@@ -108,6 +108,11 @@ the corrected nested icon paths. The same eight normal/traced Smoke/Counter JIT/
 with native packages from official NuGet, matching the clean preview.7 release source. View libraries
 are locally packed in these runs; final public View and GPU-package acceptance remain pending.
 
+[Full source CI](https://github.com/ranvier-org/Ranvier.View/actions/runs/40774290136) passed all four
+platform jobs with 781 backend tests, 12 existing ignored, 15 NativeAOT smoke checks and both visible
+counter runs each. Windows x64 verifies the independent external UIA client; Windows ARM64 verifies
+UIA attachment/smoke without that client.
+
 The manual CI `webcore-gpu` lane takes an exact `gpu_runtime_version`, public NuGet v3 `gpu_runtime_source`
 and `gpu_runtime_package` (default `Ranvier.WebCore.Native.Gpu.win-x64`). It verifies the package's GPU flavor,
 RID, version, clean source revision and file hashes before staging it. Managed interop uses that same version.

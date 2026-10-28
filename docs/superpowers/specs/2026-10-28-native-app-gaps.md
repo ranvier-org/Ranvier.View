@@ -74,8 +74,9 @@ NativeAOT runs with public native packages and locally packed View libraries. GP
 public View acceptance remain pending.
 
 The composed View branch removes copied interop, uses the shared DOM contracts on both targets, and enables
-the four previously pending conformance cases. Its full Windows x64 backend suite passed 781 tests, with
-12 existing ignored and no failures or errors. Regressions cover namespace creation, secondary documents,
+the four previously pending conformance cases. Its [full source CI 40774290136](https://github.com/ranvier-org/Ranvier.View/actions/runs/40774290136)
+passed all 17 enabled jobs, including 781 backend tests per Windows x64, Windows ARM64, Linux x64 and macOS
+26 job, with 12 existing ignored and no failures or errors. Regressions cover namespace creation, secondary documents,
 union/sequence/variadic transport, nested template cloning/import, CSS defaults, popover dictionary handles
 and passive/capture/once listeners. The expanded smoke app passed 15 checks under JIT and NativeAOT,
 including hydration retaining its server node and a subsequent native click updating state.
@@ -83,7 +84,9 @@ including hydration retaining its server node and a subsequent native click upda
 The composed visible counter also passed JIT and NativeAOT checks against the private GPU runtime:
 480x320 SDL backbuffer, scale 1, shared D3D11 frames, clipboard and an independent OS client verifying
 the UI Automation tree, Invoke, reactive name changes and provider disconnection after teardown.
-Public-package consumers, final four-platform integration CI, merges and publication remain required.
+Four-platform source integration CI is green. Public GPU integration, the View merge/publication and
+final public View package consumers remain required. Independent presenter UIA clients are verified on
+Windows x64; ARM64 verifies UIA attachment/smoke without the external client.
 
 ## Where main stands
 

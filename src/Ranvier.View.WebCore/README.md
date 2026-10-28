@@ -25,7 +25,9 @@ Fresh normal/traced package-only consumers also passed both apps under JIT and N
 passed 15 checks, including hydration retaining its server node and a native click updating state.
 Fresh runs against all seven public preview.7 native packages also pass both apps under normal/traced
 JIT and NativeAOT, with exact release-source and payload checks. View libraries are locally packed in
-those runs; final public View acceptance and the four-platform integration run remain pending.
+those runs. [Full source CI](https://github.com/ranvier-org/Ranvier.View/actions/runs/40774290136) passed
+all 17 enabled jobs, with 781 backend tests and 12 existing ignored per supported platform, both AOT apps
+and the browser/analyzer/package gates. Final public View and GPU acceptance remain pending.
 
 ```fsharp
 open Ranvier
