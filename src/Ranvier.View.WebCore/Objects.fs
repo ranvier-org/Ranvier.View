@@ -262,11 +262,11 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
     member this.Event(handle: nativeint) : NativeObject =
         this.Wrap (handle, this.EventFactory, Kind.Event)
 
-    /// <summary>The object of an event handle valid for the current listener call.</summary>
     /// <summary>Enters an object created for an owned node or event handle in the table.</summary>
     member internal _.Register(created: NativeObject) =
         table[created.Handle] <- WeakReference<NativeObject>(created)
 
+    /// <summary>The object of an event handle valid for the current listener call.</summary>
     member internal this.BorrowedEvent(handle: nativeint) : NativeObject =
         let mutable existing = null
 

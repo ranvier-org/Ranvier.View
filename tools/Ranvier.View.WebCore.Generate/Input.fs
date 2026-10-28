@@ -73,7 +73,13 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
                 let ctype = Metadata.text "ctype" field
 
                 let expression =
-                    if ctype.EndsWith "*" && ctype <> "const char*" then
+                    if List.contains (Metadata.text "kind" fieldMapping) [ "node"; "event"; "object" ] then
+                        match optionOf fieldType with
+                        | Some inner ->
+                            let encoded = build model fieldMapping inner "item"
+                            $"(match {source} with None -> 0n | Some item -> {encoded})"
+                        | None -> build model fieldMapping fieldType source
+                    elif ctype.EndsWith "*" && ctype <> "const char*" then
                         match optionOf fieldType with
                         | Some inner ->
                             let encoded = build model fieldMapping inner "item"
