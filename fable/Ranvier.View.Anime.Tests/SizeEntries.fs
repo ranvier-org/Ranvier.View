@@ -32,13 +32,13 @@ let private mountRows (target: HTMLElement) (view: Component<Board>) =
             })
 
     let mounted =
-        Mounting.mount graph None ignore target None (fun context -> Program.run (Component.render view board) context.Backend)
+        Mounting.mount graph None ignore (unbox target) None (fun context -> Program.run (Component.render view board) context.Backend)
 
     graph.Run (fun () -> board.Items.Value <- [| 3; 1 |])
     mounted.Flush ()
     mounted.Dispose ()
 
-let private listOf (row: Part<HTMLLIElement, unit -> int>) (parent: Part<HTMLUListElement, Board>) =
+let private listOf (row: Part<Ranvier.Dom.HTMLLIElement, unit -> int>) (parent: Part<Ranvier.Dom.HTMLUListElement, Board>) =
     Component.template
         (fun _ (board: Board) -> board)
         (ul parent { forEach id (fun (b: Board) -> b.Items.Value) (li row { fun (item: unit -> int) -> string (item ()) }) })
@@ -52,7 +52,8 @@ let private rowExit (_: unit -> int) (node: Element) =
 let private rowOn (_: unit -> int) (node: Element) =
     Anime.animate (node, Anim (opacity = 0.5, duration = 240))
 
-let private still: Part<HTMLUListElement, Board> = Attrs.className "rows"
+let private still: Part<Ranvier.Dom.HTMLUListElement, Board> =
+    Attrs.className "rows"
 
 /// <summary>Rows with <c>Motion.presence</c>.</summary>
 let presence (target: HTMLElement) =
@@ -65,9 +66,9 @@ let private whenComplete (animation: JSAnimation) (action: unit -> unit) : unit 
 let presenceTwin (target: HTMLElement) =
     let enter =
         Hooks.motion (
-            System.Func<_, _, _, _>(fun (item: unit -> int) (node: HTMLLIElement) context ->
+            System.Func<_, _, _, _>(fun (item: unit -> int) (node: Ranvier.Dom.HTMLLIElement) context ->
                 if context.Inserted then
-                    let animation = rowEnter item node
+                    let animation = rowEnter item (unbox node)
                     fun () -> animation.revert ()
                 else
                     ignore)
@@ -75,8 +76,8 @@ let presenceTwin (target: HTMLElement) =
 
     let exit =
         Hooks.exit (
-            System.Func<_, _, _, _>(fun (item: unit -> int) (node: HTMLLIElement) finish ->
-                let animation = rowExit item node
+            System.Func<_, _, _, _>(fun (item: unit -> int) (node: Ranvier.Dom.HTMLLIElement) finish ->
+                let animation = rowExit item (unbox node)
                 whenComplete animation finish
                 fun () -> animation.cancel ())
         )
@@ -98,8 +99,8 @@ let flip (target: HTMLElement) =
 /// <summary>A list with a reflow hook calling <c>createLayout</c> by hand.</summary>
 let flipTwin (target: HTMLElement) =
     let reflow =
-        Hooks.reflow (fun (_: Board) (node: HTMLUListElement) ->
-            let layout = Anime.layout (node, flipParameters ())
+        Hooks.reflow (fun (_: Board) (node: Ranvier.Dom.HTMLUListElement) ->
+            let layout = Anime.layout (unbox<Element> node, flipParameters ())
             Api.onCleanup (fun () -> layout.revert ())
 
             {
