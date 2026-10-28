@@ -104,8 +104,9 @@ Corrected preview.7 native CI packages from [run 40729363033](https://github.com
 also passed normal/traced package-only CPU consumers under JIT and NativeAOT. Each counter run verified
 the 480x320 actual backbuffer, clipboard and independent UIA discovery, bounds, Invoke, reactive name
 updates and provider disconnection. Native and resource payload hashes matched the packages, including
-the corrected nested icon paths. These runs use locally packed View libraries and native CI artifacts;
-public-package and GPU-package acceptance remain pending.
+the corrected nested icon paths. The same eight normal/traced Smoke/Counter JIT/NativeAOT runs also pass
+with native packages from official NuGet, matching the clean preview.7 release source. View libraries
+are locally packed in these runs; final public View and GPU-package acceptance remain pending.
 
 The manual CI `webcore-gpu` lane takes an exact `gpu_runtime_version`, public NuGet v3 `gpu_runtime_source`
 and `gpu_runtime_package` (default `Ranvier.WebCore.Native.Gpu.win-x64`). It verifies the package's GPU flavor,

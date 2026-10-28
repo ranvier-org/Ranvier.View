@@ -23,8 +23,9 @@ the corrected preview.7 CI packages from [run 40729363033](https://github.com/ra
 the full Windows x64 backend suite passed 781 tests, with 12 existing ignored and no failures or errors.
 Fresh normal/traced package-only consumers also passed both apps under JIT and NativeAOT; each smoke run
 passed 15 checks, including hydration retaining its server node and a native click updating state.
-These checks use native CI artifacts and locally packed View libraries; final public-package acceptance
-and the four-platform integration run remain pending.
+Fresh runs against all seven public preview.7 native packages also pass both apps under normal/traced
+JIT and NativeAOT, with exact release-source and payload checks. View libraries are locally packed in
+those runs; final public View acceptance and the four-platform integration run remain pending.
 
 ```fsharp
 open Ranvier
