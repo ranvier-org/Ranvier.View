@@ -4,11 +4,27 @@ Written 2026-10-28, at `webcore-backend` `3556cdc5` and Ranvier.WebCore `v0.1.0-
 [backend design](2026-10-28-native-webcore-backend-design.md) covers what exists; this lists what stands between
 it and an app a person runs: a window showing Ranvier components, taking input, shipped as one executable.
 
+## Landed: macOS and NativeAOT
+
+The macOS presenter and end-to-end AOT publish work (order-of-work items 4 and 5) landed on `main`:
+
+- [Ranvier.View#2](https://github.com/ranvier-org/Ranvier.View/pull/2), `ccf74165`: macOS main-thread support,
+  the visible counter smoke, both apps' Windows/macOS NativeAOT publish-and-run checks, and the documentation.
+- [Ranvier.WebCore#4](https://github.com/ranvier-org/Ranvier.WebCore/pull/4), `615960e6`: static delegate
+  marshalling in the canonical ABI wrapper. All five native platform jobs passed before merge.
+
+The backend suite passed 770 tests with 16 ignored and no failures. Both published apps ran on Windows x64
+and macOS 26 arm64, including a visible counter window. Hardware qualification at Retina scale 2 and with
+a real IME is still unverified; the CI runner reports scale 1. Broader AOT analysis warnings remain recorded
+below. These qualifications do not change the completed publish-and-run acceptance checks.
+
+The next implementation batch is ABI 21 in order-of-work item 6. Paused work remains paused.
+
 ## Where things stand
 
 | Piece | State |
 |---|---|
-| Ranvier.WebCore native host | ABI 20 on main. Builds on win-x64, win-arm64, linux-x64, linux-arm64, osx-arm64 in CI; preview.4 publishing to nuget.org |
+| Ranvier.WebCore native host | ABI 20 on main. Builds on win-x64, win-arm64, linux-x64, linux-arm64, osx-arm64 in CI; preview.4 consumed from nuget.org on Windows x64 and macOS arm64 |
 | `Ranvier.View.WebCore` | Runs on win-x64 and osx-arm64 (macOS 26); mounts components, paints RGBA and forwards input. macOS CI: 770 passed, 16 ignored, 0 failed |
 | Conformance | ConformanceCases' fifteen modules match the DOM twin, except four pending cases |
 | AOT | Both apps publish and run with NativeAOT locally on win-x64 and in CI on win-x64 and osx-arm64. Mount, paint, native click, repaint and the visible sample smoke pass. FSharp.Core/view reflection, trimming and generic-recursion warnings remain visible |
@@ -22,7 +38,7 @@ Critical path for a first Windows app: gaps 1, 2 and 3. The rest can follow in a
 The backend paints into a buffer and takes input events; the design leaves putting the pixels on screen to
 the app. SDL3, through `ppy.SDL3-CS` (plain P/Invoke, natives for all five RIDs), is the chosen layer.
 
-Work:
+Implemented:
 
 1. **Project.** `src/Ranvier.View.WebCore.Sdl` (decision G1), referencing `Ranvier.View.WebCore` and `ppy.SDL3-CS`.
    Trimmable and AOT-compatible, like the backend.
@@ -46,39 +62,30 @@ Work:
    and `SDL_GetClipboardText`.
 9. **API.** One entry point an app calls, for example `Window.run (title, width, height) (fun host -> mount ...)`,
    returning when the window closes (decision G2).
-10. **Sample.** `samples/native-counter` (or similar): a counter and a text input, published with
-    `PublishAot`.
+10. **Sample.** `examples/Ranvier.NativeCounter`: a counter and a text input, published and run with
+    `PublishAot` on Windows x64 and macOS 26 arm64.
 
-Checks: a test that opens a hidden window, mounts, presents and reads the texture back; the sample, run by
-hand on Windows, then macOS. On macOS, check first that WebCore's run loop and SDL's event pump share the
-main thread (decision G3): it is the riskiest unknown here.
+Verified: hidden-window mounting, presentation, pixel readback and SDL input tests pass. The regular and
+NativeAOT sample opens a visible window in macOS CI; Windows NativeAOT sample checks also pass. WebCore's
+run loop and SDL's event pump share the macOS process main thread (G3).
 
 ## 2. The native package from nuget.org
 
-`Ranvier.View.WebCore.fsproj` takes the natives from `RanvierWebCoreNativeDir` (default `C:\wk\native-v20`)
-unless `RanvierWebCoreNativeVersion` is set, and then only from `Ranvier.WebCore.Native.win-x64`.
+`Ranvier.View.WebCore.fsproj` defaults to native package version `0.1.0-preview.4`, with `win-x64` on
+Windows and `osx-arm64` on macOS. `RanvierWebCoreNativeDir` is an opt-in local-build override. Fresh CI
+checkouts restore the packages and pass the backend and publish-and-run checks on both platforms.
 
-Work:
-
-1. Once preview.4 is on nuget.org, default `RanvierWebCoreNativeVersion` to `0.1.0-preview.4` (Directory.Packages.props
-   if the repo uses central package management) and drop the local-directory default; keep
-   `RanvierWebCoreNativeDir` as an opt-in override for local WebCore builds.
-2. Reference the package for each RID the app targets. Either a RID-conditional `PackageReference` per runtime
-   in the fsproj, or a `Ranvier.WebCore.Native` meta-package in the WebCore repo that depends on the five
-   (decision G5, which also un-pauses the meta-package).
-3. Check: a clean clone, no `C:\wk`, builds and passes `Ranvier.View.WebCore.Tests`.
+Remaining for the ABI 21 batch: the five-RID `Ranvier.WebCore.Native` meta-package (G5), replacing the
+current `RanvierWebCoreNativeRid` selection. This is order-of-work item 6, outside the completed macOS/AOT batch.
 
 ## 3. Landing on master
 
-`webcore-backend` is ten commits ahead of master and has no PR. The design's three open decisions block it:
+Completed: [Ranvier.View#1](https://github.com/ranvier-org/Ranvier.View/pull/1) landed the preview backend
+and SDL presenter on `main`; [Ranvier.View#2](https://github.com/ranvier-org/Ranvier.View/pull/2) landed macOS
+and NativeAOT coverage. Main CI restores the native package and runs the backend on Windows and macOS.
 
-1. Where the managed interop lives: copied into Ranvier (today, `src/Ranvier.View.WebCore/Interop`), or a
-   managed `Ranvier.WebCore` package from the WebCore repo versioned with the ABI (decision G6).
-2. The package name: `Ranvier.View.WebCore` or `Ranvier.Native` (decision G7).
-3. The change to `Fable.Ranvier`'s global seam, a production source file (decision G8).
-
-Then: a PR against master; master's CI must restore the native package (gap 2) and run the backend tests on
-Windows at least (decision G9: which runners).
+The settled later decisions remain: move the copied interop to a managed `Ranvier.WebCore` package (G6),
+keep the `Ranvier.View.WebCore` name (G7), and decouple the Fable interfaces before stable release (G8).
 
 ## 4. AOT publish end to end
 
@@ -96,8 +103,8 @@ Completed, 2026-10-28:
    READMEs record the Windows and macOS prerequisites and publish commands. Both Windows executables have
    native PE headers with no CLR header.
 2. The warning was IL3050 from the non-generic `Marshal.GetFunctionPointerForDelegate` overload. The three
-   callbacks now use its generic overload. The fix is in [WebCore#4](https://github.com/ranvier-org/Ranvier.WebCore/pull/4)
-   and the copied view wrapper; the hand-written callback section is outside the generated declarations.
+   callbacks now use its generic overload. The fix is merged in [WebCore#4](https://github.com/ranvier-org/Ranvier.WebCore/pull/4)
+   and in the copied view wrapper through [View#2](https://github.com/ranvier-org/Ranvier.View/pull/2); the hand-written callback section is outside the generated declarations.
    The header/declaration check still matches all 175 upstream functions.
 3. The published smoke executable verified mount, paint, a native click, repaint and listener errors. The
    published counter passed its bounded visible-window, backing-size, painted-content and clipboard checks.
@@ -241,9 +248,9 @@ The frontier is empty: every decision above is settled.
 
 ## Order of work
 
-1. Publish preview.4 (in progress); switch `Ranvier.View.WebCore` to the package (gap 2, win-x64 first).
-2. Land `webcore-backend` on master as a preview, with Windows CI (gap 3).
-3. The SDL3 presenter on Windows, `Window.create`/`Step`/`run`, IME included, and the sample (gap 1).
+1. Complete for Windows/macOS: consume preview.4 from NuGet (gap 2); the meta-package follows in item 6.
+2. Complete: the preview backend landed on `main` through Ranvier.View#1, with Windows CI (gap 3).
+3. Complete: the SDL3 presenter, `Window.create`/`Step`/`run`, IME forwarding and the counter sample (gap 1).
 4. Complete: the macOS run loop spike (G3) and presenter smoke on macOS 26 (gap 6); Retina and real IME
    checks remain manual.
 5. Complete: NativeAOT publish and execution of both apps locally on Windows, then Windows/macOS CI (gap 4).
