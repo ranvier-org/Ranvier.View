@@ -130,6 +130,11 @@ jobs:
         run: dotnet run --project tests/Ranvier.View.WebCore.Tests -c Release
       - name: Build the native counter example
         run: dotnet build examples/Ranvier.NativeCounter -c Release
+      - name: Smoke the visible native counter window
+        timeout-minutes: 2
+        env:
+          RANVIER_SMOKE: '1'
+        run: dotnet run --project examples/Ranvier.NativeCounter -c Release --no-build
 
   packages:
     name: Packages

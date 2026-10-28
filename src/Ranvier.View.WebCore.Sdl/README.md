@@ -5,7 +5,13 @@ Shows a [Ranvier.View.WebCore](../Ranvier.View.WebCore/README.md) page in an SDL
 mouse, wheel, keyboard, input method and focus events to the page. It also sets the page's cursor and moves its
 `text/plain` clipboard data through SDL.
 
-Experimental, and Windows x64 only for now, like the backend.
+Experimental, on Windows x64 and macOS arm64 (macOS 26), like the backend. WebCore's run loop and SDL's
+event pump share the process main thread on macOS, with the same `Window.Step` implementation.
+
+[macOS CI](https://github.com/ranvier-org/Ranvier.Views/actions/runs/40645038498/job/122671771869) passed
+770 tests, with 16 ignored and no failures. Those tests cover a hidden window, paint readback and SDL input;
+the sample's `RANVIER_SMOKE=1` mode checks a visible window and exits automatically. A real IME still needs
+manual verification; the clipboard bridge supports `text/plain` only.
 
 ```fsharp
 open Ranvier

@@ -9,10 +9,10 @@ it and an app a person runs: a window showing Ranvier components, taking input, 
 | Piece | State |
 |---|---|
 | Ranvier.WebCore native host | ABI 20 on main. Builds on win-x64, win-arm64, linux-x64, linux-arm64, osx-arm64 in CI; preview.4 publishing to nuget.org |
-| `Ranvier.View.WebCore` | Mounts components into a WebCore page through the generated DOM members; paints to an RGBA buffer; forwards mouse input (`InputTests`) |
+| `Ranvier.View.WebCore` | Runs on win-x64 and osx-arm64 (macOS 26); mounts components, paints RGBA and forwards input. macOS CI: 770 passed, 16 ignored, 0 failed |
 | Conformance | ConformanceCases' fifteen modules match the DOM twin, except four pending cases |
 | AOT | `tests/Ranvier.View.WebCore.AotSmoke` mounts and paints; publishing it has not run end to end |
-| Window | `Ranvier.View.WebCore.Sdl` on Windows: paint, mouse, wheel, keys, IME, focus, cursor, clipboard; `examples/Ranvier.NativeCounter` runs by hand. AOT publish of the sample and macOS remain |
+| Window | `Ranvier.View.WebCore.Sdl` on Windows and macOS 26: paint, mouse, wheel, keys, IME event forwarding, focus, cursor, text/plain clipboard. macOS hidden-window tests pass; visible sample smoke and AOT publish remain to be verified |
 | Accessibility | ABI complete; no platform bridge ([help wanted](https://github.com/ranvier-org/Ranvier.WebCore/pull/2)) |
 
 Critical path for a first Windows app: gaps 1, 2 and 3. The rest can follow in any order.
@@ -111,8 +111,8 @@ Work, in the Ranvier.WebCore repo as the next ABI batch (ABI 21; one ABI version
 
 ## 6. Other platforms
 
-The backend has run only on win-x64. The packages for the other four RIDs exist and their CI smoke paints a
-page, but no Ranvier code has loaded them.
+The backend has run on win-x64 and osx-arm64 (macOS 26). The macOS run passed 770 tests, including SDL
+hidden-window presentation and input. Linux loading and win-arm64 on real hardware remain unverified.
 
 Work: run `Ranvier.View.WebCore.Tests` on osx-arm64 and linux-x64 (CI runners), then the SDL3 sample on each.
 Known blocker: macOS 15 lacks `libswiftCompatibilitySpan.dylib`, so the osx package needs macOS 26 for now
@@ -204,6 +204,14 @@ Round 3, 2026-10-28:
 - **`dom.json` scope:** curated to what native UI needs (forms, events, layout reads, ranges, selection), widened
   generously on request; `gen/dom-report.txt` lists each member left out and why, and each batch measures the
   size cost.
+
+Round 4, 2026-10-28:
+
+- **G3 result:** WebCore's run loop and SDL's event pump share the macOS process main thread without
+  changes to `Window.Step`. [Run 40645038498, macOS job](https://github.com/ranvier-org/Ranvier.Views/actions/runs/40645038498/job/122671771869)
+  passed 770 tests, with 16 ignored, 0 failed and 0 errored, on `macos-26` (arm64). The tests use their own
+  entry point through `dotnet run` to keep the bodies on the main thread. Hidden-window paint readback and
+  events through SDL's queue pass; a visible sample, Retina scale and real IME are separate checks.
 
 The frontier is empty: every decision above is settled.
 
