@@ -11,8 +11,11 @@ open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.WebCore
 
-// WebCore accepts calls only on the thread that first created a host, so every test body runs on this one.
+// WebCore accepts calls only on the thread that first created a host, so every test body runs on this one: a
+// dedicated thread, or on macOS the process's main thread, which Main hands over through serveOnThisThread.
 let private work = new BlockingCollection<unit -> unit> ()
+
+let mutable private servedOnCaller = false
 
 let private thread =
     lazy
@@ -29,9 +32,46 @@ let private thread =
          worker.Start ()
          worker)
 
+/// <summary>
+/// Makes the calling thread the WebCore host thread: runs <c>run</c> on a new thread, serving test bodies here until
+/// it returns. WebKit on macOS treats only the process's main thread as its main thread, so Main calls this there.
+/// </summary>
+let serveOnThisThread (run: unit -> int) : int =
+    servedOnCaller <- true
+    let mutable exitCode = 0
+    let mutable failure: ExceptionDispatchInfo = null
+
+    let runner =
+        Thread (
+            (fun () ->
+                try
+                    try
+                        exitCode <- run ()
+                    with error ->
+                        failure <- ExceptionDispatchInfo.Capture error
+                finally
+                    work.CompleteAdding ()),
+            64 * 1024 * 1024
+        )
+
+    runner.Name <- "Tests"
+    runner.Start ()
+
+    for item in work.GetConsumingEnumerable () do
+        item ()
+
+    runner.Join ()
+
+    if not (isNull failure) then
+        failure.Throw ()
+
+    exitCode
+
 /// <summary>Runs <c>body</c> on the WebCore host thread and returns its result or rethrows its exception.</summary>
 let onHostThread (body: unit -> 'T) : 'T =
-    thread.Force () |> ignore
+    if not servedOnCaller then
+        thread.Force () |> ignore
+
     let mutable result = Unchecked.defaultof<'T>
     let mutable failure: ExceptionDispatchInfo = null
     use finished = new ManualResetEventSlim ()
