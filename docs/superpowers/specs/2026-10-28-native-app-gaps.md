@@ -62,9 +62,16 @@ canonical managed interop, the five-RID aggregate, Windows UI Automation and sha
 five native builds/runtime checks and managed aggregation. Immutable tag `v0.1.0-preview.6` points to that
 merged revision. [Release run 40722932631](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40722932631)
 was stopped before publication when package-only testing found cross-RID resource-path corruption. The tag
-remains unchanged. [Native correction PR6](https://github.com/ranvier-org/Ranvier.WebCore/pull/6) fixes target
-scoping and advances the intended package release to preview.7, retaining ABI 21. Slim and GPU publication
-must use the same new immutable tag after that fix passes. Public-package acceptance remains pending.
+remains unchanged. [Native correction PR6](https://github.com/ranvier-org/Ranvier.WebCore/pull/6), merged as
+`eef227e2`, fixes target scoping and restores inline-style contracts. Its [pre-merge run 40729363033](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40729363033)
+passed all five native runtime jobs, the real multi-RID resource regression and managed aggregation.
+Immutable tag `v0.1.0-preview.7` points to that exact merged tree, retaining ABI 21. [Release run 40746907938](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40746907938)
+passed all five native jobs, managed aggregation and OIDC publication of the corrected Slim cohort.
+[Windows GPU run 40766367608](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40766367608) is running
+on the same immutable tag and source. Fresh official-NuGet consumers verified all seven native packages,
+all five matching clean-source manifests and exact payload hashes. Both apps passed normal/traced JIT and
+NativeAOT runs with public native packages and locally packed View libraries. GPU-package and final
+public View acceptance remain pending.
 
 The composed View branch removes copied interop, uses the shared DOM contracts on both targets, and enables
 the four previously pending conformance cases. Its full Windows x64 backend suite passed 781 tests, with
@@ -82,7 +89,7 @@ Public-package consumers, final four-platform integration CI, merges and publica
 
 | Piece | State |
 |---|---|
-| Ranvier.WebCore native host | ABI 21 on native main through WebCore#5; all five pre-merge RID jobs and managed aggregation passed. Unpublished preview.6 was stopped for a packaging defect; corrected preview.7 is pending. View main still consumes preview.4 (ABI 20) until its integration lands |
+| Ranvier.WebCore native host | ABI 21 on native main through WebCore#5 and correction #6. Corrected preview.7 passed all five tag-run RID jobs, managed aggregation, OIDC publication and fresh public-native consumers. Windows GPU publication and final public View consumers remain pending. Unpublished preview.6 was stopped for a packaging defect. View main still consumes preview.4 (ABI 20) until its integration lands |
 | `Ranvier.View.WebCore` | Runs on win-x64, real win-arm64, linux-x64 and osx-arm64 (macOS 26); 773 backend tests passed per platform, 16 existing ignored, no failures |
 | Conformance | ConformanceCases' fifteen modules match the DOM twin, except four pending cases |
 | AOT | Both apps publish and run with NativeAOT locally on win-x64 and in CI on win-x64, win-arm64, linux-x64 and osx-arm64. Mount, paint, native click, repaint and the visible sample smoke pass. FSharp.Core/view reflection, trimming and generic-recursion warnings remain visible |
@@ -134,8 +141,11 @@ runtime identifier or the SDK host's. `RanvierWebCoreNativeDir` is an opt-in loc
 checkouts restore packages and pass backend and publish-and-run checks on Windows x64/ARM64, Linux x64
 and macOS arm64.
 
-Remaining for the ABI 21 batch: the five-RID `Ranvier.WebCore.Native` meta-package (G5), replacing the
-current `RanvierWebCoreNativeRid` selection. This is order-of-work item 6, outside the completed macOS/AOT batch.
+The ABI 21 native release publishes the five-RID `Ranvier.WebCore.Native` meta-package (G5) and canonical
+managed `Ranvier.WebCore` at preview.7. Fresh official-source consumers verified exact five-RID dependencies,
+matching clean release manifests and all payload hashes, then ran both apps under JIT and NativeAOT.
+The View integration replaces `RanvierWebCoreNativeRid` selection with this aggregate; its merge and final
+public backend/presenter acceptance remain pending.
 
 ## 3. Landing on master
 
@@ -184,8 +194,8 @@ one needs `createElementNS`. Members taking unions of nodes, sequences or variad
 (`append(...nodes)`) throw `NotSupportedException`. The view's own paths use none of them, so apps are not
 blocked, but user code calling them is.
 
-ABI 21 implements the native work through WebCore#5 (one ABI version per release batch); coordinated
-publication and View consumption remain in progress:
+ABI 21 implements the native work through WebCore#5 (one ABI version per release batch), with corrected
+preview.7 published through WebCore#6. View consumption remains in integration:
 
 1. `createElementNS` and `createHTMLDocument` in `gen/dom.json`; the generator's handling of a second document's
    lifetime in the object table.

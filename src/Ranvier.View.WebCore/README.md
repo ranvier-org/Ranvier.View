@@ -17,6 +17,16 @@ The subsequent [four-platform CI run](https://github.com/ranvier-org/Ranvier.Vie
 passed 773 tests per platform, with 16 existing ignored and no failures, plus the visible sample and both
 NativeAOT apps. Windows ARM64 ran on a real ARM runner; Linux used Ubuntu 24.04 with Xvfb.
 
+The ABI 21 integration uses shared `Ranvier.Dom` contracts and canonical packaged interop, including
+namespace creation, secondary documents, node/string unions, sequences and variadic operations. Against
+the corrected preview.7 CI packages from [run 40729363033](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40729363033),
+the full Windows x64 backend suite passed 781 tests, with 12 existing ignored and no failures or errors.
+Fresh normal/traced package-only consumers also passed both apps under JIT and NativeAOT; each smoke run
+passed 15 checks, including hydration retaining its server node and a native click updating state.
+Fresh runs against all seven public preview.7 native packages also pass both apps under normal/traced
+JIT and NativeAOT, with exact release-source and payload checks. View libraries are locally packed in
+those runs; final public View acceptance and the four-platform integration run remain pending.
+
 ```fsharp
 open Ranvier
 open Ranvier.View

@@ -100,6 +100,14 @@ was 480x320 at scale 1, shared frames were presented, and the independent tree/a
 clipboard round-trip passed. The persisted presenter also passed software-renderer and scale-2 CPU fallback
 checks, then resumed shared presentation at scale 1. These checks precede the coordinated package release.
 
+Corrected preview.7 native CI packages from [run 40729363033](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40729363033)
+also passed normal/traced package-only CPU consumers under JIT and NativeAOT. Each counter run verified
+the 480x320 actual backbuffer, clipboard and independent UIA discovery, bounds, Invoke, reactive name
+updates and provider disconnection. Native and resource payload hashes matched the packages, including
+the corrected nested icon paths. The same eight normal/traced Smoke/Counter JIT/NativeAOT runs also pass
+with native packages from official NuGet, matching the clean preview.7 release source. View libraries
+are locally packed in these runs; final public View and GPU-package acceptance remain pending.
+
 The manual CI `webcore-gpu` lane takes an exact `gpu_runtime_version`, public NuGet v3 `gpu_runtime_source`
 and `gpu_runtime_package` (default `Ranvier.WebCore.Native.Gpu.win-x64`). It verifies the package's GPU flavor,
 RID, version, clean source revision and file hashes before staging it. Managed interop uses that same version.
