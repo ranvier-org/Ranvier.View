@@ -41,6 +41,10 @@ jobs:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('**/*.fsproj', '**/Directory.Build.*', 'nuget.config', '.config/dotnet-tools.json') }}
           restore-keys: nuget-${{ runner.os }}-${{ matrix.group }}-
+      # The counters suites compile core with RanvierCounters=true, which the published Ranvier package omits.
+      - name: Reference the core source for the counters suites
+        if: matrix.group == 'view' || matrix.group == 'arms'
+        run: dotnet fsi build.fsx -- dev local
       - name: Run the same view checks as local development
         run: dotnet fsi build.fsx -- test --group ${{ matrix.group }}
       - name: Upload the Playwright reports

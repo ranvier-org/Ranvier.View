@@ -268,11 +268,12 @@ module Stage =
     let arms = input {
         let! npm = npm "examples/Fable.Ranvier.Playground"
         return stage "arms" {
+            // The plugin tests' source-map reader resolves @jridgewell/trace-mapping from the playground's packages.
+            npm
             stage "plugin" {
                 run "dotnet build experiments/Ranvier.View.Arms.FablePlugin/Ranvier.View.Arms.FablePlugin.fsproj -c Release"
                 run "dotnet fsi experiments/Ranvier.View.Arms.FablePlugin/Tests/PluginTests.fsx"
             }
-            npm
             stage "discovery app on both targets" {
                 run (fun _ ->
                     let checks = "experiments/Ranvier.View.Arms/Checks/Discovery"
