@@ -207,7 +207,7 @@ type internal Events private () =
     /// <summary><c>Event.currentTarget</c>, or the override the view's delegation set for the dispatch.</summary>
     static member CurrentTarget(event: NativeObject) : EventTarget =
         if isNull (box event.CurrentTargetOverride) then
-            unbox<EventTarget> (event.Session.Node (Native.rv_event_target (event.Handle, 1)))
+            unbox<EventTarget>(event.Session.Node (Native.rv_event_target (event.Handle, 1)))
         else
             match event.CurrentTargetOverride () with
             | null -> Unchecked.defaultof<EventTarget>

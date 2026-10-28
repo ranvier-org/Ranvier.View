@@ -87,7 +87,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     static let noCursor = 20
 
     let id = SDL3.SDL_GetWindowID window
-    let cursors = Dictionary<SDL_SystemCursor, nativeint> ()
+    let cursors = Dictionary<SDL_SystemCursor, nativeint>()
     let presenter = new Presenter (renderer, host)
     let mutable accessibilityAttached = false
     let mutable fullPaint = true
@@ -174,7 +174,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         | ValueNone -> ()
 
     let dispatch (event: SDL_Event) =
-        match enum<SDL_EventType> (int event.``type``) with
+        match enum<SDL_EventType>(int event.``type``) with
         | SDL_EventType.SDL_EVENT_QUIT -> closed <- true
         | SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED when event.window.windowID = id -> closed <- true
         | SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED
@@ -367,7 +367,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             new Window (window, drawing, host)
         with _ ->
             page
-            |> Option.iter (fun host -> (host :> IDisposable).Dispose ())
+            |> Option.iter (fun host -> (host :> IDisposable).Dispose())
 
             SDL3.SDL_DestroyRenderer drawing
             SDL3.SDL_DestroyWindow window
@@ -470,8 +470,8 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                     WindowAccessibility.detach host
                     accessibilityAttached <- false
 
-                (presenter :> IDisposable).Dispose ()
-                (host :> IDisposable).Dispose ()
+                (presenter :> IDisposable).Dispose()
+                (host :> IDisposable).Dispose()
 
                 for created in cursors.Values do
                     SDL3.SDL_DestroyCursor (NativePtr.ofNativeInt created)
