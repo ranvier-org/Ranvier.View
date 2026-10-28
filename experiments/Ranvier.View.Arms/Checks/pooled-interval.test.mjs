@@ -63,8 +63,13 @@ test("a run whose recorded hash of experiments/Ranvier.View.Arms/Site.fs differs
   assert.deepEqual(outOfDate(runOf({ ...treeHashes(), "../../experiments/Ranvier.View.Arms/Site.fs": "0" })), ["../../experiments/Ranvier.View.Arms/Site.fs"]);
 });
 
-test("the runs at 22d86d44, which differ from the tree only in src/Ranvier/Core.fs, are in the pool", () => {
-  for (const n of [1, 2, 3, 4, 5, 6]) assert.ok(runs.some(r => r.path === `docs/research/arms-match/arms-match-22d86d44-${n}.json`), String(n));
+test("the runs at 22d86d44 leave the pool after the three shared DOM fixture migrations", () => {
+  for (const n of [1, 2, 3, 4, 5, 6]) {
+    const run = committed.find(r => r.path === `docs/research/arms-match/arms-match-22d86d44-${n}.json`);
+    assert.ok(run, String(n));
+    assert.deepEqual(outOfDate(run), ["tests/KeyedRowsPerf.fs", "tests/KeyedRowsSugarPerf.fs", "tests/KeyedRowsArmsMatchPerf.fs"]);
+    assert.ok(!runs.includes(run), String(n));
+  }
 });
 
 test("the runs recorded before the rebase onto aae54f2e are out of the pool", () => {
