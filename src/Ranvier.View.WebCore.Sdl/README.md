@@ -65,6 +65,10 @@ published counter with `RANVIER_SMOKE=1` for its bounded visible-window check. K
 `WebKit.resources` from the publish folder beside the executable. The app is native; the WebCore libraries
 and resources remain separate files.
 
-Both apps published and ran on Windows x64 locally. NativeAOT still reports FSharp.Core reflection/trimming
-and generic-recursion warnings; the exercised app paths pass, and broader AOT coverage remains work to do.
-The publish and executable checks run in the Windows and macOS CI jobs.
+Both apps published and ran on Windows x64 locally and in
+[Windows](https://github.com/ranvier-org/Ranvier.View/actions/runs/40649337023/job/122686137299) and
+[macOS arm64](https://github.com/ranvier-org/Ranvier.View/actions/runs/40649337023/job/122686137302) CI.
+The counter opened a visible 480x320 window, with scale 1, matching backing dimensions, painted content
+and a successful text/plain clipboard round-trip on each platform. Retina scale 2 and a real IME remain
+manual checks. NativeAOT still reports FSharp.Core/view reflection, trimming and generic-recursion
+warnings; the exercised app paths pass, and broader AOT coverage remains work to do.
