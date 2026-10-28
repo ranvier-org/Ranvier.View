@@ -23,7 +23,7 @@ Add the Xantham feed from [Installation](../guide/introduction.md#installation) 
     <Compile Include="Main.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Ranvier.View.Dom" Version="0.1.0-alpha.1" />
+    <PackageReference Include="Ranvier.View.Dom" Version="0.1.1-alpha.1" />
     <PackageReference Update="FSharp.Core" Version="10.1.401" />
   </ItemGroup>
 </Project>

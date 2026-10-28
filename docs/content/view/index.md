@@ -4,7 +4,7 @@ order: 1
 ---
 
 :::info Alpha
-The view packages share version `0.1.0-alpha.2`; their APIs may change.
+The view packages share version `0.1.1-alpha.1`; their APIs may change.
 See [installation and the dependency feed](../guide/introduction.md#installation).
 :::
 

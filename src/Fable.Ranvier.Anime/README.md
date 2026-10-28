@@ -33,9 +33,9 @@ The assembly also compiles on .NET, so portable code can reference it; the bindi
 
 ## Typed CSS custom properties
 
-The typed bridge is available in `Fable.Ranvier.Anime` and `Ranvier.View.Anime` `0.1.0-alpha.3`;
-their runtime dependency supplies `Ranvier.Css` `0.1.0-alpha.3`. Generated sugars remain in
-`Ranvier.Css.Bindings` `0.1.0-alpha.2`.
+The typed bridge is available in `Fable.Ranvier.Anime` and `Ranvier.View.Anime` `0.1.1-alpha.1`;
+their runtime dependency supplies `Ranvier.Css` `0.1.1-alpha.1`. Generated sugars remain in
+`Ranvier.Css.Bindings` `0.1.1-alpha.1`.
 
 Add `Ranvier.Css.Bindings` for the generated `Css` sugars. Custom-property handles and numeric
 values retain the same grammar marker through Anime parameters:

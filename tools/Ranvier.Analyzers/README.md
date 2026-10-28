@@ -3,7 +3,7 @@
 F# analyzers that report Ranvier traps at build time. Built against FSharp.Analyzers.SDK 0.41.0.
 
 ```xml
-<PackageReference Include="Ranvier.Analyzers" Version="0.1.0-preview.1" PrivateAssets="all" />
+<PackageReference Include="Ranvier.Analyzers" Version="0.1.1-preview.1" PrivateAssets="all" />
 <PropertyGroup>
   <RanvierAnalyze>true</RanvierAnalyze>
 </PropertyGroup>

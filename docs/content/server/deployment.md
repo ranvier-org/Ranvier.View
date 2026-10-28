@@ -44,7 +44,7 @@ The `Ranvier.View` package holds `Server` and every template type; `Ranvier.View
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../../src/Ranvier.View/Ranvier.View.fsproj" />
-    <PackageReference Include="Ranvier.Wire" Version="0.1.0-preview.1" />
+    <PackageReference Include="Ranvier.Wire" Version="0.1.1-preview.1" />
     <PackageReference Update="FSharp.Core" Version="10.1.401" />
   </ItemGroup>
 </Project>

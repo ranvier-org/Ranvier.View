@@ -4,10 +4,10 @@ order: 1
 ---
 
 :::info
-`Ranvier.Analyzers` is published on NuGet at `0.1.0-preview.1`. Reference it and set `RanvierAnalyze`:
+`Ranvier.Analyzers` is published on NuGet at `0.1.1-preview.1`. Reference it and set `RanvierAnalyze`:
 
 ```xml
-<PackageReference Include="Ranvier.Analyzers" Version="0.1.0-preview.1" PrivateAssets="all" />
+<PackageReference Include="Ranvier.Analyzers" Version="0.1.1-preview.1" PrivateAssets="all" />
 <PropertyGroup>
   <RanvierAnalyze>true</RanvierAnalyze>
 </PropertyGroup>

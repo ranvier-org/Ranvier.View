@@ -3,7 +3,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <IsPackable>true</IsPackable>
         <PackageId>Ranvier.Analyzers</PackageId>
-        <Version>0.1.0-preview.1</Version>
+        <Version>0.1.1-preview.1</Version>
         <Title>Ranvier.Analyzers</Title>
         <Description>F# analyzers that report Ranvier traps at build time: Fable snapshot inlining and union testers, owned nodes in pure derivations, async values recreated by their owner, untracked reads after an await, graph writes off the owning thread, ignored cancellation tokens, and view traps: reactive reads at template build time, unstable list keys, definitions created on every region read, invalid content parts, markup the server render refuses, and hydration with queued commits.</Description>
         <PackageTags>ranvier;fsharp;analyzers;fsharp-analyzers</PackageTags>

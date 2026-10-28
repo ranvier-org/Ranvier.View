@@ -4,7 +4,7 @@ description: "Typed anime.js 4.5.0 bindings for Fable: parameters, values, eases
 ---
 
 :::info Alpha
-The animation packages are published at `0.1.0-alpha.1`; their APIs may change.
+The animation packages are published at `0.1.1-alpha.1`; their APIs may change.
 See [installation and the dependency feed](../guide/introduction.md#installation).
 :::
 
