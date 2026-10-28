@@ -200,9 +200,9 @@ jobs:
           sudo apt-get -o Acquire::Retries=5 update -q
           sudo apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
             clang zlib1g-dev xvfb xauth dbus-x11 fonts-dejavu-core libgl1-mesa-dri \
-            libglib2.0-0t64 libharfbuzz0b libicu74 libjpeg-turbo8 libepoxy0 libgcrypt20 \
+            libglib2.0-0t64 libharfbuzz0b libharfbuzz-icu0 libicu74 libjpeg-turbo8 libepoxy0 libgcrypt20 \
             libsoup-3.0-0 libtasn1-6 libxkbcommon0 libxml2 libpng16-16t64 libsqlite3-0 \
-            libwebp7 libfreetype6 libfontconfig1 libwoff1 libdrm2 libegl1 libgles2
+            libwebp7 libwebpdemux2 libwebpmux3 libatomic1 libfreetype6 libfontconfig1 libwoff1 libdrm2 libegl1 libgles2
       - name: Test Ranvier.View.WebCore.Tests
         run: xvfb-run -a dotnet run --project tests/Ranvier.View.WebCore.Tests -c Release
       - name: Build the native counter example
