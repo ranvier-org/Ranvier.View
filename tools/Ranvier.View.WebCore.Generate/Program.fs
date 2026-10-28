@@ -95,17 +95,14 @@ let main argv =
 
         [
             "EventTarget"
-            for contract in Metadata.items "contractInterfaces" model do
-                let name = Metadata.text "name" contract
-                let t = contracts.GetType ("Ranvier.Dom." + name)
-
+            for t in contracts.GetTypes () do
                 if
-                    not (isNull t)
-                    && not (contract.GetProperty("mixin").GetBoolean())
+                    t.IsInterface
+                    && t.Namespace = "Ranvier.Dom"
                     && (nativeTypes
                         |> Array.exists (fun native -> native.IsAssignableFrom t))
                 then
-                    name
+                    t.Name
         ]
 
     let input =
