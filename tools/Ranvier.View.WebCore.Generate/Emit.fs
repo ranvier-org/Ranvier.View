@@ -34,7 +34,9 @@ type Input =
         /// <summary>The canonical IDL model, including mixin owners and concrete dispatch targets.</summary>
         Model: JsonElement
         Functions: Abi.Function list
-        /// <summary>Hand-written bodies by key: <c>Interface.member</c>, <c>.get</c>/<c>.set</c> for accessors, <c>&lt;&gt;</c> for generic methods.</summary>
+        /// <summary>
+        /// Hand-written bodies by key: <c>Interface.member</c>, <c>.get</c>/<c>.set</c> for accessors, <c>&lt;&gt;</c> for generic methods.
+        /// </summary>
         Hand: Map<string, string>
         /// <summary>Derived contract interfaces that also need native wrapper classes.</summary>
         Extra: string list
@@ -174,9 +176,16 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
         |> Result.map (fun expression -> $"(match {v} with None -> null | Some item -> [| {expression} |])")
     | "string" when inner = typeof<string> ->
         Ok (
-            if nullable then $"Option.toObj {v}"
-            elif mapping.GetProperty("nullable").GetBoolean() then v
-            else $"(if isNull {v} then \"\" else {v})"
+            if nullable then
+                match fn.Defaults.TryFind p.Name with
+                | Some raw when raw.StartsWith "\"" ->
+                    let fallback = sprintf "%A" (JsonSerializer.Deserialize<string> raw)
+                    $"Option.defaultValue {fallback} {v}"
+                | _ -> $"Option.toObj {v}"
+            elif mapping.GetProperty("nullable").GetBoolean() then
+                v
+            else
+                $"(if isNull {v} then \"\" else {v})"
         )
     | "int" ->
         scalar (fun x ->

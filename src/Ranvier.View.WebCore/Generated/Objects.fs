@@ -56,7 +56,7 @@ and internal CSSStyleDeclarationObject(session: Session, handle: nativeint) =
         member this.getPropertyPriority(property: string) : string =
             Interop.nonNull (Interop.text "CSSStyleDeclaration.getPropertyPriority" (fun buffer capacity length -> NativeDom.rv_dom_css_style_declaration_get_property_priority (this.Handle, (if isNull property then "" else property), buffer, capacity, length)))
         member this.setProperty(property: string, value: string, ?priority: string) : unit =
-            Interop.check "CSSStyleDeclaration.setProperty" (NativeDom.rv_dom_css_style_declaration_set_property (this.Handle, (if isNull property then "" else property), (if isNull value then "" else value), Option.toObj priority))
+            Interop.check "CSSStyleDeclaration.setProperty" (NativeDom.rv_dom_css_style_declaration_set_property (this.Handle, (if isNull property then "" else property), (if isNull value then "" else value), Option.defaultValue "" priority))
         member this.removeProperty(property: string) : string =
             Interop.nonNull (Interop.text "CSSStyleDeclaration.removeProperty" (fun buffer capacity length -> NativeDom.rv_dom_css_style_declaration_remove_property (this.Handle, (if isNull property then "" else property), buffer, capacity, length)))
 
@@ -2768,13 +2768,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let value: string option = unbox args[2]
                     let result =
                         let mutable result = 0
-                        Interop.check "Document.execCommand" (NativeDom.rv_dom_document_exec_command (this.Handle, (if isNull commandId then "" else commandId), (match showUI with Some x -> (if x then 1 else 0) | None -> 0), Option.toObj value, &result))
+                        Interop.check "Document.execCommand" (NativeDom.rv_dom_document_exec_command (this.Handle, (if isNull commandId then "" else commandId), (match showUI with Some x -> (if x then 1 else 0) | None -> 0), Option.defaultValue "" value, &result))
                         result <> 0
                     box result)
                 |> unbox<bool>
             else
                 let mutable result = 0
-                Interop.check "Document.execCommand" (NativeDom.rv_dom_document_exec_command (this.Handle, (if isNull commandId then "" else commandId), (match showUI with Some x -> (if x then 1 else 0) | None -> 0), Option.toObj value, &result))
+                Interop.check "Document.execCommand" (NativeDom.rv_dom_document_exec_command (this.Handle, (if isNull commandId then "" else commandId), (match showUI with Some x -> (if x then 1 else 0) | None -> 0), Option.defaultValue "" value, &result))
                 result <> 0
         member this.queryCommandEnabled(commandId: string) : bool =
             if this.Session.Intercepting then
@@ -5946,13 +5946,11 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "showPopover" [| box options |] (fun args ->
                     let options: Ranvier.Dom.ShowPopoverOptions option = unbox args[0]
                     let result =
-                        use scope = new InputScope()
-                        Interop.check "HTMLElement.showPopover" (NativeDom.rv_dom_html_element_show_popover (this.Handle, (match options with None -> null | Some item -> [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomShowPopoverOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomShowPopoverOptions>()); result.source <- (match (item).source with None -> 0n | Some item -> scope.Pin([| Interop.handle (box (item)) |])); result) |])))
+                        Interop.check "HTMLElement.showPopover" (NativeDom.rv_dom_html_element_show_popover (this.Handle, (match options with None -> null | Some item -> [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomShowPopoverOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomShowPopoverOptions>()); result.source <- (match (item).source with None -> 0n | Some item -> Interop.handle (box (item))); result) |])))
                     box result)
                 |> ignore
             else
-                use scope = new InputScope()
-                Interop.check "HTMLElement.showPopover" (NativeDom.rv_dom_html_element_show_popover (this.Handle, (match options with None -> null | Some item -> [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomShowPopoverOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomShowPopoverOptions>()); result.source <- (match (item).source with None -> 0n | Some item -> scope.Pin([| Interop.handle (box (item)) |])); result) |])))
+                Interop.check "HTMLElement.showPopover" (NativeDom.rv_dom_html_element_show_popover (this.Handle, (match options with None -> null | Some item -> [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomShowPopoverOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomShowPopoverOptions>()); result.source <- (match (item).source with None -> 0n | Some item -> Interop.handle (box (item))); result) |])))
         member this.hidePopover() : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "hidePopover" [|  |] (fun args ->
@@ -5982,14 +5980,14 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     let result =
                         use scope = new InputScope()
                         let mutable result = 0
-                        Interop.check "HTMLElement.togglePopover" (NativeDom.rv_dom_html_element_toggle_popover (this.Handle, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionTogglePopoverOptionsOrBoolean> in result.present <- 1; result.tag <- 1; result.arm0 <- scope.Pin([| (let mutable result = Unchecked.defaultof<NativeDom.RvDomTogglePopoverOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomTogglePopoverOptions>()); result.source <- (match (options).source with None -> 0n | Some item -> scope.Pin([| Interop.handle (box (item)) |])); result.force <- (match (options).force with None -> 0n | Some item -> scope.Pin([| (if item then 1 else 0) |])); result) |]); result) |], &result))
+                        Interop.check "HTMLElement.togglePopover" (NativeDom.rv_dom_html_element_toggle_popover (this.Handle, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionTogglePopoverOptionsOrBoolean> in result.present <- 1; result.tag <- 1; result.arm0 <- scope.Pin([| (let mutable result = Unchecked.defaultof<NativeDom.RvDomTogglePopoverOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomTogglePopoverOptions>()); result.source <- (match (options).source with None -> 0n | Some item -> Interop.handle (box (item))); result.force <- (match (options).force with None -> 0n | Some item -> scope.Pin([| (if item then 1 else 0) |])); result) |]); result) |], &result))
                         result <> 0
                     box result)
                 |> unbox<bool>
             else
                 use scope = new InputScope()
                 let mutable result = 0
-                Interop.check "HTMLElement.togglePopover" (NativeDom.rv_dom_html_element_toggle_popover (this.Handle, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionTogglePopoverOptionsOrBoolean> in result.present <- 1; result.tag <- 1; result.arm0 <- scope.Pin([| (let mutable result = Unchecked.defaultof<NativeDom.RvDomTogglePopoverOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomTogglePopoverOptions>()); result.source <- (match (options).source with None -> 0n | Some item -> scope.Pin([| Interop.handle (box (item)) |])); result.force <- (match (options).force with None -> 0n | Some item -> scope.Pin([| (if item then 1 else 0) |])); result) |]); result) |], &result))
+                Interop.check "HTMLElement.togglePopover" (NativeDom.rv_dom_html_element_toggle_popover (this.Handle, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionTogglePopoverOptionsOrBoolean> in result.present <- 1; result.tag <- 1; result.arm0 <- scope.Pin([| (let mutable result = Unchecked.defaultof<NativeDom.RvDomTogglePopoverOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomTogglePopoverOptions>()); result.source <- (match (options).source with None -> 0n | Some item -> Interop.handle (box (item))); result.force <- (match (options).force with None -> 0n | Some item -> scope.Pin([| (if item then 1 else 0) |])); result) |]); result) |], &result))
                 result <> 0
         member this.togglePopover(options: bool) : bool =
             if this.Session.Intercepting then
