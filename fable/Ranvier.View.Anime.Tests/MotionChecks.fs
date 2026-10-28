@@ -101,7 +101,7 @@ let private mountIn (queued: bool) (graph: Graph) (target: HTMLElement) (view: P
             SynchronousCommits
 
     let mounted =
-        Mounting.mountWith mode graph None report target None (fun context -> Program.run view context.Backend)
+        Mounting.mountWith mode graph None report (unbox target) None (fun context -> Program.run view context.Backend)
 
     mounted.Flush ()
     mounted
@@ -728,7 +728,7 @@ let private appearSkipsHydrated (clock: Clock) =
     loadServed served (Server.render Server.Options.defaults appeared ())
 
     let hydrated =
-        Hydration.hydrate graph None report { IdPrefix = "r"; Strict = true } served appeared ()
+        Hydration.hydrate graph None report { IdPrefix = "r"; Strict = true } (unbox served) appeared ()
 
     advance clock 0.
     let adopted = styleOf (find served "p") "opacity"
@@ -868,7 +868,7 @@ let private named (name: string) : Part<'native, 'inst> =
             fun () -> bothLog.Add (name + " cleanup"))
     )
 
-let private mountBoth (part: Part<HTMLDivElement, unit>) =
+let private mountBoth (part: Part<Ranvier.Dom.HTMLDivElement, unit>) =
     use graph = new Graph ()
     let target = host ()
     let view = Component.template (fun _ () -> ()) (div part { "x" })
@@ -1013,7 +1013,7 @@ let private svgCleanupRestores (clock: Clock) =
         (("1000", true, true), ("M0 0 L10 0", true))
         ((drawing, isNull (attributeOf stroke "pathLength"), isNull (attributeOf stroke "stroke-dasharray")), (first, isNull (attributeOf shape "d")))
 
-let private enteringUnderFlip (enter: Part<HTMLLIElement, unit -> int>) =
+let private enteringUnderFlip (enter: Part<Ranvier.Dom.HTMLLIElement, unit -> int>) =
     Component.template
         (fun _ (state: Rows) -> state)
         (ul (Motion.flip (LayoutParams (duration = 300, ease = Ease.linear))) {
