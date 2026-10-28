@@ -1,7 +1,5 @@
 /// <summary>
-/// Writes <c>src/Ranvier.View.WebCore/Generated/Objects.fs</c> and its report from the <c>Fable.Core.TS.Dom</c> interfaces
-/// and the copied ABI in <c>src/Ranvier.View.WebCore/Interop</c>. Run by hand after a refresh of the interop:
-/// <c>dotnet run --project tools/Ranvier.View.WebCore.Generate</c>.
+/// Writes native wrapper implementations and a mapping report from the canonical IDL model and shared contract assembly.
 /// </summary>
 module Ranvier.View.WebCore.Generate.Program
 
@@ -22,54 +20,19 @@ let private kebab (name: string) =
 let private hand (dom: Type) (header: string) : Map<string, string> =
     let fixedBodies =
         [
-            "EventTarget.addEventListener", "Events.Add(this, ``type``, callback, options)"
-            "EventTarget.removeEventListener", "Events.Remove(this, ``type``, callback, options)"
-            "EventTarget.dispatchEvent", "Events.Dispatch(this, event)"
+            "EventTarget.addEventListener", "Events.Add(this, {0}, {1}, {2})"
+            "EventTarget.removeEventListener", "Events.Remove(this, {0}, {1}, {2})"
+            "EventTarget.dispatchEvent", "Events.Dispatch(this, {0})"
             "Event.currentTarget.get", "Events.CurrentTarget this"
-            "HTMLTemplateElement.content.get", "Templates.Content this"
-            "Element.innerHTML.get", "Templates.InnerHTML this"
-            "Element.innerHTML.set", "Templates.SetInnerHTML(this, value)"
-            "Element.attributes.get", "Attributes.Map this"
-            "Document.createElement", "Documents.CreateElement(this, tagName)"
-            "Document.importNode<>", "Documents.ImportNode(this, node, options)"
-            "ChildNode.after", "Nodes.After(this, nodes)"
-            "ChildNode.before", "Nodes.Before(this, nodes)"
-            "ChildNode.replaceWith", "Nodes.ReplaceWith(this, nodes)"
-            "ParentNode.append", "Nodes.Append(this, nodes)"
-            "ParentNode.prepend", "Nodes.Prepend(this, nodes)"
-            "ParentNode.replaceChildren", "Nodes.ReplaceChildren(this, nodes)"
-            "Node.nodeType.get", "float (Native.rv_node_type this.Handle)"
-            "Node.cloneNode", "Templates.CloneNode(this, subtree)"
-            "HTMLInputElement.setSelectionRange", "Nodes.SetSelectionRange(this, start, ``end``)"
-            "HTMLTextAreaElement.setSelectionRange", "Nodes.SetSelectionRange(this, start, ``end``)"
             "KeyboardEvent.key.get",
             "Events.Init(this, \"key\", fun () -> Interop.text \"KeyboardEvent.key\" (fun b c l -> NativeDom.rv_dom_keyboard_event_get_key (this.Handle, b, c, l)))"
             "InputEvent.data.get",
-            "Events.Init(this, \"data\", fun () -> Option.ofObj (Interop.text \"InputEvent.data\" (fun b c l -> NativeDom.rv_dom_input_event_get_data (this.Handle, b, c, l))))"
+            "Events.Init(this, \"data\", fun () -> Interop.text \"InputEvent.data\" (fun b c l -> NativeDom.rv_dom_input_event_get_data (this.Handle, b, c, l)))"
             "InputEvent.inputType.get",
             "Events.Init(this, \"inputType\", fun () -> Interop.text \"InputEvent.inputType\" (fun b c l -> NativeDom.rv_dom_input_event_get_input_type (this.Handle, b, c, l)))"
         ]
 
-    // The CSS properties of CSSStyleProperties read and write getPropertyValue and setProperty by their CSS name.
-    let styles =
-        [
-            for p in
-                dom
-                    .GetNestedType("CSSStyleProperties")
-                    .GetProperties(
-                        BindingFlags.Public
-                        ||| BindingFlags.Instance
-                        ||| BindingFlags.DeclaredOnly
-                    ) do
-                if
-                    p.PropertyType = typeof<string>
-                    && p.GetIndexParameters().Length = 0
-                then
-                    $"CSSStyleProperties.{p.Name}.get", $"Styles.Get(this, \"{kebab p.Name}\")"
-
-                    if p.CanWrite then
-                        $"CSSStyleProperties.{p.Name}.set", $"Styles.Set(this, \"{kebab p.Name}\", value)"
-        ]
+    let styles = []
 
     // The IDL constants, as the header's RV_DOM_<INTERFACE>_<NAME> literals.
     let constants =
@@ -78,29 +41,7 @@ let private hand (dom: Type) (header: string) : Map<string, string> =
                 $"{m.Groups[2].Value}.{m.Groups[3].Value}.get", $"float NativeDom.{m.Groups[1].Value}"
         ]
 
-    // The interfaces that redeclare EventTarget's listener members with a required listener.
-    let listeners =
-        [
-            for t in dom.GetNestedTypes () do
-                if t.IsInterface && t.Name <> "EventTarget" then
-                    for m in
-                        t.GetMethods (
-                            BindingFlags.Public
-                            ||| BindingFlags.Instance
-                            ||| BindingFlags.DeclaredOnly
-                        ) do
-                        let parameters = m.GetParameters ()
-
-                        if
-                            not m.IsGenericMethodDefinition
-                            && (m.Name = "addEventListener"
-                                || m.Name = "removeEventListener")
-                            && parameters.Length = 3
-                            && parameters[1].Name = "listener"
-                        then
-                            let call = if m.Name = "addEventListener" then "Add" else "Remove"
-                            $"{t.Name}.{m.Name}", $"Events.{call}(this, ``type``, Some listener, options)"
-        ]
+    let listeners = []
 
     Map.ofList (fixedBodies @ styles @ constants @ listeners)
 
@@ -114,50 +55,52 @@ let private kinds =
             "DOMStringMap", "Kind.StringMap"
             "AbstractRange", "Kind.Range"
             "Selection", "Kind.Selection"
+            "DOMSelection", "Kind.Selection"
             "DOMRectReadOnly", "Kind.Rect"
             "NodeList", "Kind.NodeList"
             "HTMLCollection", "Kind.Collection"
             "HTMLCollectionOf`1", "Kind.Collection"
             "ValidityState", "Kind.Validity"
+            "DOMImplementation", "Kind.DOMImplementation"
+            "NamedNodeMap", "Kind.NamedNodeMap"
         ]
 
 [<EntryPoint>]
 let main argv =
-    let interop = Path.Combine (repository, "src", "Ranvier.View.WebCore", "Interop")
-
-    let output =
+    let modelPath, contractPath, interopPath, output =
         match argv with
-        | [| path |] -> path
-        | _ -> Path.Combine (repository, "src", "Ranvier.View.WebCore", "Generated")
+        | [| model; contracts; interop |] ->
+            model, contracts, interop, Path.Combine(repository, "src", "Ranvier.View.WebCore", "Generated")
+        | [| model; contracts; interop; output |] -> model, contracts, interop, output
+        | _ -> invalidArg "argv" "Expected dom-api.json, Ranvier.Dom.dll, Ranvier.WebCore.dll and optional output directory"
 
-    let dom = typeof<Fable.Core.TS.Dom.Node>.DeclaringType
-
-    let functions =
-        Abi.read (File.ReadAllText (Path.Combine (interop, "RanvierWebCoreDom.h"))) (File.ReadAllText (Path.Combine (interop, "NativeDom.fs")))
-
+    let model = Metadata.read modelPath
+    let contracts = Assembly.LoadFrom(Path.GetFullPath contractPath)
+    let dom = contracts.GetType("Ranvier.Dom.Node", true)
+    let interop = Assembly.LoadFrom(Path.GetFullPath interopPath)
+    let nativeDom = interop.GetType("RanvierWebCoreAbi.NativeDom", true)
+    let functions = Abi.readModel nativeDom model
     let tagMap =
-        [
-            for p in dom.GetNestedType("HTMLElementTagNameMap").GetProperties() -> p.Name, p.PropertyType.Name
-        ]
-
+        [ for tag in Metadata.items "tagInterfaces" model ->
+              Metadata.text "namespaceURI" tag, Metadata.text "tag" tag, Metadata.text "interface" tag ]
+    let extra =
+        let nativeTypes =
+            Metadata.items "interfaces" model
+            |> Array.choose (fun row -> contracts.GetType("Ranvier.Dom." + Metadata.text "name" row) |> Option.ofObj)
+        [ "EventTarget"
+          for contract in Metadata.items "contractInterfaces" model do
+              let name = Metadata.text "name" contract
+              let t = contracts.GetType("Ranvier.Dom." + name)
+              if not (isNull t) && not (contract.GetProperty("mixin").GetBoolean())
+                 && (nativeTypes |> Array.exists (fun native -> native.IsAssignableFrom t)) then
+                  name ]
     let input =
-        {
-            Dom = dom
-            Functions = functions
-            Hand = hand dom (File.ReadAllText (Path.Combine (interop, "RanvierWebCoreDom.h")))
-            Extra =
-                [
-                    "EventTarget"
-                    "Comment"
-                    "DocumentType"
-                    "ProcessingInstruction"
-                    "CDATASection"
-                    "NodeListOf`1"
-                    "HTMLCollectionOf`1"
-                    yield! tagMap |> List.map snd
-                ]
-            Kinds = kinds
-        }
+        { Dom = dom
+          Model = model
+          Functions = functions
+          Hand = hand dom ""
+          Extra = extra
+          Kinds = kinds }
 
     let code, entries = Emit.run input tagMap
 
@@ -199,7 +142,7 @@ let main argv =
     let header =
         [
             "// <auto-generated>"
-            "// Written by tools/Ranvier.View.WebCore.Generate from Xantham.Fable.Core.TS and Interop/RanvierWebCoreDom.h; do not edit."
+            "// Written by tools/Ranvier.View.WebCore.Generate from the canonical WebKit IDL model and Ranvier.Dom contracts; do not edit."
             $"// {summary}."
             "// An unmapped member raises NotSupportedException; Generated/report.txt lists each one with the reason."
             "// </auto-generated>"

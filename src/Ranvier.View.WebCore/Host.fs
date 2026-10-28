@@ -6,7 +6,7 @@ open System.Collections.Generic
 open System.Diagnostics
 open System.Runtime.InteropServices
 open System.Threading
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open RanvierWebCoreAbi
 
@@ -16,11 +16,11 @@ module internal Factories =
         match Native.rv_node_type handle with
         | 1 -> Classes.Element (session, handle, Interop.text "Node.nodeName" (fun b c l -> Native.rv_node_get_string (handle, 0, b, c, l)))
         | 3 -> TextObject (session, handle)
-        | 4 -> CDATASectionObject (session, handle)
-        | 7 -> ProcessingInstructionObject (session, handle)
-        | 10 -> DocumentTypeObject (session, handle)
+        | 4 -> CharacterDataObject (session, handle)
+        | 7 -> CharacterDataObject (session, handle)
+        | 10 -> NodeObject (session, handle)
         | 8 -> CommentObject (session, handle)
-        | 9 -> DocumentObject (session, handle)
+        | 9 -> HTMLDocumentObject (session, handle)
         | 11 ->
             let mutable mode = 0
 
@@ -64,7 +64,7 @@ type internal HostContext(posted: ConcurrentQueue<struct (SendOrPostCallback * o
     override this.CreateCopy() = this
 
 /// <summary>
-/// A WebCore page installed as the thread's DOM host: Ranvier's view and <c>Fable.Ranvier</c> run against its document.
+/// A WebCore page installed as the thread's DOM host: Ranvier's view runs against its shared DOM interfaces.
 /// It owns the page's loop (native run-loop cycles, microtasks, timers and animation frames) and takes the app's window
 /// input, paints the page and reports its dirty rectangle.
 /// </summary>
@@ -171,10 +171,10 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             original args
 
     /// <summary>Creates a page of <c>width</c> by <c>height</c> CSS pixels and installs it on the current thread.</summary>
-    /// <exception cref="T:System.InvalidOperationException">The native library predates the generated DOM functions (ABI 20).</exception>
+    /// <exception cref="T:System.InvalidOperationException">The native library predates the shared DOM transport functions (ABI 21).</exception>
     static member Create(width: int, height: int) : WebCoreHost =
-        if Native.rv_abi_has "dom-generated" <> 1 then
-            raise (InvalidOperationException $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks the generated DOM functions (ABI 20)")
+        if Native.rv_abi_version () < 21 || Native.rv_abi_has "dom-generated" <> 1 then
+            raise (InvalidOperationException $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks the shared DOM transport functions (ABI 21)")
 
         let handle = Native.rv_host_create (width, height)
 
@@ -209,7 +209,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         |> Interop.check "rv_host_set_frame_callback"
 
         SynchronizationContext.SetSynchronizationContext context
-        installed <- [ Native.install this; Fable.Ranvier.Global.Install this ]
+        installed <- [ Native.install this ]
 
     /// <summary>The <c>RvHost</c> handle, for ABI calls the host does not wrap.</summary>
     member _.Handle = handle
@@ -592,7 +592,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 if isNull this.DeletedFrom then
                     null
                 else
-                    first.parentNode |> Option.map box |> Option.toObj
+                    box first.parentNode
 
             let last = Interop.handle last
             let mutable cursor = Native.rv_node_relative (Interop.handle first, 3)
@@ -637,12 +637,6 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
                 ValueSome native.Expandos
             | _ -> ValueNone
-
-    interface Fable.Ranvier.IGlobals with
-        member _.Document = document
-
-        member this.QueueMicrotask callback =
-            this.QueueMicrotask callback
 
     interface IDisposable with
         member _.Dispose() =
