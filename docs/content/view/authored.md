@@ -117,5 +117,5 @@ let mounted =
   DOM writes to a microtask.
 
 The library has static child structure only: lists, conditional content, server rendering and
-hydration belong to template components. Its [README](https://github.com/ranvier-org/Ranvier.Views/blob/main/src/Fable.Ranvier/README.md)
+hydration belong to template components. Its [README](https://github.com/ranvier-org/Ranvier.View/blob/main/src/Fable.Ranvier/README.md)
 documents each helper and the scheduling options.

@@ -21,9 +21,9 @@ let theme =
     |> Theme.navbarEnd
         [
             NavbarDynamicWidget (Versions.switcher (Versions.versions versions Versions.defaults))
-            NavbarIcon ("GitHub", "https://github.com/ranvier-org/Ranvier.Views", Icons.github)
+            NavbarIcon ("GitHub", "https://github.com/ranvier-org/Ranvier.View", Icons.github)
         ]
-    |> Theme.editUrl "https://github.com/ranvier-org/Ranvier.Views/edit/main/docs"
+    |> Theme.editUrl "https://github.com/ranvier-org/Ranvier.View/edit/main/docs"
     |> Theme.footer (Html.p [ Html.text "Built with Nacara" ])
 
 /// <summary>Copies the built browser examples into the documentation output under examples/.</summary>
@@ -50,8 +50,8 @@ let private browserExamples =
         }
 
 let site =
-    Site.create "Ranvier.Views"
-    |> Site.baseUrl "/Ranvier.Views/"
+    Site.create "Ranvier.View"
+    |> Site.baseUrl "/Ranvier.View/"
     |> Site.origin "https://ranvier-org.github.io"
     |> Site.output "output"
     |> Site.staticFiles "static"

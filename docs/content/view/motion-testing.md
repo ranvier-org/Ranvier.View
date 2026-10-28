@@ -70,7 +70,7 @@ jsdom has no layout and no Web Animations. `animate`, `Utils.set`, `revert`, ani
 and a layout's `record ()` run as in a browser. `splitText`, `onScroll` and `createDraggable` need
 stubs of `ResizeObserver`, `DOMPoint` and `DOMMatrix`, and a FLIP layout's transforms, which run
 through the Web Animations API, do not move.
-[`examples/Ranvier.Motion/tests/pages.test.mjs`](https://github.com/ranvier-org/Ranvier.Views/blob/main/examples/Ranvier.Motion/tests/pages.test.mjs)
+[`examples/Ranvier.Motion/tests/pages.test.mjs`](https://github.com/ranvier-org/Ranvier.View/blob/main/examples/Ranvier.Motion/tests/pages.test.mjs)
 holds the full set of globals and stubs the example checks run under.
 
 ## Playwright
@@ -89,16 +89,16 @@ await page.clock.runFor(120);   // samples an animation 120 ms in
 `page.clock.runFor (ms)` moves every anime animation by `ms`. The Web Animations API runs on the
 browser's own timeline, outside the page clock: a FLIP test asserts that `element.getAnimations ()`
 holds the layout's animation, calls `finish ()` on it, then asserts the final boxes.
-[`examples/Ranvier.Motion/tests/support.mjs`](https://github.com/ranvier-org/Ranvier.Views/blob/main/examples/Ranvier.Motion/tests/support.mjs)
+[`examples/Ranvier.Motion/tests/support.mjs`](https://github.com/ranvier-org/Ranvier.View/blob/main/examples/Ranvier.Motion/tests/support.mjs)
 holds these steps.
 
 ## Server checks
 
 A portable template with Motion parts renders on .NET with `Server.render`. Comparing that HTML with
 the render of a twin without the parts checks that the parts leave the markup unchanged, as the
-[server checks of the Motion parts](https://github.com/ranvier-org/Ranvier.Views/blob/main/fable/Ranvier.View.Anime.Tests/ServerChecks.fs)
+[server checks of the Motion parts](https://github.com/ranvier-org/Ranvier.View/blob/main/fable/Ranvier.View.Anime.Tests/ServerChecks.fs)
 do under the default `Reject` policy. A page with event handlers renders under `Omit`: the
-[story example's check](https://github.com/ranvier-org/Ranvier.Views/blob/main/examples/Ranvier.Motion/Server/Program.fs)
+[story example's check](https://github.com/ranvier-org/Ranvier.View/blob/main/examples/Ranvier.Motion/Server/Program.fs)
 renders the whole page and its twin with `Server.renderDocument` and fails when the documents differ.
 
 ## Bundle costs

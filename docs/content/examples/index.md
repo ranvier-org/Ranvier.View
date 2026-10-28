@@ -8,9 +8,9 @@ repository and published with the docs on GitHub Pages.
 
 | Example | Try it | What it demonstrates |
 | --- | --- | --- |
-| Playground | [Open playground](/Ranvier.Views/examples/playground/index.html) | Reactive views, collections, boundaries, events and component lifetimes. |
-| Motion | [Open motion examples](/Ranvier.Views/examples/motion/index.html) | Kanban, dashboard, interactive graphs, story, physics and route transitions using anime.js. |
-| Server hydration | [Open hydration snapshot](/Ranvier.Views/examples/hydration/index.html) | F#-rendered HTML and transferred state becoming interactive in the browser. |
+| Playground | [Open playground](/Ranvier.View/examples/playground/index.html) | Reactive views, collections, boundaries, events and component lifetimes. |
+| Motion | [Open motion examples](/Ranvier.View/examples/motion/index.html) | Kanban, dashboard, interactive graphs, story, physics and route transitions using anime.js. |
+| Server hydration | [Open hydration snapshot](/Ranvier.View/examples/hydration/index.html) | F#-rendered HTML and transferred state becoming interactive in the browser. |
 
 Start with the [browser editor](../view/getting-started.md) to edit a standard component and see its
 result. It excludes compiler-plugin extensions such as `Arms.Match`; build those locally.
@@ -21,13 +21,13 @@ The preview starts with HTML and state rendered by .NET during the documentation
 browser hydrates that output and handles counter interactions. GitHub Pages serves the saved
 snapshot; it does not run the F# backend or produce new request-specific data.
 
-<iframe src="/Ranvier.Views/examples/hydration/index.html" title="Ranvier server hydration static snapshot" loading="lazy" style="width:100%;height:480px;border:1px solid currentColor;border-radius:8px"></iframe>
+<iframe src="/Ranvier.View/examples/hydration/index.html" title="Ranvier server hydration static snapshot" loading="lazy" style="width:100%;height:480px;border:1px solid currentColor;border-radius:8px"></iframe>
 
-[Open the snapshot in its own tab](/Ranvier.Views/examples/hydration/index.html) for more room.
+[Open the snapshot in its own tab](/Ranvier.View/examples/hydration/index.html) for more room.
 Click the counter, then reload: it returns to the value saved during the docs build.
 
 To run the real backend locally, follow the
-[hydration example README](https://github.com/ranvier-org/Ranvier.Views/tree/main/examples/Ranvier.Hydration).
+[hydration example README](https://github.com/ranvier-org/Ranvier.View/tree/main/examples/Ranvier.Hydration).
 It renders request-specific initial values on the server, transfers them to the browser and
 hydrates the shared Ranvier component. The README includes the build and start commands and
 URLs for changing those initial values.
@@ -41,12 +41,12 @@ embedded data; [hydration](../server/hydration.md) describes how the browser reu
 
 ## Explore the source
 
-- [Playground](https://github.com/ranvier-org/Ranvier.Views/tree/main/examples/Fable.Ranvier.Playground):
+- [Playground](https://github.com/ranvier-org/Ranvier.View/tree/main/examples/Fable.Ranvier.Playground):
   ordinary panels are rendered on .NET and hydrated; the scheduling panel demonstrates explicit mounting.
-- [Motion](https://github.com/ranvier-org/Ranvier.Views/tree/main/examples/Ranvier.Motion):
+- [Motion](https://github.com/ranvier-org/Ranvier.View/tree/main/examples/Ranvier.Motion):
   shared page declarations generate the documents and browser entries. Read the
   [motion walkthrough](../view/motion-parts.md#examples) for each animation technique.
-- [Server hydration](https://github.com/ranvier-org/Ranvier.Views/tree/main/examples/Ranvier.Hydration):
+- [Server hydration](https://github.com/ranvier-org/Ranvier.View/tree/main/examples/Ranvier.Hydration):
   a shared component and page used by both the local HTTP server and the static exporter.
 
 For console and Avalonia applications, see [application examples](https://ranvier-org.github.io/Ranvier/guide/examples/).

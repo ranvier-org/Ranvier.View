@@ -9,10 +9,10 @@ open FSharp.Compiler.CodeAnalysis
 open FSharp.Compiler.Diagnostics
 open FSharp.Compiler.Text
 
-/// The repository root: the nearest ancestor of the output directory that holds Ranvier.Views.slnx.
+/// The repository root: the nearest ancestor of the output directory that holds Ranvier.View.slnx.
 let repository: string =
     let rec up (directory: DirectoryInfo) =
-        if File.Exists (Path.Combine (directory.FullName, "Ranvier.Views.slnx")) then
+        if File.Exists (Path.Combine (directory.FullName, "Ranvier.View.slnx")) then
             directory.FullName
         else
             up directory.Parent

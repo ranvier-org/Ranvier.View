@@ -5,7 +5,7 @@ title: Page declarations
 `Page.Definition` groups a component, initial props, document shell and optional state codec.
 The server renders it; a generated F# entry hydrates it in the browser.
 
-Try the [hosted browser examples](https://ranvier-org.github.io/Ranvier.Views/examples/), including a hydration snapshot and
+Try the [hosted browser examples](https://ranvier-org.github.io/Ranvier.View/examples/), including a hydration snapshot and
 instructions for running its F# backend locally.
 
 ## Declare the page
@@ -81,7 +81,7 @@ initial route, because fragments are not sent to the server.
 
 The playground uses the same helper: ordinary panels hydrate; the scheduling panel mounts
 explicitly to demonstrate commit modes. Its generated entry also connects the F# test controls.
-See the [playground README](https://github.com/ranvier-org/Ranvier.Views/blob/main/examples/Fable.Ranvier.Playground/README.md)
+See the [playground README](https://github.com/ranvier-org/Ranvier.View/blob/main/examples/Fable.Ranvier.Playground/README.md)
 for commands and manual fixtures.
 
 The [lower-level deployment example](deployment.md) remains useful for applications that manage their own document

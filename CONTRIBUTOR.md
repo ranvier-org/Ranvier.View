@@ -1,4 +1,4 @@
-# Contributing to Ranvier.Views
+# Contributing to Ranvier.View
 
 ## Commit messages
 
@@ -90,7 +90,7 @@ without uploading anything. Maintainers can also publish locally with
    falls back to `GITHUB_TOKEN`; PRs created with that token require a manual CI run
    on the release branch because GitHub suppresses automatic workflow triggers.
 3. Set the Actions variable `NUGET_USER` to your NuGet.org username. Create a NuGet
-   trusted publishing policy for `ranvier-org/Ranvier.Views` and the workflow
+   trusted publishing policy for `ranvier-org/Ranvier.View` and the workflow
    filename `publish.yml`. No long-lived NuGet key is needed in GitHub secrets.
 4. Before the first release, ensure the initial commit is conventional (for example
    `feat: initialise the project`). For an existing package, seed its changelog with

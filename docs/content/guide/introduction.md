@@ -40,7 +40,7 @@ Typed CSS for views lives in [Ranvier.Css](https://ranvier-org.github.io/Ranvier
 
 ## Contributing
 
-Clone [ranvier-org/Ranvier.Views](https://github.com/ranvier-org/Ranvier.Views) and install .NET 10, the .NET 8
+Clone [ranvier-org/Ranvier.View](https://github.com/ranvier-org/Ranvier.View) and install .NET 10, the .NET 8
 runtime and Node.js 26 or later. The same Partas.Build workflows run locally and in CI:
 
 ```bash frame="terminal"
@@ -49,5 +49,5 @@ dotnet fsi build.fsx -- test
 ```
 
 Use `dev local` to work against a sibling Ranvier checkout and `dev packages` to return to pinned NuGet
-dependencies. See [CONTRIBUTOR.md](https://github.com/ranvier-org/Ranvier.Views/blob/main/CONTRIBUTOR.md) for the
+dependencies. See [CONTRIBUTOR.md](https://github.com/ranvier-org/Ranvier.View/blob/main/CONTRIBUTOR.md) for the
 full workflow and release requirements.
