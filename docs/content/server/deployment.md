@@ -84,9 +84,9 @@ The `Ranvier.View` package holds `Server` and every template type; `Ranvier.View
 </Project>
 ```
 
-The checkout's `nuget.config` supplies the temporary Xantham Cloudsmith feed for
-`Xantham.Fable.Core.TS`. Preserve that feed when moving the example outside the checkout; see
-[Installation](../guide/introduction.md#installation).
+Public DOM types come from `Ranvier.Dom`; Fable consumers reference `Fable.Ranvier.Dom` with the
+same assembly identity. The component and renderer packages require no Xantham browser bindings.
+See [Installation](../guide/introduction.md#installation).
 
 ## The page
 

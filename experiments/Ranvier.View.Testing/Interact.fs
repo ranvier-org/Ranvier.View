@@ -8,7 +8,7 @@
 /// </remarks>
 module Ranvier.View.Testing.Interact
 
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 
 let private record (root: Node) (step: string) =
     Conformance.recordIfRunning step (unbox<Element> root).innerHTML

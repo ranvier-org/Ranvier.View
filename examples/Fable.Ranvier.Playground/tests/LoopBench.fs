@@ -1,7 +1,7 @@
 module LoopBench
 
 open global.Ranvier
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Testing
@@ -27,7 +27,7 @@ let keyed (document: Document) (now: unit -> float) =
     let mountMs = now () - started
 
     try
-        if host.querySelectorAll("li").length <> 1000.0 then
+        if host.querySelectorAll("li").length <> 1000u then
             failwith "Expected 1000 rows"
 
         let next = Array.rev items.Peek
@@ -35,10 +35,7 @@ let keyed (document: Document) (now: unit -> float) =
         graph.Run (fun () -> items.Value <- next)
         let reorderMs = now () - started
 
-        if
-            host.querySelector("li").Value.textContent
-            <> "999"
-        then
+        if host.querySelector("li").textContent <> "999" then
             failwith "Reorder failed"
 
         [| mountMs; reorderMs |]

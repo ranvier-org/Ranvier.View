@@ -14,7 +14,19 @@ dotnet fsi tools/Ranvier.Dom.Generate/CheckTypes.fsx
 dotnet fsi tools/Ranvier.Dom.Generate/CheckDocs.fsx
 ```
 
-`GeneratorTests.fsx` asserts over the generator's output and its rejection of corrupt inputs and policies. `CheckTypes.fsx` builds each case's snippet against the playground's `DomTests.fsproj` and requires a clean build or exactly one expected FS error code; arguments after the script path run only the cases whose names contain one of them. `CheckDocs.fsx` compiles every `fsharp` block of the [view sugar docs page](../../src/Ranvier.View/README.md) against the same project, one file per `## ` section with the page's three `open` lines; an optional argument names another Markdown file. Each script exits non-zero and names the failing assertion, cases or compiler errors. `CheckTypes.fsx` takes about four minutes.
+`GeneratorTests.fsx` asserts over the generator's output and its rejection of corrupt inputs and policies. `CheckTypes.fsx` builds common API snippets against the playground's `DomTests.fsproj` and requires a clean build or exactly one expected FS error code. Its browser-only getter/setter case compiles with Fable against the renderer project. Arguments after the script path run only the cases whose names contain one of them. `CheckDocs.fsx` compiles every `fsharp` block of the [view sugar docs page](../../src/Ranvier.View/README.md) against the same project, one file per `## ` section with the page's three `open` lines; an optional argument names another Markdown file. Each script exits non-zero and names the failing assertion, cases or compiler errors. `CheckTypes.fsx` takes about four minutes.
+
+`dom-contracts.json` pins the WebKit-derived HTML/SVG tag identities used by the Twin dispatch
+table. Generation writes `experiments/Ranvier.View.Twin/Generated/TagTypes.fs` from those canonical
+rows and validates the existing 112 HTML authoring tags against them. Native property signatures
+come from the shared `Ranvier.Dom` contracts. Browser-only helpers keep their names behind
+`FABLE_COMPILER` and emit direct JavaScript property access. Their values use shared contracts where
+available, strings for browser scalar enums, nongeneric collections, and `obj` for out-of-scope
+objects such as `Window` and error callbacks. Consumers cast those opaque values to optional
+browser bindings when they need extra members. Renderer packages do not require Xantham bindings.
+Nullable references and integer values in common output follow shared contracts.
+The TypeScript catalogue remains a build-time validation and
+browser-extra input.
 
 The tool's own project restores published Cloudsmith `Xantham.Fable.Core.TS` 0.2.1 and `Xantham.TypeScript.Wire` 0.3.0. Its npm lock pins TypeScript 7.1.0-dev.20260902.1, revision `43a90f4c105bc9db7cb7aa299beddafbabe1d23e`. Generation reads installed packages; it never reads a sibling Xantham checkout. Output is formatted by pinned `Fantomas.Core` 7.0.5 and written as UTF-8 with LF endings. An optional first argument changes the output file, and a second argument selects a directory containing `xantham/catalogue.json` and `xantham/declarations.json.br`, useful for failure tests. An optional third argument, positional after that package root, selects a policy directory holding `attributes.json` and `authoring.json`; it defaults to the tool directory, and `GeneratorTests.fsx` uses it to generate from mutated policies.
 

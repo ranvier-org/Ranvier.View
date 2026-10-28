@@ -10,7 +10,7 @@ let private row =
     Component.define (fun _ (item: unit -> int) -> item) (fun t ->
         t.li
             [|
-                t.Hooks.exit (System.Func<_, _, _, _>(fun (_: unit -> int) (_: Fable.Core.TS.Dom.HTMLLIElement) _ -> ignore))
+                t.Hooks.exit (System.Func<_, _, _, _>(fun (_: unit -> int) (_: Ranvier.Dom.HTMLLIElement) _ -> ignore))
             |]
             [| t.text (fun item -> string (item ())) |])
 
@@ -54,7 +54,7 @@ let tests =
                     let button = Ranvier.View.Testing.Query.get session.Host "button"
                     let first, finish = Inspect.enclosingInstanceOf button |> Option.get
                     Expect.equal first.nodeName "P" "the child fragment starts at its first root"
-                    Expect.equal finish.textContent (Some "after") "the child fragment ends before its following sibling"
+                    Expect.equal finish.textContent ("after") "the child fragment ends before its following sibling"
                     (session :> System.IDisposable).Dispose()
                     Expect.isNone (Inspect.enclosingInstanceOf button) "disposed ranges are removed"
 

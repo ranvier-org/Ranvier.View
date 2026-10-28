@@ -159,7 +159,7 @@ let property native name =
     |> Array.tryFind (fun p -> p.Name = name)
     |> Option.defaultWith (fun () -> fail $"Native property missing: {native.Name}.{name}")
 
-let typeName (declarations: Declaration array) (native: Type) =
+let browserTypeName (declarations: Declaration array) (native: Type) =
     let rec render (native: Type) =
         if native = typeof<string> then
             "string"
@@ -188,7 +188,7 @@ let typeName (declarations: Declaration array) (native: Type) =
                 |> Option.defaultWith (fun () -> fail $"Unsupported native type shape: {native}")
 
             require (nativeType declaration = definition) $"Native representation mismatch: {name}"
-            let basic = "Dom." + definition.Name.Split('`')[0]
+            let basic = "BrowserDom." + definition.Name.Split('`')[0]
 
             if native.IsGenericType then
                 basic
@@ -201,6 +201,41 @@ let typeName (declarations: Declaration array) (native: Type) =
                 basic
 
     render native
+
+let sharedAssembly = typeof<global.Ranvier.Dom.HTMLElement>.Assembly
+
+let rec typeName (declarations: Declaration array) (native: Type) =
+    if
+        native.IsGenericType
+        && native.GetGenericTypeDefinition () = typedefof<option<_>>
+    then
+        typeName declarations (native.GetGenericArguments()[0])
+        + " option"
+    elif native.Assembly = nativeAssembly then
+        RanvierSharedDomTypes.contract sharedAssembly native
+        |> RanvierSharedDomTypes.render sharedAssembly
+    else
+        RanvierSharedDomTypes.render sharedAssembly native
+
+/// <summary>A generated property signature and its browser projection.</summary>
+type PropertyBinding =
+    {
+        Owner: string
+        ValueType: string
+        BrowserOnly: bool
+    }
+
+let propertyRead (binding: PropertyBinding) name =
+    if binding.BrowserOnly then
+        $"Native.expando (box node) \"{name}\""
+    else
+        $"node.``{name}``"
+
+let propertyWrite (binding: PropertyBinding) name =
+    if binding.BrowserOnly then
+        $"Native.setExpando (box node) \"{name}\" value"
+    else
+        $"node.``{name}`` <- value"
 
 let generate compilerRoot policyRoot packageRoot output (templateOutput: string option) =
     let declarations, sources = loadCatalogue packageRoot
@@ -349,7 +384,7 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
     emit "[<RequireQualifiedAccess>]"
     emit "module Ranvier.View.Dom.Generated.Html"
     emit ""
-    emit "open Fable.Core.TS"
+    emit "open global.Ranvier"
     emit "open Ranvier.View.Representation"
     emit "open Ranvier.View"
     emit ""
@@ -366,6 +401,9 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
         System.Collections.Generic.SortedDictionary<string, ResizeArray<string * string * string>>()
 
     let templatePropertyOwners = System.Collections.Generic.Dictionary<string, Type>()
+
+    let propertyBindings =
+        System.Collections.Generic.Dictionary<string * string, PropertyBinding>()
 
     let templateGroupEvents =
         System.Collections.Generic.SortedDictionary<string, System.Collections.Generic.SortedDictionary<string, string * string>>()
@@ -449,7 +487,7 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
 
     let tryType native =
         try
-            Some (typeName declarations native)
+            Some (browserTypeName declarations native)
         with :? InvalidOperationException ->
             None
 
@@ -457,6 +495,13 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
         native = typeof<string>
         || native = typeof<bool>
         || native = typeof<float>
+        || native = typeof<float32>
+        || native = typeof<int16>
+        || native = typeof<uint16>
+        || native = typeof<int32>
+        || native = typeof<uint32>
+        || native = typeof<int64>
+        || native = typeof<uint64>
         || (native.IsGenericType
             && native.GetGenericTypeDefinition () = typedefof<option<_>>
             && primitive (native.GetGenericArguments()[0]))
@@ -582,22 +627,80 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
 
                 match tryType nativeProperty.PropertyType with
                 | None -> omissions.Add (tag, memberName, $"unsupported type: {nativeProperty.PropertyType}")
-                | Some valueType ->
+                | Some _ ->
                     let owner = nativeProperty.DeclaringType
-                    let ownerName = typeName declarations owner
+                    let ownerKey = "Dom." + owner.Name
+                    let sharedNative = RanvierSharedDomTypes.contract sharedAssembly native
+
+                    let sharedProperty =
+                        allProperties sharedNative
+                        |> Array.tryFind (fun candidate -> candidate.Name = memberName)
+
+                    let projected =
+                        sharedProperty
+                        |> Option.bind (fun candidate ->
+                            try
+                                Some (candidate, RanvierSharedDomTypes.render sharedAssembly candidate.PropertyType)
+                            with :? InvalidOperationException ->
+                                None)
+
+                    let binding =
+                        match projected with
+                        | Some (candidate, valueType) ->
+                            let ownerName = RanvierSharedDomTypes.render sharedAssembly candidate.DeclaringType
+
+                            {
+                                Owner = ownerName
+                                ValueType = valueType
+                                BrowserOnly = false
+                            }
+                        | None ->
+                            let constraintType =
+                                try
+                                    RanvierSharedDomTypes.contract sharedAssembly owner
+                                with :? TypeLoadException ->
+                                    if owner.IsAssignableFrom typeof<Dom.HTMLElement> then
+                                        RanvierSharedDomTypes.contract sharedAssembly typeof<Dom.HTMLElement>
+                                    else
+                                        sharedNative
+
+                            {
+                                Owner = RanvierSharedDomTypes.render sharedAssembly constraintType
+                                ValueType = RanvierSharedDomTypes.browserValue sharedAssembly nativeProperty.PropertyType
+                                BrowserOnly = true
+                            }
+
+                    let ownerName, valueType = binding.Owner, binding.ValueType
+                    let readAccess = propertyRead binding memberName
+                    let writeAccess = propertyWrite binding memberName
+                    propertyBindings[(ownerKey, memberName)] <- binding
+
+                    let valueShape =
+                        projected
+                        |> Option.map (fun (candidate, _) -> candidate.PropertyType)
+                        |> Option.defaultValue nativeProperty.PropertyType
+
+                    let canWrite =
+                        projected
+                        |> Option.map (fun (candidate, _) -> candidate.CanWrite)
+                        |> Option.defaultValue nativeProperty.CanWrite
 
                     let canSet =
                         not (readonly memberInfo)
-                        && nativeProperty.CanWrite
+                        && canWrite
                         && not (excluded.Contains memberName)
-                        && primitive nativeProperty.PropertyType
+                        && primitive valueShape
 
                     if emittedProperties.Add (owner.FullName + "." + memberName) then
                         if not (sharedProperties.ContainsKey owner.Name) then
                             sharedProperties.Add (owner.Name, ResizeArray<string>())
 
                         let shared = sharedProperties[owner.Name]
-                        shared.Add $"        let ``{memberName}`` (node: #{ownerName}) : {valueType} = node.``{memberName}``"
+
+                        if binding.BrowserOnly then
+                            shared.Add "#if FABLE_COMPILER"
+
+                        shared.Add $"        let ``{memberName}`` (node: #{ownerName}) : {valueType} = {readAccess}"
 
                         if canSet then
                             if childReplacingSetters.Contains (owner.Name + "." + memberName) then
@@ -607,19 +710,20 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
                                     templateProperties.Add (owner.Name, ResizeArray ())
                                     templatePropertyOwners.Add (owner.Name, owner)
 
-                                templateProperties[owner.Name].Add(memberName, ownerName, valueType)
+                                templateProperties[owner.Name].Add(memberName, ownerKey, valueType)
 
                             shared.Add
                                 $"        let {memberName}Static<'native when 'native :> {ownerName}> (value: {valueType}) : Typed.Modifier<'native> ="
 
-                            shared.Add
-                                $"            Typed.staticProperty (fun (node: 'native) value -> (node :> {ownerName}).``{memberName}`` <- value) value"
+                            shared.Add $"            Typed.staticProperty (fun (node: 'native) value -> {writeAccess}) value"
 
                             shared.Add
                                 $"        let {memberName}Reactive<'native when 'native :> {ownerName}> (read: unit -> {valueType}) : Typed.Modifier<'native> ="
 
-                            shared.Add
-                                $"            Typed.reactiveProperty (fun (node: 'native) value -> (node :> {ownerName}).``{memberName}`` <- value) read"
+                            shared.Add $"            Typed.reactiveProperty (fun (node: 'native) value -> {writeAccess}) read"
+
+                        if binding.BrowserOnly then
+                            shared.Add "#endif"
 
                         shared.Add ""
 
@@ -633,14 +737,21 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
 
                     if expose then
                         getters <- getters + 1
-                        emit $"    let ``{memberName}`` (node: {name}) : {valueType} = node.``{memberName}``"
+
+                        if binding.BrowserOnly then
+                            emit "#if FABLE_COMPILER"
+
+                        emit $"    let ``{memberName}`` (node: {name}) : {valueType} = {readAccess}"
 
                         if canSet then
                             setters <- setters + 1
                             emit $"    let {memberName}Static (value: {valueType}) : Typed.Modifier<{name}> ="
-                            emit $"        Typed.staticProperty (fun (node: {name}) value -> node.``{memberName}`` <- value) value"
+                            emit $"        Typed.staticProperty (fun (node: {name}) value -> {writeAccess}) value"
                             emit $"    let {memberName}Reactive (read: unit -> {valueType}) : Typed.Modifier<{name}> ="
-                            emit $"        Typed.reactiveProperty (fun (node: {name}) value -> node.``{memberName}`` <- value) read"
+                            emit $"        Typed.reactiveProperty (fun (node: {name}) value -> {writeAccess}) read"
+
+                        if binding.BrowserOnly then
+                            emit "#endif"
 
                         emit ""
 
@@ -736,8 +847,19 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
     shared.Add "module Properties ="
 
     for owner in sharedProperties do
+        let browserOnly =
+            propertyBindings
+            |> Seq.filter (fun pair -> fst pair.Key = "Dom." + owner.Key)
+            |> Seq.forall (fun pair -> pair.Value.BrowserOnly)
+
+        if browserOnly then
+            shared.Add "#if FABLE_COMPILER"
+
         shared.Add $"    module {owner.Key} ="
         shared.AddRange owner.Value
+
+        if browserOnly then
+            shared.Add "#endif"
 
     shared.Add "module Events ="
 
@@ -993,7 +1115,11 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
 
             let owner = nativeProperty.DeclaringType
             require (emittedProperties.Contains (owner.FullName + "." + memberName)) "Authoring property has no generated binding"
-            let valueType = typeName declarations nativeProperty.PropertyType
+            let binding = propertyBindings[("Dom." + owner.Name, memberName)]
+            let valueType = binding.ValueType
+
+            if binding.BrowserOnly then
+                emit "#if FABLE_COMPILER"
 
             overloads
                 "            "
@@ -1002,6 +1128,9 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
                 valueType
                 $"Properties.{owner.Name}.{memberName}Static value"
                 $"Properties.{owner.Name}.{memberName}Reactive read"
+
+            if binding.BrowserOnly then
+                emit "#endif"
 
             authoringCount.Value <- authoringCount.Value + 1
 
@@ -1071,7 +1200,7 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
     tEmit "[<AutoOpen>]"
     tEmit "module Ranvier.View.HtmlTemplate"
     tEmit ""
-    tEmit "open Fable.Core.TS"
+    tEmit "open global.Ranvier"
     tEmit "open Ranvier.View.Representation"
     tEmit "open Ranvier.View.Template"
     tEmit ""
@@ -1317,11 +1446,13 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
     let usedPortable = Collections.Generic.HashSet<string * string>()
 
     let propertyMembers (memberName: string) (ownerName: string) (valueType: string) =
+        let binding = propertyBindings[(ownerName, memberName)]
+
         let signature argument =
-            $"    member _.``{memberName}``<'native when 'native :> {ownerName}>({argument}) : Part<'native, 'inst> ="
+            $"    member _.``{memberName}``<'native when 'native :> {binding.Owner}>({argument}) : Part<'native, 'inst> ="
 
         let write =
-            $"(fun (node: 'native) (value: {valueType}) -> (node :> {ownerName}).``{memberName}`` <- value)"
+            $"(fun (node: 'native) (value: {valueType}) -> {propertyWrite binding memberName})"
 
         let html =
             match portableLookup.TryGetValue ((memberName, ownerName)) with
@@ -1329,11 +1460,20 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
                 usedPortable.Add ((memberName, ownerName))
                 |> ignore
 
+                let serialisation =
+                    if valueType = "string" then
+                        serialisation.Replace ("PropertyHtml.optional", "PropertyHtml.text")
+                    else
+                        serialisation
+
                 if serialisation.Contains ' ' then
                     $"({serialisation})"
                 else
                     serialisation
             | false, _ -> "PropertyHtml.browserOnly"
+
+        if binding.BrowserOnly then
+            tEmit "#if FABLE_COMPILER"
 
         tEmit (signature $"value: {valueType}")
         tEmit $"        TemplateParts.property {html} {write} value"
@@ -1341,6 +1481,10 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
         tEmit $"        TemplateParts.readProperty {html} {write} read"
         tEmit (signature $"source: Source<'inst, {valueType}>")
         tEmit $"        TemplateParts.sourceProperty {html} {write} source"
+
+        if binding.BrowserOnly then
+            tEmit "#endif"
+
         tEmit ""
 
     let flatProperties =
@@ -1366,6 +1510,13 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
     for group, owner in propertyGroups do
         let entries = templateProperties[owner]
 
+        let browserOnly =
+            entries
+            |> Seq.forall (fun (memberName, ownerName, _) -> propertyBindings[(ownerName, memberName)].BrowserOnly)
+
+        if browserOnly then
+            tEmit "#if FABLE_COMPILER"
+
         emitGroup
             "Properties"
             group
@@ -1374,6 +1525,9 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
             (fun () ->
                 for memberName, ownerName, valueType in entries do
                     propertyMembers memberName ownerName valueType)
+
+        if browserOnly then
+            tEmit "#endif"
 
     for memberName, ownerName, _ in portableProperties do
         if not (usedPortable.Contains ((memberName, ownerName))) then
@@ -1439,7 +1593,7 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
                 "namespace Ranvier.View.Sugar"
                 ""
                 "open System"
-                "open Fable.Core.TS"
+                "open global.Ranvier"
                 "open Ranvier.View.Representation"
                 "open Ranvier.View.Template"
                 ""
@@ -1558,7 +1712,22 @@ let main args =
             else
                 None
 
+        use tagMetadata =
+            JsonDocument.Parse (File.ReadAllBytes (Path.Combine (AppContext.BaseDirectory, "dom-contracts.json")))
+
+        require (str "sourceCommit" tagMetadata.RootElement = "f38abd19ae54812df2a10504a439d852f0f8486b") "Native DOM metadata commit mismatch"
+        RanvierHtmlTagMetadata.validate nativeAssembly sharedAssembly tagMetadata.RootElement
+        let tagContents = RanvierHtmlTagMetadata.render tagMetadata.RootElement
+
         generate compilerRoot policyRoot packageRoot output templateOutput
+
+        let tagOutput =
+            if args.Length = 0 then
+                Path.GetFullPath (Path.Combine (__SOURCE_DIRECTORY__, "../../experiments/Ranvier.View.Twin/Generated/TagTypes.fs"))
+            else
+                Path.ChangeExtension (output, ".TagTypes.fs")
+
+        File.WriteAllText (tagOutput, tagContents, UTF8Encoding (false))
         0
     with error ->
         eprintfn "%s" error.Message

@@ -2,6 +2,8 @@
 module Ranvier.View.WebCore.Generate.Abi
 
 open System.Text.RegularExpressions
+open System.Text.Json
+open System
 
 /// <summary>A parameter: its C type from the header, its name, and its F# type in <c>NativeDom.fs</c>.</summary>
 type Parameter =
@@ -19,10 +21,14 @@ type Function =
     {
         Name: string
         Interface: string
+        /// <summary>The shared interface or mixin declaring the member.</summary>
+        ContractOwner: string
         Member: string
         Kind: string
         Parameters: Parameter list
         Defaults: Map<string, string>
+        /// <summary>The canonical IDL and transport mapping; undefined for the legacy header reader.</summary>
+        Descriptor: JsonElement
     }
 
     /// <summary>The parameters after <c>target</c> that carry IDL arguments.</summary>
@@ -110,9 +116,127 @@ let read (header: string) (nativeDom: string) : Function list =
                 {
                     Name = name
                     Interface = head.Groups["i"].Value
+                    ContractOwner = head.Groups["i"].Value
                     Member = head.Groups["m"].Value
                     Kind = kind
                     Parameters = parameters
                     Defaults = defaults
+                    Descriptor = Unchecked.defaultof<_>
                 }
+    ]
+
+let private scalarNames =
+    Map.ofList
+        [
+            "System.SByte", "sbyte"
+            "System.Byte", "byte"
+            "System.Int16", "int16"
+            "System.UInt16", "uint16"
+            "System.Int32", "int"
+            "System.UInt32", "uint32"
+            "System.Int64", "int64"
+            "System.UInt64", "uint64"
+            "System.Single", "float32"
+            "System.Double", "float"
+            "System.IntPtr", "nativeint"
+            "System.String", "string"
+        ]
+
+let rec private nativeParameter (parameterType: Type) =
+    if parameterType.IsByRef then
+        nativeParameter (parameterType.GetElementType ())
+        + "&"
+    elif parameterType.IsArray then
+        nativeParameter (parameterType.GetElementType ())
+        + "[]"
+    else
+        scalarNames.TryFind parameterType.FullName
+        |> Option.defaultValue parameterType.Name
+
+let private constantName (value: string) =
+    Regex.Replace (value, "([a-z0-9])([A-Z])", "$1_$2")
+    |> fun text -> Regex.Replace(text, "([A-Z])([A-Z][a-z])", "$1_$2").ToUpperInvariant()
+
+let private validateUnionTags (nativeDom: Type) (model: JsonElement) =
+    for container in Metadata.items "containers" model do
+        let mapping = container.GetProperty "mapping"
+
+        if Metadata.text "kind" mapping = "union" then
+            let prefix =
+                "RV_DOM_"
+                + constantName ((Metadata.text "ctype" mapping).Substring("RvDom".Length))
+
+            for index, arm in Metadata.items "subtypes" mapping |> Array.indexed do
+                let suffix =
+                    match Metadata.text "kind" arm with
+                    | "bool" -> "BOOL"
+                    | "number" -> "NUMBER"
+                    | "string" -> "STRING"
+                    | _ -> Metadata.text "interface" arm |> constantName
+
+                let fieldName = prefix + "_" + suffix
+                let field = nativeDom.GetField fieldName
+
+                if
+                    isNull field
+                    || not field.IsLiteral
+                    || unbox<int>(field.GetRawConstantValue ())
+                       <> index + 1
+                then
+                    invalidArg "nativeDom" $"Canonical managed union discriminant differs for {fieldName}"
+
+/// <summary>Reads native declarations and their IDL mappings from the canonical transport model.</summary>
+let readModel (nativeDom: Type) (model: JsonElement) : Function list =
+    validateUnionTags nativeDom model
+
+    [
+        for fn in Metadata.items "functions" model do
+            let functionName = Metadata.text "function" fn
+            let declaration = nativeDom.GetMethod functionName
+
+            if isNull declaration then
+                invalidArg "nativeDom" $"Canonical managed interop lacks {functionName}"
+
+            let managed = declaration.GetParameters ()
+            let native = Metadata.items "parameters" fn
+
+            if managed.Length <> native.Length then
+                invalidArg "nativeDom" $"Managed/native parameter count differs for {functionName}"
+
+            let parameters =
+                [
+                    for index, parameter in Array.indexed native do
+                        let ctype = Metadata.text "ctype" parameter
+
+                        {
+                            C = ctype
+                            Name = Metadata.text "name" parameter
+                            FSharp = nativeParameter managed[index].ParameterType
+                        }
+                ]
+
+            let defaults =
+                [
+                    for index, argument in Metadata.items "arguments" fn |> Array.indexed do
+                        let fallback = argument.GetProperty "default"
+
+                        if fallback.ValueKind <> JsonValueKind.Null then
+                            parameters[index + 1].Name, fallback.GetString ()
+                ]
+                |> Map.ofList
+
+            {
+                Name = Metadata.text "function" fn
+                Interface = Metadata.text "interface" fn
+                ContractOwner = Metadata.text "contractOwner" fn
+                Member = Metadata.text "member" fn
+                Kind =
+                    match Metadata.text "kind" fn with
+                    | "getter" -> "get"
+                    | "setter" -> "set"
+                    | _ -> "op"
+                Parameters = parameters
+                Defaults = defaults
+                Descriptor = fn
+            }
     ]

@@ -11,6 +11,32 @@ let tests =
     testList
         "Native"
         [
+            testCase "portable numeric properties serialize signed and unsigned DOM integers"
+            <| fun () ->
+                let serialize value =
+                    match Template.PropertyHtml.number "tabindex" with
+                    | Template.AsAttribute (_, write) -> write.Invoke value
+                    | _ -> failwith "Expected attribute serialization"
+
+                Expect.equal (serialize (box 3u)) (Some "3") "unsigned value"
+                Expect.equal (serialize (box -2)) (Some "-2") "signed value"
+                Expect.equal (serialize (box 1.25)) (Some "1.25") "fractional value"
+
+            testCase "the shared runtime restores its document after a nested host closes"
+            <| fun () ->
+                let outer = TwinHost.Create ()
+                use _ = outer.Document
+                let expected = outer.Document.Native :?> Ranvier.Dom.Document
+                Expect.isTrue (obj.ReferenceEquals (Dom.DomRuntime.document (), expected)) "outer document"
+
+                do
+                    let inner = TwinHost.Create ()
+                    use _ = inner.Document
+                    Expect.isTrue (obj.ReferenceEquals (Dom.DomRuntime.document (), inner.Document.Native)) "inner document"
+
+                Expect.isTrue (obj.ReferenceEquals (Dom.DomRuntime.document (), expected)) "outer document restored"
+                Expect.isTrue (obj.ReferenceEquals (Fable.Ranvier.Global.document, expected)) "optional Fable globals share the installed host"
+
             testCase "replaceWith puts the next element in the node's place"
             <| fun () ->
                 use document = new Ranvier.View.Twin.TwinDocument ()
@@ -21,7 +47,7 @@ let tests =
                 |> ignore
 
                 let next = document.CreateElement "b"
-                Native.replaceWith (first.Native :?> Fable.Core.TS.Dom.Element) (next.Native :?> Fable.Core.TS.Dom.Element)
+                Native.replaceWith (first.Native :?> Ranvier.Dom.Element) (next.Native :?> Ranvier.Dom.Element)
                 Expect.equal (Ranvier.View.Twin.Html.inner document.Head) "<b></b><i></i>" "replaced in place"
 
             testCase "defaultValueOf reads an input's and a textarea's default value"

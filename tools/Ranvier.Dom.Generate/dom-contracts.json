@@ -1,0 +1,1362 @@
+{
+  "sourceCommit": "f38abd19ae54812df2a10504a439d852f0f8486b",
+  "sourceSha256": "6e2a2fca3a0d5a0e51de09f0b5112a50fafd85844b2cad64614e59f071ae6bd5",
+  "tagInterfaces": [
+    {
+      "tag": "a",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLAnchorElement",
+      "implementationInterface": "HTMLAnchorElement"
+    },
+    {
+      "tag": "abbr",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "acronym",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "address",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "applet",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLUnknownElement",
+      "implementationInterface": "HTMLUnknownElement"
+    },
+    {
+      "tag": "area",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLAreaElement",
+      "implementationInterface": "HTMLAreaElement"
+    },
+    {
+      "tag": "article",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLArticleElement"
+    },
+    {
+      "tag": "aside",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "attachment",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLAttachmentElement",
+      "implementationInterface": "HTMLAttachmentElement"
+    },
+    {
+      "tag": "audio",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLAudioElement",
+      "implementationInterface": "HTMLAudioElement"
+    },
+    {
+      "tag": "b",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "base",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLBaseElement",
+      "implementationInterface": "HTMLBaseElement"
+    },
+    {
+      "tag": "basefont",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "bdi",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLBDIElement"
+    },
+    {
+      "tag": "bdo",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "bgsound",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLUnknownElement",
+      "implementationInterface": "HTMLUnknownElement"
+    },
+    {
+      "tag": "big",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "blockquote",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLQuoteElement",
+      "implementationInterface": "HTMLQuoteElement"
+    },
+    {
+      "tag": "body",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLBodyElement",
+      "implementationInterface": "HTMLBodyElement"
+    },
+    {
+      "tag": "br",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLBRElement",
+      "implementationInterface": "HTMLBRElement"
+    },
+    {
+      "tag": "button",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLButtonElement",
+      "implementationInterface": "HTMLButtonElement"
+    },
+    {
+      "tag": "canvas",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLCanvasElement",
+      "implementationInterface": "HTMLCanvasElement"
+    },
+    {
+      "tag": "caption",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTableCaptionElement",
+      "implementationInterface": "HTMLTableCaptionElement"
+    },
+    {
+      "tag": "center",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "cite",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "code",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "col",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTableColElement",
+      "implementationInterface": "HTMLTableColElement"
+    },
+    {
+      "tag": "colgroup",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTableColElement",
+      "implementationInterface": "HTMLTableColElement"
+    },
+    {
+      "tag": "data",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLDataElement",
+      "implementationInterface": "HTMLDataElement"
+    },
+    {
+      "tag": "datalist",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLDataListElement",
+      "implementationInterface": "HTMLDataListElement"
+    },
+    {
+      "tag": "dd",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "del",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLModElement",
+      "implementationInterface": "HTMLModElement"
+    },
+    {
+      "tag": "details",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLDetailsElement",
+      "implementationInterface": "HTMLDetailsElement"
+    },
+    {
+      "tag": "dfn",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "dialog",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLDialogElement",
+      "implementationInterface": "HTMLDialogElement"
+    },
+    {
+      "tag": "dir",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLDirectoryElement",
+      "implementationInterface": "HTMLDirectoryElement"
+    },
+    {
+      "tag": "div",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLDivElement",
+      "implementationInterface": "HTMLDivElement"
+    },
+    {
+      "tag": "dl",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLDListElement",
+      "implementationInterface": "HTMLDListElement"
+    },
+    {
+      "tag": "dt",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "em",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "embed",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLEmbedElement",
+      "implementationInterface": "HTMLEmbedElement"
+    },
+    {
+      "tag": "fieldset",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLFieldSetElement",
+      "implementationInterface": "HTMLFieldSetElement"
+    },
+    {
+      "tag": "figcaption",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "figure",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "font",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLFontElement",
+      "implementationInterface": "HTMLFontElement"
+    },
+    {
+      "tag": "footer",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "form",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLFormElement",
+      "implementationInterface": "HTMLFormElement"
+    },
+    {
+      "tag": "frame",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLFrameElement",
+      "implementationInterface": "HTMLFrameElement"
+    },
+    {
+      "tag": "frameset",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLFrameSetElement",
+      "implementationInterface": "HTMLFrameSetElement"
+    },
+    {
+      "tag": "h1",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLHeadingElement",
+      "implementationInterface": "HTMLHeadingElement"
+    },
+    {
+      "tag": "h2",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLHeadingElement",
+      "implementationInterface": "HTMLHeadingElement"
+    },
+    {
+      "tag": "h3",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLHeadingElement",
+      "implementationInterface": "HTMLHeadingElement"
+    },
+    {
+      "tag": "h4",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLHeadingElement",
+      "implementationInterface": "HTMLHeadingElement"
+    },
+    {
+      "tag": "h5",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLHeadingElement",
+      "implementationInterface": "HTMLHeadingElement"
+    },
+    {
+      "tag": "h6",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLHeadingElement",
+      "implementationInterface": "HTMLHeadingElement"
+    },
+    {
+      "tag": "head",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLHeadElement",
+      "implementationInterface": "HTMLHeadElement"
+    },
+    {
+      "tag": "header",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "hgroup",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "hr",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLHRElement",
+      "implementationInterface": "HTMLHRElement"
+    },
+    {
+      "tag": "html",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLHtmlElement",
+      "implementationInterface": "HTMLHtmlElement"
+    },
+    {
+      "tag": "i",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "iframe",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLIFrameElement",
+      "implementationInterface": "HTMLIFrameElement"
+    },
+    {
+      "tag": "image",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLUnknownElement",
+      "implementationInterface": "HTMLUnknownElement"
+    },
+    {
+      "tag": "img",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLImageElement",
+      "implementationInterface": "HTMLImageElement"
+    },
+    {
+      "tag": "input",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLInputElement",
+      "implementationInterface": "HTMLInputElement"
+    },
+    {
+      "tag": "ins",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLModElement",
+      "implementationInterface": "HTMLModElement"
+    },
+    {
+      "tag": "kbd",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "keygen",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLUnknownElement",
+      "implementationInterface": "HTMLUnknownElement"
+    },
+    {
+      "tag": "label",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLLabelElement",
+      "implementationInterface": "HTMLLabelElement"
+    },
+    {
+      "tag": "legend",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLLegendElement",
+      "implementationInterface": "HTMLLegendElement"
+    },
+    {
+      "tag": "li",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLLIElement",
+      "implementationInterface": "HTMLLIElement"
+    },
+    {
+      "tag": "link",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLLinkElement",
+      "implementationInterface": "HTMLLinkElement"
+    },
+    {
+      "tag": "listing",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLPreElement",
+      "implementationInterface": "HTMLPreElement"
+    },
+    {
+      "tag": "main",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "map",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLMapElement",
+      "implementationInterface": "HTMLMapElement"
+    },
+    {
+      "tag": "mark",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "marquee",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLMarqueeElement",
+      "implementationInterface": "HTMLMarqueeElement"
+    },
+    {
+      "tag": "menu",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLMenuElement",
+      "implementationInterface": "HTMLMenuElement"
+    },
+    {
+      "tag": "meta",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLMetaElement",
+      "implementationInterface": "HTMLMetaElement"
+    },
+    {
+      "tag": "meter",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLMeterElement",
+      "implementationInterface": "HTMLMeterElement"
+    },
+    {
+      "tag": "model",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLModelElement",
+      "implementationInterface": "HTMLModelElement"
+    },
+    {
+      "tag": "nav",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "nobr",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "noembed",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "noframes",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "object",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLObjectElement",
+      "implementationInterface": "HTMLObjectElement"
+    },
+    {
+      "tag": "ol",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLOListElement",
+      "implementationInterface": "HTMLOListElement"
+    },
+    {
+      "tag": "optgroup",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLOptGroupElement",
+      "implementationInterface": "HTMLOptGroupElement"
+    },
+    {
+      "tag": "option",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLOptionElement",
+      "implementationInterface": "HTMLOptionElement"
+    },
+    {
+      "tag": "output",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLOutputElement",
+      "implementationInterface": "HTMLOutputElement"
+    },
+    {
+      "tag": "p",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLParagraphElement",
+      "implementationInterface": "HTMLParagraphElement"
+    },
+    {
+      "tag": "param",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLParamElement",
+      "implementationInterface": "HTMLParamElement"
+    },
+    {
+      "tag": "picture",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLPictureElement",
+      "implementationInterface": "HTMLPictureElement"
+    },
+    {
+      "tag": "plaintext",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "pre",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLPreElement",
+      "implementationInterface": "HTMLPreElement"
+    },
+    {
+      "tag": "progress",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLProgressElement",
+      "implementationInterface": "HTMLProgressElement"
+    },
+    {
+      "tag": "q",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLQuoteElement",
+      "implementationInterface": "HTMLQuoteElement"
+    },
+    {
+      "tag": "rb",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "rp",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "rt",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "rtc",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "ruby",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "s",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "samp",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "script",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLScriptElement",
+      "implementationInterface": "HTMLScriptElement"
+    },
+    {
+      "tag": "search",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "section",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "select",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLSelectElement",
+      "implementationInterface": "HTMLSelectElement"
+    },
+    {
+      "tag": "selectedcontent",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLSelectedContentElement",
+      "implementationInterface": "HTMLSelectedContentElement"
+    },
+    {
+      "tag": "slot",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLSlotElement",
+      "implementationInterface": "HTMLSlotElement"
+    },
+    {
+      "tag": "small",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "source",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLSourceElement",
+      "implementationInterface": "HTMLSourceElement"
+    },
+    {
+      "tag": "span",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLSpanElement",
+      "implementationInterface": "HTMLSpanElement"
+    },
+    {
+      "tag": "strike",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "strong",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "style",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLStyleElement",
+      "implementationInterface": "HTMLStyleElement"
+    },
+    {
+      "tag": "sub",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "summary",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLSummaryElement"
+    },
+    {
+      "tag": "sup",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "table",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTableElement",
+      "implementationInterface": "HTMLTableElement"
+    },
+    {
+      "tag": "tbody",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTableSectionElement",
+      "implementationInterface": "HTMLTableSectionElement"
+    },
+    {
+      "tag": "td",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTableCellElement",
+      "implementationInterface": "HTMLTableCellElement"
+    },
+    {
+      "tag": "template",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTemplateElement",
+      "implementationInterface": "HTMLTemplateElement"
+    },
+    {
+      "tag": "textarea",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTextAreaElement",
+      "implementationInterface": "HTMLTextAreaElement"
+    },
+    {
+      "tag": "tfoot",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTableSectionElement",
+      "implementationInterface": "HTMLTableSectionElement"
+    },
+    {
+      "tag": "th",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTableCellElement",
+      "implementationInterface": "HTMLTableCellElement"
+    },
+    {
+      "tag": "thead",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTableSectionElement",
+      "implementationInterface": "HTMLTableSectionElement"
+    },
+    {
+      "tag": "time",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTimeElement",
+      "implementationInterface": "HTMLTimeElement"
+    },
+    {
+      "tag": "title",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTitleElement",
+      "implementationInterface": "HTMLTitleElement"
+    },
+    {
+      "tag": "tr",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTableRowElement",
+      "implementationInterface": "HTMLTableRowElement"
+    },
+    {
+      "tag": "track",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLTrackElement",
+      "implementationInterface": "HTMLTrackElement"
+    },
+    {
+      "tag": "tt",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "u",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "ul",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLUListElement",
+      "implementationInterface": "HTMLUListElement"
+    },
+    {
+      "tag": "var",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "video",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLVideoElement",
+      "implementationInterface": "HTMLVideoElement"
+    },
+    {
+      "tag": "wbr",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLWBRElement"
+    },
+    {
+      "tag": "xmp",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLPreElement",
+      "implementationInterface": "HTMLPreElement"
+    },
+    {
+      "tag": "noscript",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLElement",
+      "implementationInterface": "HTMLElement"
+    },
+    {
+      "tag": "annotation-xml",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLUnknownElement",
+      "implementationInterface": "HTMLUnknownElement"
+    },
+    {
+      "tag": "color-profile",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLUnknownElement",
+      "implementationInterface": "HTMLUnknownElement"
+    },
+    {
+      "tag": "font-face",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLUnknownElement",
+      "implementationInterface": "HTMLUnknownElement"
+    },
+    {
+      "tag": "font-face-format",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLUnknownElement",
+      "implementationInterface": "HTMLUnknownElement"
+    },
+    {
+      "tag": "font-face-name",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLUnknownElement",
+      "implementationInterface": "HTMLUnknownElement"
+    },
+    {
+      "tag": "font-face-src",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLUnknownElement",
+      "implementationInterface": "HTMLUnknownElement"
+    },
+    {
+      "tag": "font-face-uri",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLUnknownElement",
+      "implementationInterface": "HTMLUnknownElement"
+    },
+    {
+      "tag": "missing-glyph",
+      "namespaceURI": "http://www.w3.org/1999/xhtml",
+      "interface": "HTMLUnknownElement",
+      "implementationInterface": "HTMLUnknownElement"
+    },
+    {
+      "tag": "a",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGAElement",
+      "implementationInterface": "SVGAElement"
+    },
+    {
+      "tag": "altGlyph",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGAltGlyphElement"
+    },
+    {
+      "tag": "altGlyphDef",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGAltGlyphDefElement"
+    },
+    {
+      "tag": "altGlyphItem",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGAltGlyphItemElement"
+    },
+    {
+      "tag": "animate",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGAnimateElement",
+      "implementationInterface": "SVGAnimateElement"
+    },
+    {
+      "tag": "animateColor",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGUnknownElement"
+    },
+    {
+      "tag": "animateMotion",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGAnimateMotionElement",
+      "implementationInterface": "SVGAnimateMotionElement"
+    },
+    {
+      "tag": "animateTransform",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGAnimateTransformElement",
+      "implementationInterface": "SVGAnimateTransformElement"
+    },
+    {
+      "tag": "set",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGSetElement",
+      "implementationInterface": "SVGSetElement"
+    },
+    {
+      "tag": "circle",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGCircleElement",
+      "implementationInterface": "SVGCircleElement"
+    },
+    {
+      "tag": "clipPath",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGClipPathElement",
+      "implementationInterface": "SVGClipPathElement"
+    },
+    {
+      "tag": "defs",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGDefsElement",
+      "implementationInterface": "SVGDefsElement"
+    },
+    {
+      "tag": "desc",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGDescElement",
+      "implementationInterface": "SVGDescElement"
+    },
+    {
+      "tag": "ellipse",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGEllipseElement",
+      "implementationInterface": "SVGEllipseElement"
+    },
+    {
+      "tag": "feBlend",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEBlendElement",
+      "implementationInterface": "SVGFEBlendElement"
+    },
+    {
+      "tag": "feColorMatrix",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEColorMatrixElement",
+      "implementationInterface": "SVGFEColorMatrixElement"
+    },
+    {
+      "tag": "feComponentTransfer",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEComponentTransferElement",
+      "implementationInterface": "SVGFEComponentTransferElement"
+    },
+    {
+      "tag": "feComposite",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFECompositeElement",
+      "implementationInterface": "SVGFECompositeElement"
+    },
+    {
+      "tag": "feConvolveMatrix",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEConvolveMatrixElement",
+      "implementationInterface": "SVGFEConvolveMatrixElement"
+    },
+    {
+      "tag": "feDiffuseLighting",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEDiffuseLightingElement",
+      "implementationInterface": "SVGFEDiffuseLightingElement"
+    },
+    {
+      "tag": "feDisplacementMap",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEDisplacementMapElement",
+      "implementationInterface": "SVGFEDisplacementMapElement"
+    },
+    {
+      "tag": "feDistantLight",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEDistantLightElement",
+      "implementationInterface": "SVGFEDistantLightElement"
+    },
+    {
+      "tag": "feDropShadow",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEDropShadowElement",
+      "implementationInterface": "SVGFEDropShadowElement"
+    },
+    {
+      "tag": "feFlood",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEFloodElement",
+      "implementationInterface": "SVGFEFloodElement"
+    },
+    {
+      "tag": "feFuncA",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEFuncAElement",
+      "implementationInterface": "SVGFEFuncAElement"
+    },
+    {
+      "tag": "feFuncB",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEFuncBElement",
+      "implementationInterface": "SVGFEFuncBElement"
+    },
+    {
+      "tag": "feFuncG",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEFuncGElement",
+      "implementationInterface": "SVGFEFuncGElement"
+    },
+    {
+      "tag": "feFuncR",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEFuncRElement",
+      "implementationInterface": "SVGFEFuncRElement"
+    },
+    {
+      "tag": "feGaussianBlur",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEGaussianBlurElement",
+      "implementationInterface": "SVGFEGaussianBlurElement"
+    },
+    {
+      "tag": "feImage",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEImageElement",
+      "implementationInterface": "SVGFEImageElement"
+    },
+    {
+      "tag": "feMerge",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEMergeElement",
+      "implementationInterface": "SVGFEMergeElement"
+    },
+    {
+      "tag": "feMergeNode",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEMergeNodeElement",
+      "implementationInterface": "SVGFEMergeNodeElement"
+    },
+    {
+      "tag": "feMorphology",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEMorphologyElement",
+      "implementationInterface": "SVGFEMorphologyElement"
+    },
+    {
+      "tag": "feOffset",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEOffsetElement",
+      "implementationInterface": "SVGFEOffsetElement"
+    },
+    {
+      "tag": "fePointLight",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFEPointLightElement",
+      "implementationInterface": "SVGFEPointLightElement"
+    },
+    {
+      "tag": "feSpecularLighting",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFESpecularLightingElement",
+      "implementationInterface": "SVGFESpecularLightingElement"
+    },
+    {
+      "tag": "feSpotLight",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFESpotLightElement",
+      "implementationInterface": "SVGFESpotLightElement"
+    },
+    {
+      "tag": "feTile",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFETileElement",
+      "implementationInterface": "SVGFETileElement"
+    },
+    {
+      "tag": "feTurbulence",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFETurbulenceElement",
+      "implementationInterface": "SVGFETurbulenceElement"
+    },
+    {
+      "tag": "filter",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGFilterElement",
+      "implementationInterface": "SVGFilterElement"
+    },
+    {
+      "tag": "font",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGFontElement"
+    },
+    {
+      "tag": "font-face",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGFont-faceElement"
+    },
+    {
+      "tag": "font-face-format",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGFont-face-formatElement"
+    },
+    {
+      "tag": "font-face-name",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGFont-face-nameElement"
+    },
+    {
+      "tag": "font-face-src",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGFont-face-srcElement"
+    },
+    {
+      "tag": "font-face-uri",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGFont-face-uriElement"
+    },
+    {
+      "tag": "foreignObject",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGForeignObjectElement",
+      "implementationInterface": "SVGForeignObjectElement"
+    },
+    {
+      "tag": "g",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGGElement",
+      "implementationInterface": "SVGGElement"
+    },
+    {
+      "tag": "glyph",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGGlyphElement"
+    },
+    {
+      "tag": "glyphRef",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGGlyphRefElement"
+    },
+    {
+      "tag": "hkern",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGHKernElement"
+    },
+    {
+      "tag": "image",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGImageElement",
+      "implementationInterface": "SVGImageElement"
+    },
+    {
+      "tag": "line",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGLineElement",
+      "implementationInterface": "SVGLineElement"
+    },
+    {
+      "tag": "linearGradient",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGLinearGradientElement",
+      "implementationInterface": "SVGLinearGradientElement"
+    },
+    {
+      "tag": "marker",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGMarkerElement",
+      "implementationInterface": "SVGMarkerElement"
+    },
+    {
+      "tag": "mask",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGMaskElement",
+      "implementationInterface": "SVGMaskElement"
+    },
+    {
+      "tag": "metadata",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGMetadataElement",
+      "implementationInterface": "SVGMetadataElement"
+    },
+    {
+      "tag": "missing-glyph",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGMissing-glyphElement"
+    },
+    {
+      "tag": "mpath",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGMPathElement",
+      "implementationInterface": "SVGMPathElement"
+    },
+    {
+      "tag": "path",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGPathElement",
+      "implementationInterface": "SVGPathElement"
+    },
+    {
+      "tag": "pattern",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGPatternElement",
+      "implementationInterface": "SVGPatternElement"
+    },
+    {
+      "tag": "polygon",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGPolygonElement",
+      "implementationInterface": "SVGPolygonElement"
+    },
+    {
+      "tag": "polyline",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGPolylineElement",
+      "implementationInterface": "SVGPolylineElement"
+    },
+    {
+      "tag": "radialGradient",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGRadialGradientElement",
+      "implementationInterface": "SVGRadialGradientElement"
+    },
+    {
+      "tag": "rect",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGRectElement",
+      "implementationInterface": "SVGRectElement"
+    },
+    {
+      "tag": "script",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGScriptElement",
+      "implementationInterface": "SVGScriptElement"
+    },
+    {
+      "tag": "stop",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGStopElement",
+      "implementationInterface": "SVGStopElement"
+    },
+    {
+      "tag": "style",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGStyleElement",
+      "implementationInterface": "SVGStyleElement"
+    },
+    {
+      "tag": "svg",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGSVGElement",
+      "implementationInterface": "SVGSVGElement"
+    },
+    {
+      "tag": "switch",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGSwitchElement",
+      "implementationInterface": "SVGSwitchElement"
+    },
+    {
+      "tag": "symbol",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGSymbolElement",
+      "implementationInterface": "SVGSymbolElement"
+    },
+    {
+      "tag": "text",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGTextElement",
+      "implementationInterface": "SVGTextElement"
+    },
+    {
+      "tag": "textPath",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGTextPathElement",
+      "implementationInterface": "SVGTextPathElement"
+    },
+    {
+      "tag": "title",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGTitleElement",
+      "implementationInterface": "SVGTitleElement"
+    },
+    {
+      "tag": "tref",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGTRefElement"
+    },
+    {
+      "tag": "tspan",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGTSpanElement",
+      "implementationInterface": "SVGTSpanElement"
+    },
+    {
+      "tag": "use",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGUseElement",
+      "implementationInterface": "SVGUseElement"
+    },
+    {
+      "tag": "view",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGViewElement",
+      "implementationInterface": "SVGViewElement"
+    },
+    {
+      "tag": "vkern",
+      "namespaceURI": "http://www.w3.org/2000/svg",
+      "interface": "SVGElement",
+      "implementationInterface": "SVGVKernElement"
+    }
+  ]
+}

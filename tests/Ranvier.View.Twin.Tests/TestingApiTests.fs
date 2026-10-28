@@ -1,4 +1,4 @@
-module Ranvier.View.Twin.Tests.TestingApiTests
+﻿module Ranvier.View.Twin.Tests.TestingApiTests
 
 open Expecto
 open Ranvier.View.Twin
@@ -18,7 +18,7 @@ let tests =
                         use session = Twin.mount Fixtures.counter 7
 
                         try
-                            Expect.text (session.Host :> Fable.Core.TS.Dom.Node) "button" "nope"
+                            Expect.text (session.Host :> Ranvier.Dom.Node) "button" "nope"
                         with Expect.ExpectationException text ->
                             message <- text)
 
@@ -54,7 +54,7 @@ let tests =
                             "leaks",
                             fun () ->
                                 let body = (Conformance.document ()).body
-                                body.addEventListener ("click", listener = Fable.Core.U2.Case1 (fun (_: Fable.Core.TS.Dom.Event) -> ()))
+                                body.addEventListener ("click", listener = (fun (_: Ranvier.Dom.Event) -> ()))
                         |]
                     |> Array.head
                     |> snd

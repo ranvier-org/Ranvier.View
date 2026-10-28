@@ -1,10 +1,9 @@
 module Ranvier.View.Dom.Mounting
 
 open System
-open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
-open Fable.Core.TS
+open Ranvier.Dom
+open Ranvier
 open Ranvier.View
 open Ranvier.View.Representation
 open Ranvier.View.Dom.Scheduling
@@ -14,9 +13,6 @@ type NativeOwnership =
     | Borrowed
 
 #if FABLE_COMPILER
-[<Global>]
-let private globalThis: GlobalThis = jsNative
-
 [<Global "document">]
 let private document: Document = jsNative
 #endif
@@ -38,24 +34,20 @@ let private attributeEquals =
 let inline private insert (parent: #Node) (node: #Node) (before: #Node option) : unit =
     let before: Node option = before |> Option.map (fun x -> x :> Node)
 
-    parent.insertBefore (node, ?child = before)
+    parent.insertBefore (node, Option.defaultValue null before)
     |> ignore
 
 let inline private nextSiblingNode (node: #Node) : Node option =
-    node.nextSibling
-    |> Option.map (fun x -> x :> Node)
+    node.nextSibling |> Option.ofObj
 
-let private remove (node: ChildNode) : unit =
-    node.remove ()
+let private remove (node: Node) : unit =
+    (unbox<ChildNode> node).remove()
 
 let private contains (parent: Node) (node: Node) : bool =
     parent.contains node
 
 let private sameDocument (a: Node) (b: Node) : bool =
-    match a.ownerDocument, b.ownerDocument with
-    | None, None -> true
-    | Some left, Some right -> obj.ReferenceEquals (left, right)
-    | _ -> false
+    obj.ReferenceEquals (a.ownerDocument, b.ownerDocument)
 
 let private inputValue (node: HTMLInputElement) (value: string) : unit =
     node.value <- value
@@ -66,7 +58,7 @@ let private attributeValue (node: Element) name =
     | None -> node.removeAttribute name
 
 let private isDocumentFragment (node: Node) : bool =
-    node.nodeType = 11.
+    node.nodeType = 11us
 
 let private invalid message =
     raise (InvalidOperationException message)
@@ -86,7 +78,7 @@ let rec private walkPrepared visit (node: Node) =
 
     let children =
         if
-            node.nodeType = 1.
+            node.nodeType = 1us
             && (node :?> Element).tagName = "TEMPLATE"
         then
             (node :?> HTMLTemplateElement).content :> Node
@@ -95,15 +87,16 @@ let rec private walkPrepared visit (node: Node) =
 
     let mutable child = children.firstChild
 
-    while child.IsSome do
-        let current = child.Value
+    while not (isNull child) do
+        let current = child
         child <- current.nextSibling
         walkPrepared visit current
 
-let private createClaims () : WeakSet<Node> =
 #if FABLE_COMPILER
-    globalThis.WeakSet.Create ()
+[<Emit("new WeakSet()")>]
+let private createClaims () : Native.INodeWeakSet = jsNative
 #else
+let private createClaims () : Native.INodeWeakSet =
     Native.newNodeWeakSet ()
 #endif
 
@@ -210,7 +203,7 @@ let private walk (host: Node) (eventName: string) (event: obj) =
 
     let mutable node: Node =
         if Native.isNullish inner then
-            unbox<Node>(Native.valueOrNull (unbox<Event> event).target)
+            unbox<Node> (unbox<Event> event).target
         else
             Native.parentOrNull inner
 
@@ -267,17 +260,17 @@ let private undelegateFrom: Func<Node, string, unit> =
             | false, _ -> ())
 #endif
 
-let private claim (registry: WeakSet<Node>) (node: Node) : unit =
+let private claim (registry: Native.INodeWeakSet) (node: Node) : unit =
     registry.add node |> ignore
 
-let private unclaim (registry: WeakSet<Node>) (node: Node) : unit =
+let private unclaim (registry: Native.INodeWeakSet) (node: Node) : unit =
     registry.delete node |> ignore
 
 #if FABLE_COMPILER
 [<Emit("(() => { for (let p = $1; p; p = p.parentNode) { if ($0.has(p)) return true; } if (!$1.firstChild) return false; const pending = Array.from($1.childNodes); while (pending.length) { const n = pending.pop(); if ($0.has(n)) return true; for (let c = n.firstChild; c; c = c.nextSibling) pending.push(c); } return false; })()")>]
-let private overlaps (registry: WeakSet<Node>) (node: Node) : bool = jsNative
+let private overlaps (registry: Native.INodeWeakSet) (node: Node) : bool = jsNative
 #else
-let private overlaps (registry: WeakSet<Node>) (node: Node) : bool =
+let private overlaps (registry: Native.INodeWeakSet) (node: Node) : bool =
     let mutable found = false
     let mutable cursor = node
 
@@ -345,7 +338,7 @@ let private nextNode = System.Func<Node, Node>(fun node -> nextOrNull node)
 let private clearChildren (parent: Node) : unit = jsNative
 #else
 let private clearChildren (parent: Node) : unit =
-    parent.textContent <- Some ""
+    parent.textContent <- ""
 #endif
 
 /// <summary>Removes the siblings between <c>first</c> and <c>last</c> in one operation.</summary>
@@ -366,7 +359,7 @@ let private fillsFragment (first: Node) (last: Node) : bool =
     let parent = Native.parentOrNull first
 
     not (Native.isNullish parent)
-    && parent.nodeType = 11.0
+    && parent.nodeType = 11us
     && obj.ReferenceEquals (Native.firstChildOf parent, first)
     && obj.ReferenceEquals (Native.lastChildOf parent, last)
 #endif
@@ -526,7 +519,7 @@ let private isSeparator (node: Node) : bool = jsNative
 #else
 let private isSeparator (node: Node) : bool =
     not (Native.isNullish node)
-    && node.nodeType = 8.0
+    && node.nodeType = 8us
     && Native.dataOf node = "!"
 #endif
 
@@ -536,7 +529,7 @@ let private isRowMarker (node: Node) : bool = jsNative
 #else
 let private isRowMarker (node: Node) : bool =
     not (Native.isNullish node)
-    && node.nodeType = 8.0
+    && node.nodeType = 8us
     && Native.dataOf node = "ranvier:row"
 #endif
 
@@ -557,7 +550,7 @@ let private clearAdopted (cursor: TemplateDom.HydrationCursor) (regionStart: Nod
           && not (same node regionEnd) do
         let next = nextOrNull node
         removed.Add node
-        remove (node :?> ChildNode)
+        remove node
         node <- next
 
     if removed.Count > 0 then
@@ -919,6 +912,8 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
             insert staging node (Some last)
 
     member _.Add(node: ChildNode, ownership) =
+        let node = unbox<Node> node
+
         if
             contains node host
             || (not (isNull (box staging))
@@ -936,18 +931,19 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
                 let originalParent, originalNext = node.parentNode, node.nextSibling
 
                 Some (fun () ->
-                    match originalParent with
-                    | None -> remove node
-                    | Some parent ->
+                    if isNull originalParent then
+                        remove node
+                    else
                         let before =
-                            originalNext
-#if FABLE_COMPILER
-                            |> Option.filter (fun next -> next.parentNode |> optionSame parent)
-#else
-                            |> Option.filter (fun next -> next.parentNode |> Option.exists (same parent))
-#endif
+                            if
+                                not (isNull originalNext)
+                                && same originalNext.parentNode originalParent
+                            then
+                                Some originalNext
+                            else
+                                None
 
-                        insert parent node before)
+                        insert originalParent node before)
 
         stage ()
 
@@ -974,11 +970,15 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
             ()
         elif
             isDocumentFragment placement
-            && placement.firstChild.IsNone
+            && isNull placement.firstChild
         then
             let relocatedParent =
-                first.parentNode
-                |> Option.defaultWith (fun () -> invalid "Range boundaries or owned roots were externally mutated")
+                let parent = first.parentNode
+
+                if isNull parent then
+                    invalid "Range boundaries or owned roots were externally mutated"
+
+                parent
 
             if not (intactAt relocatedParent) then
                 invalid "Range roots were not contiguous after their staging fragment was attached"
@@ -1039,7 +1039,7 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
     member _.Relocate() =
         placement <-
             first.parentNode
-            |> Option.map (fun node -> node :> Node)
+            |> Option.ofObj
             |> Option.defaultWith (fun () -> invalid "Range has no parent")
 
         for entry in entries do
@@ -1095,7 +1095,7 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
 
                             staging.appendChild node |> ignore
 
-                    insert originalParent staging originalNext
+                    insert originalParent staging (Option.ofObj originalNext)
                     placement <- originalParent
 
                     for entry in entries do
@@ -1124,7 +1124,7 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
                 // A retiring release leaves each node to its root: held, or removed with it.
                 if not keep && isNull held then
                     try
-                        remove (node :?> ChildNode)
+                        remove node
                     with error ->
                         errors.Add error
 
@@ -1150,13 +1150,13 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
                         || isNull held
                         || not (Departures.seam.Retire.Invoke (entry.Node, held))
                     then
-                        remove (entry.Node :?> ChildNode)
+                        remove entry.Node
                 with error ->
                     errors.Add error
 
                 if spans then
                     try
-                        remove (entry.EndNode :?> ChildNode)
+                        remove entry.EndNode
                     with error ->
                         errors.Add error
 
@@ -1293,7 +1293,7 @@ and [<Sealed; AllowNullLiteral>] private Row(first: Node, last: Node) =
                         isNull held
                         || not (Departures.seam.Retire.Invoke (cursor, held))
                     then
-                        remove (cursor :?> ChildNode)
+                        remove cursor
                 with error ->
                     failure <- error
 
@@ -1306,12 +1306,11 @@ and [<Sealed; AllowNullLiteral>] private Row(first: Node, last: Node) =
     static member ClearBetween(parent: Node, regionStart: Node, regionEnd: Node) =
         if
 #if FABLE_COMPILER
-            parent.firstChild |> optionSame regionStart
-            && parent.lastChild |> optionSame regionEnd
+            same parent.firstChild regionStart
+            && same parent.lastChild regionEnd
 #else
-            parent.firstChild
-            |> Option.exists (same regionStart)
-            && parent.lastChild |> Option.exists (same regionEnd)
+            same parent.firstChild regionStart
+            && same parent.lastChild regionEnd
 #endif
         then
             clearChildren parent
@@ -1333,17 +1332,11 @@ and [<Sealed; AllowNullLiteral>] private Row(first: Node, last: Node) =
     static member ValidateWindow(regionStart: Node, regionEnd: Node, laidOut: ResizeArray<Row>, parent: Node, first: int, last: int) =
         if
 #if FABLE_COMPILER
-            not (regionStart.parentNode |> optionSame parent)
-            || not (regionEnd.parentNode |> optionSame parent)
+            not (same regionStart.parentNode parent)
+            || not (same regionEnd.parentNode parent)
 #else
-            not (
-                regionStart.parentNode
-                |> Option.exists (same parent)
-            )
-            || not (
-                regionEnd.parentNode
-                |> Option.exists (same parent)
-            )
+            not (same regionStart.parentNode parent)
+            || not (same regionEnd.parentNode parent)
 #endif
         then
             invalid "Keyed-list boundaries were externally mutated"
@@ -1439,15 +1432,11 @@ and [<Sealed; AllowNullLiteral>] private Row(first: Node, last: Node) =
             if aStart = aEnd then
                 let staged =
 #if FABLE_COMPILER
-                    staging.firstChild
-                    |> optionSame next[bStart].First
-                    && staging.lastChild
-                       |> optionSame next[bEnd - 1].Last
+                    same staging.firstChild next[bStart].First
+                    && same staging.lastChild next[bEnd - 1].Last
 #else
-                    staging.firstChild
-                    |> Option.exists (same next[bStart].First)
-                    && staging.lastChild
-                       |> Option.exists (same next[bEnd - 1].Last)
+                    same staging.firstChild next[bStart].First
+                    && same staging.lastChild next[bEnd - 1].Last
 #endif
 
                 if staged then
@@ -1546,7 +1535,7 @@ and private RowBuilder(state: MountState, hydration: unit -> TemplateDom.Hydrati
         if isSeparator separator then
             let next = nextOrNull separator
             let parent = parentOrNull separator
-            remove (separator :?> ChildNode)
+            remove separator
             cursor.Next <- next
             cursor.Undo (fun () -> parent.insertBefore (separator, next) |> ignore)
 
@@ -1600,7 +1589,7 @@ and private RowBuilder(state: MountState, hydration: unit -> TemplateDom.Hydrati
             with _ ->
                 if not adopted then
                     for index in 0 .. roots.Count - 1 do
-                        remove (roots[index] :?> ChildNode)
+                        remove roots[index]
 
                 roots.Clear ()
                 reraise ()
@@ -1749,16 +1738,14 @@ and private RegionSite(state: MountState, regionStart: Node, regionEnd: Node, re
     member _.Parent() : Node =
         let regionParent =
             regionStart.parentNode
+            |> Option.ofObj
             |> Option.defaultWith (fun () -> invalid "Keyed-list boundaries have no parent")
 
         if
 #if FABLE_COMPILER
-            not (regionEnd.parentNode |> optionSame regionParent)
+            not (same regionEnd.parentNode regionParent)
 #else
-            not (
-                regionEnd.parentNode
-                |> Option.exists (same regionParent)
-            )
+            not (same regionEnd.parentNode regionParent)
 #endif
         then
             invalid "Keyed-list boundaries were externally mutated"
@@ -1845,7 +1832,7 @@ and private RegionSite(state: MountState, regionStart: Node, regionEnd: Node, re
 
             let parent =
                 match regionStart.parentNode with
-                | Some parent when isChildOf regionEnd parent -> parent
+                | parent when not (isNull parent) && isChildOf regionEnd parent -> parent
                 | _ -> Unchecked.defaultof<_>
 
             if
@@ -2214,7 +2201,7 @@ and [<Sealed>] private ViewBoundary
 
         let copied =
             [|
-                for index in 0 .. int shownCopy.childNodes.length - 1 -> unbox<Node>(shownCopy.childNodes.item (float index))
+                for index in 0 .. int shownCopy.childNodes.length - 1 -> shownCopy.childNodes.item (uint32 index)
             |]
 
         let parent = site.Parent ()
@@ -2231,7 +2218,7 @@ and [<Sealed>] private ViewBoundary
             cursor.Undo (fun () ->
                 for node in copied do
                     if not (isNull (box (parentOrNull node))) then
-                        remove (node :?> ChildNode)
+                        remove node
 
                 Row.MoveBefore (bound, parentOrNull regionEnd, regionEnd))
 
@@ -2760,6 +2747,7 @@ and internal MountState
             if isNullish create then
 #if FABLE_COMPILER
                 document.createElement tagName
+                |> unbox<HTMLElement>
 #else
                 Native.createElement tagName
 #endif
@@ -3174,10 +3162,10 @@ and internal MountState
     override this.BindText(node, read) =
         ensurePrepared node
 
-        if node.nodeType <> 3. then
+        if node.nodeType <> 3us then
             raise (ArgumentException ("Prepared text bindings require a text node", "node"))
 
-        startBinding this.Scope (Func<_, _, _>(fun left right -> left = right)) read (fun value -> node.textContent <- Some value)
+        startBinding this.Scope (Func<_, _, _>(fun left right -> left = right)) read (fun value -> node.textContent <- value)
         ensureSetup ()
 
     override _.Text(value) =
@@ -3525,7 +3513,7 @@ and internal MountState
             rowHost.insertBefore (first, cursor.Next)
             |> ignore
 
-            cursor.Undo (fun () -> remove (first :?> ChildNode))
+            cursor.Undo (fun () -> remove first)
 
         let nested =
             MountState (
@@ -3559,7 +3547,7 @@ and internal MountState
 
             if adopting then
                 rowHost.insertBefore (last, cursor.Next) |> ignore
-                cursor.Undo (fun () -> remove (last :?> ChildNode))
+                cursor.Undo (fun () -> remove last)
 
         let mounted = nested.Run (None, build)
 
@@ -3573,10 +3561,12 @@ and internal MountState
         else
             let first =
                 rowHost.firstChild
+                |> Option.ofObj
                 |> Option.defaultWith (fun () -> invalid "A keyed row has no start boundary")
 
             let last =
                 rowHost.lastChild
+                |> Option.ofObj
                 |> Option.defaultWith (fun () -> invalid "A keyed row has no end boundary")
 
             Row (first, last, Mount = mounted)
@@ -4518,7 +4508,7 @@ and internal MountState
     interface TemplateDom.MountServices with
         member _.Append(node) =
             if isNull cursor || not (isNull (box target)) then
-                append (node :?> ChildNode)
+                append node
             else
                 ensureSetup ()
                 range.AddAdopted node

@@ -82,15 +82,24 @@ let run (folder: string) =
 
     check (sameBytes first second) "regeneration must be byte-identical"
 
+    check
+        (sameBytes (Path.ChangeExtension (first, ".TagTypes.fs")) (Path.ChangeExtension (second, ".TagTypes.fs")))
+        "tag interface regeneration must be byte-identical"
+
     for output, committed in
         [
             first, "src/Ranvier.View.Dom/Generated/Html.fs"
             Path.Combine (folder, "firstTemplate.fs"), "src/Ranvier.View/Generated/HtmlTemplate.fs"
             Path.Combine (folder, "firstTemplateSugar.fs"), "src/Ranvier.View/Generated/HtmlTemplateSugar.fs"
+            Path.ChangeExtension (first, ".TagTypes.fs"), "experiments/Ranvier.View.Twin/Generated/TagTypes.fs"
         ] do
         check (readText output = readText (Path.Combine (repositoryRoot, committed))) (committed + " must equal the generator's output")
 
     let text = readText first
+    let tagTypes = readText (Path.ChangeExtension (first, ".TagTypes.fs"))
+    check (tagTypes.Contains "\"input\", \"HTMLInputElement\"") "tag dispatch preserves the concrete input interface"
+    check (tagTypes.Contains "\"svg\", \"SVGSVGElement\"") "tag dispatch preserves the concrete SVG root interface"
+    check (not (tagTypes.Contains "Fable.Core.TS")) "tag dispatch must not retain runtime browser binding references"
     check (text.Contains "[<RequireQualifiedAccess>]\nmodule Ranvier.View.Dom.Generated.Html\n") "Generated.Html requires qualified access"
     check (text.Contains "module Authoring =") "generate overloaded authoring helpers"
     check (text.Contains "static member inline") "static member inline in text"
@@ -115,7 +124,13 @@ let run (folder: string) =
 
     check (text.Contains "Dom.HTMLInputElement") "Dom.HTMLInputElement in text"
     check (text.Contains "Dom.InputEvent -> unit") "Dom.InputEvent -> unit in text"
-    check (text.Contains "Dom.FileList option") "Dom.FileList option in text"
+    check (text.Contains "Dom.FileList") "the file list uses the shared contract"
+
+    check
+        (not (text.Contains "BrowserDom")
+         && not (text.Contains "Fable.Core.TS"))
+        "generated helpers must compile without browser binding dependencies"
+
     check (text.Contains "let ``files`` (") "let ``files`` ( in text"
     check (not (text.Contains "let filesStatic")) "let filesStatic not in text"
     check (not (text.Contains "let formStatic")) "let formStatic not in text"
@@ -296,13 +311,12 @@ let run (folder: string) =
              + name)
 
         check
-            (text.Contains (
-                "(node :> Dom."
-                + owner
-                + ").``"
-                + name
-                + "`` <- value"
-            ))
+            (text.Contains ("node.``" + name + "`` <- value")
+             || text.Contains (
+                 "Native.setExpando (box node) \""
+                 + name
+                 + "\" value"
+             ))
             ("Html.fs keeps setter " + owner + "." + name)
 
     check (not (ttext.Contains "type Groups.TitleProperties<'inst> with")) "no TitleProperties group"
@@ -315,7 +329,7 @@ let run (folder: string) =
 
     check
         (templatePropertyCount =
-            count "Typed.staticProperty (fun (node: 'native)" text
+            (matches @"Typed\.staticProperty\s+\(fun\s+\(node: 'native\)" text).Length
             - childReplacing.Count)
         "every shared settable property, except child-replacing setters, needs a template part"
 
@@ -360,8 +374,7 @@ let run (folder: string) =
         "TemplateParts.readProperty (PropertyHtml.text \"class\") in flat"
 
     check
-        (flat.Contains
-            "TemplateParts.readProperty PropertyHtml.childText (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``value`` <- value) read")
+        (flat.Contains "TemplateParts.readProperty PropertyHtml.childText (fun (node: 'native) (value: string) -> node.``value`` <- value) read")
         "textarea value childText reader in flat"
 
     let sugar = Path.Combine (folder, "firstTemplateSugar.fs")

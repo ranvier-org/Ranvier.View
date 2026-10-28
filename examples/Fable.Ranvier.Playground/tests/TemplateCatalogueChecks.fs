@@ -1,8 +1,8 @@
-module TemplateCatalogueChecks
+﻿module TemplateCatalogueChecks
 
 open global.Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Testing
@@ -56,6 +56,7 @@ let private fire (target: HTMLElement) (name: string) : obj =
 
 let private host () =
     (Conformance.document ()).createElement "main"
+    |> unbox<HTMLElement>
 
 let private mount graph (host: HTMLElement) view =
     Mounting.mount graph None (fun errors -> failwithf "%A" errors) host None (fun context -> Program.run view context.Backend)
@@ -106,21 +107,21 @@ let private labelInference () =
 
     let div =
         host.querySelector "div"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let button =
         host.querySelector "button"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLButtonElement>
 
-    equal (Some "card") (div.getAttribute "class")
-    equal (Some "card-7") (div.getAttribute "id")
+    equal (Some "card") ((Option.ofObj (div.getAttribute "class")))
+    equal (Some "card-7") ((Option.ofObj (div.getAttribute "id")))
 
     equal
         "v"
         (host.querySelector "input"
-         |> Option.get
+         |> (Option.ofObj >> Option.get)
          |> unbox<HTMLInputElement>)
             .value
 
@@ -360,7 +361,7 @@ let private sourceAttributes () =
 
     let button =
         host.querySelector "button"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let snapshot () =
@@ -374,7 +375,7 @@ let private sourceAttributes () =
                     "aria-expanded"
                     "aria-label"
                     "data-k"
-                ] -> button.getAttribute name
+                ] -> Option.ofObj (button.getAttribute name)
         ]
 
     equal [ Some "a"; Some "o"; Some ""; Some "true"; Some "true"; Some "l"; Some "d" ] (snapshot ())
@@ -413,8 +414,8 @@ let private rawTextElement () =
 
     let mounted = mount graph host (Component.render framed ())
     let frames = host.querySelectorAll "iframe"
-    equal 1. frames.length
-    equal (Some "map") ((frames.[0] |> unbox<HTMLElement>).getAttribute "title")
+    equal 1u frames.length
+    equal (Some "map") ((Option.ofObj ((frames.item 0u |> unbox<HTMLElement>).getAttribute "title")))
     mounted.Dispose ()
 
 let private rawTextChildrenRejected () =
@@ -443,7 +444,7 @@ type Live =
         Text: Signal<string>
         On: Signal<bool>
         Level: Signal<float>
-        Popover: Signal<string option>
+        Popover: Signal<string>
     }
 
 let private live =
@@ -465,7 +466,7 @@ let private live =
                 t.meter [| t.Props.Meter.high 0.25 |] [||]
                 t.meter [| t.Props.Meter.high (fun r -> r.Level.Value) |] [||]
                 t.meter [| t.Props.Meter.high (t.from (fun r -> r.Level)) |] [||]
-                t.span [| t.Props.popover (Some "manual") |] [||]
+                t.span [| t.Props.popover "manual" |] [||]
                 t.span [| t.Props.popover (fun r -> r.Popover.Value) |] [||]
                 t.span [| t.Props.popover (t.from (fun r -> r.Popover)) |] [||]
             |])
@@ -476,7 +477,7 @@ let private propertyTypes () =
     let text = graph.Run (fun () -> Api.createSignal "a")
     let on = graph.Run (fun () -> Api.createSignal false)
     let level = graph.Run (fun () -> Api.createSignal 0.5)
-    let popover = graph.Run (fun () -> Api.createSignal (Some "auto"))
+    let popover = graph.Run (fun () -> Api.createSignal "auto")
 
     let mounted =
         mount
@@ -494,19 +495,21 @@ let private propertyTypes () =
     let inputs =
         [|
             for i in 0..2 ->
-                host.querySelectorAll("input").[i]
+                host.querySelectorAll("input").item(uint32 i)
                 |> unbox<HTMLInputElement>
         |]
 
-    let meters = [| for i in 0..2 -> host.querySelectorAll("meter").[i] :> obj |]
+    let meters =
+        [| for i in 0..2 -> host.querySelectorAll("meter").item(uint32 i) :> obj |]
 
-    let spans = [| for i in 0..2 -> host.querySelectorAll("span").[i] :> obj |]
+    let spans =
+        [| for i in 0..2 -> host.querySelectorAll("span").item(uint32 i) :> obj |]
 
     let snapshot () =
         [| for i in inputs -> i.value |],
         [| for i in inputs -> i.``checked`` |],
         [| for m in meters -> (read m "high": float) |],
-        [| for s in spans -> (read s "popover": string option) |]
+        [| for s in spans -> Option.ofObj (read s "popover": string) |]
 
     equal ([| "static"; "a"; "a" |], [| true; false; false |], [| 0.25; 0.5; 0.5 |], [| Some "manual"; Some "auto"; Some "auto" |]) (snapshot ())
 
@@ -514,7 +517,7 @@ let private propertyTypes () =
         text.Value <- "b"
         on.Value <- true
         level.Value <- 0.75
-        popover.Value <- None)
+        popover.Value <- null)
 
     equal ([| "static"; "b"; "b" |], [| true; true; true |], [| 0.25; 0.75; 0.75 |], [| Some "manual"; None; None |]) (snapshot ())
 
@@ -550,20 +553,20 @@ let private events () =
     let inputEvent =
         fire
             (host.querySelector "input"
-             |> Option.get
+             |> (Option.ofObj >> Option.get)
              |> unbox<HTMLElement>)
             "input"
 
     let videoEvent =
         fire
             (host.querySelector "video"
-             |> Option.get
+             |> (Option.ofObj >> Option.get)
              |> unbox<HTMLElement>)
             "waitingforkey"
 
     fire
         (host.querySelector "video"
-         |> Option.get
+         |> (Option.ofObj >> Option.get)
          |> unbox<HTMLElement>)
         "input"
     |> ignore
@@ -620,13 +623,13 @@ let private isolation () =
 
     let div =
         host.querySelector "div"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     graph.Run (fun () -> first.Value <- "b")
-    equal (1, Some "b", Some "x") (reads.Value, div.getAttribute "id", div.getAttribute "title")
+    equal (1, Some "b", Some "x") (reads.Value, (Option.ofObj (div.getAttribute "id")), (Option.ofObj (div.getAttribute "title")))
     graph.Run (fun () -> second.Value <- "y")
-    equal (2, Some "y") (reads.Value, div.getAttribute "title")
+    equal (2, Some "y") (reads.Value, (Option.ofObj (div.getAttribute "title")))
     mounted.Dispose ()
 
 let private staticIsolationRejected () =

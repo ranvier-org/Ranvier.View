@@ -12,7 +12,7 @@ let private row =
         t.li
             [|
                 t.Attrs.className "leaving-row"
-                t.Hooks.exit (System.Func<_, _, _, _>(fun (_: unit -> int) (_: Fable.Core.TS.Dom.HTMLLIElement) _ -> ignore))
+                t.Hooks.exit (System.Func<_, _, _, _>(fun (_: unit -> int) (_: Ranvier.Dom.HTMLLIElement) _ -> ignore))
             |]
             [| t.text (fun item -> string (item ())) |])
 

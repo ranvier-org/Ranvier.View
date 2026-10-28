@@ -3,7 +3,7 @@ module DocumentChecks
 open System
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Testing
@@ -45,8 +45,11 @@ let private headCount (selector: string) : int =
 let private headAttribute (selector: string) (name: string) : string = jsNative
 #else
 let private headAttribute (selector: string) (name: string) : string =
-    match (pageOrCaseDocument ()).head.querySelector selector with
-    | Some element -> Option.toObj (element.getAttribute name)
+    match
+        (pageOrCaseDocument ()).head.querySelector selector
+        |> Option.ofObj
+    with
+    | Some element -> element.getAttribute name
     | None -> null
 #endif
 
@@ -78,7 +81,10 @@ let private isConnected (node: Node) : bool =
 let private headHolds (selector: string) (node: Node) : bool = jsNative
 #else
 let private headHolds (selector: string) (node: Node) : bool =
-    match (pageOrCaseDocument ()).head.querySelector selector with
+    match
+        (pageOrCaseDocument ()).head.querySelector selector
+        |> Option.ofObj
+    with
     | Some element -> obj.ReferenceEquals (element, node)
     | None -> false
 #endif
@@ -604,7 +610,7 @@ let private definitionChecks () =
                 t.Document.meta
                     [|
                         t.Attrs.attribute ("name", "x")
-                        t.Props.propertyStatic ((fun (node: HTMLMetaElement) (value: string) -> node.content <- value), "x")
+                        t.Props.propertyStatic ((fun (node: HTMLMetaElement) (value: string) -> node.setAttribute ("content", value)), "x")
                     |])
             defines (fun t -> t.Document.meta [| t.Attrs.attribute ("name", (fun () -> Some "x")) |])
             defines (fun t ->
@@ -818,7 +824,10 @@ let private headHtml () : string =
 let private inHead (selector: string) : Node = jsNative
 #else
 let private inHead (selector: string) : Node =
-    match (pageOrCaseDocument ()).head.querySelector selector with
+    match
+        (pageOrCaseDocument ()).head.querySelector selector
+        |> Option.ofObj
+    with
     | Some element -> element :> Node
     | None -> Unchecked.defaultof<_>
 #endif
@@ -829,7 +838,7 @@ let private headElements () : Node array = jsNative
 #else
 let private headElements () : Node array =
     let found = (pageOrCaseDocument ()).head.querySelectorAll "*"
-    [| for i in 0 .. int found.length - 1 -> unbox<Node>(found.item (float i)) |]
+    [| for i in 0 .. int found.length - 1 -> unbox<Node>(found.item (uint32 i)) |]
 #endif
 
 #if FABLE_COMPILER
@@ -837,9 +846,12 @@ let private headElements () : Node array =
 let private titleText () : Node = jsNative
 #else
 let private titleText () : Node =
-    match (pageOrCaseDocument ()).head.querySelector "title" with
+    match
+        (pageOrCaseDocument ()).head.querySelector "title"
+        |> Option.ofObj
+    with
     | Some title ->
-        match title.firstChild with
+        match title.firstChild |> Option.ofObj with
         | Some child -> unbox<Node> child
         | None -> Unchecked.defaultof<_>
     | None -> Unchecked.defaultof<_>
@@ -1022,7 +1034,7 @@ let private spacedTitleKept () =
             writes (), obj.ReferenceEquals (titleText (), text), title (), (inHead "title").textContent
 
         mounted.Dispose ()
-        equal (0, true, "Lamp · Shop", Some "  Lamp  · Shop") shown)
+        equal (0, true, "Lamp · Shop", "  Lamp  · Shop") shown)
 
 let private mountAdoptsHead queued () =
     withHead (fun () ->
@@ -1146,8 +1158,8 @@ let private pendingHeadAdopted () =
         let read () =
             obj.ReferenceEquals (inHead "meta[data-ranvier-head]", server),
             isConnected server,
-            (server :?> Element).getAttribute "content",
-            (server :?> Element).getAttribute "data-extra",
+            Option.ofObj ((server :?> Element).getAttribute "content"),
+            Option.ofObj ((server :?> Element).getAttribute "data-extra"),
             title ()
 
         let pending = read (), isConnected robots
@@ -1295,7 +1307,10 @@ let private freshMountFailureRestoresHead () =
 let private editStylesheet () : unit = jsNative
 #else
 let private editStylesheet () : unit =
-    match (pageOrCaseDocument ()).head.querySelector "link" with
+    match
+        (pageOrCaseDocument ()).head.querySelector "link"
+        |> Option.ofObj
+    with
     | Some link ->
         link.setAttribute ("href", "/client.css")
         link.setAttribute ("media", "print")
@@ -1331,7 +1346,7 @@ let private setStylesheet (href: string) : unit = jsNative
 #else
 let private setStylesheet (href: string) : unit =
     ((pageOrCaseDocument ()).head.querySelector "link"
-     |> Option.get)
+     |> (Option.ofObj >> Option.get))
         .setAttribute("href", href)
 #endif
 

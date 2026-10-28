@@ -12,7 +12,7 @@ module internal Sdl =
     let ok (value: SDLBool) : bool =
         SDLBool.op_Implicit value
 
-    /// NUL-terminated UTF-8, for SDL's byte pointer overloads.
+    /// <summary>NUL-terminated UTF-8, for SDL's byte pointer overloads.</summary>
     let utf8 (text: string) =
         Encoding.UTF8.GetBytes (text + "\000")
 
@@ -22,7 +22,7 @@ module internal Sdl =
     let failure (name: string) =
         InvalidOperationException $"{name} failed: {SDL3.SDL_GetError ()}"
 
-    /// The SDL system cursor for an RV_CURSOR_* value.
+    /// <summary>The SDL system cursor for an RV_CURSOR_* value.</summary>
     let cursor (value: int) =
         match value with
         | 1 -> SDL_SystemCursor.SDL_SYSTEM_CURSOR_POINTER
@@ -60,7 +60,7 @@ module internal Sdl =
         | 34 -> SDL_SystemCursor.SDL_SYSTEM_CURSOR_NWSE_RESIZE
         | _ -> SDL_SystemCursor.SDL_SYSTEM_CURSOR_DEFAULT
 
-    /// The UTF-16 offset of the code point at <c>index</c> in <c>text</c>, as SDL counts an input method's cursor.
+    /// <summary>The UTF-16 offset of the code point at <c>index</c> in <c>text</c>, as SDL counts an input method's cursor.</summary>
     let utf16Offset (text: string) (index: int) =
         let mutable offset = 0
         let mutable points = 0
@@ -88,10 +88,8 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     let id = SDL3.SDL_GetWindowID window
     let cursors = Dictionary<SDL_SystemCursor, nativeint>()
-    let mutable texture = NativePtr.nullPtr<SDL_Texture>
-    let mutable pixels: byte array = [||]
-    let mutable textureWidth = 0
-    let mutable textureHeight = 0
+    let presenter = new Presenter (renderer, host)
+    let mutable accessibilityAttached = false
     let mutable fullPaint = true
     let mutable exposed = true
     let mutable toCss = 1.0f
@@ -120,6 +118,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         toCss <- density / scale
         host.SetDeviceScale scale
         host.Resize (max 1 (int (float32 width / scale)), max 1 (int (float32 height / scale)))
+        presenter.Invalidate ()
         fullPaint <- true
 
     let css (value: float32) =
@@ -173,17 +172,6 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             SDL3.SDL_SetTextInputArea (window, &&area, 0)
             |> ignore
         | ValueNone -> ()
-
-    let render () =
-        SDL3.SDL_RenderClear renderer |> ignore
-
-        if not (NativePtr.isNullPtr texture) then
-            let mutable target = SDL_FRect ()
-            target.w <- float32 textureWidth
-            target.h <- float32 textureHeight
-
-            SDL3.SDL_RenderTexture (renderer, texture, NativePtr.nullPtr, &&target)
-            |> ignore
 
     let dispatch (event: SDL_Event) =
         match enum<SDL_EventType>(int event.``type``) with
@@ -291,6 +279,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     do
         resize ()
+        accessibilityAttached <- WindowAccessibility.attach host window
         SDL3.SDL_StartTextInput window |> ignore
 
         if WebCoreHost.Has "clipboard" then
@@ -349,6 +338,18 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             | Some driver ->
                 use name = fixed Sdl.utf8 driver
                 SDL3.SDL_CreateRenderer (window, name)
+            | None when
+                OperatingSystem.IsWindows ()
+                && WebCoreHost.Has "presentation-d3d11"
+                ->
+                let accelerated =
+                    use name = fixed Sdl.utf8 "direct3d11"
+                    SDL3.SDL_CreateRenderer (window, name)
+
+                if NativePtr.isNullPtr accelerated then
+                    SDL3.SDL_CreateRenderer (window, NativePtr.nullPtr<byte>)
+                else
+                    accelerated
             | None -> SDL3.SDL_CreateRenderer (window, NativePtr.nullPtr<byte>)
 
         if NativePtr.isNullPtr drawing then
@@ -358,7 +359,20 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             raise error
 
         SDL3.SDL_SetRenderVSync (drawing, 1) |> ignore
-        new Window (window, drawing, WebCoreHost.Create (width, height))
+        let mutable page = None
+
+        try
+            let host = WebCoreHost.Create (width, height)
+            page <- Some host
+            new Window (window, drawing, host)
+        with _ ->
+            page
+            |> Option.iter (fun host -> (host :> IDisposable).Dispose())
+
+            SDL3.SDL_DestroyRenderer drawing
+            SDL3.SDL_DestroyWindow window
+            SDL3.SDL_QuitSubSystem SDL_InitFlags.SDL_INIT_VIDEO
+            reraise ()
 
     /// <summary>The window's page.</summary>
     member _.Host = host
@@ -397,57 +411,10 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// </summary>
     member _.Present() =
         host.Frame ()
-        let struct (width, height) = host.PaintSize
-
-        if width > 0 && height > 0 then
-            if
-                width <> textureWidth
-                || height <> textureHeight
-                || NativePtr.isNullPtr texture
-            then
-                if not (NativePtr.isNullPtr texture) then
-                    SDL3.SDL_DestroyTexture texture
-
-                texture <-
-                    SDL3.SDL_CreateTexture (
-                        renderer,
-                        SDL_PixelFormat.SDL_PIXELFORMAT_ABGR8888,
-                        SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING,
-                        width,
-                        height
-                    )
-
-                if NativePtr.isNullPtr texture then
-                    raise (Sdl.failure "SDL_CreateTexture")
-
-                SDL3.SDL_SetTextureBlendMode (texture, SDL_BlendMode.SDL_BLENDMODE_NONE)
-                |> ignore
-
-                textureWidth <- width
-                textureHeight <- height
-                pixels <- Array.zeroCreate (width * height * 4)
-                fullPaint <- true
-
-            let painted =
-                if fullPaint then
-                    fullPaint <- false
-                    host.Paint pixels
-                    true
-                else
-                    (host.PaintDirty pixels).IsSome
-
-            if painted then
-                use start = fixed pixels
-
-                SDL3.SDL_UpdateTexture (texture, NativePtr.nullPtr, NativePtr.toNativeInt start, width * 4)
-                |> ignore
-
-            if painted || exposed then
-                exposed <- false
-                render ()
-                SDL3.SDL_RenderPresent renderer |> ignore
-
-            placeInputMethod ()
+        presenter.Present exposed
+        fullPaint <- false
+        exposed <- false
+        placeInputMethod ()
 
     /// <summary>
     /// One turn of the window's loop: waits up to <c>timeout</c> milliseconds (50 by default), less when a timer is due
@@ -484,39 +451,27 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
         not closed
 
-    /// <summary>The texture as the window last showed it: its width and height in pixels and RGBA bytes, row by row.</summary>
+    /// <summary>The rendered page's physical dimensions and top-down RGBA bytes.</summary>
     member internal _.ReadPixels() : struct (int * int * byte array) =
-        render ()
-        let surface = SDL3.SDL_RenderReadPixels (renderer, NativePtr.nullPtr)
+        presenter.ReadPixels ()
 
-        if NativePtr.isNullPtr surface then
-            raise (Sdl.failure "SDL_RenderReadPixels")
+    /// <summary>The number of shared GPU frames presented to the window.</summary>
+    member internal _.GpuFramesPresented = presenter.GpuFramesPresented
 
-        let converted =
-            SDL3.SDL_ConvertSurface (surface, SDL_PixelFormat.SDL_PIXELFORMAT_ABGR8888)
-
-        SDL3.SDL_DestroySurface surface
-
-        if NativePtr.isNullPtr converted then
-            raise (Sdl.failure "SDL_ConvertSurface")
-
-        let image = NativePtr.read converted
-        let bytes = Array.zeroCreate<byte>(image.w * image.h * 4)
-
-        for row in 0 .. image.h - 1 do
-            Marshal.Copy (image.pixels + nativeint (row * image.pitch), bytes, row * image.w * 4, image.w * 4)
-
-        SDL3.SDL_DestroySurface converted
-        struct (image.w, image.h, bytes)
+    /// <summary>Whether Windows UI Automation is attached to the window.</summary>
+    member internal _.AccessibilityAttached = accessibilityAttached
 
     interface IDisposable with
         member _.Dispose() =
             if not disposed then
                 disposed <- true
-                (host :> IDisposable).Dispose()
 
-                if not (NativePtr.isNullPtr texture) then
-                    SDL3.SDL_DestroyTexture texture
+                if accessibilityAttached then
+                    WindowAccessibility.detach host
+                    accessibilityAttached <- false
+
+                (presenter :> IDisposable).Dispose()
+                (host :> IDisposable).Dispose()
 
                 for created in cursors.Values do
                     SDL3.SDL_DestroyCursor (NativePtr.ofNativeInt created)

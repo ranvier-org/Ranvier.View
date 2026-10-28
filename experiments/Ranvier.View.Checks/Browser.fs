@@ -2,7 +2,7 @@ module Ranvier.View.Checks.Browser
 
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 
@@ -30,14 +30,15 @@ let globalThis: TS.Es.GlobalThis = jsNative
 let private element (tag: string) : HTMLElement =
     refuseScript tag
 #if FABLE_COMPILER
-    globalThis.document.createElement tag
+    (DomRuntime.document ()).createElement tag
+    |> unbox<HTMLElement>
 #else
     Native.createElement tag
 #endif
 
 let private text (value: string) : Node =
 #if FABLE_COMPILER
-    globalThis.document.createTextNode value
+    (DomRuntime.document ()).createTextNode value
 #else
     Native.createTextNode value
 #endif
@@ -168,7 +169,7 @@ let mount (graph: Graph) (host: HTMLElement) (report: exn list -> unit) (counts:
                         | Some old -> not (equals old value)
 
                     if changed then
-                        Api.untrack (fun () -> node.textContent <- Some value)
+                        Api.untrack (fun () -> node.textContent <- value)
                         committed <- Some value
                         count (fun c -> c.Writes <- c.Writes + 1))
 

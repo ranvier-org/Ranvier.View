@@ -2,7 +2,7 @@ module RepresentationBench
 
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Fable.Ranvier
 open Ranvier.View
 open Ranvier.View.Checks
@@ -11,7 +11,7 @@ let private now () : float =
     globalThis.performance.now ()
 
 let private attach (node: Node) : unit =
-    globalThis.document.body.appendChild (node)
+    (Ranvier.View.Dom.DomRuntime.document ()).body.appendChild(node)
     |> ignore
 
 let private remove (node: #ChildNode) : unit =
@@ -135,7 +135,7 @@ let private verifyWith (ops: Operations<'view>) run =
             finally
                 dispose ()
 
-            if host.childNodes.length <> 0. then
+            if host.childNodes.length <> 0u then
                 failwith "Disposal retained DOM"
 
 let verify () =

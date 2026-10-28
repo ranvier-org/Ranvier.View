@@ -6,6 +6,7 @@
         <RootNamespace>Ranvier.View.WebCore.Sdl</RootNamespace>
         <AssemblyName>Ranvier.View.WebCore.Sdl</AssemblyName>
         <PackageId>Ranvier.View.WebCore.Sdl</PackageId>
+        <PackageId Condition="'$(RanvierTrace)' == 'true'">Ranvier.View.WebCore.Sdl.Traced</PackageId>
         <Title>Ranvier.View.WebCore.Sdl</Title>
         <Description>Shows a Ranvier.View.WebCore page in an SDL3 window: paints it, forwards mouse, keyboard and input method events to it, and bridges the cursor and the clipboard.</Description>
         <PackageTags>reactive;signals;view;dom;webcore;native;sdl;fsharp</PackageTags>
@@ -14,14 +15,14 @@
         <Version>0.1.0-alpha.1</Version>
         <IsAotCompatible>true</IsAotCompatible>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <!-- Not published yet, like Ranvier.View.WebCore, which it depends on. -->
-        <IsPackable>false</IsPackable>
+        <IsPackable>true</IsPackable>
         <!-- SDL3-CS's pointers: the window, renderer and texture handles are used through nativeptr. -->
         <NoWarn>$(NoWarn);FS0009;FS0051</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
         <Compile Include="Keys.fs" />
+        <Compile Include="Presentation.fs" />
         <Compile Include="Window.fs" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />
@@ -36,12 +37,17 @@
     </ItemGroup>
 
     <ItemGroup>
-        <!-- Fable.Ranvier, through Ranvier.View.WebCore, requires FSharp.Core 10.1.401. -->
+        <!-- The canonical managed WebCore interop requires FSharp.Core 10.1.401. -->
         <PackageReference Update="FSharp.Core" Version="10.1.401" />
     </ItemGroup>
 
     <ItemGroup>
         <InternalsVisibleTo Include="Ranvier.View.WebCore.Tests" />
+        <InternalsVisibleTo Include="Ranvier.NativeCounter" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(RanvierTrace)' == 'true'">
+        <AssemblyMetadata Include="RanvierTrace" Value="true" />
     </ItemGroup>
 
 </Project>

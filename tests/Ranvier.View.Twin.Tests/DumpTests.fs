@@ -1,4 +1,4 @@
-module Ranvier.View.Twin.Tests.DumpTests
+﻿module Ranvier.View.Twin.Tests.DumpTests
 
 open System
 open Expecto
@@ -115,14 +115,13 @@ let tests =
                 use session = Twin.mount counter 1
                 let document = session.Host.ownerDocument
                 let html = document.createElement "svg"
-                let supported = Prepared.Template (fun () -> html)
-                Expect.equal (supported.Invoke().namespaceURI) (Some "http://www.w3.org/1999/xhtml") "HTML namespace"
+                let supported = Prepared.Template (fun () -> unbox<Ranvier.Dom.HTMLElement> html)
+                Expect.equal (supported.Invoke().namespaceURI) ("http://www.w3.org/1999/xhtml") "HTML namespace"
 
                 let svg =
-                    document.createElementNS (namespaceURI = Some "http://www.w3.org/2000/svg", qualifiedName = "svg")
+                    document.createElementNS (namespaceURI = "http://www.w3.org/2000/svg", qualifiedName = "svg")
 
-                let unsupported =
-                    Prepared.Template (fun () -> unbox<Fable.Core.TS.Dom.HTMLElement> svg)
+                let unsupported = Prepared.Template (fun () -> unbox<Ranvier.Dom.HTMLElement> svg)
 
                 Expect.throwsT<InvalidCastException>
                     (fun () -> unsupported.Invoke () |> ignore)
@@ -217,7 +216,7 @@ let tests =
             <| fun () ->
                 use session = Twin.mount counter 1
                 let struct (first, _) = session.Mounted.Range
-                let before = first.nextSibling.Value :?> Fable.Core.TS.Dom.Node
+                let before = first.nextSibling
 
                 let nested =
                     Mounting.mount session.Graph None ignore session.Host (Some before) (fun context ->

@@ -9,7 +9,7 @@ The examples use the [sugar](sugar.md) vocabulary. The [explicit form](#the-expl
 end of the page builds the same trees. Every sample on this page compiles with these opens:
 
 ```fsharp
-open Fable.Core.TS
+open Ranvier.Dom
 open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Sugar
@@ -186,7 +186,7 @@ let field =
         form () {
             input (
                 Props.Input.value (from (fun f -> f.Text)),
-                Events.onInput (fun f event -> f.Text.Value <- (unbox<Dom.HTMLInputElement> event.currentTarget.Value).value)
+                Events.onInput (fun f event -> f.Text.Value <- (unbox<Dom.HTMLInputElement> event.currentTarget).value)
             )
 
             button (Props.Button.disabled (fun f -> f.Busy.Value || f.Text.Value = "")) { "Save" }

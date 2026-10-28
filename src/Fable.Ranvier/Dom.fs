@@ -1,7 +1,6 @@
 namespace Fable.Ranvier
 
-open Fable.Core.JsInterop
-open Fable.Core.TS.Dom
+open global.Ranvier.Dom
 open global.Ranvier
 
 module Dom =
@@ -9,6 +8,7 @@ module Dom =
 
     let createElement (name: string) =
         Global.document.createElement name
+        |> unbox<HTMLElement>
 
     let text (value: string) =
         Global.document.createTextNode value
@@ -52,9 +52,8 @@ module Dom =
                                 | Some current when current.Options.BatchEvents -> batch invoke
                                 | _ -> invoke ())))
 
-            let callback: EventListenerOrEventListenerObject = !^listener
-            target.addEventListener (name, callback)
-            onCleanup (fun () -> target.removeEventListener (name, callback))
+            target.addEventListener (name, listener)
+            onCleanup (fun () -> target.removeEventListener (name, listener))
 
     let element (name: string) (modifiers: Modifier list) (children: Node list) : HTMLElement =
         let node = createElement name

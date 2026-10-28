@@ -4,7 +4,7 @@ module Ranvier.View.Dom.Debug
 #if RANVIER_VIEW_INSPECT || !FABLE_COMPILER
 open System
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier
 open Ranvier.View
 open Ranvier.View.Template
@@ -429,7 +429,7 @@ let private isList (value: obj) =
     && value.GetType().GetGenericTypeDefinition() = typedefof<list<_>>
 
 let private kindOf (node: Node) : float =
-    node.nodeType
+    float node.nodeType
 
 let private dataOf (node: Node) : string =
     Native.dataOf node

@@ -88,7 +88,7 @@ type Session internal (host: TwinHost, element: TwinElement, graph: Graph, polic
         this.RaisePending ()
 
     member _.Document = host.Document
-    member _.Host: Fable.Core.TS.Dom.HTMLElement = unbox element.Native
+    member _.Host: Ranvier.Dom.HTMLElement = unbox element.Native
     member _.Graph = graph
     member _.Clock = host.Clock
     member _.Mounted = mounted
@@ -186,7 +186,7 @@ module Twin =
         (options: TwinMount)
         (hydration: Hydration.HydrationOptions)
         (body: string)
-        (parsed: Fable.Core.TS.Dom.HTMLElement -> unit)
+        (parsed: Ranvier.Dom.HTMLElement -> unit)
         (definition: Component<'props>)
         (props: 'props)
         : Session =

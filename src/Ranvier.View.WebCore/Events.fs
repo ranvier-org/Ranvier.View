@@ -2,8 +2,7 @@ namespace Ranvier.View.WebCore
 
 open System
 open System.Runtime.InteropServices
-open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open RanvierWebCoreAbi
 
 /// <summary>Native event listeners, dispatch and <c>currentTarget</c>.</summary>
@@ -35,7 +34,9 @@ type internal Events private () =
     static member val private Pointer = Marshal.GetFunctionPointerForDelegate<Native.EventCallback> Events.Callback
 
     /// <summary>Registers <c>invoke</c> natively on the node; <c>callback</c> identifies the registration for removal.</summary>
-    static member internal Listen(target: NativeObject, eventType: string, capture: bool, callback: obj, invoke: obj -> unit) : Registration =
+    static member internal Listen
+        (target: NativeObject, eventType: string, capture: bool, callback: obj, invoke: obj -> unit, ?passive: bool)
+        : Registration =
         let session = target.Session
 
         let registration =
@@ -43,8 +44,15 @@ type internal Events private () =
 
         let context = GCHandle.Alloc (box (session, registration))
 
+        let flags =
+            (if capture then 1 else 0)
+            ||| (match passive with
+                 | None -> 0
+                 | Some false -> 4
+                 | Some true -> 6)
+
         let listener =
-            Native.rv_node_add_event_listener (registration.Target, eventType, (if capture then 1 else 0), Events.Pointer, GCHandle.ToIntPtr context)
+            Native.rv_node_add_event_listener (registration.Target, eventType, flags, Events.Pointer, GCHandle.ToIntPtr context)
 
         if listener = 0n then
             context.Free ()
@@ -78,40 +86,11 @@ type internal Events private () =
             && r.Capture = capture
             && obj.ReferenceEquals (r.Callback, callback))
 
-    static member private Identity(callback: U2<Event -> unit, EventListenerObject>) : obj =
-        match callback with
-        | U2.Case1 f -> box f
-        | U2.Case2 o -> box o
-
-    /// <summary><c>EventTarget.addEventListener</c>: a repeated registration of one callback, type and phase is ignored.</summary>
-    static member Add
-        (
-            target: NativeObject,
-            eventType: string,
-            callback: U2<Event -> unit, EventListenerObject> option,
-            options: U2<bool, AddEventListenerOptions> option
-        ) : unit =
-        match callback with
-        | None -> ()
-        | Some callback ->
-            let capture, once =
-                match options with
-                | Some (U2.Case1 capture) -> capture, false
-                | Some (U2.Case2 options) ->
-                    if options.signal.IsSome then
-                        Interop.unsupported "AddEventListenerOptions.signal"
-
-                    Option.defaultValue false options.capture, Option.defaultValue false options.once
-                | None -> false, false
-
-            let identity = Events.Identity callback
-
+    static member private AddCore
+        (target: NativeObject, eventType: string, identity: obj, invoke: obj -> unit, capture: bool, once: bool, passive: bool option)
+        =
+        if not (isNull identity) then
             if (Events.Find (target, eventType, capture, identity)).IsNone then
-                let invoke: obj -> unit =
-                    match callback with
-                    | U2.Case1 f -> fun e -> f (unbox<Event> e)
-                    | U2.Case2 o -> fun e -> o.handleEvent (unbox<Event> e)
-
                 if once then
                     let registration: Registration ref = ref null
 
@@ -121,34 +100,80 @@ type internal Events private () =
                             eventType,
                             capture,
                             identity,
-                            fun e ->
+                            (fun e ->
                                 Events.Unlisten (target.Session, registration.Value)
-                                invoke e
+                                invoke e),
+                            ?passive = passive
                         )
                 else
-                    Events.Listen (target, eventType, capture, identity, invoke)
+                    Events.Listen (target, eventType, capture, identity, invoke, ?passive = passive)
                     |> ignore
 
-    /// <summary><c>EventTarget.removeEventListener</c>.</summary>
-    static member Remove
-        (
-            target: NativeObject,
-            eventType: string,
-            callback: U2<Event -> unit, EventListenerObject> option,
-            options: U2<bool, EventListenerOptions> option
-        ) : unit =
-        match callback with
-        | None -> ()
-        | Some callback ->
-            let capture =
-                match options with
-                | Some (U2.Case1 capture) -> capture
-                | Some (U2.Case2 options) -> Option.defaultValue false options.capture
-                | None -> false
+    static member private Options(options: AddEventListenerOptions) =
+        if obj.ReferenceEquals (options, null) then
+            false, false, None
+        else
+            options.capture, options.once, options.passive
 
-            match Events.Find (target, eventType, capture, Events.Identity callback) with
+    /// <summary>Registers a function listener, ignoring repeated callback/type/capture registrations.</summary>
+    static member Add(target: NativeObject, eventType: string, listener: EventListener, capture: bool option) =
+        Events.AddCore (target, eventType, box listener, (fun event -> listener (unbox<Event> event)), defaultArg capture false, false, None)
+
+    /// <summary>Registers an object listener, preserving the object's removal identity.</summary>
+    static member Add(target: NativeObject, eventType: string, listener: EventListenerObject, capture: bool option) =
+        Events.AddCore (
+            target,
+            eventType,
+            box listener,
+            (fun event -> listener.handleEvent (unbox<Event> event)),
+            defaultArg capture false,
+            false,
+            None
+        )
+
+    /// <summary>Registers a function listener with capture, once and optional passive behavior.</summary>
+    static member Add(target: NativeObject, eventType: string, listener: EventListener, options: AddEventListenerOptions) =
+        let capture, once, passive = Events.Options options
+        Events.AddCore (target, eventType, box listener, (fun event -> listener (unbox<Event> event)), capture, once, passive)
+
+    /// <summary>Registers an object listener with capture, once and optional passive behavior.</summary>
+    static member Add(target: NativeObject, eventType: string, listener: EventListenerObject, options: AddEventListenerOptions) =
+        let capture, once, passive = Events.Options options
+        Events.AddCore (target, eventType, box listener, (fun event -> listener.handleEvent (unbox<Event> event)), capture, once, passive)
+
+    static member private RemoveCore(target: NativeObject, eventType: string, identity: obj, capture: bool) =
+        if not (isNull identity) then
+            match Events.Find (target, eventType, capture, identity) with
             | Some registration -> Events.Unlisten (target.Session, registration)
             | None -> ()
+
+    /// <summary>Removes the matching function listener in the selected phase.</summary>
+    static member Remove(target: NativeObject, eventType: string, listener: EventListener, capture: bool option) =
+        Events.RemoveCore (target, eventType, box listener, defaultArg capture false)
+
+    /// <summary>Removes the matching object listener in the selected phase.</summary>
+    static member Remove(target: NativeObject, eventType: string, listener: EventListenerObject, capture: bool option) =
+        Events.RemoveCore (target, eventType, box listener, defaultArg capture false)
+
+    /// <summary>Removes the matching function listener using only the capture option.</summary>
+    static member Remove(target: NativeObject, eventType: string, listener: EventListener, options: EventListenerOptions) =
+        Events.RemoveCore (
+            target,
+            eventType,
+            box listener,
+            not (obj.ReferenceEquals (options, null))
+            && options.capture
+        )
+
+    /// <summary>Removes the matching object listener using only the capture option.</summary>
+    static member Remove(target: NativeObject, eventType: string, listener: EventListenerObject, options: EventListenerOptions) =
+        Events.RemoveCore (
+            target,
+            eventType,
+            box listener,
+            not (obj.ReferenceEquals (options, null))
+            && options.capture
+        )
 
     /// <summary>
     /// <c>EventTarget.dispatchEvent</c>: dispatches a native event synchronously and returns false when a listener
@@ -180,10 +205,10 @@ type internal Events private () =
             | _ -> read ()
 
     /// <summary><c>Event.currentTarget</c>, or the override the view's delegation set for the dispatch.</summary>
-    static member CurrentTarget(event: NativeObject) : EventTarget option =
+    static member CurrentTarget(event: NativeObject) : EventTarget =
         if isNull (box event.CurrentTargetOverride) then
-            Interop.optionOf<EventTarget>(event.Session.Node (Native.rv_event_target (event.Handle, 1)))
+            unbox<EventTarget>(event.Session.Node (Native.rv_event_target (event.Handle, 1)))
         else
             match event.CurrentTargetOverride () with
-            | null -> None
-            | target -> Some (unbox<EventTarget> target)
+            | null -> Unchecked.defaultof<EventTarget>
+            | target -> unbox<EventTarget> target

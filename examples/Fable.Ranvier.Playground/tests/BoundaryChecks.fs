@@ -3,7 +3,7 @@ module BoundaryChecks
 open System
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View.Testing
 open Ranvier.View
 open Ranvier.View.Dom
@@ -40,6 +40,7 @@ let private server (ops: Operations<'view>) (run: 'view -> Backend -> unit) =
 
 let private host () : HTMLElement =
     (Conformance.document ()).createElement "div"
+    |> unbox<HTMLElement>
 
 let private modeOf queued =
     if queued then
@@ -66,11 +67,7 @@ let private recordInserts (node: Node) : unit -> string array =
 
     let restore =
         Conformance.intercept node "insertBefore" (fun original args ->
-            texts.Add (
-                match (unbox<Node> args[0]).textContent with
-                | Some text -> text
-                | None -> null
-            )
+            texts.Add ((unbox<Node> args[0]).textContent)
 
             original args)
 
@@ -190,10 +187,10 @@ let private disposedWhilePending (ops: Operations<'view>) (run: 'view -> Backend
 
     let inserts = countInserts host
     mounted.Dispose ()
-    equal ([ "content"; "pending"; "pending cleanup"; "content cleanup" ], 0.) (List.ofSeq log, host.childNodes.length)
+    equal ([ "content"; "pending"; "pending cleanup"; "content cleanup" ], 0u) (List.ofSeq log, host.childNodes.length)
     graph.Run (fun () -> source.Settle "late")
     mounted.Flush ()
-    equal (4, 0., 0) (log.Count, host.childNodes.length, inserts ())
+    equal (4, 0u, 0) (log.Count, host.childNodes.length, inserts ())
 
 /// <summary>Moves a mount to another host while its boundary is pending; the content reveals there and handles clicks.</summary>
 let private movedWhilePending (ops: Operations<'view>) (run: 'view -> Backend -> unit) queued =
@@ -219,7 +216,7 @@ let private movedWhilePending (ops: Operations<'view>) (run: 'view -> Backend ->
     equal ("", "moved") (first.textContent, second.textContent)
 
     (second.querySelector "button"
-     |> Option.get
+     |> (Option.ofObj >> Option.get)
      |> unbox<HTMLButtonElement>)
         .click()
 
@@ -644,7 +641,7 @@ let private retry (ops: Operations<'view>) (run: 'view -> Backend -> unit) queue
 
     let click () =
         (host.querySelector "button"
-         |> Option.get
+         |> (Option.ofObj >> Option.get)
          |> unbox<HTMLButtonElement>)
             .click()
 
@@ -748,7 +745,7 @@ let private handlerNotReady (ops: Operations<'view>) (run: 'view -> Backend -> u
 
     let button =
         host.querySelector "button"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLButtonElement>
 
     let escaped = windowErrors (fun () -> fire eventName button)
@@ -769,7 +766,7 @@ let private handlerFailure (ops: Operations<'view>) (run: 'view -> Backend -> un
 
     let button =
         host.querySelector "button"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLButtonElement>
 
     let escaped = windowErrors (fun () -> fire eventName button)
@@ -885,7 +882,7 @@ let private templateReveal queued () =
 
     let outer =
         host.querySelector "div"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let inserts = countInserts outer
@@ -985,7 +982,7 @@ let private templateArmReplacedWhilePending queued () =
     let inserted =
         recordInserts (
             host.querySelector "div"
-            |> Option.get
+            |> (Option.ofObj >> Option.get)
             |> unbox<Node>
         )
 
@@ -1098,7 +1095,7 @@ let private templateFailure queued (trigger: Graph -> HTMLElement -> unit) (mess
 
 let private button (host: HTMLElement) =
     host.querySelector "button"
-    |> Option.get
+    |> (Option.ofObj >> Option.get)
     |> unbox<HTMLButtonElement>
 
 /// <summary>A template content whose setup fails while broken; the error view's button retries it.</summary>
@@ -1228,7 +1225,7 @@ let private handlerOutsideBoundary (ops: Operations<'view>) (run: 'view -> Backe
 
     let button =
         host.querySelector "button"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLButtonElement>
 
     let escaped = windowErrors (fun () -> fire eventName button)
@@ -1266,7 +1263,7 @@ let private handlerAfterFailure (ops: Operations<'view>) (run: 'view -> Backend 
 
     let button =
         host.querySelector "button"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLButtonElement>
 
     let escaped = windowErrors (fun () -> button.click ())
@@ -1316,7 +1313,7 @@ let private retryCachedFailure (ops: Operations<'view>) (run: 'view -> Backend -
         mountWith (modeOf queued) graph None reports.Add host None (fun context -> run view context.Backend)
 
     (host.querySelector "button"
-     |> Option.get
+     |> (Option.ofObj >> Option.get)
      |> unbox<HTMLButtonElement>)
         .click()
 

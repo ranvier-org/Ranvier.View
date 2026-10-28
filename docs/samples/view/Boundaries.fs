@@ -1,7 +1,7 @@
 /// The F# samples of docs/content/view/boundaries.md, in page order; a sample that is an excerpt is wrapped in a function.
 module Boundaries
 
-open Fable.Core.TS
+open Ranvier.Dom
 open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Sugar

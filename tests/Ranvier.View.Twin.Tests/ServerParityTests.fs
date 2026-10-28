@@ -1,4 +1,4 @@
-module Ranvier.View.Twin.Tests.ServerParityTests
+﻿module Ranvier.View.Twin.Tests.ServerParityTests
 
 open Expecto
 open Ranvier.View
@@ -40,7 +40,7 @@ type private Hydrated =
     {
         Name: string
         Page: unit -> Server.Page
-        Hydrate: string -> (Fable.Core.TS.Dom.HTMLElement -> unit) -> Session
+        Hydrate: string -> (Ranvier.Dom.HTMLElement -> unit) -> Session
         /// <summary>The document-order positions of the server nodes the client replaces.</summary>
         Replaced: int list
     }
@@ -103,14 +103,14 @@ let private headed =
             |])
 
 // Every node under the host, in document order.
-let private nodesUnder (root: Fable.Core.TS.Dom.Node) =
+let private nodesUnder (root: Ranvier.Dom.Node) =
     let found = ResizeArray<obj>()
 
-    let rec walk (node: Fable.Core.TS.Dom.Node) =
+    let rec walk (node: Ranvier.Dom.Node) =
         let mutable child = node.firstChild
 
-        while child.IsSome do
-            let current = unbox<Fable.Core.TS.Dom.Node> child.Value
+        while not (isNull child) do
+            let current = unbox<Ranvier.Dom.Node> child
             found.Add (box current)
             walk current
             child <- current.nextSibling

@@ -42,6 +42,12 @@ module internal Kind =
     [<Literal>]
     let Validity = 10
 
+    [<Literal>]
+    let DOMImplementation = 11
+
+    [<Literal>]
+    let NamedNodeMap = 12
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -128,6 +134,8 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.NodeList -> NativeDom.rv_dom_node_list_release handle
         | Kind.Collection -> NativeDom.rv_dom_html_collection_release handle
         | Kind.Validity -> NativeDom.rv_dom_validity_state_release handle
+        | Kind.DOMImplementation -> NativeDom.rv_dom_dom_implementation_release handle
+        | Kind.NamedNodeMap -> NativeDom.rv_dom_named_node_map_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =
@@ -254,11 +262,11 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
     member this.Event(handle: nativeint) : NativeObject =
         this.Wrap (handle, this.EventFactory, Kind.Event)
 
-    /// <summary>The object of an event handle valid for the current listener call.</summary>
     /// <summary>Enters an object created for an owned node or event handle in the table.</summary>
     member internal _.Register(created: NativeObject) =
         table[created.Handle] <- WeakReference<NativeObject>(created)
 
+    /// <summary>The object of an event handle valid for the current listener call.</summary>
     member internal this.BorrowedEvent(handle: nativeint) : NativeObject =
         let mutable existing = null
 

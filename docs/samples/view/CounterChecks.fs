@@ -2,7 +2,7 @@
 module CounterChecks
 
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Dom
@@ -24,7 +24,7 @@ let clickIncrements () =
         Mounting.mount graph None (fun errors -> failwithf "%A" errors) host None (fun context ->
             Program.run (Component.render counter { Start = 0; Label = "Clicks" }) context.Backend)
 
-    let button = unbox<HTMLElement> (host.querySelector "button").Value
+    let button = unbox<HTMLElement> (host.querySelector "button")
     button.click ()
     button.click ()
     expect "2" button.textContent

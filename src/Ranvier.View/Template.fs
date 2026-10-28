@@ -4,7 +4,7 @@ module Ranvier.View.Template
 open System
 open System.Text
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier
 open Ranvier.View.Representation
 
@@ -63,9 +63,17 @@ module PropertyHtml =
     let text (name: string) : PropertySerialization =
         AsAttribute (name, Func<obj, string option>(fun value -> if isNull value then None else Some (unbox<string> value)))
 
-    /// <summary>A <c>float</c> written as the attribute <c>name</c> in ECMAScript number form on .NET and under Fable.</summary>
+    /// <summary>A DOM number written as the attribute <c>name</c> in ECMAScript number form on .NET and under Fable.</summary>
     let number (name: string) : PropertySerialization =
-        AsAttribute (name, Func<obj, string option>(fun value -> Some (numberText (unbox<float> value))))
+        AsAttribute (
+            name,
+            Func<obj, string option>(fun value ->
+#if FABLE_COMPILER
+                Some (numberText (unbox<float> value)))
+#else
+                Some (numberText (System.Convert.ToDouble (value, System.Globalization.CultureInfo.InvariantCulture))))
+#endif
+        )
 
     /// <summary>A <c>bool</c> written as the attribute <c>name</c> with an empty value when true, omitted when false.</summary>
     let presence (name: string) : PropertySerialization =

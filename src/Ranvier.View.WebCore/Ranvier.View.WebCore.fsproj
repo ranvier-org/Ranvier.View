@@ -8,35 +8,36 @@
         <PackageId>Ranvier.View.WebCore</PackageId>
         <PackageId Condition="'$(RanvierTrace)' == 'true'">Ranvier.View.WebCore.Traced</PackageId>
         <Title>Ranvier.View.WebCore</Title>
-        <Description>Runs Ranvier's view and Fable.Ranvier's DOM API on .NET against a native WebCore page: the app forwards window input and paints the page into its window.</Description>
+        <Description>Runs Ranvier's view and shared DOM API on .NET against a native WebCore page: the app forwards window input and paints the page into its window.</Description>
         <Description Condition="'$(RanvierTrace)' == 'true'">The traced build of Ranvier.View.WebCore: Ranvier's view on a native WebCore page. Depends on Ranvier.View.Dom.Traced.</Description>
         <PackageTags>reactive;signals;view;dom;webcore;native;fsharp</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>Experimental. The API may change.</PackageReleaseNotes>
         <Version>0.1.0-alpha.1</Version>
         <IsAotCompatible>true</IsAotCompatible>
-        <!-- Not published yet: it depends on Fable.Ranvier, which is not a package, until the native path drops Fable
-             (docs/superpowers/specs/2026-10-28-native-app-gaps.md, G8). -->
-        <IsPackable>false</IsPackable>
-        <!-- The generated wrappers and the copied interop carry no docs of their own. -->
+        <IsPackable>true</IsPackable>
+        <!-- Generated wrapper implementation members inherit their contracts' documentation. -->
         <NoWarn>$(NoWarn);FS3390</NoWarn>
     </PropertyGroup>
 
-    <!--
-    The native library: the Ranvier.WebCore.Native package for RanvierWebCoreNativeRid at
-    RanvierWebCoreNativeVersion, whose ABI the copied interop in Interop/ matches. The runtime identifier defaults to
-    the publish target's, or the SDK host's when no target is specified. Setting
-    RanvierWebCoreNativeDir (the directory holding runtimes/<rid>/native) takes the native files from a local build
-    of Ranvier.WebCore instead. The Ranvier.WebCore.Native meta-package (decision G5) replaces this choice.
-    -->
+    <!-- RanvierWebCoreNativeDir holds runtimes/<rid>/native for local native runtime checks. -->
     <PropertyGroup>
-        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.0-preview.4</RanvierWebCoreNativeVersion>
+        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.0-preview.7</RanvierWebCoreNativeVersion>
+        <UseLocalRanvierWebCore Condition="'$(UseLocalRanvierWebCore)' == ''">false</UseLocalRanvierWebCore>
+        <RanvierWebCoreRoot Condition="'$(RanvierWebCoreRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../Ranvier.WebCore'))</RanvierWebCoreRoot>
         <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</RanvierWebCoreNativeRid>
         <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</RanvierWebCoreNativeRid>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(RanvierWebCoreNativeDir)' == ''">
-        <PackageReference Include="Ranvier.WebCore.Native.$(RanvierWebCoreNativeRid)" Version="$(RanvierWebCoreNativeVersion)" />
+        <PackageReference Include="Ranvier.WebCore.Native" Version="$(RanvierWebCoreNativeVersion)" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseLocalRanvierWebCore)' != 'true'">
+        <PackageReference Include="Ranvier.WebCore" Version="$(RanvierWebCoreNativeVersion)" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(UseLocalRanvierWebCore)' == 'true'">
+        <ProjectReference Include="$(RanvierWebCoreRoot)/src/Ranvier.WebCore/Ranvier.WebCore.fsproj" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(RanvierWebCoreNativeDir)' != ''">
@@ -49,14 +50,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Include="Interop/Native.fs" />
-        <Compile Include="Interop/NativeDom.fs" />
         <Compile Include="Objects.fs" />
         <Compile Include="Events.fs" />
-        <Compile Include="Members.fs" />
+        <Compile Include="Marshalling.fs" />
         <Compile Include="Generated/Objects.fs" />
         <Compile Include="Host.fs" />
-        <None Include="Interop/*.h" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />
@@ -64,11 +62,10 @@
 
     <ItemGroup>
         <ProjectReference Include="../Ranvier.View.Dom/Ranvier.View.Dom.fsproj" />
-        <ProjectReference Include="../Fable.Ranvier/Fable.Ranvier.fsproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <!-- Fable.Ranvier requires FSharp.Core 10.1.401. -->
+        <!-- Canonical managed WebCore interop uses FSharp.Core 10.1.401. -->
         <PackageReference Update="FSharp.Core" Version="10.1.401" />
     </ItemGroup>
 

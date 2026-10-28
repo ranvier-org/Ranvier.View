@@ -3,7 +3,7 @@ module PreparedChecks
 open System
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 
@@ -55,8 +55,8 @@ let private reuse mode =
                 setups <- setups + 1
                 let local = Api.createSignal 0
                 context.OnCleanup (fun () -> cleaned <- cleaned + 1)
-                let input = root.firstChild.Value :?> HTMLInputElement
-                let button = input.nextSibling.Value :?> HTMLButtonElement
+                let input = root.firstChild :?> HTMLInputElement
+                let button = input.nextSibling :?> HTMLButtonElement
                 Prepared.apply input inputModifiers backend
 
                 Prepared.apply
@@ -68,7 +68,7 @@ let private reuse mode =
                     |]
                     backend
 
-                Prepared.text button.firstChild.Value (fun () -> string local.Value) backend)
+                Prepared.text button.firstChild (fun () -> string local.Value) backend)
             ()
 
     let first, second = mount graph mode a view, mount graph mode b view
@@ -100,7 +100,7 @@ let private reuse mode =
         graph.Run (fun () -> source.Value <- "c")
         second.Flush ()
         equal (1, 1, "b", "c") (cleaned, clicks, inputA.value, inputB.value)
-        equal 0. a.childNodes.length
+        equal 0u a.childNodes.length
     finally
         first.Dispose ()
         second.Dispose ()
@@ -124,15 +124,16 @@ let private moved () =
         Mounting.mount graph None ignore outside None (fun context -> context.Native (input, Mounting.Owned))
 
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
     equal
         true
         (input.parentNode
+         |> Option.ofObj
          |> Option.exists (fun parent -> obj.ReferenceEquals (parent, outside)))
 
     adopted.Dispose ()
-    equal 0. outside.childNodes.length
+    equal 0u outside.childNodes.length
 
 let private rollback dispose =
     use graph = new Graph ()
@@ -177,10 +178,14 @@ let private invalidTargets () =
     let template = Prepared.prepare (H.Program.div [||] [||])
 
     rejected (fun () ->
-        mount graph Scheduling.SynchronousCommits host (Prepared.view template (fun _ backend -> Prepared.apply other [||] backend))
+        mount
+            graph
+            Scheduling.SynchronousCommits
+            host
+            (Prepared.view template (fun _ backend -> Prepared.apply (unbox<HTMLElement> other) [||] backend))
         |> ignore)
 
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
     let mutable failed = false
 
     try
@@ -190,7 +195,7 @@ let private invalidTargets () =
         failed <- true
 
     equal true failed
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private staticOnly () =
     use graph = new Graph ()
@@ -213,7 +218,7 @@ let private staticOnly () =
             mount graph Scheduling.SynchronousCommits host (Prepared.view template (fun _ _ -> ()))
             |> ignore)
 
-    equal (0, 0.) (reads, host.childNodes.length)
+    equal (0, 0u) (reads, host.childNodes.length)
 
     rejected (fun () ->
         Html.render Reject (Program.run (Prepared.view template (fun _ _ -> ())))
@@ -228,8 +233,7 @@ let private templateContent () =
 
     let view =
         Prepared.view template (fun root backend ->
-            let input =
-                (root :?> HTMLTemplateElement).content.firstChild.Value :?> HTMLInputElement
+            let input = (root :?> HTMLTemplateElement).content.firstChild :?> HTMLInputElement
 
             Prepared.apply input [| H.Properties.HTMLInputElement.valueStatic "a" |] backend)
 
@@ -239,11 +243,11 @@ let private templateContent () =
         host.querySelector "template"
         |> unbox<HTMLTemplateElement>
 
-    let input = root.content.firstChild.Value :?> HTMLInputElement
+    let input = root.content.firstChild :?> HTMLInputElement
     equal "a" input.value
     mounted.Dispose ()
-    equal 0. host.childNodes.length
-    equal true (obj.ReferenceEquals (input, root.content.firstChild.Value))
+    equal 0u host.childNodes.length
+    equal true (obj.ReferenceEquals (input, root.content.firstChild))
 
 /// <summary>Checks clone reuse, ownership, rollback and static preparation restrictions.</summary>
 let cases =

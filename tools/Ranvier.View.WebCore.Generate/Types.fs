@@ -1,4 +1,4 @@
-/// <summary>F# names of the <c>Fable.Core.TS</c> types, as source text.</summary>
+/// <summary>F# source names for reflected contract types.</summary>
 module Ranvier.View.WebCore.Generate.Types
 
 open System
@@ -112,7 +112,7 @@ let private strip (name: string) =
     | -1 -> name
     | at -> name.Substring (0, at)
 
-/// <summary>The type's path without generic arguments, such as <c>Fable.Core.TS.Dom.NodeListOf</c>.</summary>
+/// <summary>The type's namespace and declaring path without generic arguments.</summary>
 let rec path (t: Type) : string =
     // A module compiled with the Module suffix keeps its source name.
     let own =
@@ -142,7 +142,13 @@ let rec name (t: Type) : string =
         | "System.Double" -> "float"
         | "System.Single" -> "float32"
         | "System.Int32" -> "int"
+        | "System.UInt32" -> "uint32"
+        | "System.Int16" -> "int16"
+        | "System.UInt16" -> "uint16"
         | "System.Int64" -> "int64"
+        | "System.UInt64" -> "uint64"
+        | "System.Byte" -> "byte"
+        | "System.SByte" -> "sbyte"
         | "System.Void" -> "unit"
         | "System.Object" -> "obj"
         | "Microsoft.FSharp.Core.Unit" -> "unit"

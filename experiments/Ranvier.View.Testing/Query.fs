@@ -1,7 +1,7 @@
 module Ranvier.View.Testing.Query
 
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 
 #if FABLE_COMPILER
 /// <summary>The value of a form control: an input, a textarea or a select.</summary>

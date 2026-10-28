@@ -1,7 +1,7 @@
 module TestingApiChecks
 
 open global.Ranvier
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Testing
@@ -14,7 +14,7 @@ type private FormState =
     }
 
 let private targetOf (e: Event) : HTMLInputElement =
-    unbox<HTMLInputElement> e.target.Value
+    unbox<HTMLInputElement> e.target
 
 let private form =
     Component.define
@@ -152,7 +152,7 @@ let private selectorsAgree () =
         let all = host.querySelectorAll selector
 
         let native =
-            texts [ for i in 0 .. int all.length - 1 -> unbox<Element>(all.item (float i)) ]
+            texts [ for i in 0 .. int all.length - 1 -> unbox<Element>(all.item (uint32 i)) ]
 
         if engine <> expected || native <> expected then
             failwithf "%s: expected %A, engine %A, querySelectorAll %A" selector expected engine native
@@ -168,8 +168,8 @@ let private values () =
     let inputs = ResizeArray<string>()
     let area = Query.get root "textarea"
 
-    let listener: EventListenerOrEventListenerObject =
-        Fable.Core.U2.Case1 (fun (_: Event) -> inputs.Add (unbox<HTMLTextAreaElement> area).value)
+    let listener: EventListener =
+        (fun (_: Event) -> inputs.Add (unbox<HTMLTextAreaElement> area).value)
 
     (area :> EventTarget).addEventListener("input", listener)
     Interact.input root "textarea" "typed"
@@ -251,7 +251,7 @@ let private unreachableStates () =
     let select = Query.get root "select"
 
     for name in [ "input"; "change" ] do
-        select.addEventListener (name, listener = Fable.Core.U2.Case1 (fun (_: Event) -> events.Add name))
+        select.addEventListener (name, listener = (fun (_: Event) -> events.Add name))
 
     let unknown = failureOf (fun () -> Interact.select root "select" "zzz")
     let radio = failureOf (fun () -> Interact.check root "input" false)
@@ -283,7 +283,7 @@ let private textAndEvents () =
     let input = Query.get root "input.k"
 
     for name in [ "keydown"; "keyup" ] do
-        input.addEventListener (name, listener = Fable.Core.U2.Case1 (fun (e: Event) -> keys.Add (e.``type`` + ":" + (unbox<KeyboardEvent> e).key)))
+        input.addEventListener (name, listener = (fun (e: Event) -> keys.Add (e.``type`` + ":" + (unbox<KeyboardEvent> e).key)))
 
     Interact.key root "input.k" "a"
 
@@ -291,7 +291,7 @@ let private textAndEvents () =
         failwithf "keys %A" (List.ofSeq keys)
 
     let button = Query.get root "button"
-    button.addEventListener ("custom", listener = Fable.Core.U2.Case1 (fun (e: Event) -> e.preventDefault ()))
+    button.addEventListener ("custom", listener = (fun (e: Event) -> e.preventDefault ()))
 
     let cancelled =
         Interact.dispatch

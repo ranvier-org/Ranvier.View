@@ -20,16 +20,84 @@ below. These qualifications do not change the completed publish-and-run acceptan
 
 The next implementation batch is ABI 21 in order-of-work item 6. Paused work remains paused.
 
-## Where things stand
+## Landed: Linux and Windows ARM64
+
+[Ranvier.View#4](https://github.com/ranvier-org/Ranvier.View/pull/4), merged as `688feec`, completes the
+Linux x64 and real Windows ARM64 execution checks. [Run 40675534807](https://github.com/ranvier-org/Ranvier.View/actions/runs/40675534807)
+passed all checks: each Windows x64, Windows ARM64, Linux x64 and macOS 26 backend job reported 773 passed,
+16 existing ignored and no failures or errors. All four platforms ran the visible regular sample and
+published and ran both NativeAOT apps. Windows ARM64 used the hosted `windows-11-arm` runner; Linux used
+`ubuntu-24.04` with Xvfb. The visible samples reported 480x320 backing pixels and scale 1.
+
+The changes add Linux runtime dependencies, conservative WPE glyph damage bounds and device-pixel-aligned
+partial painting at fractional scales. Three regressions cover scale 1.25, scale 1.2 fallback and resized
+viewport bounds. Physical Retina scale 2 and a real IME remain unverified.
+
+## Landed: shared DOM interface packages
+
+[Ranvier#249](https://github.com/ranvier-org/Ranvier/pull/249), merged as `f371df76`, publishes
+`Ranvier.Dom`, `Fable.Ranvier.Dom` and their traced variants at `0.1.0-alpha.1`. The two projects include
+the same generated source, pinned to WebCore generator `7213a5d`. Both .NET target frameworks build;
+the packages share a CLR assembly identity, and the native contracts do not depend on Fable or Xantham.
+
+[Master CI 40694699765](https://github.com/ranvier-org/Ranvier/actions/runs/40694699765), the DOM drift
+check and performance checks passed. [OIDC publication 40695381647](https://github.com/ranvier-org/Ranvier/actions/runs/40695381647)
+succeeded. All four packages appeared on the public NuGet feed; fresh public-source consumers then
+passed normal/traced assembly-identity checks, Fable compilation and JavaScript execution. This lands
+the interface-package part of G8. View/backend migration and native package publication remain in progress.
+
+[Ranvier#250](https://github.com/ranvier-org/Ranvier/pull/250), merged as `ef19d86b`, restores the
+`CSSStyleProperties` contract and both inline-style getters omitted from alpha.1. The corrected source is
+pinned to generator `e81b32b`; all PR checks passed, including the IDL drift check, packed normal/traced
+.NET and Fable consumers, and ARM/x64 performance jobs. [Main CI 40715311270](https://github.com/ranvier-org/Ranvier/actions/runs/40715311270)
+and [OIDC publication 40716357543](https://github.com/ranvier-org/Ranvier/actions/runs/40716357543) passed.
+All four alpha.2 packages are public; fresh official-NuGet consumers passed normal/traced .NET
+assembly-identity and style-contract checks, Fable compilation and JavaScript execution.
+
+## In integration: ABI 21 and the native View migration
+
+[Ranvier.WebCore#5](https://github.com/ranvier-org/Ranvier.WebCore/pull/5), merged as `6222b6f9`, contains ABI 21,
+canonical managed interop, the five-RID aggregate, Windows UI Automation and shared D3D11 transport.
+[Pre-merge run 40706181592](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40706181592) passed all
+five native builds/runtime checks and managed aggregation. Immutable tag `v0.1.0-preview.6` points to that
+merged revision. [Release run 40722932631](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40722932631)
+was stopped before publication when package-only testing found cross-RID resource-path corruption. The tag
+remains unchanged. [Native correction PR6](https://github.com/ranvier-org/Ranvier.WebCore/pull/6), merged as
+`eef227e2`, fixes target scoping and restores inline-style contracts. Its [pre-merge run 40729363033](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40729363033)
+passed all five native runtime jobs, the real multi-RID resource regression and managed aggregation.
+Immutable tag `v0.1.0-preview.7` points to that exact merged tree, retaining ABI 21. [Release run 40746907938](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40746907938)
+passed all five native jobs, managed aggregation and OIDC publication of the corrected Slim cohort.
+[Windows GPU run 40766367608](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40766367608) is running
+on the same immutable tag and source. Fresh official-NuGet consumers verified all seven native packages,
+all five matching clean-source manifests and exact payload hashes. Both apps passed normal/traced JIT and
+NativeAOT runs with public native packages and locally packed View libraries. GPU-package and final
+public View acceptance remain pending.
+
+The composed View branch removes copied interop, uses the shared DOM contracts on both targets, and enables
+the four previously pending conformance cases. Its [full source CI 40774290136](https://github.com/ranvier-org/Ranvier.View/actions/runs/40774290136)
+passed all 17 enabled jobs, including 781 backend tests per Windows x64, Windows ARM64, Linux x64 and macOS
+26 job, with 12 existing ignored and no failures or errors. Regressions cover namespace creation, secondary documents,
+union/sequence/variadic transport, nested template cloning/import, CSS defaults, popover dictionary handles
+and passive/capture/once listeners. The expanded smoke app passed 15 checks under JIT and NativeAOT,
+including hydration retaining its server node and a subsequent native click updating state.
+
+The composed visible counter also passed JIT and NativeAOT checks against the private GPU runtime:
+480x320 SDL backbuffer, scale 1, shared D3D11 frames, clipboard and an independent OS client verifying
+the UI Automation tree, Invoke, reactive name changes and provider disconnection after teardown.
+Four-platform source integration CI is green. Public GPU integration, the View merge/publication and
+final public View package consumers remain required. Independent presenter UIA clients are verified on
+Windows x64; ARM64 verifies UIA attachment/smoke without the external client.
+
+## Where main stands
 
 | Piece | State |
 |---|---|
-| Ranvier.WebCore native host | ABI 20 on main. Builds on win-x64, win-arm64, linux-x64, linux-arm64, osx-arm64 in CI; preview.4 consumed from nuget.org on Windows x64 and macOS arm64 |
-| `Ranvier.View.WebCore` | Runs on win-x64 and osx-arm64 (macOS 26); mounts components, paints RGBA and forwards input. macOS CI: 770 passed, 16 ignored, 0 failed |
+| Ranvier.WebCore native host | ABI 21 on native main through WebCore#5 and correction #6. Corrected preview.7 passed all five tag-run RID jobs, managed aggregation, OIDC publication and fresh public-native consumers. Windows GPU publication and final public View consumers remain pending. Unpublished preview.6 was stopped for a packaging defect. View main still consumes preview.4 (ABI 20) until its integration lands |
+| `Ranvier.View.WebCore` | Runs on win-x64, real win-arm64, linux-x64 and osx-arm64 (macOS 26); 773 backend tests passed per platform, 16 existing ignored, no failures |
 | Conformance | ConformanceCases' fifteen modules match the DOM twin, except four pending cases |
-| AOT | Both apps publish and run with NativeAOT locally on win-x64 and in CI on win-x64 and osx-arm64. Mount, paint, native click, repaint and the visible sample smoke pass. FSharp.Core/view reflection, trimming and generic-recursion warnings remain visible |
-| Window | `Ranvier.View.WebCore.Sdl` on Windows and macOS 26: paint, mouse, wheel, keys, IME event forwarding, focus, cursor, text/plain clipboard. macOS hidden-window tests and visible sample smoke pass (480x320, scale 1); Retina scale 2 and real IME remain manual checks. NativeAOT smoke app and sample publish and run locally on Windows and in Windows/macOS CI |
-| Accessibility | ABI complete; no platform bridge ([help wanted](https://github.com/ranvier-org/Ranvier.WebCore/pull/2)) |
+| AOT | Both apps publish and run with NativeAOT locally on win-x64 and in CI on win-x64, win-arm64, linux-x64 and osx-arm64. Mount, paint, native click, repaint and the visible sample smoke pass. FSharp.Core/view reflection, trimming and generic-recursion warnings remain visible |
+| Window | `Ranvier.View.WebCore.Sdl` runs on Windows x64/ARM64, Linux x64 and macOS 26: paint, mouse, wheel, keys, IME event forwarding, focus, cursor and text/plain clipboard. Hidden-window tests and visible sample smoke pass (480x320, scale 1). Both NativeAOT apps run in all four CI jobs. Retina scale 2 and a real IME remain unverified |
+| Accessibility | Windows UI Automation bridge on native main through WebCore#5; View's SDL attachment and JIT/AOT OS-client checks pass in integration. Coordinated release and published presenter checks remain pending |
 
 Critical path for a first Windows app: gaps 1, 2 and 3. The rest can follow in any order.
 
@@ -71,18 +139,25 @@ run loop and SDL's event pump share the macOS process main thread (G3).
 
 ## 2. The native package from nuget.org
 
-`Ranvier.View.WebCore.fsproj` defaults to native package version `0.1.0-preview.4`, with `win-x64` on
-Windows and `osx-arm64` on macOS. `RanvierWebCoreNativeDir` is an opt-in local-build override. Fresh CI
-checkouts restore the packages and pass the backend and publish-and-run checks on both platforms.
+The landed backend defaults to native package version `0.1.0-preview.4`, selecting the publish target's
+runtime identifier or the SDK host's. `RanvierWebCoreNativeDir` is an opt-in local-build override. Fresh CI
+checkouts restore packages and pass backend and publish-and-run checks on Windows x64/ARM64, Linux x64
+and macOS arm64.
 
-Remaining for the ABI 21 batch: the five-RID `Ranvier.WebCore.Native` meta-package (G5), replacing the
-current `RanvierWebCoreNativeRid` selection. This is order-of-work item 6, outside the completed macOS/AOT batch.
+The ABI 21 native release publishes the five-RID `Ranvier.WebCore.Native` meta-package (G5) and canonical
+managed `Ranvier.WebCore` at preview.7. Fresh official-source consumers verified exact five-RID dependencies,
+matching clean release manifests and all payload hashes, then ran both apps under JIT and NativeAOT.
+The View integration replaces `RanvierWebCoreNativeRid` selection with this aggregate; its merge and final
+public backend/presenter acceptance remain pending.
 
 ## 3. Landing on master
 
 Completed: [Ranvier.View#1](https://github.com/ranvier-org/Ranvier.View/pull/1) landed the preview backend
 and SDL presenter on `main`; [Ranvier.View#2](https://github.com/ranvier-org/Ranvier.View/pull/2) landed macOS
 and NativeAOT coverage. Main CI restores the native package and runs the backend on Windows and macOS.
+
+[Ranvier.View#4](https://github.com/ranvier-org/Ranvier.View/pull/4) adds Linux x64 and real Windows ARM64
+to those backend, visible sample and NativeAOT gates.
 
 The settled later decisions remain: move the copied interop to a managed `Ranvier.WebCore` package (G6),
 keep the `Ranvier.View.WebCore` name (G7), and decouple the Fable interfaces before stable release (G8).
@@ -122,37 +197,44 @@ one needs `createElementNS`. Members taking unions of nodes, sequences or variad
 (`append(...nodes)`) throw `NotSupportedException`. The view's own paths use none of them, so apps are not
 blocked, but user code calling them is.
 
-Work, in the Ranvier.WebCore repo as the next ABI batch (ABI 21; one ABI version per release batch):
+ABI 21 implements the native work through WebCore#5 (one ABI version per release batch), with corrected
+preview.7 published through WebCore#6. View consumption remains in integration:
 
 1. `createElementNS` and `createHTMLDocument` in `gen/dom.json`; the generator's handling of a second document's
    lifetime in the object table.
 2. Mapping unions, sequences and variadics in the generator (decision G11: now, or when a user hits one).
-3. Regenerate `Native.fs` and `NativeDom.fs`, copy into Ranvier, un-pend the four cases.
+3. Canonical `Native.fs` and `NativeDom.fs` are generated in Ranvier.WebCore. The View integration consumes
+   the managed package, removes copied interop and enables all four cases; its source suite passes against
+   the actual CI package cohort. Release/public-package CI and merge remain pending.
 
 ## 6. Other platforms
 
-The backend has run on win-x64 and osx-arm64 (macOS 26). The macOS run passed 770 tests, including SDL
-hidden-window presentation and input. Linux loading and win-arm64 on real hardware remain unverified.
+Completed by [Ranvier.View#4](https://github.com/ranvier-org/Ranvier.View/pull/4) and
+[run 40675534807](https://github.com/ranvier-org/Ranvier.View/actions/runs/40675534807): Linux x64 loading,
+the complete backend suite, the visible SDL3 sample and both NativeAOT apps pass. The same checks pass on
+a real hosted Windows ARM64 runner, alongside Windows x64 and macOS 26. Each platform passed 773 tests,
+with 16 existing ignored and no failures or errors. Linux clipboard and input checks use the WPE host
+under Xvfb. This proves the specified Linux x64 and Windows ARM64 execution; it does not establish a
+Linux ARM64 backend/presenter run.
 
-macOS is verified on `macos-26`: 770 backend tests pass, and both the regular and NativeAOT sample smoke
-pass with a visible window. Retina scale 2 and a real IME remain manual checks.
-
-Remaining: run `Ranvier.View.WebCore.Tests` and the SDL3 sample on linux-x64. Check win-arm64 on real hardware.
-Known blocker: macOS 15 lacks `libswiftCompatibilitySpan.dylib`, so the osx package needs macOS 26 for now
-(decision G12: ship that, or the paused macOS 15 work first). win-arm64 needs a real ARM machine.
-Linux loads the WPE port, whose input and clipboard paths differ from Windows'.
+Retina scale 2 and a real IME remain manual qualifications. macOS 15 still lacks
+`libswiftCompatibilitySpan.dylib`; decision G12 keeps that work paused and ships macOS 26 support.
 
 ## 7. Accessibility bridges
 
-The ABI is complete; the bridges (UI Automation, NSAccessibility, AT-SPI) are documented as help wanted in
-Ranvier.WebCore's `docs/ACCESSIBILITY.md`. The SDL3 presenter must expose its native window handle so a bridge
-can attach. Not on the critical path (decision G13).
+Windows UI Automation is implemented in native main through WebCore#5. The View integration attaches it to
+the SDL HWND and detaches it before page/window teardown. Independent OS-client checks pass locally under
+JIT and NativeAOT for discovery, geometry, Invoke, reactive names and stale-provider disconnection. Native
+release and final published presenter acceptance remain pending. NSAccessibility and AT-SPI remain
+contributor work; decision G13 requires one working bridge before stable.
 
 ## 8. Optional: GPU compositing
 
-PR #1 in Ranvier.WebCore (`gpu-compositing`) adds accelerated compositing on Windows. The CPU paint works
-without it; with it, the presenter would take a GPU texture instead of copying pixels. Linux and macOS
-compositing are paused. After the first app works.
+WebCore#5 includes the Windows shared D3D11 transport. The View integration imports its frames into SDL's
+`direct3d11` renderer, flushes before releasing frame leases, and falls back to CPU painting for unsupported
+devices/renderers/scales. Private JIT/NativeAOT actual-backbuffer checks pass; coordinated GPU publication
+and the normal/traced published-package acceptance matrix are still required. Linux and macOS compositing
+remain paused.
 
 ## Decisions
 
@@ -254,9 +336,10 @@ The frontier is empty: every decision above is settled.
 4. Complete: the macOS run loop spike (G3) and presenter smoke on macOS 26 (gap 6); Retina and real IME
    checks remain manual.
 5. Complete: NativeAOT publish and execution of both apps locally on Windows, then Windows/macOS CI (gap 4).
-6. ABI 21 in Ranvier.WebCore: `createElementNS`, `createHTMLDocument`, the union, sequence and variadic mapping,
-   the managed `Ranvier.WebCore` package, the `Ranvier.WebCore.Native` meta-package, and `domgen.py` emitting the
-   F# interfaces (gaps 5, 2; G5, G6).
-7. The Fable decoupling onto the generated interfaces, before the first stable release (G8).
-8. Linux and win-arm64 (gap 6); accessibility bridges from contributors, one required for stable (gap 7); GPU
-   compositing (gap 8).
+6. Implemented on native main through WebCore#5: ABI 21 `createElementNS`, `createHTMLDocument`, union,
+   sequence and variadic mapping, canonical managed interop, the five-RID aggregate and shared F# generation.
+   Coordinated publication and View integration remain pending (gaps 5, 2; G5, G6).
+7. Fable decoupling is implemented in the View integration, with 781 backend tests passing against the CI
+   package cohort. Public-package acceptance, final four-platform CI, merge and publication remain pending (G8).
+8. Linux x64 and real Windows ARM64 execution is complete through View#4 (gap 6). Accessibility integration,
+   with one bridge required for stable (gap 7), and Windows GPU presentation (gap 8) remain in progress.

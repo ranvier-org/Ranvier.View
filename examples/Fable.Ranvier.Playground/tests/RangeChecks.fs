@@ -3,7 +3,7 @@ module RangeChecks
 open System
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View.Testing
 open Fable.Ranvier
 open Ranvier.View
@@ -13,6 +13,7 @@ open Ranvier.View.Dom.Mounting
 module private Dom =
     let element (tag: string) (_: obj list) (_: obj list) : HTMLElement =
         (Conformance.document ()).createElement tag
+        |> unbox<HTMLElement>
 
 let private equal expected actual =
     if expected <> actual then
@@ -53,6 +54,7 @@ let private query (node: Node) (selector: string) : HTMLElement option = jsNativ
 #else
 let private query (node: Node) (selector: string) : HTMLElement option =
     (unbox<Element> node).querySelector selector
+    |> Option.ofObj
     |> Option.map unbox<HTMLElement>
 #endif
 
@@ -96,16 +98,16 @@ let private sizes () =
         let handle =
             mounted graph None host (Some sibling) (fun ctx ->
                 equal SettingUp (ctx.Phase ())
-                equal 1. host.childNodes.length
+                equal 1u host.childNodes.length
                 Tree.run view ctx.Backend
-                equal 1. host.childNodes.length)
+                equal 1u host.childNodes.length)
 
         equal Attached handle.Phase
         equal expected host.textContent
         same sibling (at host (int host.childNodes.length - 1))
         handle.Dispose ()
         handle.Dispose ()
-        equal 1. host.childNodes.length
+        equal 1u host.childNodes.length
         same sibling (at host 0)
 
 let private movement () =
@@ -116,17 +118,17 @@ let private movement () =
     let sibling = Dom.element "aside" [] []
     other.appendChild sibling |> ignore
     handle.MoveBefore (other, Some sibling)
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
     same button (at other 1)
     same sibling (at other 3)
     handle.MoveBefore (other, Some (at other 0))
-    equal 4. other.childNodes.length
+    equal 4u other.childNodes.length
     rejected (fun () -> handle.MoveBefore (button, None))
     same button (at other 1)
     rejected (fun () -> handle.MoveBefore (host, Some sibling))
     same button (at other 1)
     handle.Dispose ()
-    equal 1. other.childNodes.length
+    equal 1u other.childNodes.length
     rejected (fun () -> handle.MoveBefore (host, None))
 
 let private mutatedBoundaries () =
@@ -136,15 +138,15 @@ let private mutatedBoundaries () =
     let foreign = Dom.element "aside" [] []
     host.insertBefore (foreign, at host 2) |> ignore
     rejected (fun () -> handle.MoveBefore (other, None))
-    equal 0. other.childNodes.length
+    equal 0u other.childNodes.length
     handle.Dispose ()
-    equal 1. host.childNodes.length
+    equal 1u host.childNodes.length
     same foreign (at host 0)
     let next = tree graph host (Tree.ops.Text "next")
     remove (at host 1)
     rejected (fun () -> next.MoveBefore (other, None))
     next.Dispose ()
-    equal 1. host.childNodes.length
+    equal 1u host.childNodes.length
 
 let private reparentedOwnership () =
     use graph = new Graph ()
@@ -155,8 +157,8 @@ let private reparentedOwnership () =
 
     other.appendChild (at host 1) |> ignore
     handle.Dispose ()
-    equal 0. host.childNodes.length
-    equal 0. other.childNodes.length
+    equal 0u host.childNodes.length
+    equal 0u other.childNodes.length
 
 let private nativePolicies () =
     use graph = new Graph ()
@@ -187,14 +189,14 @@ let private nativePolicies () =
     let owned = mounted graph None host None (fun ctx -> ctx.Native (a, Owned))
     other.appendChild a |> ignore
     owned.Dispose ()
-    equal None a.parentNode
+    equal null a.parentNode
     let detached = Dom.element "button" [] []
 
     let borrowed =
         mounted graph None host None (fun ctx -> ctx.Native (detached, Borrowed))
 
     borrowed.Dispose ()
-    equal None detached.parentNode
+    equal null detached.parentNode
 
 let private failures attachFailure =
     use graph = new Graph ()
@@ -242,7 +244,7 @@ let private failures attachFailure =
 
     equal true caught
     equal true cleaned
-    equal 1. host.childNodes.length
+    equal 1u host.childNodes.length
     same sibling (at host 0)
     button.Value.click ()
     equal 0 calls
@@ -271,7 +273,7 @@ let private cleanupOrder () =
     let handle = tree graph host view
     handle.Dispose ()
     equal [ "child"; "parent" ] (List.ofSeq trace)
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private parentAndGraph () =
     use graph = new Graph ()
@@ -287,7 +289,7 @@ let private parentAndGraph () =
     equal "c" host.textContent
     graph.Dispose ()
     equal Disposed c.Phase
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
     rejected (fun () ->
         mounted graph (Some parent) host None ignore
@@ -309,7 +311,7 @@ let private retainedCapabilities () =
     handle.Dispose ()
     rejected (fun () -> captured.Value.OnCleanup ignore)
     rejected (fun () -> captured.Value.Backend.Bind ((=), fun () -> "late"))
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private duplicateNative () =
     use graph = new Graph ()
@@ -322,13 +324,13 @@ let private duplicateNative () =
             ctx.Native (node, Borrowed))
         |> ignore)
 
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
     rejected (fun () ->
         mounted graph None host None (fun ctx -> ctx.Native (host, Borrowed))
         |> ignore)
 
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private releaseFailures () =
     use graph = new Graph ()
@@ -356,7 +358,7 @@ let private releaseFailures () =
         handle.Dispose ()
         equal 1 reports
         equal 3 handle.Failures.Length
-        equal 1. host.childNodes.length
+        equal 1u host.childNodes.length
         same node (at host 0)
         handle.Dispose ()
         equal 1 reports
@@ -376,7 +378,7 @@ let private disposedDuringSetup () =
             ctx.Backend.Text "y")
         |> ignore)
 
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let cases =
     [|
@@ -425,7 +427,7 @@ let private reactiveMoves () =
     equal "2" other.textContent
     equal 2 setups
     b.Dispose ()
-    equal 0. other.childNodes.length
+    equal 0u other.childNodes.length
 
 let private keyedReconciliation () =
     use graph = new Graph ()
@@ -491,7 +493,7 @@ let private keyedReconciliation () =
 
     handle.Dispose ()
     equal [ 1; 1; 2; 3 ] (cleanups |> Seq.sort |> List.ofSeq)
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private keyedRootMovement () =
     use graph = new Graph ()
@@ -517,7 +519,7 @@ let private keyedRootMovement () =
     equal "" other.textContent
     equal "before:TWOONEthree:after" host.textContent
     handle.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private keyedForeignMutation () =
     use graph = new Graph ()
@@ -532,9 +534,9 @@ let private keyedForeignMutation () =
     host.insertBefore (foreign, at host 3) |> ignore
 
     rejected (fun () -> handle.MoveBefore (other, None))
-    equal 0. other.childNodes.length
+    equal 0u other.childNodes.length
     handle.Dispose ()
-    same host foreign.parentNode.Value
+    same host foreign.parentNode
     remove foreign
 
 // remove () on the node raises.
@@ -554,8 +556,8 @@ let private keyedReleaseFailure () =
 
     try
         handle.Dispose ()
-        equal None finish.parentNode
-        equal 1. host.childNodes.length
+        equal null finish.parentNode
+        equal 1u host.childNodes.length
         equal 1 handle.Failures.Length
     finally
         restore ()
@@ -576,7 +578,7 @@ let private duplicateKeys () =
         caught <- true
 
     equal true caught
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
     use liveGraph = new Graph ()
     let liveHost = Dom.element "section" [] []
@@ -613,7 +615,7 @@ let private attachmentReentry () =
             mounted graph (Some parent) host None (fun ctx -> ctx.Backend.Text "x")
             |> ignore)
 
-        equal 0. host.childNodes.length
+        equal 0u host.childNodes.length
     finally
         restore ()
 
@@ -649,9 +651,9 @@ let private movedBeforeStaging () =
             ctx.Native (native, Owned))
         |> ignore)
 
-    equal 0. host.childNodes.length
-    equal None moved.Value.parentNode
-    equal None native.parentNode
+    equal 0u host.childNodes.length
+    equal null moved.Value.parentNode
+    equal null native.parentNode
 
 #if FABLE_COMPILER
 [<Emit("Array.from($0.childNodes, n => n.nodeType === 1 ? n.tagName : n.nodeType === 3 ? 'text:' + n.data : n.data)")>]
@@ -661,8 +663,8 @@ let private describe (node: Node) : string array =
     Ranvier.View.Native.childNodesOf node
     |> Array.map (fun n ->
         match n.nodeType with
-        | 1.0 -> (unbox<Element> n).tagName
-        | 3.0 -> "text:" + Ranvier.View.Native.dataOf n
+        | 1us -> (unbox<Element> n).tagName
+        | 3us -> "text:" + Ranvier.View.Native.dataOf n
         | _ -> Ranvier.View.Native.dataOf n)
 #endif
 
@@ -761,7 +763,7 @@ let private overlappingMounts () =
             |> ignore)
 
         same node (at host 1)
-        equal 0. other.childNodes.length
+        equal 0u other.childNodes.length
         let child = Dom.element "span" [] []
         node.appendChild child |> ignore
 
@@ -769,7 +771,7 @@ let private overlappingMounts () =
             mounted graph None other None (fun ctx -> ctx.Native (child, Owned))
             |> ignore)
 
-        same node child.parentNode.Value
+        same node child.parentNode
     finally
         a.Dispose ()
 
@@ -791,8 +793,8 @@ let private equalityDisposal () =
     let node = at host 1
     graph.Run (fun () -> source.Value <- 1)
     equal Disposed handle.Phase
-    equal "0" node.textContent.Value
-    equal 0. host.childNodes.length
+    equal "0" node.textContent
+    equal 0u host.childNodes.length
 
 let private childReporter () =
     use graph = new Graph ()
@@ -815,7 +817,7 @@ let private childReporter () =
 
     handle.Dispose ()
     equal 1 mountReports
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
     parent.Dispose ()
 
 let private failedMovementRollback () =
@@ -854,8 +856,8 @@ let private failedMovementRollback () =
 
         equal true caught
         equal Disposed handle.Phase
-        equal 0. host.childNodes.length
-        equal 0. other.childNodes.length
+        equal 0u host.childNodes.length
+        equal 0u other.childNodes.length
         let before = reads
         graph.Run (fun () -> source.Value <- 1)
         equal before reads
@@ -878,10 +880,10 @@ let private reparentedGeneratedDescendants () =
 
     try
         handle.Dispose ()
-        equal 0. host.childNodes.length
+        equal 0u host.childNodes.length
         equal "x" other.textContent
         adopted.Dispose ()
-        equal 0. other.childNodes.length
+        equal 0u other.childNodes.length
     finally
         adopted.Dispose ()
         handle.Dispose ()
@@ -914,7 +916,7 @@ let private keyedReportsAndRecovery () =
     equal 2 setups
     equal 1 reports.Count
     handle.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private keyedSetupRecovery initial =
     use graph = new Graph ()
@@ -952,7 +954,7 @@ let private keyedSetupRecovery initial =
             caught <- true
 
         equal true caught
-        equal 0. host.childNodes.length
+        equal 0u host.childNodes.length
         equal [ 1; 2; 3 ] (cleanups |> Seq.sort |> List.ofSeq)
     else
         let handle = mount graph None (List.iter reports.Add) host None build
@@ -968,7 +970,7 @@ let private keyedSetupRecovery initial =
         same one (at host 6)
         handle.Dispose ()
         equal [ 1; 2; 2; 3; 3 ] (cleanups |> Seq.sort |> List.ofSeq)
-        equal 0. host.childNodes.length
+        equal 0u host.childNodes.length
 
 let private keyedLayoutFailure () =
     use graph = new Graph ()
@@ -1003,7 +1005,7 @@ let private keyedLayoutFailure () =
 
     equal 1 reports.Count
     equal Disposed handle.Phase
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
     equal [ 1; 2; 3 ] (cleanups |> Seq.sort |> List.ofSeq)
 
 let private keyedNestedMovement () =
@@ -1054,8 +1056,8 @@ let private keyedNestedMovement () =
     equal [ 11; 20; 21 ] (cleanups |> Seq.sort |> List.ofSeq)
     handle.Dispose ()
     equal [ 10; 11; 20; 21 ] (cleanups |> Seq.sort |> List.ofSeq)
-    equal 0. host.childNodes.length
-    equal 0. other.childNodes.length
+    equal 0u host.childNodes.length
+    equal 0u other.childNodes.length
 
 let private keyedDisposal point =
     use graph = new Graph ()
@@ -1102,7 +1104,7 @@ let private keyedDisposal point =
         restore ()
 
     equal Disposed handle.Phase
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
     let expected =
         if point = "read" then [ 1; 2 ]
@@ -1114,7 +1116,7 @@ let private keyedDisposal point =
     let before = setups
     graph.Run (fun () -> rows.Value <- [ 4; 5 ])
     equal before setups
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private keyedReporter throws =
     use graph = new Graph ()
@@ -1147,7 +1149,7 @@ let private keyedReporter throws =
     same one (at host 6)
     equal 1 reports
     handle.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private keyedTracksOnlySnapshot () =
     use graph = new Graph ()
@@ -1198,7 +1200,7 @@ let private keyedInitialDisposal () =
         |> ignore)
 
     equal 0 rendered
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
     equal true parent.IsDisposed
 
 let private keyedSetupAndCleanupFailure () =
@@ -1231,7 +1233,7 @@ let private keyedSetupAndCleanupFailure () =
     equal "21" host.textContent
     same one (at host 6)
     handle.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private arrayKeyMutation () =
     use graph = new Graph ()
@@ -1256,7 +1258,7 @@ let private arrayKeyMutation () =
     equal "onetwo" host.textContent
     equal 1 reads
     handle.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private authoredSwitch () =
     use graph = new Graph ()
@@ -1279,7 +1281,7 @@ let private authoredSwitch () =
     equal "c" host.textContent
     equal [ "setup 1"; "cleanup 1"; "setup 2" ] (List.ofSeq log)
     handle.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private moreCases =
     [|

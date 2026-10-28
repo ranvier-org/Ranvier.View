@@ -10,8 +10,17 @@
     <PackageReference Include="Xantham.Fable.Core.TS" Version="[0.2.1]" GeneratePathProperty="true" />
     <PackageReference Include="Xantham.TypeScript.Wire" Version="[0.3.0]" />
     <PackageReference Include="Fantomas.Core" Version="[7.0.5]" />
+    <Compile Include="TagMetadata.fs" />
+    <Compile Include="SharedTypes.fs" />
+    <Content Include="dom-contracts.json" CopyToOutputDirectory="PreserveNewest" />
     <Compile Include="Program.fs" />
     <Content Include="$(PkgXantham_Fable_Core_TS)/xantham/catalogue.json" Link="xantham/catalogue.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(PkgXantham_Fable_Core_TS)/xantham/declarations.json.br" Link="xantham/declarations.json.br" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseLocalRanvier)' == 'true'">
+    <ProjectReference Include="$(RanvierRoot)/src/Ranvier.Dom/Ranvier.Dom.fsproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UseLocalRanvier)' != 'true'">
+    <PackageReference Include="Ranvier.Dom$(RanvierPackageSuffix)" Version="$(RanvierDomVersion)" />
   </ItemGroup>
 </Project>

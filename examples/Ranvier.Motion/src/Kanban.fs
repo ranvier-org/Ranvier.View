@@ -384,7 +384,8 @@ let mount (mode: CommitMode) (graph: Graph) (report: exn list -> unit) (host: Fa
     let definition = view board
 
     let mounted =
-        Mounting.mountWith mode graph None report host None (fun context -> Program.run (Component.render definition ()) context.Backend)
+        Mounting.mountWith mode graph None report (unbox<global.Ranvier.Dom.HTMLElement> host) None (fun context ->
+            Program.run (Component.render definition ()) context.Backend)
 
     { Board = board; Mount = mounted }
 

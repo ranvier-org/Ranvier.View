@@ -1,7 +1,7 @@
 /// The F# samples of docs/content/view/document-head.md, in page order; a sample that is an excerpt is wrapped in a function.
 module DocumentHead
 
-open Fable.Core.TS
+open Ranvier.Dom
 open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Sugar

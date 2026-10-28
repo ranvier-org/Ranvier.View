@@ -7,7 +7,7 @@ open Ranvier.View
 open System
 open System.Collections.Generic
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View.Representation
 
 #if FABLE_COMPILER
@@ -47,7 +47,7 @@ let private isConnected (node: Element) : bool =
 let private markOf (node: Element) : string = jsNative
 #else
 let private markOf (node: Element) : string =
-    Option.toObj (node.getAttribute "data-ranvier-head")
+    node.getAttribute "data-ranvier-head"
 #endif
 
 #if FABLE_COMPILER
@@ -66,7 +66,7 @@ let private marked (document: Document) (key: string) (claimed: ResizeArray<Elem
 let private marked (document: Document) (key: string) (claimed: ResizeArray<Element>) : Element =
     Native.markedIn document
     |> Array.tryFind (fun node ->
-        Option.toObj (node.getAttribute "data-ranvier-head") = key
+        node.getAttribute "data-ranvier-head" = key
         && not (claimed.Contains node))
     |> Native.valueOrNull
 #endif
@@ -191,7 +191,7 @@ type private KeptCopy(document: Document) =
     let attributes =
         children
         |> Array.map (fun n ->
-            if n.nodeType = 1.0 then
+            if n.nodeType = 1us then
                 Native.attributesOf (unbox<Element> n)
             else
                 null)
@@ -209,7 +209,7 @@ type private KeptCopy(document: Document) =
                     match current with
                     | Some n when obj.ReferenceEquals (n, children[i]) -> ()
                     | Some n -> head.insertBefore (children[i], n) |> ignore
-                    | None -> head.insertBefore children[i] |> ignore
+                    | None -> head.insertBefore (children[i], null) |> ignore
 
                 while (Native.childNodesOf head).Length > children.Length do
                     Native.removeNode (Native.lastChildOf head)
@@ -427,7 +427,7 @@ let removeUnadopted (document: Document) =
 let writeAttribute (element: Element) (name: string) (value: string option) =
     match value with
     | Some text ->
-        if element.getAttribute name <> Some text then
+        if element.getAttribute name <> text then
             element.setAttribute (name, text)
     | None ->
         if element.hasAttribute name then

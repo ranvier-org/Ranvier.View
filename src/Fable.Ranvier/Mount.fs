@@ -1,7 +1,7 @@
 namespace Fable.Ranvier
 
 open System
-open Fable.Core.TS.Dom
+open global.Ranvier.Dom
 open global.Ranvier
 
 type DomMount internal (owner: Owner, queue: DomQueue) =
@@ -39,14 +39,16 @@ module Mount =
                         onCleanup queue.Dispose
                         let root = DomContext.run (Some context) factory
 
-                        if root.nodeType = root.DOCUMENT_FRAGMENT_NODE then
+                        if root.nodeType = 11us then
                             raise (
                                 ArgumentException ("A mount requires one persistent root node; DocumentFragment roots are unsupported.", "factory")
                             )
 
                         onCleanup (fun () ->
-                            root.parentNode
-                            |> Option.iter (fun parent -> parent.removeChild root |> ignore))
+                            let parent = root.parentNode
+
+                            if not (isNull parent) then
+                                parent.removeChild root |> ignore)
 
                         host.appendChild root |> ignore
                         owner)

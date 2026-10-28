@@ -317,7 +317,7 @@ let private delegateReader () =
                     | Loaded (text, _) ->
                         span (
                             Hooks.exit (
-                                Func<_, _, _, _>(fun (_: Signal<Load>) (_: Fable.Core.TS.Dom.HTMLSpanElement) finish ->
+                                Func<_, _, _, _>(fun (_: Signal<Load>) (_: Ranvier.Dom.HTMLSpanElement) finish ->
                                     if text = "" then
                                         finish ()
 
@@ -331,7 +331,7 @@ let private delegateReader () =
             })
 
     let heldTwin =
-        armOf (span (Hooks.exit (Func<_, _, _, _>(fun (_: unit -> string) (_: Fable.Core.TS.Dom.HTMLSpanElement) _ -> ignore))) { "held" })
+        armOf (span (Hooks.exit (Func<_, _, _, _>(fun (_: unit -> string) (_: Ranvier.Dom.HTMLSpanElement) _ -> ignore))) { "held" })
 
     let otherTwin = armOf (span () { "Other" })
 

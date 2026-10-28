@@ -3,7 +3,7 @@ module ComponentChecks
 open System
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Fable.Ranvier
 open Ranvier.View
 open Ranvier.View.Dom
@@ -15,10 +15,11 @@ let private equal expected actual =
         failwithf "Expected %A; got %A" expected actual
 
 let private at (node: Node) (index: int) : ChildNode =
-    node.childNodes[index]
+    node.childNodes.item (uint32 index)
+    |> unbox<ChildNode>
 
 let private listen (node: HTMLElement) (action: unit -> unit) : unit -> unit =
-    let fn: Event -> obj = fun _ -> action ()
+    let fn: Event -> unit = fun _ -> action ()
     node.addEventListener ("click", fn)
     fun () -> node.removeEventListener ("click", fn)
 
@@ -274,7 +275,7 @@ let private setupFailure (ops: Operations<'view>) run =
     equal true caught
     equal 1 childClean
     equal 1 parentClean
-    equal 1. host.childNodes.length
+    equal 1u host.childNodes.length
     retained.Value.click ()
     equal 0 calls
     graph.Run (fun () -> source.Value <- "b")

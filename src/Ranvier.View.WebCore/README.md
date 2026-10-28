@@ -5,12 +5,29 @@ Runs [Ranvier.View](../Ranvier.View/README.md) components on .NET against a nati
 its `Document` takes the same `Mounting.mount` as the browser renderer, and the app forwards window input to it and
 paints it into its window.
 
-Experimental, on Windows x64 and macOS arm64 (macOS 26). The native library comes from
-`Ranvier.WebCore.Native.win-x64` or `Ranvier.WebCore.Native.osx-arm64`. On macOS, create the host and run
-WebCore on the process main thread, shared with SDL's event pump.
+Experimental, on Windows x64, Windows ARM64, Linux x64 and macOS arm64 (macOS 26). The backend references
+the canonical `Ranvier.WebCore` managed interop and `Ranvier.WebCore.Native` aggregate, which selects native
+assets for the application's RID. On macOS, create the host and run WebCore on the process main thread,
+shared with SDL's event pump.
 
 [macOS CI](https://github.com/ranvier-org/Ranvier.Views/actions/runs/40645038498/job/122671771869) passed
 770 tests, with 16 ignored and no failures, including the SDL hidden-window tests.
+
+The subsequent [four-platform CI run](https://github.com/ranvier-org/Ranvier.View/actions/runs/40675534807)
+passed 773 tests per platform, with 16 existing ignored and no failures, plus the visible sample and both
+NativeAOT apps. Windows ARM64 ran on a real ARM runner; Linux used Ubuntu 24.04 with Xvfb.
+
+The ABI 21 integration uses shared `Ranvier.Dom` contracts and canonical packaged interop, including
+namespace creation, secondary documents, node/string unions, sequences and variadic operations. Against
+the corrected preview.7 CI packages from [run 40729363033](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40729363033),
+the full Windows x64 backend suite passed 781 tests, with 12 existing ignored and no failures or errors.
+Fresh normal/traced package-only consumers also passed both apps under JIT and NativeAOT; each smoke run
+passed 15 checks, including hydration retaining its server node and a native click updating state.
+Fresh runs against all seven public preview.7 native packages also pass both apps under normal/traced
+JIT and NativeAOT, with exact release-source and payload checks. View libraries are locally packed in
+those runs. [Full source CI](https://github.com/ranvier-org/Ranvier.View/actions/runs/40774290136) passed
+all 17 enabled jobs, with 781 backend tests and 12 existing ignored per supported platform, both AOT apps
+and the browser/analyzer/package gates. Final public View and GPU acceptance remain pending.
 
 ```fsharp
 open Ranvier

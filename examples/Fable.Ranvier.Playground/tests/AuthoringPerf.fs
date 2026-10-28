@@ -1,7 +1,7 @@
 module AuthoringPerf
 
 open global.Ranvier
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 
@@ -47,7 +47,10 @@ let verify mode width =
         AuthoringPerfFixtures.create mode width source disabled (fun () -> clicks <- clicks + 1)
 
     let constructed = snapshot ()
-    let host = globalThis.document.createElement "section"
+
+    let host =
+        ((Ranvier.View.Dom.DomRuntime.document ()).createElement "section"
+         |> unbox<HTMLElement>)
 
     let mounted =
         Mounting.mount graph None (fun errors -> failwithf "%A" errors) host None (fun context -> Program.run view context.Backend)
@@ -96,7 +99,7 @@ let verify mode width =
     button.click ()
     graph.Run (fun () -> source.Value <- "disposed")
 
-    if clicks <> 1 || host.childNodes.length <> 0. then
+    if clicks <> 1 || host.childNodes.length <> 0u then
         failwith "Disposal retained resources"
 
     initial, updated, constructed, mountedCounts, updatedCounts, snapshot ()
@@ -113,9 +116,12 @@ let sample mode width phase iterations =
         AuthoringPerfFixtures.create mode width source disabled ignore
 
     let view = make ()
-    let host = globalThis.document.createElement "section"
 
-    globalThis.document.body.appendChild host
+    let host =
+        ((Ranvier.View.Dom.DomRuntime.document ()).createElement "section"
+         |> unbox<HTMLElement>)
+
+    (Ranvier.View.Dom.DomRuntime.document ()).body.appendChild host
     |> ignore
 
     let mounts = ResizeArray<Mounting.Mounted>()
@@ -167,7 +173,7 @@ let sample mode width phase iterations =
         for mounted in mounts do
             mounted.Dispose ()
 
-        if host.childNodes.length <> 0. then
+        if host.childNodes.length <> 0u then
             failwith "Retained DOM after cleanup"
 
         host.remove ()

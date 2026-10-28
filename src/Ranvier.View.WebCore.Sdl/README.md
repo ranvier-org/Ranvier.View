@@ -5,8 +5,17 @@ Shows a [Ranvier.View.WebCore](../Ranvier.View.WebCore/README.md) page in an SDL
 mouse, wheel, keyboard, input method and focus events to the page. It also sets the page's cursor and moves its
 `text/plain` clipboard data through SDL.
 
-Experimental, on Windows x64 and macOS arm64 (macOS 26), like the backend. WebCore's run loop and SDL's
-event pump share the process main thread on macOS, with the same `Window.Step` implementation.
+On Windows, a native GPU runtime with the `presentation-d3d11` capability uses shared D3D11 textures with
+SDL's `direct3d11` renderer at display scale 1. Other renderers, unsupported devices and other display scales
+use CPU painting. An explicit `renderer = "software"` keeps CPU presentation. GPU frames are released after
+SDL submits its drawing, including readback, and before renderer teardown.
+
+The `accessibility-uia` capability attaches the page's Windows UI Automation tree to the SDL window. It
+detaches before page or window disposal. The bridge uses native COM and also works in a NativeAOT app.
+
+Experimental, on Windows x64, Windows ARM64, Linux x64 and macOS arm64 (macOS 26), like the backend.
+WebCore's run loop and SDL's event pump share the process main thread on macOS, with the same
+`Window.Step` implementation.
 
 [macOS CI](https://github.com/ranvier-org/Ranvier.Views/actions/runs/40645038498/job/122671771869) passed
 770 tests, with 16 ignored and no failures. Those tests cover a hidden window, paint readback and SDL input;
@@ -14,6 +23,10 @@ event pump share the process main thread on macOS, with the same `Window.Step` i
 also passed (480x320 backing pixels, scale 1, painted content and clipboard). `RANVIER_SMOKE=1` closes the
 sample automatically. Retina scale 2 and a real IME still need
 manual verification; the clipboard bridge supports `text/plain` only.
+
+The subsequent [four-platform CI run](https://github.com/ranvier-org/Ranvier.View/actions/runs/40675534807)
+passed 773 tests per platform, with 16 existing ignored and no failures, plus the visible sample and both
+NativeAOT apps. Windows ARM64 ran on a real ARM runner; Linux used Ubuntu 24.04 with Xvfb.
 
 ```fsharp
 open Ranvier
@@ -72,3 +85,38 @@ The counter opened a visible 480x320 window, with scale 1, matching backing dime
 and a successful text/plain clipboard round-trip on each platform. Retina scale 2 and a real IME remain
 manual checks. NativeAOT still reports FSharp.Core/view reflection, trimming and generic-recursion
 warnings; the exercised app paths pass, and broader AOT coverage remains work to do.
+
+## Windows presentation and accessibility acceptance
+
+The visible smoke reads SDL's actual backbuffer. `RANVIER_SMOKE_GPU=1` requires at least one shared D3D11
+frame; `RANVIER_SMOKE_UIA=1` requires an attached UI Automation tree. Build the independent OS client with
+`python tools/native-window-probe.py`, then set `RANVIER_UIA_PROBE` to the absolute path of
+`artifacts/native-window/UiAutomationProbe.exe`. The smoke keeps pumping the owner thread while the client
+finds the counter button, invokes it, observes its new accessible name and closes the window. It verifies
+that the retained UIA element becomes unavailable after teardown.
+
+Local JIT and NativeAOT checks passed with a private Windows x64 GPU host/WebCore build: the SDL backbuffer
+was 480x320 at scale 1, shared frames were presented, and the independent tree/action/teardown checks and
+clipboard round-trip passed. The persisted presenter also passed software-renderer and scale-2 CPU fallback
+checks, then resumed shared presentation at scale 1. These checks precede the coordinated package release.
+
+Corrected preview.7 native CI packages from [run 40729363033](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40729363033)
+also passed normal/traced package-only CPU consumers under JIT and NativeAOT. Each counter run verified
+the 480x320 actual backbuffer, clipboard and independent UIA discovery, bounds, Invoke, reactive name
+updates and provider disconnection. Native and resource payload hashes matched the packages, including
+the corrected nested icon paths. The same eight normal/traced Smoke/Counter JIT/NativeAOT runs also pass
+with native packages from official NuGet, matching the clean preview.7 release source. View libraries
+are locally packed in these runs; final public View and GPU-package acceptance remain pending.
+
+[Full source CI](https://github.com/ranvier-org/Ranvier.View/actions/runs/40774290136) passed all four
+platform jobs with 781 backend tests, 12 existing ignored, 15 NativeAOT smoke checks and both visible
+counter runs each. Windows x64 verifies the independent external UIA client; Windows ARM64 verifies
+UIA attachment/smoke without that client.
+
+The manual CI `webcore-gpu` lane takes an exact `gpu_runtime_version`, public NuGet v3 `gpu_runtime_source`
+and `gpu_runtime_package` (default `Ranvier.WebCore.Native.Gpu.win-x64`). It verifies the package's GPU flavor,
+RID, version, clean source revision and file hashes before staging it. Managed interop uses that same version.
+Both JIT and NativeAOT must pass the strict shared-frame, actual-backbuffer and independent UIA checks, and
+a failing enabled GPU lane fails the aggregate CI result. An empty version disables the lane; CPU CI does
+not count as GPU verification. A successful published-cohort GPU CI run remains required before closing
+the Windows presentation gap.
