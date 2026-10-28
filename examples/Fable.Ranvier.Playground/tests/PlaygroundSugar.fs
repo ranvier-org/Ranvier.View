@@ -2,7 +2,7 @@
 module PlaygroundSugar
 
 open global.Ranvier
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Sugar
 
@@ -108,7 +108,7 @@ let demoExplicit =
                                     t.Attrs.data ("testid", "name")
                                     t.Props.Input.value (fun (demo: DemoInstance) -> demo.State.Name.Value)
                                     t.Events.onInput (fun (demo: DemoInstance) event ->
-                                        demo.State.Name.Value <- (unbox<HTMLInputElement> event.currentTarget.Value).value)
+                                        demo.State.Name.Value <- (unbox<HTMLInputElement> event.currentTarget).value)
                                 |]
                             t.p
                                 [|
@@ -199,7 +199,7 @@ let demoSugar =
                     Attrs.attribute ("autocomplete", "off"),
                     Attrs.data ("testid", "name"),
                     Props.Input.value (fun demo -> demo.State.Name.Value),
-                    Events.onInput (fun demo event -> demo.State.Name.Value <- (unbox<HTMLInputElement> event.currentTarget.Value).value)
+                    Events.onInput (fun demo event -> demo.State.Name.Value <- (unbox<HTMLInputElement> event.currentTarget).value)
                 )
 
                 p (Attrs.className "greeting", Attrs.data ("testid", "greeting"), Attrs.aria ("live", "polite")) {
@@ -294,7 +294,7 @@ type DemoMembers =
                     Attrs.attribute ("autocomplete", "off"),
                     Attrs.data ("testid", "name"),
                     Props.Input.value (fun demo -> demo.State.Name.Value),
-                    Events.onInput (fun demo event -> demo.State.Name.Value <- (unbox<HTMLInputElement> event.currentTarget.Value).value)
+                    Events.onInput (fun demo event -> demo.State.Name.Value <- (unbox<HTMLInputElement> event.currentTarget).value)
                 )
 
                 p (Attrs.className "greeting", Attrs.data ("testid", "greeting"), Attrs.aria ("live", "polite")) {
@@ -383,7 +383,7 @@ type DemoClass(setup: Setup, state: DemoState) =
                     Attrs.attribute ("autocomplete", "off"),
                     Attrs.data ("testid", "name"),
                     Props.Input.value (fun (demo: DemoClass) -> demo.State.Name.Value),
-                    Events.onInput (fun demo event -> demo.State.Name.Value <- (unbox<HTMLInputElement> event.currentTarget.Value).value)
+                    Events.onInput (fun demo event -> demo.State.Name.Value <- (unbox<HTMLInputElement> event.currentTarget).value)
                 )
 
                 p (Attrs.className "greeting", Attrs.data ("testid", "greeting"), Attrs.aria ("live", "polite")) {

@@ -4,7 +4,7 @@ module DepartureChecks
 open System
 open global.Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Testing
@@ -298,7 +298,7 @@ let private textsOf (root: HTMLElement) (selector: string) : string array = jsNa
 #else
 let private textsOf (root: HTMLElement) (selector: string) : string array =
     [|
-        for element in Ranvier.View.Testing.Query.queryAll root selector -> Option.defaultValue "" (element :> Node).textContent
+        for element in Ranvier.View.Testing.Query.queryAll root selector -> Option.defaultValue "" (Option.ofObj ((element :> Node).textContent))
     |]
 #endif
 
@@ -311,11 +311,11 @@ let private childrenOf (node: Element) : string array =
     [|
         let mutable child = (node :> Node).firstChild
 
-        while child.IsSome do
-            let current = unbox<Node> child.Value
+        while (not (isNull child)) do
+            let current = unbox<Node> child
 
-            if current.nodeType <> 8.0 then
-                Option.defaultValue "" current.textContent
+            if current.nodeType <> 8us then
+                Option.defaultValue "" (Option.ofObj (current.textContent))
 
             child <- current.nextSibling
     |]
@@ -325,7 +325,12 @@ let private items (target: HTMLElement) =
     List.ofArray (textsOf target "li")
 
 let private childrenAt (selector: string) (target: HTMLElement) =
-    List.ofArray (childrenOf (target.querySelector selector |> Option.get))
+    List.ofArray (
+        childrenOf (
+            target.querySelector selector
+            |> (Option.ofObj >> Option.get)
+        )
+    )
 
 let private tick (milliseconds: int) : unit =
     (Conformance.harness ()).AdvanceBy(float milliseconds)
@@ -446,7 +451,7 @@ let private disposalEndsExits queued () =
     recordStep "disposed" target
     let ended = List.sort (taken ()), target.childNodes.length
     finish "1"
-    equal (([ "cancel 1"; "cancel 2"; "cancel on" ], 0.), []) (ended, taken ())
+    equal (([ "cancel 1"; "cancel 2"; "cancel on" ], 0u), []) (ended, taken ())
 
 let private finishesAfterTimeout queued () =
     use graph = new Graph ()
@@ -744,7 +749,12 @@ let private reflowWithdrawnWithInstance queued () =
         mountTemplate queued graph strict target (Component.render measuredArm state)
 
     mounted.Flush ()
-    let measuredList: Node = target.querySelector "ul" |> Option.get :> Node
+
+    let measuredList: Node =
+        target.querySelector "ul"
+        |> (Option.ofObj >> Option.get)
+        :> Node
+
     let registered = Departures.hasReflow measuredList
     write graph mounted (fun () -> state.Shown.Value <- false)
     let withdrawn = not (Departures.hasReflow measuredList)
@@ -813,7 +823,7 @@ let private rowTexts (target: HTMLElement) : string array = jsNative
 #else
 let private rowTexts (target: HTMLElement) : string array =
     [|
-        for element in Ranvier.View.Testing.Query.queryAll target "li" -> Option.defaultValue "" (element :> Node).textContent
+        for element in Ranvier.View.Testing.Query.queryAll target "li" -> Option.defaultValue "" (Option.ofObj ((element :> Node).textContent))
     |]
 #endif
 

@@ -2,7 +2,7 @@
 namespace Ranvier.View.Sugar
 
 open System
-open Fable.Core.TS
+open global.Ranvier
 open Ranvier.View.Representation
 open Ranvier.View.Template
 

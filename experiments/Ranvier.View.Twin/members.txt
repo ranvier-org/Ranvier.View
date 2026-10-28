@@ -3,10 +3,10 @@ ARIAMixin.ariaLabel
 Attr.name
 Attr.value
 CharacterData.data
-CharacterData.textContent
 ChildNode.remove
 ChildNode.replaceWith
 DOMImplementation.createHTMLDocument
+Document.activeElement
 Document.body
 Document.createComment
 Document.createDocumentFragment
@@ -19,8 +19,6 @@ Document.head
 Document.implementation
 Document.importNode
 Document.title
-DocumentOrShadowRoot.activeElement
-Element.addEventListener
 Element.attributes
 Element.getAttribute
 Element.hasAttribute
@@ -33,7 +31,6 @@ Element.prefix
 Element.removeAttribute
 Element.setAttribute
 Element.tagName
-Element.textContent
 Event.cancelBubble
 Event.currentTarget
 Event.preventDefault
@@ -44,7 +41,7 @@ EventTarget.addEventListener
 EventTarget.dispatchEvent
 EventTarget.removeEventListener
 HTMLButtonElement.disabled
-HTMLCollectionBase.length
+HTMLCollection.length
 HTMLElement.click
 HTMLElement.popover
 HTMLElement.title
@@ -81,9 +78,8 @@ Node.parentNode
 Node.removeChild
 Node.replaceChild
 Node.textContent
+NodeList.item
 NodeList.length
-NodeListOf.Item
-NodeListOf.item
 ParentNode.children
 ParentNode.querySelector
 ParentNode.querySelectorAll

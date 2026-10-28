@@ -14,14 +14,26 @@
         <Compile Include="Mount.fs"/>
     </ItemGroup>
 
-        <ItemGroup>
+    <ItemGroup Condition="'$(FABLE_COMPILER)' == 'true'">
       <PackageReference Include="Xantham.Fable.Core" Version="0.2.0" />
       <PackageReference Include="Xantham.Fable.Core.TS" Version="0.2.1" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="Fable.Core" Version="5.3.0" />
       <PackageReference Update="FSharp.Core" Version="10.1.401" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(UseLocalRanvier)' == 'true'">
         <ProjectReference Include="$(RanvierRoot)/src/Ranvier/Ranvier.fsproj" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(FABLE_COMPILER)' != 'true'">
+        <ProjectReference Include="../Ranvier.View.Dom/Ranvier.View.Dom.fsproj" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(UseLocalRanvier)' == 'true' and '$(FABLE_COMPILER)' == 'true'">
+        <ProjectReference Include="$(RanvierRoot)/src/Fable.Ranvier.Dom/Fable.Ranvier.Dom.fsproj" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(UseLocalRanvier)' != 'true' and '$(FABLE_COMPILER)' == 'true'">
+        <PackageReference Include="Fable.Ranvier.Dom$(RanvierPackageSuffix)" Version="$(RanvierDomVersion)" />
     </ItemGroup>
     <ItemGroup Condition="'$(UseLocalRanvier)' != 'true'">
         <PackageReference Include="Ranvier$(RanvierPackageSuffix)" Version="$(RanvierVersion)" />

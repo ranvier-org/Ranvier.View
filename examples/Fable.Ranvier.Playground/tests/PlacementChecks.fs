@@ -2,7 +2,7 @@ module PlacementChecks
 
 open System
 open Ranvier
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View.Testing
 open Ranvier.View
 open Ranvier.View.Dom
@@ -29,7 +29,7 @@ let private placedInHost (ops: Operations<'view>) (run: 'view -> Backend -> unit
     let mounted = mountView ops run queued graph strict target view
     equal [ "hook true" ] (List.ofSeq log)
     mounted.Dispose ()
-    equal ([ "hook true"; "cleanup true" ], 0.) (List.ofSeq log, target.childNodes.length)
+    equal ([ "hook true"; "cleanup true" ], 0u) (List.ofSeq log, target.childNodes.length)
 
 let private browserHookUnplaced (ops: Operations<'view>) (run: 'view -> Backend -> unit) queued =
     use graph = new Graph ()
@@ -270,7 +270,7 @@ let private initialHookFailure (ops: Operations<'view>) (run: 'view -> Backend -
         with error ->
             Some error.Message
 
-    equal (Some "hook", [ "first"; "first cleanup" ], 0.) (raised, List.ofSeq log, target.childNodes.length)
+    equal (Some "hook", [ "first"; "first cleanup" ], 0u) (raised, List.ofSeq log, target.childNodes.length)
 
 /// <summary>A second list row whose hook raises after the mount: the failure is reported and the row stays.</summary>
 let private laterHookFailure (ops: Operations<'view>) (run: 'view -> Backend -> unit) queued =
@@ -342,7 +342,12 @@ let private nodeRefLifetime (ops: Operations<'view>) (run: 'view -> Backend -> u
 
     let placed =
         match field.Current with
-        | Some node -> obj.ReferenceEquals (node, target.querySelector "input" |> Option.get)
+        | Some node ->
+            obj.ReferenceEquals (
+                node,
+                target.querySelector "input"
+                |> (Option.ofObj >> Option.get)
+            )
         | None -> false
 
     mounted.Dispose ()
@@ -759,7 +764,7 @@ let private templatePlacedInHost queued () =
 
     equal [ "hook true" ] (List.ofSeq probe.Log)
     mounted.Dispose ()
-    equal ([ "hook true"; "cleanup true" ], 0.) (List.ofSeq probe.Log, probe.Host.childNodes.length)
+    equal ([ "hook true"; "cleanup true" ], 0u) (List.ofSeq probe.Log, probe.Host.childNodes.length)
 
 let private orderLog () =
     Conformance.local "PlacementChecks.orderLog" (fun () -> ResizeArray<string>())
@@ -1071,7 +1076,7 @@ let private reentrantArmSelection queued () =
              "arm 3 true"
          ],
          "3",
-         1.)
+         1u)
         (first,
          second,
          List.ofSeq (armProbe ()).Value.Log,
@@ -1105,7 +1110,7 @@ let private templateInitialHookFailure queued () =
         with error ->
             Some error.Message
 
-    equal (Some "hook", [ "first"; "first cleanup" ], 0.) (raised, List.ofSeq log, target.childNodes.length)
+    equal (Some "hook", [ "first"; "first cleanup" ], 0u) (raised, List.ofSeq log, target.childNodes.length)
 
 let private failingRow =
     Component.define (fun _ (item: unit -> int) -> item) (fun t ->
@@ -1191,7 +1196,12 @@ let private templateNodeRef queued () =
 
     let placed =
         match field.Field.Current with
-        | Some node -> obj.ReferenceEquals (node, target.querySelector "input" |> Option.get)
+        | Some node ->
+            obj.ReferenceEquals (
+                node,
+                target.querySelector "input"
+                |> (Option.ofObj >> Option.get)
+            )
         | None -> false
 
     mounted.Dispose ()
@@ -1260,6 +1270,7 @@ let private refRow =
                                 match row.Button.Current with
                                 | Some node ->
                                     node.getAttribute "data-item"
+                                    |> Option.ofObj
                                     |> Option.defaultValue "absent"
                                 | None -> "none"
                             ))
@@ -1284,13 +1295,13 @@ let private templateRefAcrossReorder queued () =
     let mounted =
         mountTemplate queued graph strict target (Component.render refRows rows)
 
-    let second = target.querySelectorAll("button").[1]
+    let second = target.querySelectorAll("button").item 1u
     graph.Run (fun () -> rows.Value <- [ 2; 1 ])
     mounted.Flush ()
 
     let first =
         target.querySelector "button"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLButtonElement>
 
     first.click ()
@@ -1378,7 +1389,7 @@ let private templateHiddenLifecycle queued () =
     graph.Run (fun () -> (hiddenSource ()).Value.Value <- Api.createAsyncSource<string>())
 
     ((hiddenHost ()).Value.querySelector "button"
-     |> Option.get
+     |> (Option.ofObj >> Option.get)
      |> unbox<HTMLButtonElement>)
         .click()
 
@@ -1447,7 +1458,12 @@ let private templateHiddenNodeRef queued () =
 
     let shown =
         match (hiddenField ()).Value.Field.Current with
-        | Some node -> obj.ReferenceEquals (node, target.querySelector "input" |> Option.get)
+        | Some node ->
+            obj.ReferenceEquals (
+                node,
+                target.querySelector "input"
+                |> (Option.ofObj >> Option.get)
+            )
         | None -> false
 
     mounted.Dispose ()
@@ -1476,7 +1492,11 @@ let private focusAndMeasure () =
         mountWith SynchronousCommits graph None strict target None (fun context -> Program.run view context.Backend)
 
     let focused =
-        obj.ReferenceEquals (activeElement (), target.querySelector "input" |> Option.get)
+        obj.ReferenceEquals (
+            activeElement (),
+            target.querySelector "input"
+            |> (Option.ofObj >> Option.get)
+        )
 
     mounted.Dispose ()
     target.remove ()

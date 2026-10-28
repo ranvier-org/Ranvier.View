@@ -50,7 +50,7 @@
     <ProjectReference Include="../../../src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj" />
     <ProjectReference Include="../../../experiments/Ranvier.View.Arms/Ranvier.View.Arms.fsproj" />
     <ProjectReference Include="../../../src/Fable.Ranvier/Fable.Ranvier.fsproj" />
-    <PackageReference Update="FSharp.Core" Version="10.1.402" />
+    <PackageReference Update="FSharp.Core" Version="10.1.403" />
   </ItemGroup>
     <ItemGroup Condition="'$(UseLocalRanvier)' == 'true'">
         <ProjectReference Include="$(RanvierRoot)/src/Ranvier.Elmish/Ranvier.Elmish.fsproj" />

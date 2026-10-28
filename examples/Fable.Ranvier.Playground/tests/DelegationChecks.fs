@@ -2,7 +2,7 @@ module DelegationChecks
 
 open global.Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View.Testing
 open Ranvier.View
 open Ranvier.View.Dom
@@ -20,6 +20,7 @@ let private equal expected actual =
 
 let private element (tag: string) =
     (Conformance.document ()).createElement tag
+    |> unbox<HTMLElement>
 
 let private mount graph host view =
     Mounting.mount graph None (fun errors -> failwithf "%A" errors) host None (fun context -> Program.run view context.Backend)
@@ -70,13 +71,13 @@ let private detachedHost () =
     let mutable current: obj = null
 
     let view =
-        H.Program.button [| H.Events.onClick (fun event -> current <- box event.currentTarget.Value) |] [||]
+        H.Program.button [| H.Events.onClick (fun event -> current <- box event.currentTarget) |] [||]
 
     let mounted = mount graph host view
 
     let button =
         host.querySelector "button"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLButtonElement>
 
     button.click ()
@@ -108,7 +109,7 @@ let private nested stop =
     let mounted = mount graph host view
 
     let second =
-        host.querySelectorAll("button").item 1.
+        host.querySelectorAll("button").item 1u
         |> unbox<HTMLButtonElement>
 
     second.click ()
@@ -133,7 +134,7 @@ let private nonBubbling () =
 
     let input =
         host.querySelector "input"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLInputElement>
 
     dispatchFocus input
@@ -155,7 +156,7 @@ let private moved () =
 
     let button =
         first.querySelector "button"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLButtonElement>
 
     mounted.MoveBefore (second, None)
@@ -191,7 +192,7 @@ let private independentHosts () =
         mount graph second (H.Program.button [| H.Events.onClick (fun _ -> clicks <- clicks + 1) |] [||])
 
     a.Dispose ()
-    (button second 0.).click()
+    (button second 0u).click()
     equal 1 clicks
     equal [| 1; 0 |] (listenerCounts counts)
     b.Dispose ()
@@ -216,7 +217,7 @@ let private selfDisposal () =
                 |]
                 [||])
 
-    let target = button host 0.
+    let target = button host 0u
     target.click ()
     equal 1 clicks
     equal Disposed mounted.Phase
@@ -246,13 +247,13 @@ let private remountDuringDispatch () =
             [||]
 
     mounts.Add (mount graph host view)
-    (button host 0.).click()
+    (button host 0u).click()
     equal 1 outer
     equal 0 inner
-    (button host 1.).click()
+    (button host 1u).click()
     equal 1 outer
     equal 1 inner
-    (button host 0.).click()
+    (button host 0u).click()
     equal 2 outer
     equal 1 inner
     equal [| 1; 0 |] (listenerCounts counts)
@@ -272,7 +273,7 @@ let private nestedHosts stop =
 
     let innerHost =
         host.querySelector "section"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let b =
@@ -289,7 +290,7 @@ let private nestedHosts stop =
                 |]
                 [||])
 
-    (button innerHost 0.).click()
+    (button innerHost 0u).click()
 
     Conformance.recordIfRunning
         "handlers run by the inner host's click"
@@ -316,7 +317,7 @@ let private directOnlyMove () =
 
     direct.MoveBefore (second, None)
     direct.Dispose ()
-    (button first 0.).click()
+    (button first 0u).click()
     equal 1 clicks
     equal 0 focused
     delegated.Dispose ()
@@ -332,18 +333,18 @@ let private topLevelList () =
             H.Program.button [| H.Events.onClick (fun _ -> clicks.Add (current ())) |] [||])
 
     let mounted = mount graph first view
-    (button first 1.).click()
+    (button first 1u).click()
     equal [ 2 ] (List.ofSeq clicks)
     graph.Run (fun () -> rows.Value <- [ 3; 1; 2 ])
-    (button first 0.).click()
+    (button first 0u).click()
     equal [ 2; 3 ] (List.ofSeq clicks)
     mounted.MoveBefore (second, None)
-    equal (0., 3.) (first.childNodes.length, (second.querySelectorAll "button").length)
-    (button second 1.).click()
-    (button second 2.).click()
+    equal (0u, 3u) (first.childNodes.length, (second.querySelectorAll "button").length)
+    (button second 1u).click()
+    (button second 2u).click()
     equal [ 2; 3; 1; 2 ] (List.ofSeq clicks)
     mounted.Dispose ()
-    equal 0. second.childNodes.length
+    equal 0u second.childNodes.length
 
 /// <summary>Adds a native click listener that stops propagation.</summary>
 #if FABLE_COMPILER
@@ -367,13 +368,13 @@ let private nativeStopBetween () =
 
     let wrapper =
         host.querySelector "div"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     stopClicks wrapper
 
     (host.querySelector "button"
-     |> Option.get
+     |> (Option.ofObj >> Option.get)
      |> unbox<HTMLButtonElement>)
         .click()
 

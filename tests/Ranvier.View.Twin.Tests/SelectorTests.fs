@@ -1,7 +1,7 @@
 module Ranvier.View.Twin.Tests.SelectorTests
 
 open Expecto
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View.Twin
 open Ranvier.View.Testing
 
@@ -58,7 +58,7 @@ let tests =
                 SelectorMembers.ensure ()
                 use document = new TwinDocument ()
                 Html.parseInto document.Body "<p></p>"
-                let root = document.Native :?> Node
+                let root = document.Native
 
                 Expect.equal
                     ((Selector.queryAll root ":scope").Length,
@@ -155,8 +155,8 @@ let tests =
             <| fun () ->
                 let document, root = tree ()
                 use _ = document
-                Expect.equal ((root :?> Element).querySelectorAll "li").length 3.0 "querySelectorAll"
-                Expect.isSome ((root :?> Element).querySelector "#l") "querySelector"
+                Expect.equal ((root :?> Element).querySelectorAll "li").length 3u "querySelectorAll"
+                Expect.isNotNull ((root :?> Element).querySelector "#l") "querySelector"
 
             testCase "unsupported syntax names the column"
             <| fun () ->

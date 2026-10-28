@@ -41,10 +41,21 @@
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />
     </ItemGroup>
 
-        <ItemGroup>
-        <!-- Temporary: Xantham.Fable.Core.TS 0.2.x restores from the xantham Cloudsmith feed (nuget.config) until it is
-             published to nuget.org. -->
-        <PackageReference Include="Xantham.Fable.Core.TS" Version="0.2.1" />
+    <ItemGroup>
+        <PackageReference Include="Fable.Core" Version="5.3.0" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseLocalRanvier)' == 'true' and '$(FABLE_COMPILER)' != 'true'">
+        <ProjectReference Include="$(RanvierRoot)/src/Ranvier.Dom/Ranvier.Dom.fsproj" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(UseLocalRanvier)' == 'true' and '$(FABLE_COMPILER)' == 'true'">
+        <ProjectReference Include="$(RanvierRoot)/src/Fable.Ranvier.Dom/Fable.Ranvier.Dom.fsproj" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(UseLocalRanvier)' != 'true' and '$(FABLE_COMPILER)' != 'true'">
+        <PackageReference Include="Ranvier.Dom$(RanvierPackageSuffix)" Version="$(RanvierDomVersion)" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(UseLocalRanvier)' != 'true' and '$(FABLE_COMPILER)' == 'true'">
+        <PackageReference Include="Fable.Ranvier.Dom$(RanvierPackageSuffix)" Version="$(RanvierDomVersion)" />
     </ItemGroup>
 
     <ItemGroup>

@@ -14,6 +14,7 @@ type Case =
         Expected: string option
         /// Opens the free sugar instead of Generated.Html.Authoring.
         Sugar: bool
+        Fable: bool
     }
 
 let root = Path.GetFullPath (Path.Combine (__SOURCE_DIRECTORY__, "..", ".."))
@@ -23,7 +24,7 @@ let project =
 
 let prefix =
     """module GeneratedTypeCheck
-open Fable.Core.TS
+open Ranvier
 open Ranvier.View
 module H = Ranvier.View.Dom.Generated.Html
 open Ranvier.View.Dom.Generated.Html.Authoring
@@ -33,7 +34,7 @@ open Ranvier.View.Template
 // The free sugar is opened without Generated.Html.Authoring (spec §4 scope rule).
 let sugarPrefix =
     """module GeneratedTypeCheck
-open Fable.Core.TS
+open Ranvier
 open Ranvier.View
 open Ranvier.View.Sugar
 """
@@ -81,6 +82,7 @@ let case name body expected =
         Body = body
         Expected = expected
         Sugar = false
+        Fable = false
     }
 
 let free name body expected =
@@ -100,7 +102,7 @@ let cases =
         case "bound children reject lists" "let view = H.Program.div [||] []" (Some "FS0001")
         case "input modifier on div" "let view = H.div Tree.ops [| H.Input.checkedStatic true |] [||]" (Some "FS0001")
         case "wrong property value" "let modifier = H.Input.checkedStatic \"true\"" (Some "FS0001")
-        case "readonly native property" "let write (node: Dom.HTMLInputElement) = node.form <- None" (Some "FS0810")
+        case "readonly native property" "let write (node: Dom.HTMLInputElement) = node.form <- null" (Some "FS0810")
         case "files setter excluded by policy" "let modifier = H.Input.filesStatic None" (Some "FS0039")
         case "void element rejects children" "let view = H.br Tree.ops [||] [| Tree.ops.Text \"child\" |]" (Some "FS0001")
         case "wrong expanded property value" "let modifier = H.Textarea.rowsStatic \"3\"" (Some "FS0001")
@@ -120,11 +122,22 @@ let view = Component.define (fun _ () -> ()) (fun t -> t.div [| t.Unsafe.html "<
             "excluded setters' getters and sibling setters exist in their declaring modules"
             """
 let readers: (Dom.HTMLIFrameElement -> string) list =
-    [ H.Properties.Element.innerHTML; H.Properties.Element.outerHTML; H.Properties.Element.textContent; H.Properties.HTMLElement.innerText; H.Properties.HTMLElement.outerText; H.Properties.HTMLIFrameElement.srcdoc; H.Iframe.srcdoc ]
+    [ H.Properties.Element.innerHTML; H.Properties.Element.outerHTML; H.Properties.Element.textContent; H.Properties.HTMLElement.innerText; H.Properties.HTMLElement.outerText ]
 let modifiers: Typed.Modifier<Dom.HTMLIFrameElement> list =
-    [ H.Properties.Element.idStatic "x"; H.Properties.HTMLElement.titleStatic "x"; H.Properties.HTMLIFrameElement.srcStatic "x"; H.Iframe.srcStatic "x" ]
+    [ H.Properties.Element.idStatic "x"; H.Properties.HTMLElement.titleStatic "x" ]
 """
             None
+        { case
+              "browser-only excluded setters keep getters and sibling setters"
+              """
+let readers: (Dom.HTMLIFrameElement -> string) list =
+    [ H.Properties.HTMLIFrameElement.srcdoc; H.Iframe.srcdoc ]
+let modifiers: Typed.Modifier<Dom.HTMLIFrameElement> list =
+    [ H.Properties.HTMLIFrameElement.srcStatic "x"; H.Iframe.srcStatic "x" ]
+"""
+              None with
+            Fable = true
+        }
         case "Element innerHTML setter excluded" "let modifier = H.Properties.Element.innerHTMLStatic \"markup\"" (Some "FS0039")
         case "Element outerHTML setter excluded" "let modifier = H.Properties.Element.outerHTMLStatic \"markup\"" (Some "FS0039")
         case "Element textContent setter excluded" "let modifier = H.Properties.Element.textContentStatic \"text\"" (Some "FS0039")
@@ -468,6 +481,11 @@ let directory =
 let check = Path.Combine (directory.FullName, "Check.fs")
 let fsproj = Path.Combine (directory.FullName, "Check.fsproj")
 
+let browserDirectory =
+    Directory.CreateDirectory (Path.Combine (directory.FullName, "browser"))
+
+let browserProject = Path.Combine (browserDirectory.FullName, "Browser.fsproj")
+
 let failures =
     try
         File.WriteAllText (
@@ -480,6 +498,15 @@ let failures =
         )
 
         File.WriteAllText (check, prefix + cases.Head.Body + "\n")
+
+        File.WriteAllText (
+            browserProject,
+            $"""<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><GenerateDocumentationFile>false</GenerateDocumentationFile></PropertyGroup>
+  <ItemGroup><Compile Include="../Check.fs" /><ProjectReference Include="{root.Replace ('\\', '/')}/src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj" /><PackageReference Update="FSharp.Core" Version="10.1.401" /></ItemGroup>
+</Project>
+"""
+        )
 
         let restored, restoreOutput =
             dotnet [ "restore"; fsproj; "--configfile"; Path.Combine (root, "nuget.config") ]
@@ -497,7 +524,24 @@ let failures =
                 )
 
                 let exitCode, output =
-                    dotnet [ "build"; fsproj; "--no-restore"; "--configuration"; "Release" ]
+                    if c.Fable then
+                        let compiled =
+                            dotnet
+                                [
+                                    "fickl"
+                                    browserProject
+                                    "--outDir"
+                                    Path.Combine (directory.FullName, "fable")
+                                    "--configuration"
+                                    "Release"
+                                ]
+
+                        let restored, restoreOutput =
+                            dotnet [ "restore"; fsproj; "--configfile"; Path.Combine (root, "nuget.config") ]
+
+                        if restored <> 0 then restored, restoreOutput else compiled
+                    else
+                        dotnet [ "build"; fsproj; "--no-restore"; "--configuration"; "Release" ]
 
                 let failure =
                     match c.Expected with

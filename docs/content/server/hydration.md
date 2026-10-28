@@ -10,7 +10,7 @@ Matching elements retain their identity.
 
 ```fsharp
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Dom
@@ -26,7 +26,7 @@ let start () : unit -> unit =
         | None -> { Start = 0; Label = "Clicks" }
 
     let graph = new Graph ()
-    let host = document.getElementById "app" |> Option.get
+    let host = document.getElementById "app" |> Option.ofObj |> Option.get
 
     let report (errors: exn list) =
         for error in errors do

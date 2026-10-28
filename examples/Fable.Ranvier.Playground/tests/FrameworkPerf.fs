@@ -1,7 +1,7 @@
 module FrameworkPerf
 
 open global.Ranvier
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Dom.Generated.Html.Authoring
@@ -57,10 +57,10 @@ let private preparedRows width (source: Signal<string>) (disabled: Memo<bool>) =
     let inputModifiers = [| Props.Input.value source |]
     let disabledModifier = Props.Button.disabled disabled
 
-    let setup _ index (root: Fable.Core.TS.Dom.HTMLElement) backend =
+    let setup _ index (root: Ranvier.Dom.HTMLElement) backend =
         let local = Api.createSignal 0
-        let input = root.firstChild.Value :?> Fable.Core.TS.Dom.HTMLInputElement
-        let button = input.nextSibling.Value :?> Fable.Core.TS.Dom.HTMLButtonElement
+        let input = root.firstChild :?> Ranvier.Dom.HTMLInputElement
+        let button = input.nextSibling :?> Ranvier.Dom.HTMLButtonElement
         Prepared.apply root [| Attrs.id ("row-" + string index); title |] backend
         Prepared.apply input inputModifiers backend
 
@@ -72,7 +72,7 @@ let private preparedRows width (source: Signal<string>) (disabled: Memo<bool>) =
             |]
             backend
 
-        Prepared.text button.firstChild.Value (fun () -> string local.Value) backend
+        Prepared.text button.firstChild (fun () -> string local.Value) backend
 
     Program.fragment (Array.init width (fun index -> Prepared.createComponent rowTemplate setup (index + 1)))
 

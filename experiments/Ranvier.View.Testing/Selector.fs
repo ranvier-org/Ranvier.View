@@ -1,7 +1,7 @@
 /// <summary>One selector engine over the DOM interfaces, for the testing API on both hosts and the twin's own queries.</summary>
 module Ranvier.View.Testing.Selector
 
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 
 /// <summary>Selector syntax outside the supported set, at a 0-based column.</summary>
 exception SelectorException of selector: string * column: int with
@@ -241,14 +241,14 @@ let parse (selector: string) : Parsed =
     Parsed (List.ofSeq list)
 
 let private parentElement (element: Element) : Element =
-    match element.parentNode with
-    | Some parent when (unbox<Node> parent).nodeType = 1.0 -> unbox<Element> parent
+    match Option.ofObj element.parentNode with
+    | Some parent when (unbox<Node> parent).nodeType = 1us -> unbox<Element> parent
     | _ -> Unchecked.defaultof<_>
 
 let private siblings (element: Element) : Element list =
-    match element.parentNode with
+    match Option.ofObj element.parentNode with
     | Some parent ->
-        let mutable child = (unbox<Node> parent).firstChild
+        let mutable child = Option.ofObj (unbox<Node> parent).firstChild
         let result = ResizeArray<Element>()
 
         let mutable going = true
@@ -258,10 +258,10 @@ let private siblings (element: Element) : Element list =
             | Some value ->
                 let node = unbox<Node> value
 
-                if node.nodeType = 1.0 then
+                if node.nodeType = 1us then
                     result.Add (unbox<Element> node)
 
-                child <- node.nextSibling
+                child <- Option.ofObj node.nextSibling
             | None -> going <- false
 
         List.ofSeq result
@@ -270,22 +270,22 @@ let private siblings (element: Element) : Element list =
 let private htmlNamespace = "http://www.w3.org/1999/xhtml"
 
 let private isHtml (element: Element) =
-    Option.toObj element.namespaceURI = htmlNamespace
+    element.namespaceURI = htmlNamespace
 
 // Names match HTML elements in any case and other elements (SVG, MathML) as written.
 let private attribute (element: Element) (name: string) =
-    Option.toObj (element.getAttribute (if isHtml element then name.ToLowerInvariant () else name))
+    element.getAttribute (if isHtml element then name.ToLowerInvariant () else name)
 
 let private isElementNamed (name: string) (node: Node) =
-    node.nodeType = 1.0
+    node.nodeType = 1us
     && (unbox<Element> node).localName = name
 
 let private firstLegendOf (fieldset: Element) : Element =
     let mutable child = (fieldset :> Node).firstChild
     let mutable found: Element = Unchecked.defaultof<_>
 
-    while isNull (box found) && child.IsSome do
-        let node = unbox<Node> child.Value
+    while isNull (box found) && not (isNull child) do
+        let node = child
 
         if isElementNamed "legend" node then
             found <- unbox<Element> node
@@ -300,20 +300,19 @@ let private disabledControls =
 // A form control is disabled by its own attribute, or by a disabled fieldset ancestor unless it sits in that
 // fieldset's first legend; an option is disabled by its own attribute or its optgroup's.
 let private isDisabled (element: Element) =
-    let own = not (isNull (Option.toObj (element.getAttribute "disabled")))
+    let own = element.hasAttribute "disabled"
 
     match element.localName with
     | "optgroup" -> own
     | "option" ->
         own
-        || (match element.parentNode with
-            | Some parent when isElementNamed "optgroup" (unbox<Node> parent) ->
-                not (isNull (Option.toObj ((unbox<Element> parent).getAttribute "disabled")))
+        || (match Option.ofObj element.parentNode with
+            | Some parent when isElementNamed "optgroup" (unbox<Node> parent) -> (unbox<Element> parent).hasAttribute "disabled"
             | _ -> false)
     | name when List.contains name disabledControls ->
         own
         || (let mutable inside: Node = unbox<Node> element
-            let mutable ancestor = element.parentNode
+            let mutable ancestor = Option.ofObj element.parentNode
             let mutable disabled = false
 
             while not disabled && ancestor.IsSome do
@@ -321,13 +320,13 @@ let private isDisabled (element: Element) =
 
                 if
                     isElementNamed "fieldset" node
-                    && not (isNull (Option.toObj ((unbox<Element> node).getAttribute "disabled")))
+                    && (unbox<Element> node).hasAttribute "disabled"
                     && not (obj.ReferenceEquals (inside, firstLegendOf (unbox<Element> node)))
                 then
                     disabled <- true
 
                 inside <- node
-                ancestor <- node.parentNode
+                ancestor <- Option.ofObj node.parentNode
 
             disabled)
     | _ -> false
@@ -396,7 +395,7 @@ let rec private matchFrom (scope: Node) (element: Element) (compounds: (Simple l
 /// <summary>Whether the element matches, with <c>:scope</c> matching <c>scope</c>, or its root element when <c>scope</c> is a document.</summary>
 let matchesIn (scope: Node) (Parsed list) (element: Element) : bool =
     let scope =
-        if scope.nodeType = 9.0 then
+        if scope.nodeType = 9us then
             (unbox<Document> scope).documentElement :> Node
         else
             scope
@@ -412,7 +411,7 @@ let queryAll (root: Node) (selector: string) : Element array =
     let result = ResizeArray<Element>()
 
     let rec walk (node: Node) =
-        let mutable child = node.firstChild
+        let mutable child = Option.ofObj node.firstChild
 
         let mutable going = true
 
@@ -422,7 +421,7 @@ let queryAll (root: Node) (selector: string) : Element array =
             | Some value ->
                 let current = unbox<Node> value
 
-                if current.nodeType = 1.0 then
+                if current.nodeType = 1us then
                     let element = unbox<Element> current
 
                     if matchesIn root parsed element then
@@ -430,7 +429,7 @@ let queryAll (root: Node) (selector: string) : Element array =
 
                     walk current
 
-                child <- current.nextSibling
+                child <- Option.ofObj current.nextSibling
 
     walk root
     result.ToArray ()

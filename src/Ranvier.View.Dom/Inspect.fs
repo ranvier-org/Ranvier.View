@@ -2,7 +2,7 @@
 module internal Ranvier.View.Dom.Inspect
 
 #if RANVIER_VIEW_INSPECT || !FABLE_COMPILER
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier
 open Ranvier.View
 open Ranvier.View.Template
@@ -101,7 +101,7 @@ let rememberRowKey (node: Node) (key: obj) =
 
 /// <summary>The row's key while its first node has a parent; a detached node clears its retained entry.</summary>
 let rowKeyOf (node: Node) : obj option =
-    if node.parentNode.IsNone then
+    if isNull node.parentNode then
         Native.delete rowKeys node
         None
     else

@@ -27,10 +27,22 @@ let private compiled () =
     includes "Compile" "Include"
 
 let private browserReferences () =
-    let expectedProjects = set [ "$(RanvierRoot)/src/Ranvier/Ranvier.fsproj" ]
+    let expectedProjects =
+        set
+            [
+                "$(RanvierRoot)/src/Ranvier/Ranvier.fsproj"
+                "$(RanvierRoot)/src/Ranvier.Dom/Ranvier.Dom.fsproj"
+                "$(RanvierRoot)/src/Fable.Ranvier.Dom/Fable.Ranvier.Dom.fsproj"
+            ]
 
     let expectedPackages =
-        set [ "Xantham.Fable.Core.TS"; "Ranvier$(RanvierPackageSuffix)" ]
+        set
+            [
+                "Fable.Core"
+                "Ranvier$(RanvierPackageSuffix)"
+                "Ranvier.Dom$(RanvierPackageSuffix)"
+                "Fable.Ranvier.Dom$(RanvierPackageSuffix)"
+            ]
 
     let extra (expected: Set<string>) (actual: string list) =
         actual
@@ -40,6 +52,7 @@ let private browserReferences () =
     equal [] (extra expectedProjects (includes "ProjectReference" "Include"))
 
     equal [] (extra (expectedPackages.Add "FSharp.Core") (includes "PackageReference" "Include"))
+
 
 let private browserAttribute =
     Regex (@"\[<\s*(?:[\w.]*\.)?(Emit|Import|ImportAll|ImportDefault|ImportMember|Global)\b.*?>\]", RegexOptions.Singleline)
@@ -421,7 +434,7 @@ let private guardedEmitsReach () =
 
 let cases: (string * (unit -> unit)) array =
     [|
-        "the portable project references only src/Ranvier and the Xantham type bindings", browserReferences
+        "the portable project references shared contracts without browser binding packages", browserReferences
         "the portable project's attributes use no Import or Global, and no Emit outside Native.fs touches document, window or addEventListener",
         browserEmits
         "every Emit of Native.fs sits in a #if FABLE_COMPILER block whose #else defines the same names", nativeBodies

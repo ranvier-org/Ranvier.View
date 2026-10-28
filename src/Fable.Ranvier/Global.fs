@@ -2,14 +2,14 @@
 module Fable.Ranvier.Global
 
 open Fable.Core
-open Fable.Core.TS.Dom
+open global.Ranvier.Dom
 open Fable.Core.TS
 
 [<Global "globalThis">]
 let globalThis: GlobalThis = jsNative
 
 [<Global "window">]
-let window: Window = jsNative
+let window: Fable.Core.TS.Dom.Window = jsNative
 
 [<Global "document">]
 let document: Document = jsNative
@@ -18,51 +18,22 @@ let isBrowser = lazy (Option.ofObj document |> Option.isSome)
 #else
 namespace Fable.Ranvier
 
-open Fable.Core.TS
-open Fable.Core.TS.Dom
-
-/// <summary>The browser globals of a .NET DOM host, such as Ranvier.View.WebCore's page.</summary>
-type IGlobals =
-    abstract Document: Document
-    abstract QueueMicrotask: (unit -> unit) -> unit
+open global.Ranvier.Dom
 
 /// <summary>
-/// The JavaScript globals on .NET: each member reads the globals installed on the current thread with <c>Install</c>.
+/// The DOM globals of the host installed on the current thread.
 /// </summary>
 [<Sealed; AbstractClass>]
 type Global =
-    [<System.ThreadStatic; DefaultValue>]
-    static val mutable private current: IGlobals
-
-    static member private Current =
-        if isNull (box Global.current) then
-            raise (System.InvalidOperationException "No DOM globals are installed on this thread; create a .NET DOM host first")
-
-        Global.current
-
-    /// <summary>
-    /// Installs <c>globals</c> for the current thread until the returned value is disposed, which restores the previous
-    /// globals.
-    /// </summary>
-    static member Install(globals: IGlobals) : System.IDisposable =
-        let previous = Global.current
-        Global.current <- globals
-
-        { new System.IDisposable with
-            member _.Dispose() =
-                Global.current <- previous
-        }
-
-    static member document: Document = Global.Current.Document
+    static member document: Document = global.Ranvier.View.Dom.DomRuntime.document ()
 
     static member queueMicrotask(callback: unit -> unit) : unit =
-        Global.Current.QueueMicrotask callback
+        global.Ranvier.View.Dom.DomRuntime.queueMicrotask callback
 
-    static member window: Window =
-        raise (System.NotSupportedException "window is not available on .NET")
-
-    static member globalThis: GlobalThis =
-        raise (System.NotSupportedException "globalThis is not available on .NET")
-
-    static member isBrowser = lazy (not (isNull (box Global.current)))
+    static member isBrowser =
+        lazy
+            (try
+                not (isNull (Global.document))
+             with :? System.InvalidOperationException ->
+                 false)
 #endif

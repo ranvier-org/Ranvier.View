@@ -4,7 +4,7 @@ module SugarChecks
 open System
 open global.Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Testing
@@ -134,7 +134,7 @@ let private delta (before: (string * float) list) (after: (string * float) list)
 
 let private click (selector: string) (root: HTMLElement) =
     (root.querySelector selector
-     |> Option.get
+     |> (Option.ofObj >> Option.get)
      |> unbox<HTMLElement>)
         .click()
 
@@ -416,8 +416,8 @@ let private nodesOf (root: Node) : Node array =
     let rec walk (node: Node) =
         let mutable child = node.firstChild
 
-        while child.IsSome do
-            let current = unbox<Node> child.Value
+        while (not (isNull child)) do
+            let current = unbox<Node> child
             found.Add current
             walk current
             child <- current.nextSibling

@@ -2,7 +2,7 @@
 module PendingRegionChecks
 
 open global.Ranvier
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Dom.Scheduling
@@ -18,6 +18,7 @@ let private strict (errors: exn list) =
 
 let private host () : HTMLElement =
     (Conformance.document ()).createElement "div"
+    |> unbox<HTMLElement>
 
 let private modeOf queued =
     if queued then
@@ -29,9 +30,8 @@ let private countOf (root: HTMLElement) (selector: string) =
     int (root.querySelectorAll selector).length
 
 let private textOf (root: HTMLElement) (selector: string) =
-    match root.querySelector selector with
-    | Some element -> element.textContent
-    | None -> null
+    let element = root.querySelector selector
+    if isNull element then null else element.textContent
 
 /// <summary>The region kinds under test; each reads the source's value in its condition, selector or items.</summary>
 type private Kind =

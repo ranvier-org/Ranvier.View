@@ -2,7 +2,7 @@ module Ranvier.View.Twin.Tests.SessionTests
 
 open System
 open Expecto
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier
 open Ranvier.View.Twin
 open Ranvier.View
@@ -10,7 +10,7 @@ open Ranvier.View.Twin.Tests.Fixtures
 
 let private items (session: Session) =
     let list = session.Host.querySelectorAll "li"
-    [ for i in 0 .. int list.length - 1 -> Bridge.nodeOf (list.item (float i)) ]
+    [ for i in 0 .. int list.length - 1 -> Bridge.nodeOf (list.item (uint32 i)) ]
 
 [<Tests>]
 let tests =
@@ -37,7 +37,7 @@ let tests =
                 use session = Twin.mount counter 1
                 Expect.equal (session.Text ()) "1" "first render"
 
-                (session.Host.querySelector "button").Value
+                (session.Host.querySelector "button")
                 |> unbox<HTMLElement>
                 |> fun b -> b.click ()
 
@@ -80,7 +80,7 @@ let tests =
                     Threading.Thread (fun () ->
                         use session = Twin.mount counter 20
 
-                        (session.Host.querySelector "button").Value
+                        (session.Host.querySelector "button")
                         |> unbox<HTMLElement>
                         |> fun b -> b.click ()
 
@@ -99,7 +99,7 @@ let tests =
                 use session = Twin.mount failing ()
 
                 let button =
-                    (session.Host.querySelector "button").Value
+                    (session.Host.querySelector "button")
                     |> unbox<HTMLElement>
 
                 Expect.throwsC (fun () -> button.click ()) (fun e ->
@@ -118,7 +118,7 @@ let tests =
                         ()
 
                 let button =
-                    (session.Host.querySelector "button").Value
+                    (session.Host.querySelector "button")
                     |> unbox<HTMLElement>
 
                 button.click ()
@@ -141,7 +141,7 @@ let tests =
 
                 session.Clock.RunMicrotasks () |> ignore
 
-                (session.Host.querySelector "button").Value
+                (session.Host.querySelector "button")
                 |> unbox<HTMLElement>
                 |> fun b -> b.click ()
 

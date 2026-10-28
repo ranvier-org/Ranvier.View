@@ -3,7 +3,7 @@ module SugarFixtures
 
 open System
 open global.Ranvier
-open Fable.Core.TS
+open Ranvier
 open Ranvier.View
 open Ranvier.View.Sugar
 

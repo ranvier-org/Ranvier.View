@@ -2,7 +2,7 @@ module Ranvier.View.Typed
 
 open Fable.Core
 open Fable.Core.JsInterop
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier
 open Ranvier.View.Representation
 

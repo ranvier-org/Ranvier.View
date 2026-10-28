@@ -14,6 +14,7 @@
     <Compile Include="DomChecks.fs" />
     <Compile Include="ScheduledChecks.fs" />
     <Compile Include="../../../src/Ranvier.View/Native.fs" Link="Native.fs" />
+    <Compile Include="../../../src/Ranvier.View.Dom/DomRuntime.fs" Link="DomRuntime.fs" />
     <Compile Include="../../../src/Ranvier.View/Lifetime.fs" Link="Lifetime.fs" />
     <Compile Include="../../../src/Ranvier.View/Scope.fs" Link="Scope.fs" />
     <Compile Include="../../../src/Ranvier.View/Identity.fs" Link="Identity.fs" />
@@ -124,6 +125,9 @@
     <Compile Include="LoopBench.fs" />
     <Compile Include="ConformanceCases.fs" />
     <ProjectReference Include="../../../src/Fable.Ranvier/Fable.Ranvier.fsproj" />
+    <!-- The frozen browser baseline and globals stay compilable in the .NET type-check fixture. -->
+    <PackageReference Include="Xantham.Fable.Core" Version="0.2.0" />
+    <PackageReference Include="Xantham.Fable.Core.TS" Version="0.2.1" />
     <PackageReference Update="FSharp.Core" Version="10.1.401" />
   </ItemGroup>
   <Import Project="../../../experiments/Ranvier.View.Arms/Ranvier.View.Arms.targets" />

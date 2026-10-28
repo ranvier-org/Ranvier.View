@@ -3,7 +3,7 @@ module RepresentationChecks
 open System
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Fable.Ranvier
 open Ranvier.View
 open Ranvier.View.Dom
@@ -51,8 +51,8 @@ let private exercise (ops: Operations<'view>) run =
             context.OnCleanup (fun () ->
                 equal
                     true
-                    (host.childNodes.length > 0.
-                     || other.childNodes.length > 0.)
+                    (host.childNodes.length > 0u
+                     || other.childNodes.length > 0u)
 
                 cleanups <- cleanups + 1)
 
@@ -122,7 +122,7 @@ let private staticAndFailure (ops: Operations<'view>) run =
     equal 0 counts.Effects
     equal 1 counts.Owners
     dispose ()
-    equal 1. host.childNodes.length
+    equal 1u host.childNodes.length
     let mutable cleaned = false
     let failure = System.InvalidOperationException "setup"
 
@@ -142,7 +142,7 @@ let private staticAndFailure (ops: Operations<'view>) run =
 
     equal true caught
     equal true cleaned
-    equal 1. host.childNodes.length
+    equal 1u host.childNodes.length
 
 let private portableModifiers (ops: Operations<'view>) run =
     use graph = new Graph ()

@@ -4,7 +4,7 @@ module ArmsChecks
 open System
 open global.Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Representation

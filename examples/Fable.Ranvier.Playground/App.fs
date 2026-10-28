@@ -2,7 +2,7 @@ module App
 
 open System
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier
 open Ranvier.View
 open Ranvier.View.Sugar
@@ -97,7 +97,7 @@ type private Demo =
                     Attrs.attribute ("autocomplete", "off"),
                     Attrs.data ("testid", "name"),
                     Props.Input.value _.State.Name.Value,
-                    Events.onInput (fun demo event -> demo.State.Name.Value <- (unbox<HTMLInputElement> event.currentTarget.Value).value)
+                    Events.onInput (fun demo event -> demo.State.Name.Value <- (unbox<HTMLInputElement> event.currentTarget).value)
                 )
 
                 p (Attrs.className "greeting", Attrs.data ("testid", "greeting"), Attrs.aria ("live", "polite")) {

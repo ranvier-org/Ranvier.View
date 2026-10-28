@@ -2,7 +2,7 @@
 module FrameworkSugarPerf
 
 open global.Ranvier
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Sugar
 open FrameworkPerf

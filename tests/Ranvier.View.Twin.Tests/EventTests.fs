@@ -1,7 +1,7 @@
-module Ranvier.View.Twin.Tests.EventTests
+﻿module Ranvier.View.Twin.Tests.EventTests
 
 open Expecto
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View.Twin
 
 let private setup () =
@@ -254,19 +254,19 @@ let tests =
                 use document = new TwinDocument ()
                 let native = document.Native :?> Document
                 let body = document.Body.Native
-                Expect.isTrue (obj.ReferenceEquals (native.activeElement.Value, body)) "nothing focused"
+                Expect.isTrue (obj.ReferenceEquals (native.activeElement, body)) "nothing focused"
                 let a, b = document.CreateElement "input", document.CreateElement "input"
                 document.Body.AppendChild a |> ignore
                 document.Body.AppendChild b |> ignore
                 Events.focus a
-                Expect.isTrue (obj.ReferenceEquals (native.activeElement.Value, a.Native)) "focused"
+                Expect.isTrue (obj.ReferenceEquals (native.activeElement, a.Native)) "focused"
                 let blurred = ref false
 
                 Events.listen a "blur" false (fun _ -> blurred.Value <- true)
                 |> ignore
 
                 a.Remove ()
-                Expect.isTrue (obj.ReferenceEquals (native.activeElement.Value, body)) "focus fixup"
+                Expect.isTrue (obj.ReferenceEquals (native.activeElement, body)) "focus fixup"
                 Events.focus b
                 Expect.isFalse blurred.Value "a removed element is not blurred"
 
@@ -281,7 +281,7 @@ let tests =
 
                 Events.click inner
                 Expect.isTrue (seen.Value :? PointerEvent) "PointerEvent"
-                Expect.isTrue (obj.ReferenceEquals ((seen.Value :?> Event).target.Value, inner.Native)) "target"
+                Expect.isTrue (obj.ReferenceEquals ((seen.Value :?> Event).target, inner.Native)) "target"
 
             testCase "a listener's exception surfaces after the dispatch ends"
             <| fun () ->
@@ -431,38 +431,22 @@ let tests =
                 let log = ResizeArray<string>()
 
                 let options capture once passive =
-                    { new AddEventListenerOptions with
-                        member _.capture
-                            with get () = Some capture
-                            and set _ = ()
-
-                        member _.once
-                            with get () = Some once
-                            and set _ = ()
-
-                        member _.passive
-                            with get () = Some passive
-                            and set _ = ()
-
-                        member _.signal
-                            with get () = None
-                            and set _ = ()
-                    }
+                    AddEventListenerOptions (capture = capture, once = once, passive = Some passive)
 
                 let listener: Event -> unit = fun _ -> log.Add "outer"
                 let native = outer.Native
-                native.addEventListener ("x", Fable.Core.U2.Case1 listener, Fable.Core.U2.Case2 (options true true false))
-                native.addEventListener ("x", Fable.Core.U2.Case1 listener, Fable.Core.U2.Case1 false)
+                native.addEventListener ("x", listener, options true true false)
+                native.addEventListener ("x", listener, false)
 
                 let passive: Event -> unit = fun e -> e.preventDefault ()
-                native.addEventListener ("x", Fable.Core.U2.Case1 passive, Fable.Core.U2.Case2 (options false false true))
+                native.addEventListener ("x", passive, options false false true)
 
                 Expect.isTrue (Events.dispatch inner (plain "x" true)) "a passive listener cannot cancel"
                 Expect.equal (List.ofSeq log) [ "outer"; "outer" ] "capture and non-capture are two listeners"
                 log.Clear ()
                 Events.dispatch inner (plain "x" true) |> ignore
                 Expect.equal (List.ofSeq log) [ "outer" ] "the once listener is gone"
-                native.removeEventListener ("x", Fable.Core.U2.Case1 listener, Fable.Core.U2.Case1 false)
+                native.removeEventListener ("x", listener, false)
                 log.Clear ()
                 Events.dispatch inner (plain "x" true) |> ignore
                 Expect.equal (List.ofSeq log) [] "removed by capture"

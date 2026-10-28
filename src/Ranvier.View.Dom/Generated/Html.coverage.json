@@ -67802,7 +67802,7 @@
       "events": 2,
       "getters": 13,
       "isVoid": false,
-      "setters": 9,
+      "setters": 10,
       "tag": "form"
     },
     {
@@ -67907,7 +67907,7 @@
       "events": 2,
       "getters": 47,
       "isVoid": true,
-      "setters": 39,
+      "setters": 40,
       "tag": "input"
     },
     {
@@ -68236,7 +68236,7 @@
       "events": 2,
       "getters": 24,
       "isVoid": false,
-      "setters": 16,
+      "setters": 17,
       "tag": "textarea"
     },
     {
@@ -68364,7 +68364,7 @@
       "reason": "setter replaces child nodes"
     }
   ],
-  "templatePropertyCount": 402,
+  "templatePropertyCount": 405,
   "templatePropertyGroups": 59,
   "templateTagClassCount": 112,
   "templateTagCount": 112

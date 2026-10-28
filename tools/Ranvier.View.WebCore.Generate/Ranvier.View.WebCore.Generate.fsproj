@@ -7,11 +7,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Types.fs" />
+    <Compile Include="Metadata.fs" />
     <Compile Include="Abi.fs" />
+    <Compile Include="Input.fs" />
     <Compile Include="Emit.fs" />
     <Compile Include="Program.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Xantham.Fable.Core.TS" Version="0.2.1" />
   </ItemGroup>
 </Project>

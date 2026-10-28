@@ -3,7 +3,7 @@ module TemplateChecks
 open global.Ranvier
 open Fable.Core
 open Fable.Core.JsInterop
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View.Testing
 open Ranvier.View
 open Ranvier.View.Dom
@@ -73,7 +73,7 @@ let private compiledSkeleton () =
     equal 4 targets.Length
     equal 4 compiled.NodeCount
     equal 4 compiled.RenderSlots.Length
-    equal 2. compiled.Skeleton.childNodes.length
+    equal 2u compiled.Skeleton.childNodes.length
 
 module H = Ranvier.View.Dom.Generated.Html
 
@@ -129,6 +129,7 @@ let private row =
 
 let private host () =
     (Conformance.document ()).createElement "main"
+    |> unbox<HTMLElement>
 
 let private mount graph (host: HTMLElement) view =
     Mounting.mount graph None (fun errors -> failwithf "%A" errors) host None (fun context -> Program.run view context.Backend)
@@ -136,17 +137,17 @@ let private mount graph (host: HTMLElement) view =
 let private state (host: HTMLElement) =
     let div =
         host.querySelector "div"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let input =
         host.querySelector "input"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLInputElement>
 
     let button =
         host.querySelector "button"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLButtonElement>
 
     div.getAttribute "class", div.getAttribute "id", div.getAttribute "title", input.value, button.disabled, button.textContent
@@ -208,7 +209,7 @@ let private changedSlotsOnly () =
 
     let div =
         host.querySelector "div"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let titleWrites = ref 0
@@ -221,7 +222,7 @@ let private changedSlotsOnly () =
     |> ignore
 
     (host.querySelector "button"
-     |> Option.get
+     |> (Option.ofObj >> Option.get)
      |> unbox<HTMLButtonElement>)
         .click()
 
@@ -253,11 +254,13 @@ let private readerFailure () =
 
     equal
         (Some "a", "bad")
-        ((host.querySelector "div"
-          |> Option.get
-          |> unbox<HTMLElement>)
-            .getAttribute
-             "title",
+        ((Option.ofObj (
+            (host.querySelector "div"
+             |> (Option.ofObj >> Option.get)
+             |> unbox<HTMLElement>)
+                .getAttribute
+                "title"
+         )),
          host.textContent)
 
     equal [ "reader" ] [ for error in reported -> error.Message ]
@@ -265,11 +268,13 @@ let private readerFailure () =
 
     equal
         (Some "c", "c")
-        ((host.querySelector "div"
-          |> Option.get
-          |> unbox<HTMLElement>)
-            .getAttribute
-             "title",
+        ((Option.ofObj (
+            (host.querySelector "div"
+             |> (Option.ofObj >> Option.get)
+             |> unbox<HTMLElement>)
+                .getAttribute
+                "title"
+         )),
          host.textContent)
 
     equal 1 reported.Count
@@ -340,11 +345,13 @@ let private throwingReporter () =
 
     equal
         (Some "a", "abad!")
-        ((host.querySelector "div"
-          |> Option.get
-          |> unbox<HTMLElement>)
-            .getAttribute
-             "title",
+        ((Option.ofObj (
+            (host.querySelector "div"
+             |> (Option.ofObj >> Option.get)
+             |> unbox<HTMLElement>)
+                .getAttribute
+                "title"
+         )),
          host.textContent)
 
     equal None (run "ok")
@@ -352,11 +359,13 @@ let private throwingReporter () =
 
     equal
         (Some "ok", "okok!")
-        ((host.querySelector "div"
-          |> Option.get
-          |> unbox<HTMLElement>)
-            .getAttribute
-             "title",
+        ((Option.ofObj (
+            (host.querySelector "div"
+             |> (Option.ofObj >> Option.get)
+             |> unbox<HTMLElement>)
+                .getAttribute
+                "title"
+         )),
          host.textContent)
 
     mounted.Dispose ()
@@ -384,11 +393,13 @@ let private initialReaderFailure () =
 
     equal
         (Some "ok", "ok")
-        ((host.querySelector "div"
-          |> Option.get
-          |> unbox<HTMLElement>)
-            .getAttribute
-             "title",
+        ((Option.ofObj (
+            (host.querySelector "div"
+             |> (Option.ofObj >> Option.get)
+             |> unbox<HTMLElement>)
+                .getAttribute
+                "title"
+         )),
          host.textContent)
 
     mounted.Dispose ()
@@ -444,7 +455,7 @@ let private cleanupOrder () =
     let mounted = mount graph host view
     mounted.Dispose ()
     equal [ "cleanup 2"; "cleanup 1" ] (List.ofSeq (rowLog ()))
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private adjacentTexts () =
     use graph = new Graph ()
@@ -455,7 +466,7 @@ let private adjacentTexts () =
 
     equal "Hello Ada!Ada" host.textContent
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private compiledOnce () =
     use graph = new Graph ()
@@ -492,11 +503,11 @@ let private compiledOnce () =
     equal true (obj.ReferenceEquals (compiled, compiledForm row))
 
     (first.querySelector "button"
-     |> Option.get
+     |> (Option.ofObj >> Option.get)
      |> unbox<HTMLButtonElement>)
         .click()
 
-    equal ("1", "0") ((first.querySelector "button").Value.textContent, (second.querySelector "button").Value.textContent)
+    equal ("1", "0") ((first.querySelector "button").textContent, (second.querySelector "button").textContent)
     a.Dispose ()
     b.Dispose ()
 
@@ -520,20 +531,22 @@ let private keyedRows () =
     let mounted = mount graph host view
 
     let removed =
-        host.querySelectorAll("div").item 1.
+        host.querySelectorAll("div").item 1u
         |> unbox<HTMLElement>
 
     graph.Run (fun () -> rows.Value <- [ 1 ])
     graph.Run (fun () -> source.Value <- "b")
-    equal (Some "a") (removed.getAttribute "title")
+    equal (Some "a") ((Option.ofObj (removed.getAttribute "title")))
 
     equal
         (Some "b")
-        ((host.querySelector "div"
-          |> Option.get
-          |> unbox<HTMLElement>)
-            .getAttribute
-            "title")
+        ((Option.ofObj (
+            (host.querySelector "div"
+             |> (Option.ofObj >> Option.get)
+             |> unbox<HTMLElement>)
+                .getAttribute
+                "title"
+        )))
 
     mounted.Dispose ()
 
@@ -559,7 +572,7 @@ let private staticTemplate () =
     let b = mount graph second (Component.render fixedView ())
 
     let shape (host: HTMLElement) =
-        (host.querySelector "div.fixed").Value.textContent
+        (host.querySelector "div.fixed").textContent
 
     equal ("static", "static") (shape first, shape second)
     equal 0 (compiledForm fixedView :?> TemplateDom.Compiled).RenderSlots.Length
@@ -633,11 +646,13 @@ let private sourceSlots () =
 
     equal
         (Some "b", "bb")
-        ((host.querySelector "div"
-          |> Option.get
-          |> unbox<HTMLElement>)
-            .getAttribute
-             "title",
+        ((Option.ofObj (
+            (host.querySelector "div"
+             |> (Option.ofObj >> Option.get)
+             |> unbox<HTMLElement>)
+                .getAttribute
+                "title"
+         )),
          host.textContent)
 
     mounted.Dispose ()
@@ -703,7 +718,7 @@ let private clicks () =
 
     let button =
         host.querySelector "button"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLButtonElement>
 
     button.click ()
@@ -733,7 +748,7 @@ let private movedClicks () =
 
     let button =
         first.querySelector "button"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLButtonElement>
 
     mounted.MoveBefore (second, None)
@@ -758,7 +773,7 @@ let private focusBesideClick () =
 
     let input =
         host.querySelector "input"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLInputElement>
 
     dispatchFocus input
@@ -789,22 +804,26 @@ let private queuedFallback () =
 
     equal
         (Some "a")
-        ((host.querySelector "div"
-          |> Option.get
-          |> unbox<HTMLElement>)
-            .getAttribute
-            "title")
+        ((Option.ofObj (
+            (host.querySelector "div"
+             |> (Option.ofObj >> Option.get)
+             |> unbox<HTMLElement>)
+                .getAttribute
+                "title"
+        )))
 
     graph.Run (fun () -> source.Value <- "b")
     mounted.Flush ()
 
     equal
         (Some "b")
-        ((host.querySelector "div"
-          |> Option.get
-          |> unbox<HTMLElement>)
-            .getAttribute
-            "title")
+        ((Option.ofObj (
+            (host.querySelector "div"
+             |> (Option.ofObj >> Option.get)
+             |> unbox<HTMLElement>)
+                .getAttribute
+                "title"
+        )))
 
     mounted.Dispose ()
 
@@ -822,17 +841,19 @@ let private browserInterpreter () =
 
     equal
         (Some "row-1", "a")
-        ((host.querySelector "div"
-          |> Option.get
-          |> unbox<HTMLElement>)
-            .getAttribute
-             "id",
+        ((Option.ofObj (
+            (host.querySelector "div"
+             |> (Option.ofObj >> Option.get)
+             |> unbox<HTMLElement>)
+                .getAttribute
+                "id"
+         )),
          host.textContent)
 
     graph.Run (fun () -> source.Value <- "b")
     equal "b" host.textContent
     dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private preparedRejects () =
     let mutable rejected = false
@@ -927,7 +948,7 @@ let private nullAttributes () =
 
     let div =
         host.querySelector "div"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let writes = ref 0
@@ -937,11 +958,14 @@ let private nullAttributes () =
         original args)
     |> ignore
 
-    equal (None, None, None) (div.getAttribute "title", div.getAttribute "id", div.getAttribute "class")
+    equal
+        (None, None, None)
+        ((Option.ofObj (div.getAttribute "title")), (Option.ofObj (div.getAttribute "id")), (Option.ofObj (div.getAttribute "class")))
+
     graph.Run (fun () -> other.Value <- 1)
-    equal (0, None, "1") (writes.Value, div.getAttribute "title", host.textContent)
+    equal (0, None, "1") (writes.Value, (Option.ofObj (div.getAttribute "title")), host.textContent)
     graph.Run (fun () -> source.Value <- "set")
-    equal (Some "set", Some "set") (div.getAttribute "id", div.getAttribute "class")
+    equal (Some "set", Some "set") ((Option.ofObj (div.getAttribute "id")), (Option.ofObj (div.getAttribute "class")))
     mounted.Dispose ()
 
     let server =
@@ -983,10 +1007,13 @@ let private laterSetterFailure () =
 
     let button =
         host.querySelector "button"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
-    equal ([ "setter" ], Some "bad", "bad") ([ for error in reported -> error.Message ], button.getAttribute "title", host.textContent)
+    equal
+        ([ "setter" ], Some "bad", "bad")
+        ([ for error in reported -> error.Message ], (Option.ofObj (button.getAttribute "title")), host.textContent)
+
     graph.Run (fun () -> source.Value <- "c")
     equal ([ "a"; "c" ], "c") (List.ofSeq written, host.textContent)
     mounted.Dispose ()
@@ -1003,7 +1030,7 @@ let private textRoot () =
     graph.Run (fun () -> source.Value <- "b")
     equal "b" host.textContent
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private fragmentRoot () =
     use graph = new Graph ()
@@ -1014,12 +1041,12 @@ let private fragmentRoot () =
 
     let host = host ()
     let mounted = mount graph host (Component.render wrapped ())
-    equal 1. host.children.length
+    equal 1u host.children.length
     equal "a" host.textContent
     graph.Run (fun () -> source.Value <- "b")
     equal "b" host.textContent
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private movedRoots () =
     use graph = new Graph ()
@@ -1028,13 +1055,13 @@ let private movedRoots () =
     let mounted =
         mount graph first (Component.render greeting { Title = "T"; Name = "Ada" })
 
-    equal 2. first.children.length
+    equal 2u first.children.length
     mounted.MoveBefore (second, None)
-    equal 0. first.children.length
-    equal 2. second.children.length
+    equal 0u first.children.length
+    equal 2u second.children.length
     equal "Hello Ada!Ada" second.textContent
     mounted.Dispose ()
-    equal 0. second.childNodes.length
+    equal 0u second.childNodes.length
 
 let private walkProgramEmptyPath () =
     equal [| 3; 0; 1; 3 |] (TemplateDom.walkProgram [| [||]; [| 1 |] |])
@@ -1045,7 +1072,7 @@ let private singleRootCompiled () =
 
     let compiled = TemplateDom.compile single
     equal 1 compiled.RootCount
-    equal 1. compiled.Skeleton.nodeType
+    equal 1us compiled.Skeleton.nodeType
 
     equal
         true
@@ -1093,7 +1120,7 @@ let private regionMarkers (node: Node) : int = jsNative
 let private regionMarkers (node: Node) : int =
     Ranvier.View.Native.childNodesOf node
     |> Array.filter (fun n ->
-        n.nodeType = 8.0
+        n.nodeType = 8us
         && (Ranvier.View.Native.dataOf n = "["
             || Ranvier.View.Native.dataOf n = "]"))
     |> Array.length
@@ -1119,14 +1146,14 @@ let private viewHole () =
 
     let div =
         host.querySelector "div"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     equal ("<div class=\"card\">A<em>x</em></div>", 2) (withoutComments host, regionMarkers div)
     graph.Run (fun () -> label.Value <- "y")
     equal "Ay" host.textContent
     mounted.Dispose ()
-    equal (1, 0.) (cleaned, host.childNodes.length)
+    equal (1, 0u) (cleaned, host.childNodes.length)
 
 let private holeTwin () =
     use graph = new Graph ()
@@ -1166,12 +1193,12 @@ let private emptyHole () =
 
     let div =
         host.querySelector "div"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     equal ("<div class=\"card\">E</div>", 2) (withoutComments host, regionMarkers div)
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private viewReadOnce () =
     use graph = new Graph ()
@@ -1228,16 +1255,16 @@ let private rootHoleClicks () =
 
     let button =
         first.querySelector "button"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLButtonElement>
 
     button.click ()
     mounted.MoveBefore (second, None)
     button.click ()
-    equal (2, 0., 1.) (clicks.Count, first.childNodes.length, second.children.length)
+    equal (2, 0u, 1u) (clicks.Count, first.childNodes.length, second.children.length)
     mounted.Dispose ()
     button.click ()
-    equal (2, 0.) (clicks.Count, second.childNodes.length)
+    equal (2, 0u) (clicks.Count, second.childNodes.length)
 
 let private holeFallbacks () =
     use graph = new Graph ()
@@ -1274,7 +1301,7 @@ let private holeFallbacks () =
     equal ("Qv", "Bv") (queuedHost.textContent, browserHost.textContent)
     queued.Dispose ()
     dispose ()
-    equal (0., 0.) (queuedHost.childNodes.length, browserHost.childNodes.length)
+    equal (0u, 0u) (queuedHost.childNodes.length, browserHost.childNodes.length)
 
 type Stage =
     | Waiting
@@ -1355,7 +1382,7 @@ let private matchSwitching () =
         (List.ofSeq (stageLog ()))
 
     mounted.Dispose ()
-    equal ("cleanup complete", 0.) ((stageLog ())[(stageLog ()).Count - 1], host.childNodes.length)
+    equal ("cleanup complete", 0u) ((stageLog ())[(stageLog ()).Count - 1], host.childNodes.length)
 
 let private matchSameFlush () =
     use graph = new Graph ()
@@ -1395,7 +1422,7 @@ let private matchTwin () =
     equal (withoutComments second, "<div><span>complete ok</span></div>") (withoutComments first, withoutComments second)
     templateMount.Dispose ()
     twinMount.Dispose ()
-    equal (0., 0.) (first.childNodes.length, second.childNodes.length)
+    equal (0u, 0u) (first.childNodes.length, second.childNodes.length)
 
 let private haltDuringSetup () =
     Conformance.local "haltDuringSetup" (fun () -> ref (ignore: unit -> unit))
@@ -1429,7 +1456,7 @@ let private disposedMidSwitch () =
     finally
         (haltDuringSetup ()).Value <- ignore
 
-    equal (0., 0) (host.childNodes.length, reported.Count)
+    equal (0u, 0) (host.childNodes.length, reported.Count)
 
     equal [ "cleanup halting"; "cleanup working"; "setup halting"; "setup working" ] (List.sort (List.ofSeq (stageLog ())))
 
@@ -1468,7 +1495,7 @@ let private sharedArm () =
 
     let span =
         host.querySelector "span"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     equal ("working 1", [ "setup working" ]) (host.textContent, List.ofSeq (stageLog ()))
@@ -1476,14 +1503,20 @@ let private sharedArm () =
 
     equal
         ("working 2", [ "setup working" ], true)
-        (host.textContent, List.ofSeq (stageLog ()), obj.ReferenceEquals (span, host.querySelector "span" |> Option.get))
+        (host.textContent,
+         List.ofSeq (stageLog ()),
+         obj.ReferenceEquals (
+             span,
+             host.querySelector "span"
+             |> (Option.ofObj >> Option.get)
+         ))
 
     graph.Run (fun () -> phase.Value <- Loading 3)
     equal ("working 3", [ "setup working" ]) (host.textContent, List.ofSeq (stageLog ()))
     graph.Run (fun () -> phase.Value <- Idle)
     equal ("waiting", [ "setup working"; "cleanup working"; "setup waiting" ]) (host.textContent, List.ofSeq (stageLog ()))
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private decadeLog () =
     Conformance.local "decadeLog" (fun () -> ResizeArray<string>())
@@ -1516,7 +1549,7 @@ let private branchSwitching () =
     graph.Run (fun () -> value.Value <- 21)
     equal ("2", [ "setup 1"; "cleanup 1"; "setup 2" ]) (host.textContent, List.ofSeq (decadeLog ()))
     mounted.Dispose ()
-    equal ([ "setup 1"; "cleanup 1"; "setup 2"; "cleanup 2" ], 0.) (List.ofSeq (decadeLog ()), host.childNodes.length)
+    equal ([ "setup 1"; "cleanup 1"; "setup 2"; "cleanup 2" ], 0u) (List.ofSeq (decadeLog ()), host.childNodes.length)
 
 let private branchTwin () =
     use graph = new Graph ()
@@ -1532,7 +1565,7 @@ let private branchTwin () =
     equal (withoutComments second, "<div><span>2</span></div>") (withoutComments first, withoutComments second)
     templateMount.Dispose ()
     twinMount.Dispose ()
-    equal (0., 0.) (first.childNodes.length, second.childNodes.length)
+    equal (0u, 0u) (first.childNodes.length, second.childNodes.length)
 
 let private branchMarkup () =
     use graph = new Graph ()
@@ -1711,19 +1744,19 @@ let private armSetupFailure () =
 
     let div =
         host.querySelector "div"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     graph.Run (fun () -> stage.Value <- Complete "x")
 
     equal
-        ([ "setup working"; "cleanup working"; "setup failing"; "cleanup failing" ], 2., "", [ "arm setup failed" ])
+        ([ "setup working"; "cleanup working"; "setup failing"; "cleanup failing" ], 2u, "", [ "arm setup failed" ])
         (List.ofSeq (stageLog ()), div.childNodes.length, div.textContent, reported |> Seq.map _.Message |> List.ofSeq)
 
     graph.Run (fun () -> stage.Value <- Waiting)
     equal ("waiting", "setup waiting", 1) (host.textContent, (stageLog ())[(stageLog ()).Count - 1], reported.Count)
     mounted.Dispose ()
-    equal ("cleanup waiting", 0.) ((stageLog ())[(stageLog ()).Count - 1], host.childNodes.length)
+    equal ("cleanup waiting", 0u) ((stageLog ())[(stageLog ()).Count - 1], host.childNodes.length)
 
 let private throwingCleanupArm =
     Component.define
@@ -1761,7 +1794,7 @@ let private armCleanupFailure () =
         (host.textContent, List.ofSeq (stageLog ()), reported |> Seq.map _.Message |> List.ofSeq)
 
     mounted.Dispose ()
-    equal ("cleanup working", 0.) ((stageLog ())[(stageLog ()).Count - 1], host.childNodes.length)
+    equal ("cleanup working", 0u) ((stageLog ())[(stageLog ()).Count - 1], host.childNodes.length)
 
 let private armPlacementFailure () =
     use graph = new Graph ()
@@ -1775,10 +1808,10 @@ let private armPlacementFailure () =
                 setup.OnCleanup (fun () ->
                     let div =
                         host.querySelector "div"
-                        |> Option.get
+                        |> (Option.ofObj >> Option.get)
                         |> unbox<HTMLElement>
 
-                    div.removeChild div.firstChild.Value |> ignore))
+                    div.removeChild div.firstChild |> ignore))
             (fun t -> t.span [||] [| t.text "detaching" |])
 
     let tickingArm =
@@ -1868,18 +1901,18 @@ let private eachRows () =
 
     let first =
         host.querySelector "li"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     equal "ab" host.textContent
     graph.Run (fun () -> items.Value <- [| { Id = 2; Text = "B" }; { Id = 1; Text = "a" } |])
-    equal ("Ba", true) (host.textContent, obj.ReferenceEquals (first, host.querySelectorAll("li").item 1.))
+    equal ("Ba", true) (host.textContent, obj.ReferenceEquals (first, host.querySelectorAll("li").item 1u))
     first.click ()
     graph.Run (fun () -> items.Value <- [| { Id = 1; Text = "a" } |])
     equal "a" host.textContent
     mounted.Dispose ()
 
-    equal ([ "setup 1"; "setup 2"; "click 1"; "cleanup 2"; "cleanup 1" ], 0.) (List.ofSeq (listedLog ()), host.childNodes.length)
+    equal ([ "setup 1"; "setup 2"; "click 1"; "cleanup 2"; "cleanup 1" ], 0u) (List.ofSeq (listedLog ()), host.childNodes.length)
 
 let private eachReplacement () =
     for expanded in [ false; true ] do
@@ -1953,7 +1986,7 @@ let private rowMarkers (node: Node) : obj array = jsNative
 let private rowMarkers (node: Node) : obj array =
     Ranvier.View.Native.childNodesOf node
     |> Array.filter (fun n ->
-        n.nodeType = 8.0
+        n.nodeType = 8us
         && Ranvier.View.Native.dataOf n = "ranvier:row")
     |> Array.map box
 #endif
@@ -1963,7 +1996,10 @@ let private rowMarkers (node: Node) : obj array =
 let private isFocused (node: obj) : bool = jsNative
 #else
 let private isFocused (node: obj) : bool =
-    match (Conformance.document ()).activeElement with
+    match
+        (Conformance.document ()).activeElement
+        |> Option.ofObj
+    with
     | Some active -> obj.ReferenceEquals (active, node)
     | None -> false
 #endif
@@ -1996,7 +2032,7 @@ let private eachSwapMovesTwo () =
 
     let list =
         host.querySelector "ul"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let next = Array.copy items.Value
@@ -2032,7 +2068,7 @@ let private stableRemove (view: (Listed -> int) -> Signal<Listed array> -> Progr
     (listedLog ()).Clear()
     keyCalls.Value <- 0
     graph.Run (fun () -> items.Value <- Array.removeAt 100 items.Value)
-    equal (199., [ "cleanup 100" ]) ((host.querySelectorAll "li").length, List.ofSeq (listedLog ()))
+    equal (199u, [ "cleanup 100" ]) ((host.querySelectorAll "li").length, List.ofSeq (listedLog ()))
     equal 0 keyCalls.Value
     mounted.Dispose ()
 
@@ -2058,7 +2094,7 @@ let private listedItems count =
 
 let private rowNodes (host: HTMLElement) =
     let rendered = host.querySelectorAll "li"
-    Array.init (int rendered.length) (fun index -> box (rendered.item (float index)))
+    Array.init (int rendered.length) (fun index -> box (rendered.item (uint32 index)))
 
 let private sameNodes (expected: obj array) (actual: obj array) =
     expected.Length = actual.Length
@@ -2074,7 +2110,7 @@ let private swapEnds (keyed: bool) (count: int) (left: int) (right: int) =
     let held = next[left]
     next[left] <- next[right]
     next[right] <- held
-    let list = (before[0] :?> Node).parentNode.Value :> Node
+    let list = (before[0] :?> Node).parentNode
     let inserts = countInserts list
     graph.Run (fun () -> items.Value <- next)
     let moved = inserts ()
@@ -2133,7 +2169,7 @@ let private swapStopsWhenDisposed () =
 
     let list =
         host.querySelector "ul"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let inserts = countInserts list
@@ -2190,7 +2226,7 @@ let private windowedRemove (keyed: bool) =
     let validated, lookups =
         Mounting.ListCounters.validatedRows.Value, Mounting.ListCounters.lookups.Value
 
-    equal 199. (host.querySelectorAll "li").length
+    equal 199u (host.querySelectorAll "li").length
 
     if validated > 4 || lookups > 1 then
         failwithf "Removing one of 200 rows validated %d rows and looked up %d" validated lookups
@@ -2340,11 +2376,11 @@ let private foreignNearWindow (keyed: bool) (position: int) (removed: int) (each
         if position < before.Length then
             before[position] :?> Node
         else
-            (before[position - 1] :?> Node).nextSibling.Value
+            (before[position - 1] :?> Node).nextSibling
 
     let foreign = (Conformance.document ()).createElement "li"
 
-    anchor.parentNode.Value.insertBefore (foreign, anchor)
+    anchor.parentNode.insertBefore (foreign, anchor)
     |> ignore
 
     let expectedNodes = Array.insertAt position (box foreign) before
@@ -2399,7 +2435,7 @@ let private foreignNearSwap (keyed: bool) (position: int) =
     let anchor = before[position] :?> Node
     let foreign = (Conformance.document ()).createElement "li"
 
-    anchor.parentNode.Value.insertBefore (foreign, anchor)
+    anchor.parentNode.insertBefore (foreign, anchor)
     |> ignore
 
     let expectedNodes = Array.insertAt position (box foreign) before
@@ -2514,14 +2550,14 @@ let private eachMatchesReferenceOrder () =
         let rendered = host.querySelectorAll "li"
 
         for index in 0 .. order.Length - 1 do
-            let node = box (rendered.item (float index))
+            let node = box (rendered.item (uint32 index))
 
             match nodes.TryGetValue order[index] with
             | true, known -> equal true (obj.ReferenceEquals (known, node))
             | _ -> nodes[order[index]] <- node
 
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private stableView (keyed: bool) (items: Signal<Listed array>) =
     if keyed then
@@ -2563,10 +2599,10 @@ let private stableItemsMatchReferenceOrder (keyed: bool) =
             host.textContent
 
         let rendered = host.querySelectorAll "li"
-        equal (float order.Length) rendered.length
+        equal (uint32 order.Length) rendered.length
 
         for index in 0 .. order.Length - 1 do
-            let node = box (rendered.item (float index))
+            let node = box (rendered.item (uint32 index))
 
             match nodes.TryGetValue order[index] with
             | true, known -> equal true (obj.ReferenceEquals (known, node))
@@ -2597,7 +2633,7 @@ let private stableItemsMatchReferenceOrder (keyed: bool) =
         apply (current.ToArray ())
 
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private eachStableItemsMatchReferenceOrder () =
     stableItemsMatchReferenceOrder false
@@ -2637,8 +2673,13 @@ let private recreatedRows (keyed: bool) =
         let rendered = host.querySelectorAll "li"
 
         for index in 0 .. int rendered.length - 1 do
-            let node = rendered.item (float index)
-            let text = node.textContent |> Option.defaultValue ""
+            let node = rendered.item (uint32 index)
+
+            let text =
+                node.textContent
+                |> Option.ofObj
+                |> Option.defaultValue ""
+
             let id = int (text.TrimEnd ',')
 
             match nodes.TryGetValue id with
@@ -2666,7 +2707,7 @@ let private recreatedRows (keyed: bool) =
     set [| 3; 99; 1; 4 |]
     set [| 3; 99; 1 |]
     set [||]
-    equal 0. (host.querySelectorAll "li").length
+    equal 0u (host.querySelectorAll "li").length
     mounted.Dispose ()
 
 let private eachRecreatedRows () =
@@ -2708,9 +2749,22 @@ let private recreatedEqualKeyUpdate (keyed: bool) =
 
     let host = host ()
     let mounted = mount graph host (recreatedView keyed items)
-    let first = host.querySelector "li" |> Option.get
+
+    let first =
+        host.querySelector "li"
+        |> (Option.ofObj >> Option.get)
+
     graph.Run (fun () -> items.Value <- [| { Id = 1; Text = "A" }; { Id = 2; Text = "b" } |])
-    equal ("Ab", true) (host.textContent, obj.ReferenceEquals (first, host.querySelector "li" |> Option.get))
+
+    equal
+        ("Ab", true)
+        (host.textContent,
+         obj.ReferenceEquals (
+             first,
+             host.querySelector "li"
+             |> (Option.ofObj >> Option.get)
+         ))
+
     mounted.Dispose ()
 
 let private stableEqualKeyUpdate (keyed: bool) =
@@ -2739,7 +2793,7 @@ let private stableEqualKeyUpdate (keyed: bool) =
     let mounted = mount graph host view
 
     let before =
-        Array.init 5 (fun index -> box ((host.querySelectorAll "li").item(float index)))
+        Array.init 5 (fun index -> box ((host.querySelectorAll "li").item(uint32 index)))
 
     let setups = (listedLog ()).Count
 
@@ -2749,7 +2803,7 @@ let private stableEqualKeyUpdate (keyed: bool) =
             |> Array.mapi (fun index it -> if index = 3 then { it with Text = "X" } else it))
 
     let after =
-        Array.init 5 (fun index -> box ((host.querySelectorAll "li").item(float index)))
+        Array.init 5 (fun index -> box ((host.querySelectorAll "li").item(uint32 index)))
 
     equal "0,1,2,X4," host.textContent
     equal (true, setups) (Array.forall2 (fun a b -> obj.ReferenceEquals (a, b)) before after, (listedLog ()).Count)
@@ -2785,7 +2839,7 @@ let private zeroNodeRows () =
 
     let list =
         host.querySelector "ul"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let markers = rowMarkers list
@@ -2806,7 +2860,7 @@ let private zeroNodeRows () =
 let private disposalCleansBeforeRelease (rootLevel: bool) =
     use graph = new Graph ()
     let host = host ()
-    let counts = ResizeArray<float>()
+    let counts = ResizeArray<uint32>()
 
     let watching =
         Component.define
@@ -2829,14 +2883,14 @@ let private disposalCleansBeforeRelease (rootLevel: bool) =
         graph.Run (fun () -> Api.createSignal [| for id in 1..3 -> { Id = id; Text = string id } |])
 
     let mounted = mount graph host (Component.render watched items)
-    equal 3. (host.querySelectorAll "li").length
+    equal 3u (host.querySelectorAll "li").length
     mounted.Dispose ()
-    equal ([ 3.; 3.; 3. ], 0.) (List.ofSeq counts, host.childNodes.length)
+    equal ([ 3u; 3u; 3u ], 0u) (List.ofSeq counts, host.childNodes.length)
 
 let private armCleansBeforeRelease () =
     use graph = new Graph ()
     let host = host ()
-    let counts = ResizeArray<float>()
+    let counts = ResizeArray<uint32>()
 
     let watchingArm =
         Component.define (fun setup (_: unit -> unit) -> setup.OnCleanup (fun () -> counts.Add (host.querySelectorAll "span").length)) (fun t ->
@@ -2856,7 +2910,7 @@ let private armCleansBeforeRelease () =
     equal "waiting" host.textContent
     graph.Run (fun () -> on.Value <- true)
     mounted.Dispose ()
-    equal ([ 1.; 1. ], 0.) (List.ofSeq counts, host.childNodes.length)
+    equal ([ 1u; 1u ], 0u) (List.ofSeq counts, host.childNodes.length)
 
 let private clicksFollowMovedRows () =
     use graph = new Graph ()
@@ -2878,7 +2932,7 @@ let private clicksFollowMovedRows () =
 
     let one =
         host.querySelector "li"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     graph.Run (fun () -> items.Value <- [| for id in [ 3; 1; 2 ] -> { Id = id; Text = string id } |])
@@ -2886,7 +2940,7 @@ let private clicksFollowMovedRows () =
     mounted.MoveBefore (other, None)
     one.click ()
     graph.Run (fun () -> items.Value <- [| for id in [ 3; 2 ] -> { Id = id; Text = string id } |])
-    let removed = one.parentNode.IsNone
+    let removed = isNull one.parentNode
     // Back under the delegating host, the removed row's node reaches the listener.
     other.appendChild one |> ignore
     one.click ()
@@ -2904,7 +2958,7 @@ let private clicksFollowMovedRows () =
 let private throwingRowCleanup () =
     use graph = new Graph ()
     let host = host ()
-    let seen = ResizeArray<float>()
+    let seen = ResizeArray<uint32>()
 
     let throwing =
         Component.define
@@ -2923,7 +2977,7 @@ let private throwingRowCleanup () =
     let items =
         graph.Run (fun () -> Api.createSignal [| for id in 1..2 -> { Id = id; Text = string id } |])
 
-    let mutable atReport = -1.
+    let mutable atReport = System.UInt32.MaxValue
     let reports = ResizeArray<exn list>()
 
     let mounted =
@@ -2938,7 +2992,7 @@ let private throwingRowCleanup () =
             (fun context -> Program.run (Component.render list items) context.Backend)
 
     graph.Run (fun () -> items.Value <- [| { Id = 2; Text = "2" } |])
-    equal ([ 2. ], 1, [ "row cleanup" ], 1.) (List.ofSeq seen, reports.Count, reports[0] |> List.map _.Message, atReport)
+    equal ([ 2u ], 1, [ "row cleanup" ], 1u) (List.ofSeq seen, reports.Count, reports[0] |> List.map _.Message, atReport)
     mounted.Dispose ()
 
 let private disposalFromRowSetup () =
@@ -2968,7 +3022,7 @@ let private disposalFromRowSetup () =
     let mounted, reports = reported graph host (Component.render list items)
     handle <- mounted
     graph.Run (fun () -> items.Value <- [| { Id = 1; Text = "a" }; { Id = 3; Text = "c" } |])
-    equal (Disposed, 0., 0) (handle.Phase, host.childNodes.length, reports.Count)
+    equal (Disposed, 0u, 0) (handle.Phase, host.childNodes.length, reports.Count)
 
 type Grouped = { Group: int; Members: Listed array }
 
@@ -3043,7 +3097,7 @@ let private nestedListsMoveWhole () =
 
     equal "1:b" host.textContent
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private boxedRow =
     Component.define (fun _ (item: unit -> obj * string) -> item) (fun t -> t.element (HtmlTag "li") [||] [| t.text (fun item -> snd (item ())) |])
@@ -3066,10 +3120,10 @@ let private boxedKeys () =
     let host = host ()
     let mounted = mount graph host (Component.render boxedListed items)
     let rendered = host.querySelectorAll "li"
-    let long = box (rendered.item 1.)
+    let long = box (rendered.item 1u)
     graph.Run (fun () -> items.Value <- [| box 1L, "LONG"; box "1", "string" |])
     equal "LONGstring" host.textContent
-    equal true (obj.ReferenceEquals (long, box ((host.querySelectorAll "li").item 0.)))
+    equal true (obj.ReferenceEquals (long, box ((host.querySelectorAll "li").item 0u)))
     mounted.Dispose ()
 
 let private disposalAfterCleanupFailure placement =
@@ -3123,7 +3177,7 @@ let private disposalAfterCleanupFailure placement =
         if placement = "adopted" then
             let section =
                 host.querySelector "section"
-                |> Option.get
+                |> (Option.ofObj >> Option.get)
                 |> unbox<HTMLElement>
 
             other.appendChild section |> ignore
@@ -3144,7 +3198,7 @@ let private disposalAfterCleanupFailure placement =
     |> Option.iter (fun (mount: Mounting.Mounted) -> mount.Dispose ())
 
     equal
-        (Disposed, 0., 0., [ [ "first cleanup" ] ])
+        (Disposed, 0u, 0u, [ [ "first cleanup" ] ])
         (handle.Phase,
          rows,
          hostNodes,
@@ -3173,7 +3227,7 @@ let private adoptedElementLosesRows () =
 
     let section =
         host.querySelector "section"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     other.appendChild section |> ignore
@@ -3184,7 +3238,7 @@ let private adoptedElementLosesRows () =
     mounted.Dispose ()
     let rows = (section.querySelectorAll "li").length
     adopted.Dispose ()
-    equal (0., 0., 0.) (rows, host.childNodes.length, other.childNodes.length)
+    equal (0u, 0u, 0u) (rows, host.childNodes.length, other.childNodes.length)
 
 let private focusSurvivesOtherMoves () =
     use graph = new Graph ()
@@ -3208,11 +3262,11 @@ let private focusSurvivesOtherMoves () =
     let mounted = mount graph host (Component.render fields items)
 
     let third =
-        (host.querySelectorAll "input").item 2.
+        (host.querySelectorAll "input").item 2u
         |> unbox<HTMLInputElement>
 
     third.focus ()
-    third.setSelectionRange (1., 3.)
+    third.setSelectionRange (1u, 3u)
     graph.Run (fun () -> items.Value <- [| for id in [ 2; 3; 4; 1 ] -> { Id = id; Text = "value" + string id } |])
     let focused = isFocused third
     let selection = selectionOf third
@@ -3251,7 +3305,7 @@ let private clearsWithoutRemoves () =
 
     let list =
         host.querySelector "ul"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let before = childrenOf list
@@ -3303,11 +3357,11 @@ let private clearsBetweenSiblings () =
 
     let list =
         host.querySelector "ul"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     equal
-        (0, 4., "beforeafter", 5., "outside", 0.)
+        (0, 4u, "beforeafter", 5u, "outside", 0u)
         (removed, list.childNodes.length, list.textContent, other.childNodes.length, other.textContent, (other.querySelectorAll "li").length)
 
     graph.Run (fun () ->
@@ -3317,7 +3371,7 @@ let private clearsBetweenSiblings () =
     equal ("before0,1,after", "outside0,1,") (host.textContent, other.textContent)
     a.Dispose ()
     b.Dispose ()
-    equal (0., "<p>outside</p>") (host.childNodes.length, other.innerHTML)
+    equal (0u, "<p>outside</p>") (host.childNodes.length, other.innerHTML)
 
 // Empties a list of 10 with a foreign node inserted before row 4, in a list alone in its parent or between siblings.
 let private clearDeletesForeignNode (between: bool) () =
@@ -3336,7 +3390,7 @@ let private clearDeletesForeignNode (between: bool) () =
     let foreign = (Conformance.document ()).createElement "li"
     foreign.textContent <- "foreign"
 
-    row.parentNode.Value.insertBefore (foreign, row)
+    row.parentNode.insertBefore (foreign, row)
     |> ignore
 
     let outside = if between then "beforeafter" else ""
@@ -3347,7 +3401,7 @@ let private clearDeletesForeignNode (between: bool) () =
 
     graph.Run (fun () -> items.Value <- listedItems 2)
 
-    equal ((0, 0., outside), (if between then "before0,1,after" else "0,1,")) (afterClear, host.textContent)
+    equal ((0, 0u, outside), (if between then "before0,1,after" else "0,1,")) (afterClear, host.textContent)
 
     mounted.Dispose ()
 
@@ -3359,13 +3413,12 @@ let private clearReportsMovedMarker () =
 
     let list =
         host.querySelector "ul"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let elsewhere = (Conformance.document ()).createElement "div"
 
-    elsewhere.appendChild list.lastChild.Value
-    |> ignore
+    elsewhere.appendChild list.lastChild |> ignore
 
     graph.Run (fun () -> items.Value <- [||])
 
@@ -3427,14 +3480,14 @@ let private keyedClearKeepsOrder () =
             "cleanup 31"
             "group cleanup 3"
          ],
-         0.,
-         4.)
+         0u,
+         4u)
         (List.ofSeq (listedLog ()), (host.querySelectorAll "li").length, host.childNodes.length)
 
     graph.Run (fun () -> items.Value <- groups[0..0])
     equal "1:" host.textContent
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private cleanupsSeeConnectedRows () =
     use graph = new Graph ()
@@ -3458,7 +3511,7 @@ let private cleanupsSeeConnectedRows () =
         let rendered = host.querySelectorAll "li"
 
         for index in 0 .. int rendered.length - 1 do
-            let node = rendered.item (float index) |> unbox<HTMLElement>
+            let node = rendered.item (uint32 index) |> unbox<HTMLElement>
             nodes[int node.textContent] <- node
 
     (Conformance.document ()).body.appendChild host
@@ -3510,11 +3563,11 @@ let private failingClearLeavesNoRows () =
 
     let list =
         host.querySelector "ul"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     equal
-        (0., 2., [ [ "row cleanup" ] ])
+        (0u, 2u, [ [ "row cleanup" ] ])
         (rows,
          list.childNodes.length,
          reports
@@ -3550,7 +3603,7 @@ let private failedInsertionLeavesStagingEmpty () =
 
     let ul =
         host.querySelector "ul"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let inserts = countInserts ul
@@ -3591,7 +3644,7 @@ let private failedCreateLeavesRegionEmpty (attached: bool) () =
 
     let ul =
         host.querySelector "ul"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let markers = ul.childNodes.length
@@ -3600,7 +3653,7 @@ let private failedCreateLeavesRegionEmpty (attached: bool) () =
     graph.Run (fun () -> items.Value <- [| { Id = 4; Text = "4," }; { Id = 5; Text = "5," } |])
 
     equal
-        ((0., markers), "4,5,", [ [ "row setup" ] ])
+        ((0u, markers), "4,5,", [ [ "row setup" ] ])
         (failed,
          host.textContent,
          reports
@@ -3658,17 +3711,17 @@ let private retiredRowLeavesWhole () =
 
     let first =
         host.querySelector "li"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let removes = countRemoves ()
     graph.Run (fun () -> items.Value <- items.Value[1..])
     let removed = removes ()
 
-    equal (1, true, 3., 3.) (removed, first.parentNode.IsNone, (first.querySelectorAll "li").length, (host.querySelectorAll "li li").length)
+    equal (1, true, 3u, 3u) (removed, isNull first.parentNode, (first.querySelectorAll "li").length, (host.querySelectorAll "li li").length)
 
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private disposalLeavesDetachedHeldRows () =
     use graph = new Graph ()
@@ -3724,13 +3777,13 @@ let private disposalLeavesDetachedHeldRows () =
 
     let list =
         host.querySelector "ul"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     graph.Run (fun () -> items.Value <- [| { items.Value[0] with Members = [||] } |])
 
     equal
-        (Disposed, 0., 0., [])
+        (Disposed, 0u, 0u, [])
         (mounted.Phase,
          host.childNodes.length,
          (list.querySelectorAll "li").length,
@@ -3766,7 +3819,7 @@ let private nestedClearKeepsOrder () =
 
     let list =
         host.querySelector "ul"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     let before = childrenOf list
@@ -3786,7 +3839,7 @@ let private nestedClearKeepsOrder () =
             "cleanup 31"
             "group cleanup 3"
          ],
-         0.,
+         0u,
          2,
          true)
         (List.ofSeq (listedLog ()),
@@ -3849,10 +3902,10 @@ let private eachEmpty () =
 
     let list =
         first.querySelector "ul"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
-    equal (2., 2, "") (list.childNodes.length, regionMarkers second, second.textContent)
+    equal (2u, 2, "") (list.childNodes.length, regionMarkers second, second.textContent)
 
     graph.Run (fun () ->
         nested.Value <- [| { Id = 1; Text = "a" } |]
@@ -3861,7 +3914,7 @@ let private eachEmpty () =
     equal ("a", "b") (first.textContent, second.textContent)
 
     (second.querySelector "li"
-     |> Option.get
+     |> (Option.ofObj >> Option.get)
      |> unbox<HTMLElement>)
         .click()
 
@@ -3871,10 +3924,10 @@ let private eachEmpty () =
         nested.Value <- [||]
         rooted.Value <- [||])
 
-    equal (2., 2, "", "") (list.childNodes.length, regionMarkers second, first.textContent, second.textContent)
+    equal (2u, 2, "", "") (list.childNodes.length, regionMarkers second, first.textContent, second.textContent)
     a.Dispose ()
     b.Dispose ()
-    equal (0., 0.) (first.childNodes.length, second.childNodes.length)
+    equal (0u, 0u) (first.childNodes.length, second.childNodes.length)
 
 let private eachTwin () =
     use graph = new Graph ()
@@ -3900,15 +3953,23 @@ let private eachTwin () =
 
     let retained =
         first.querySelector "li"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     graph.Run (fun () -> items.Value <- [| { Id = 2; Text = "B" }; { Id = 1; Text = "a" } |])
     matches "<ul><li>B</li><li>a</li></ul>"
-    equal true (obj.ReferenceEquals (retained, first.querySelector "li" |> Option.get))
+
+    equal
+        true
+        (obj.ReferenceEquals (
+            retained,
+            first.querySelector "li"
+            |> (Option.ofObj >> Option.get)
+        ))
+
     templateMount.Dispose ()
     twinMount.Dispose ()
-    equal (0., 0.) (first.childNodes.length, second.childNodes.length)
+    equal (0u, 0u) (first.childNodes.length, second.childNodes.length)
 
 let private eachRandomEdits () =
     use graph = new Graph ()
@@ -3939,7 +4000,7 @@ let private eachRandomEdits () =
 
     let rowsOf (node: HTMLElement) =
         let rows = node.querySelectorAll "li"
-        Array.init (int rows.length) (fun index -> rows.item (float index) |> unbox<HTMLElement>)
+        Array.init (int rows.length) (fun index -> rows.item (uint32 index) |> unbox<HTMLElement>)
 
     let edit (current: Listed array) =
         let rows = ResizeArray current
@@ -4006,7 +4067,7 @@ let private eachRandomEdits () =
 
     templateMount.Dispose ()
     twinMount.Dispose ()
-    equal (0., 0.) (first.childNodes.length, second.childNodes.length)
+    equal (0u, 0u) (first.childNodes.length, second.childNodes.length)
 
 type Shelf =
     {
@@ -4042,7 +4103,7 @@ let private rootRegions () =
     equal ("<a|bc", 4) (first.textContent, regionMarkers first)
 
     let moved =
-        first.querySelectorAll("li").item 2.
+        first.querySelectorAll("li").item 2u
         |> unbox<HTMLElement>
 
     graph.Run (fun () ->
@@ -4050,9 +4111,9 @@ let private rootRegions () =
         shelf.Right.Value <- [| { Id = 3; Text = "c" }; { Id = 2; Text = "b" } |]
         shelf.Label.Value <- "/")
 
-    equal ("<dA/cb", true) (first.textContent, obj.ReferenceEquals (moved, first.querySelectorAll("li").item 2.))
+    equal ("<dA/cb", true) (first.textContent, obj.ReferenceEquals (moved, first.querySelectorAll("li").item 2u))
     mounted.MoveBefore (second, None)
-    equal (0., "<dA/cb", 4) (first.childNodes.length, second.textContent, regionMarkers second)
+    equal (0u, "<dA/cb", 4) (first.childNodes.length, second.textContent, regionMarkers second)
     moved.click ()
 
     graph.Run (fun () ->
@@ -4061,7 +4122,7 @@ let private rootRegions () =
 
     equal ("</be", 4) (second.textContent, regionMarkers second)
     mounted.Dispose ()
-    equal (0., 0.) (first.childNodes.length, second.childNodes.length)
+    equal (0u, 0u) (first.childNodes.length, second.childNodes.length)
 
     equal
         (List.sort
@@ -4101,7 +4162,7 @@ let private nestedRegions () =
     let mounted = mount graph host (Component.render jobs items)
 
     let second =
-        host.querySelectorAll("li").item 1.
+        host.querySelectorAll("li").item 1u
         |> unbox<HTMLElement>
 
     equal "waitingworking 1" host.textContent
@@ -4114,14 +4175,14 @@ let private nestedRegions () =
          obj.ReferenceEquals (
              second,
              host.querySelector "li"
-             |> Option.get
+             |> (Option.ofObj >> Option.get)
              |> unbox<HTMLElement>
          ))
 
     graph.Run (fun () -> items.Value <- [| { JobId = 1; Stage = Complete "ok" } |])
     equal "complete ok" host.textContent
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
     equal
         [
@@ -4152,7 +4213,7 @@ let private clearsArmRowsWithoutRemoves () =
     let removed = removes ()
 
     equal
-        (0, 0., 100)
+        (0, 0u, 100)
         (removed,
          (host.querySelectorAll "li").length,
          (stageLog ())
@@ -4162,7 +4223,7 @@ let private clearsArmRowsWithoutRemoves () =
     graph.Run (fun () -> items.Value <- jobItems 2)
     equal "waitingworking 1" host.textContent
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private removesArmRowLikePlainRow () =
     use graph = new Graph ()
@@ -4266,13 +4327,13 @@ let private inlinedChild () =
     equal 1 (compiledForm card :?> TemplateDom.Compiled).Children.Length
 
     (host.querySelector "button"
-     |> Option.get
+     |> (Option.ofObj >> Option.get)
      |> unbox<HTMLButtonElement>)
         .click()
 
     mounted.Dispose ()
 
-    equal ([ "badge 2"; "card"; "cleanup badge"; "cleanup card" ], 0.) (List.ofSeq props.CardLog, host.childNodes.length)
+    equal ([ "badge 2"; "card"; "cleanup badge"; "cleanup card" ], 0u) (List.ofSeq props.CardLog, host.childNodes.length)
 
 let private framed =
     Component.define (fun _ (props: CardProps) -> props) (fun t -> t.section [||] [| t.render card id |])
@@ -4285,14 +4346,14 @@ let private inlinedGrandchild () =
     graph.Run (fun () -> props.Tally.Value <- 5)
 
     (host.querySelector "button"
-     |> Option.get
+     |> (Option.ofObj >> Option.get)
      |> unbox<HTMLButtonElement>)
         .click()
 
     equal ("h5", [ "badge 5"; "card" ]) (host.textContent, List.ofSeq props.CardLog)
     equal 2 (compiledForm framed :?> TemplateDom.Compiled).Children.Length
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 type ShelfProps = { Shelf: Signal<Listed array> }
 
@@ -4322,12 +4383,12 @@ let private inlinedRegion () =
         (host.textContent,
          regionMarkers (
              host.querySelector "ul"
-             |> Option.get
+             |> (Option.ofObj >> Option.get)
              |> unbox<HTMLElement>
          ))
 
     mounted.Dispose ()
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private textual =
     Component.define (fun _ (value: Signal<string>) -> value) (fun t -> t.text (fun value -> value.Value))
@@ -4344,10 +4405,10 @@ let private inlinedText () =
 
     let span =
         host.querySelector "span"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
-    equal ("ac", 3.) (span.textContent, span.childNodes.length)
+    equal ("ac", 3u) (span.textContent, span.childNodes.length)
     mounted.Dispose ()
 
 let private inlinedFailure () =
@@ -4420,7 +4481,7 @@ let private inlinedTwin () =
     matches "<div title=\"C\">C<div>H<button>2</button></div><ul><li>b</li><li>a</li></ul></div>"
     templateMount.Dispose ()
     twinMount.Dispose ()
-    equal (0., 0.) (first.childNodes.length, second.childNodes.length)
+    equal (0u, 0u) (first.childNodes.length, second.childNodes.length)
 
 let private structureRoundTrips () =
     let definitions: TemplateComponent list =
@@ -4493,7 +4554,7 @@ let private inlinedRootRegion (wrapped: bool) =
         if wrapped then
             regionMarkers (
                 host.querySelector "div"
-                |> Option.get
+                |> (Option.ofObj >> Option.get)
                 |> unbox<HTMLElement>
             )
         else
@@ -4503,21 +4564,21 @@ let private inlinedRootRegion (wrapped: bool) =
 
     let retained =
         first.querySelector "li"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLElement>
 
     graph.Run (fun () ->
         ledger.LedgerLabel.Value <- "M"
         ledger.LedgerItems.Value <- [| { Id = 2; Text = "B" }; { Id = 3; Text = "c" }; { Id = 1; Text = "a" } |])
 
-    equal ("<MBca>", true) (first.textContent, obj.ReferenceEquals (retained, first.querySelectorAll("li").item 2.))
+    equal ("<MBca>", true) (first.textContent, obj.ReferenceEquals (retained, first.querySelectorAll("li").item 2u))
     mounted.MoveBefore (second, None)
-    equal (0., "<MBca>", 2) (first.childNodes.length, second.textContent, markers second)
+    equal (0u, "<MBca>", 2) (first.childNodes.length, second.textContent, markers second)
     retained.click ()
     graph.Run (fun () -> ledger.LedgerItems.Value <- [| { Id = 1; Text = "A" } |])
     equal ("<MA>", 2) (second.textContent, markers second)
     mounted.Dispose ()
-    equal (0., 0.) (first.childNodes.length, second.childNodes.length)
+    equal (0u, 0u) (first.childNodes.length, second.childNodes.length)
 
     equal
         (List.sort
@@ -4543,8 +4604,8 @@ let private someNullPropertyRemoved () =
         Component.define (fun _ () -> label) (fun t ->
             t.div
                 [|
-                    t.Props.ariaAtomic (Some null)
-                    t.Props.ariaLabel (fun (current: Signal<string option>) -> current.Value)
+                    t.Props.ariaAtomic (Option.toObj (Some null))
+                    t.Props.ariaLabel (fun (current: Signal<string option>) -> Option.toObj current.Value)
                 |]
                 [||])
 

@@ -3,7 +3,7 @@ module BindingIntegrationChecks
 open System
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom.Scheduling
 open Ranvier.View.Dom.Mounting
@@ -13,7 +13,8 @@ let private equal expected actual =
         failwithf "Expected %A; got %A" expected actual
 
 let private host () : HTMLElement =
-    globalThis.document.createElement "div"
+    (Ranvier.View.Dom.DomRuntime.document ()).createElement "div"
+    |> unbox<HTMLElement>
 
 [<Emit("(() => { const original = document.createTextNode; document.createTextNode = function(value) { const node = original.call(this, value); Object.defineProperty(node, 'textContent', { set() { throw new Error('setter'); }, configurable: true }); return node; }; return () => { document.createTextNode = original; }; })()")>]
 let private failTextWrites () : unit -> unit = jsNative
@@ -88,8 +89,8 @@ let private boundary (ops: Operations<'view>) run queued =
         mountWith mode graph None ignore host None (fun context -> run view context.Backend)
 
     equal "loadingloading" host.textContent
-    let nodes = host.firstChild.Value.childNodes
-    let first, second = nodes.item 0., nodes.item 1.
+    let nodes = host.firstChild.childNodes
+    let first, second = nodes.item 0u, nodes.item 1u
     equal (1, 0, 1) (pending, failed, bodies)
     graph.Run (fun () -> flight.Value.Settle "ready")
 
@@ -108,8 +109,8 @@ let private boundary (ops: Operations<'view>) run queued =
     graph.Run (fun () -> flight.Value.Settle "recovered")
     mounted.Flush ()
     equal "recoveredrecovered" host.textContent
-    equal true (obj.ReferenceEquals (first, nodes.item 0.))
-    equal true (obj.ReferenceEquals (second, nodes.item 1.))
+    equal true (obj.ReferenceEquals (first, nodes.item 0u))
+    equal true (obj.ReferenceEquals (second, nodes.item 1u))
     graph.Run (fun () -> flight.Value.Settle "stale")
     mounted.Dispose ()
     let before = bodies
@@ -215,7 +216,7 @@ let private structuralBoundary (ops: Operations<'view>) run queued =
         mountWith mode graph None ignore host None (fun context -> run view context.Backend)
 
     let content () =
-        host.children.item(0.).Value
+        host.children.item (0u)
 
     let initial = content ()
     equal "loading" host.textContent
@@ -236,7 +237,7 @@ let private structuralBoundary (ops: Operations<'view>) run queued =
     mounted.Flush ()
     equal "onetwo" host.textContent
     let ready = content ()
-    let first, second = ready.firstChild.Value, ready.lastChild.Value
+    let first, second = ready.firstChild, ready.lastChild
     equal false (obj.ReferenceEquals (initial, ready))
 
     graph.Run (fun () ->
@@ -249,8 +250,8 @@ let private structuralBoundary (ops: Operations<'view>) run queued =
     mounted.Flush ()
     equal "ONEtwo" host.textContent
     equal true (obj.ReferenceEquals (ready, content ()))
-    equal true (obj.ReferenceEquals (first, ready.firstChild.Value))
-    equal true (obj.ReferenceEquals (second, ready.lastChild.Value))
+    equal true (obj.ReferenceEquals (first, ready.firstChild))
+    equal true (obj.ReferenceEquals (second, ready.lastChild))
     equal [ 0; 2 ] (List.ofSeq setups)
 
     graph.Run (fun () ->
@@ -260,15 +261,16 @@ let private structuralBoundary (ops: Operations<'view>) run queued =
     graph.Run (fun () -> flight.Value <- fresh ())
     mounted.Flush ()
     equal "loading" host.textContent
-    equal None ready.parentNode
+    equal null ready.parentNode
 
     equal
         true
         (first.parentNode
+         |> Option.ofObj
          |> Option.exists (fun parent -> obj.ReferenceEquals (parent, ready)))
 
-    equal (Some (if queued then "ONE" else "stale")) first.textContent
-    equal (Some "two") second.textContent
+    equal (Some (if queued then "ONE" else "stale")) (Option.ofObj (first.textContent))
+    equal (Some "two") (Option.ofObj (second.textContent))
     equal [ 0; 2 ] (List.ofSeq cleanups)
 
     graph.Run (fun () ->

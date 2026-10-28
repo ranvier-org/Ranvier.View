@@ -64,7 +64,7 @@ let generated: (string * string list) list =
     let elmish = blocks "view/elmish.md"
     let testing = blocks "view/testing.md"
     let serverIndex = blocks "server/index.md"
-    let fableOpens = [ "open Fable.Core.TS" ] @ opens @ [ ""]
+    let fableOpens = [ "open Ranvier.Dom" ] @ opens @ [ ""]
 
     let pageOfBlocks (page: string) (name: string) (preamble: string list) =
         header page name @ preamble @ all page

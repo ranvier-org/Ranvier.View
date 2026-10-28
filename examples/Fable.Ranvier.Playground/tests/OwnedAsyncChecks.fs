@@ -4,7 +4,7 @@ open System.Threading
 open System.Threading.Tasks
 open global.Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Testing
@@ -72,6 +72,7 @@ let private loading (label: unit -> string) =
 
 let private host () =
     (Conformance.document ()).createElement "main"
+    |> unbox<HTMLElement>
 
 let private mount graph (host: HTMLElement) (reported: ResizeArray<exn>) view =
     Mounting.mount graph None reported.AddRange host None (fun context -> Program.run view context.Backend)
@@ -105,7 +106,7 @@ let private removedRow () =
         equal (false, true) ((flight "row 1").Token.IsCancellationRequested, (flight "row 2").Token.IsCancellationRequested)
         (flight "row 2").Resolve "late"
         do! drain ()
-        equal ("one", 1., 0) (host.textContent, host.querySelectorAll("li").length, reported.Count)
+        equal ("one", 1u, 0) (host.textContent, host.querySelectorAll("li").length, reported.Count)
         mounted.Dispose ()
     }
     |> Async.StartAsPromise
@@ -175,7 +176,7 @@ let private cooperativeRemoval () =
         equal ("one", 0) (host.textContent, reported.Count)
         mounted.Dispose ()
         do! drain ()
-        equal (0., 0) (host.childNodes.length, reported.Count)
+        equal (0u, 0) (host.childNodes.length, reported.Count)
     }
     |> Async.StartAsPromise
 
@@ -198,7 +199,7 @@ let private disposedMount () =
         (flight "row 1").Resolve "late"
         (flight "row 2").Reject(exn "late failure")
         do! drain ()
-        equal (0., 0) (host.childNodes.length, reported.Count)
+        equal (0u, 0) (host.childNodes.length, reported.Count)
     }
     |> Async.StartAsPromise
 
@@ -232,7 +233,7 @@ let private replacedArm () =
         equal "" host.textContent
         (flight "decade 2").Resolve "two"
         do! drain ()
-        equal ("two", 1., 0) (host.textContent, host.querySelectorAll("span").length, reported.Count)
+        equal ("two", 1u, 0) (host.textContent, host.querySelectorAll("span").length, reported.Count)
         mounted.Dispose ()
         equal true (flight "decade 2").Token.IsCancellationRequested
     }

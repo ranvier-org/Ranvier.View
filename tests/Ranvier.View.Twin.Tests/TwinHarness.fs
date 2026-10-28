@@ -40,7 +40,7 @@ let create (host: TwinHost) (directory: string) : Harness =
 
     { new Harness with
         member _.Platform = "twin"
-        member _.Document = host.Document.Native :?> Fable.Core.TS.Dom.Document
+        member _.Document = host.Document.Native :?> Ranvier.Dom.Document
 
         member _.Post callback =
             host.Clock.Post callback
@@ -71,7 +71,7 @@ let create (host: TwinHost) (directory: string) : Harness =
 
         member _.ObserveMutations root =
             let under = Bridge.nodeOf root
-            let changes = ResizeArray<string * Fable.Core.TS.Dom.Node>()
+            let changes = ResizeArray<string * Ranvier.Dom.Node>()
 
             let observer =
                 host.Document.ObserveMutations (fun (kind, target) ->

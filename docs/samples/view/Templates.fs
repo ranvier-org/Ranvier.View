@@ -1,7 +1,7 @@
 /// The F# samples of docs/content/view/templates.md, in page order; a sample that is an excerpt is wrapped in a function.
 module Templates
 
-open Fable.Core.TS
+open Ranvier.Dom
 open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Sugar
@@ -79,7 +79,7 @@ let field =
         form () {
             input (
                 Props.Input.value (from (fun f -> f.Text)),
-                Events.onInput (fun f event -> f.Text.Value <- (unbox<Dom.HTMLInputElement> event.currentTarget.Value).value)
+                Events.onInput (fun f event -> f.Text.Value <- (unbox<Dom.HTMLInputElement> event.currentTarget).value)
             )
 
             button (Props.Button.disabled (fun f -> f.Busy.Value || f.Text.Value = "")) { "Save" }

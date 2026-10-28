@@ -4,7 +4,7 @@ module Ranvier.View.Dom.Prepared
 open Ranvier.View
 open System
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View.Representation
 
 /// <summary>Supplies a cached static HTML skeleton for browser cloning.</summary>
@@ -99,11 +99,11 @@ let private build (view: Program.View) =
 
     Program.run view backend
 
-    if staging.childNodes.length <> 1. then
+    if staging.childNodes.length <> 1u then
         raise (ArgumentException ("A prepared skeleton must contain exactly one HTML root element", "view"))
 
     match staging.firstChild with
-    | Some node when node.nodeType = 1. -> node :?> HTMLElement
+    | node when not (isNull node) && node.nodeType = 1us -> node :?> HTMLElement
     | _ -> raise (ArgumentException ("A prepared skeleton must have an HTML root element", "view"))
 
 /// <summary>Caches a static skeleton on its first browser mount.</summary>
