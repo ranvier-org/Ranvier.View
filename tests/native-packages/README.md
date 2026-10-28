@@ -2,7 +2,7 @@
 
 Run the **Published native packages** manual Actions workflow after a coordinated release exists on
 NuGet. Supply `view_package_version` for the exact published backend and SDL version, including their
-`.Traced` variants. `native_runtime_version` defaults to `0.1.0-preview.6`; managed interop, the native
+`.Traced` variants. `native_runtime_version` defaults to `0.1.0-preview.7`; managed interop, the native
 meta-package, all five RID packages and the Windows GPU package must be from that same release.
 An absent package or mismatched cohort fails acceptance.
 
