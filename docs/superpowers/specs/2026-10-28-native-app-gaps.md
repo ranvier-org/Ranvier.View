@@ -62,9 +62,12 @@ canonical managed interop, the five-RID aggregate, Windows UI Automation and sha
 five native builds/runtime checks and managed aggregation. Immutable tag `v0.1.0-preview.6` points to that
 merged revision. [Release run 40722932631](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40722932631)
 was stopped before publication when package-only testing found cross-RID resource-path corruption. The tag
-remains unchanged. [Native correction PR6](https://github.com/ranvier-org/Ranvier.WebCore/pull/6) fixes target
-scoping and advances the intended package release to preview.7, retaining ABI 21. Slim and GPU publication
-must use the same new immutable tag after that fix passes. Public-package acceptance remains pending.
+remains unchanged. [Native correction PR6](https://github.com/ranvier-org/Ranvier.WebCore/pull/6), merged as
+`eef227e2`, fixes target scoping and restores inline-style contracts. Its [pre-merge run 40729363033](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40729363033)
+passed all five native runtime jobs, the real multi-RID resource regression and managed aggregation.
+Immutable tag `v0.1.0-preview.7` points to that exact merged tree, retaining ABI 21. [Release run 40746907938](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40746907938)
+is queued for the corrected Slim cohort; GPU publication must follow on the same tag. Publication and
+public-package acceptance remain pending.
 
 The composed View branch removes copied interop, uses the shared DOM contracts on both targets, and enables
 the four previously pending conformance cases. Its full Windows x64 backend suite passed 781 tests, with
