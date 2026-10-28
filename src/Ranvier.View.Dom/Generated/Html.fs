@@ -548,19 +548,15 @@ module Properties =
         let ``isContentEditable`` (node: #Dom.ElementContentEditable) : bool =
             node.``isContentEditable``
 
-#if FABLE_COMPILER
     module ElementCSSInlineStyle =
 #if FABLE_COMPILER
         let ``attributeStyleMap`` (node: #Dom.ElementCSSInlineStyle) : Dom.StylePropertyMap =
             Native.expando (box node) "attributeStyleMap"
 #endif
 
-#if FABLE_COMPILER
-        let ``style`` (node: #Dom.ElementCSSInlineStyle) : Dom.CSSStyleDeclaration =
-            Native.expando (box node) "style"
-#endif
+        let ``style`` (node: #Dom.ElementCSSInlineStyle) : Dom.CSSStyleProperties =
+            node.``style``
 
-#endif
 #if FABLE_COMPILER
     module GlobalEventHandlers =
 #if FABLE_COMPILER
