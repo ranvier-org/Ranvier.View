@@ -46,7 +46,33 @@ succeeded. All four packages appeared on the public NuGet feed; fresh public-sou
 passed normal/traced assembly-identity checks, Fable compilation and JavaScript execution. This lands
 the interface-package part of G8. View/backend migration and native package publication remain in progress.
 
-## Where things stand
+[Ranvier#250](https://github.com/ranvier-org/Ranvier/pull/250), merged as `ef19d86b`, restores the
+`CSSStyleProperties` contract and both inline-style getters omitted from alpha.1. The corrected source is
+pinned to generator `e81b32b`; all PR checks passed, including the IDL drift check, packed normal/traced
+.NET and Fable consumers, and ARM/x64 performance jobs. [Main CI 40715311270](https://github.com/ranvier-org/Ranvier/actions/runs/40715311270)
+and [OIDC publication 40716357543](https://github.com/ranvier-org/Ranvier/actions/runs/40716357543) passed.
+All four alpha.2 packages are public; fresh official-NuGet consumers passed normal/traced .NET
+assembly-identity and style-contract checks, Fable compilation and JavaScript execution.
+
+## In integration: ABI 21 and the native View migration
+
+[Ranvier.WebCore#5](https://github.com/ranvier-org/Ranvier.WebCore/pull/5) contains ABI 21, canonical managed
+interop, the five-RID aggregate, Windows UI Automation and shared D3D11 transport. Its coordinated native
+build and publication are still in progress; the private runtime checks do not substitute for that release.
+
+The composed View branch removes copied interop, uses the shared DOM contracts on both targets, and enables
+the four previously pending conformance cases. Its full Windows x64 backend suite passed 781 tests, with
+12 existing ignored and no failures or errors. Regressions cover namespace creation, secondary documents,
+union/sequence/variadic transport, nested template cloning/import, CSS defaults, popover dictionary handles
+and passive/capture/once listeners. The expanded smoke app passed 15 checks under JIT and NativeAOT,
+including hydration retaining its server node and a subsequent native click updating state.
+
+The composed visible counter also passed JIT and NativeAOT checks against the private GPU runtime:
+480x320 SDL backbuffer, scale 1, shared D3D11 frames, clipboard and an independent OS client verifying
+the UI Automation tree, Invoke, reactive name changes and provider disconnection after teardown.
+Public-package consumers, final four-platform integration CI, merges and publication remain required.
+
+## Where main stands
 
 | Piece | State |
 |---|---|
@@ -157,7 +183,8 @@ Work, in the Ranvier.WebCore repo as the next ABI batch (ABI 21; one ABI version
 1. `createElementNS` and `createHTMLDocument` in `gen/dom.json`; the generator's handling of a second document's
    lifetime in the object table.
 2. Mapping unions, sequences and variadics in the generator (decision G11: now, or when a user hits one).
-3. Regenerate `Native.fs` and `NativeDom.fs`, copy into Ranvier, un-pend the four cases.
+3. Regenerate canonical `Native.fs` and `NativeDom.fs` in Ranvier.WebCore, consume the managed package in
+   Ranvier.View, remove copied interop, and un-pend the four cases.
 
 ## 6. Other platforms
 

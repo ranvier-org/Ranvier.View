@@ -129,6 +129,13 @@ jobs:
           dotnet --info
       - name: Test Ranvier.View.WebCore.Tests
         run: dotnet test tests/Ranvier.View.WebCore.Tests -c Release
+      - name: Verify wrappers against the restored canonical model and DOM contracts
+        if: matrix.rid == 'win-x64'
+        run: |
+          dotnet build tools/Ranvier.View.WebCore.Generate -c Release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/check-webcore-generated.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Build the native counter example
         run: dotnet build examples/Ranvier.NativeCounter -c Release
       - name: Build the independent Windows UI Automation client
