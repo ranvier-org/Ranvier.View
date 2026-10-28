@@ -23,20 +23,24 @@
     </PropertyGroup>
 
     <!--
-    The native library: the Ranvier.WebCore.Native.win-x64 package at RanvierWebCoreNativeVersion, whose ABI the
-    copied interop in Interop/ matches. Setting RanvierWebCoreNativeDir (the directory holding
-    runtimes/win-x64/native) takes the native files from a local build of Ranvier.WebCore instead.
+    The native library: the Ranvier.WebCore.Native package for RanvierWebCoreNativeRid at
+    RanvierWebCoreNativeVersion, whose ABI the copied interop in Interop/ matches. The runtime identifier defaults to
+    the building machine's: osx-arm64 on macOS, otherwise win-x64, the two that have run the backend. Setting
+    RanvierWebCoreNativeDir (the directory holding runtimes/<rid>/native) takes the native files from a local build
+    of Ranvier.WebCore instead. The Ranvier.WebCore.Native meta-package (decision G5) replaces this choice.
     -->
     <PropertyGroup>
         <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.0-preview.4</RanvierWebCoreNativeVersion>
+        <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == '' and $([MSBuild]::IsOSPlatform('OSX'))">osx-arm64</RanvierWebCoreNativeRid>
+        <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == ''">win-x64</RanvierWebCoreNativeRid>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(RanvierWebCoreNativeDir)' == ''">
-        <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="$(RanvierWebCoreNativeVersion)" />
+        <PackageReference Include="Ranvier.WebCore.Native.$(RanvierWebCoreNativeRid)" Version="$(RanvierWebCoreNativeVersion)" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(RanvierWebCoreNativeDir)' != ''">
-        <None Include="$(RanvierWebCoreNativeDir)/runtimes/win-x64/native/**/*"
+        <None Include="$(RanvierWebCoreNativeDir)/runtimes/$(RanvierWebCoreNativeRid)/native/**/*"
               Link="%(RecursiveDir)%(Filename)%(Extension)"
               CopyToOutputDirectory="PreserveNewest"
               CopyToPublishDirectory="PreserveNewest"
