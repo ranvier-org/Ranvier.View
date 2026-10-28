@@ -83,6 +83,7 @@ let tests =
                     "Template.fs"
                     [
                         "Ranvier.dll"
+                        "Ranvier.Dom.dll"
                         "Fable.Core.dll"
                         "Xantham.Fable.Core.dll"
                         "Xantham.Fable.Core.TS.dll"

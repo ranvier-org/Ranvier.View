@@ -48,6 +48,7 @@ let ranvier: Lazy<FSharpProjectOptions> =
         (withReferences
             [
                 "Ranvier.dll"
+                "Ranvier.Dom.dll"
                 "Ranvier.View.dll"
                 "Ranvier.View.Dom.dll"
                 "Fable.Core.dll"
