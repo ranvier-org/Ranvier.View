@@ -144,22 +144,28 @@ let private scalarNames =
 
 let rec private nativeParameter (parameterType: Type) =
     if parameterType.IsByRef then
-        nativeParameter (parameterType.GetElementType()) + "&"
+        nativeParameter (parameterType.GetElementType ())
+        + "&"
     elif parameterType.IsArray then
-        nativeParameter (parameterType.GetElementType()) + "[]"
+        nativeParameter (parameterType.GetElementType ())
+        + "[]"
     else
         scalarNames.TryFind parameterType.FullName
         |> Option.defaultValue parameterType.Name
 
 let private constantName (value: string) =
-    Regex.Replace(value, "([a-z0-9])([A-Z])", "$1_$2")
+    Regex.Replace (value, "([a-z0-9])([A-Z])", "$1_$2")
     |> fun text -> Regex.Replace(text, "([A-Z])([A-Z][a-z])", "$1_$2").ToUpperInvariant()
 
 let private validateUnionTags (nativeDom: Type) (model: JsonElement) =
     for container in Metadata.items "containers" model do
         let mapping = container.GetProperty "mapping"
+
         if Metadata.text "kind" mapping = "union" then
-            let prefix = "RV_DOM_" + constantName ((Metadata.text "ctype" mapping).Substring("RvDom".Length))
+            let prefix =
+                "RV_DOM_"
+                + constantName ((Metadata.text "ctype" mapping).Substring("RvDom".Length))
+
             for index, arm in Metadata.items "subtypes" mapping |> Array.indexed do
                 let suffix =
                     match Metadata.text "kind" arm with
@@ -167,14 +173,22 @@ let private validateUnionTags (nativeDom: Type) (model: JsonElement) =
                     | "number" -> "NUMBER"
                     | "string" -> "STRING"
                     | _ -> Metadata.text "interface" arm |> constantName
+
                 let fieldName = prefix + "_" + suffix
                 let field = nativeDom.GetField fieldName
-                if isNull field || not field.IsLiteral || unbox<int> (field.GetRawConstantValue()) <> index + 1 then
+
+                if
+                    isNull field
+                    || not field.IsLiteral
+                    || unbox<int>(field.GetRawConstantValue ())
+                       <> index + 1
+                then
                     invalidArg "nativeDom" $"Canonical managed union discriminant differs for {fieldName}"
 
 /// <summary>Reads native declarations and their IDL mappings from the canonical transport model.</summary>
 let readModel (nativeDom: Type) (model: JsonElement) : Function list =
     validateUnionTags nativeDom model
+
     [
         for fn in Metadata.items "functions" model do
             let functionName = Metadata.text "function" fn
@@ -183,7 +197,7 @@ let readModel (nativeDom: Type) (model: JsonElement) : Function list =
             if isNull declaration then
                 invalidArg "nativeDom" $"Canonical managed interop lacks {functionName}"
 
-            let managed = declaration.GetParameters()
+            let managed = declaration.GetParameters ()
             let native = Metadata.items "parameters" fn
 
             if managed.Length <> native.Length then
@@ -207,7 +221,7 @@ let readModel (nativeDom: Type) (model: JsonElement) : Function list =
                         let fallback = argument.GetProperty "default"
 
                         if fallback.ValueKind <> JsonValueKind.Null then
-                            parameters[index + 1].Name, fallback.GetString()
+                            parameters[index + 1].Name, fallback.GetString ()
                 ]
                 |> Map.ofList
 

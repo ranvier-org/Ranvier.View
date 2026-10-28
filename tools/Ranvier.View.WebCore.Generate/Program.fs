@@ -69,38 +69,54 @@ let private kinds =
 let main argv =
     let modelPath, contractPath, interopPath, output =
         match argv with
-        | [| model; contracts; interop |] ->
-            model, contracts, interop, Path.Combine(repository, "src", "Ranvier.View.WebCore", "Generated")
+        | [| model; contracts; interop |] -> model, contracts, interop, Path.Combine (repository, "src", "Ranvier.View.WebCore", "Generated")
         | [| model; contracts; interop; output |] -> model, contracts, interop, output
         | _ -> invalidArg "argv" "Expected dom-api.json, Ranvier.Dom.dll, Ranvier.WebCore.dll and optional output directory"
 
     let model = Metadata.read modelPath
-    let contracts = Assembly.LoadFrom(Path.GetFullPath contractPath)
-    let dom = contracts.GetType("Ranvier.Dom.Node", true)
-    let interop = Assembly.LoadFrom(Path.GetFullPath interopPath)
-    let nativeDom = interop.GetType("RanvierWebCoreAbi.NativeDom", true)
+    let contracts = Assembly.LoadFrom (Path.GetFullPath contractPath)
+    let dom = contracts.GetType ("Ranvier.Dom.Node", true)
+    let interop = Assembly.LoadFrom (Path.GetFullPath interopPath)
+    let nativeDom = interop.GetType ("RanvierWebCoreAbi.NativeDom", true)
     let functions = Abi.readModel nativeDom model
+
     let tagMap =
-        [ for tag in Metadata.items "tagInterfaces" model ->
-              Metadata.text "namespaceURI" tag, Metadata.text "tag" tag, Metadata.text "interface" tag ]
+        [
+            for tag in Metadata.items "tagInterfaces" model ->
+                Metadata.text "namespaceURI" tag, Metadata.text "tag" tag, Metadata.text "interface" tag
+        ]
+
     let extra =
         let nativeTypes =
             Metadata.items "interfaces" model
-            |> Array.choose (fun row -> contracts.GetType("Ranvier.Dom." + Metadata.text "name" row) |> Option.ofObj)
-        [ "EventTarget"
-          for contract in Metadata.items "contractInterfaces" model do
-              let name = Metadata.text "name" contract
-              let t = contracts.GetType("Ranvier.Dom." + name)
-              if not (isNull t) && not (contract.GetProperty("mixin").GetBoolean())
-                 && (nativeTypes |> Array.exists (fun native -> native.IsAssignableFrom t)) then
-                  name ]
+            |> Array.choose (fun row ->
+                contracts.GetType ("Ranvier.Dom." + Metadata.text "name" row)
+                |> Option.ofObj)
+
+        [
+            "EventTarget"
+            for contract in Metadata.items "contractInterfaces" model do
+                let name = Metadata.text "name" contract
+                let t = contracts.GetType ("Ranvier.Dom." + name)
+
+                if
+                    not (isNull t)
+                    && not (contract.GetProperty("mixin").GetBoolean())
+                    && (nativeTypes
+                        |> Array.exists (fun native -> native.IsAssignableFrom t))
+                then
+                    name
+        ]
+
     let input =
-        { Dom = dom
-          Model = model
-          Functions = functions
-          Hand = hand dom ""
-          Extra = extra
-          Kinds = kinds }
+        {
+            Dom = dom
+            Model = model
+            Functions = functions
+            Hand = hand dom ""
+            Extra = extra
+            Kinds = kinds
+        }
 
     let code, entries = Emit.run input tagMap
 
@@ -121,14 +137,15 @@ let main argv =
             | Unmapped _ -> true
             | _ -> false)
 
-    let used =
+    let usedFunctions =
         entries
         |> List.choose (fun e ->
             match e.Status with
             | Mapped f -> Some f
             | _ -> None)
-        |> List.distinct
-        |> List.length
+        |> Set.ofList
+
+    let used = usedFunctions.Count
 
     let classes =
         entries
@@ -163,6 +180,11 @@ let main argv =
     let report =
         [
             summary
+            ""
+            "Native exports without generated member mappings (including hand-written adapters):"
+            for fn in functions |> List.sortBy (fun fn -> fn.Name) do
+                if not (usedFunctions.Contains fn.Name) then
+                    $"  {fn.Name}: {fn.Interface}.{fn.Member} ({fn.Kind})"
             ""
             "Unmapped members by reason:"
             for reason, group in

@@ -13,8 +13,9 @@ SDL submits its drawing, including readback, and before renderer teardown.
 The `accessibility-uia` capability attaches the page's Windows UI Automation tree to the SDL window. It
 detaches before page or window disposal. The bridge uses native COM and also works in a NativeAOT app.
 
-Experimental, on Windows x64 and macOS arm64 (macOS 26), like the backend. WebCore's run loop and SDL's
-event pump share the process main thread on macOS, with the same `Window.Step` implementation.
+Experimental, on Windows x64, Windows ARM64, Linux x64 and macOS arm64 (macOS 26), like the backend.
+WebCore's run loop and SDL's event pump share the process main thread on macOS, with the same
+`Window.Step` implementation.
 
 [macOS CI](https://github.com/ranvier-org/Ranvier.Views/actions/runs/40645038498/job/122671771869) passed
 770 tests, with 16 ignored and no failures. Those tests cover a hidden window, paint readback and SDL input;
@@ -22,6 +23,10 @@ event pump share the process main thread on macOS, with the same `Window.Step` i
 also passed (480x320 backing pixels, scale 1, painted content and clipboard). `RANVIER_SMOKE=1` closes the
 sample automatically. Retina scale 2 and a real IME still need
 manual verification; the clipboard bridge supports `text/plain` only.
+
+The subsequent [four-platform CI run](https://github.com/ranvier-org/Ranvier.View/actions/runs/40675534807)
+passed 773 tests per platform, with 16 existing ignored and no failures, plus the visible sample and both
+NativeAOT apps. Windows ARM64 ran on a real ARM runner; Linux used Ubuntu 24.04 with Xvfb.
 
 ```fsharp
 open Ranvier

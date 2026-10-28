@@ -99,9 +99,16 @@ let private literal (value: string) =
 
 let private numericType (t: Type) =
     match Type.GetTypeCode t with
-    | TypeCode.SByte | TypeCode.Byte | TypeCode.Int16 | TypeCode.UInt16
-    | TypeCode.Int32 | TypeCode.UInt32 | TypeCode.Int64 | TypeCode.UInt64
-    | TypeCode.Single | TypeCode.Double -> true
+    | TypeCode.SByte
+    | TypeCode.Byte
+    | TypeCode.Int16
+    | TypeCode.UInt16
+    | TypeCode.Int32
+    | TypeCode.UInt32
+    | TypeCode.Int64
+    | TypeCode.UInt64
+    | TypeCode.Single
+    | TypeCode.Double -> true
     | _ -> false
 
 /// <summary>The F# expression passing the TS parameter <c>v</c> of type <c>ts</c> as the C parameter <c>p</c>.</summary>
@@ -133,7 +140,10 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
     let numeric (cast: string) (x: string) =
         if numericType inner then Some $"{cast} {x}" else None
 
-    let argumentIndex = fn.Inputs |> List.findIndex (fun candidate -> candidate.Name = p.Name)
+    let argumentIndex =
+        fn.Inputs
+        |> List.findIndex (fun candidate -> candidate.Name = p.Name)
+
     let argument = (Metadata.items "arguments" fn.Descriptor)[argumentIndex]
     let mapping = argument.GetProperty "mapping"
     let mappingKind = Metadata.text "kind" mapping
@@ -142,12 +152,20 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
     | "int" when mappingKind = "enum" ->
         Input.encode ctx.Input.Model mapping inner (if nullable then "item" else v)
         |> Result.bind (fun expression ->
-            if not nullable then Ok expression
+            if not nullable then
+                Ok expression
             else
                 match fn.Defaults.TryFind p.Name with
                 | Some raw ->
-                    let values = ctx.Input.Model.GetProperty("enumerations").GetProperty(Metadata.text "enum" mapping).EnumerateArray() |> Seq.map _.GetString() |> Seq.toArray
-                    match values |> Array.tryFindIndex ((=) (raw.Trim('"'))) with
+                    let values =
+                        ctx.Input.Model.GetProperty("enumerations").GetProperty(Metadata.text "enum" mapping).EnumerateArray()
+                        |> Seq.map _.GetString()
+                        |> Seq.toArray
+
+                    match
+                        values
+                        |> Array.tryFindIndex ((=) (raw.Trim ('"')))
+                    with
                     | Some index -> Ok $"(match {v} with Some item -> {expression} | None -> {index})"
                     | None -> Error $"Unknown enum default {raw} for {qualified}"
                 | None -> Error $"Optional enum {p.Name} has no IDL default")
@@ -156,12 +174,9 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
         |> Result.map (fun expression -> $"(match {v} with None -> null | Some item -> [| {expression} |])")
     | "string" when inner = typeof<string> ->
         Ok (
-            if nullable then
-                $"Option.toObj {v}"
-            elif mapping.GetProperty("nullable").GetBoolean() then
-                v
-            else
-                $"(if isNull {v} then \"\" else {v})"
+            if nullable then $"Option.toObj {v}"
+            elif mapping.GetProperty("nullable").GetBoolean() then v
+            else $"(if isNull {v} then \"\" else {v})"
         )
     | "int" ->
         scalar (fun x ->
@@ -186,11 +201,16 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
     | "int[]" when nullable && inner = typeof<bool> -> Ok $"(match {v} with Some x -> [| (if x then 1 else 0) |] | None -> null)"
     | "int[]" when nullable && numericType inner -> Ok $"(match {v} with Some x -> [| int x |] | None -> null)"
     | "uint32[]" when nullable && numericType inner -> Ok $"(match {v} with Some x -> [| uint32 x |] | None -> null)"
-    | container when container.EndsWith "[]" && container.StartsWith "RvDom" ->
+    | container when
+        container.EndsWith "[]"
+        && container.StartsWith "RvDom"
+        ->
         Input.encode ctx.Input.Model mapping inner (if nullable then "item" else v)
         |> Result.map (fun expression ->
-            if nullable then $"(match {v} with None -> null | Some item -> [| {expression} |])"
-            else $"[| {expression} |]")
+            if nullable then
+                $"(match {v} with None -> null | Some item -> [| {expression} |])"
+            else
+                $"[| {expression} |]")
     | _ -> Error $"argument {p.Name}: {name ts} as {p.C}"
 
 let private zero (fsharp: string) =
@@ -204,16 +224,16 @@ let private zero (fsharp: string) =
     | "float32&" -> "0.0f"
     | "int64&" -> "0L"
     | "uint64&" -> "0UL"
-    | other when other.EndsWith "&" ->
-        $"Unchecked.defaultof<NativeDom.{other.TrimEnd '&'}>"
+    | other when other.EndsWith "&" -> $"Unchecked.defaultof<NativeDom.{other.TrimEnd '&'}>"
     | other -> failwith $"Unsupported output parameter type {other}"
 
 let private snake (value: string) =
-    Text.RegularExpressions.Regex.Replace(value, "([a-z0-9])([A-Z])", "$1_$2")
+    Text.RegularExpressions.Regex.Replace (value, "([a-z0-9])([A-Z])", "$1_$2")
     |> fun text -> Text.RegularExpressions.Regex.Replace(text, "([A-Z])([A-Z][a-z])", "$1_$2").ToLowerInvariant()
 
 let private releaseContainer (ctx: Context) (mapping: JsonElement) =
     let ctype = Metadata.text "ctype" mapping
+
     Metadata.items "containers" ctx.Input.Model
     |> Array.find (fun item -> Metadata.text "ctype" (item.GetProperty "mapping") = ctype)
     |> Metadata.text "releaseFunction"
@@ -221,66 +241,111 @@ let private releaseContainer (ctx: Context) (mapping: JsonElement) =
 let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (value: string) : Result<string, string> =
     let kind = Metadata.text "kind" mapping
     let plain = optionOf managed |> Option.defaultValue managed
+
     let wrap expression =
         if optionOf managed |> Option.isSome then
             $"(if {value}.present = 0 then None else Some ({expression}))"
-        else expression
+        else
+            expression
+
     match kind with
     | "bool" -> Ok $"({value} <> 0)"
     | "number" -> Ok $"{name plain} ({value})"
     | "string" -> Ok $"System.Runtime.InteropServices.Marshal.PtrToStringUTF8({value})"
     | "enum" when FSharpType.IsUnion plain ->
         let cases = FSharpType.GetUnionCases plain
-        let branches = cases |> Array.mapi(fun index case -> $"| {index} -> {name plain}.{ident case.Name}") |> String.concat " "
+
+        let branches =
+            cases
+            |> Array.mapi (fun index case -> $"| {index} -> {name plain}.{ident case.Name}")
+            |> String.concat " "
+
         Ok $"(match int ({value}) with {branches} | _ -> invalidOp \"Unknown {plain.Name} value from WebCore\")"
-    | "node" | "event" ->
-        let retain, session = if kind = "node" then "rv_node_retain", "Node" else "rv_event_retain", "Event"
+    | "node"
+    | "event" ->
+        let retain, session =
+            if kind = "node" then
+                "rv_node_retain", "Node"
+            else
+                "rv_event_retain", "Event"
+
         Ok $"(let handle = {value} in Native.{retain} handle |> ignore; unbox<{name plain}> (this.Session.{session} handle))"
     | "object" ->
         match classFor ctx plain with
         | None -> Error $"returns {name plain}, which has no class"
         | Some cls ->
             let root = Metadata.text "root" mapping |> snake
-            Ok $"(let handle = {value} in NativeDom.rv_dom_{root}_retain handle |> ignore; this.Session.Track ({cls}(this.Session, handle)) :> {name plain})"
+
+            Ok
+                $"(let handle = {value} in NativeDom.rv_dom_{root}_retain handle |> ignore; this.Session.Track ({cls}(this.Session, handle)) :> {name plain})"
     | "sequence" when plain.IsArray ->
-        let element = plain.GetElementType()
+        let element = plain.GetElementType ()
         let mapping = (Metadata.items "subtypes" mapping)[0]
+
         let nativeType =
             match Metadata.text "kind" mapping with
-            | "node" | "event" | "object" | "string" -> "nativeint"
-            | "union" | "sequence" -> "NativeDom." + Metadata.text "ctype" mapping
-            | "bool" | "enum" -> "int"
+            | "node"
+            | "event"
+            | "object"
+            | "string" -> "nativeint"
+            | "union"
+            | "sequence" -> "NativeDom." + Metadata.text "ctype" mapping
+            | "bool"
+            | "enum" -> "int"
             | _ -> name element
+
         decoded ctx mapping element "item"
         |> Result.map (fun expression ->
             $"(Array.init {value}.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<{nativeType}>({value}.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<{nativeType}>())) in {expression}))")
     | "union" when FSharpType.IsUnion plain ->
         let cases = FSharpType.GetUnionCases plain
         let arms = Metadata.items "subtypes" mapping
-        if cases.Length <> arms.Length then Error $"Union arm count differs for {name plain}"
+
+        if cases.Length <> arms.Length then
+            Error $"Union arm count differs for {name plain}"
         else
             let branches =
                 Array.zip cases arms
                 |> Array.mapi (fun index (case, arm) ->
-                    let fields = case.GetFields()
-                    if fields.Length <> 1 then Error $"Union arm {case.Name} lacks a single payload"
-                    else decoded ctx arm fields[0].PropertyType $"{value}.arm{index}"
-                         |> Result.map (fun expression -> $"| {index + 1} -> {name plain}.{ident case.Name} ({expression})"))
-            match branches |> Array.tryPick(function Error reason -> Some reason | _ -> None) with
+                    let fields = case.GetFields ()
+
+                    if fields.Length <> 1 then
+                        Error $"Union arm {case.Name} lacks a single payload"
+                    else
+                        decoded ctx arm fields[0].PropertyType $"{value}.arm{index}"
+                        |> Result.map (fun expression -> $"| {index + 1} -> {name plain}.{ident case.Name} ({expression})"))
+
+            match
+                branches
+                |> Array.tryPick (function
+                    | Error reason -> Some reason
+                    | _ -> None)
+            with
             | Some reason -> Error reason
             | None ->
-                let branches = branches |> Array.choose(function Ok text -> Some text | _ -> None) |> String.concat " "
+                let branches =
+                    branches
+                    |> Array.choose (function
+                        | Ok text -> Some text
+                        | _ -> None)
+                    |> String.concat " "
+
                 Ok (wrap $"(match {value}.tag with {branches} | _ -> invalidOp \"Unknown {plain.Name} union tag from WebCore\")")
     | _ -> Error $"Unsupported owned result {kind} as {name managed}"
 
 /// <summary>The body of a mapped member, or why it cannot be mapped.</summary>
 let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (parameters: (string * Type) list) (returns: Type) =
     let arguments = Metadata.items "arguments" fn.Descriptor
+
     let inputs =
         fn.Inputs
         |> List.mapi (fun index p ->
             let argumentName = Metadata.text "name" arguments[index]
-            match parameters |> List.tryFind (fun (value, _) -> value.Trim('`') = argumentName) with
+
+            match
+                parameters
+                |> List.tryFind (fun (value, _) -> value.Trim ('`') = argumentName)
+            with
             | Some (value, t) -> input ctx fn qualified value t p
             | None when p.FSharp.EndsWith "[]" -> Ok "null"
             | None when p.FSharp = "string" -> Ok "null"
@@ -356,14 +421,22 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
 
             let resultMapping = fn.Descriptor.GetProperty "returns"
             let resultKind = Metadata.text "kind" resultMapping
+
             match result.FSharp with
             | _ when resultKind = "union" || resultKind = "sequence" ->
                 decoded ctx resultMapping returns "result"
                 |> Result.map (fun expression ->
-                    declare @ [ "try"; "    " + checkCall outs; "    " + expression
-                                "finally"; $"    NativeDom.{releaseContainer ctx resultMapping}(&result)" ])
+                    declare
+                    @ [
+                        "try"
+                        "    " + checkCall outs
+                        "    " + expression
+                        "finally"
+                        $"    NativeDom.{releaseContainer ctx resultMapping}(&result)"
+                    ])
             | "int&" when resultKind = "enum" ->
-                decoded ctx resultMapping inner "result" |> Result.bind scalar
+                decoded ctx resultMapping inner "result"
+                |> Result.bind scalar
             | "nativeint&" when result.C = "RvNode**" || result.C = "RvEvent**" ->
                 if not (isInterface ctx inner) then
                     Error $"returns {name returns} for {result.C}"
@@ -399,11 +472,16 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
 /// <summary>The ABI functions of a member, searched in the declaring interface, then the class and its bases.</summary>
 let private candidates (ctx: Context) (chain: Type list) (iface: Type) (memberName: string) (kind: string) =
     let concrete = List.head chain
+
     ctx.Input.Functions
     |> List.filter (fun fn ->
-        fn.ContractOwner = iface.Name && fn.Member = memberName && fn.Kind = kind
-        && (let target = ctx.Input.Dom.Assembly.GetType("Ranvier.Dom." + fn.Interface)
-            not (isNull target) && target.IsAssignableFrom concrete))
+        fn.ContractOwner = iface.Name
+        && fn.Member = memberName
+        && fn.Kind = kind
+        && (let target = ctx.Input.Dom.Assembly.GetType ("Ranvier.Dom." + fn.Interface)
+
+            not (isNull target)
+            && target.IsAssignableFrom concrete))
 
 let private resolve (ctx: Context) chain iface memberName kind (parameters: (string * Type) list) returns qualified =
     match candidates ctx chain iface memberName kind with
@@ -413,9 +491,19 @@ let private resolve (ctx: Context) chain iface memberName kind (parameters: (str
             fns
             |> List.filter (fun f ->
                 let arguments = Metadata.items "arguments" f.Descriptor
-                let supplied argument = parameters |> List.exists (fun (value, _) -> value.Trim('`') = Metadata.text "name" argument)
-                (arguments |> Array.forall (fun argument -> supplied argument || argument.GetProperty("optional").GetBoolean()))
-                && (parameters |> List.forall (fun (value, _) -> arguments |> Array.exists (fun argument -> value.Trim('`') = Metadata.text "name" argument))))
+
+                let supplied argument =
+                    parameters
+                    |> List.exists (fun (value, _) -> value.Trim ('`') = Metadata.text "name" argument)
+
+                (arguments
+                 |> Array.forall (fun argument ->
+                     supplied argument
+                     || argument.GetProperty("optional").GetBoolean()))
+                && (parameters
+                    |> List.forall (fun (value, _) ->
+                        arguments
+                        |> Array.exists (fun argument -> value.Trim ('`') = Metadata.text "name" argument))))
         with
         | [] -> Error "no ABI overload of this arity"
         | matching ->
@@ -503,19 +591,27 @@ type private Emitter(ctx: Context, out: StringBuilder, entries: ResizeArray<Entr
         match ctx.Input.Hand.TryFind handKey with
         | Some hand ->
             record Hand
+
             let hand =
                 parameters
                 |> List.indexed
-                |> List.fold (fun (text: string) (index, (variable, _)) -> text.Replace("{" + string index + "}", variable)) hand
+                |> List.fold (fun (text: string) (index, (variable, _)) -> text.Replace ("{" + string index + "}", variable)) hand
+
             wrap [ hand ]
         | None ->
             match resolve ctx chain iface memberName kind parameters returns qualified with
             | Ok (fn, lines) ->
                 record (Mapped fn)
+
                 let lines =
-                    if lines |> List.exists (fun line -> line.Contains "scope.") then
+                    if
+                        lines
+                        |> List.exists (fun line -> line.Contains "scope.")
+                    then
                         "use scope = new InputScope()" :: lines
-                    else lines
+                    else
+                        lines
+
                 wrap lines
             | Error reason ->
                 record (Unmapped reason)
@@ -657,7 +753,8 @@ type private Emitter(ctx: Context, out: StringBuilder, entries: ResizeArray<Entr
 /// <summary>The class set: in-scope interfaces, their extras, and the class each one inherits.</summary>
 let private classSet (input: Input) =
     let lookup (n: string) =
-        input.Dom.Assembly.GetType("Ranvier.Dom." + n) |> Option.ofObj
+        input.Dom.Assembly.GetType ("Ranvier.Dom." + n)
+        |> Option.ofObj
 
     let names =
         [
@@ -780,13 +877,23 @@ let run (input: Input) (tagMap: (string * string * string) list) : string * Entr
 
     emitter.Line (1, "/// <summary>The wrapper class matching the element's namespace and tag.</summary>")
     emitter.Line (1, "static member Element(session: Session, handle: nativeint, tag: string) : NativeObject =")
-    emitter.Line (2, "let ns = Interop.text \"Element.namespaceURI\" (fun buffer capacity length -> NativeDom.rv_dom_element_get_namespace_uri(handle, buffer, capacity, length))")
+
+    emitter.Line (
+        2,
+        "let ns = Interop.text \"Element.namespaceURI\" (fun buffer capacity length -> NativeDom.rv_dom_element_get_namespace_uri(handle, buffer, capacity, length))"
+    )
+
     emitter.Line (2, "let tag = if ns = \"http://www.w3.org/1999/xhtml\" then tag.ToUpperInvariant() else tag")
     emitter.Line (2, "match ns, tag with")
 
     for ns, tag, iface in tagMap do
         if classes.ContainsKey iface then
-            let tag = if ns = "http://www.w3.org/1999/xhtml" then tag.ToUpperInvariant() else tag
+            let tag =
+                if ns = "http://www.w3.org/1999/xhtml" then
+                    tag.ToUpperInvariant ()
+                else
+                    tag
+
             emitter.Line (2, $"| \"{ns}\", \"{tag}\" -> {iface}Object (session, handle)")
 
     emitter.Line (2, "| \"http://www.w3.org/1999/xhtml\", _ -> HTMLElementObject (session, handle)")
