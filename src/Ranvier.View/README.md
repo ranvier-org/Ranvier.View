@@ -6,9 +6,18 @@ The companion [Ranvier.View.Dom](../Ranvier.View.Dom/README.md) mounts the same 
 or hydrates their server HTML. Server-only and shared component code references `Ranvier.View` alone;
 the explicit browser authoring examples below also use `Ranvier.View.Dom.Generated.Html`.
 
-The view projects are packable, but `Ranvier.View` and `Ranvier.View.Dom` were absent from nuget.org
-when checked on 2026-10-26. Use source project references for now. Public DOM types come from
-`Ranvier.Dom`; the Fable project path selects `Fable.Ranvier.Dom` with the same assembly identity.
+Install `Ranvier.View` 0.1.1 for server-only or shared components. Browser apps install
+`Ranvier.View.Dom` 0.1.1 and `Fable.Ranvier.Dom` 0.1.0-alpha.2; use the matching `.Traced` package
+IDs for a traced build. The explicit Fable DOM companion supplies browser metadata with the same
+assembly identity as the transitive .NET `Ranvier.Dom` contracts. Source project references select
+that companion through `FABLE_COMPILER`.
+
+```sh
+dotnet add package Ranvier.View.Dom --version 0.1.1
+dotnet add package Fable.Ranvier.Dom --version 0.1.0-alpha.2
+```
+
+Public DOM types come from `Ranvier.Dom`.
 The component and renderer packages require no Xantham browser bindings. Browser-only helpers use
 shared object types, scalar strings and opaque `obj` values for objects outside the curated contracts.
 Consumer code that needs additional browser object members can reference optional browser bindings
