@@ -66,8 +66,9 @@ remains unchanged. [Native correction PR6](https://github.com/ranvier-org/Ranvie
 `eef227e2`, fixes target scoping and restores inline-style contracts. Its [pre-merge run 40729363033](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40729363033)
 passed all five native runtime jobs, the real multi-RID resource regression and managed aggregation.
 Immutable tag `v0.1.0-preview.7` points to that exact merged tree, retaining ABI 21. [Release run 40746907938](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40746907938)
-is queued for the corrected Slim cohort; GPU publication must follow on the same tag. Publication and
-public-package acceptance remain pending.
+passed all five native jobs, managed aggregation and OIDC publication of the corrected Slim cohort.
+[Windows GPU run 40766367608](https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40766367608) is running
+on the same immutable tag and source. Fresh public-feed and GPU-package acceptance remain pending.
 
 The composed View branch removes copied interop, uses the shared DOM contracts on both targets, and enables
 the four previously pending conformance cases. Its full Windows x64 backend suite passed 781 tests, with
@@ -85,7 +86,7 @@ Public-package consumers, final four-platform integration CI, merges and publica
 
 | Piece | State |
 |---|---|
-| Ranvier.WebCore native host | ABI 21 on native main through WebCore#5; all five pre-merge RID jobs and managed aggregation passed. Unpublished preview.6 was stopped for a packaging defect; corrected preview.7 is pending. View main still consumes preview.4 (ABI 20) until its integration lands |
+| Ranvier.WebCore native host | ABI 21 on native main through WebCore#5 and correction #6. Corrected preview.7 passed all five tag-run RID jobs, managed aggregation and OIDC publication; Windows GPU publication and fresh public consumers remain pending. Unpublished preview.6 was stopped for a packaging defect. View main still consumes preview.4 (ABI 20) until its integration lands |
 | `Ranvier.View.WebCore` | Runs on win-x64, real win-arm64, linux-x64 and osx-arm64 (macOS 26); 773 backend tests passed per platform, 16 existing ignored, no failures |
 | Conformance | ConformanceCases' fifteen modules match the DOM twin, except four pending cases |
 | AOT | Both apps publish and run with NativeAOT locally on win-x64 and in CI on win-x64, win-arm64, linux-x64 and osx-arm64. Mount, paint, native click, repaint and the visible sample smoke pass. FSharp.Core/view reflection, trimming and generic-recursion warnings remain visible |
