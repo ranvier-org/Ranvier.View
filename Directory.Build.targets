@@ -1,0 +1,55 @@
+<Project>
+    <PropertyGroup Condition="'$(IsExcludedFromRootBuild)' == 'true'">
+        <BuildDependsOn>BeforeBuild;AfterBuild</BuildDependsOn>
+        <CompileDependsOn />
+    </PropertyGroup>
+
+    <!--
+    `RanvierTrace=true` compiles in the per-graph event log (`RANVIER_TRACE`) and selects the `.Traced` core packages.
+    Debug defaults to traced; any other configuration defaults to untraced. An explicit value, global or set in a
+    project file, wins over the default.
+    -->
+    <PropertyGroup Condition="'$(RanvierTrace)' == 'true'">
+        <DefineConstants>$(DefineConstants);RANVIER_TRACE</DefineConstants>
+    </PropertyGroup>
+
+    <!--
+    `RanvierViewInspect=true` compiles the view's inspection registry and `Debug` into Fable builds
+    (`RANVIER_VIEW_INSPECT`). Debug defaults to on; any other configuration defaults to off. .NET builds of
+    Ranvier.View.Dom always hold the registry.
+    -->
+    <PropertyGroup>
+        <RanvierViewInspect Condition="'$(RanvierViewInspect)' == '' and '$(Configuration)' == 'Debug'">true</RanvierViewInspect>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(RanvierViewInspect)' == 'true'">
+        <DefineConstants>$(DefineConstants);RANVIER_VIEW_INSPECT</DefineConstants>
+    </PropertyGroup>
+
+    <Target Name="ValidateLocalRanvier" BeforeTargets="PrepareForBuild" Condition="'$(UseLocalRanvier)' == 'true'">
+        <Error Condition="!Exists('$(RanvierRoot)/src/Ranvier/Ranvier.fsproj')" Text="RanvierRoot must point to a Ranvier checkout. Run dotnet fsi build.fsx -- dev local." />
+    </Target>
+    <Target Name="ValidateLocalRanvierCss" BeforeTargets="PrepareForBuild" Condition="'$(UseLocalRanvierCss)' == 'true'">
+        <Error Condition="!Exists('$(RanvierCssRoot)/src/Ranvier.Css/Ranvier.Css.fsproj')" Text="RanvierCssRoot must point to a Ranvier.Css checkout. Run dotnet fsi build.fsx -- dev local --with-css." />
+    </Target>
+
+    <!--
+    A traced build packs only under a `.Traced` package id, which a project
+    selects on an explicit `-p:RanvierTrace=true`. The traced and untraced
+    packages hold the same assembly names, namespaces and version.
+    -->
+    <Target Name="RefuseTracedPack" BeforeTargets="GenerateNuspec"
+            Condition="'$(RanvierTrace)' == 'true' and !$(PackageId.EndsWith('.Traced'))">
+        <Error Text="$(PackageId) is built with RanvierTrace=true, the Debug default. Pack with -c Release, or pass -p:RanvierTrace=true to pack $(PackageId).Traced." />
+    </Target>
+
+    <!--
+    `RanvierAnalyze=true` runs the analyzers built at tools/Ranvier.Analyzers/bin/Release/net10.0 after CoreCompile, and
+    a finding promoted to an error fails the build. `RanvierAnalyzersFlags` passes further CLI flags, such as a code
+    promoted to an error; the analyzers run only when CoreCompile does.
+    -->
+    <PropertyGroup Condition="'$(RanvierAnalyze)' == 'true'">
+        <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+        <FSharpAnalyzersContinueOnError>false</FSharpAnalyzersContinueOnError>
+        <FSharpAnalyzersOtherFlags>$(FSharpAnalyzersOtherFlags) $(RanvierAnalyzersFlags) --analyzers-path &quot;$(MSBuildThisFileDirectory)tools/Ranvier.Analyzers/bin/Release/net10.0&quot; --code-root &quot;$(MSBuildThisFileDirectory).&quot;</FSharpAnalyzersOtherFlags>
+    </PropertyGroup>
+</Project>

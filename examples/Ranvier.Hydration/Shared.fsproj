@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="HydrationPage.fs" />
+    <ProjectReference Include="../../src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj" />
+    <PackageReference Update="FSharp.Core" Version="10.1.401" />
+  </ItemGroup>
+    <ItemGroup Condition="'$(UseLocalRanvier)' == 'true'">
+        <ProjectReference Include="$(RanvierRoot)/src/Ranvier.Wire/Ranvier.Wire.fsproj" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(UseLocalRanvier)' != 'true'">
+        <PackageReference Include="Ranvier.Wire$(RanvierPackageSuffix)" Version="$(RanvierWireVersion)" />
+    </ItemGroup>
+</Project>

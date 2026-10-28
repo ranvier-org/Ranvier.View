@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Each group is a `test --group` shard of build.fsx: the same checks as local development.
+  views:
+    name: Views (${{ matrix.group }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [view, sugar, anime, motion, hydration, arms, analyzers]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # global.json pins the SDK; the net8.0 builds (DotnetCost, the packages' second target) need the .NET 8 runtime.
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+          dotnet-version: 8.0.x
+      # The playground, the Motion and hydration examples and the anime suites require Node 26 or newer.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('**/*.fsproj', '**/Directory.Build.*', 'nuget.config', '.config/dotnet-tools.json') }}
+          restore-keys: nuget-${{ runner.os }}-${{ matrix.group }}-
+      - name: Run the same view checks as local development
+        run: dotnet fsi build.fsx -- test --group ${{ matrix.group }}
+      - name: Upload the Playwright reports
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: views-${{ matrix.group }}-playwright
+          path: |
+            examples/*/playwright-report/
+            examples/*/test-results/
+          if-no-files-found: ignore
+
+  # The analyzers over the repository's projects, one group per leg, every RAN code an error.
+  analyze:
+    name: Analyzers (${{ matrix.group }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [library, view, examples]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - run: dotnet fsi build.fsx -- tools
+      - name: Build the group and run the analyzers over it
+        run: dotnet fsi build.fsx -- analyze --group ${{ matrix.group }} --build
+      - name: Upload the SARIF report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: analyzers-sarif-${{ matrix.group }}
+          path: artifacts/analyzers/*.sarif
+          if-no-files-found: ignore
+
+  packages:
+    name: Packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Build and pack the libraries untraced and traced, with Fable sources, and the analyzers
+        run: dotnet fsi build.fsx -- pack
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nuget-packages
+          path: bin/*.nupkg
+          if-no-files-found: error
+
+  format:
+    name: Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - run: dotnet fsi build.fsx -- tools
+      - run: dotnet fsi build.fsx -- format --dry-format --quick
+
+  result:
+    name: CI result
+    needs: [views, analyze, packages, format]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for result in $RESULTS; do
+            case "$result" in success) ;; *) exit 1 ;; esac
+          done
