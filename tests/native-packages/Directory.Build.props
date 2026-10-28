@@ -1,0 +1,13 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishAot>true</PublishAot>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NativeRuntimePackageVersion Condition="'$(NativeRuntimePackageVersion)' == ''">0.1.0-preview.6</NativeRuntimePackageVersion>
+    <UsePublishedGpu Condition="'$(UsePublishedGpu)' == ''">false</UsePublishedGpu>
+    <RestoreConfigFile>$(MSBuildThisFileDirectory)NuGet.Config</RestoreConfigFile>
+    <DefineConstants Condition="'$(RanvierPackageSuffix)' == '.Traced'">$(DefineConstants);RANVIER_TRACE</DefineConstants>
+  </PropertyGroup>
+</Project>

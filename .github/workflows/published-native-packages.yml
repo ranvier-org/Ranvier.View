@@ -1,0 +1,104 @@
+name: Published native packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      view_package_version:
+        description: 'Exact published coordinated Ranvier.View.WebCore / .Sdl version'
+        required: true
+        type: string
+      native_runtime_version:
+        description: 'Exact published coordinated managed/slim/GPU WebCore version (ABI 21)'
+        required: true
+        default: '0.1.0-preview.6'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  acceptance:
+    name: Published (${{ matrix.trace }}, ${{ matrix.flavor }})
+    runs-on: windows-2025
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        trace: [normal, traced]
+        flavor: [slim, gpu]
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/published-native-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.trace }}-${{ matrix.flavor }}
+      NativeViewPackageVersion: ${{ inputs.view_package_version }}
+      NativeRuntimePackageVersion: ${{ inputs.native_runtime_version }}
+      RanvierPackageSuffix: ${{ matrix.trace == 'traced' && '.Traced' || '' }}
+      UsePublishedGpu: ${{ matrix.flavor == 'gpu' && 'true' || 'false' }}
+      RANVIER_SMOKE: '1'
+      RANVIER_SMOKE_UIA: '1'
+      RANVIER_UIA_PROBE: ${{ github.workspace }}/artifacts/native-window/UiAutomationProbe.exe
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Test the package/output verifier without downloading runtimes
+        run: python -I tests/native-packages/test_verify_published_native_runtime.py
+      - name: Require shared GPU presentation in GPU jobs
+        if: matrix.flavor == 'gpu'
+        run: Add-Content -LiteralPath $env:GITHUB_ENV -Value 'RANVIER_SMOKE_GPU=1'
+      - name: Build the independent OS accessibility client
+        run: python tools/native-window-probe.py
+      - name: Restore both fixtures from official NuGet into the fresh job cache
+        run: |
+          foreach ($fixture in @('Smoke', 'Counter')) {
+            dotnet restore "tests/native-packages/$fixture/$fixture.fsproj" --configfile tests/native-packages/NuGet.Config -r win-x64
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Build and verify both JIT outputs
+        run: |
+          foreach ($fixture in @('Smoke', 'Counter')) {
+            $output = "artifacts/published-native/jit/$fixture"
+            dotnet build "tests/native-packages/$fixture/$fixture.fsproj" -c Release -r win-x64 --no-restore -o $output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $package = if ($fixture -eq 'Smoke') { "Ranvier.View.WebCore$env:RanvierPackageSuffix" } else { "Ranvier.View.WebCore.Sdl$env:RanvierPackageSuffix" }
+            python tools/verify-published-native-runtime.py --assets "tests/native-packages/$fixture/obj/project.assets.json" --output $output --native-version "$env:NativeRuntimePackageVersion" --view-package $package --view-version "$env:NativeViewPackageVersion" --flavor '${{ matrix.flavor }}'
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Run the JIT smoke and visible counter with independent accessibility checks
+        timeout-minutes: 3
+        run: |
+          dotnet artifacts/published-native/jit/Smoke/Ranvier.View.WebCore.AotSmoke.dll
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet artifacts/published-native/jit/Counter/Ranvier.NativeCounter.dll
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Publish and verify both NativeAOT outputs
+        run: |
+          foreach ($fixture in @('Smoke', 'Counter')) {
+            $output = "artifacts/published-native/aot/$fixture"
+            dotnet publish "tests/native-packages/$fixture/$fixture.fsproj" -c Release -r win-x64 --no-restore -o $output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $package = if ($fixture -eq 'Smoke') { "Ranvier.View.WebCore$env:RanvierPackageSuffix" } else { "Ranvier.View.WebCore.Sdl$env:RanvierPackageSuffix" }
+            python tools/verify-published-native-runtime.py --assets "tests/native-packages/$fixture/obj/project.assets.json" --output $output --native-version "$env:NativeRuntimePackageVersion" --view-package $package --view-version "$env:NativeViewPackageVersion" --flavor '${{ matrix.flavor }}'
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Run the published NativeAOT smoke and visible counter
+        timeout-minutes: 3
+        run: |
+          & ./artifacts/published-native/aot/Smoke/Ranvier.View.WebCore.AotSmoke.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $counter = (Resolve-Path -LiteralPath ./artifacts/published-native/aot/Counter/Ranvier.NativeCounter.exe).Path
+          $process = Start-Process -FilePath $counter -WindowStyle Normal -Wait -PassThru
+          if ($process.ExitCode -ne 0) { exit $process.ExitCode }
+      - name: Preserve restore graphs and executable output evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: published-native-${{ matrix.trace }}-${{ matrix.flavor }}
+          path: |
+            tests/native-packages/**/obj/project.assets.json
+            artifacts/published-native/**/Ranvier*.deps.json
+          if-no-files-found: ignore
