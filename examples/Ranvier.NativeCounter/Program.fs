@@ -77,6 +77,15 @@ let private smoke (window: Window) =
 
     let scale = SDL.SDL3.SDL_GetWindowDisplayScale pointer
 
+    let nativeWindow =
+        if SDL.SDL3.SDL_GetCurrentVideoDriver () = "x11" then
+            use key = fixed (System.Text.Encoding.UTF8.GetBytes ("SDL.window.x11.window\000"))
+
+            SDL.SDL3.SDL_GetNumberProperty (SDL.SDL3.SDL_GetWindowProperties pointer, key, 0L)
+            <> 0L
+        else
+            window.NativeHandle <> 0n
+
     let hidden =
         (SDL.SDL3.SDL_GetWindowFlags pointer
          &&& SDL.SDL_WindowFlags.SDL_WINDOW_HIDDEN)
@@ -98,7 +107,7 @@ let private smoke (window: Window) =
 
     if
         hidden
-        || window.NativeHandle = 0n
+        || not nativeWindow
         || scale <= 0.0f
         || width <= 0
         || height <= 0
