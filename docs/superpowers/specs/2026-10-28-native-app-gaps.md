@@ -49,7 +49,10 @@ the interface-package part of G8. View/backend migration and native package publ
 [Ranvier#250](https://github.com/ranvier-org/Ranvier/pull/250), merged as `ef19d86b`, restores the
 `CSSStyleProperties` contract and both inline-style getters omitted from alpha.1. The corrected source is
 pinned to generator `e81b32b`; all PR checks passed, including the IDL drift check, packed normal/traced
-.NET and Fable consumers, and ARM/x64 performance jobs. Alpha.2 publication follows main-branch CI.
+.NET and Fable consumers, and ARM/x64 performance jobs. [Main CI 40715311270](https://github.com/ranvier-org/Ranvier/actions/runs/40715311270)
+and [OIDC publication 40716357543](https://github.com/ranvier-org/Ranvier/actions/runs/40716357543) passed.
+All four alpha.2 packages are public; fresh official-NuGet consumers passed normal/traced .NET
+assembly-identity and style-contract checks, Fable compilation and JavaScript execution.
 
 ## In integration: ABI 21 and the native View migration
 
