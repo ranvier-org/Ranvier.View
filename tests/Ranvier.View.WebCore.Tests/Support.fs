@@ -5,7 +5,7 @@ open System.Collections.Concurrent
 open System.Runtime.ExceptionServices
 open System.Threading
 open Expecto
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier
 open Ranvier.View
 open Ranvier.View.Dom
@@ -122,7 +122,7 @@ type Mount =
             this.Graph.Run (fun () -> this.Mounted.Dispose ())
 
 let mountView (host: WebCoreHost) (graph: Graph) (build: Mounting.BuildContext -> unit) : Mount =
-    let container = host.Document.createElement "div"
+    let container = host.Document.createElement "div" :?> HTMLElement
     host.Document.body.appendChild container |> ignore
 
     let mounted =

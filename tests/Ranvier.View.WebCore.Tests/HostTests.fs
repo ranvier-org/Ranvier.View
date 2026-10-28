@@ -2,7 +2,7 @@ module Ranvier.View.WebCore.Tests.HostTests
 
 open System
 open Expecto
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Twin
 open Ranvier.View.WebCore
@@ -28,38 +28,23 @@ let private script (host: Native.IHost) : string list =
     let comment = document.createComment "m" :> Node
 
     let children (parent: Node) =
-        let rec go (node: Node option) acc =
-            match node with
-            | Some node ->
-                go
-                    (node.nextSibling
-                     |> Option.map (fun n -> n :> Node))
-                    (name node :: acc)
-            | None -> List.rev acc
+        let rec go (node: Node) acc =
+            if isNull node then
+                List.rev acc
+            else
+                go node.nextSibling (name node :: acc)
 
-        go
-            (parent.firstChild
-             |> Option.map (fun n -> n :> Node))
-            []
-        |> String.concat ","
+        go parent.firstChild [] |> String.concat ","
 
     root.appendChild span |> ignore
     root.appendChild text |> ignore
     root.insertBefore (comment, span) |> ignore
-    root.insertBefore bold |> ignore
+    root.insertBefore (bold, null) |> ignore
     log.Add $"children {children root}"
 
-    log.Add
-        $"last {root.lastChild
-                |> Option.map box
-                |> Option.toObj
-                |> name}"
+    log.Add $"last {name root.lastChild}"
 
-    log.Add
-        $"parent {span.parentNode
-                  |> Option.map box
-                  |> Option.toObj
-                  |> name} / {root.parentNode.IsSome}"
+    log.Add $"parent {name span.parentNode} / {not (isNull root.parentNode)}"
 
     log.Add $"data {(text :?> CharacterData).data}"
     (text :?> CharacterData).data <- "y"
@@ -85,7 +70,7 @@ let private script (host: Native.IHost) : string list =
     host.QueueMicrotask (fun () -> queued <- queued + 1)
     log.Add $"queued {queued}"
 
-    let button = document.createElement "button"
+    let button = document.createElement "button" :?> HTMLElement
     document.body.appendChild button |> ignore
     let mutable count = 0
     let mutable seen = ""
@@ -98,11 +83,7 @@ let private script (host: Native.IHost) : string list =
                 count <- count + 1
                 host.OverrideCurrentTarget (event, fun () -> box root)
 
-                seen <-
-                    (unbox<Event> event).currentTarget
-                    |> Option.map box
-                    |> Option.toObj
-                    |> name
+                seen <- (unbox<Event> event).currentTarget |> box |> name
         )
 
     button.click ()
