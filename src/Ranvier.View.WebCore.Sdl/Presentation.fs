@@ -142,7 +142,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
 
         try
             let image = NativePtr.read converted
-            let bytes = Array.zeroCreate<byte> (image.w * image.h * 4)
+            let bytes = Array.zeroCreate<byte>(image.w * image.h * 4)
 
             for row in 0 .. image.h - 1 do
                 Marshal.Copy (image.pixels + nativeint (row * image.pitch), bytes, row * image.w * 4, image.w * 4)

@@ -173,7 +173,10 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// <summary>Creates a page of <c>width</c> by <c>height</c> CSS pixels and installs it on the current thread.</summary>
     /// <exception cref="T:System.InvalidOperationException">The native library predates the shared DOM transport functions (ABI 21).</exception>
     static member Create(width: int, height: int) : WebCoreHost =
-        if Native.rv_abi_version () < 21 || Native.rv_abi_has "dom-generated" <> 1 then
+        if
+            Native.rv_abi_version () < 21
+            || Native.rv_abi_has "dom-generated" <> 1
+        then
             raise (InvalidOperationException $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks the shared DOM transport functions (ABI 21)")
 
         let handle = Native.rv_host_create (width, height)

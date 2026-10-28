@@ -18,6 +18,8 @@ module Spec =
         "src/Ranvier.View/Ranvier.View.fsproj"
         "src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj"
         "src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj"
+        "src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj"
+        "src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj"
     ]
 
     let analyzers = "tools/Ranvier.Analyzers/Ranvier.Analyzers.fsproj"
@@ -384,8 +386,8 @@ module Stage =
         }
     }
 
-    /// Packs the four libraries untraced and as `.Traced` packages, and the analyzers. The traced packs restore and
-    /// build again, after every untraced pack.
+    /// <summary>Packs the libraries, their <c>.Traced</c> variants and the analyzers.</summary>
+    /// <remarks>The traced packs restore and build again after every untraced pack.</remarks>
     let pack = input {
         let! clean = Baked.Stages.cleanWith (InputSpec.ret false) [] [ "bin/*.nupkg"; "bin/*.snupkg" ]
         and! untraced = packWith false
@@ -512,7 +514,7 @@ exit <| rootCommand fsi.CommandLineArgs[1..] {
         Command.pipeline { Stage.restore; Stage.format }
     }
     command "pack" {
-        description "Build and pack the four libraries untraced and traced, with Fable sources, and the analyzers"
+        description "Build and pack the libraries untraced and traced, with Fable sources where supported, and the analyzers"
         Command.pipeline { Stage.restore; Stage.build; Stage.pack }
     }
     command "publish" {

@@ -1,11 +1,18 @@
-59 classes; 1106 members: 1080 mapped to 1063 of 1070 rv_dom_* functions, 13 hand-written, 13 unmapped
+59 classes; 1109 members: 1082 mapped to 1065 of 1070 rv_dom_* functions, 13 hand-written, 14 unmapped
+
+Native exports without generated member mappings (including hand-written adapters):
+  rv_dom_event_get_current_target: Event.currentTarget (get)
+  rv_dom_html_select_element_remove_0: HTMLSelectElement.remove (op)
+  rv_dom_input_event_get_data: InputEvent.data (get)
+  rv_dom_input_event_get_input_type: InputEvent.inputType (get)
+  rv_dom_keyboard_event_get_key: KeyboardEvent.key (get)
 
 Unmapped members by reason:
-     13  no ABI function
+     14  no ABI function
 
 Members by class (mapped / hand-written / unmapped):
   AbstractRangeObject: 5 / 0 / 0
-  AttrObject: 8 / 0 / 0
+  AttrObject: 9 / 0 / 0
   CSSStyleDeclarationObject: 8 / 0 / 0
   CharacterDataObject: 14 / 0 / 0
   CompositionEventObject: 1 / 0 / 0
@@ -28,7 +35,7 @@ Members by class (mapped / hand-written / unmapped):
   HTMLDetailsElementObject: 4 / 0 / 0
   HTMLDialogElementObject: 10 / 0 / 0
   HTMLDivElementObject: 2 / 0 / 0
-  HTMLElementObject: 66 / 0 / 0
+  HTMLElementObject: 67 / 0 / 0
   HTMLFieldSetElementObject: 13 / 0 / 0
   HTMLFormElementObject: 28 / 0 / 0
   HTMLImageElementObject: 49 / 0 / 0
@@ -57,7 +64,7 @@ Members by class (mapped / hand-written / unmapped):
   PointerEventObject: 14 / 0 / 0
   RadioNodeListObject: 2 / 0 / 0
   RangeObject: 25 / 0 / 0
-  SVGElementObject: 0 / 0 / 9
+  SVGElementObject: 0 / 0 / 10
   ShadowRootObject: 17 / 0 / 0
   TextObject: 3 / 0 / 0
   UIEventObject: 6 / 0 / 0
@@ -65,6 +72,7 @@ Members by class (mapped / hand-written / unmapped):
   WheelEventObject: 7 / 0 / 0
 
 Unmapped members:
+  SVGElementObject ElementCSSInlineStyle.style (getter): no ABI function
   SVGElementObject HTMLOrSVGElement.dataset (getter): no ABI function
   SVGElementObject HTMLOrSVGElement.nonce (getter): no ABI function
   SVGElementObject HTMLOrSVGElement.nonce (setter): no ABI function

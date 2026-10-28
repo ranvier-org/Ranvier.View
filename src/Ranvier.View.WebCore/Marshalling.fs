@@ -11,14 +11,16 @@ type internal InputScope() =
     let strings = List<nativeint>()
 
     member _.Pin<'T when 'T: struct>(values: 'T array) =
-        if isNull values || values.Length = 0 then 0n
+        if isNull values || values.Length = 0 then
+            0n
         else
-            let pin = GCHandle.Alloc(values, GCHandleType.Pinned)
+            let pin = GCHandle.Alloc (values, GCHandleType.Pinned)
             pins.Add pin
-            pin.AddrOfPinnedObject()
+            pin.AddrOfPinnedObject ()
 
     member _.Text(value: string) =
-        if isNull value then 0n
+        if isNull value then
+            0n
         else
             let pointer = Marshal.StringToCoTaskMemUTF8 value
             strings.Add pointer
@@ -26,7 +28,11 @@ type internal InputScope() =
 
     interface IDisposable with
         member _.Dispose() =
-            for pin in pins do pin.Free()
-            for pointer in strings do Marshal.FreeCoTaskMem pointer
-            pins.Clear()
-            strings.Clear()
+            for pin in pins do
+                pin.Free ()
+
+            for pointer in strings do
+                Marshal.FreeCoTaskMem pointer
+
+            pins.Clear ()
+            strings.Clear ()

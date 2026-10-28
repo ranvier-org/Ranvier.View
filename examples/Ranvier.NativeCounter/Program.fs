@@ -11,32 +11,46 @@ open Ranvier.View.Dom
 open Ranvier.View.WebCore.Sdl
 
 type State =
-    { Count: Signal<int>
-      Name: Signal<string> }
+    {
+        Count: Signal<int>
+        Name: Signal<string>
+    }
 
 let private app =
     Component.define
         (fun _ () ->
-            { Count = Api.createSignal 0
-              Name = Api.createSignal "" })
+            {
+                Count = Api.createSignal 0
+                Name = Api.createSignal ""
+            })
         (fun t ->
             t.div
-                [| t.Attrs.attribute ("style", "font-family:sans-serif;padding:24px;display:flex;flex-direction:column;gap:16px") |]
-                [| t.button
-                       [| t.Attrs.attribute ("style", "font-size:32px;padding:8px 24px;align-self:flex-start")
-                          t.Events.on ("click", fun state _ -> state.Count.Value <- state.Count.Value + 1) |]
-                       [| t.text (fun state -> $"Clicked {state.Count.Value} times") |]
-                   t.input
-                       [| t.Attrs.attribute ("placeholder", "Your name")
-                          t.Attrs.attribute ("style", "font-size:20px;padding:6px")
-                          t.Events.on ("input", fun state (event: Event) -> state.Name.Value <- (unbox<HTMLInputElement> event.target).value) |]
-                   t.p
-                       [| t.Attrs.attribute ("style", "font-size:20px;margin:0") |]
-                       [| t.text (fun state ->
-                              if String.IsNullOrWhiteSpace state.Name.Value then
-                                  "Hello, whoever you are."
-                              else
-                                  $"Hello, {state.Name.Value}.") |] |])
+                [|
+                    t.Attrs.attribute ("style", "font-family:sans-serif;padding:24px;display:flex;flex-direction:column;gap:16px")
+                |]
+                [|
+                    t.button
+                        [|
+                            t.Attrs.attribute ("style", "font-size:32px;padding:8px 24px;align-self:flex-start")
+                            t.Events.on ("click", fun state _ -> state.Count.Value <- state.Count.Value + 1)
+                        |]
+                        [| t.text (fun state -> $"Clicked {state.Count.Value} times") |]
+                    t.input
+                        [|
+                            t.Attrs.attribute ("placeholder", "Your name")
+                            t.Attrs.attribute ("style", "font-size:20px;padding:6px")
+                            t.Events.on ("input", fun state (event: Event) -> state.Name.Value <- (unbox<HTMLInputElement> event.target).value)
+                        |]
+                    t.p
+                        [| t.Attrs.attribute ("style", "font-size:20px;margin:0") |]
+                        [|
+                            t.text (fun state ->
+                                if String.IsNullOrWhiteSpace state.Name.Value then
+                                    "Hello, whoever you are."
+                                else
+                                    $"Hello, {state.Name.Value}.")
+                        |]
+                |])
 
 let private mount (host: Ranvier.View.WebCore.WebCoreHost) =
     let graph = new Graph ()
@@ -50,7 +64,8 @@ let private mount (host: Ranvier.View.WebCore.WebCoreHost) =
     { new IDisposable with
         member _.Dispose() =
             graph.Run (fun () -> mounted.Dispose ())
-            graph.Dispose () }
+            graph.Dispose ()
+    }
 
 let private smoke (window: Window) (beforeClose: unit -> unit) =
     for _ in 1..60 do
@@ -73,7 +88,9 @@ let private smoke (window: Window) (beforeClose: unit -> unit) =
 
     let hidden =
         (SDL.SDL3.SDL_GetWindowFlags pointer
-         &&& SDL.SDL_WindowFlags.SDL_WINDOW_HIDDEN) = SDL.SDL_WindowFlags.SDL_WINDOW_HIDDEN
+         &&& SDL.SDL_WindowFlags.SDL_WINDOW_HIDDEN)
+            =
+            SDL.SDL_WindowFlags.SDL_WINDOW_HIDDEN
 
     let struct (width, height) = window.Host.PaintSize
     let mutable pixelWidth = 0
@@ -180,7 +197,7 @@ let private smoke (window: Window) (beforeClose: unit -> unit) =
                 if not window.Closed then
                     if not (window.Step (timeout = 16)) then
                         beforeClose ()
-                        (window :> IDisposable).Dispose ()
+                        (window :> IDisposable).Dispose()
                         tornDown <- true
                 else
                     System.Threading.Thread.Sleep 10
