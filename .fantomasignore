@@ -6,3 +6,6 @@ docs/samples/
 experiments/Ranvier.View.Arms.FablePlugin/Tests/Fixtures/
 experiments/Ranvier.View.Arms.FablePlugin/Tests/NoTargets/
 experiments/Ranvier.View.Twin/Generated/
+# The generated wrappers, and the interop copied from Ranvier.WebCore as it is generated there.
+src/Ranvier.View.WebCore/Generated/
+src/Ranvier.View.WebCore/Interop/

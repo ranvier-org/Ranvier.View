@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+    A native Ranvier app: a counter and a text field in an SDL3 window, on a WebCore page. `dotnet run` opens it;
+    `dotnet publish -c Release -r win-x64` builds it with NativeAOT into one executable beside the native libraries.
+    -->
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <PublishAot>true</PublishAot>
+        <TrimmerSingleWarn>false</TrimmerSingleWarn>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../src/Ranvier.View/Ranvier.View.fsproj" />
+        <ProjectReference Include="../../src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj" />
+        <ProjectReference Include="../../src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseLocalRanvier)' == 'true'">
+        <ProjectReference Include="$(RanvierRoot)/src/Ranvier/Ranvier.fsproj" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(UseLocalRanvier)' != 'true'">
+        <PackageReference Include="Ranvier$(RanvierPackageSuffix)" Version="$(RanvierVersion)" />
+    </ItemGroup>
+
+</Project>
