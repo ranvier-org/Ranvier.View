@@ -54,7 +54,7 @@ let held =
                 | Loaded (text, _) ->
                     span (
                         Hooks.exit (
-                            Func<_, _, _, _>(fun (_: Signal<Load>) (_: Fable.Core.TS.Dom.HTMLSpanElement) finish ->
+                            Func<_, _, _, _>(fun (_: Signal<Load>) (_: Ranvier.Dom.HTMLSpanElement) finish ->
                                 if text = "" then finish ()
                                 ignore)
                         )
