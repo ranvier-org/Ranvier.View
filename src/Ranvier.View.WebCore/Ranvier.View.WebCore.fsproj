@@ -25,14 +25,14 @@
     <!--
     The native library: the Ranvier.WebCore.Native package for RanvierWebCoreNativeRid at
     RanvierWebCoreNativeVersion, whose ABI the copied interop in Interop/ matches. The runtime identifier defaults to
-    the building machine's: osx-arm64 on macOS, otherwise win-x64, the two that have run the backend. Setting
+    the publish target's, or the SDK host's when no target is specified. Setting
     RanvierWebCoreNativeDir (the directory holding runtimes/<rid>/native) takes the native files from a local build
     of Ranvier.WebCore instead. The Ranvier.WebCore.Native meta-package (decision G5) replaces this choice.
     -->
     <PropertyGroup>
         <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.0-preview.4</RanvierWebCoreNativeVersion>
-        <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == '' and $([MSBuild]::IsOSPlatform('OSX'))">osx-arm64</RanvierWebCoreNativeRid>
-        <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == ''">win-x64</RanvierWebCoreNativeRid>
+        <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</RanvierWebCoreNativeRid>
+        <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</RanvierWebCoreNativeRid>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(RanvierWebCoreNativeDir)' == ''">
