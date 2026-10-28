@@ -73,7 +73,7 @@ type internal HostContext(posted: ConcurrentQueue<struct (SendOrPostCallback * o
 /// host's loop. Disposal removes the installation, releases every native reference and destroys the page.
 /// </remarks>
 [<Sealed>]
-type WebCoreHost private (handle: nativeint, session: Session) =
+type WebCoreHost private (handle: nativeint, session: Session, width: int, height: int) =
     let thread = Environment.CurrentManagedThreadId
     let microtasks = Queue<unit -> unit>()
     let posted = ConcurrentQueue<struct (SendOrPostCallback * obj)>()
@@ -95,9 +95,31 @@ type WebCoreHost private (handle: nativeint, session: Session) =
     let mutable clipboardRead: Native.ClipboardRead = null
     let mutable document: Document = Unchecked.defaultof<_>
     let mutable disposed = false
+    let mutable viewportWidth = width
+    let mutable viewportHeight = height
+    let mutable deviceScale = 1.0f
 
     let record (error: exn) =
         session.ListenerErrors.Add error
+
+    let repaintBounds x y width height =
+        // A partial canvas must start on the full canvas's device-pixel grid.
+        let grid =
+            seq { 1..64 }
+            |> Seq.tryFind (fun step ->
+                let pixels = float deviceScale * float step
+                pixels = Math.Round pixels)
+
+        match grid with
+        | None -> struct (0, 0, viewportWidth, viewportHeight)
+        | Some step ->
+            // WPE's glyph damage can omit its outer antialias pixel.
+            let margin = if OperatingSystem.IsLinux () then 1 else 0
+            let left = max 0 ((x - margin) / step * step)
+            let top = max 0 ((y - margin) / step * step)
+            let right = min viewportWidth ((x + width + margin + step - 1) / step * step)
+            let bottom = min viewportHeight ((y + height + margin + step - 1) / step * step)
+            struct (left, top, right - left, bottom - top)
 
     let runMicrotasks () =
         while microtasks.Count > 0 do
@@ -165,7 +187,7 @@ type WebCoreHost private (handle: nativeint, session: Session) =
         let session = new Session (handle)
         session.NodeFactory <- Func<_, _, _>(Factories.node)
         session.EventFactory <- Func<_, _, _>(Factories.event)
-        let host = new WebCoreHost (handle, session)
+        let host = new WebCoreHost (handle, session, width, height)
         host.Install ()
         host
 
@@ -363,10 +385,15 @@ type WebCoreHost private (handle: nativeint, session: Session) =
         Native.rv_host_resize (handle, width, height)
         |> Interop.check "rv_host_resize"
 
+        viewportWidth <- width
+        viewportHeight <- height
+
     /// <summary>Sets the device pixels per CSS pixel, from 0.25 to 8; <c>PaintSize</c> scales with it.</summary>
     member _.SetDeviceScale(scale: float32) =
         Native.rv_host_set_device_scale (handle, scale)
         |> Interop.check "rv_host_set_device_scale"
+
+        deviceScale <- scale
 
     /// <summary>The size in device pixels of the image <c>Paint</c> writes.</summary>
     member _.PaintSize =
@@ -383,7 +410,7 @@ type WebCoreHost private (handle: nativeint, session: Session) =
         Native.rv_host_paint_rgba (handle, rgba, rgba.Length)
         |> Interop.check "rv_host_paint_rgba"
 
-    /// <summary>The viewport area invalidated since the last paint, in CSS pixels, or None.</summary>
+    /// <summary>The conservative repaint area since the last paint, in CSS pixels, or None.</summary>
     member _.DirtyRect: struct (int * int * int * int) voption =
         let mutable x = 0
         let mutable y = 0
@@ -391,7 +418,7 @@ type WebCoreHost private (handle: nativeint, session: Session) =
         let mutable height = 0
 
         match Native.rv_host_dirty_rect (handle, &x, &y, &width, &height) with
-        | 1 -> ValueSome (struct (x, y, width, height))
+        | 1 -> ValueSome (repaintBounds x y width height)
         | 0 -> ValueNone
         | status -> raise (Interop.failure "rv_host_dirty_rect" status)
 
