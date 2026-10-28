@@ -1,4 +1,5 @@
 ---
+last_commit_released: 86573f6d828dd0e668158e86033c4f30ff72366d
 updaters:
   - xml:
       file: Ranvier.Analyzers.fsproj
