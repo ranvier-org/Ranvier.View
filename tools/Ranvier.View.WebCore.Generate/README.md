@@ -13,7 +13,7 @@ dotnet tools/Ranvier.View.WebCore.Generate/bin/Release/net10.0/Ranvier.View.WebC
 
 The default output is `src/Ranvier.View.WebCore/Generated`. After restoring and building the backend from
 published packages, `python tools/check-webcore-generated.py` regenerates into a temporary directory and
-checks both committed outputs. CI runs this check on Windows x64. Local interop/runtime overrides are
+checks both committed outputs. CI runs this check on Windows x64. Local core, interop and runtime overrides are
 rejected by that check.
 
 Native roots and transport mappings come from the canonical model. Derived wrapper classes come from the

@@ -11,10 +11,12 @@ def main():
     project = root / 'src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj'
     result = subprocess.run([
         'dotnet', 'msbuild', str(project), '-nologo', '-p:Configuration=Release',
-        '-getProperty:NuGetPackageRoot,RanvierWebCoreNativeVersion,RanvierDomVersion,RanvierPackageSuffix,UseLocalRanvierWebCore,RanvierWebCoreNativeDir',
+        '-getProperty:NuGetPackageRoot,RanvierWebCoreNativeVersion,RanvierDomVersion,RanvierPackageSuffix,UseLocalRanvier,UseLocalRanvierWebCore,RanvierWebCoreNativeDir',
     ], cwd=root, check=True, text=True, capture_output=True)
     properties = json.loads(result.stdout)['Properties']
-    if properties['UseLocalRanvierWebCore'] != 'false' or properties['RanvierWebCoreNativeDir']:
+    if (properties['UseLocalRanvier'].lower() != 'false'
+        or properties['UseLocalRanvierWebCore'].lower() != 'false'
+        or properties['RanvierWebCoreNativeDir']):
         raise ValueError('Wrapper verification requires restored packages, without local interop/runtime overrides.')
     packages = Path(properties['NuGetPackageRoot'])
     native = packages / 'ranvier.webcore' / properties['RanvierWebCoreNativeVersion'].lower()
