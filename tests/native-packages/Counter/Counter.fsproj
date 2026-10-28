@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>Ranvier.NativeCounter</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../../examples/Ranvier.NativeCounter/Program.fs" Link="Program.fs" />
+    <PackageReference Include="Ranvier.View.WebCore.Sdl$(RanvierPackageSuffix)" Version="[$(NativeViewPackageVersion)]" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(UsePublishedGpu)' == 'true'">
+    <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="[$(NativeRuntimePackageVersion)]" ExcludeAssets="all" />
+    <PackageReference Include="Ranvier.WebCore.Native.Gpu.win-x64" Version="[$(NativeRuntimePackageVersion)]" />
+  </ItemGroup>
+</Project>
