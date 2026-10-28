@@ -5,6 +5,28 @@ Shows a [Ranvier.View.WebCore](../Ranvier.View.WebCore/README.md) page in an SDL
 mouse, wheel, keyboard, input method and focus events to the page. It also sets the page's cursor and moves its
 `text/plain` clipboard data through SDL.
 
+## Install
+
+```sh
+dotnet add package Ranvier.View.WebCore.Sdl --version 0.1.0-alpha.1
+```
+
+Use `Ranvier.View.WebCore.Sdl.Traced` for a traced build. Backend, shared contracts, canonical interop,
+SDL3 and the five-RID native aggregate are transitive dependencies.
+
+For Windows x64 shared GPU presentation, add the matching GPU runtime and suppress the aggregate's
+Slim win-x64 assets in the application project:
+
+```xml
+<ItemGroup>
+  <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="[0.1.0-preview.7]" ExcludeAssets="all" />
+  <PackageReference Include="Ranvier.WebCore.Native.Gpu.win-x64" Version="[0.1.0-preview.7]" />
+</ItemGroup>
+```
+
+Select the `direct3d11` renderer through `Window.create`'s renderer argument. The other four native RID
+dependencies remain available; the explicit exclusion prevents conflicting Windows native payloads.
+
 On Windows, a native GPU runtime with the `presentation-d3d11` capability uses shared D3D11 textures with
 SDL's `direct3d11` renderer at display scale 1. Other renderers, unsupported devices and other display scales
 use CPU painting. An explicit `renderer = "software"` keeps CPU presentation. GPU frames are released after
@@ -106,7 +128,8 @@ the 480x320 actual backbuffer, clipboard and independent UIA discovery, bounds, 
 updates and provider disconnection. Native and resource payload hashes matched the packages, including
 the corrected nested icon paths. The same eight normal/traced Smoke/Counter JIT/NativeAOT runs also pass
 with native packages from official NuGet, matching the clean preview.7 release source. View libraries
-are locally packed in these runs; final public View and GPU-package acceptance remain pending.
+are locally packed in these runs. The [package acceptance workflow](../../.github/workflows/published-native-packages.yml)
+checks fully published normal/traced CPU and GPU consumers.
 
 [Full source CI](https://github.com/ranvier-org/Ranvier.View/actions/runs/40774290136) passed all four
 platform jobs with 781 backend tests, 12 existing ignored, 15 NativeAOT smoke checks and both visible
@@ -118,5 +141,6 @@ and `gpu_runtime_package` (default `Ranvier.WebCore.Native.Gpu.win-x64`). It ver
 RID, version, clean source revision and file hashes before staging it. Managed interop uses that same version.
 Both JIT and NativeAOT must pass the strict shared-frame, actual-backbuffer and independent UIA checks, and
 a failing enabled GPU lane fails the aggregate CI result. An empty version disables the lane; CPU CI does
-not count as GPU verification. A successful published-cohort GPU CI run remains required before closing
-the Windows presentation gap.
+not count as GPU verification. [Run 40784192253](https://github.com/ranvier-org/Ranvier.View/actions/runs/40784192253)
+passed all 18 jobs with public GPU preview.7: JIT and NativeAOT each presented two shared frames at
+480x320/scale 1 and passed clipboard and independent UIA tree/action/teardown checks.

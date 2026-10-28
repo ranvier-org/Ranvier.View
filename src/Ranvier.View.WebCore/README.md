@@ -10,6 +10,17 @@ the canonical `Ranvier.WebCore` managed interop and `Ranvier.WebCore.Native` agg
 assets for the application's RID. On macOS, create the host and run WebCore on the process main thread,
 shared with SDL's event pump.
 
+## Install
+
+```sh
+dotnet add package Ranvier.View.WebCore --version 0.1.0-alpha.1
+```
+
+Use `Ranvier.View.WebCore.Traced` for the traced build. The package brings the shared `Ranvier.Dom`
+contracts, canonical managed interop and five-RID native aggregate; no native download or copied interop
+is needed. Publish with the supported target RID so the SDK selects its libraries and resources. For an
+SDL window, install the [presenter package](../Ranvier.View.WebCore.Sdl/README.md) instead.
+
 [macOS CI](https://github.com/ranvier-org/Ranvier.Views/actions/runs/40645038498/job/122671771869) passed
 770 tests, with 16 ignored and no failures, including the SDL hidden-window tests.
 
@@ -27,7 +38,9 @@ Fresh runs against all seven public preview.7 native packages also pass both app
 JIT and NativeAOT, with exact release-source and payload checks. View libraries are locally packed in
 those runs. [Full source CI](https://github.com/ranvier-org/Ranvier.View/actions/runs/40774290136) passed
 all 17 enabled jobs, with 781 backend tests and 12 existing ignored per supported platform, both AOT apps
-and the browser/analyzer/package gates. Final public View and GPU acceptance remain pending.
+and the browser/analyzer/package gates. [Strict public-runtime GPU integration](https://github.com/ranvier-org/Ranvier.View/actions/runs/40784192253)
+also passed all 18 jobs. Fully published normal/traced CPU/GPU consumers are checked by the
+[package acceptance workflow](../../.github/workflows/published-native-packages.yml).
 
 ```fsharp
 open Ranvier
