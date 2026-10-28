@@ -21,6 +21,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="DomRuntime.fs" />
         <Compile Include="DomEvents.fs" />
         <Compile Include="Scheduling.fs" />
         <Compile Include="Binding.fs" />

@@ -8,10 +8,9 @@ which is the runnable reference for everything in this section.
 
 ## Project
 
-Reference `Ranvier.View.Dom`; it brings in `Ranvier.View` and `Ranvier`.
+Reference `Ranvier.View.Dom`; it brings in `Ranvier.View` and `Ranvier`. Add `Fable.Ranvier.Dom`
+for the browser DOM implementation of the shared contracts. These packages restore from NuGet.
 Use this `Counter/Counter.fsproj`:
-Add the Xantham feed from [Installation](../guide/introduction.md#installation) to the application's
-`nuget.config` so the DOM type dependency restores.
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -24,6 +23,7 @@ Add the Xantham feed from [Installation](../guide/introduction.md#installation) 
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Ranvier.View.Dom" Version="0.1.1-alpha.1" />
+    <PackageReference Include="Fable.Ranvier.Dom" Version="0.1.0-alpha.1" />
     <PackageReference Update="FSharp.Core" Version="10.1.401" />
   </ItemGroup>
 </Project>
@@ -114,7 +114,7 @@ function that disposes both:
 module Main
 
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Dom
@@ -125,7 +125,7 @@ let private document: Document = jsNative
 
 let start () : unit -> unit =
     let graph = new Graph ()
-    let host = document.getElementById "app" |> Option.get
+    let host = document.getElementById "app" |> Option.ofObj |> Option.get
 
     let report (errors: exn list) =
         for error in errors do

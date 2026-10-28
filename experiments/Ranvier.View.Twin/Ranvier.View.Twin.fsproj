@@ -9,6 +9,7 @@
         <Compile Include="Tree.fs" />
         <Compile Include="Generated/Entities.fs" />
         <Compile Include="Html.fs" />
+        <Compile Include="Generated/TagTypes.fs" />
         <Compile Include="Bridge.fs" />
         <Compile Include="Events.fs" />
         <Compile Include="SelectorMembers.fs" />

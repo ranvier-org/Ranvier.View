@@ -1,7 +1,7 @@
 /// <summary>Assertions on the matches of a selector under a root; a failure raises <c>ExpectationException</c>.</summary>
 module Ranvier.View.Testing.Expect
 
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 
 exception ExpectationException of message: string with
     override this.Message = this.message
@@ -35,7 +35,7 @@ let count (root: Node) (selector: string) (expected: int) : unit =
 /// <summary>The attribute of the single match is <c>expected</c>; <c>None</c> expects it absent.</summary>
 let attribute (root: Node) (selector: string) (name: string) (expected: string option) : unit =
     let target = Query.get root selector
-    let actual = target.getAttribute name
+    let actual = target.getAttribute name |> Option.ofObj
 
     if actual <> expected then
         let show = Option.defaultValue "(absent)"

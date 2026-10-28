@@ -480,13 +480,22 @@ module Events =
     let private flagsOf (options: obj) : bool * bool * bool =
         match options with
         | :? bool as capture -> capture, false, false
-        | :? Fable.Core.TS.Dom.AddEventListenerOptions as o ->
-            if o.signal.IsSome then
+        | null -> false, false, false
+        | options ->
+            let read name =
+                let property = options.GetType().GetProperty name
+                if isNull property then null else property.GetValue options
+
+            if not (isNull (read "signal")) then
                 raise (NotSupportedException "The DOM twin does not implement AddEventListenerOptions.signal")
 
-            Option.defaultValue false o.capture, Option.defaultValue false o.once, Option.defaultValue false o.passive
-        | :? Fable.Core.TS.Dom.EventListenerOptions as o -> Option.defaultValue false o.capture, false, false
-        | _ -> false, false, false
+            let flag name =
+                match read name with
+                | :? bool as value -> value
+                | :? option<bool> as value -> Option.defaultValue false value
+                | _ -> false
+
+            flag "capture", flag "once", flag "passive"
 
     let private registered =
         lazy
@@ -498,7 +507,8 @@ module Events =
 
                  let invoke =
                      match callback with
-                     | :? (Fable.Core.TS.Dom.Event -> unit) as f -> fun (e: obj) -> f (e :?> Fable.Core.TS.Dom.Event)
+                     | :? (Ranvier.Dom.Event -> unit) as f -> fun (e: obj) -> f (e :?> Ranvier.Dom.Event)
+                     | :? Ranvier.Dom.EventListenerObject as listener -> fun (e: obj) -> listener.handleEvent (e :?> Ranvier.Dom.Event)
                      | :? (obj -> unit) as f -> f
                      | other -> raise (NotSupportedException $"The DOM twin does not accept a {other.GetType().Name} listener")
 

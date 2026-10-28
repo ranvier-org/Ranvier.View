@@ -22,7 +22,7 @@ type TwinHost private (document: TwinDocument, clock: TwinClock) =
         host
 
     interface Native.IHost with
-        member _.Document = document.Native :?> Fable.Core.TS.Dom.Document
+        member _.Document = document.Native :?> Ranvier.Dom.Document
 
         member _.QueueMicrotask callback =
             clock.Post callback
@@ -56,10 +56,10 @@ type TwinHost private (document: TwinDocument, clock: TwinClock) =
         // Through addEventListener and removeEventListener, as the JavaScript body calls them, so a case's
         // interception of those members sees the view's listeners.
         member _.Listen(target, eventName, listener) =
-            let target = target :?> Fable.Core.TS.Dom.EventTarget
-            let callback: Fable.Core.TS.Dom.Event -> unit = fun e -> listener (box e)
-            target.addEventListener (eventName, Fable.Core.U2.Case1 callback)
-            fun () -> target.removeEventListener (eventName, Fable.Core.U2.Case1 callback)
+            let target = target :?> Ranvier.Dom.EventTarget
+            let callback: Ranvier.Dom.Event -> unit = fun e -> listener (box e)
+            target.addEventListener (eventName, callback)
+            fun () -> target.removeEventListener (eventName, callback)
 
         member _.OverrideCurrentTarget(event, read) =
             (Events.eventOf event).CurrentTargetOverride <- read
@@ -76,4 +76,4 @@ type TwinHost private (document: TwinDocument, clock: TwinClock) =
 
     interface EventSpec.IEventSource with
         member _.Create spec =
-            Events.proxyOf (Events.create spec) :?> Fable.Core.TS.Dom.Event
+            Events.proxyOf (Events.create spec) :?> Ranvier.Dom.Event

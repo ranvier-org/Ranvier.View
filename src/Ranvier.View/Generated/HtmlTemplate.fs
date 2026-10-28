@@ -2,7 +2,7 @@
 [<AutoOpen>]
 module Ranvier.View.HtmlTemplate
 
-open Fable.Core.TS
+open global.Ranvier
 open Ranvier.View.Representation
 open Ranvier.View.Template
 
@@ -1045,1165 +1045,757 @@ type Groups.OptionAttributes<'inst> with
 
 type PropertyBuilder<'inst> with
     member _.``accessKey``<'native when 'native :> Dom.HTMLElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``accessKey`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``accessKey`` <- value) value
 
     member _.``accessKey``<'native when 'native :> Dom.HTMLElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``accessKey`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``accessKey`` <- value) read
 
     member _.``accessKey``<'native when 'native :> Dom.HTMLElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``accessKey`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``accessKey`` <- value) source
 
-    member _.``ariaAtomic``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
+    member _.``ariaAtomic``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-atomic") (fun (node: 'native) (value: string) -> node.``ariaAtomic`` <- value) value
+
+    member _.``ariaAtomic``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-atomic") (fun (node: 'native) (value: string) -> node.``ariaAtomic`` <- value) read
+
+    member _.``ariaAtomic``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-atomic") (fun (node: 'native) (value: string) -> node.``ariaAtomic`` <- value) source
+
+    member _.``ariaAutoComplete``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
-            (PropertyHtml.optional "aria-atomic")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaAtomic`` <- value)
+            (PropertyHtml.text "aria-autocomplete")
+            (fun (node: 'native) (value: string) -> node.``ariaAutoComplete`` <- value)
             value
 
-    member _.``ariaAtomic``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
+    member _.``ariaAutoComplete``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
-            (PropertyHtml.optional "aria-atomic")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaAtomic`` <- value)
+            (PropertyHtml.text "aria-autocomplete")
+            (fun (node: 'native) (value: string) -> node.``ariaAutoComplete`` <- value)
             read
 
-    member _.``ariaAtomic``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaAutoComplete``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-atomic")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaAtomic`` <- value)
+            (PropertyHtml.text "aria-autocomplete")
+            (fun (node: 'native) (value: string) -> node.``ariaAutoComplete`` <- value)
             source
 
-    member _.``ariaAutoComplete``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
+    member _.``ariaBrailleLabel``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
-            (PropertyHtml.optional "aria-autocomplete")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaAutoComplete`` <- value)
+            (PropertyHtml.text "aria-braillelabel")
+            (fun (node: 'native) (value: string) -> node.``ariaBrailleLabel`` <- value)
             value
 
-    member _.``ariaAutoComplete``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
+    member _.``ariaBrailleLabel``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
-            (PropertyHtml.optional "aria-autocomplete")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaAutoComplete`` <- value)
+            (PropertyHtml.text "aria-braillelabel")
+            (fun (node: 'native) (value: string) -> node.``ariaBrailleLabel`` <- value)
             read
 
-    member _.``ariaAutoComplete``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaBrailleLabel``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-autocomplete")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaAutoComplete`` <- value)
+            (PropertyHtml.text "aria-braillelabel")
+            (fun (node: 'native) (value: string) -> node.``ariaBrailleLabel`` <- value)
             source
 
-    member _.``ariaBrailleLabel``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
+    member _.``ariaBrailleRoleDescription``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
-            (PropertyHtml.optional "aria-braillelabel")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaBrailleLabel`` <- value)
+            (PropertyHtml.text "aria-brailleroledescription")
+            (fun (node: 'native) (value: string) -> node.``ariaBrailleRoleDescription`` <- value)
             value
 
-    member _.``ariaBrailleLabel``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
+    member _.``ariaBrailleRoleDescription``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
-            (PropertyHtml.optional "aria-braillelabel")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaBrailleLabel`` <- value)
+            (PropertyHtml.text "aria-brailleroledescription")
+            (fun (node: 'native) (value: string) -> node.``ariaBrailleRoleDescription`` <- value)
             read
 
-    member _.``ariaBrailleLabel``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaBrailleRoleDescription``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-braillelabel")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaBrailleLabel`` <- value)
+            (PropertyHtml.text "aria-brailleroledescription")
+            (fun (node: 'native) (value: string) -> node.``ariaBrailleRoleDescription`` <- value)
             source
 
-    member _.``ariaBrailleRoleDescription``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-brailleroledescription")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaBrailleRoleDescription`` <- value)
-            value
+    member _.``ariaBusy``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-busy") (fun (node: 'native) (value: string) -> node.``ariaBusy`` <- value) value
 
-    member _.``ariaBrailleRoleDescription``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-brailleroledescription")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaBrailleRoleDescription`` <- value)
-            read
+    member _.``ariaBusy``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-busy") (fun (node: 'native) (value: string) -> node.``ariaBusy`` <- value) read
 
-    member _.``ariaBrailleRoleDescription``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaBusy``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-busy") (fun (node: 'native) (value: string) -> node.``ariaBusy`` <- value) source
+
+    member _.``ariaChecked``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-checked") (fun (node: 'native) (value: string) -> node.``ariaChecked`` <- value) value
+
+    member _.``ariaChecked``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-checked") (fun (node: 'native) (value: string) -> node.``ariaChecked`` <- value) read
+
+    member _.``ariaChecked``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-checked") (fun (node: 'native) (value: string) -> node.``ariaChecked`` <- value) source
+
+    member _.``ariaColCount``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-colcount") (fun (node: 'native) (value: string) -> node.``ariaColCount`` <- value) value
+
+    member _.``ariaColCount``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-colcount") (fun (node: 'native) (value: string) -> node.``ariaColCount`` <- value) read
+
+    member _.``ariaColCount``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-brailleroledescription")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaBrailleRoleDescription`` <- value)
+            (PropertyHtml.text "aria-colcount")
+            (fun (node: 'native) (value: string) -> node.``ariaColCount`` <- value)
             source
 
-    member _.``ariaBusy``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-busy")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaBusy`` <- value)
-            value
+    member _.``ariaColIndex``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-colindex") (fun (node: 'native) (value: string) -> node.``ariaColIndex`` <- value) value
 
-    member _.``ariaBusy``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-busy")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaBusy`` <- value)
-            read
+    member _.``ariaColIndex``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-colindex") (fun (node: 'native) (value: string) -> node.``ariaColIndex`` <- value) read
 
-    member _.``ariaBusy``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaColIndex``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-busy")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaBusy`` <- value)
+            (PropertyHtml.text "aria-colindex")
+            (fun (node: 'native) (value: string) -> node.``ariaColIndex`` <- value)
             source
 
-    member _.``ariaChecked``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
+    member _.``ariaColIndexText``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
-            (PropertyHtml.optional "aria-checked")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaChecked`` <- value)
+            (PropertyHtml.text "aria-colindextext")
+            (fun (node: 'native) (value: string) -> node.``ariaColIndexText`` <- value)
             value
 
-    member _.``ariaChecked``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
+    member _.``ariaColIndexText``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
-            (PropertyHtml.optional "aria-checked")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaChecked`` <- value)
+            (PropertyHtml.text "aria-colindextext")
+            (fun (node: 'native) (value: string) -> node.``ariaColIndexText`` <- value)
             read
 
-    member _.``ariaChecked``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaColIndexText``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-checked")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaChecked`` <- value)
+            (PropertyHtml.text "aria-colindextext")
+            (fun (node: 'native) (value: string) -> node.``ariaColIndexText`` <- value)
             source
 
-    member _.``ariaColCount``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-colcount")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaColCount`` <- value)
-            value
+    member _.``ariaColSpan``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-colspan") (fun (node: 'native) (value: string) -> node.``ariaColSpan`` <- value) value
 
-    member _.``ariaColCount``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
+    member _.``ariaColSpan``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-colspan") (fun (node: 'native) (value: string) -> node.``ariaColSpan`` <- value) read
+
+    member _.``ariaColSpan``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-colspan") (fun (node: 'native) (value: string) -> node.``ariaColSpan`` <- value) source
+
+    member _.``ariaCurrent``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-current") (fun (node: 'native) (value: string) -> node.``ariaCurrent`` <- value) value
+
+    member _.``ariaCurrent``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-current") (fun (node: 'native) (value: string) -> node.``ariaCurrent`` <- value) read
+
+    member _.``ariaCurrent``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-current") (fun (node: 'native) (value: string) -> node.``ariaCurrent`` <- value) source
+
+    member _.``ariaDescription``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-description") (fun (node: 'native) (value: string) -> node.``ariaDescription`` <- value) value
+
+    member _.``ariaDescription``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
-            (PropertyHtml.optional "aria-colcount")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaColCount`` <- value)
+            (PropertyHtml.text "aria-description")
+            (fun (node: 'native) (value: string) -> node.``ariaDescription`` <- value)
             read
 
-    member _.``ariaColCount``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaDescription``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-colcount")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaColCount`` <- value)
+            (PropertyHtml.text "aria-description")
+            (fun (node: 'native) (value: string) -> node.``ariaDescription`` <- value)
             source
 
-    member _.``ariaColIndex``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-colindex")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaColIndex`` <- value)
-            value
+    member _.``ariaDisabled``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-disabled") (fun (node: 'native) (value: string) -> node.``ariaDisabled`` <- value) value
 
-    member _.``ariaColIndex``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-colindex")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaColIndex`` <- value)
-            read
+    member _.``ariaDisabled``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-disabled") (fun (node: 'native) (value: string) -> node.``ariaDisabled`` <- value) read
 
-    member _.``ariaColIndex``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaDisabled``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-colindex")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaColIndex`` <- value)
+            (PropertyHtml.text "aria-disabled")
+            (fun (node: 'native) (value: string) -> node.``ariaDisabled`` <- value)
             source
 
-    member _.``ariaColIndexText``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-colindextext")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaColIndexText`` <- value)
-            value
+    member _.``ariaExpanded``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-expanded") (fun (node: 'native) (value: string) -> node.``ariaExpanded`` <- value) value
 
-    member _.``ariaColIndexText``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-colindextext")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaColIndexText`` <- value)
-            read
+    member _.``ariaExpanded``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-expanded") (fun (node: 'native) (value: string) -> node.``ariaExpanded`` <- value) read
 
-    member _.``ariaColIndexText``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaExpanded``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-colindextext")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaColIndexText`` <- value)
+            (PropertyHtml.text "aria-expanded")
+            (fun (node: 'native) (value: string) -> node.``ariaExpanded`` <- value)
             source
 
-    member _.``ariaColSpan``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-colspan")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaColSpan`` <- value)
-            value
+    member _.``ariaHasPopup``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-haspopup") (fun (node: 'native) (value: string) -> node.``ariaHasPopup`` <- value) value
 
-    member _.``ariaColSpan``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-colspan")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaColSpan`` <- value)
-            read
+    member _.``ariaHasPopup``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-haspopup") (fun (node: 'native) (value: string) -> node.``ariaHasPopup`` <- value) read
 
-    member _.``ariaColSpan``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaHasPopup``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-colspan")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaColSpan`` <- value)
+            (PropertyHtml.text "aria-haspopup")
+            (fun (node: 'native) (value: string) -> node.``ariaHasPopup`` <- value)
             source
 
-    member _.``ariaCurrent``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
+    member _.``ariaHidden``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-hidden") (fun (node: 'native) (value: string) -> node.``ariaHidden`` <- value) value
+
+    member _.``ariaHidden``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-hidden") (fun (node: 'native) (value: string) -> node.``ariaHidden`` <- value) read
+
+    member _.``ariaHidden``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-hidden") (fun (node: 'native) (value: string) -> node.``ariaHidden`` <- value) source
+
+    member _.``ariaInvalid``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-invalid") (fun (node: 'native) (value: string) -> node.``ariaInvalid`` <- value) value
+
+    member _.``ariaInvalid``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-invalid") (fun (node: 'native) (value: string) -> node.``ariaInvalid`` <- value) read
+
+    member _.``ariaInvalid``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-invalid") (fun (node: 'native) (value: string) -> node.``ariaInvalid`` <- value) source
+
+    member _.``ariaKeyShortcuts``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
-            (PropertyHtml.optional "aria-current")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaCurrent`` <- value)
+            (PropertyHtml.text "aria-keyshortcuts")
+            (fun (node: 'native) (value: string) -> node.``ariaKeyShortcuts`` <- value)
             value
 
-    member _.``ariaCurrent``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
+    member _.``ariaKeyShortcuts``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
-            (PropertyHtml.optional "aria-current")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaCurrent`` <- value)
+            (PropertyHtml.text "aria-keyshortcuts")
+            (fun (node: 'native) (value: string) -> node.``ariaKeyShortcuts`` <- value)
             read
 
-    member _.``ariaCurrent``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaKeyShortcuts``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-current")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaCurrent`` <- value)
+            (PropertyHtml.text "aria-keyshortcuts")
+            (fun (node: 'native) (value: string) -> node.``ariaKeyShortcuts`` <- value)
             source
 
-    member _.``ariaDescription``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-description")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaDescription`` <- value)
-            value
+    member _.``ariaLabel``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-label") (fun (node: 'native) (value: string) -> node.``ariaLabel`` <- value) value
 
-    member _.``ariaDescription``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-description")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaDescription`` <- value)
-            read
+    member _.``ariaLabel``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-label") (fun (node: 'native) (value: string) -> node.``ariaLabel`` <- value) read
 
-    member _.``ariaDescription``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaLabel``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-label") (fun (node: 'native) (value: string) -> node.``ariaLabel`` <- value) source
+
+    member _.``ariaLevel``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-level") (fun (node: 'native) (value: string) -> node.``ariaLevel`` <- value) value
+
+    member _.``ariaLevel``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-level") (fun (node: 'native) (value: string) -> node.``ariaLevel`` <- value) read
+
+    member _.``ariaLevel``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-level") (fun (node: 'native) (value: string) -> node.``ariaLevel`` <- value) source
+
+    member _.``ariaLive``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-live") (fun (node: 'native) (value: string) -> node.``ariaLive`` <- value) value
+
+    member _.``ariaLive``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-live") (fun (node: 'native) (value: string) -> node.``ariaLive`` <- value) read
+
+    member _.``ariaLive``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-live") (fun (node: 'native) (value: string) -> node.``ariaLive`` <- value) source
+
+    member _.``ariaModal``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-modal") (fun (node: 'native) (value: string) -> node.``ariaModal`` <- value) value
+
+    member _.``ariaModal``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-modal") (fun (node: 'native) (value: string) -> node.``ariaModal`` <- value) read
+
+    member _.``ariaModal``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-modal") (fun (node: 'native) (value: string) -> node.``ariaModal`` <- value) source
+
+    member _.``ariaMultiLine``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-multiline") (fun (node: 'native) (value: string) -> node.``ariaMultiLine`` <- value) value
+
+    member _.``ariaMultiLine``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-multiline") (fun (node: 'native) (value: string) -> node.``ariaMultiLine`` <- value) read
+
+    member _.``ariaMultiLine``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-description")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaDescription`` <- value)
+            (PropertyHtml.text "aria-multiline")
+            (fun (node: 'native) (value: string) -> node.``ariaMultiLine`` <- value)
             source
 
-    member _.``ariaDisabled``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
+    member _.``ariaMultiSelectable``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
-            (PropertyHtml.optional "aria-disabled")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaDisabled`` <- value)
+            (PropertyHtml.text "aria-multiselectable")
+            (fun (node: 'native) (value: string) -> node.``ariaMultiSelectable`` <- value)
             value
 
-    member _.``ariaDisabled``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
+    member _.``ariaMultiSelectable``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
-            (PropertyHtml.optional "aria-disabled")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaDisabled`` <- value)
+            (PropertyHtml.text "aria-multiselectable")
+            (fun (node: 'native) (value: string) -> node.``ariaMultiSelectable`` <- value)
             read
 
-    member _.``ariaDisabled``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaMultiSelectable``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-disabled")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaDisabled`` <- value)
+            (PropertyHtml.text "aria-multiselectable")
+            (fun (node: 'native) (value: string) -> node.``ariaMultiSelectable`` <- value)
             source
 
-    member _.``ariaExpanded``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-expanded")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaExpanded`` <- value)
-            value
+    member _.``ariaOrientation``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-orientation") (fun (node: 'native) (value: string) -> node.``ariaOrientation`` <- value) value
 
-    member _.``ariaExpanded``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
+    member _.``ariaOrientation``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
-            (PropertyHtml.optional "aria-expanded")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaExpanded`` <- value)
+            (PropertyHtml.text "aria-orientation")
+            (fun (node: 'native) (value: string) -> node.``ariaOrientation`` <- value)
             read
 
-    member _.``ariaExpanded``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaOrientation``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-expanded")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaExpanded`` <- value)
+            (PropertyHtml.text "aria-orientation")
+            (fun (node: 'native) (value: string) -> node.``ariaOrientation`` <- value)
             source
 
-    member _.``ariaHasPopup``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-haspopup")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaHasPopup`` <- value)
-            value
+    member _.``ariaPlaceholder``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-placeholder") (fun (node: 'native) (value: string) -> node.``ariaPlaceholder`` <- value) value
 
-    member _.``ariaHasPopup``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
+    member _.``ariaPlaceholder``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
-            (PropertyHtml.optional "aria-haspopup")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaHasPopup`` <- value)
+            (PropertyHtml.text "aria-placeholder")
+            (fun (node: 'native) (value: string) -> node.``ariaPlaceholder`` <- value)
             read
 
-    member _.``ariaHasPopup``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaPlaceholder``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-haspopup")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaHasPopup`` <- value)
+            (PropertyHtml.text "aria-placeholder")
+            (fun (node: 'native) (value: string) -> node.``ariaPlaceholder`` <- value)
             source
 
-    member _.``ariaHidden``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-hidden")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaHidden`` <- value)
-            value
+    member _.``ariaPosInSet``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-posinset") (fun (node: 'native) (value: string) -> node.``ariaPosInSet`` <- value) value
 
-    member _.``ariaHidden``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-hidden")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaHidden`` <- value)
-            read
+    member _.``ariaPosInSet``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-posinset") (fun (node: 'native) (value: string) -> node.``ariaPosInSet`` <- value) read
 
-    member _.``ariaHidden``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaPosInSet``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-hidden")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaHidden`` <- value)
+            (PropertyHtml.text "aria-posinset")
+            (fun (node: 'native) (value: string) -> node.``ariaPosInSet`` <- value)
             source
 
-    member _.``ariaInvalid``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-invalid")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaInvalid`` <- value)
-            value
+    member _.``ariaPressed``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-pressed") (fun (node: 'native) (value: string) -> node.``ariaPressed`` <- value) value
 
-    member _.``ariaInvalid``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-invalid")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaInvalid`` <- value)
-            read
+    member _.``ariaPressed``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-pressed") (fun (node: 'native) (value: string) -> node.``ariaPressed`` <- value) read
 
-    member _.``ariaInvalid``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaPressed``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-pressed") (fun (node: 'native) (value: string) -> node.``ariaPressed`` <- value) source
+
+    member _.``ariaReadOnly``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-readonly") (fun (node: 'native) (value: string) -> node.``ariaReadOnly`` <- value) value
+
+    member _.``ariaReadOnly``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-readonly") (fun (node: 'native) (value: string) -> node.``ariaReadOnly`` <- value) read
+
+    member _.``ariaReadOnly``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-invalid")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaInvalid`` <- value)
+            (PropertyHtml.text "aria-readonly")
+            (fun (node: 'native) (value: string) -> node.``ariaReadOnly`` <- value)
             source
 
-    member _.``ariaKeyShortcuts``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-keyshortcuts")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaKeyShortcuts`` <- value)
-            value
+    member _.``ariaRelevant``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-relevant") (fun (node: 'native) (value: string) -> node.``ariaRelevant`` <- value) value
 
-    member _.``ariaKeyShortcuts``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-keyshortcuts")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaKeyShortcuts`` <- value)
-            read
+    member _.``ariaRelevant``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-relevant") (fun (node: 'native) (value: string) -> node.``ariaRelevant`` <- value) read
 
-    member _.``ariaKeyShortcuts``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaRelevant``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-keyshortcuts")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaKeyShortcuts`` <- value)
+            (PropertyHtml.text "aria-relevant")
+            (fun (node: 'native) (value: string) -> node.``ariaRelevant`` <- value)
             source
 
-    member _.``ariaLabel``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-label")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaLabel`` <- value)
-            value
+    member _.``ariaRequired``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-required") (fun (node: 'native) (value: string) -> node.``ariaRequired`` <- value) value
 
-    member _.``ariaLabel``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-label")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaLabel`` <- value)
-            read
+    member _.``ariaRequired``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-required") (fun (node: 'native) (value: string) -> node.``ariaRequired`` <- value) read
 
-    member _.``ariaLabel``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaRequired``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-label")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaLabel`` <- value)
+            (PropertyHtml.text "aria-required")
+            (fun (node: 'native) (value: string) -> node.``ariaRequired`` <- value)
             source
 
-    member _.``ariaLevel``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
+    member _.``ariaRoleDescription``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
-            (PropertyHtml.optional "aria-level")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaLevel`` <- value)
+            (PropertyHtml.text "aria-roledescription")
+            (fun (node: 'native) (value: string) -> node.``ariaRoleDescription`` <- value)
             value
 
-    member _.``ariaLevel``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
+    member _.``ariaRoleDescription``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
-            (PropertyHtml.optional "aria-level")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaLevel`` <- value)
+            (PropertyHtml.text "aria-roledescription")
+            (fun (node: 'native) (value: string) -> node.``ariaRoleDescription`` <- value)
             read
 
-    member _.``ariaLevel``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaRoleDescription``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-level")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaLevel`` <- value)
+            (PropertyHtml.text "aria-roledescription")
+            (fun (node: 'native) (value: string) -> node.``ariaRoleDescription`` <- value)
             source
 
-    member _.``ariaLive``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-live")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaLive`` <- value)
-            value
+    member _.``ariaRowCount``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-rowcount") (fun (node: 'native) (value: string) -> node.``ariaRowCount`` <- value) value
 
-    member _.``ariaLive``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-live")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaLive`` <- value)
-            read
+    member _.``ariaRowCount``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-rowcount") (fun (node: 'native) (value: string) -> node.``ariaRowCount`` <- value) read
 
-    member _.``ariaLive``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaRowCount``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-live")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaLive`` <- value)
+            (PropertyHtml.text "aria-rowcount")
+            (fun (node: 'native) (value: string) -> node.``ariaRowCount`` <- value)
             source
 
-    member _.``ariaModal``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-modal")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaModal`` <- value)
-            value
+    member _.``ariaRowIndex``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-rowindex") (fun (node: 'native) (value: string) -> node.``ariaRowIndex`` <- value) value
 
-    member _.``ariaModal``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-modal")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaModal`` <- value)
-            read
+    member _.``ariaRowIndex``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-rowindex") (fun (node: 'native) (value: string) -> node.``ariaRowIndex`` <- value) read
 
-    member _.``ariaModal``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaRowIndex``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-modal")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaModal`` <- value)
+            (PropertyHtml.text "aria-rowindex")
+            (fun (node: 'native) (value: string) -> node.``ariaRowIndex`` <- value)
             source
 
-    member _.``ariaMultiLine``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
+    member _.``ariaRowIndexText``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
-            (PropertyHtml.optional "aria-multiline")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaMultiLine`` <- value)
+            (PropertyHtml.text "aria-rowindextext")
+            (fun (node: 'native) (value: string) -> node.``ariaRowIndexText`` <- value)
             value
 
-    member _.``ariaMultiLine``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
+    member _.``ariaRowIndexText``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
-            (PropertyHtml.optional "aria-multiline")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaMultiLine`` <- value)
+            (PropertyHtml.text "aria-rowindextext")
+            (fun (node: 'native) (value: string) -> node.``ariaRowIndexText`` <- value)
             read
 
-    member _.``ariaMultiLine``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaRowIndexText``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-multiline")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaMultiLine`` <- value)
+            (PropertyHtml.text "aria-rowindextext")
+            (fun (node: 'native) (value: string) -> node.``ariaRowIndexText`` <- value)
             source
 
-    member _.``ariaMultiSelectable``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-multiselectable")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaMultiSelectable`` <- value)
-            value
+    member _.``ariaRowSpan``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-rowspan") (fun (node: 'native) (value: string) -> node.``ariaRowSpan`` <- value) value
 
-    member _.``ariaMultiSelectable``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-multiselectable")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaMultiSelectable`` <- value)
-            read
+    member _.``ariaRowSpan``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-rowspan") (fun (node: 'native) (value: string) -> node.``ariaRowSpan`` <- value) read
 
-    member _.``ariaMultiSelectable``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaRowSpan``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-rowspan") (fun (node: 'native) (value: string) -> node.``ariaRowSpan`` <- value) source
+
+    member _.``ariaSelected``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-selected") (fun (node: 'native) (value: string) -> node.``ariaSelected`` <- value) value
+
+    member _.``ariaSelected``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-selected") (fun (node: 'native) (value: string) -> node.``ariaSelected`` <- value) read
+
+    member _.``ariaSelected``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-multiselectable")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaMultiSelectable`` <- value)
+            (PropertyHtml.text "aria-selected")
+            (fun (node: 'native) (value: string) -> node.``ariaSelected`` <- value)
             source
 
-    member _.``ariaOrientation``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-orientation")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaOrientation`` <- value)
-            value
+    member _.``ariaSetSize``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-setsize") (fun (node: 'native) (value: string) -> node.``ariaSetSize`` <- value) value
 
-    member _.``ariaOrientation``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-orientation")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaOrientation`` <- value)
-            read
+    member _.``ariaSetSize``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-setsize") (fun (node: 'native) (value: string) -> node.``ariaSetSize`` <- value) read
 
-    member _.``ariaOrientation``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaSetSize``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-setsize") (fun (node: 'native) (value: string) -> node.``ariaSetSize`` <- value) source
+
+    member _.``ariaSort``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-sort") (fun (node: 'native) (value: string) -> node.``ariaSort`` <- value) value
+
+    member _.``ariaSort``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-sort") (fun (node: 'native) (value: string) -> node.``ariaSort`` <- value) read
+
+    member _.``ariaSort``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.text "aria-sort") (fun (node: 'native) (value: string) -> node.``ariaSort`` <- value) source
+
+    member _.``ariaValueMax``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-valuemax") (fun (node: 'native) (value: string) -> node.``ariaValueMax`` <- value) value
+
+    member _.``ariaValueMax``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-valuemax") (fun (node: 'native) (value: string) -> node.``ariaValueMax`` <- value) read
+
+    member _.``ariaValueMax``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-orientation")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaOrientation`` <- value)
+            (PropertyHtml.text "aria-valuemax")
+            (fun (node: 'native) (value: string) -> node.``ariaValueMax`` <- value)
             source
 
-    member _.``ariaPlaceholder``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-placeholder")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaPlaceholder`` <- value)
-            value
+    member _.``ariaValueMin``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-valuemin") (fun (node: 'native) (value: string) -> node.``ariaValueMin`` <- value) value
 
-    member _.``ariaPlaceholder``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-placeholder")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaPlaceholder`` <- value)
-            read
+    member _.``ariaValueMin``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-valuemin") (fun (node: 'native) (value: string) -> node.``ariaValueMin`` <- value) read
 
-    member _.``ariaPlaceholder``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaValueMin``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-placeholder")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaPlaceholder`` <- value)
+            (PropertyHtml.text "aria-valuemin")
+            (fun (node: 'native) (value: string) -> node.``ariaValueMin`` <- value)
             source
 
-    member _.``ariaPosInSet``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-posinset")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaPosInSet`` <- value)
-            value
+    member _.``ariaValueNow``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-valuenow") (fun (node: 'native) (value: string) -> node.``ariaValueNow`` <- value) value
 
-    member _.``ariaPosInSet``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-posinset")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaPosInSet`` <- value)
-            read
+    member _.``ariaValueNow``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-valuenow") (fun (node: 'native) (value: string) -> node.``ariaValueNow`` <- value) read
 
-    member _.``ariaPosInSet``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaValueNow``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-posinset")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaPosInSet`` <- value)
+            (PropertyHtml.text "aria-valuenow")
+            (fun (node: 'native) (value: string) -> node.``ariaValueNow`` <- value)
             source
 
-    member _.``ariaPressed``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-pressed")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaPressed`` <- value)
-            value
+    member _.``ariaValueText``<'native when 'native :> Dom.ARIAMixin>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.text "aria-valuetext") (fun (node: 'native) (value: string) -> node.``ariaValueText`` <- value) value
 
-    member _.``ariaPressed``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-pressed")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaPressed`` <- value)
-            read
+    member _.``ariaValueText``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.text "aria-valuetext") (fun (node: 'native) (value: string) -> node.``ariaValueText`` <- value) read
 
-    member _.``ariaPressed``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``ariaValueText``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-pressed")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaPressed`` <- value)
-            source
-
-    member _.``ariaReadOnly``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-readonly")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaReadOnly`` <- value)
-            value
-
-    member _.``ariaReadOnly``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-readonly")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaReadOnly`` <- value)
-            read
-
-    member _.``ariaReadOnly``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-readonly")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaReadOnly`` <- value)
-            source
-
-    member _.``ariaRelevant``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-relevant")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRelevant`` <- value)
-            value
-
-    member _.``ariaRelevant``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-relevant")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRelevant`` <- value)
-            read
-
-    member _.``ariaRelevant``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-relevant")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRelevant`` <- value)
-            source
-
-    member _.``ariaRequired``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-required")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRequired`` <- value)
-            value
-
-    member _.``ariaRequired``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-required")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRequired`` <- value)
-            read
-
-    member _.``ariaRequired``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-required")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRequired`` <- value)
-            source
-
-    member _.``ariaRoleDescription``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-roledescription")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRoleDescription`` <- value)
-            value
-
-    member _.``ariaRoleDescription``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-roledescription")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRoleDescription`` <- value)
-            read
-
-    member _.``ariaRoleDescription``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-roledescription")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRoleDescription`` <- value)
-            source
-
-    member _.``ariaRowCount``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-rowcount")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRowCount`` <- value)
-            value
-
-    member _.``ariaRowCount``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-rowcount")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRowCount`` <- value)
-            read
-
-    member _.``ariaRowCount``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-rowcount")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRowCount`` <- value)
-            source
-
-    member _.``ariaRowIndex``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-rowindex")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRowIndex`` <- value)
-            value
-
-    member _.``ariaRowIndex``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-rowindex")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRowIndex`` <- value)
-            read
-
-    member _.``ariaRowIndex``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-rowindex")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRowIndex`` <- value)
-            source
-
-    member _.``ariaRowIndexText``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-rowindextext")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRowIndexText`` <- value)
-            value
-
-    member _.``ariaRowIndexText``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-rowindextext")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRowIndexText`` <- value)
-            read
-
-    member _.``ariaRowIndexText``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-rowindextext")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRowIndexText`` <- value)
-            source
-
-    member _.``ariaRowSpan``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-rowspan")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRowSpan`` <- value)
-            value
-
-    member _.``ariaRowSpan``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-rowspan")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRowSpan`` <- value)
-            read
-
-    member _.``ariaRowSpan``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-rowspan")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaRowSpan`` <- value)
-            source
-
-    member _.``ariaSelected``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-selected")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaSelected`` <- value)
-            value
-
-    member _.``ariaSelected``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-selected")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaSelected`` <- value)
-            read
-
-    member _.``ariaSelected``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-selected")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaSelected`` <- value)
-            source
-
-    member _.``ariaSetSize``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-setsize")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaSetSize`` <- value)
-            value
-
-    member _.``ariaSetSize``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-setsize")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaSetSize`` <- value)
-            read
-
-    member _.``ariaSetSize``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-setsize")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaSetSize`` <- value)
-            source
-
-    member _.``ariaSort``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-sort")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaSort`` <- value)
-            value
-
-    member _.``ariaSort``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-sort")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaSort`` <- value)
-            read
-
-    member _.``ariaSort``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-sort")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaSort`` <- value)
-            source
-
-    member _.``ariaValueMax``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-valuemax")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaValueMax`` <- value)
-            value
-
-    member _.``ariaValueMax``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-valuemax")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaValueMax`` <- value)
-            read
-
-    member _.``ariaValueMax``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-valuemax")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaValueMax`` <- value)
-            source
-
-    member _.``ariaValueMin``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-valuemin")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaValueMin`` <- value)
-            value
-
-    member _.``ariaValueMin``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-valuemin")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaValueMin`` <- value)
-            read
-
-    member _.``ariaValueMin``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-valuemin")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaValueMin`` <- value)
-            source
-
-    member _.``ariaValueNow``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-valuenow")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaValueNow`` <- value)
-            value
-
-    member _.``ariaValueNow``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-valuenow")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaValueNow`` <- value)
-            read
-
-    member _.``ariaValueNow``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-valuenow")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaValueNow`` <- value)
-            source
-
-    member _.``ariaValueText``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.optional "aria-valuetext")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaValueText`` <- value)
-            value
-
-    member _.``ariaValueText``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.optional "aria-valuetext")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaValueText`` <- value)
-            read
-
-    member _.``ariaValueText``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.optional "aria-valuetext")
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``ariaValueText`` <- value)
+            (PropertyHtml.text "aria-valuetext")
+            (fun (node: 'native) (value: string) -> node.``ariaValueText`` <- value)
             source
 
     member _.``autocapitalize``<'native when 'native :> Dom.HTMLElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``autocapitalize`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocapitalize`` <- value) value
 
     member _.``autocapitalize``<'native when 'native :> Dom.HTMLElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``autocapitalize`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocapitalize`` <- value) read
 
     member _.``autocapitalize``<'native when 'native :> Dom.HTMLElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``autocapitalize`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocapitalize`` <- value) source
 
     member _.``autocorrect``<'native when 'native :> Dom.HTMLElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``autocorrect`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``autocorrect`` <- value) value
 
     member _.``autocorrect``<'native when 'native :> Dom.HTMLElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``autocorrect`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``autocorrect`` <- value) read
 
     member _.``autocorrect``<'native when 'native :> Dom.HTMLElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``autocorrect`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``autocorrect`` <- value) source
 
     member _.``autofocus``<'native when 'native :> Dom.HTMLOrSVGElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOrSVGElement).``autofocus`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``autofocus`` <- value) value
 
     member _.``autofocus``<'native when 'native :> Dom.HTMLOrSVGElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOrSVGElement).``autofocus`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``autofocus`` <- value) read
 
     member _.``autofocus``<'native when 'native :> Dom.HTMLOrSVGElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOrSVGElement).``autofocus`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``autofocus`` <- value) source
 
     member _.``className``<'native when 'native :> Dom.Element>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property (PropertyHtml.text "class") (fun (node: 'native) (value: string) -> (node :> Dom.Element).``className`` <- value) value
+        TemplateParts.property (PropertyHtml.text "class") (fun (node: 'native) (value: string) -> node.``className`` <- value) value
 
     member _.``className``<'native when 'native :> Dom.Element>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.text "class")
-            (fun (node: 'native) (value: string) -> (node :> Dom.Element).``className`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.text "class") (fun (node: 'native) (value: string) -> node.``className`` <- value) read
 
     member _.``className``<'native when 'native :> Dom.Element>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.text "class")
-            (fun (node: 'native) (value: string) -> (node :> Dom.Element).``className`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.text "class") (fun (node: 'native) (value: string) -> node.``className`` <- value) source
 
     member _.``contentEditable``<'native when 'native :> Dom.ElementContentEditable>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.ElementContentEditable).``contentEditable`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``contentEditable`` <- value) value
 
     member _.``contentEditable``<'native when 'native :> Dom.ElementContentEditable>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.ElementContentEditable).``contentEditable`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``contentEditable`` <- value) read
 
     member _.``contentEditable``<'native when 'native :> Dom.ElementContentEditable>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.ElementContentEditable).``contentEditable`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``contentEditable`` <- value) source
 
     member _.``dir``<'native when 'native :> Dom.HTMLElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``dir`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``dir`` <- value) value
 
     member _.``dir``<'native when 'native :> Dom.HTMLElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``dir`` <- value) read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``dir`` <- value) read
 
     member _.``dir``<'native when 'native :> Dom.HTMLElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``dir`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``dir`` <- value) source
 
     member _.``draggable``<'native when 'native :> Dom.HTMLElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``draggable`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``draggable`` <- value) value
 
     member _.``draggable``<'native when 'native :> Dom.HTMLElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``draggable`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``draggable`` <- value) read
 
     member _.``draggable``<'native when 'native :> Dom.HTMLElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``draggable`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``draggable`` <- value) source
 
     member _.``enterKeyHint``<'native when 'native :> Dom.ElementContentEditable>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.ElementContentEditable).``enterKeyHint`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``enterKeyHint`` <- value) value
 
     member _.``enterKeyHint``<'native when 'native :> Dom.ElementContentEditable>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.ElementContentEditable).``enterKeyHint`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``enterKeyHint`` <- value) read
 
     member _.``enterKeyHint``<'native when 'native :> Dom.ElementContentEditable>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.ElementContentEditable).``enterKeyHint`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``enterKeyHint`` <- value) source
 
     member _.``id``<'native when 'native :> Dom.Element>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property (PropertyHtml.text "id") (fun (node: 'native) (value: string) -> (node :> Dom.Element).``id`` <- value) value
+        TemplateParts.property (PropertyHtml.text "id") (fun (node: 'native) (value: string) -> node.``id`` <- value) value
 
     member _.``id``<'native when 'native :> Dom.Element>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty (PropertyHtml.text "id") (fun (node: 'native) (value: string) -> (node :> Dom.Element).``id`` <- value) read
+        TemplateParts.readProperty (PropertyHtml.text "id") (fun (node: 'native) (value: string) -> node.``id`` <- value) read
 
     member _.``id``<'native when 'native :> Dom.Element>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty (PropertyHtml.text "id") (fun (node: 'native) (value: string) -> (node :> Dom.Element).``id`` <- value) source
+        TemplateParts.sourceProperty (PropertyHtml.text "id") (fun (node: 'native) (value: string) -> node.``id`` <- value) source
 
     member _.``inert``<'native when 'native :> Dom.HTMLElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``inert`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``inert`` <- value) value
 
     member _.``inert``<'native when 'native :> Dom.HTMLElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``inert`` <- value) read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``inert`` <- value) read
 
     member _.``inert``<'native when 'native :> Dom.HTMLElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``inert`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``inert`` <- value) source
 
     member _.``inputMode``<'native when 'native :> Dom.ElementContentEditable>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.ElementContentEditable).``inputMode`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``inputMode`` <- value) value
 
     member _.``inputMode``<'native when 'native :> Dom.ElementContentEditable>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.ElementContentEditable).``inputMode`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``inputMode`` <- value) read
 
     member _.``inputMode``<'native when 'native :> Dom.ElementContentEditable>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.ElementContentEditable).``inputMode`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``inputMode`` <- value) source
 
     member _.``lang``<'native when 'native :> Dom.HTMLElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``lang`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``lang`` <- value) value
 
     member _.``lang``<'native when 'native :> Dom.HTMLElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``lang`` <- value) read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``lang`` <- value) read
 
     member _.``lang``<'native when 'native :> Dom.HTMLElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``lang`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``lang`` <- value) source
 
-    member _.``nodeValue``<'native when 'native :> Dom.Node>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.Node).``nodeValue`` <- value)
-            value
+    member _.``nodeValue``<'native when 'native :> Dom.Node>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``nodeValue`` <- value) value
 
-    member _.``nodeValue``<'native when 'native :> Dom.Node>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.Node).``nodeValue`` <- value)
-            read
+    member _.``nodeValue``<'native when 'native :> Dom.Node>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``nodeValue`` <- value) read
 
-    member _.``nodeValue``<'native when 'native :> Dom.Node>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.Node).``nodeValue`` <- value)
-            source
+    member _.``nodeValue``<'native when 'native :> Dom.Node>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``nodeValue`` <- value) source
 
     member _.``nonce``<'native when 'native :> Dom.HTMLOrSVGElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOrSVGElement).``nonce`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``nonce`` <- value) value
 
     member _.``nonce``<'native when 'native :> Dom.HTMLOrSVGElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOrSVGElement).``nonce`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``nonce`` <- value) read
 
     member _.``nonce``<'native when 'native :> Dom.HTMLOrSVGElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOrSVGElement).``nonce`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``nonce`` <- value) source
 
-    member _.``popover``<'native when 'native :> Dom.HTMLElement>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLElement).``popover`` <- value)
-            value
+    member _.``popover``<'native when 'native :> Dom.HTMLElement>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``popover`` <- value) value
 
-    member _.``popover``<'native when 'native :> Dom.HTMLElement>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLElement).``popover`` <- value)
-            read
+    member _.``popover``<'native when 'native :> Dom.HTMLElement>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``popover`` <- value) read
 
-    member _.``popover``<'native when 'native :> Dom.HTMLElement>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLElement).``popover`` <- value)
-            source
+    member _.``popover``<'native when 'native :> Dom.HTMLElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``popover`` <- value) source
 
-    member _.``role``<'native when 'native :> Dom.ARIAMixin>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``role`` <- value)
-            value
+    member _.``role``<'native when 'native :> Dom.Element>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``role`` <- value) value
 
-    member _.``role``<'native when 'native :> Dom.ARIAMixin>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``role`` <- value)
-            read
+    member _.``role``<'native when 'native :> Dom.Element>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``role`` <- value) read
 
-    member _.``role``<'native when 'native :> Dom.ARIAMixin>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.ARIAMixin).``role`` <- value)
-            source
+    member _.``role``<'native when 'native :> Dom.Element>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``role`` <- value) source
 
-    member _.``scrollLeft``<'native when 'native :> Dom.Element>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> (node :> Dom.Element).``scrollLeft`` <- value) value
+    member _.``scrollLeft``<'native when 'native :> Dom.Element>(value: int) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``scrollLeft`` <- value) value
 
-    member _.``scrollLeft``<'native when 'native :> Dom.Element>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> (node :> Dom.Element).``scrollLeft`` <- value) read
+    member _.``scrollLeft``<'native when 'native :> Dom.Element>(read: 'inst -> int) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``scrollLeft`` <- value) read
 
-    member _.``scrollLeft``<'native when 'native :> Dom.Element>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.Element).``scrollLeft`` <- value)
-            source
+    member _.``scrollLeft``<'native when 'native :> Dom.Element>(source: Source<'inst, int>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``scrollLeft`` <- value) source
 
-    member _.``scrollTop``<'native when 'native :> Dom.Element>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> (node :> Dom.Element).``scrollTop`` <- value) value
+    member _.``scrollTop``<'native when 'native :> Dom.Element>(value: int) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``scrollTop`` <- value) value
 
-    member _.``scrollTop``<'native when 'native :> Dom.Element>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> (node :> Dom.Element).``scrollTop`` <- value) read
+    member _.``scrollTop``<'native when 'native :> Dom.Element>(read: 'inst -> int) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``scrollTop`` <- value) read
 
-    member _.``scrollTop``<'native when 'native :> Dom.Element>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.Element).``scrollTop`` <- value)
-            source
+    member _.``scrollTop``<'native when 'native :> Dom.Element>(source: Source<'inst, int>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``scrollTop`` <- value) source
 
     member _.``slot``<'native when 'native :> Dom.Element>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.Element).``slot`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``slot`` <- value) value
 
     member _.``slot``<'native when 'native :> Dom.Element>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.Element).``slot`` <- value) read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``slot`` <- value) read
 
     member _.``slot``<'native when 'native :> Dom.Element>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.Element).``slot`` <- value) source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``slot`` <- value) source
 
     member _.``spellcheck``<'native when 'native :> Dom.HTMLElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``spellcheck`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``spellcheck`` <- value) value
 
     member _.``spellcheck``<'native when 'native :> Dom.HTMLElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``spellcheck`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``spellcheck`` <- value) read
 
     member _.``spellcheck``<'native when 'native :> Dom.HTMLElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``spellcheck`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``spellcheck`` <- value) source
 
-    member _.``tabIndex``<'native when 'native :> Dom.HTMLOrSVGElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.number "tabindex")
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLOrSVGElement).``tabIndex`` <- value)
-            value
+    member _.``tabIndex``<'native when 'native :> Dom.HTMLOrSVGElement>(value: int) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.number "tabindex") (fun (node: 'native) (value: int) -> node.``tabIndex`` <- value) value
 
-    member _.``tabIndex``<'native when 'native :> Dom.HTMLOrSVGElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.number "tabindex")
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLOrSVGElement).``tabIndex`` <- value)
-            read
+    member _.``tabIndex``<'native when 'native :> Dom.HTMLOrSVGElement>(read: 'inst -> int) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.number "tabindex") (fun (node: 'native) (value: int) -> node.``tabIndex`` <- value) read
 
-    member _.``tabIndex``<'native when 'native :> Dom.HTMLOrSVGElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.number "tabindex")
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLOrSVGElement).``tabIndex`` <- value)
-            source
+    member _.``tabIndex``<'native when 'native :> Dom.HTMLOrSVGElement>(source: Source<'inst, int>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.number "tabindex") (fun (node: 'native) (value: int) -> node.``tabIndex`` <- value) source
 
     member _.``title``<'native when 'native :> Dom.HTMLElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property (PropertyHtml.text "title") (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``title`` <- value) value
+        TemplateParts.property (PropertyHtml.text "title") (fun (node: 'native) (value: string) -> node.``title`` <- value) value
 
     member _.``title``<'native when 'native :> Dom.HTMLElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.text "title")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``title`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.text "title") (fun (node: 'native) (value: string) -> node.``title`` <- value) read
 
     member _.``title``<'native when 'native :> Dom.HTMLElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.text "title")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``title`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.text "title") (fun (node: 'native) (value: string) -> node.``title`` <- value) source
 
     member _.``translate``<'native when 'native :> Dom.HTMLElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``translate`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``translate`` <- value) value
 
     member _.``translate``<'native when 'native :> Dom.HTMLElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``translate`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``translate`` <- value) read
 
     member _.``translate``<'native when 'native :> Dom.HTMLElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLElement).``translate`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``translate`` <- value) source
 
     member _.``writingSuggestions``<'native when 'native :> Dom.HTMLElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``writingSuggestions`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``writingSuggestions`` <- value) value
 
     member _.``writingSuggestions``<'native when 'native :> Dom.HTMLElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``writingSuggestions`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``writingSuggestions`` <- value) read
 
     member _.``writingSuggestions``<'native when 'native :> Dom.HTMLElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLElement).``writingSuggestions`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``writingSuggestions`` <- value) source
 
     member _.Anchor: Groups.AnchorProperties<'inst> = Groups.AnchorProperties ()
     member _.Area: Groups.AreaProperties<'inst> = Groups.AreaProperties ()
@@ -2279,5372 +1871,3798 @@ type PropertyBuilder<'inst> with
 
 type Groups.AnchorProperties<'inst> with
     member _.``charset``<'native when 'native :> Dom.HTMLAnchorElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``charset`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``charset`` <- value) value
 
     member _.``charset``<'native when 'native :> Dom.HTMLAnchorElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``charset`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``charset`` <- value) read
 
     member _.``charset``<'native when 'native :> Dom.HTMLAnchorElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``charset`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``charset`` <- value) source
 
     member _.``coords``<'native when 'native :> Dom.HTMLAnchorElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``coords`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``coords`` <- value) value
 
     member _.``coords``<'native when 'native :> Dom.HTMLAnchorElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``coords`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``coords`` <- value) read
 
     member _.``coords``<'native when 'native :> Dom.HTMLAnchorElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``coords`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``coords`` <- value) source
 
     member _.``download``<'native when 'native :> Dom.HTMLAnchorElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``download`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``download`` <- value) value
 
     member _.``download``<'native when 'native :> Dom.HTMLAnchorElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``download`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``download`` <- value) read
 
     member _.``download``<'native when 'native :> Dom.HTMLAnchorElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``download`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``download`` <- value) source
 
     member _.``hreflang``<'native when 'native :> Dom.HTMLAnchorElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``hreflang`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``hreflang`` <- value) value
 
     member _.``hreflang``<'native when 'native :> Dom.HTMLAnchorElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``hreflang`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``hreflang`` <- value) read
 
     member _.``hreflang``<'native when 'native :> Dom.HTMLAnchorElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``hreflang`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``hreflang`` <- value) source
 
     member _.``name``<'native when 'native :> Dom.HTMLAnchorElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``name`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLAnchorElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLAnchorElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``name`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) source
 
+#if FABLE_COMPILER
     member _.``ping``<'native when 'native :> Dom.HTMLAnchorElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``ping`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ping" value) value
 
     member _.``ping``<'native when 'native :> Dom.HTMLAnchorElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``ping`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ping" value) read
 
     member _.``ping``<'native when 'native :> Dom.HTMLAnchorElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``ping`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ping" value)
             source
+#endif
 
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLAnchorElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``referrerPolicy`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``referrerPolicy`` <- value) value
 
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLAnchorElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``referrerPolicy`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``referrerPolicy`` <- value) read
 
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLAnchorElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``referrerPolicy`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``referrerPolicy`` <- value) source
 
     member _.``rel``<'native when 'native :> Dom.HTMLAnchorElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``rel`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``rel`` <- value) value
 
     member _.``rel``<'native when 'native :> Dom.HTMLAnchorElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``rel`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``rel`` <- value) read
 
     member _.``rel``<'native when 'native :> Dom.HTMLAnchorElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``rel`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``rel`` <- value) source
 
     member _.``rev``<'native when 'native :> Dom.HTMLAnchorElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``rev`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``rev`` <- value) value
 
     member _.``rev``<'native when 'native :> Dom.HTMLAnchorElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``rev`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``rev`` <- value) read
 
     member _.``rev``<'native when 'native :> Dom.HTMLAnchorElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``rev`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``rev`` <- value) source
 
     member _.``shape``<'native when 'native :> Dom.HTMLAnchorElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``shape`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``shape`` <- value) value
 
     member _.``shape``<'native when 'native :> Dom.HTMLAnchorElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``shape`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``shape`` <- value) read
 
     member _.``shape``<'native when 'native :> Dom.HTMLAnchorElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``shape`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``shape`` <- value) source
 
-    member _.``target``<'native when 'native :> Dom.HTMLAnchorElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``target`` <- value)
-            value
+    member _.``target``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``target`` <- value) value
 
-    member _.``target``<'native when 'native :> Dom.HTMLAnchorElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``target`` <- value)
-            read
+    member _.``target``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``target`` <- value) read
 
-    member _.``target``<'native when 'native :> Dom.HTMLAnchorElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``target`` <- value)
-            source
+    member _.``target``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``target`` <- value) source
 
     member _.``type``<'native when 'native :> Dom.HTMLAnchorElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``type`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) value
 
     member _.``type``<'native when 'native :> Dom.HTMLAnchorElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``type`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) read
 
     member _.``type``<'native when 'native :> Dom.HTMLAnchorElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAnchorElement).``type`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) source
 
 type Groups.AreaProperties<'inst> with
+#if FABLE_COMPILER
     member _.``alt``<'native when 'native :> Dom.HTMLAreaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``alt`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "alt" value) value
 
     member _.``alt``<'native when 'native :> Dom.HTMLAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``alt`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "alt" value) read
 
     member _.``alt``<'native when 'native :> Dom.HTMLAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``alt`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "alt" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``coords``<'native when 'native :> Dom.HTMLAreaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``coords`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "coords" value) value
 
     member _.``coords``<'native when 'native :> Dom.HTMLAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``coords`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "coords" value) read
 
     member _.``coords``<'native when 'native :> Dom.HTMLAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``coords`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "coords" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``download``<'native when 'native :> Dom.HTMLAreaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``download`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "download" value) value
 
     member _.``download``<'native when 'native :> Dom.HTMLAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``download`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "download" value)
             read
 
     member _.``download``<'native when 'native :> Dom.HTMLAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``download`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "download" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``noHref``<'native when 'native :> Dom.HTMLAreaElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLAreaElement).``noHref`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "noHref" value) value
 
     member _.``noHref``<'native when 'native :> Dom.HTMLAreaElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLAreaElement).``noHref`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "noHref" value) read
 
     member _.``noHref``<'native when 'native :> Dom.HTMLAreaElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLAreaElement).``noHref`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "noHref" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``ping``<'native when 'native :> Dom.HTMLAreaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``ping`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ping" value) value
 
     member _.``ping``<'native when 'native :> Dom.HTMLAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``ping`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ping" value) read
 
     member _.``ping``<'native when 'native :> Dom.HTMLAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``ping`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ping" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLAreaElement>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``referrerPolicy`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "referrerPolicy" value)
             value
 
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``referrerPolicy`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "referrerPolicy" value)
             read
 
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``referrerPolicy`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "referrerPolicy" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``rel``<'native when 'native :> Dom.HTMLAreaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``rel`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "rel" value) value
 
     member _.``rel``<'native when 'native :> Dom.HTMLAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``rel`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "rel" value) read
 
     member _.``rel``<'native when 'native :> Dom.HTMLAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``rel`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "rel" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``shape``<'native when 'native :> Dom.HTMLAreaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``shape`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "shape" value) value
 
     member _.``shape``<'native when 'native :> Dom.HTMLAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``shape`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "shape" value) read
 
     member _.``shape``<'native when 'native :> Dom.HTMLAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``shape`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "shape" value)
             source
+#endif
 
-    member _.``target``<'native when 'native :> Dom.HTMLAreaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``target`` <- value)
-            value
+    member _.``target``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``target`` <- value) value
 
-    member _.``target``<'native when 'native :> Dom.HTMLAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``target`` <- value)
-            read
+    member _.``target``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``target`` <- value) read
 
-    member _.``target``<'native when 'native :> Dom.HTMLAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLAreaElement).``target`` <- value)
-            source
+    member _.``target``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``target`` <- value) source
 
+#if FABLE_COMPILER
 type Groups.BRProperties<'inst> with
+#if FABLE_COMPILER
     member _.``clear``<'native when 'native :> Dom.HTMLBRElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBRElement).``clear`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "clear" value) value
 
     member _.``clear``<'native when 'native :> Dom.HTMLBRElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBRElement).``clear`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "clear" value) read
 
     member _.``clear``<'native when 'native :> Dom.HTMLBRElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBRElement).``clear`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "clear" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.BaseProperties<'inst> with
+#if FABLE_COMPILER
     member _.``href``<'native when 'native :> Dom.HTMLBaseElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBaseElement).``href`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "href" value) value
 
     member _.``href``<'native when 'native :> Dom.HTMLBaseElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBaseElement).``href`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "href" value) read
 
     member _.``href``<'native when 'native :> Dom.HTMLBaseElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBaseElement).``href`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "href" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``target``<'native when 'native :> Dom.HTMLBaseElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBaseElement).``target`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "target" value) value
 
     member _.``target``<'native when 'native :> Dom.HTMLBaseElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBaseElement).``target`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "target" value) read
 
     member _.``target``<'native when 'native :> Dom.HTMLBaseElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBaseElement).``target`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "target" value)
             source
+#endif
 
+#endif
 type Groups.BodyProperties<'inst> with
     member _.``aLink``<'native when 'native :> Dom.HTMLBodyElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``aLink`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``aLink`` <- value) value
 
     member _.``aLink``<'native when 'native :> Dom.HTMLBodyElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``aLink`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``aLink`` <- value) read
 
     member _.``aLink``<'native when 'native :> Dom.HTMLBodyElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``aLink`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``aLink`` <- value) source
 
     member _.``background``<'native when 'native :> Dom.HTMLBodyElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``background`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``background`` <- value) value
 
     member _.``background``<'native when 'native :> Dom.HTMLBodyElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``background`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``background`` <- value) read
 
     member _.``background``<'native when 'native :> Dom.HTMLBodyElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``background`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``background`` <- value) source
 
     member _.``bgColor``<'native when 'native :> Dom.HTMLBodyElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``bgColor`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``bgColor`` <- value) value
 
     member _.``bgColor``<'native when 'native :> Dom.HTMLBodyElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``bgColor`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``bgColor`` <- value) read
 
     member _.``bgColor``<'native when 'native :> Dom.HTMLBodyElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``bgColor`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``bgColor`` <- value) source
 
     member _.``link``<'native when 'native :> Dom.HTMLBodyElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``link`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``link`` <- value) value
 
     member _.``link``<'native when 'native :> Dom.HTMLBodyElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``link`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``link`` <- value) read
 
     member _.``link``<'native when 'native :> Dom.HTMLBodyElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``link`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``link`` <- value) source
 
     member _.``text``<'native when 'native :> Dom.HTMLBodyElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``text`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``text`` <- value) value
 
     member _.``text``<'native when 'native :> Dom.HTMLBodyElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``text`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``text`` <- value) read
 
     member _.``text``<'native when 'native :> Dom.HTMLBodyElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``text`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``text`` <- value) source
 
     member _.``vLink``<'native when 'native :> Dom.HTMLBodyElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``vLink`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``vLink`` <- value) value
 
     member _.``vLink``<'native when 'native :> Dom.HTMLBodyElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``vLink`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``vLink`` <- value) read
 
     member _.``vLink``<'native when 'native :> Dom.HTMLBodyElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLBodyElement).``vLink`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``vLink`` <- value) source
 
 type Groups.ButtonProperties<'inst> with
     member _.``command``<'native when 'native :> Dom.HTMLButtonElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``command`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``command`` <- value) value
 
     member _.``command``<'native when 'native :> Dom.HTMLButtonElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``command`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``command`` <- value) read
 
     member _.``command``<'native when 'native :> Dom.HTMLButtonElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``command`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``command`` <- value) source
 
     member _.``disabled``<'native when 'native :> Dom.HTMLButtonElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLButtonElement).``disabled`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) value
 
     member _.``disabled``<'native when 'native :> Dom.HTMLButtonElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLButtonElement).``disabled`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) read
 
     member _.``disabled``<'native when 'native :> Dom.HTMLButtonElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLButtonElement).``disabled`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) source
 
     member _.``formAction``<'native when 'native :> Dom.HTMLButtonElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``formAction`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formAction`` <- value) value
 
     member _.``formAction``<'native when 'native :> Dom.HTMLButtonElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``formAction`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formAction`` <- value) read
 
     member _.``formAction``<'native when 'native :> Dom.HTMLButtonElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``formAction`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formAction`` <- value) source
 
     member _.``formEnctype``<'native when 'native :> Dom.HTMLButtonElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``formEnctype`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formEnctype`` <- value) value
 
     member _.``formEnctype``<'native when 'native :> Dom.HTMLButtonElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``formEnctype`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formEnctype`` <- value) read
 
     member _.``formEnctype``<'native when 'native :> Dom.HTMLButtonElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``formEnctype`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formEnctype`` <- value) source
 
     member _.``formMethod``<'native when 'native :> Dom.HTMLButtonElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``formMethod`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formMethod`` <- value) value
 
     member _.``formMethod``<'native when 'native :> Dom.HTMLButtonElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``formMethod`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formMethod`` <- value) read
 
     member _.``formMethod``<'native when 'native :> Dom.HTMLButtonElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``formMethod`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formMethod`` <- value) source
 
     member _.``formNoValidate``<'native when 'native :> Dom.HTMLButtonElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLButtonElement).``formNoValidate`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``formNoValidate`` <- value) value
 
     member _.``formNoValidate``<'native when 'native :> Dom.HTMLButtonElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLButtonElement).``formNoValidate`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``formNoValidate`` <- value) read
 
     member _.``formNoValidate``<'native when 'native :> Dom.HTMLButtonElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLButtonElement).``formNoValidate`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``formNoValidate`` <- value) source
 
     member _.``formTarget``<'native when 'native :> Dom.HTMLButtonElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``formTarget`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formTarget`` <- value) value
 
     member _.``formTarget``<'native when 'native :> Dom.HTMLButtonElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``formTarget`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formTarget`` <- value) read
 
     member _.``formTarget``<'native when 'native :> Dom.HTMLButtonElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``formTarget`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formTarget`` <- value) source
 
     member _.``name``<'native when 'native :> Dom.HTMLButtonElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``name`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLButtonElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLButtonElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``name`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) source
 
     member _.``value``<'native when 'native :> Dom.HTMLButtonElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.text "value")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``value`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.text "value") (fun (node: 'native) (value: string) -> node.``value`` <- value) value
 
     member _.``value``<'native when 'native :> Dom.HTMLButtonElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.text "value")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``value`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.text "value") (fun (node: 'native) (value: string) -> node.``value`` <- value) read
 
     member _.``value``<'native when 'native :> Dom.HTMLButtonElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.text "value")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLButtonElement).``value`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.text "value") (fun (node: 'native) (value: string) -> node.``value`` <- value) source
 
+#if FABLE_COMPILER
 type Groups.CanvasProperties<'inst> with
+#if FABLE_COMPILER
     member _.``height``<'native when 'native :> Dom.HTMLCanvasElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLCanvasElement).``height`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "height" value) value
 
     member _.``height``<'native when 'native :> Dom.HTMLCanvasElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLCanvasElement).``height`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "height" value) read
 
     member _.``height``<'native when 'native :> Dom.HTMLCanvasElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLCanvasElement).``height`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "height" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``width``<'native when 'native :> Dom.HTMLCanvasElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLCanvasElement).``width`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value) value
 
     member _.``width``<'native when 'native :> Dom.HTMLCanvasElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLCanvasElement).``width`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value) read
 
     member _.``width``<'native when 'native :> Dom.HTMLCanvasElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLCanvasElement).``width`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.DListProperties<'inst> with
+#if FABLE_COMPILER
     member _.``compact``<'native when 'native :> Dom.HTMLDListElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLDListElement).``compact`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "compact" value) value
 
     member _.``compact``<'native when 'native :> Dom.HTMLDListElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLDListElement).``compact`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "compact" value) read
 
     member _.``compact``<'native when 'native :> Dom.HTMLDListElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLDListElement).``compact`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "compact" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.DataProperties<'inst> with
+#if FABLE_COMPILER
     member _.``value``<'native when 'native :> Dom.HTMLDataElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.text "value")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDataElement).``value`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.text "value") (fun (node: 'native) (value: string) -> Native.setExpando (box node) "value" value) value
 
     member _.``value``<'native when 'native :> Dom.HTMLDataElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             (PropertyHtml.text "value")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDataElement).``value`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "value" value)
             read
 
     member _.``value``<'native when 'native :> Dom.HTMLDataElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             (PropertyHtml.text "value")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDataElement).``value`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "value" value)
             source
+#endif
 
+#endif
 type Groups.DetailsProperties<'inst> with
     member _.``name``<'native when 'native :> Dom.HTMLDetailsElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDetailsElement).``name`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLDetailsElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDetailsElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLDetailsElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDetailsElement).``name`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) source
 
     member _.``open``<'native when 'native :> Dom.HTMLDetailsElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLDetailsElement).``open`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``open`` <- value) value
 
     member _.``open``<'native when 'native :> Dom.HTMLDetailsElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLDetailsElement).``open`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``open`` <- value) read
 
     member _.``open``<'native when 'native :> Dom.HTMLDetailsElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLDetailsElement).``open`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``open`` <- value) source
 
 type Groups.DialogProperties<'inst> with
     member _.``closedBy``<'native when 'native :> Dom.HTMLDialogElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDialogElement).``closedBy`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``closedBy`` <- value) value
 
     member _.``closedBy``<'native when 'native :> Dom.HTMLDialogElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDialogElement).``closedBy`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``closedBy`` <- value) read
 
     member _.``closedBy``<'native when 'native :> Dom.HTMLDialogElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDialogElement).``closedBy`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``closedBy`` <- value) source
 
     member _.``open``<'native when 'native :> Dom.HTMLDialogElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLDialogElement).``open`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``open`` <- value) value
 
     member _.``open``<'native when 'native :> Dom.HTMLDialogElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLDialogElement).``open`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``open`` <- value) read
 
     member _.``open``<'native when 'native :> Dom.HTMLDialogElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLDialogElement).``open`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``open`` <- value) source
 
     member _.``returnValue``<'native when 'native :> Dom.HTMLDialogElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDialogElement).``returnValue`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``returnValue`` <- value) value
 
     member _.``returnValue``<'native when 'native :> Dom.HTMLDialogElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDialogElement).``returnValue`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``returnValue`` <- value) read
 
     member _.``returnValue``<'native when 'native :> Dom.HTMLDialogElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDialogElement).``returnValue`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``returnValue`` <- value) source
 
 type Groups.DivProperties<'inst> with
     member _.``align``<'native when 'native :> Dom.HTMLDivElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDivElement).``align`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLDivElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDivElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLDivElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLDivElement).``align`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) source
 
+#if FABLE_COMPILER
 type Groups.EmbedProperties<'inst> with
+#if FABLE_COMPILER
     member _.``align``<'native when 'native :> Dom.HTMLEmbedElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``align`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLEmbedElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLEmbedElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``align`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``height``<'native when 'native :> Dom.HTMLEmbedElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``height`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "height" value) value
 
     member _.``height``<'native when 'native :> Dom.HTMLEmbedElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``height`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "height" value) read
 
     member _.``height``<'native when 'native :> Dom.HTMLEmbedElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``height`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "height" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``name``<'native when 'native :> Dom.HTMLEmbedElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``name`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLEmbedElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLEmbedElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``name`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``src``<'native when 'native :> Dom.HTMLEmbedElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``src`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) value
 
     member _.``src``<'native when 'native :> Dom.HTMLEmbedElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``src`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) read
 
     member _.``src``<'native when 'native :> Dom.HTMLEmbedElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``src`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``type``<'native when 'native :> Dom.HTMLEmbedElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``type`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value) value
 
     member _.``type``<'native when 'native :> Dom.HTMLEmbedElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``type`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value) read
 
     member _.``type``<'native when 'native :> Dom.HTMLEmbedElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``type`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``width``<'native when 'native :> Dom.HTMLEmbedElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``width`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value) value
 
     member _.``width``<'native when 'native :> Dom.HTMLEmbedElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``width`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value) read
 
     member _.``width``<'native when 'native :> Dom.HTMLEmbedElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLEmbedElement).``width`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value)
             source
+#endif
 
+#endif
 type Groups.FieldSetProperties<'inst> with
     member _.``disabled``<'native when 'native :> Dom.HTMLFieldSetElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLFieldSetElement).``disabled`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) value
 
     member _.``disabled``<'native when 'native :> Dom.HTMLFieldSetElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLFieldSetElement).``disabled`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) read
 
     member _.``disabled``<'native when 'native :> Dom.HTMLFieldSetElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLFieldSetElement).``disabled`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) source
 
     member _.``name``<'native when 'native :> Dom.HTMLFieldSetElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFieldSetElement).``name`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLFieldSetElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFieldSetElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLFieldSetElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFieldSetElement).``name`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) source
 
 type Groups.FormProperties<'inst> with
     member _.``acceptCharset``<'native when 'native :> Dom.HTMLFormElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``acceptCharset`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``acceptCharset`` <- value) value
 
     member _.``acceptCharset``<'native when 'native :> Dom.HTMLFormElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``acceptCharset`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``acceptCharset`` <- value) read
 
     member _.``acceptCharset``<'native when 'native :> Dom.HTMLFormElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``acceptCharset`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``acceptCharset`` <- value) source
 
     member _.``action``<'native when 'native :> Dom.HTMLFormElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``action`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``action`` <- value) value
 
     member _.``action``<'native when 'native :> Dom.HTMLFormElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``action`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``action`` <- value) read
 
     member _.``action``<'native when 'native :> Dom.HTMLFormElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``action`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``action`` <- value) source
+
+    member _.``autocomplete``<'native when 'native :> Dom.HTMLFormElement>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocomplete`` <- value) value
+
+    member _.``autocomplete``<'native when 'native :> Dom.HTMLFormElement>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocomplete`` <- value) read
+
+    member _.``autocomplete``<'native when 'native :> Dom.HTMLFormElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocomplete`` <- value) source
 
     member _.``encoding``<'native when 'native :> Dom.HTMLFormElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``encoding`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``encoding`` <- value) value
 
     member _.``encoding``<'native when 'native :> Dom.HTMLFormElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``encoding`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``encoding`` <- value) read
 
     member _.``encoding``<'native when 'native :> Dom.HTMLFormElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``encoding`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``encoding`` <- value) source
 
     member _.``enctype``<'native when 'native :> Dom.HTMLFormElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``enctype`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``enctype`` <- value) value
 
     member _.``enctype``<'native when 'native :> Dom.HTMLFormElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``enctype`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``enctype`` <- value) read
 
     member _.``enctype``<'native when 'native :> Dom.HTMLFormElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``enctype`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``enctype`` <- value) source
 
     member _.``method``<'native when 'native :> Dom.HTMLFormElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``method`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``method`` <- value) value
 
     member _.``method``<'native when 'native :> Dom.HTMLFormElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``method`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``method`` <- value) read
 
     member _.``method``<'native when 'native :> Dom.HTMLFormElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``method`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``method`` <- value) source
 
     member _.``name``<'native when 'native :> Dom.HTMLFormElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``name`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLFormElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLFormElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``name`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) source
 
     member _.``noValidate``<'native when 'native :> Dom.HTMLFormElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLFormElement).``noValidate`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``noValidate`` <- value) value
 
     member _.``noValidate``<'native when 'native :> Dom.HTMLFormElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLFormElement).``noValidate`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``noValidate`` <- value) read
 
     member _.``noValidate``<'native when 'native :> Dom.HTMLFormElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLFormElement).``noValidate`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``noValidate`` <- value) source
 
     member _.``rel``<'native when 'native :> Dom.HTMLFormElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``rel`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``rel`` <- value) value
 
     member _.``rel``<'native when 'native :> Dom.HTMLFormElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``rel`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``rel`` <- value) read
 
     member _.``rel``<'native when 'native :> Dom.HTMLFormElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``rel`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``rel`` <- value) source
 
     member _.``target``<'native when 'native :> Dom.HTMLFormElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``target`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``target`` <- value) value
 
     member _.``target``<'native when 'native :> Dom.HTMLFormElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``target`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``target`` <- value) read
 
     member _.``target``<'native when 'native :> Dom.HTMLFormElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLFormElement).``target`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``target`` <- value) source
 
+#if FABLE_COMPILER
 type Groups.HRProperties<'inst> with
+#if FABLE_COMPILER
     member _.``align``<'native when 'native :> Dom.HTMLHRElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHRElement).``align`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLHRElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHRElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLHRElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHRElement).``align`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``color``<'native when 'native :> Dom.HTMLHRElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHRElement).``color`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "color" value) value
 
     member _.``color``<'native when 'native :> Dom.HTMLHRElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHRElement).``color`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "color" value) read
 
     member _.``color``<'native when 'native :> Dom.HTMLHRElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHRElement).``color`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "color" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``noShade``<'native when 'native :> Dom.HTMLHRElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLHRElement).``noShade`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "noShade" value) value
 
     member _.``noShade``<'native when 'native :> Dom.HTMLHRElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLHRElement).``noShade`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "noShade" value) read
 
     member _.``noShade``<'native when 'native :> Dom.HTMLHRElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLHRElement).``noShade`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "noShade" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``size``<'native when 'native :> Dom.HTMLHRElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHRElement).``size`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "size" value) value
 
     member _.``size``<'native when 'native :> Dom.HTMLHRElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHRElement).``size`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "size" value) read
 
     member _.``size``<'native when 'native :> Dom.HTMLHRElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHRElement).``size`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "size" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``width``<'native when 'native :> Dom.HTMLHRElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHRElement).``width`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value) value
 
     member _.``width``<'native when 'native :> Dom.HTMLHRElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHRElement).``width`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value) read
 
     member _.``width``<'native when 'native :> Dom.HTMLHRElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHRElement).``width`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.HeadingProperties<'inst> with
+#if FABLE_COMPILER
     member _.``align``<'native when 'native :> Dom.HTMLHeadingElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHeadingElement).``align`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLHeadingElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHeadingElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLHeadingElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHeadingElement).``align`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.HtmlProperties<'inst> with
+#if FABLE_COMPILER
     member _.``version``<'native when 'native :> Dom.HTMLHtmlElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHtmlElement).``version`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "version" value) value
 
     member _.``version``<'native when 'native :> Dom.HTMLHtmlElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHtmlElement).``version`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "version" value) read
 
     member _.``version``<'native when 'native :> Dom.HTMLHtmlElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHtmlElement).``version`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "version" value)
             source
+#endif
 
+#endif
 type Groups.HyperlinkElementUtilsProperties<'inst> with
+#if FABLE_COMPILER
     member _.``hash``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``hash`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "hash" value) value
 
     member _.``hash``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``hash`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "hash" value) read
 
     member _.``hash``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``hash`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "hash" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``host``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``host`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "host" value) value
 
     member _.``host``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``host`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "host" value) read
 
     member _.``host``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``host`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "host" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``hostname``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``hostname`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "hostname" value) value
 
     member _.``hostname``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``hostname`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "hostname" value)
             read
 
     member _.``hostname``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``hostname`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "hostname" value)
             source
+#endif
 
     member _.``href``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``href`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``href`` <- value) value
 
     member _.``href``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``href`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``href`` <- value) read
 
     member _.``href``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``href`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``href`` <- value) source
 
+#if FABLE_COMPILER
     member _.``password``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``password`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "password" value) value
 
     member _.``password``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``password`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "password" value)
             read
 
     member _.``password``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``password`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "password" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``pathname``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``pathname`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "pathname" value) value
 
     member _.``pathname``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``pathname`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "pathname" value)
             read
 
     member _.``pathname``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``pathname`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "pathname" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``port``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``port`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "port" value) value
 
     member _.``port``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``port`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "port" value) read
 
     member _.``port``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``port`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "port" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``protocol``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``protocol`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "protocol" value) value
 
     member _.``protocol``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``protocol`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "protocol" value)
             read
 
     member _.``protocol``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``protocol`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "protocol" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``search``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``search`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "search" value) value
 
     member _.``search``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``search`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "search" value) read
 
     member _.``search``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``search`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "search" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``username``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``username`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "username" value) value
 
     member _.``username``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``username`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "username" value)
             read
 
     member _.``username``<'native when 'native :> Dom.HTMLHyperlinkElementUtils>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLHyperlinkElementUtils).``username`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "username" value)
             source
+#endif
 
+#if FABLE_COMPILER
 type Groups.IFrameProperties<'inst> with
+#if FABLE_COMPILER
     member _.``align``<'native when 'native :> Dom.HTMLIFrameElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``align`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLIFrameElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLIFrameElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``align`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``allow``<'native when 'native :> Dom.HTMLIFrameElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``allow`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "allow" value) value
 
     member _.``allow``<'native when 'native :> Dom.HTMLIFrameElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``allow`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "allow" value) read
 
     member _.``allow``<'native when 'native :> Dom.HTMLIFrameElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``allow`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "allow" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``allowFullscreen``<'native when 'native :> Dom.HTMLIFrameElement>(value: bool) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLIFrameElement).``allowFullscreen`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "allowFullscreen" value)
             value
 
     member _.``allowFullscreen``<'native when 'native :> Dom.HTMLIFrameElement>(read: 'inst -> bool) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLIFrameElement).``allowFullscreen`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "allowFullscreen" value)
             read
 
     member _.``allowFullscreen``<'native when 'native :> Dom.HTMLIFrameElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLIFrameElement).``allowFullscreen`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "allowFullscreen" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``frameBorder``<'native when 'native :> Dom.HTMLIFrameElement>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``frameBorder`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "frameBorder" value)
             value
 
     member _.``frameBorder``<'native when 'native :> Dom.HTMLIFrameElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``frameBorder`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "frameBorder" value)
             read
 
     member _.``frameBorder``<'native when 'native :> Dom.HTMLIFrameElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``frameBorder`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "frameBorder" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``height``<'native when 'native :> Dom.HTMLIFrameElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``height`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "height" value) value
 
     member _.``height``<'native when 'native :> Dom.HTMLIFrameElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``height`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "height" value) read
 
     member _.``height``<'native when 'native :> Dom.HTMLIFrameElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``height`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "height" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``longDesc``<'native when 'native :> Dom.HTMLIFrameElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``longDesc`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "longDesc" value) value
 
     member _.``longDesc``<'native when 'native :> Dom.HTMLIFrameElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``longDesc`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "longDesc" value)
             read
 
     member _.``longDesc``<'native when 'native :> Dom.HTMLIFrameElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``longDesc`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "longDesc" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``marginHeight``<'native when 'native :> Dom.HTMLIFrameElement>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``marginHeight`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "marginHeight" value)
             value
 
     member _.``marginHeight``<'native when 'native :> Dom.HTMLIFrameElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``marginHeight`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "marginHeight" value)
             read
 
     member _.``marginHeight``<'native when 'native :> Dom.HTMLIFrameElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``marginHeight`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "marginHeight" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``marginWidth``<'native when 'native :> Dom.HTMLIFrameElement>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``marginWidth`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "marginWidth" value)
             value
 
     member _.``marginWidth``<'native when 'native :> Dom.HTMLIFrameElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``marginWidth`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "marginWidth" value)
             read
 
     member _.``marginWidth``<'native when 'native :> Dom.HTMLIFrameElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``marginWidth`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "marginWidth" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``name``<'native when 'native :> Dom.HTMLIFrameElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``name`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLIFrameElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLIFrameElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``name`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``scrolling``<'native when 'native :> Dom.HTMLIFrameElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``scrolling`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "scrolling" value) value
 
     member _.``scrolling``<'native when 'native :> Dom.HTMLIFrameElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``scrolling`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "scrolling" value)
             read
 
     member _.``scrolling``<'native when 'native :> Dom.HTMLIFrameElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``scrolling`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "scrolling" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``src``<'native when 'native :> Dom.HTMLIFrameElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``src`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) value
 
     member _.``src``<'native when 'native :> Dom.HTMLIFrameElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``src`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) read
 
     member _.``src``<'native when 'native :> Dom.HTMLIFrameElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``src`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``width``<'native when 'native :> Dom.HTMLIFrameElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``width`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value) value
 
     member _.``width``<'native when 'native :> Dom.HTMLIFrameElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``width`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value) read
 
     member _.``width``<'native when 'native :> Dom.HTMLIFrameElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLIFrameElement).``width`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value)
             source
+#endif
 
+#endif
 type Groups.ImageProperties<'inst> with
     member _.``align``<'native when 'native :> Dom.HTMLImageElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``align`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``align`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) source
 
     member _.``alt``<'native when 'native :> Dom.HTMLImageElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``alt`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``alt`` <- value) value
 
     member _.``alt``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``alt`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``alt`` <- value) read
 
     member _.``alt``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``alt`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``alt`` <- value) source
 
     member _.``border``<'native when 'native :> Dom.HTMLImageElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``border`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``border`` <- value) value
 
     member _.``border``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``border`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``border`` <- value) read
 
     member _.``border``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``border`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``border`` <- value) source
 
-    member _.``crossOrigin``<'native when 'native :> Dom.HTMLImageElement>(value: string option) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLImageElement).``crossOrigin`` <- value)
-            value
+    member _.``crossOrigin``<'native when 'native :> Dom.HTMLImageElement>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``crossOrigin`` <- value) value
 
-    member _.``crossOrigin``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> string option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLImageElement).``crossOrigin`` <- value)
-            read
+    member _.``crossOrigin``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``crossOrigin`` <- value) read
 
-    member _.``crossOrigin``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, string option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLImageElement).``crossOrigin`` <- value)
-            source
+    member _.``crossOrigin``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``crossOrigin`` <- value) source
 
-    member _.``height``<'native when 'native :> Dom.HTMLImageElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLImageElement).``height`` <- value)
-            value
+    member _.``height``<'native when 'native :> Dom.HTMLImageElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``height`` <- value) value
 
-    member _.``height``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLImageElement).``height`` <- value)
-            read
+    member _.``height``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``height`` <- value) read
 
-    member _.``height``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLImageElement).``height`` <- value)
-            source
+    member _.``height``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``height`` <- value) source
 
-    member _.``hspace``<'native when 'native :> Dom.HTMLImageElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLImageElement).``hspace`` <- value)
-            value
+    member _.``hspace``<'native when 'native :> Dom.HTMLImageElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``hspace`` <- value) value
 
-    member _.``hspace``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLImageElement).``hspace`` <- value)
-            read
+    member _.``hspace``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``hspace`` <- value) read
 
-    member _.``hspace``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLImageElement).``hspace`` <- value)
-            source
+    member _.``hspace``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``hspace`` <- value) source
 
     member _.``isMap``<'native when 'native :> Dom.HTMLImageElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLImageElement).``isMap`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``isMap`` <- value) value
 
     member _.``isMap``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLImageElement).``isMap`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``isMap`` <- value) read
 
     member _.``isMap``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLImageElement).``isMap`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``isMap`` <- value) source
 
     member _.``longDesc``<'native when 'native :> Dom.HTMLImageElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``longDesc`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``longDesc`` <- value) value
 
     member _.``longDesc``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``longDesc`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``longDesc`` <- value) read
 
     member _.``longDesc``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``longDesc`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``longDesc`` <- value) source
 
     member _.``lowsrc``<'native when 'native :> Dom.HTMLImageElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``lowsrc`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``lowsrc`` <- value) value
 
     member _.``lowsrc``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``lowsrc`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``lowsrc`` <- value) read
 
     member _.``lowsrc``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``lowsrc`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``lowsrc`` <- value) source
 
     member _.``name``<'native when 'native :> Dom.HTMLImageElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``name`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``name`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) source
 
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLImageElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``referrerPolicy`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``referrerPolicy`` <- value) value
 
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``referrerPolicy`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``referrerPolicy`` <- value) read
 
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``referrerPolicy`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``referrerPolicy`` <- value) source
 
     member _.``sizes``<'native when 'native :> Dom.HTMLImageElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``sizes`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``sizes`` <- value) value
 
     member _.``sizes``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``sizes`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``sizes`` <- value) read
 
     member _.``sizes``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``sizes`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``sizes`` <- value) source
 
     member _.``src``<'native when 'native :> Dom.HTMLImageElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``src`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``src`` <- value) value
 
     member _.``src``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``src`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``src`` <- value) read
 
     member _.``src``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``src`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``src`` <- value) source
 
     member _.``srcset``<'native when 'native :> Dom.HTMLImageElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``srcset`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``srcset`` <- value) value
 
     member _.``srcset``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``srcset`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``srcset`` <- value) read
 
     member _.``srcset``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``srcset`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``srcset`` <- value) source
 
     member _.``useMap``<'native when 'native :> Dom.HTMLImageElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``useMap`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``useMap`` <- value) value
 
     member _.``useMap``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``useMap`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``useMap`` <- value) read
 
     member _.``useMap``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLImageElement).``useMap`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``useMap`` <- value) source
 
-    member _.``vspace``<'native when 'native :> Dom.HTMLImageElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLImageElement).``vspace`` <- value)
-            value
+    member _.``vspace``<'native when 'native :> Dom.HTMLImageElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``vspace`` <- value) value
 
-    member _.``vspace``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLImageElement).``vspace`` <- value)
-            read
+    member _.``vspace``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``vspace`` <- value) read
 
-    member _.``vspace``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLImageElement).``vspace`` <- value)
-            source
+    member _.``vspace``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``vspace`` <- value) source
 
-    member _.``width``<'native when 'native :> Dom.HTMLImageElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLImageElement).``width`` <- value)
-            value
+    member _.``width``<'native when 'native :> Dom.HTMLImageElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``width`` <- value) value
 
-    member _.``width``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLImageElement).``width`` <- value)
-            read
+    member _.``width``<'native when 'native :> Dom.HTMLImageElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``width`` <- value) read
 
-    member _.``width``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLImageElement).``width`` <- value)
-            source
+    member _.``width``<'native when 'native :> Dom.HTMLImageElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``width`` <- value) source
 
 type Groups.InputProperties<'inst> with
     member _.``accept``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``accept`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``accept`` <- value) value
 
     member _.``accept``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``accept`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``accept`` <- value) read
 
     member _.``accept``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``accept`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``accept`` <- value) source
 
     member _.``align``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``align`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``align`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) source
 
     member _.``alt``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``alt`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``alt`` <- value) value
 
     member _.``alt``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``alt`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``alt`` <- value) read
 
     member _.``alt``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``alt`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``alt`` <- value) source
 
     member _.``autocomplete``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``autocomplete`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocomplete`` <- value) value
 
     member _.``autocomplete``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``autocomplete`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocomplete`` <- value) read
 
     member _.``autocomplete``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``autocomplete`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocomplete`` <- value) source
 
     member _.``capture``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``capture`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``capture`` <- value) value
 
     member _.``capture``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``capture`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``capture`` <- value) read
 
     member _.``capture``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``capture`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``capture`` <- value) source
 
     member _.``checked``<'native when 'native :> Dom.HTMLInputElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "checked")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``checked`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "checked") (fun (node: 'native) (value: bool) -> node.``checked`` <- value) value
 
     member _.``checked``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "checked")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``checked`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "checked") (fun (node: 'native) (value: bool) -> node.``checked`` <- value) read
 
     member _.``checked``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "checked")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``checked`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "checked") (fun (node: 'native) (value: bool) -> node.``checked`` <- value) source
 
     member _.``defaultChecked``<'native when 'native :> Dom.HTMLInputElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``defaultChecked`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``defaultChecked`` <- value) value
 
     member _.``defaultChecked``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``defaultChecked`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``defaultChecked`` <- value) read
 
     member _.``defaultChecked``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``defaultChecked`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``defaultChecked`` <- value) source
 
     member _.``defaultValue``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``defaultValue`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``defaultValue`` <- value) value
 
     member _.``defaultValue``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``defaultValue`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``defaultValue`` <- value) read
 
     member _.``defaultValue``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``defaultValue`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``defaultValue`` <- value) source
 
     member _.``dirName``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``dirName`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``dirName`` <- value) value
 
     member _.``dirName``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``dirName`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``dirName`` <- value) read
 
     member _.``dirName``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``dirName`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``dirName`` <- value) source
 
     member _.``disabled``<'native when 'native :> Dom.HTMLInputElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``disabled`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) value
 
     member _.``disabled``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``disabled`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) read
 
     member _.``disabled``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``disabled`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) source
 
     member _.``formAction``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``formAction`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formAction`` <- value) value
 
     member _.``formAction``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``formAction`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formAction`` <- value) read
 
     member _.``formAction``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``formAction`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formAction`` <- value) source
 
     member _.``formEnctype``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``formEnctype`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formEnctype`` <- value) value
 
     member _.``formEnctype``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``formEnctype`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formEnctype`` <- value) read
 
     member _.``formEnctype``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``formEnctype`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formEnctype`` <- value) source
 
     member _.``formMethod``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``formMethod`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formMethod`` <- value) value
 
     member _.``formMethod``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``formMethod`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formMethod`` <- value) read
 
     member _.``formMethod``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``formMethod`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formMethod`` <- value) source
 
     member _.``formNoValidate``<'native when 'native :> Dom.HTMLInputElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``formNoValidate`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``formNoValidate`` <- value) value
 
     member _.``formNoValidate``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``formNoValidate`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``formNoValidate`` <- value) read
 
     member _.``formNoValidate``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``formNoValidate`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``formNoValidate`` <- value) source
 
     member _.``formTarget``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``formTarget`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formTarget`` <- value) value
 
     member _.``formTarget``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``formTarget`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formTarget`` <- value) read
 
     member _.``formTarget``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``formTarget`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``formTarget`` <- value) source
 
-    member _.``height``<'native when 'native :> Dom.HTMLInputElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``height`` <- value)
-            value
+    member _.``height``<'native when 'native :> Dom.HTMLInputElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``height`` <- value) value
 
-    member _.``height``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``height`` <- value)
-            read
+    member _.``height``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``height`` <- value) read
 
-    member _.``height``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``height`` <- value)
-            source
+    member _.``height``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``height`` <- value) source
 
     member _.``indeterminate``<'native when 'native :> Dom.HTMLInputElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``indeterminate`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``indeterminate`` <- value) value
 
     member _.``indeterminate``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``indeterminate`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``indeterminate`` <- value) read
 
     member _.``indeterminate``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``indeterminate`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``indeterminate`` <- value) source
 
     member _.``max``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``max`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``max`` <- value) value
 
     member _.``max``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``max`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``max`` <- value) read
 
     member _.``max``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``max`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``max`` <- value) source
 
-    member _.``maxLength``<'native when 'native :> Dom.HTMLInputElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``maxLength`` <- value)
-            value
+    member _.``maxLength``<'native when 'native :> Dom.HTMLInputElement>(value: int) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``maxLength`` <- value) value
 
-    member _.``maxLength``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``maxLength`` <- value)
-            read
+    member _.``maxLength``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> int) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``maxLength`` <- value) read
 
-    member _.``maxLength``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``maxLength`` <- value)
-            source
+    member _.``maxLength``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, int>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``maxLength`` <- value) source
 
     member _.``min``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``min`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``min`` <- value) value
 
     member _.``min``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``min`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``min`` <- value) read
 
     member _.``min``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``min`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``min`` <- value) source
 
-    member _.``minLength``<'native when 'native :> Dom.HTMLInputElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``minLength`` <- value)
-            value
+    member _.``minLength``<'native when 'native :> Dom.HTMLInputElement>(value: int) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``minLength`` <- value) value
 
-    member _.``minLength``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``minLength`` <- value)
-            read
+    member _.``minLength``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> int) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``minLength`` <- value) read
 
-    member _.``minLength``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``minLength`` <- value)
-            source
+    member _.``minLength``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, int>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``minLength`` <- value) source
 
     member _.``multiple``<'native when 'native :> Dom.HTMLInputElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "multiple")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``multiple`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "multiple") (fun (node: 'native) (value: bool) -> node.``multiple`` <- value) value
 
     member _.``multiple``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "multiple")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``multiple`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "multiple") (fun (node: 'native) (value: bool) -> node.``multiple`` <- value) read
 
     member _.``multiple``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "multiple")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``multiple`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "multiple") (fun (node: 'native) (value: bool) -> node.``multiple`` <- value) source
 
     member _.``name``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``name`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``name`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) source
 
     member _.``pattern``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``pattern`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``pattern`` <- value) value
 
     member _.``pattern``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``pattern`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``pattern`` <- value) read
 
     member _.``pattern``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``pattern`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``pattern`` <- value) source
 
     member _.``placeholder``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``placeholder`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``placeholder`` <- value) value
 
     member _.``placeholder``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``placeholder`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``placeholder`` <- value) read
 
     member _.``placeholder``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``placeholder`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``placeholder`` <- value) source
 
     member _.``readOnly``<'native when 'native :> Dom.HTMLInputElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "readonly")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``readOnly`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "readonly") (fun (node: 'native) (value: bool) -> node.``readOnly`` <- value) value
 
     member _.``readOnly``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "readonly")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``readOnly`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "readonly") (fun (node: 'native) (value: bool) -> node.``readOnly`` <- value) read
 
     member _.``readOnly``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "readonly")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``readOnly`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "readonly") (fun (node: 'native) (value: bool) -> node.``readOnly`` <- value) source
 
     member _.``required``<'native when 'native :> Dom.HTMLInputElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "required")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``required`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "required") (fun (node: 'native) (value: bool) -> node.``required`` <- value) value
 
     member _.``required``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "required")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``required`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "required") (fun (node: 'native) (value: bool) -> node.``required`` <- value) read
 
     member _.``required``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "required")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``required`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "required") (fun (node: 'native) (value: bool) -> node.``required`` <- value) source
 
-    member _.``selectionEnd``<'native when 'native :> Dom.HTMLInputElement>(value: float option) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float option) -> (node :> Dom.HTMLInputElement).``selectionEnd`` <- value)
-            value
+    member _.``selectionDirection``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``selectionDirection`` <- value) value
 
-    member _.``selectionEnd``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> float option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float option) -> (node :> Dom.HTMLInputElement).``selectionEnd`` <- value)
-            read
+    member _.``selectionDirection``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``selectionDirection`` <- value) read
 
-    member _.``selectionEnd``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, float option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float option) -> (node :> Dom.HTMLInputElement).``selectionEnd`` <- value)
-            source
+    member _.``selectionDirection``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``selectionDirection`` <- value) source
 
-    member _.``selectionStart``<'native when 'native :> Dom.HTMLInputElement>(value: float option) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float option) -> (node :> Dom.HTMLInputElement).``selectionStart`` <- value)
-            value
+    member _.``selectionEnd``<'native when 'native :> Dom.HTMLInputElement>(value: uint32 option) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32 option) -> node.``selectionEnd`` <- value) value
 
-    member _.``selectionStart``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> float option) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float option) -> (node :> Dom.HTMLInputElement).``selectionStart`` <- value)
-            read
+    member _.``selectionEnd``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> uint32 option) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32 option) -> node.``selectionEnd`` <- value) read
 
-    member _.``selectionStart``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, float option>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float option) -> (node :> Dom.HTMLInputElement).``selectionStart`` <- value)
-            source
+    member _.``selectionEnd``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, uint32 option>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32 option) -> node.``selectionEnd`` <- value) source
 
-    member _.``size``<'native when 'native :> Dom.HTMLInputElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``size`` <- value) value
+    member _.``selectionStart``<'native when 'native :> Dom.HTMLInputElement>(value: uint32 option) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32 option) -> node.``selectionStart`` <- value) value
 
-    member _.``size``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``size`` <- value)
-            read
+    member _.``selectionStart``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> uint32 option) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32 option) -> node.``selectionStart`` <- value) read
 
-    member _.``size``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``size`` <- value)
-            source
+    member _.``selectionStart``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, uint32 option>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32 option) -> node.``selectionStart`` <- value) source
+
+    member _.``size``<'native when 'native :> Dom.HTMLInputElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``size`` <- value) value
+
+    member _.``size``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``size`` <- value) read
+
+    member _.``size``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``size`` <- value) source
 
     member _.``src``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``src`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``src`` <- value) value
 
     member _.``src``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``src`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``src`` <- value) read
 
     member _.``src``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``src`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``src`` <- value) source
 
     member _.``step``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``step`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``step`` <- value) value
 
     member _.``step``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``step`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``step`` <- value) read
 
     member _.``step``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``step`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``step`` <- value) source
 
     member _.``type``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``type`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) value
 
     member _.``type``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``type`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) read
 
     member _.``type``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``type`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) source
 
     member _.``useMap``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``useMap`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``useMap`` <- value) value
 
     member _.``useMap``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``useMap`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``useMap`` <- value) read
 
     member _.``useMap``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``useMap`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``useMap`` <- value) source
 
     member _.``value``<'native when 'native :> Dom.HTMLInputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.text "value")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``value`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.text "value") (fun (node: 'native) (value: string) -> node.``value`` <- value) value
 
     member _.``value``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.text "value")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``value`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.text "value") (fun (node: 'native) (value: string) -> node.``value`` <- value) read
 
     member _.``value``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.text "value")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLInputElement).``value`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.text "value") (fun (node: 'native) (value: string) -> node.``value`` <- value) source
 
     member _.``valueAsNumber``<'native when 'native :> Dom.HTMLInputElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``valueAsNumber`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``valueAsNumber`` <- value) value
 
     member _.``valueAsNumber``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``valueAsNumber`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``valueAsNumber`` <- value) read
 
     member _.``valueAsNumber``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``valueAsNumber`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``valueAsNumber`` <- value) source
 
+#if FABLE_COMPILER
     member _.``webkitdirectory``<'native when 'native :> Dom.HTMLInputElement>(value: bool) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``webkitdirectory`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "webkitdirectory" value)
             value
 
     member _.``webkitdirectory``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> bool) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``webkitdirectory`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "webkitdirectory" value)
             read
 
     member _.``webkitdirectory``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLInputElement).``webkitdirectory`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "webkitdirectory" value)
             source
+#endif
 
-    member _.``width``<'native when 'native :> Dom.HTMLInputElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``width`` <- value)
-            value
+    member _.``width``<'native when 'native :> Dom.HTMLInputElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``width`` <- value) value
 
-    member _.``width``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``width`` <- value)
-            read
+    member _.``width``<'native when 'native :> Dom.HTMLInputElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``width`` <- value) read
 
-    member _.``width``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLInputElement).``width`` <- value)
-            source
+    member _.``width``<'native when 'native :> Dom.HTMLInputElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``width`` <- value) source
 
 type Groups.LIProperties<'inst> with
     member _.``type``<'native when 'native :> Dom.HTMLLIElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLIElement).``type`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) value
 
     member _.``type``<'native when 'native :> Dom.HTMLLIElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLIElement).``type`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) read
 
     member _.``type``<'native when 'native :> Dom.HTMLLIElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLIElement).``type`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) source
 
-    member _.``value``<'native when 'native :> Dom.HTMLLIElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.number "value")
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLLIElement).``value`` <- value)
-            value
+    member _.``value``<'native when 'native :> Dom.HTMLLIElement>(value: int) : Part<'native, 'inst> =
+        TemplateParts.property (PropertyHtml.number "value") (fun (node: 'native) (value: int) -> node.``value`` <- value) value
 
-    member _.``value``<'native when 'native :> Dom.HTMLLIElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.number "value")
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLLIElement).``value`` <- value)
-            read
+    member _.``value``<'native when 'native :> Dom.HTMLLIElement>(read: 'inst -> int) : Part<'native, 'inst> =
+        TemplateParts.readProperty (PropertyHtml.number "value") (fun (node: 'native) (value: int) -> node.``value`` <- value) read
 
-    member _.``value``<'native when 'native :> Dom.HTMLLIElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.number "value")
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLLIElement).``value`` <- value)
-            source
+    member _.``value``<'native when 'native :> Dom.HTMLLIElement>(source: Source<'inst, int>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty (PropertyHtml.number "value") (fun (node: 'native) (value: int) -> node.``value`` <- value) source
 
 type Groups.LabelProperties<'inst> with
     member _.``htmlFor``<'native when 'native :> Dom.HTMLLabelElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.text "for")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLabelElement).``htmlFor`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.text "for") (fun (node: 'native) (value: string) -> node.``htmlFor`` <- value) value
 
     member _.``htmlFor``<'native when 'native :> Dom.HTMLLabelElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.text "for")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLabelElement).``htmlFor`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.text "for") (fun (node: 'native) (value: string) -> node.``htmlFor`` <- value) read
 
     member _.``htmlFor``<'native when 'native :> Dom.HTMLLabelElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.text "for")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLabelElement).``htmlFor`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.text "for") (fun (node: 'native) (value: string) -> node.``htmlFor`` <- value) source
 
 type Groups.LegendProperties<'inst> with
     member _.``align``<'native when 'native :> Dom.HTMLLegendElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLegendElement).``align`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLLegendElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLegendElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLLegendElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLegendElement).``align`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) source
 
+#if FABLE_COMPILER
 type Groups.LinkProperties<'inst> with
+#if FABLE_COMPILER
     member _.``as``<'native when 'native :> Dom.HTMLLinkElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``as`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "as" value) value
 
     member _.``as``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``as`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "as" value) read
 
     member _.``as``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``as`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "as" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``charset``<'native when 'native :> Dom.HTMLLinkElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``charset`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "charset" value) value
 
     member _.``charset``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``charset`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "charset" value) read
 
     member _.``charset``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``charset`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "charset" value)
             source
+#endif
 
-    member _.``crossOrigin``<'native when 'native :> Dom.HTMLLinkElement>(value: string option) : Part<'native, 'inst> =
+#if FABLE_COMPILER
+    member _.``crossOrigin``<'native when 'native :> Dom.HTMLLinkElement>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLLinkElement).``crossOrigin`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "crossOrigin" value)
             value
 
-    member _.``crossOrigin``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string option) : Part<'native, 'inst> =
+    member _.``crossOrigin``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLLinkElement).``crossOrigin`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "crossOrigin" value)
             read
 
-    member _.``crossOrigin``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``crossOrigin``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLLinkElement).``crossOrigin`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "crossOrigin" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``disabled``<'native when 'native :> Dom.HTMLLinkElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLLinkElement).``disabled`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "disabled" value) value
 
     member _.``disabled``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLLinkElement).``disabled`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "disabled" value) read
 
     member _.``disabled``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLLinkElement).``disabled`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "disabled" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``href``<'native when 'native :> Dom.HTMLLinkElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``href`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "href" value) value
 
     member _.``href``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``href`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "href" value) read
 
     member _.``href``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``href`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "href" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``hreflang``<'native when 'native :> Dom.HTMLLinkElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``hreflang`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "hreflang" value) value
 
     member _.``hreflang``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``hreflang`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "hreflang" value)
             read
 
     member _.``hreflang``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``hreflang`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "hreflang" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``imageSizes``<'native when 'native :> Dom.HTMLLinkElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``imageSizes`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "imageSizes" value) value
 
     member _.``imageSizes``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``imageSizes`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "imageSizes" value)
             read
 
     member _.``imageSizes``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``imageSizes`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "imageSizes" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``imageSrcset``<'native when 'native :> Dom.HTMLLinkElement>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``imageSrcset`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "imageSrcset" value)
             value
 
     member _.``imageSrcset``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``imageSrcset`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "imageSrcset" value)
             read
 
     member _.``imageSrcset``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``imageSrcset`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "imageSrcset" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``integrity``<'native when 'native :> Dom.HTMLLinkElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``integrity`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "integrity" value) value
 
     member _.``integrity``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``integrity`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "integrity" value)
             read
 
     member _.``integrity``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``integrity`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "integrity" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``media``<'native when 'native :> Dom.HTMLLinkElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``media`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "media" value) value
 
     member _.``media``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``media`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "media" value) read
 
     member _.``media``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``media`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "media" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLLinkElement>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``referrerPolicy`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "referrerPolicy" value)
             value
 
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``referrerPolicy`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "referrerPolicy" value)
             read
 
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``referrerPolicy`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "referrerPolicy" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``rel``<'native when 'native :> Dom.HTMLLinkElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``rel`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "rel" value) value
 
     member _.``rel``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``rel`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "rel" value) read
 
     member _.``rel``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``rel`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "rel" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``rev``<'native when 'native :> Dom.HTMLLinkElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``rev`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "rev" value) value
 
     member _.``rev``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``rev`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "rev" value) read
 
     member _.``rev``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``rev`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "rev" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``target``<'native when 'native :> Dom.HTMLLinkElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``target`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "target" value) value
 
     member _.``target``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``target`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "target" value) read
 
     member _.``target``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``target`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "target" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``type``<'native when 'native :> Dom.HTMLLinkElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``type`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value) value
 
     member _.``type``<'native when 'native :> Dom.HTMLLinkElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``type`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value) read
 
     member _.``type``<'native when 'native :> Dom.HTMLLinkElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLLinkElement).``type`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.MapProperties<'inst> with
+#if FABLE_COMPILER
     member _.``name``<'native when 'native :> Dom.HTMLMapElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMapElement).``name`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLMapElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMapElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLMapElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMapElement).``name`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.MediaProperties<'inst> with
+#if FABLE_COMPILER
     member _.``autoplay``<'native when 'native :> Dom.HTMLMediaElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``autoplay`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "autoplay" value) value
 
     member _.``autoplay``<'native when 'native :> Dom.HTMLMediaElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``autoplay`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "autoplay" value) read
 
     member _.``autoplay``<'native when 'native :> Dom.HTMLMediaElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``autoplay`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "autoplay" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``controls``<'native when 'native :> Dom.HTMLMediaElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``controls`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "controls" value) value
 
     member _.``controls``<'native when 'native :> Dom.HTMLMediaElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``controls`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "controls" value) read
 
     member _.``controls``<'native when 'native :> Dom.HTMLMediaElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``controls`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "controls" value)
             source
+#endif
 
-    member _.``crossOrigin``<'native when 'native :> Dom.HTMLMediaElement>(value: string option) : Part<'native, 'inst> =
+#if FABLE_COMPILER
+    member _.``crossOrigin``<'native when 'native :> Dom.HTMLMediaElement>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLMediaElement).``crossOrigin`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "crossOrigin" value)
             value
 
-    member _.``crossOrigin``<'native when 'native :> Dom.HTMLMediaElement>(read: 'inst -> string option) : Part<'native, 'inst> =
+    member _.``crossOrigin``<'native when 'native :> Dom.HTMLMediaElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLMediaElement).``crossOrigin`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "crossOrigin" value)
             read
 
-    member _.``crossOrigin``<'native when 'native :> Dom.HTMLMediaElement>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``crossOrigin``<'native when 'native :> Dom.HTMLMediaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLMediaElement).``crossOrigin`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "crossOrigin" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``currentTime``<'native when 'native :> Dom.HTMLMediaElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMediaElement).``currentTime`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "currentTime" value) value
 
     member _.``currentTime``<'native when 'native :> Dom.HTMLMediaElement>(read: 'inst -> float) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMediaElement).``currentTime`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "currentTime" value)
             read
 
     member _.``currentTime``<'native when 'native :> Dom.HTMLMediaElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMediaElement).``currentTime`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "currentTime" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``defaultMuted``<'native when 'native :> Dom.HTMLMediaElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``defaultMuted`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "defaultMuted" value) value
 
     member _.``defaultMuted``<'native when 'native :> Dom.HTMLMediaElement>(read: 'inst -> bool) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``defaultMuted`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "defaultMuted" value)
             read
 
     member _.``defaultMuted``<'native when 'native :> Dom.HTMLMediaElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``defaultMuted`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "defaultMuted" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``defaultPlaybackRate``<'native when 'native :> Dom.HTMLMediaElement>(value: float) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMediaElement).``defaultPlaybackRate`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "defaultPlaybackRate" value)
             value
 
     member _.``defaultPlaybackRate``<'native when 'native :> Dom.HTMLMediaElement>(read: 'inst -> float) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMediaElement).``defaultPlaybackRate`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "defaultPlaybackRate" value)
             read
 
     member _.``defaultPlaybackRate``<'native when 'native :> Dom.HTMLMediaElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMediaElement).``defaultPlaybackRate`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "defaultPlaybackRate" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``disableRemotePlayback``<'native when 'native :> Dom.HTMLMediaElement>(value: bool) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``disableRemotePlayback`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "disableRemotePlayback" value)
             value
 
     member _.``disableRemotePlayback``<'native when 'native :> Dom.HTMLMediaElement>(read: 'inst -> bool) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``disableRemotePlayback`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "disableRemotePlayback" value)
             read
 
     member _.``disableRemotePlayback``<'native when 'native :> Dom.HTMLMediaElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``disableRemotePlayback`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "disableRemotePlayback" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``loop``<'native when 'native :> Dom.HTMLMediaElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``loop`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "loop" value) value
 
     member _.``loop``<'native when 'native :> Dom.HTMLMediaElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``loop`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "loop" value) read
 
     member _.``loop``<'native when 'native :> Dom.HTMLMediaElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``loop`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "loop" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``muted``<'native when 'native :> Dom.HTMLMediaElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``muted`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "muted" value) value
 
     member _.``muted``<'native when 'native :> Dom.HTMLMediaElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``muted`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "muted" value) read
 
     member _.``muted``<'native when 'native :> Dom.HTMLMediaElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``muted`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "muted" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``playbackRate``<'native when 'native :> Dom.HTMLMediaElement>(value: float) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMediaElement).``playbackRate`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "playbackRate" value)
             value
 
     member _.``playbackRate``<'native when 'native :> Dom.HTMLMediaElement>(read: 'inst -> float) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMediaElement).``playbackRate`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "playbackRate" value)
             read
 
     member _.``playbackRate``<'native when 'native :> Dom.HTMLMediaElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMediaElement).``playbackRate`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "playbackRate" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``preservesPitch``<'native when 'native :> Dom.HTMLMediaElement>(value: bool) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``preservesPitch`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "preservesPitch" value)
             value
 
     member _.``preservesPitch``<'native when 'native :> Dom.HTMLMediaElement>(read: 'inst -> bool) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``preservesPitch`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "preservesPitch" value)
             read
 
     member _.``preservesPitch``<'native when 'native :> Dom.HTMLMediaElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMediaElement).``preservesPitch`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "preservesPitch" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``src``<'native when 'native :> Dom.HTMLMediaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMediaElement).``src`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) value
 
     member _.``src``<'native when 'native :> Dom.HTMLMediaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMediaElement).``src`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) read
 
     member _.``src``<'native when 'native :> Dom.HTMLMediaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMediaElement).``src`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``volume``<'native when 'native :> Dom.HTMLMediaElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMediaElement).``volume`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "volume" value) value
 
     member _.``volume``<'native when 'native :> Dom.HTMLMediaElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMediaElement).``volume`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "volume" value) read
 
     member _.``volume``<'native when 'native :> Dom.HTMLMediaElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMediaElement).``volume`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "volume" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.MenuProperties<'inst> with
+#if FABLE_COMPILER
     member _.``compact``<'native when 'native :> Dom.HTMLMenuElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMenuElement).``compact`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "compact" value) value
 
     member _.``compact``<'native when 'native :> Dom.HTMLMenuElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMenuElement).``compact`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "compact" value) read
 
     member _.``compact``<'native when 'native :> Dom.HTMLMenuElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLMenuElement).``compact`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "compact" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.MetaProperties<'inst> with
+#if FABLE_COMPILER
     member _.``content``<'native when 'native :> Dom.HTMLMetaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``content`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "content" value) value
 
     member _.``content``<'native when 'native :> Dom.HTMLMetaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``content`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "content" value) read
 
     member _.``content``<'native when 'native :> Dom.HTMLMetaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``content`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "content" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``httpEquiv``<'native when 'native :> Dom.HTMLMetaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``httpEquiv`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "httpEquiv" value) value
 
     member _.``httpEquiv``<'native when 'native :> Dom.HTMLMetaElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``httpEquiv`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "httpEquiv" value)
             read
 
     member _.``httpEquiv``<'native when 'native :> Dom.HTMLMetaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``httpEquiv`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "httpEquiv" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``media``<'native when 'native :> Dom.HTMLMetaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``media`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "media" value) value
 
     member _.``media``<'native when 'native :> Dom.HTMLMetaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``media`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "media" value) read
 
     member _.``media``<'native when 'native :> Dom.HTMLMetaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``media`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "media" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``name``<'native when 'native :> Dom.HTMLMetaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``name`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLMetaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLMetaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``name`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``scheme``<'native when 'native :> Dom.HTMLMetaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``scheme`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "scheme" value) value
 
     member _.``scheme``<'native when 'native :> Dom.HTMLMetaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``scheme`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "scheme" value) read
 
     member _.``scheme``<'native when 'native :> Dom.HTMLMetaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLMetaElement).``scheme`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "scheme" value)
             source
+#endif
 
+#endif
 type Groups.MeterProperties<'inst> with
     member _.``high``<'native when 'native :> Dom.HTMLMeterElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``high`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``high`` <- value) value
 
     member _.``high``<'native when 'native :> Dom.HTMLMeterElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``high`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``high`` <- value) read
 
     member _.``high``<'native when 'native :> Dom.HTMLMeterElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``high`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``high`` <- value) source
 
     member _.``low``<'native when 'native :> Dom.HTMLMeterElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``low`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``low`` <- value) value
 
     member _.``low``<'native when 'native :> Dom.HTMLMeterElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``low`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``low`` <- value) read
 
     member _.``low``<'native when 'native :> Dom.HTMLMeterElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``low`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``low`` <- value) source
 
     member _.``max``<'native when 'native :> Dom.HTMLMeterElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``max`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``max`` <- value) value
 
     member _.``max``<'native when 'native :> Dom.HTMLMeterElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``max`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``max`` <- value) read
 
     member _.``max``<'native when 'native :> Dom.HTMLMeterElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``max`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``max`` <- value) source
 
     member _.``min``<'native when 'native :> Dom.HTMLMeterElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``min`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``min`` <- value) value
 
     member _.``min``<'native when 'native :> Dom.HTMLMeterElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``min`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``min`` <- value) read
 
     member _.``min``<'native when 'native :> Dom.HTMLMeterElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``min`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``min`` <- value) source
 
     member _.``optimum``<'native when 'native :> Dom.HTMLMeterElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``optimum`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``optimum`` <- value) value
 
     member _.``optimum``<'native when 'native :> Dom.HTMLMeterElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``optimum`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``optimum`` <- value) read
 
     member _.``optimum``<'native when 'native :> Dom.HTMLMeterElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``optimum`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``optimum`` <- value) source
 
     member _.``value``<'native when 'native :> Dom.HTMLMeterElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.number "value")
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``value`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.number "value") (fun (node: 'native) (value: float) -> node.``value`` <- value) value
 
     member _.``value``<'native when 'native :> Dom.HTMLMeterElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.number "value")
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``value`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.number "value") (fun (node: 'native) (value: float) -> node.``value`` <- value) read
 
     member _.``value``<'native when 'native :> Dom.HTMLMeterElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.number "value")
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLMeterElement).``value`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.number "value") (fun (node: 'native) (value: float) -> node.``value`` <- value) source
 
+#if FABLE_COMPILER
 type Groups.ModProperties<'inst> with
+#if FABLE_COMPILER
     member _.``cite``<'native when 'native :> Dom.HTMLModElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLModElement).``cite`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "cite" value) value
 
     member _.``cite``<'native when 'native :> Dom.HTMLModElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLModElement).``cite`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "cite" value) read
 
     member _.``cite``<'native when 'native :> Dom.HTMLModElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLModElement).``cite`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "cite" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``dateTime``<'native when 'native :> Dom.HTMLModElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLModElement).``dateTime`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "dateTime" value) value
 
     member _.``dateTime``<'native when 'native :> Dom.HTMLModElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLModElement).``dateTime`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "dateTime" value)
             read
 
     member _.``dateTime``<'native when 'native :> Dom.HTMLModElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLModElement).``dateTime`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "dateTime" value)
             source
+#endif
 
+#endif
 type Groups.OListProperties<'inst> with
     member _.``compact``<'native when 'native :> Dom.HTMLOListElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOListElement).``compact`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``compact`` <- value) value
 
     member _.``compact``<'native when 'native :> Dom.HTMLOListElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOListElement).``compact`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``compact`` <- value) read
 
     member _.``compact``<'native when 'native :> Dom.HTMLOListElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOListElement).``compact`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``compact`` <- value) source
 
     member _.``reversed``<'native when 'native :> Dom.HTMLOListElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOListElement).``reversed`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``reversed`` <- value) value
 
     member _.``reversed``<'native when 'native :> Dom.HTMLOListElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOListElement).``reversed`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``reversed`` <- value) read
 
     member _.``reversed``<'native when 'native :> Dom.HTMLOListElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOListElement).``reversed`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``reversed`` <- value) source
 
-    member _.``start``<'native when 'native :> Dom.HTMLOListElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLOListElement).``start`` <- value)
-            value
+    member _.``start``<'native when 'native :> Dom.HTMLOListElement>(value: int) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``start`` <- value) value
 
-    member _.``start``<'native when 'native :> Dom.HTMLOListElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLOListElement).``start`` <- value)
-            read
+    member _.``start``<'native when 'native :> Dom.HTMLOListElement>(read: 'inst -> int) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``start`` <- value) read
 
-    member _.``start``<'native when 'native :> Dom.HTMLOListElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLOListElement).``start`` <- value)
-            source
+    member _.``start``<'native when 'native :> Dom.HTMLOListElement>(source: Source<'inst, int>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``start`` <- value) source
 
     member _.``type``<'native when 'native :> Dom.HTMLOListElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOListElement).``type`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) value
 
     member _.``type``<'native when 'native :> Dom.HTMLOListElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOListElement).``type`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) read
 
     member _.``type``<'native when 'native :> Dom.HTMLOListElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOListElement).``type`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) source
 
+#if FABLE_COMPILER
 type Groups.ObjectProperties<'inst> with
+#if FABLE_COMPILER
     member _.``align``<'native when 'native :> Dom.HTMLObjectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``align`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``align`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``archive``<'native when 'native :> Dom.HTMLObjectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``archive`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "archive" value) value
 
     member _.``archive``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``archive`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "archive" value) read
 
     member _.``archive``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``archive`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "archive" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``border``<'native when 'native :> Dom.HTMLObjectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``border`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "border" value) value
 
     member _.``border``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``border`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "border" value) read
 
     member _.``border``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``border`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "border" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``code``<'native when 'native :> Dom.HTMLObjectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``code`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "code" value) value
 
     member _.``code``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``code`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "code" value) read
 
     member _.``code``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``code`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "code" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``codeBase``<'native when 'native :> Dom.HTMLObjectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``codeBase`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "codeBase" value) value
 
     member _.``codeBase``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``codeBase`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "codeBase" value)
             read
 
     member _.``codeBase``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``codeBase`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "codeBase" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``codeType``<'native when 'native :> Dom.HTMLObjectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``codeType`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "codeType" value) value
 
     member _.``codeType``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``codeType`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "codeType" value)
             read
 
     member _.``codeType``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``codeType`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "codeType" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``data``<'native when 'native :> Dom.HTMLObjectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``data`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "data" value) value
 
     member _.``data``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``data`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "data" value) read
 
     member _.``data``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``data`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "data" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``declare``<'native when 'native :> Dom.HTMLObjectElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLObjectElement).``declare`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "declare" value) value
 
     member _.``declare``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLObjectElement).``declare`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "declare" value) read
 
     member _.``declare``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLObjectElement).``declare`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "declare" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``height``<'native when 'native :> Dom.HTMLObjectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``height`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "height" value) value
 
     member _.``height``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``height`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "height" value) read
 
     member _.``height``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``height`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "height" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``hspace``<'native when 'native :> Dom.HTMLObjectElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLObjectElement).``hspace`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "hspace" value) value
 
     member _.``hspace``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLObjectElement).``hspace`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "hspace" value) read
 
     member _.``hspace``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLObjectElement).``hspace`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "hspace" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``name``<'native when 'native :> Dom.HTMLObjectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``name`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``name`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "name" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``standby``<'native when 'native :> Dom.HTMLObjectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``standby`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "standby" value) value
 
     member _.``standby``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``standby`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "standby" value) read
 
     member _.``standby``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``standby`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "standby" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``type``<'native when 'native :> Dom.HTMLObjectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``type`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value) value
 
     member _.``type``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``type`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value) read
 
     member _.``type``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``type`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``useMap``<'native when 'native :> Dom.HTMLObjectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``useMap`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "useMap" value) value
 
     member _.``useMap``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``useMap`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "useMap" value) read
 
     member _.``useMap``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``useMap`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "useMap" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``vspace``<'native when 'native :> Dom.HTMLObjectElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLObjectElement).``vspace`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "vspace" value) value
 
     member _.``vspace``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLObjectElement).``vspace`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "vspace" value) read
 
     member _.``vspace``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLObjectElement).``vspace`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "vspace" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``width``<'native when 'native :> Dom.HTMLObjectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``width`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value) value
 
     member _.``width``<'native when 'native :> Dom.HTMLObjectElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``width`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value) read
 
     member _.``width``<'native when 'native :> Dom.HTMLObjectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLObjectElement).``width`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value)
             source
+#endif
 
+#endif
 type Groups.OptGroupProperties<'inst> with
     member _.``disabled``<'native when 'native :> Dom.HTMLOptGroupElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOptGroupElement).``disabled`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) value
 
     member _.``disabled``<'native when 'native :> Dom.HTMLOptGroupElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOptGroupElement).``disabled`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) read
 
     member _.``disabled``<'native when 'native :> Dom.HTMLOptGroupElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOptGroupElement).``disabled`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) source
 
     member _.``label``<'native when 'native :> Dom.HTMLOptGroupElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOptGroupElement).``label`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``label`` <- value) value
 
     member _.``label``<'native when 'native :> Dom.HTMLOptGroupElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOptGroupElement).``label`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``label`` <- value) read
 
     member _.``label``<'native when 'native :> Dom.HTMLOptGroupElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOptGroupElement).``label`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``label`` <- value) source
 
 type Groups.OptionProperties<'inst> with
     member _.``defaultSelected``<'native when 'native :> Dom.HTMLOptionElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOptionElement).``defaultSelected`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``defaultSelected`` <- value) value
 
     member _.``defaultSelected``<'native when 'native :> Dom.HTMLOptionElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOptionElement).``defaultSelected`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``defaultSelected`` <- value) read
 
     member _.``defaultSelected``<'native when 'native :> Dom.HTMLOptionElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOptionElement).``defaultSelected`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``defaultSelected`` <- value) source
 
     member _.``disabled``<'native when 'native :> Dom.HTMLOptionElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOptionElement).``disabled`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) value
 
     member _.``disabled``<'native when 'native :> Dom.HTMLOptionElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOptionElement).``disabled`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) read
 
     member _.``disabled``<'native when 'native :> Dom.HTMLOptionElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOptionElement).``disabled`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) source
 
     member _.``label``<'native when 'native :> Dom.HTMLOptionElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOptionElement).``label`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``label`` <- value) value
 
     member _.``label``<'native when 'native :> Dom.HTMLOptionElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOptionElement).``label`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``label`` <- value) read
 
     member _.``label``<'native when 'native :> Dom.HTMLOptionElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOptionElement).``label`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``label`` <- value) source
 
     member _.``selected``<'native when 'native :> Dom.HTMLOptionElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "selected")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOptionElement).``selected`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "selected") (fun (node: 'native) (value: bool) -> node.``selected`` <- value) value
 
     member _.``selected``<'native when 'native :> Dom.HTMLOptionElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "selected")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOptionElement).``selected`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "selected") (fun (node: 'native) (value: bool) -> node.``selected`` <- value) read
 
     member _.``selected``<'native when 'native :> Dom.HTMLOptionElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "selected")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLOptionElement).``selected`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "selected") (fun (node: 'native) (value: bool) -> node.``selected`` <- value) source
 
     member _.``value``<'native when 'native :> Dom.HTMLOptionElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.text "value")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOptionElement).``value`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.text "value") (fun (node: 'native) (value: string) -> node.``value`` <- value) value
 
     member _.``value``<'native when 'native :> Dom.HTMLOptionElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.text "value")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOptionElement).``value`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.text "value") (fun (node: 'native) (value: string) -> node.``value`` <- value) read
 
     member _.``value``<'native when 'native :> Dom.HTMLOptionElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.text "value")
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOptionElement).``value`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.text "value") (fun (node: 'native) (value: string) -> node.``value`` <- value) source
 
 type Groups.OutputProperties<'inst> with
     member _.``name``<'native when 'native :> Dom.HTMLOutputElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOutputElement).``name`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLOutputElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOutputElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLOutputElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLOutputElement).``name`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) source
 
 type Groups.ParagraphProperties<'inst> with
     member _.``align``<'native when 'native :> Dom.HTMLParagraphElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLParagraphElement).``align`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLParagraphElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLParagraphElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLParagraphElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLParagraphElement).``align`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``align`` <- value) source
 
 type Groups.PopoverTargetAttributesProperties<'inst> with
     member _.``popoverTargetAction``<'native when 'native :> Dom.PopoverTargetAttributes>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.PopoverTargetAttributes).``popoverTargetAction`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``popoverTargetAction`` <- value) value
 
     member _.``popoverTargetAction``<'native when 'native :> Dom.PopoverTargetAttributes>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.PopoverTargetAttributes).``popoverTargetAction`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``popoverTargetAction`` <- value) read
 
     member _.``popoverTargetAction``<'native when 'native :> Dom.PopoverTargetAttributes>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.PopoverTargetAttributes).``popoverTargetAction`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``popoverTargetAction`` <- value) source
 
+#if FABLE_COMPILER
 type Groups.PreProperties<'inst> with
+#if FABLE_COMPILER
     member _.``width``<'native when 'native :> Dom.HTMLPreElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> (node :> Dom.HTMLPreElement).``width`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value) value
 
     member _.``width``<'native when 'native :> Dom.HTMLPreElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLPreElement).``width`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value) read
 
     member _.``width``<'native when 'native :> Dom.HTMLPreElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLPreElement).``width`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value)
             source
+#endif
 
+#endif
 type Groups.ProgressProperties<'inst> with
     member _.``max``<'native when 'native :> Dom.HTMLProgressElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLProgressElement).``max`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``max`` <- value) value
 
     member _.``max``<'native when 'native :> Dom.HTMLProgressElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLProgressElement).``max`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``max`` <- value) read
 
     member _.``max``<'native when 'native :> Dom.HTMLProgressElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLProgressElement).``max`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> node.``max`` <- value) source
 
     member _.``value``<'native when 'native :> Dom.HTMLProgressElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.number "value")
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLProgressElement).``value`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.number "value") (fun (node: 'native) (value: float) -> node.``value`` <- value) value
 
     member _.``value``<'native when 'native :> Dom.HTMLProgressElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.number "value")
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLProgressElement).``value`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.number "value") (fun (node: 'native) (value: float) -> node.``value`` <- value) read
 
     member _.``value``<'native when 'native :> Dom.HTMLProgressElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.number "value")
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLProgressElement).``value`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.number "value") (fun (node: 'native) (value: float) -> node.``value`` <- value) source
 
+#if FABLE_COMPILER
 type Groups.QuoteProperties<'inst> with
+#if FABLE_COMPILER
     member _.``cite``<'native when 'native :> Dom.HTMLQuoteElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLQuoteElement).``cite`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "cite" value) value
 
     member _.``cite``<'native when 'native :> Dom.HTMLQuoteElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLQuoteElement).``cite`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "cite" value) read
 
     member _.``cite``<'native when 'native :> Dom.HTMLQuoteElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLQuoteElement).``cite`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "cite" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.ScriptProperties<'inst> with
+#if FABLE_COMPILER
     member _.``async``<'native when 'native :> Dom.HTMLScriptElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLScriptElement).``async`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "async" value) value
 
     member _.``async``<'native when 'native :> Dom.HTMLScriptElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLScriptElement).``async`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "async" value) read
 
     member _.``async``<'native when 'native :> Dom.HTMLScriptElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLScriptElement).``async`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "async" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``charset``<'native when 'native :> Dom.HTMLScriptElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``charset`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "charset" value) value
 
     member _.``charset``<'native when 'native :> Dom.HTMLScriptElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``charset`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "charset" value) read
 
     member _.``charset``<'native when 'native :> Dom.HTMLScriptElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``charset`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "charset" value)
             source
+#endif
 
-    member _.``crossOrigin``<'native when 'native :> Dom.HTMLScriptElement>(value: string option) : Part<'native, 'inst> =
+#if FABLE_COMPILER
+    member _.``crossOrigin``<'native when 'native :> Dom.HTMLScriptElement>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLScriptElement).``crossOrigin`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "crossOrigin" value)
             value
 
-    member _.``crossOrigin``<'native when 'native :> Dom.HTMLScriptElement>(read: 'inst -> string option) : Part<'native, 'inst> =
+    member _.``crossOrigin``<'native when 'native :> Dom.HTMLScriptElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLScriptElement).``crossOrigin`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "crossOrigin" value)
             read
 
-    member _.``crossOrigin``<'native when 'native :> Dom.HTMLScriptElement>(source: Source<'inst, string option>) : Part<'native, 'inst> =
+    member _.``crossOrigin``<'native when 'native :> Dom.HTMLScriptElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string option) -> (node :> Dom.HTMLScriptElement).``crossOrigin`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "crossOrigin" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``defer``<'native when 'native :> Dom.HTMLScriptElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLScriptElement).``defer`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "defer" value) value
 
     member _.``defer``<'native when 'native :> Dom.HTMLScriptElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLScriptElement).``defer`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "defer" value) read
 
     member _.``defer``<'native when 'native :> Dom.HTMLScriptElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLScriptElement).``defer`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "defer" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``event``<'native when 'native :> Dom.HTMLScriptElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``event`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "event" value) value
 
     member _.``event``<'native when 'native :> Dom.HTMLScriptElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``event`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "event" value) read
 
     member _.``event``<'native when 'native :> Dom.HTMLScriptElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``event`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "event" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``htmlFor``<'native when 'native :> Dom.HTMLScriptElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``htmlFor`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "htmlFor" value) value
 
     member _.``htmlFor``<'native when 'native :> Dom.HTMLScriptElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``htmlFor`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "htmlFor" value) read
 
     member _.``htmlFor``<'native when 'native :> Dom.HTMLScriptElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``htmlFor`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "htmlFor" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``integrity``<'native when 'native :> Dom.HTMLScriptElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``integrity`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "integrity" value) value
 
     member _.``integrity``<'native when 'native :> Dom.HTMLScriptElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``integrity`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "integrity" value)
             read
 
     member _.``integrity``<'native when 'native :> Dom.HTMLScriptElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``integrity`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "integrity" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``noModule``<'native when 'native :> Dom.HTMLScriptElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLScriptElement).``noModule`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "noModule" value) value
 
     member _.``noModule``<'native when 'native :> Dom.HTMLScriptElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLScriptElement).``noModule`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "noModule" value) read
 
     member _.``noModule``<'native when 'native :> Dom.HTMLScriptElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLScriptElement).``noModule`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "noModule" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLScriptElement>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``referrerPolicy`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "referrerPolicy" value)
             value
 
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLScriptElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``referrerPolicy`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "referrerPolicy" value)
             read
 
     member _.``referrerPolicy``<'native when 'native :> Dom.HTMLScriptElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``referrerPolicy`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "referrerPolicy" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``src``<'native when 'native :> Dom.HTMLScriptElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``src`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) value
 
     member _.``src``<'native when 'native :> Dom.HTMLScriptElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``src`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) read
 
     member _.``src``<'native when 'native :> Dom.HTMLScriptElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``src`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``type``<'native when 'native :> Dom.HTMLScriptElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``type`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value) value
 
     member _.``type``<'native when 'native :> Dom.HTMLScriptElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``type`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value) read
 
     member _.``type``<'native when 'native :> Dom.HTMLScriptElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLScriptElement).``type`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value)
             source
+#endif
 
+#endif
 type Groups.SelectProperties<'inst> with
     member _.``autocomplete``<'native when 'native :> Dom.HTMLSelectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSelectElement).``autocomplete`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocomplete`` <- value) value
 
     member _.``autocomplete``<'native when 'native :> Dom.HTMLSelectElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSelectElement).``autocomplete`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocomplete`` <- value) read
 
     member _.``autocomplete``<'native when 'native :> Dom.HTMLSelectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSelectElement).``autocomplete`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocomplete`` <- value) source
 
     member _.``disabled``<'native when 'native :> Dom.HTMLSelectElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLSelectElement).``disabled`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) value
 
     member _.``disabled``<'native when 'native :> Dom.HTMLSelectElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLSelectElement).``disabled`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) read
 
     member _.``disabled``<'native when 'native :> Dom.HTMLSelectElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLSelectElement).``disabled`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) source
 
-    member _.``length``<'native when 'native :> Dom.HTMLSelectElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSelectElement).``length`` <- value)
-            value
+    member _.``length``<'native when 'native :> Dom.HTMLSelectElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``length`` <- value) value
 
-    member _.``length``<'native when 'native :> Dom.HTMLSelectElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSelectElement).``length`` <- value)
-            read
+    member _.``length``<'native when 'native :> Dom.HTMLSelectElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``length`` <- value) read
 
-    member _.``length``<'native when 'native :> Dom.HTMLSelectElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSelectElement).``length`` <- value)
-            source
+    member _.``length``<'native when 'native :> Dom.HTMLSelectElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``length`` <- value) source
 
     member _.``multiple``<'native when 'native :> Dom.HTMLSelectElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "multiple")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLSelectElement).``multiple`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "multiple") (fun (node: 'native) (value: bool) -> node.``multiple`` <- value) value
 
     member _.``multiple``<'native when 'native :> Dom.HTMLSelectElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "multiple")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLSelectElement).``multiple`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "multiple") (fun (node: 'native) (value: bool) -> node.``multiple`` <- value) read
 
     member _.``multiple``<'native when 'native :> Dom.HTMLSelectElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "multiple")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLSelectElement).``multiple`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "multiple") (fun (node: 'native) (value: bool) -> node.``multiple`` <- value) source
 
     member _.``name``<'native when 'native :> Dom.HTMLSelectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSelectElement).``name`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLSelectElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSelectElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLSelectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSelectElement).``name`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) source
 
     member _.``required``<'native when 'native :> Dom.HTMLSelectElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "required")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLSelectElement).``required`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "required") (fun (node: 'native) (value: bool) -> node.``required`` <- value) value
 
     member _.``required``<'native when 'native :> Dom.HTMLSelectElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "required")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLSelectElement).``required`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "required") (fun (node: 'native) (value: bool) -> node.``required`` <- value) read
 
     member _.``required``<'native when 'native :> Dom.HTMLSelectElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "required")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLSelectElement).``required`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "required") (fun (node: 'native) (value: bool) -> node.``required`` <- value) source
 
-    member _.``selectedIndex``<'native when 'native :> Dom.HTMLSelectElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSelectElement).``selectedIndex`` <- value)
-            value
+    member _.``selectedIndex``<'native when 'native :> Dom.HTMLSelectElement>(value: int) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``selectedIndex`` <- value) value
 
-    member _.``selectedIndex``<'native when 'native :> Dom.HTMLSelectElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSelectElement).``selectedIndex`` <- value)
-            read
+    member _.``selectedIndex``<'native when 'native :> Dom.HTMLSelectElement>(read: 'inst -> int) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``selectedIndex`` <- value) read
 
-    member _.``selectedIndex``<'native when 'native :> Dom.HTMLSelectElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSelectElement).``selectedIndex`` <- value)
-            source
+    member _.``selectedIndex``<'native when 'native :> Dom.HTMLSelectElement>(source: Source<'inst, int>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``selectedIndex`` <- value) source
 
-    member _.``size``<'native when 'native :> Dom.HTMLSelectElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSelectElement).``size`` <- value)
-            value
+    member _.``size``<'native when 'native :> Dom.HTMLSelectElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``size`` <- value) value
 
-    member _.``size``<'native when 'native :> Dom.HTMLSelectElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSelectElement).``size`` <- value)
-            read
+    member _.``size``<'native when 'native :> Dom.HTMLSelectElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``size`` <- value) read
 
-    member _.``size``<'native when 'native :> Dom.HTMLSelectElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSelectElement).``size`` <- value)
-            source
+    member _.``size``<'native when 'native :> Dom.HTMLSelectElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``size`` <- value) source
 
     member _.``value``<'native when 'native :> Dom.HTMLSelectElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSelectElement).``value`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``value`` <- value) value
 
     member _.``value``<'native when 'native :> Dom.HTMLSelectElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSelectElement).``value`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``value`` <- value) read
 
     member _.``value``<'native when 'native :> Dom.HTMLSelectElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSelectElement).``value`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``value`` <- value) source
 
 type Groups.SlotProperties<'inst> with
     member _.``name``<'native when 'native :> Dom.HTMLSlotElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSlotElement).``name`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLSlotElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSlotElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLSlotElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSlotElement).``name`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) source
 
+#if FABLE_COMPILER
 type Groups.SourceProperties<'inst> with
+#if FABLE_COMPILER
     member _.``height``<'native when 'native :> Dom.HTMLSourceElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSourceElement).``height`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "height" value) value
 
     member _.``height``<'native when 'native :> Dom.HTMLSourceElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSourceElement).``height`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "height" value) read
 
     member _.``height``<'native when 'native :> Dom.HTMLSourceElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSourceElement).``height`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "height" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``media``<'native when 'native :> Dom.HTMLSourceElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``media`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "media" value) value
 
     member _.``media``<'native when 'native :> Dom.HTMLSourceElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``media`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "media" value) read
 
     member _.``media``<'native when 'native :> Dom.HTMLSourceElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``media`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "media" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``sizes``<'native when 'native :> Dom.HTMLSourceElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``sizes`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "sizes" value) value
 
     member _.``sizes``<'native when 'native :> Dom.HTMLSourceElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``sizes`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "sizes" value) read
 
     member _.``sizes``<'native when 'native :> Dom.HTMLSourceElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``sizes`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "sizes" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``src``<'native when 'native :> Dom.HTMLSourceElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``src`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) value
 
     member _.``src``<'native when 'native :> Dom.HTMLSourceElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``src`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) read
 
     member _.``src``<'native when 'native :> Dom.HTMLSourceElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``src`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``srcset``<'native when 'native :> Dom.HTMLSourceElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``srcset`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "srcset" value) value
 
     member _.``srcset``<'native when 'native :> Dom.HTMLSourceElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``srcset`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "srcset" value) read
 
     member _.``srcset``<'native when 'native :> Dom.HTMLSourceElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``srcset`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "srcset" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``type``<'native when 'native :> Dom.HTMLSourceElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``type`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value) value
 
     member _.``type``<'native when 'native :> Dom.HTMLSourceElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``type`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value) read
 
     member _.``type``<'native when 'native :> Dom.HTMLSourceElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLSourceElement).``type`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``width``<'native when 'native :> Dom.HTMLSourceElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSourceElement).``width`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value) value
 
     member _.``width``<'native when 'native :> Dom.HTMLSourceElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSourceElement).``width`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value) read
 
     member _.``width``<'native when 'native :> Dom.HTMLSourceElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLSourceElement).``width`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.StyleProperties<'inst> with
+#if FABLE_COMPILER
     member _.``disabled``<'native when 'native :> Dom.HTMLStyleElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLStyleElement).``disabled`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "disabled" value) value
 
     member _.``disabled``<'native when 'native :> Dom.HTMLStyleElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLStyleElement).``disabled`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "disabled" value) read
 
     member _.``disabled``<'native when 'native :> Dom.HTMLStyleElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLStyleElement).``disabled`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "disabled" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``media``<'native when 'native :> Dom.HTMLStyleElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLStyleElement).``media`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "media" value) value
 
     member _.``media``<'native when 'native :> Dom.HTMLStyleElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLStyleElement).``media`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "media" value) read
 
     member _.``media``<'native when 'native :> Dom.HTMLStyleElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLStyleElement).``media`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "media" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``type``<'native when 'native :> Dom.HTMLStyleElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLStyleElement).``type`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value) value
 
     member _.``type``<'native when 'native :> Dom.HTMLStyleElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLStyleElement).``type`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value) read
 
     member _.``type``<'native when 'native :> Dom.HTMLStyleElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLStyleElement).``type`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "type" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.TableProperties<'inst> with
+#if FABLE_COMPILER
     member _.``align``<'native when 'native :> Dom.HTMLTableElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``align`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLTableElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLTableElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``align`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``bgColor``<'native when 'native :> Dom.HTMLTableElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``bgColor`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "bgColor" value) value
 
     member _.``bgColor``<'native when 'native :> Dom.HTMLTableElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``bgColor`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "bgColor" value) read
 
     member _.``bgColor``<'native when 'native :> Dom.HTMLTableElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``bgColor`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "bgColor" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``border``<'native when 'native :> Dom.HTMLTableElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``border`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "border" value) value
 
     member _.``border``<'native when 'native :> Dom.HTMLTableElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``border`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "border" value) read
 
     member _.``border``<'native when 'native :> Dom.HTMLTableElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``border`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "border" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``cellPadding``<'native when 'native :> Dom.HTMLTableElement>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``cellPadding`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "cellPadding" value)
             value
 
     member _.``cellPadding``<'native when 'native :> Dom.HTMLTableElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``cellPadding`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "cellPadding" value)
             read
 
     member _.``cellPadding``<'native when 'native :> Dom.HTMLTableElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``cellPadding`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "cellPadding" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``cellSpacing``<'native when 'native :> Dom.HTMLTableElement>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``cellSpacing`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "cellSpacing" value)
             value
 
     member _.``cellSpacing``<'native when 'native :> Dom.HTMLTableElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``cellSpacing`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "cellSpacing" value)
             read
 
     member _.``cellSpacing``<'native when 'native :> Dom.HTMLTableElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``cellSpacing`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "cellSpacing" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``frame``<'native when 'native :> Dom.HTMLTableElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``frame`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "frame" value) value
 
     member _.``frame``<'native when 'native :> Dom.HTMLTableElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``frame`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "frame" value) read
 
     member _.``frame``<'native when 'native :> Dom.HTMLTableElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``frame`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "frame" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``rules``<'native when 'native :> Dom.HTMLTableElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``rules`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "rules" value) value
 
     member _.``rules``<'native when 'native :> Dom.HTMLTableElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``rules`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "rules" value) read
 
     member _.``rules``<'native when 'native :> Dom.HTMLTableElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``rules`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "rules" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``summary``<'native when 'native :> Dom.HTMLTableElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``summary`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "summary" value) value
 
     member _.``summary``<'native when 'native :> Dom.HTMLTableElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``summary`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "summary" value) read
 
     member _.``summary``<'native when 'native :> Dom.HTMLTableElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``summary`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "summary" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``width``<'native when 'native :> Dom.HTMLTableElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``width`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value) value
 
     member _.``width``<'native when 'native :> Dom.HTMLTableElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``width`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value) read
 
     member _.``width``<'native when 'native :> Dom.HTMLTableElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableElement).``width`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.TableCaptionProperties<'inst> with
+#if FABLE_COMPILER
     member _.``align``<'native when 'native :> Dom.HTMLTableCaptionElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCaptionElement).``align`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLTableCaptionElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCaptionElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLTableCaptionElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCaptionElement).``align`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.TableCellProperties<'inst> with
+#if FABLE_COMPILER
     member _.``abbr``<'native when 'native :> Dom.HTMLTableCellElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``abbr`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "abbr" value) value
 
     member _.``abbr``<'native when 'native :> Dom.HTMLTableCellElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``abbr`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "abbr" value) read
 
     member _.``abbr``<'native when 'native :> Dom.HTMLTableCellElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``abbr`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "abbr" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``align``<'native when 'native :> Dom.HTMLTableCellElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``align`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLTableCellElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLTableCellElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``align`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``axis``<'native when 'native :> Dom.HTMLTableCellElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``axis`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "axis" value) value
 
     member _.``axis``<'native when 'native :> Dom.HTMLTableCellElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``axis`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "axis" value) read
 
     member _.``axis``<'native when 'native :> Dom.HTMLTableCellElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``axis`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "axis" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``bgColor``<'native when 'native :> Dom.HTMLTableCellElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``bgColor`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "bgColor" value) value
 
     member _.``bgColor``<'native when 'native :> Dom.HTMLTableCellElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``bgColor`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "bgColor" value) read
 
     member _.``bgColor``<'native when 'native :> Dom.HTMLTableCellElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``bgColor`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "bgColor" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``ch``<'native when 'native :> Dom.HTMLTableCellElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``ch`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ch" value) value
 
     member _.``ch``<'native when 'native :> Dom.HTMLTableCellElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``ch`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ch" value) read
 
     member _.``ch``<'native when 'native :> Dom.HTMLTableCellElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``ch`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ch" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``chOff``<'native when 'native :> Dom.HTMLTableCellElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``chOff`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "chOff" value) value
 
     member _.``chOff``<'native when 'native :> Dom.HTMLTableCellElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``chOff`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "chOff" value) read
 
     member _.``chOff``<'native when 'native :> Dom.HTMLTableCellElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``chOff`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "chOff" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``colSpan``<'native when 'native :> Dom.HTMLTableCellElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTableCellElement).``colSpan`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "colSpan" value) value
 
     member _.``colSpan``<'native when 'native :> Dom.HTMLTableCellElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTableCellElement).``colSpan`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "colSpan" value) read
 
     member _.``colSpan``<'native when 'native :> Dom.HTMLTableCellElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTableCellElement).``colSpan`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "colSpan" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``headers``<'native when 'native :> Dom.HTMLTableCellElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``headers`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "headers" value) value
 
     member _.``headers``<'native when 'native :> Dom.HTMLTableCellElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``headers`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "headers" value) read
 
     member _.``headers``<'native when 'native :> Dom.HTMLTableCellElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``headers`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "headers" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``height``<'native when 'native :> Dom.HTMLTableCellElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``height`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "height" value) value
 
     member _.``height``<'native when 'native :> Dom.HTMLTableCellElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``height`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "height" value) read
 
     member _.``height``<'native when 'native :> Dom.HTMLTableCellElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``height`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "height" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``noWrap``<'native when 'native :> Dom.HTMLTableCellElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTableCellElement).``noWrap`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "noWrap" value) value
 
     member _.``noWrap``<'native when 'native :> Dom.HTMLTableCellElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTableCellElement).``noWrap`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "noWrap" value) read
 
     member _.``noWrap``<'native when 'native :> Dom.HTMLTableCellElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTableCellElement).``noWrap`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "noWrap" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``rowSpan``<'native when 'native :> Dom.HTMLTableCellElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTableCellElement).``rowSpan`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "rowSpan" value) value
 
     member _.``rowSpan``<'native when 'native :> Dom.HTMLTableCellElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTableCellElement).``rowSpan`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "rowSpan" value) read
 
     member _.``rowSpan``<'native when 'native :> Dom.HTMLTableCellElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTableCellElement).``rowSpan`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "rowSpan" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``scope``<'native when 'native :> Dom.HTMLTableCellElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``scope`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "scope" value) value
 
     member _.``scope``<'native when 'native :> Dom.HTMLTableCellElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``scope`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "scope" value) read
 
     member _.``scope``<'native when 'native :> Dom.HTMLTableCellElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``scope`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "scope" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``vAlign``<'native when 'native :> Dom.HTMLTableCellElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``vAlign`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "vAlign" value) value
 
     member _.``vAlign``<'native when 'native :> Dom.HTMLTableCellElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``vAlign`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "vAlign" value) read
 
     member _.``vAlign``<'native when 'native :> Dom.HTMLTableCellElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``vAlign`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "vAlign" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``width``<'native when 'native :> Dom.HTMLTableCellElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``width`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value) value
 
     member _.``width``<'native when 'native :> Dom.HTMLTableCellElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``width`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value) read
 
     member _.``width``<'native when 'native :> Dom.HTMLTableCellElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableCellElement).``width`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.TableColProperties<'inst> with
+#if FABLE_COMPILER
     member _.``align``<'native when 'native :> Dom.HTMLTableColElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``align`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLTableColElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLTableColElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``align`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``ch``<'native when 'native :> Dom.HTMLTableColElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``ch`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ch" value) value
 
     member _.``ch``<'native when 'native :> Dom.HTMLTableColElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``ch`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ch" value) read
 
     member _.``ch``<'native when 'native :> Dom.HTMLTableColElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``ch`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ch" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``chOff``<'native when 'native :> Dom.HTMLTableColElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``chOff`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "chOff" value) value
 
     member _.``chOff``<'native when 'native :> Dom.HTMLTableColElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``chOff`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "chOff" value) read
 
     member _.``chOff``<'native when 'native :> Dom.HTMLTableColElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``chOff`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "chOff" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``span``<'native when 'native :> Dom.HTMLTableColElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTableColElement).``span`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "span" value) value
 
     member _.``span``<'native when 'native :> Dom.HTMLTableColElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTableColElement).``span`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "span" value) read
 
     member _.``span``<'native when 'native :> Dom.HTMLTableColElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTableColElement).``span`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "span" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``vAlign``<'native when 'native :> Dom.HTMLTableColElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``vAlign`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "vAlign" value) value
 
     member _.``vAlign``<'native when 'native :> Dom.HTMLTableColElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``vAlign`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "vAlign" value) read
 
     member _.``vAlign``<'native when 'native :> Dom.HTMLTableColElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``vAlign`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "vAlign" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``width``<'native when 'native :> Dom.HTMLTableColElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``width`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value) value
 
     member _.``width``<'native when 'native :> Dom.HTMLTableColElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``width`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value) read
 
     member _.``width``<'native when 'native :> Dom.HTMLTableColElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableColElement).``width`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "width" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.TableRowProperties<'inst> with
+#if FABLE_COMPILER
     member _.``align``<'native when 'native :> Dom.HTMLTableRowElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``align`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLTableRowElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLTableRowElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``align`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``bgColor``<'native when 'native :> Dom.HTMLTableRowElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``bgColor`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "bgColor" value) value
 
     member _.``bgColor``<'native when 'native :> Dom.HTMLTableRowElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``bgColor`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "bgColor" value) read
 
     member _.``bgColor``<'native when 'native :> Dom.HTMLTableRowElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``bgColor`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "bgColor" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``ch``<'native when 'native :> Dom.HTMLTableRowElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``ch`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ch" value) value
 
     member _.``ch``<'native when 'native :> Dom.HTMLTableRowElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``ch`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ch" value) read
 
     member _.``ch``<'native when 'native :> Dom.HTMLTableRowElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``ch`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ch" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``chOff``<'native when 'native :> Dom.HTMLTableRowElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``chOff`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "chOff" value) value
 
     member _.``chOff``<'native when 'native :> Dom.HTMLTableRowElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``chOff`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "chOff" value) read
 
     member _.``chOff``<'native when 'native :> Dom.HTMLTableRowElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``chOff`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "chOff" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``vAlign``<'native when 'native :> Dom.HTMLTableRowElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``vAlign`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "vAlign" value) value
 
     member _.``vAlign``<'native when 'native :> Dom.HTMLTableRowElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``vAlign`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "vAlign" value) read
 
     member _.``vAlign``<'native when 'native :> Dom.HTMLTableRowElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableRowElement).``vAlign`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "vAlign" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.TableSectionProperties<'inst> with
+#if FABLE_COMPILER
     member _.``align``<'native when 'native :> Dom.HTMLTableSectionElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableSectionElement).``align`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) value
 
     member _.``align``<'native when 'native :> Dom.HTMLTableSectionElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableSectionElement).``align`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value) read
 
     member _.``align``<'native when 'native :> Dom.HTMLTableSectionElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableSectionElement).``align`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "align" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``ch``<'native when 'native :> Dom.HTMLTableSectionElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableSectionElement).``ch`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ch" value) value
 
     member _.``ch``<'native when 'native :> Dom.HTMLTableSectionElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableSectionElement).``ch`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ch" value) read
 
     member _.``ch``<'native when 'native :> Dom.HTMLTableSectionElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableSectionElement).``ch`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "ch" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``chOff``<'native when 'native :> Dom.HTMLTableSectionElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableSectionElement).``chOff`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "chOff" value) value
 
     member _.``chOff``<'native when 'native :> Dom.HTMLTableSectionElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableSectionElement).``chOff`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "chOff" value) read
 
     member _.``chOff``<'native when 'native :> Dom.HTMLTableSectionElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableSectionElement).``chOff`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "chOff" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``vAlign``<'native when 'native :> Dom.HTMLTableSectionElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableSectionElement).``vAlign`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "vAlign" value) value
 
     member _.``vAlign``<'native when 'native :> Dom.HTMLTableSectionElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableSectionElement).``vAlign`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "vAlign" value) read
 
     member _.``vAlign``<'native when 'native :> Dom.HTMLTableSectionElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTableSectionElement).``vAlign`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "vAlign" value)
             source
+#endif
 
+#endif
 type Groups.TemplateProperties<'inst> with
     member _.``shadowRootClonable``<'native when 'native :> Dom.HTMLTemplateElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTemplateElement).``shadowRootClonable`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``shadowRootClonable`` <- value) value
 
     member _.``shadowRootClonable``<'native when 'native :> Dom.HTMLTemplateElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTemplateElement).``shadowRootClonable`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``shadowRootClonable`` <- value) read
 
     member _.``shadowRootClonable``<'native when 'native :> Dom.HTMLTemplateElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTemplateElement).``shadowRootClonable`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``shadowRootClonable`` <- value) source
 
     member _.``shadowRootCustomElementRegistry``<'native when 'native :> Dom.HTMLTemplateElement>(value: string) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTemplateElement).``shadowRootCustomElementRegistry`` <- value)
+            (fun (node: 'native) (value: string) -> node.``shadowRootCustomElementRegistry`` <- value)
             value
 
     member _.``shadowRootCustomElementRegistry``<'native when 'native :> Dom.HTMLTemplateElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTemplateElement).``shadowRootCustomElementRegistry`` <- value)
+            (fun (node: 'native) (value: string) -> node.``shadowRootCustomElementRegistry`` <- value)
             read
 
     member _.``shadowRootCustomElementRegistry``<'native when 'native :> Dom.HTMLTemplateElement>
@@ -7652,569 +5670,372 @@ type Groups.TemplateProperties<'inst> with
         : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTemplateElement).``shadowRootCustomElementRegistry`` <- value)
+            (fun (node: 'native) (value: string) -> node.``shadowRootCustomElementRegistry`` <- value)
             source
 
     member _.``shadowRootDelegatesFocus``<'native when 'native :> Dom.HTMLTemplateElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTemplateElement).``shadowRootDelegatesFocus`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``shadowRootDelegatesFocus`` <- value) value
 
     member _.``shadowRootDelegatesFocus``<'native when 'native :> Dom.HTMLTemplateElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTemplateElement).``shadowRootDelegatesFocus`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``shadowRootDelegatesFocus`` <- value) read
 
     member _.``shadowRootDelegatesFocus``<'native when 'native :> Dom.HTMLTemplateElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTemplateElement).``shadowRootDelegatesFocus`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``shadowRootDelegatesFocus`` <- value) source
 
     member _.``shadowRootMode``<'native when 'native :> Dom.HTMLTemplateElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTemplateElement).``shadowRootMode`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``shadowRootMode`` <- value) value
 
     member _.``shadowRootMode``<'native when 'native :> Dom.HTMLTemplateElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTemplateElement).``shadowRootMode`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``shadowRootMode`` <- value) read
 
     member _.``shadowRootMode``<'native when 'native :> Dom.HTMLTemplateElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTemplateElement).``shadowRootMode`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``shadowRootMode`` <- value) source
 
     member _.``shadowRootSerializable``<'native when 'native :> Dom.HTMLTemplateElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTemplateElement).``shadowRootSerializable`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``shadowRootSerializable`` <- value) value
 
     member _.``shadowRootSerializable``<'native when 'native :> Dom.HTMLTemplateElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTemplateElement).``shadowRootSerializable`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``shadowRootSerializable`` <- value) read
 
     member _.``shadowRootSerializable``<'native when 'native :> Dom.HTMLTemplateElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTemplateElement).``shadowRootSerializable`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``shadowRootSerializable`` <- value) source
 
 type Groups.TextAreaProperties<'inst> with
     member _.``autocomplete``<'native when 'native :> Dom.HTMLTextAreaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``autocomplete`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocomplete`` <- value) value
 
     member _.``autocomplete``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``autocomplete`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocomplete`` <- value) read
 
     member _.``autocomplete``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``autocomplete`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``autocomplete`` <- value) source
 
-    member _.``cols``<'native when 'native :> Dom.HTMLTextAreaElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``cols`` <- value)
-            value
+    member _.``cols``<'native when 'native :> Dom.HTMLTextAreaElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``cols`` <- value) value
 
-    member _.``cols``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``cols`` <- value)
-            read
+    member _.``cols``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``cols`` <- value) read
 
-    member _.``cols``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``cols`` <- value)
-            source
+    member _.``cols``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``cols`` <- value) source
 
     member _.``dirName``<'native when 'native :> Dom.HTMLTextAreaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``dirName`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``dirName`` <- value) value
 
     member _.``dirName``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``dirName`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``dirName`` <- value) read
 
     member _.``dirName``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``dirName`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``dirName`` <- value) source
 
     member _.``disabled``<'native when 'native :> Dom.HTMLTextAreaElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTextAreaElement).``disabled`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) value
 
     member _.``disabled``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTextAreaElement).``disabled`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) read
 
     member _.``disabled``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "disabled")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTextAreaElement).``disabled`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "disabled") (fun (node: 'native) (value: bool) -> node.``disabled`` <- value) source
 
-    member _.``maxLength``<'native when 'native :> Dom.HTMLTextAreaElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``maxLength`` <- value)
-            value
+    member _.``maxLength``<'native when 'native :> Dom.HTMLTextAreaElement>(value: int) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``maxLength`` <- value) value
 
-    member _.``maxLength``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``maxLength`` <- value)
-            read
+    member _.``maxLength``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> int) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``maxLength`` <- value) read
 
-    member _.``maxLength``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``maxLength`` <- value)
-            source
+    member _.``maxLength``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, int>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``maxLength`` <- value) source
 
-    member _.``minLength``<'native when 'native :> Dom.HTMLTextAreaElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``minLength`` <- value)
-            value
+    member _.``minLength``<'native when 'native :> Dom.HTMLTextAreaElement>(value: int) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``minLength`` <- value) value
 
-    member _.``minLength``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``minLength`` <- value)
-            read
+    member _.``minLength``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> int) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``minLength`` <- value) read
 
-    member _.``minLength``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``minLength`` <- value)
-            source
+    member _.``minLength``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, int>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: int) -> node.``minLength`` <- value) source
 
     member _.``name``<'native when 'native :> Dom.HTMLTextAreaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``name`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) value
 
     member _.``name``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``name`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) read
 
     member _.``name``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``name`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``name`` <- value) source
 
     member _.``placeholder``<'native when 'native :> Dom.HTMLTextAreaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``placeholder`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``placeholder`` <- value) value
 
     member _.``placeholder``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``placeholder`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``placeholder`` <- value) read
 
     member _.``placeholder``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``placeholder`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``placeholder`` <- value) source
 
     member _.``readOnly``<'native when 'native :> Dom.HTMLTextAreaElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "readonly")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTextAreaElement).``readOnly`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "readonly") (fun (node: 'native) (value: bool) -> node.``readOnly`` <- value) value
 
     member _.``readOnly``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "readonly")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTextAreaElement).``readOnly`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "readonly") (fun (node: 'native) (value: bool) -> node.``readOnly`` <- value) read
 
     member _.``readOnly``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "readonly")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTextAreaElement).``readOnly`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "readonly") (fun (node: 'native) (value: bool) -> node.``readOnly`` <- value) source
 
     member _.``required``<'native when 'native :> Dom.HTMLTextAreaElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            (PropertyHtml.presence "required")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTextAreaElement).``required`` <- value)
-            value
+        TemplateParts.property (PropertyHtml.presence "required") (fun (node: 'native) (value: bool) -> node.``required`` <- value) value
 
     member _.``required``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            (PropertyHtml.presence "required")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTextAreaElement).``required`` <- value)
-            read
+        TemplateParts.readProperty (PropertyHtml.presence "required") (fun (node: 'native) (value: bool) -> node.``required`` <- value) read
 
     member _.``required``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            (PropertyHtml.presence "required")
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTextAreaElement).``required`` <- value)
-            source
+        TemplateParts.sourceProperty (PropertyHtml.presence "required") (fun (node: 'native) (value: bool) -> node.``required`` <- value) source
 
-    member _.``rows``<'native when 'native :> Dom.HTMLTextAreaElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``rows`` <- value)
-            value
+    member _.``rows``<'native when 'native :> Dom.HTMLTextAreaElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``rows`` <- value) value
 
-    member _.``rows``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``rows`` <- value)
-            read
+    member _.``rows``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``rows`` <- value) read
 
-    member _.``rows``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``rows`` <- value)
-            source
+    member _.``rows``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``rows`` <- value) source
 
-    member _.``selectionEnd``<'native when 'native :> Dom.HTMLTextAreaElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``selectionEnd`` <- value)
-            value
+    member _.``selectionDirection``<'native when 'native :> Dom.HTMLTextAreaElement>(value: string) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``selectionDirection`` <- value) value
 
-    member _.``selectionEnd``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``selectionEnd`` <- value)
-            read
+    member _.``selectionDirection``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``selectionDirection`` <- value) read
 
-    member _.``selectionEnd``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``selectionEnd`` <- value)
-            source
+    member _.``selectionDirection``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``selectionDirection`` <- value) source
 
-    member _.``selectionStart``<'native when 'native :> Dom.HTMLTextAreaElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``selectionStart`` <- value)
-            value
+    member _.``selectionEnd``<'native when 'native :> Dom.HTMLTextAreaElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``selectionEnd`` <- value) value
 
-    member _.``selectionStart``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``selectionStart`` <- value)
-            read
+    member _.``selectionEnd``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``selectionEnd`` <- value) read
 
-    member _.``selectionStart``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLTextAreaElement).``selectionStart`` <- value)
-            source
+    member _.``selectionEnd``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``selectionEnd`` <- value) source
+
+    member _.``selectionStart``<'native when 'native :> Dom.HTMLTextAreaElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``selectionStart`` <- value) value
+
+    member _.``selectionStart``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``selectionStart`` <- value) read
+
+    member _.``selectionStart``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``selectionStart`` <- value) source
 
     member _.``value``<'native when 'native :> Dom.HTMLTextAreaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.childText
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``value`` <- value)
-            value
+        TemplateParts.property PropertyHtml.childText (fun (node: 'native) (value: string) -> node.``value`` <- value) value
 
     member _.``value``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.childText
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``value`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.childText (fun (node: 'native) (value: string) -> node.``value`` <- value) read
 
     member _.``value``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.childText
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``value`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.childText (fun (node: 'native) (value: string) -> node.``value`` <- value) source
 
     member _.``wrap``<'native when 'native :> Dom.HTMLTextAreaElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``wrap`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``wrap`` <- value) value
 
     member _.``wrap``<'native when 'native :> Dom.HTMLTextAreaElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``wrap`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``wrap`` <- value) read
 
     member _.``wrap``<'native when 'native :> Dom.HTMLTextAreaElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTextAreaElement).``wrap`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``wrap`` <- value) source
 
+#if FABLE_COMPILER
 type Groups.TimeProperties<'inst> with
+#if FABLE_COMPILER
     member _.``dateTime``<'native when 'native :> Dom.HTMLTimeElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTimeElement).``dateTime`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "dateTime" value) value
 
     member _.``dateTime``<'native when 'native :> Dom.HTMLTimeElement>(read: 'inst -> string) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTimeElement).``dateTime`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "dateTime" value)
             read
 
     member _.``dateTime``<'native when 'native :> Dom.HTMLTimeElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTimeElement).``dateTime`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "dateTime" value)
             source
+#endif
 
+#endif
+#if FABLE_COMPILER
 type Groups.TrackProperties<'inst> with
+#if FABLE_COMPILER
     member _.``default``<'native when 'native :> Dom.HTMLTrackElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTrackElement).``default`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "default" value) value
 
     member _.``default``<'native when 'native :> Dom.HTMLTrackElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTrackElement).``default`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "default" value) read
 
     member _.``default``<'native when 'native :> Dom.HTMLTrackElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLTrackElement).``default`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "default" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``kind``<'native when 'native :> Dom.HTMLTrackElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTrackElement).``kind`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "kind" value) value
 
     member _.``kind``<'native when 'native :> Dom.HTMLTrackElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTrackElement).``kind`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "kind" value) read
 
     member _.``kind``<'native when 'native :> Dom.HTMLTrackElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTrackElement).``kind`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "kind" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``label``<'native when 'native :> Dom.HTMLTrackElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTrackElement).``label`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "label" value) value
 
     member _.``label``<'native when 'native :> Dom.HTMLTrackElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTrackElement).``label`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "label" value) read
 
     member _.``label``<'native when 'native :> Dom.HTMLTrackElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTrackElement).``label`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "label" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``src``<'native when 'native :> Dom.HTMLTrackElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTrackElement).``src`` <- value) value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) value
 
     member _.``src``<'native when 'native :> Dom.HTMLTrackElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTrackElement).``src`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) read
 
     member _.``src``<'native when 'native :> Dom.HTMLTrackElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTrackElement).``src`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "src" value) source
+#endif
 
+#if FABLE_COMPILER
     member _.``srclang``<'native when 'native :> Dom.HTMLTrackElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTrackElement).``srclang`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "srclang" value) value
 
     member _.``srclang``<'native when 'native :> Dom.HTMLTrackElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTrackElement).``srclang`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "srclang" value) read
 
     member _.``srclang``<'native when 'native :> Dom.HTMLTrackElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLTrackElement).``srclang`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "srclang" value)
             source
+#endif
 
+#endif
 type Groups.UListProperties<'inst> with
     member _.``compact``<'native when 'native :> Dom.HTMLUListElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLUListElement).``compact`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``compact`` <- value) value
 
     member _.``compact``<'native when 'native :> Dom.HTMLUListElement>(read: 'inst -> bool) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLUListElement).``compact`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``compact`` <- value) read
 
     member _.``compact``<'native when 'native :> Dom.HTMLUListElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLUListElement).``compact`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``compact`` <- value) source
 
     member _.``type``<'native when 'native :> Dom.HTMLUListElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLUListElement).``type`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) value
 
     member _.``type``<'native when 'native :> Dom.HTMLUListElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLUListElement).``type`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) read
 
     member _.``type``<'native when 'native :> Dom.HTMLUListElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLUListElement).``type`` <- value)
-            source
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> node.``type`` <- value) source
 
+#if FABLE_COMPILER
 type Groups.VideoProperties<'inst> with
+#if FABLE_COMPILER
     member _.``disablePictureInPicture``<'native when 'native :> Dom.HTMLVideoElement>(value: bool) : Part<'native, 'inst> =
         TemplateParts.property
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLVideoElement).``disablePictureInPicture`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "disablePictureInPicture" value)
             value
 
     member _.``disablePictureInPicture``<'native when 'native :> Dom.HTMLVideoElement>(read: 'inst -> bool) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLVideoElement).``disablePictureInPicture`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "disablePictureInPicture" value)
             read
 
     member _.``disablePictureInPicture``<'native when 'native :> Dom.HTMLVideoElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLVideoElement).``disablePictureInPicture`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "disablePictureInPicture" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``height``<'native when 'native :> Dom.HTMLVideoElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLVideoElement).``height`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "height" value) value
 
     member _.``height``<'native when 'native :> Dom.HTMLVideoElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLVideoElement).``height`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "height" value) read
 
     member _.``height``<'native when 'native :> Dom.HTMLVideoElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLVideoElement).``height`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "height" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``playsInline``<'native when 'native :> Dom.HTMLVideoElement>(value: bool) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLVideoElement).``playsInline`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "playsInline" value) value
 
     member _.``playsInline``<'native when 'native :> Dom.HTMLVideoElement>(read: 'inst -> bool) : Part<'native, 'inst> =
         TemplateParts.readProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLVideoElement).``playsInline`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "playsInline" value)
             read
 
     member _.``playsInline``<'native when 'native :> Dom.HTMLVideoElement>(source: Source<'inst, bool>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: bool) -> (node :> Dom.HTMLVideoElement).``playsInline`` <- value)
+            (fun (node: 'native) (value: bool) -> Native.setExpando (box node) "playsInline" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``poster``<'native when 'native :> Dom.HTMLVideoElement>(value: string) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLVideoElement).``poster`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "poster" value) value
 
     member _.``poster``<'native when 'native :> Dom.HTMLVideoElement>(read: 'inst -> string) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLVideoElement).``poster`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: string) -> Native.setExpando (box node) "poster" value) read
 
     member _.``poster``<'native when 'native :> Dom.HTMLVideoElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: string) -> (node :> Dom.HTMLVideoElement).``poster`` <- value)
+            (fun (node: 'native) (value: string) -> Native.setExpando (box node) "poster" value)
             source
+#endif
 
+#if FABLE_COMPILER
     member _.``width``<'native when 'native :> Dom.HTMLVideoElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLVideoElement).``width`` <- value)
-            value
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value) value
 
     member _.``width``<'native when 'native :> Dom.HTMLVideoElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLVideoElement).``width`` <- value)
-            read
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value) read
 
     member _.``width``<'native when 'native :> Dom.HTMLVideoElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty
             PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> (node :> Dom.HTMLVideoElement).``width`` <- value)
+            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value)
             source
+#endif
 
+#endif
 type EventBuilder<'inst> with
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     member _.onAbort<'native when 'native :> Dom.Element>(handler: 'inst -> Dom.UIEvent -> unit) : Part<'native, 'inst> =
@@ -8517,7 +6338,7 @@ type EventBuilder<'inst> with
         TemplateParts.event "pointerup" handler
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    member _.onProgress<'native when 'native :> Dom.Element>(handler: 'inst -> Dom.ProgressEvent<Dom.EventTarget> -> unit) : Part<'native, 'inst> =
+    member _.onProgress<'native when 'native :> Dom.Element>(handler: 'inst -> Dom.ProgressEvent -> unit) : Part<'native, 'inst> =
         TemplateParts.event "progress" handler
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>

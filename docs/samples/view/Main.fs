@@ -2,7 +2,7 @@
 module Main
 
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Dom
@@ -13,7 +13,7 @@ let private document: Document = jsNative
 
 let start () : unit -> unit =
     let graph = new Graph ()
-    let host = document.getElementById "app" |> Option.get
+    let host = document.getElementById "app" |> Option.ofObj |> Option.get
 
     let report (errors: exn list) =
         for error in errors do

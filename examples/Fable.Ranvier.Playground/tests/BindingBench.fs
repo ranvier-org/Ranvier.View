@@ -2,7 +2,7 @@ module BindingBench
 
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Dom.Scheduling
@@ -17,10 +17,11 @@ let private now () : float =
     globalThis.performance.now ()
 
 let private host () : HTMLElement =
-    globalThis.document.createElement "div"
+    (Ranvier.View.Dom.DomRuntime.document ()).createElement "div"
+    |> unbox<HTMLElement>
 
 let private attach (node: Node) : unit =
-    globalThis.document.body.appendChild (node)
+    (Ranvier.View.Dom.DomRuntime.document ()).body.appendChild(node)
     |> ignore
 
 let private remove (node: #ChildNode) : unit =
@@ -79,8 +80,13 @@ let sample path queued width phase iterations =
     let mount () =
         if path = "legacy" then
             let old =
-                BindingBaselineMounting.mount graph None (fun errors -> failwithf "%A" errors) host None (fun context ->
-                    Tree.run view context.Backend)
+                BindingBaselineMounting.mount
+                    graph
+                    None
+                    (fun errors -> failwithf "%A" errors)
+                    (unbox<Fable.Core.TS.Dom.Node> host)
+                    None
+                    (fun context -> Tree.run view context.Backend)
 
             {
                 Dispose = old.Dispose
@@ -157,7 +163,7 @@ let sample path queued width phase iterations =
             then
                 failwith "Binding benchmark final text is incorrect"
 
-        if phase = "dispose" && host.childNodes.length <> 0. then
+        if phase = "dispose" && host.childNodes.length <> 0u then
             failwith "Binding benchmark disposal retained nodes"
 
         elapsed / float iterations
@@ -165,7 +171,7 @@ let sample path queued width phase iterations =
         for mounted in mounts do
             mounted.Dispose ()
 
-        if host.childNodes.length <> 0. then
+        if host.childNodes.length <> 0u then
             failwith "Binding benchmark cleanup retained nodes"
 
         consume null

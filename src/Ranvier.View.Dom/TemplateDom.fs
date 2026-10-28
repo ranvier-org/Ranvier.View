@@ -4,7 +4,7 @@ open Ranvier.View
 open System
 open Fable.Core
 open Fable.Core.JsInterop
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier
 open Ranvier.View.Representation
 open Ranvier.View.Template
@@ -164,7 +164,7 @@ let private absent (node: Node) : bool =
 let private isComment (node: Node) : bool = jsNative
 #else
 let private isComment (node: Node) : bool =
-    node.nodeType = 8.0
+    node.nodeType = 8us
 #endif
 
 #if FABLE_COMPILER
@@ -190,7 +190,7 @@ let internal isStartMarker (node: Node) : bool = jsNative
 #else
 let internal isStartMarker (node: Node) : bool =
     not (Native.isNullish node)
-    && node.nodeType = 8.0
+    && node.nodeType = 8us
     && (Native.dataOf node).StartsWith "["
 #endif
 
@@ -472,10 +472,10 @@ let private isRegionStart (node: Node) : bool =
             Native.nextOrNull node
 
     not (Native.isNullish node)
-    && node.nodeType = 8.0
+    && node.nodeType = 8us
     && Native.dataOf node = "["
     && not (Native.isNullish next)
-    && next.nodeType = 8.0
+    && next.nodeType = 8us
     && Native.dataOf next = "]"
 #endif
 
@@ -507,9 +507,9 @@ let private validateParsed (content: DocumentFragment) (walk: int array) (target
 
                     "<" + tagName + ">",
                     not (isNull (box cursor))
-                    && cursor.nodeType = 1.
+                    && cursor.nodeType = 1us
                     && cursor.nodeName.ToLowerInvariant () = tagName.ToLowerInvariant ()
-                | TextSlotNode _ -> "a text node", not (isNull (box cursor)) && cursor.nodeType = 3.
+                | TextSlotNode _ -> "a text node", not (isNull (box cursor)) && cursor.nodeType = 3us
                 | RegionNode _ -> "a region marker pair", isRegionStart cursor
                 | TextNode _
                 | FragmentNode _
@@ -860,7 +860,7 @@ let private dataDiffers (node: obj) (value: obj) : bool =
 let private attributeDiffers (node: obj) (name: string) (value: obj) : bool = jsNative
 #else
 let private attributeDiffers (node: obj) (name: string) (value: obj) : bool =
-    Option.toObj ((unbox<Element> node).getAttribute name)
+    (unbox<Element> node).getAttribute name
     <> (if isNull value then null else Native.jsString value)
 #endif
 
@@ -1343,7 +1343,7 @@ let private isEmptyText (node: Node) : bool = jsNative
 #else
 let private isEmptyText (node: Node) : bool =
     not (Native.isNullish node)
-    && node.nodeType = 8.0
+    && node.nodeType = 8us
     && Native.dataOf node = "_"
 #endif
 
@@ -1405,7 +1405,7 @@ let private sameElementName (node: Node) (expected: Node) : bool = jsNative
 #else
 let private sameElementName (node: Node) (expected: Node) : bool =
     not (Native.isNullish node)
-    && node.nodeType = 1.0
+    && node.nodeType = 1us
     && ((Native.localNameOf node = Native.localNameOf expected
          && Native.isNullish (Native.prefixOf node)
          && Native.isNullish (Native.prefixOf expected))
@@ -1419,7 +1419,7 @@ let private isElementNamed (node: Node) (tag: string) : bool = jsNative
 #else
 let private isElementNamed (node: Node) (tag: string) : bool =
     not (Native.isNullish node)
-    && node.nodeType = 1.0
+    && node.nodeType = 1us
     && ((Native.localNameOf node = tag
          && Native.isNullish (Native.prefixOf node))
         || node.nodeName.ToLowerInvariant () = tag.ToLowerInvariant ())
@@ -1451,13 +1451,13 @@ let private adoptRoots (cursor: HydrationCursor) (compiled: Compiled) : Node arr
     let mutable node = cursor.Next
 
     for index in 0 .. count - 1 do
-        if expected.nodeType = 1. then
+        if expected.nodeType = 1us then
             if not (sameElementName node expected) then
                 raise (rootMismatch index ("<" + expected.nodeName.ToLowerInvariant () + ">") node)
-        elif expected.nodeType = 3. then
+        elif expected.nodeType = 3us then
             if isEmptyText node then
                 node <- replacePlaceholder cursor node
-            elif absent node || node.nodeType <> 3. then
+            elif absent node || node.nodeType <> 3us then
                 raise (rootMismatch index "a text node" node)
         elif isStartMarker expected then
             if not (isStartMarker node) then
@@ -1498,7 +1498,7 @@ let private isRcdataElement (node: Node) : bool = jsNative
 #else
 let private isRcdataElement (node: Node) : bool =
     not (Native.isNullish node)
-    && node.nodeType = 1.0
+    && node.nodeType = 1us
     && (Native.localNameOf node = "textarea"
         || Native.localNameOf node = "title")
 #endif
@@ -1554,7 +1554,7 @@ let private adoptTarget
             appendNode parent text
             cursor.Undo (fun () -> removeNode text)
             text
-        elif absent node || node.nodeType <> 3. then
+        elif absent node || node.nodeType <> 3us then
             raise (mismatch (walkPath walk single index) "a text node" (describe node))
         else
             node
@@ -1760,7 +1760,7 @@ let private instanceRoots (template: TemplateComponent) (clone: Node) (roots: No
             let mutable node =
                 if not (isNull roots) then
                     at roots path[0]
-                elif clone.nodeType = 11.0 then
+                elif clone.nodeType = 11us then
                     siblingAt (Native.firstChildOf clone) path[0]
                 else
                     clone
@@ -1837,7 +1837,7 @@ let rec internal materialise
     let first: Node =
         if not (isNull roots) then
             (if roots.Length > 0 then at roots 0 else noNode)
-        elif clone.nodeType = 11.0 then
+        elif clone.nodeType = 11us then
             Native.firstChildOf clone
         else
             clone
@@ -1848,10 +1848,9 @@ let rec internal materialise
         let last =
             if not (isNull roots) then
                 at roots (roots.Length - 1)
-            elif clone.nodeType = 11.0 then
-                clone.lastChild
-                |> Option.map (fun node -> node :> Node)
-                |> Option.defaultValue noNode
+            elif clone.nodeType = 11us then
+                let last = clone.lastChild
+                if isNull last then noNode else last
             else
                 clone
 

@@ -3,7 +3,7 @@ module FrameworkDiagnostics
 open global.Ranvier
 open Fable.Core
 open Fable.Core.JsInterop
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 
@@ -257,7 +257,7 @@ let mountReactiveNative (host: HTMLElement) width =
                     let clicked: EventListener =
                         fun _ -> graph.Run (fun () -> local.Value <- local.Value + 1)
 
-                    let callback: EventListenerOrEventListenerObject = !^clicked
+                    let callback: EventListener = clicked
                     (button :> EventTarget).addEventListener("click", callback)
                     button.appendChild text |> ignore
                     row.appendChild input |> ignore

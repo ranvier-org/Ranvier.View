@@ -3,7 +3,7 @@ module ComponentsExample
 open Ranvier
 open Ranvier.View
 open Ranvier.View.Sugar
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 
 type private CounterProps =
     {
@@ -74,7 +74,7 @@ type private Example =
                 Attrs.id "component-label",
                 Attrs.Input.placeholder "Shared label",
                 Props.Input.value _.Label.Value,
-                Events.onInput (fun state event -> state.Label.Value <- (unbox<HTMLInputElement> event.currentTarget.Value).value)
+                Events.onInput (fun state event -> state.Label.Value <- (unbox<HTMLInputElement> event.currentTarget).value)
             )
 
             button (
@@ -92,7 +92,7 @@ type private Example =
                 Attrs.id "component-checkbox",
                 Attrs.Input.``type`` "checkbox",
                 Props.Input.``checked`` _.Selected.Value,
-                Events.onChange (fun state event -> state.Selected.Value <- (unbox<HTMLInputElement> event.currentTarget.Value).``checked``)
+                Events.onChange (fun state event -> state.Selected.Value <- (unbox<HTMLInputElement> event.currentTarget).``checked``)
             )
 
             output (Attrs.id "component-checkbox-state") { fun state -> if state.Selected.Value then "Checked" else "Unchecked" }

@@ -105,13 +105,13 @@ and internal BridgeCore private () =
         table.AddOrUpdate (key, [ entry ], fun _ entries -> entries @ [ entry ])
         |> ignore
 
-    static member Domain = typeof<Fable.Core.TS.Dom.Node>.Assembly
+    static member Domain = typeof<Ranvier.Dom.Node>.Assembly
 
     static member Interface(name: string) : Type =
         match interfaces.TryGetValue name with
         | true, t -> t
         | false, _ ->
-            let t = BridgeCore.Domain.GetType ("Fable.Core.TS+Dom+" + name, true)
+            let t = BridgeCore.Domain.GetType ("Ranvier.Dom." + name, true)
             interfaces[name] <- t
             t
 
@@ -155,21 +155,11 @@ and internal BridgeCore private () =
 
     static member InterfaceOf(node: TwinNode) : Type =
         match node with
-        | :? TwinDocument -> BridgeCore.Interface "Document"
+        | :? TwinDocument -> BridgeCore.Interface "HTMLDocument"
         | :? TwinFragment -> BridgeCore.Interface "DocumentFragment"
         | :? TwinCharacterData as c when c.Kind = NodeKind.Text -> BridgeCore.Interface "Text"
         | :? TwinCharacterData -> BridgeCore.Interface "Comment"
-        | :? TwinElement as e ->
-            // The tag map and base interface of the element's namespace.
-            let map, fallback =
-                match e.Namespace with
-                | "svg" -> "SVGElementTagNameMap", "SVGElement"
-                | "math" -> "MathMLElementTagNameMap", "MathMLElement"
-                | _ -> "HTMLElementTagNameMap", "HTMLElement"
-
-            match (BridgeCore.Interface map).GetProperty e.LocalName with
-            | null -> BridgeCore.Interface fallback
-            | property -> property.PropertyType
+        | :? TwinElement as e -> BridgeCore.Interface (TagTypes.interfaceName e.Namespace e.LocalName)
         | _ -> BridgeCore.Interface "Node"
 
     static member Unwrap(value: obj) : obj =
@@ -186,9 +176,12 @@ and internal BridgeCore private () =
                 BridgeCore.Unwrap (t.GetProperty("Value").GetValue value)
             elif
                 FSharpType.IsUnion (t, true)
-                && t.Namespace = "Fable.Core"
+                && (t.Namespace = "Fable.Core"
+                    || t.Assembly = BridgeCore.Domain)
             then
-                BridgeCore.Unwrap ((FSharpValue.GetUnionFields (value, t, true) |> snd)[0])
+                match FSharpValue.GetUnionFields (value, t, true) |> snd with
+                | [| item |] -> BridgeCore.Unwrap item
+                | _ -> value
             else
                 value
 
@@ -225,7 +218,7 @@ and internal BridgeCore private () =
                 match m.Name with
                 | "get_length" ->
                     BridgeCore.ServeMethod m
-                    box (float list.Items.Length)
+                    BridgeCore.Wrap (m, m.ReturnType, box list.Items.Length)
                 | "item"
                 | "get_Item" ->
                     BridgeCore.ServeMethod m
@@ -250,7 +243,7 @@ and internal BridgeCore private () =
                 match m.Name with
                 | "get_length" ->
                     BridgeCore.ServeMethod m
-                    box (float element.Attributes.Length)
+                    BridgeCore.Wrap (m, m.ReturnType, box element.Attributes.Length)
                 | "item"
                 | "get_Item" ->
                     BridgeCore.ServeMethod m
@@ -304,6 +297,29 @@ and internal BridgeCore private () =
                 BridgeCore.Cached (attributes.Element, "attributes", target, fun () -> BridgeCore.AttributesProxy (target, attributes))
             | :? AttributeValue as attribute -> BridgeCore.AttributeProxy (target, attribute)
             | :? int as i when target = typeof<float> -> box (float i)
+            | (:? IConvertible as number) when
+                (target = typeof<uint16>
+                 || target = typeof<uint32>
+                 || target = typeof<int16>
+                 || target = typeof<int32>
+                 || target = typeof<int64>
+                 || target = typeof<uint64>
+                 || target = typeof<float32>)
+                && (match number.GetTypeCode () with
+                    | TypeCode.Byte
+                    | TypeCode.SByte
+                    | TypeCode.Int16
+                    | TypeCode.UInt16
+                    | TypeCode.Int32
+                    | TypeCode.UInt32
+                    | TypeCode.Int64
+                    | TypeCode.UInt64
+                    | TypeCode.Single
+                    | TypeCode.Double
+                    | TypeCode.Decimal -> true
+                    | _ -> false)
+                ->
+                Convert.ChangeType (number, target, Globalization.CultureInfo.InvariantCulture)
             | _ -> value
 
         let fits =
@@ -755,7 +771,7 @@ module Bridge =
                  ))
 
              setter [ "HTMLSelectElement" ] "selectedIndex" (fun n v ->
-                 let index = int (unbox<float> v)
+                 let index = Convert.ToInt32 (v, Globalization.CultureInfo.InvariantCulture)
 
                  (element n).Options
                  |> List.iteri (fun i o ->
@@ -809,7 +825,7 @@ module Bridge =
                  | null -> (element n).RemoveAttribute "popover"
                  | value -> (element n).SetAttribute("popover", string value))
              // ARIAMixin: each string aria* property reflects its aria-* attribute; null removes it.
-             for property in typeof<Fable.Core.TS.Dom.ARIAMixin>.GetProperties() do
+             for property in typeof<Ranvier.Dom.ARIAMixin>.GetProperties() do
                  let name = property.Name
 
                  if
@@ -832,7 +848,7 @@ module Bridge =
              // DOMImplementation.createHTMLDocument: a new document on the same thread, with a title element when titled.
              getter documents "implementation" (fun n ->
                  BridgeCore.ValueProxyOf (
-                     typeof<Fable.Core.TS.Dom.DOMImplementation>,
+                     typeof<Ranvier.Dom.DOMImplementation>,
                      fun m args ->
                          match m.Name with
                          | "createHTMLDocument" ->
@@ -883,6 +899,7 @@ module Bridge =
                      title.TextContent <- text v
                  | _ -> (element n).SetAttribute("title", text v))
 
+             method documents "createElement" 1 (fun n a -> box ((n :?> TwinDocument).CreateElement(string a[0])))
              method documents "createElement" 2 (fun n a -> box ((n :?> TwinDocument).CreateElement(string a[0])))
 
              method documents "createElementNS" 2 createElementNS
@@ -907,7 +924,7 @@ module Bridge =
 
              method [ "Document"; "NonElementParentNode" ] "getElementById" 1 (fun n a -> box ((n :?> TwinDocument).ElementById(string a[0])))
 
-             getter [ "DocumentOrShadowRoot" ] "activeElement" (fun n ->
+             getter [ "Document"; "DocumentOrShadowRoot" ] "activeElement" (fun n ->
                  let document = n :?> TwinDocument
 
                  match document.ActiveElement with
@@ -946,7 +963,7 @@ module Bridge =
 [<AutoOpen>]
 module NodeNative =
     type TwinNode with
-        /// <summary>The node as <c>Fable.Core.TS.Dom</c> sees it: the same object on every read.</summary>
-        member this.Native: Fable.Core.TS.Dom.Node =
+        /// <summary>The node as <c>Ranvier.Dom</c> sees it: the same object on every read.</summary>
+        member this.Native: Ranvier.Dom.Node =
             Bridge.ensureAll ()
-            BridgeCore.ProxyOf this :?> Fable.Core.TS.Dom.Node
+            BridgeCore.ProxyOf this :?> Ranvier.Dom.Node

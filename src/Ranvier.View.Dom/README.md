@@ -7,7 +7,7 @@ Both accept the same typed components, including Sugar declarations. See the
 
 ```fsharp
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Dom
@@ -18,7 +18,7 @@ let private document: Document = jsNative
 
 let start () : unit -> unit =
     let graph = new Graph ()
-    let host = document.getElementById "app" |> Option.get
+    let host = document.getElementById "app" |> Option.ofObj |> Option.get
 
     let report (errors: exn list) =
         for error in errors do
@@ -34,6 +34,23 @@ let start () : unit -> unit =
 ```
 
 `counter` is the sugar component of the [getting started guide](https://ranvier-org.github.io/Ranvier/view/getting-started/). The guide covers [mounts and commit modes](https://ranvier-org.github.io/Ranvier/view/lifetimes/) and [hydration](https://ranvier-org.github.io/Ranvier/server/hydration/).
+
+## Shared DOM contracts
+
+Public component, modifier and mount types use `Ranvier.Dom` on both .NET and Fable. The generated
+contracts follow the scoped WebKit interfaces: reference-valued lookups return `null` when absent,
+collection lengths and indices use `uint32`, node kinds use `uint16`, and integer properties retain
+their IDL integer type. Nullable primitive values, such as an input selection offset, remain options.
+`NodeList` and `HTMLCollection` replace TypeScript-only generic collection helpers.
+
+`DomRuntime.document ()` and `DomRuntime.queueMicrotask callback` use the installed native host on
+.NET and browser globals under Fable. Browser-only property extras remain available under Fable
+without a browser binding package dependency: shared objects keep their shared types, browser scalar
+enums use strings, and out-of-scope objects such as `Window` use `obj`. Consumers can reference
+optional browser bindings and cast opaque values when they need extra members. These helpers do
+not expand the native contract with `Window` or media scripting APIs.
+HTML and SVG tag/event marker identities remain shared. MathML nodes use the
+shared `Element` interface and preserve their namespace.
 
 ## Explicit browser authoring
 

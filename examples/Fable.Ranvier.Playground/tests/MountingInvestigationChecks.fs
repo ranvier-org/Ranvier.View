@@ -3,7 +3,7 @@ module MountingInvestigationChecks
 open System
 open global.Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Dom.Authoring
@@ -20,8 +20,15 @@ let private equal expected actual =
 /// <summary>Checks wide component cleanup while a sibling mount and their shared graph remain live.</summary>
 let wideCleanup width =
     use graph = new Graph ()
-    let host = globalThis.document.createElement "main"
-    let otherHost = globalThis.document.createElement "main"
+
+    let host =
+        ((Ranvier.View.Dom.DomRuntime.document ()).createElement "main"
+         |> unbox<HTMLElement>)
+
+    let otherHost =
+        ((Ranvier.View.Dom.DomRuntime.document ()).createElement "main"
+         |> unbox<HTMLElement>)
+
     let source = graph.Run (fun () -> Api.createSignal "a")
     let cleaned = ResizeArray<int>()
     let inputs = ResizeArray<HTMLInputElement>()
@@ -37,7 +44,7 @@ let wideCleanup width =
                         let local = Api.createSignal 0
 
                         context.OnCleanup (fun () ->
-                            equal true (host.childNodes.length > 0.)
+                            equal true (host.childNodes.length > 0u)
                             cleaned.Add index)
 
                         H.Program.div
@@ -82,7 +89,7 @@ let wideCleanup width =
         mounted.Dispose ()
         mounted.Dispose ()
         equal [| width .. -1 .. 1 |] (cleaned.ToArray ())
-        equal 0. host.childNodes.length
+        equal 0u host.childNodes.length
 
         for button in buttons do
             button.click ()
@@ -101,8 +108,15 @@ let wideCleanup width =
 /// <summary>Checks that a moved generated descendant can be adopted by another mount and outlives its original mount.</summary>
 let movedDescendant () =
     use graph = new Graph ()
-    let host = globalThis.document.createElement "main"
-    let externalHost = globalThis.document.createElement "main"
+
+    let host =
+        ((Ranvier.View.Dom.DomRuntime.document ()).createElement "main"
+         |> unbox<HTMLElement>)
+
+    let externalHost =
+        ((Ranvier.View.Dom.DomRuntime.document ()).createElement "main"
+         |> unbox<HTMLElement>)
+
     let source = graph.Run (fun () -> Api.createSignal "a")
 
     let view =
@@ -126,24 +140,29 @@ let movedDescendant () =
 
     try
         mounted.Dispose ()
-        equal 0. host.childNodes.length
+        equal 0u host.childNodes.length
 
         equal
             true
             (input.parentNode
+             |> Option.ofObj
              |> Option.exists (fun parent -> obj.ReferenceEquals (parent, externalHost)))
 
         graph.Run (fun () -> source.Value <- "b")
         equal "a" input.value
         adopted.Dispose ()
-        equal 0. externalHost.childNodes.length
+        equal 0u externalHost.childNodes.length
     finally
         adopted.Dispose ()
         mounted.Dispose ()
 
 let private setterDisposal () =
     use graph = new Graph ()
-    let host = globalThis.document.createElement "main"
+
+    let host =
+        ((Ranvier.View.Dom.DomRuntime.document ()).createElement "main"
+         |> unbox<HTMLElement>)
+
     host.innerHTML <- "<span>keep</span>"
     let mutable writes = 0
 

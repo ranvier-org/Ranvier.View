@@ -3,7 +3,7 @@ module ScheduledChecks
 open System
 open global.Ranvier
 open Fable.Ranvier
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 
 type Fixture =
     {
@@ -96,7 +96,7 @@ let private createOnGraph (graph: Graph) (synchronous: bool) (batchEvents: bool)
 
                                     if input.value <> value then
                                         input.value <- value)
-                                Dom.on "input" (fun event -> name.Value <- (unbox<HTMLInputElement> event.currentTarget.Value).value)
+                                Dom.on "input" (fun event -> name.Value <- (unbox<HTMLInputElement> event.currentTarget).value)
                             ]
                             []
                     ]

@@ -868,8 +868,8 @@ let private serialised =
         t.div
             [|
                 t.Props.className (fun _ -> "a<b")
-                t.Props.tabIndex (fun _ -> 2.0)
-                t.Props.ariaBusy (fun _ -> Some "true")
+                t.Props.tabIndex (fun _ -> 2)
+                t.Props.ariaBusy (fun _ -> "true")
             |]
             [|
                 t.input
@@ -2292,7 +2292,13 @@ let private someNullOmitted () =
 
 /// <summary>A div whose string option properties are given in the static and the reader form.</summary>
 let private ariaDiv (value: string option) =
-    Component.define (fun _ () -> ()) (fun t -> t.div [| t.Props.ariaAtomic value; t.Props.ariaLabel (fun () -> value) |] [||])
+    Component.define (fun _ () -> ()) (fun t ->
+        t.div
+            [|
+                t.Props.ariaAtomic (Option.toObj value)
+                t.Props.ariaLabel (fun () -> Option.toObj value)
+            |]
+            [||])
 
 let private someNullPropertyOmitted () =
     let options =

@@ -223,7 +223,7 @@ let tests =
                 let labels =
                     root.Children
                     |> Seq.collect (fun node ->
-                        let native: Fable.Core.TS.Dom.Node = unbox node.Native
+                        let native: Ranvier.Dom.Node = unbox node.Native
 
                         Inspect.instancesOf native
                         |> Array.choose (function
@@ -231,7 +231,7 @@ let tests =
                             | _ -> None))
                     |> Seq.toList
 
-                Expect.equal labels [ "first", 3., Some "static"; "second", 3., Some "static" ] "both static text roots"
+                Expect.equal labels [ "first", 3us, "static"; "second", 3us, "static" ] "both static text roots"
 
             testCase "hydrated child roots skip a preceding list's server rows"
             <| fun () ->
@@ -245,7 +245,7 @@ let tests =
 
                 let rec childRoots (node: TwinNode) =
                     [
-                        let native: Fable.Core.TS.Dom.Node = unbox node.Native
+                        let native: Ranvier.Dom.Node = unbox node.Native
 
                         for probe in Inspect.instancesOf native do
                             match probe with

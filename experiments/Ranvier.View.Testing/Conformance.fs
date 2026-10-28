@@ -1,7 +1,7 @@
 /// <summary>The conformance case format: cases written once, run under jsdom and on the DOM twin.</summary>
 module Ranvier.View.Testing.Conformance
 
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 
 /// <summary>
 /// The host-specific operations a case uses: the document, the clock, interception and the artefact sink. Both hosts
@@ -163,7 +163,7 @@ let recordListenerErrors () : unit =
 
 /// <summary>The node's document, or the node itself when it is a document.</summary>
 let documentOf (node: Node) : Document =
-    match node.ownerDocument with
+    match Option.ofObj node.ownerDocument with
     | Some document -> document
     | None -> unbox<Document> node
 

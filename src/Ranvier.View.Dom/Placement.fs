@@ -4,7 +4,7 @@ open Ranvier.View
 open System
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View.Representation
 
 #if RANVIER_VIEW_COUNTERS
@@ -235,7 +235,7 @@ module internal PlacedHook =
 #else
     let atRoot (node: Node) : bool =
         let parent = Native.parentOrNull node
-        Native.isNullish parent || parent.nodeType = 11.0
+        Native.isNullish parent || parent.nodeType = 11us
 #endif
 
     /// <summary>

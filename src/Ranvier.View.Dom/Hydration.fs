@@ -3,7 +3,7 @@ module Ranvier.View.Dom.Hydration
 
 open System
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier
 open Ranvier.View
 open Ranvier.View.Template
@@ -28,7 +28,7 @@ module HydrationOptions =
 let private isRootMarker (node: Node) : bool = jsNative
 #else
 let private isRootMarker (node: Node) : bool =
-    node.nodeType = 8.0
+    node.nodeType = 8us
     && (unbox<CharacterData> node).data = "[r"
 #endif
 

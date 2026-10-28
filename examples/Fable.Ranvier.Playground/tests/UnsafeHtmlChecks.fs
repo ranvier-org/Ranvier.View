@@ -3,7 +3,7 @@ module UnsafeHtmlChecks
 open System
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Testing
 open CheckSupport
@@ -71,7 +71,7 @@ let private reparse queued () =
 
     let div =
         target.querySelector "div"
-        |> Option.get
+        |> (Option.ofObj >> Option.get)
         |> unbox<HTMLDivElement>
 
     let first = div.innerHTML
@@ -98,7 +98,7 @@ let private inContext queued () =
     let mounted =
         mountTemplate queued graph strict target (Component.render tableBody ())
 
-    equal (2., "ab") ((target.querySelectorAll "tbody > tr").length, target.textContent)
+    equal (2u, "ab") ((target.querySelectorAll "tbody > tr").length, target.textContent)
     mounted.Dispose ()
 
 let private svgGroup =
@@ -207,7 +207,7 @@ let private pendingReader queued () =
 
     let revealed =
         (target.querySelector "b"
-         |> Option.get
+         |> (Option.ofObj >> Option.get)
          |> unbox<HTMLElement>)
             .textContent
 
@@ -281,10 +281,10 @@ let private parsedComments (markup: string) : string array =
     let rec walk (node: Node) =
         let mutable child = node.firstChild
 
-        while child.IsSome do
-            let current = unbox<Node> child.Value
+        while (not (isNull child)) do
+            let current = unbox<Node> child
 
-            if current.nodeType = 8.0 then
+            if current.nodeType = 8us then
                 data.Add (unbox<CharacterData> current).data
 
             walk current

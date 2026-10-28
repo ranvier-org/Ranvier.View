@@ -30,6 +30,7 @@ let attach (graph: Graph) (host: TS.Dom.HTMLElement) : Mounted =
         Page.report failures
 
     let hydrated = served host
+    let sharedHost: global.Ranvier.Dom.HTMLElement = unbox host
     let mutable story = Unchecked.defaultof<Story.Story>
 
     let publish created =
@@ -44,11 +45,11 @@ let attach (graph: Graph) (host: TS.Dom.HTMLElement) : Mounted =
                 { Hydration.HydrationOptions.defaults with
                     Strict = true
                 }
-                host
+                sharedHost
                 Story.view
                 publish
         else
-            Mounting.mount graph None report host None (fun context -> Program.run (Component.render Story.view publish) context.Backend)
+            Mounting.mount graph None report sharedHost None (fun context -> Program.run (Component.render Story.view publish) context.Backend)
 
     {
         Mount = mounted

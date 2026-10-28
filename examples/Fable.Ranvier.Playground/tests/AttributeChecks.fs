@@ -2,7 +2,7 @@ module AttributeChecks
 
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Fable.Ranvier
 open Ranvier.View
 open Ranvier.View.Dom
@@ -15,7 +15,9 @@ let private equal expected actual =
         failwithf "Expected %A; got %A" expected actual
 
 let private query (host: HTMLElement) (selector: string) : HTMLElement =
-    host.querySelector (selector) |> Option.get
+    host.querySelector (selector)
+    |> (Option.ofObj >> Option.get)
+    |> unbox<HTMLElement>
 
 let private exercise (ops: Operations<'view>) run queued =
     use graph = new Graph ()
@@ -54,8 +56,8 @@ let private exercise (ops: Operations<'view>) run queued =
     let button = query host "button" :?> HTMLButtonElement
 
     try
-        equal (Some "panel") (button.getAttribute "class")
-        equal (Some "false") (button.getAttribute "aria-expanded")
+        equal (Some "panel") ((Option.ofObj (button.getAttribute "class")))
+        equal (Some "false") ((Option.ofObj (button.getAttribute "aria-expanded")))
         equal true button.disabled
         equal 2 reads
         parsed.innerHTML <- Html.render Reject (run view)
@@ -73,9 +75,9 @@ let private exercise (ops: Operations<'view>) run queued =
             equal true button.disabled
 
         mounted.Flush ()
-        equal None (button.getAttribute "title")
-        equal None (button.getAttribute "data-item")
-        equal None (button.getAttribute "aria-expanded")
+        equal None ((Option.ofObj (button.getAttribute "title")))
+        equal None ((Option.ofObj (button.getAttribute "data-item")))
+        equal None ((Option.ofObj (button.getAttribute "aria-expanded")))
         equal false button.disabled
 
         graph.Run (fun () ->
@@ -83,8 +85,8 @@ let private exercise (ops: Operations<'view>) run queued =
             aria.Value <- Some false)
 
         mounted.Flush ()
-        equal (Some "again") (button.getAttribute "title")
-        equal (Some "false") (button.getAttribute "aria-expanded")
+        equal (Some "again") ((Option.ofObj (button.getAttribute "title")))
+        equal (Some "false") ((Option.ofObj (button.getAttribute "aria-expanded")))
         let before = reads
         graph.Run (fun () -> text.Value <- Some "cancelled")
         let retained = button.getAttribute "title"
@@ -96,7 +98,7 @@ let private exercise (ops: Operations<'view>) run queued =
     finally
         mounted.Dispose ()
 
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private duplicateSnapshot (ops: Operations<'view>) run =
     let view =

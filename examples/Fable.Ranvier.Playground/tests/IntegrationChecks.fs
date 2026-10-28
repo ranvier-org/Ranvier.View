@@ -3,7 +3,7 @@ module IntegrationChecks
 open System
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom.Scheduling
 open Ranvier.View.Dom.Mounting
@@ -43,7 +43,7 @@ let private widgetRenders (ops: Operations<'view>) (run: 'view -> Backend -> uni
     let mounted = mountView ops run queued graph strict target view
     equal ([ "attach true" ], "drawn") (List.ofSeq log, target.textContent)
     mounted.Dispose ()
-    equal ([ "attach true"; "destroy true drawn" ], 0.) (List.ofSeq log, target.childNodes.length)
+    equal ([ "attach true"; "destroy true drawn" ], 0u) (List.ofSeq log, target.childNodes.length)
 
 type WidgetProbe =
     {
@@ -72,7 +72,7 @@ let private templateWidgetRenders queued () =
 
     equal ([ "attach true" ], "drawn") (List.ofSeq probe.Log, probe.Host.textContent)
     mounted.Dispose ()
-    equal ([ "attach true"; "destroy true drawn" ], 0.) (List.ofSeq probe.Log, probe.Host.childNodes.length)
+    equal ([ "attach true"; "destroy true drawn" ], 0u) (List.ofSeq probe.Log, probe.Host.childNodes.length)
 
 let private widgetChildrenAtDefinition () =
     equal
@@ -113,7 +113,7 @@ let private widgetChildrenAtMount (ops: Operations<'view>) (run: 'view -> Backen
     let doubledTarget = host ()
 
     equal
-        (true, 0., true, 0.)
+        (true, 0u, true, 0u)
         (raisesArgument (fun () ->
             mountView ops run queued graph strict target view
             |> ignore),
@@ -155,7 +155,7 @@ let private templateForeignContent queued () =
     let reversed = target.textContent
     graph.Run (fun () -> rows.Value <- [])
     mounted.Flush ()
-    equal ("3foreign2foreign1foreign", "", 0.) (reversed, target.textContent, (target.querySelectorAll "b").length)
+    equal ("3foreign2foreign1foreign", "", 0u) (reversed, target.textContent, (target.querySelectorAll "b").length)
     mounted.Dispose ()
 
 let private foreignContent (ops: Operations<'view>) (run: 'view -> Backend -> unit) queued =
@@ -225,7 +225,7 @@ let private nestedMountInWidget queued =
     equal ("updated", 1) (target.textContent, clicks.Value)
     mounted.Dispose ()
     graph.Run (fun () -> label.Value <- "late")
-    equal ([ "destroy" ], 0.) (List.ofSeq log, target.childNodes.length)
+    equal ([ "destroy" ], 0u) (List.ofSeq log, target.childNodes.length)
 
 let private lentKeepsAttributes (ops: Operations<'view>) (run: 'view -> Backend -> unit) queued =
     use graph = new Graph ()
@@ -254,7 +254,7 @@ let private lentKeepsAttributes (ops: Operations<'view>) (run: 'view -> Backend 
 
     graph.Run (fun () -> label.Value <- "b")
     mounted.Flush ()
-    equal (Some "on", Some "b") (input.getAttribute "data-mask", input.getAttribute "title")
+    equal (Some "on", Some "b") ((Option.ofObj (input.getAttribute "data-mask")), (Option.ofObj (input.getAttribute "title")))
     mounted.Dispose ()
     equal [ "removed" ] (List.ofSeq log)
 
@@ -282,7 +282,7 @@ let private templateLentKeepsAttributes queued () =
 
     graph.Run (fun () -> label.Value <- "b")
     mounted.Flush ()
-    equal (Some "on", Some "b") (input.getAttribute "data-mask", input.getAttribute "title")
+    equal (Some "on", Some "b") ((Option.ofObj (input.getAttribute "data-mask")), (Option.ofObj (input.getAttribute "title")))
     mounted.Dispose ()
 
 /// <summary>A lent span inside a div, moved by its integration into another element when it attaches.</summary>
@@ -351,9 +351,9 @@ let private lentMountRootMoved (ops: Operations<'view>) (run: 'view -> Backend -
 
     let mounted = mountView ops run queued graph reports.Add target view
     mounted.MoveBefore (elsewhere, None)
-    let moved = (elsewhere.querySelector "span").IsSome
+    let moved = not (isNull (elsewhere.querySelector "span"))
     mounted.Dispose ()
-    equal (true, [ "cleanup" ], [], 0.) (moved, List.ofSeq log, messages reports, elsewhere.childNodes.length)
+    equal (true, [ "cleanup" ], [], 0u) (moved, List.ofSeq log, messages reports, elsewhere.childNodes.length)
 
 let private lentRowRoots (ops: Operations<'view>) (run: 'view -> Backend -> unit) queued =
     use graph = new Graph ()
@@ -546,7 +546,7 @@ let private widgetOnOtherGraph () =
     let updated = target.textContent
     mounted.Dispose ()
     other.Run (fun () -> label.Value <- "late")
-    equal ("updated", [ "disposed false" ], 0.) (updated, List.ofSeq log, target.childNodes.length)
+    equal ("updated", [ "disposed false" ], 0u) (updated, List.ofSeq log, target.childNodes.length)
 
 let private measuredWidget () =
     use graph = new Graph ()

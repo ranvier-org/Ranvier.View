@@ -94,13 +94,13 @@ authored component's `CreateId` issues ids that can differ between server and cl
 functions, and each binding is one Ranvier effect:
 
 ```fsharp
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open global.Ranvier
 open Fable.Ranvier
 
 let graph = new Graph ()
 let count = graph.Run (fun () -> createSignal 0)
-let host = Global.document.getElementById("app").Value
+let host = Global.document.getElementById("app") |> Option.ofObj |> Option.get
 
 let mounted =
     Mount.mount graph host (fun () ->

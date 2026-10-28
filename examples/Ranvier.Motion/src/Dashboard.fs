@@ -459,7 +459,8 @@ let mount (mode: CommitMode) (graph: Graph) (report: exn list -> unit) (host: TS
     let definition = view store
 
     let mounted =
-        Mounting.mountWith mode graph None report host None (fun context -> Program.run (Component.render definition ()) context.Backend)
+        Mounting.mountWith mode graph None report (unbox<global.Ranvier.Dom.HTMLElement> host) None (fun context ->
+            Program.run (Component.render definition ()) context.Backend)
 
     { Store = store; Mount = mounted }
 

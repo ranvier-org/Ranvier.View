@@ -5,7 +5,7 @@
 module Ranvier.View.Departures
 
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View.Representation
 
 /// <summary>

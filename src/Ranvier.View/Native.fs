@@ -1,11 +1,17 @@
 /// <summary>
 /// The host primitives of the view sources. Under Fable each primitive is an Emit expression inlined at its call sites; on
-/// .NET each is F# over the <c>Fable.Core.TS.Dom</c> interfaces, the installed host, or .NET collections.
+/// .NET each is F# over the <c>Ranvier.Dom</c> interfaces, the installed host, or .NET collections.
 /// </summary>
 module internal Ranvier.View.Native
 
 open Fable.Core
-open Fable.Core.TS.Dom
+open global.Ranvier.Dom
+
+/// <summary>The weak membership operations used for DOM ownership checks.</summary>
+type INodeWeakSet =
+    abstract add: Node -> INodeWeakSet
+    abstract delete: Node -> bool
+    abstract has: Node -> bool
 
 #if !FABLE_COMPILER
 /// <summary>The DOM globals of the current thread; the DOM twin installs one per document.</summary>
@@ -148,7 +154,7 @@ let isNullish (value: 'T) : bool =
 let nextOrNull (node: Node) : Node = jsNative
 #else
 let nextOrNull (node: Node) : Node =
-    orNull node.nextSibling
+    node.nextSibling
 #endif
 
 #if FABLE_COMPILER
@@ -156,7 +162,7 @@ let nextOrNull (node: Node) : Node =
 let parentOrNull (node: Node) : Node = jsNative
 #else
 let parentOrNull (node: Node) : Node =
-    orNull node.parentNode
+    node.parentNode
 #endif
 
 #if FABLE_COMPILER
@@ -164,7 +170,7 @@ let parentOrNull (node: Node) : Node =
 let firstChildOf (node: Node) : Node = jsNative
 #else
 let firstChildOf (node: Node) : Node =
-    orNull node.firstChild
+    node.firstChild
 #endif
 
 #if FABLE_COMPILER
@@ -180,7 +186,7 @@ let removeNode (node: Node) : unit =
 let textContentOf (node: Node) : string = jsNative
 #else
 let textContentOf (node: Node) : string =
-    Option.toObj node.textContent
+    node.textContent
 #endif
 
 #if FABLE_COMPILER
@@ -188,7 +194,7 @@ let textContentOf (node: Node) : string =
 let elementById (id: string) : Element = jsNative
 #else
 let elementById (id: string) : Element =
-    orNull ((document ()).getElementById id)
+    (document ()).getElementById id
 #endif
 
 #if !FABLE_COMPILER
@@ -591,7 +597,7 @@ let setExpando (target: obj) (name: string) (value: 'T) : unit =
 // .NET bodies of the node, document, timer and microtask helpers kept under a local `#if` in the view files.
 
 let lastChildOf (node: Node) : Node =
-    orNull node.lastChild
+    node.lastChild
 
 let dataOf (node: Node) : string =
     (unbox<CharacterData> node).data
@@ -600,7 +606,7 @@ let localNameOf (node: Node) : string =
     (unbox<Element> node).localName
 
 let prefixOf (node: Node) : string =
-    Option.toObj (unbox<Element> node).prefix
+    (unbox<Element> node).prefix
 
 /// <summary>The ECMAScript Number::toString form of <c>value</c>.</summary>
 let numberText (value: float) : string =
@@ -685,7 +691,7 @@ let replaceNode (existing: Node) (replacement: Node) (replaced: Node) : unit =
     |> ignore
 
 let importDeep (node: Node) : Node =
-    (document ()).importNode(node, Fable.Core.U2.Case1 true)
+    (document ()).importNode(node, true)
 
 let setAttributeOrRemove (node: obj) (value: obj) (name: string) : unit =
     let element = unbox<Element> node
@@ -701,18 +707,17 @@ let defaultValueOf (node: obj) : string =
     | _ -> (unbox<HTMLInputElement> node).defaultValue
 
 let createElementIn (owner: Document) (tag: string) : Element =
-    owner.createElement (tagName = tag) :> Element
+    owner.createElement tag
 
 let documentOf (node: Node) : Document =
-    match node.ownerDocument with
-    | Some owner -> owner
-    | None -> document ()
+    let owner = node.ownerDocument
+    if isNull owner then document () else owner
 
 let headOf (owner: Document) : Node =
     owner.head :> Node
 
 let replaceWith (node: Element) (next: Element) : unit =
-    (unbox<ChildNode> node).replaceWith [| Fable.Core.U2.Case2 (next :> Node) |]
+    (unbox<ChildNode> node).replaceWith [| NodeOrDOMString.Node (next :> Node) |]
 
 /// <summary>The elements of the document's head that carry <c>data-ranvier-head</c>, in document order.</summary>
 let markedIn (owner: Document) : Element array =
@@ -722,10 +727,10 @@ let markedIn (owner: Document) : Element array =
         let mutable child = firstChildOf node
 
         while not (isNullish child) do
-            if child.nodeType = 1.0 then
+            if child.nodeType = 1us then
                 let element = unbox<Element> child
 
-                if (element.getAttribute "data-ranvier-head").IsSome then
+                if not (isNull (element.getAttribute "data-ranvier-head")) then
                     found.Add element
 
                 walk child
@@ -753,7 +758,7 @@ let queueMicrotask (callback: unit -> unit) : unit =
 type private NodeWeakSet() =
     let held = System.Runtime.CompilerServices.ConditionalWeakTable<Node, obj>()
 
-    interface Fable.Core.TS.Es.WeakSet<Node> with
+    interface INodeWeakSet with
         member this.add value =
             held.AddOrUpdate (value, null)
             this :> _
@@ -765,7 +770,7 @@ type private NodeWeakSet() =
             let mutable found = null
             held.TryGetValue (value, &found)
 
-let newNodeWeakSet () : Fable.Core.TS.Es.WeakSet<Node> =
+let newNodeWeakSet () : INodeWeakSet =
     NodeWeakSet ()
 #endif
 
@@ -865,7 +870,8 @@ let createTextNode (data: string) : Text =
     (document ()).createTextNode data
 
 let createElement (tag: string) : HTMLElement =
-    (document ()).createElement(tagName = tag)
+    (document ()).createElement tag
+    |> unbox<HTMLElement>
 #endif
 
 #if !FABLE_COMPILER
@@ -874,7 +880,7 @@ let attributesOf (element: Element) : (string * string) array =
     let attributes = element.attributes
 
     Array.init (int attributes.length) (fun i ->
-        let attribute = (attributes.item (float i)).Value
+        let attribute = attributes.item (uint32 i)
         attribute.name, attribute.value)
 
 /// <summary>Replaces the element's attributes with <c>attributes</c>, in order.</summary>

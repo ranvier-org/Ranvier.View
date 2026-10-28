@@ -92,7 +92,7 @@ let tests =
 
                 Expect.isTrue (obj.ReferenceEquals (button, after)) "server button adopted"
                 Expect.equal calls.Value 1 "client used state instead of calling initial factory"
-                (button.Native :?> Fable.Core.TS.Dom.HTMLElement).click()
+                (button.Native :?> Ranvier.Dom.HTMLElement).click()
                 Expect.equal host.TextContent "8" "hydrated event updates graph"
                 started.Dispose ()
                 Expect.isTrue started.Graph.Root.IsDisposed "owned graph disposed"

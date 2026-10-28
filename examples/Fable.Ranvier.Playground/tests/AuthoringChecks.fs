@@ -1,7 +1,7 @@
 module AuthoringChecks
 
 open Ranvier
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Fable.Ranvier
 open Ranvier.View
 open Ranvier.View.Dom
@@ -152,7 +152,7 @@ let private overloadedModifiers () =
     let inputs =
         [
             for i in 0..4 ->
-                host.querySelectorAll("input")[i]
+                host.querySelectorAll("input").item(uint32 i)
                 |> unbox<HTMLInputElement>
         ]
 
@@ -162,10 +162,10 @@ let private overloadedModifiers () =
         [ Some "fixed"; Some "a"; Some "a"; Some "a!" ]
         (inputs
          |> List.take 4
-         |> List.map (fun input -> input.getAttribute "title"))
+         |> List.map (fun input -> (Option.ofObj (input.getAttribute "title"))))
 
-    equal (Some "default") (inputs[4].getAttribute "value")
-    equal (Some "false") (inputs[4].getAttribute "aria-busy")
+    equal (Some "default") ((Option.ofObj (inputs[4].getAttribute "value")))
+    equal (Some "false") ((Option.ofObj (inputs[4].getAttribute "aria-busy")))
     equal 2 reads
 
     graph.Run (fun () ->
@@ -179,10 +179,10 @@ let private overloadedModifiers () =
         [ Some "fixed"; Some "b"; Some "b"; Some "b!" ]
         (inputs
          |> List.take 4
-         |> List.map (fun input -> input.getAttribute "title"))
+         |> List.map (fun input -> (Option.ofObj (input.getAttribute "title"))))
 
-    equal None (inputs[4].getAttribute "value")
-    equal None (inputs[4].getAttribute "aria-busy")
+    equal None ((Option.ofObj (inputs[4].getAttribute "value")))
+    equal None ((Option.ofObj (inputs[4].getAttribute "aria-busy")))
 
     equal
         true

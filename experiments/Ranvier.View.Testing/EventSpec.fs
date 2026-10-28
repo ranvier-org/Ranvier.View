@@ -1,7 +1,7 @@
 namespace Ranvier.View.Testing
 
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 
 type EventKind =
     | Plain

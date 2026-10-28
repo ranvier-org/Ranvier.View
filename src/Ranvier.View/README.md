@@ -7,23 +7,12 @@ or hydrates their server HTML. Server-only and shared component code references 
 the explicit browser authoring examples below also use `Ranvier.View.Dom.Generated.Html`.
 
 The view projects are packable, but `Ranvier.View` and `Ranvier.View.Dom` were absent from nuget.org
-when checked on 2026-10-26. Use source project references for now. Their `Xantham.Fable.Core.TS` 0.2.1
-dependency requires the Xantham Cloudsmith feed. Add it in `nuget.config`:
-
-```xml
-<packageSources>
-  <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
-  <add key="xantham-cloudsmith" value="https://nuget.cloudsmith.io/shayanhabibi/xantham/v3/index.json" />
-</packageSources>
-<packageSourceMapping>
-  <packageSource key="xantham-cloudsmith">
-    <package pattern="Xantham.*" />
-  </packageSource>
-  <packageSource key="nuget.org">
-    <package pattern="*" />
-  </packageSource>
-</packageSourceMapping>
-```
+when checked on 2026-10-26. Use source project references for now. Public DOM types come from
+`Ranvier.Dom`; the Fable project path selects `Fable.Ranvier.Dom` with the same assembly identity.
+The component and renderer packages require no Xantham browser bindings. Browser-only helpers use
+shared object types, scalar strings and opaque `obj` values for objects outside the curated contracts.
+Consumer code that needs additional browser object members can reference optional browser bindings
+and cast those opaque values explicitly.
 
 The [installation guide](https://ranvier-org.github.io/Ranvier/guide/installation/#views) gives the full file.
 

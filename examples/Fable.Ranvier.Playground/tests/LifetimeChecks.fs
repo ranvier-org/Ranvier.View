@@ -3,7 +3,7 @@ module LifetimeChecks
 open System
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Fable.Ranvier
 open Ranvier.View
 
@@ -19,11 +19,11 @@ let private remove (node: ChildNode) : unit =
     node.remove ()
 
 let private attach (node: Node) : unit =
-    globalThis.document.body.appendChild node
+    (Ranvier.View.Dom.DomRuntime.document ()).body.appendChild node
     |> ignore
 
 let private listen (node: HTMLElement) (handler: unit -> unit) : unit -> unit =
-    let fn: Event -> obj = fun _ -> handler ()
+    let fn: Event -> unit = fun _ -> handler ()
     node.addEventListener ("click", fn)
     fun () -> node.removeEventListener ("click", fn)
 
@@ -108,8 +108,8 @@ let private createFixture (graph: Graph) (host: HTMLElement) (trace: ResizeArray
 
                     // Runs after the child lifetime's teardown.
                     scope.OnCleanup (fun () ->
-                        same host parent.parentNode.Value
-                        same parent child.parentNode.Value
+                        same host parent.parentNode
+                        same parent child.parentNode
                         trace.Add (label + ":parent-clean-attached"))
 
                     childScope <-
@@ -122,8 +122,8 @@ let private createFixture (graph: Graph) (host: HTMLElement) (trace: ResizeArray
                                     failwith "release"),
                             fun nested ->
                                 nested.OnCleanup (fun () ->
-                                    same parent child.parentNode.Value
-                                    same host parent.parentNode.Value
+                                    same parent child.parentNode
+                                    same host parent.parentNode
                                     trace.Add (label + ":child-clean-attached")
                                     unsubscribe ()
 
@@ -175,7 +175,7 @@ let private withHost check =
 
     try
         check host sibling
-        same host sibling.parentNode.Value
+        same host sibling.parentNode
     finally
         remove host
 
@@ -196,7 +196,7 @@ let private disposalPath path =
         | _ -> invalidArg "path" path
 
         equal (expected "root") (List.ofSeq trace)
-        equal 1.0 host.childNodes.length
+        equal 1u host.childNodes.length
         fixture.Child.click ()
         equal 1 (fixture.Calls ())
 
@@ -216,14 +216,14 @@ let private sharedGraph () =
         let second = createFixture graph host trace "second" normal
         first.Dispose ()
         equal (expected "first") (List.ofSeq trace)
-        same host second.Parent.parentNode.Value
+        same host second.Parent.parentNode
         second.Set 1
         equal 2 (second.Writes ())
         second.Child.click ()
         equal 1 (second.Calls ())
         graph.Dispose ()
         equal (expected "first" @ expected "second") (List.ofSeq trace)
-        equal 1.0 host.childNodes.length)
+        equal 1u host.childNodes.length)
 
 let private effectRerun () =
     withHost (fun host _ ->
@@ -235,7 +235,7 @@ let private effectRerun () =
         graph.Run (fun () ->
             Api.createEffect (fun () ->
                 let value = version.Value
-                equal 1.0 host.childNodes.length
+                equal 1u host.childNodes.length
                 let fixture = createFixture graph host trace (string value) normal
                 Api.onCleanup fixture.Scope.Dispose
                 latest <- Some fixture))
@@ -244,12 +244,12 @@ let private effectRerun () =
         graph.Run (fun () -> version.Value <- 1)
         equal (expected "0") (List.ofSeq trace)
         equal true old.Scope.IsDisposed
-        same host latest.Value.Parent.parentNode.Value
+        same host latest.Value.Parent.parentNode
         old.Child.click ()
         equal 0 (old.Calls ())
         graph.Dispose ()
         equal (expected "0" @ expected "1") (List.ofSeq trace)
-        equal 1.0 host.childNodes.length)
+        equal 1u host.childNodes.length)
 
 let private setupFailure () =
     withHost (fun host _ ->
@@ -276,7 +276,7 @@ let private setupFailure () =
 
         equal true caught
         equal (expected "failed") (List.ofSeq trace)
-        equal 1.0 host.childNodes.length
+        equal 1u host.childNodes.length
         let child, calls, set, writes = acquired.Value
         let before = writes ()
         child.click ()
@@ -328,7 +328,7 @@ let private teardownFailures () =
         equal 0 (second.Calls ())
         first.Dispose ()
         equal 1 first.Reports.Count
-        equal 1.0 host.childNodes.length)
+        equal 1u host.childNodes.length)
 
 
 let private reentrantAndRejected () =
@@ -376,7 +376,7 @@ let private ancestorReentry () =
         let trace = ResizeArray<string>()
         let fixture = createFixture graph host trace "root" normal
         fixture.ChildScope.OnCleanup (fixture.Scope.Dispose)
-        fixture.ChildScope.OnCleanup (fun () -> same host fixture.Parent.parentNode.Value)
+        fixture.ChildScope.OnCleanup (fun () -> same host fixture.Parent.parentNode)
         fixture.ChildScope.Dispose ()
 
         // Every cleanup of the tree runs before its first release.
@@ -392,7 +392,7 @@ let private ancestorReentry () =
         equal [] fixture.ChildScope.Failures
         equal true fixture.Scope.IsDisposed
         fixture.Dispose ()
-        equal 1.0 host.childNodes.length)
+        equal 1u host.childNodes.length)
 
 let private attachmentPhases () =
     use graph = new Graph ()

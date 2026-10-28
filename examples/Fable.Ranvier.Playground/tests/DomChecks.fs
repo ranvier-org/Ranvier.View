@@ -3,7 +3,7 @@ module DomChecks
 open System
 open Ranvier
 open Fable.Ranvier
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 
 let private equal label expected actual =
     if expected <> actual then
@@ -20,8 +20,8 @@ let staticConstruction () =
         Dom.element "div" [ Dom.attribute "id" "sample" ] [ Dom.text "before "; child ]
 
     equal "nested text" "before inside" root.textContent
-    equal "attribute" (Some "sample") (root.getAttribute "id")
-    same "existing child appended" child root.lastChild.Value
+    equal "attribute" (Some "sample") ((Option.ofObj (root.getAttribute "id")))
+    same "existing child appended" child root.lastChild
 
 let reactiveTextKeepsIdentity () =
     use graph = new Graph ()
@@ -33,7 +33,7 @@ let reactiveTextKeepsIdentity () =
         equal "initial text" "first" root.textContent
         value.Value <- "second"
         equal "updated text" "second" root.textContent
-        same "text node replaced" child root.firstChild.Value)
+        same "text node replaced" child root.firstChild)
 
 let optionalAttributeRemoved () =
     use graph = new Graph ()
@@ -44,11 +44,11 @@ let optionalAttributeRemoved () =
         let root =
             Dom.element "div" [ Dom.bindAttribute "title" (fun () -> title.Value) ] []
 
-        equal "initial attribute" (Some "ready") (root.getAttribute "title")
+        equal "initial attribute" (Some "ready") ((Option.ofObj (root.getAttribute "title")))
         title.Value <- None
-        equal "attribute removed" None (root.getAttribute "title")
+        equal "attribute removed" None ((Option.ofObj (root.getAttribute "title")))
         title.Value <- Some "again"
-        equal "attribute restored" (Some "again") (root.getAttribute "title"))
+        equal "attribute restored" (Some "again") ((Option.ofObj (root.getAttribute "title"))))
 
 let propertyUsesDomProperty () =
     let write (element: HTMLElement) value =
@@ -56,7 +56,7 @@ let propertyUsesDomProperty () =
 
     let root = Dom.element "input" [ Dom.property write "seed" ] []
     equal "input property" "seed" (unbox<HTMLInputElement> root).value
-    equal "property is not an attribute" None (root.getAttribute "value")
+    equal "property is not an attribute" None ((Option.ofObj (root.getAttribute "value")))
 
 let derivedPropertyAndIndependentState () =
     use graph = new Graph ()
@@ -74,9 +74,9 @@ let derivedPropertyAndIndependentState () =
         let root =
             Dom.element "output" [ Dom.bindProperty (fun () -> doubled.Value) write ] []
 
-        equal "initial derived property" (Some "2") (root.getAttribute "data-value")
+        equal "initial derived property" (Some "2") ((Option.ofObj (root.getAttribute "data-value")))
         count.Value <- 3
-        equal "changed derived property" (Some "6") (root.getAttribute "data-value")
+        equal "changed derived property" (Some "6") ((Option.ofObj (root.getAttribute "data-value")))
         equal "two DOM writes" 2 writes
         count.Value <- 3
         unrelated.Value <- "changed"
@@ -101,7 +101,7 @@ let propertyActionDoesNotTrack () =
         equal "action read must not subscribe" 1 writes
         source.Value <- 2
         equal "subscribed source changes" 2 writes
-        equal "action sees current incidental value" (Some "22") (root.getAttribute "data-value"))
+        equal "action sees current incidental value" (Some "22") ((Option.ofObj (root.getAttribute "data-value"))))
 
 let eventsAndScopeCleanup () =
     let graph = new Graph ()
@@ -133,13 +133,13 @@ let mountPreservesHostAndStopsBindings () =
 
     button.click ()
     equal "mounted handler updates state" 1 count.Peek
-    equal "mounted text updates" (Some "1") child.textContent
+    equal "mounted text updates" (Some "1") (Option.ofObj (child.textContent))
     handle.Dispose ()
     handle.Dispose ()
-    same "preserved host child" existing host.firstChild.Value
+    same "preserved host child" existing host.firstChild
     equal "only preserved content remains" "preserved" host.textContent
     count.Value <- 2
-    equal "disposed text no longer updates" (Some "1") child.textContent
+    equal "disposed text no longer updates" (Some "1") (Option.ofObj (child.textContent))
     button.click ()
     equal "disposed event no longer writes" 2 count.Peek
 
@@ -162,9 +162,9 @@ let sharedGraphMountsAreIndependent () =
 
     first.Dispose ()
     count.Value <- 5
-    equal "first scope inert" (Some "0") left.textContent
-    equal "second scope still active" (Some "5") right.textContent
-    same "only second mount remains" right host.firstChild.Value
+    equal "first scope inert" (Some "0") (Option.ofObj (left.textContent))
+    equal "second scope still active" (Some "5") (Option.ofObj (right.textContent))
+    same "only second mount remains" right host.firstChild
 
 let failedFactoryCleansItsOwner () =
     use graph = new Graph ()
@@ -187,9 +187,9 @@ let failedFactoryCleansItsOwner () =
         threw <- true
 
     equal "factory exception escapes" true threw
-    same "failure leaves host content" existing host.firstChild.Value
+    same "failure leaves host content" existing host.firstChild
     count.Value <- 2
-    equal "failed factory text is inert" (Some "0") child.textContent
+    equal "failed factory text is inert" (Some "0") (Option.ofObj (child.textContent))
     button.click ()
     equal "failed factory event is inert" 2 count.Peek
 
@@ -214,7 +214,7 @@ let detachedOrMovedRootCleanup () =
     let scope2 = Mount.mount graph host (fun () -> detached :> Node)
     host.removeChild detached |> ignore
     scope2.Dispose ()
-    equal "already detached root stays detached" None detached.parentNode
+    equal "already detached root stays detached" null detached.parentNode
 
 let graphDisposalCleansMount () =
     let graph = new Graph ()
@@ -279,10 +279,10 @@ let fragmentRootIsRejectedWithoutLeaks () =
         rejected <- true
 
     equal "fragment root rejected" true rejected
-    same "host sibling preserved" existing host.firstChild.Value
+    same "host sibling preserved" existing host.firstChild
     equal "nothing attached" "preserved" host.textContent
     count.Value <- 2
-    equal "rejected binding stopped" (Some "0") child.textContent
+    equal "rejected binding stopped" (Some "0") (Option.ofObj (child.textContent))
     button.click ()
     equal "rejected listener removed" 2 count.Peek
 

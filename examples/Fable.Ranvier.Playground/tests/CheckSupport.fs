@@ -2,7 +2,7 @@
 module CheckSupport
 
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom.Scheduling
 open Ranvier.View.Dom.Mounting
@@ -19,7 +19,7 @@ let private document () : Document =
     if Conformance.isRunning () then
         Conformance.document ()
     else
-        globalThis.document
+        Ranvier.View.Dom.DomRuntime.document ()
 #else
     Conformance.document ()
 #endif
@@ -31,6 +31,7 @@ let equal expected actual =
 /// <summary>A detached div to mount into.</summary>
 let host () : HTMLElement =
     (document ()).createElement "div"
+    |> unbox<HTMLElement>
 
 /// <summary>The running conformance case's document, or the page's outside a case.</summary>
 let pageOrCaseDocument () : Document =
@@ -105,9 +106,7 @@ let attachToBody (node: Node) : unit =
     (document ()).body.appendChild node |> ignore
 
 let activeElement () : obj =
-    match (document ()).activeElement with
-    | Some element -> box element
-    | None -> null
+    box (document ()).activeElement
 
 /// <summary>
 /// Replaces the children of <c>target</c> with <c>html</c> parsed by <c>Range.createContextualFragment</c> in the

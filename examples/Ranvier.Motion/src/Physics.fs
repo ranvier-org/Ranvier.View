@@ -210,7 +210,7 @@ let mount (mode: CommitMode) (graph: Graph) (report: exn list -> unit) (host: TS
     let mutable playground = Unchecked.defaultof<Playground>
 
     let mounted =
-        Mounting.mountWith mode graph None report host None (fun context ->
+        Mounting.mountWith mode graph None report (unbox<global.Ranvier.Dom.HTMLElement> host) None (fun context ->
             Program.run (Component.render view (fun created -> playground <- created)) context.Backend)
 
     {

@@ -2,7 +2,7 @@ module GeneratedChecks
 
 open Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Fable.Ranvier
 open Ranvier.View
 open Ranvier.View.Dom
@@ -15,7 +15,9 @@ let private equal expected actual =
         failwithf "Expected %A; got %A" expected actual
 
 let private query (host: Element) (selector: string) : HTMLElement =
-    host.querySelector (selector) |> Option.get
+    host.querySelector (selector)
+    |> (Option.ofObj >> Option.get)
+    |> unbox<HTMLElement>
 
 [<Emit("$0.dispatchEvent(new ($0.ownerDocument.defaultView.InputEvent)('input', { bubbles: true, data: 'x', inputType: 'insertText' }))")>]
 let private dispatchInput (node: Node) : unit = jsNative
@@ -83,8 +85,10 @@ let private lifecycle (ops: Operations<'view>) run queued generated =
             equal "first" input.value
             equal "static" input.title
             equal false input.``checked``
-            equal None (H.Input.files input)
-            equal None (H.Input.form input)
+#if FABLE_COMPILER
+            equal null (H.Input.files input)
+#endif
+            equal null (H.Input.form input)
 
         graph.Run (fun () ->
             value.Value <- "second"
@@ -99,7 +103,7 @@ let private lifecycle (ops: Operations<'view>) run queued generated =
         for input in inputs do
             equal "second" input.value
             equal true input.``checked``
-            equal None (input.getAttribute "checked")
+            equal None ((Option.ofObj (input.getAttribute "checked")))
 
         graph.Run (fun () -> checkedValue.Value <- false)
 
@@ -130,7 +134,7 @@ let private lifecycle (ops: Operations<'view>) run queued generated =
             mount.Dispose ()
 
     for host in hosts do
-        equal 0. host.childNodes.length
+        equal 0u host.childNodes.length
 
 let private tagsAndSelect () =
     use graph = new Graph ()
@@ -177,7 +181,7 @@ let private expandedElements () =
             [|
                 H.br Tree.ops [||]
                 H.img Tree.ops [| H.Img.altStatic "sample" |]
-                H.textarea Tree.ops [| H.Textarea.rowsStatic 3. |] [||]
+                H.textarea Tree.ops [| H.Textarea.rowsStatic 3u |] [||]
                 H.template Tree.ops [||] [| H.span Tree.ops [||] [| Tree.ops.Text "inert" |] |]
             |]
 
@@ -187,14 +191,14 @@ let private expandedElements () =
     try
         equal "expanded" ((query host "article").title)
         equal "sample" ((query host "img" :?> HTMLImageElement).alt)
-        equal 3. ((query host "textarea" :?> HTMLTextAreaElement).rows)
+        equal 3u ((query host "textarea" :?> HTMLTextAreaElement).rows)
         let template = query host "template" :?> HTMLTemplateElement
         equal "inert" template.content.textContent
-        equal 0. template.childNodes.length
+        equal 0u template.childNodes.length
     finally
         mounted.Dispose ()
 
-    equal 0. host.childNodes.length
+    equal 0u host.childNodes.length
 
 let private expandedPortable () =
     let view =
@@ -368,7 +372,8 @@ let private mountBurst authoring queued (graph: Graph) report (host: HTMLElement
                 context.Backend)
 
 let private burstHost () : HTMLElement =
-    globalThis.document.createElement "div"
+    (Ranvier.View.Dom.DomRuntime.document ()).createElement "div"
+    |> unbox<HTMLElement>
 
 let private burstButtonOf (host: HTMLElement) =
     host.querySelector "button"

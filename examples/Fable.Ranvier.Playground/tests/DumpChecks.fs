@@ -4,7 +4,7 @@ module DumpChecks
 #if RANVIER_VIEW_INSPECT || !FABLE_COMPILER
 open global.Ranvier
 open Fable.Core
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Testing
@@ -244,8 +244,8 @@ let private observedNodes (target: Node) =
 
         let mutable child = node.firstChild
 
-        while child.IsSome do
-            let current = unbox<Node> child.Value
+        while (not (isNull child)) do
+            let current = unbox<Node> child
             visit current
             child <- current.nextSibling
 
@@ -310,9 +310,9 @@ let private boardOf (target: HTMLElement) : Board =
             let mutable child = node.firstChild
             let mutable found = None
 
-            while found.IsNone && child.IsSome do
-                found <- find (unbox<Node> child.Value)
-                child <- (unbox<Node> child.Value).nextSibling
+            while found.IsNone && (not (isNull child)) do
+                found <- find (unbox<Node> child)
+                child <- (unbox<Node> child).nextSibling
 
             found
 
@@ -494,6 +494,7 @@ let benchmarkBoardHydration (now: unit -> float) =
         mounted.Dispose ()
 
         target.parentNode
+        |> Option.ofObj
         |> Option.iter (fun parent -> parent.removeChild target |> ignore)
 
 let cases: Conformance.Case array =
