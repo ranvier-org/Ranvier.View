@@ -3,13 +3,13 @@
 
     <PropertyGroup>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <RepositoryUrl>https://github.com/ranvier-org/Ranvier.Views</RepositoryUrl>
+        <RepositoryUrl>https://github.com/ranvier-org/Ranvier.View</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Authors>shayanhabibi</Authors>
         <Copyright>Copyright (c) 2026 Shayan Habibi</Copyright>
         <PackageIcon>ranvier-icon.png</PackageIcon>
-        <PackageProjectUrl>https://ranvier-org.github.io/Ranvier.Views/</PackageProjectUrl>
+        <PackageProjectUrl>https://ranvier-org.github.io/Ranvier.View/</PackageProjectUrl>
         <PackageReleaseNotes>Alpha release. The API may change before 1.0.</PackageReleaseNotes>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>

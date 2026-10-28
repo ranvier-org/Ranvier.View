@@ -12,7 +12,7 @@ at `0.1.1-alpha.1`; see [installation and the dependency feed](../guide/introduc
 A [template component](../view/components.md) renders HTML on the server; the browser runs setup
 again and adopts matching nodes to make them interactive.
 
-![Render a shared component on the server, transfer its props as JSON, then hydrate the same component in the browser.](/Ranvier.Views/diagrams/view-server-hydration.svg)
+![Render a shared component on the server, transfer its props as JSON, then hydrate the same component in the browser.](/Ranvier.View/diagrams/view-server-hydration.svg)
 
 The three steps are:
 

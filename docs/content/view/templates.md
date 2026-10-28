@@ -242,7 +242,7 @@ any of the instance's bindings re-runs the effect, and the effect writes changed
 
 Static text and fixed attributes are written once.
 
-![A signal change re-runs an instance render effect, which compares bindings and writes only changed DOM values.](/Ranvier.Views/diagrams/view-bindings.svg)
+![A signal change re-runs an instance render effect, which compares bindings and writes only changed DOM values.](/Ranvier.View/diagrams/view-bindings.svg)
 
 ## Explicit-only members
 

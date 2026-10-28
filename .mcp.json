@@ -3,7 +3,7 @@
     "fslangmcp": {
       "type": "stdio",
       "command": "fslangmcp",
-      "args": ["--project", "Ranvier.Views.slnx"],
+      "args": ["--project", "Ranvier.View.slnx"],
       "env": {}
     },
     "sagefs": {

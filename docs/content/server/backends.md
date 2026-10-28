@@ -5,7 +5,7 @@ description: Serve the same Ranvier page with Giraffe, Oxpecker or Suave.
 
 Giraffe, Oxpecker and Suave can serve the same Ranvier component, codec and browser bundle. Each
 handler reads query values, builds props and returns `HydrationPage.render props` as HTML. The
-[complete hydration example](https://github.com/ranvier-org/Ranvier.Views/tree/main/examples/Ranvier.Hydration)
+[complete hydration example](https://github.com/ranvier-org/Ranvier.View/tree/main/examples/Ranvier.Hydration)
 uses Giraffe; companion projects below use Oxpecker and Suave.
 
 ## Build the shared browser bundle
@@ -20,7 +20,7 @@ npm --prefix examples/Ranvier.Hydration run build
 
 This writes `examples/Ranvier.Hydration/dist`, including the browser entry at `assets/client.js`
 and `style.css`. All three servers use those assets. The document's relative asset URLs work
-at the root of each local server and under the documentation's `/Ranvier.Views/examples/hydration/` path.
+at the root of each local server and under the documentation's `/Ranvier.View/examples/hydration/` path.
 
 `HydrationPage.fromQuery greeting start` produces the request props. An empty greeting defaults
 to `Hello from F#`; greetings are limited to 200 UTF-16 code units. A missing, invalid or out-of-range
@@ -42,7 +42,7 @@ let page: HttpHandler =
         htmlString (HydrationPage.render props) next ctx
 ```
 
-Run the [complete Giraffe source](https://github.com/ranvier-org/Ranvier.Views/tree/main/examples/Ranvier.Hydration/Server):
+Run the [complete Giraffe source](https://github.com/ranvier-org/Ranvier.View/tree/main/examples/Ranvier.Hydration/Server):
 
 ```shell
 npm --prefix examples/Ranvier.Hydration start
@@ -68,7 +68,7 @@ let page: EndpointHandler =
         ctx.Response.WriteAsync (HydrationPage.render props)
 ```
 
-The [complete Oxpecker Program.fs](https://github.com/ranvier-org/Ranvier.Views/blob/main/docs/samples/server-backends/Oxpecker/Program.fs)
+The [complete Oxpecker Program.fs](https://github.com/ranvier-org/Ranvier.View/blob/main/docs/samples/server-backends/Oxpecker/Program.fs)
 registers routing and Oxpecker, serves `/assets` through ASP.NET Core static-file middleware,
 and exposes the stylesheet separately. Its small project references the shared hydration project:
 
@@ -99,7 +99,7 @@ let page: WebPart =
         (OK (HydrationPage.render props) >=> setMimeType "text/html; charset=utf-8") ctx
 ```
 
-The [complete Suave Program.fs](https://github.com/ranvier-org/Ranvier.Views/blob/main/docs/samples/server-backends/Suave/Program.fs)
+The [complete Suave Program.fs](https://github.com/ranvier-org/Ranvier.View/blob/main/docs/samples/server-backends/Suave/Program.fs)
 serves the rendered page at `/`, allows the built `/assets/` files and stylesheet, and binds to
 the loopback address:
 
@@ -125,6 +125,6 @@ first application argument. This is useful when copying the source outside this 
 Both serve the live route before any static HTML, so the exported snapshot cannot replace a
 request-specific page.
 
-The [hosted preview](https://ranvier-org.github.io/Ranvier.Views/examples/#server-hydration-preview) is a build-time snapshot on
+The [hosted preview](https://ranvier-org.github.io/Ranvier.View/examples/#server-hydration-preview) is a build-time snapshot on
 GitHub Pages. Running one of these local servers demonstrates fresh HTML for each request.
 See [page declarations](pages.md) and [state transfer](state-transfer.md) for the shared Ranvier APIs.

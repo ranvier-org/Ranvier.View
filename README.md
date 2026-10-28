@@ -1,11 +1,11 @@
-# Ranvier.Views
+# Ranvier.View
 
 Template components, server rendering, hydration, DOM bindings, motion parts and build-time analyzers for
 [Ranvier](https://github.com/ranvier-org/Ranvier), on .NET and Fable.
 
-[Repository](https://github.com/ranvier-org/Ranvier.Views) · [Documentation](https://ranvier-org.github.io/Ranvier.Views/)
+[Repository](https://github.com/ranvier-org/Ranvier.View) · [Documentation](https://ranvier-org.github.io/Ranvier.View/)
 
-Ranvier.Views is the view layer of the Ranvier family:
+Ranvier.View is the view layer of the Ranvier family:
 
 - [Ranvier](https://github.com/ranvier-org/Ranvier) ([docs](https://ranvier-org.github.io/Ranvier/)): the reactive
   core, `Ranvier.Elmish`, `Ranvier.Query`, `Ranvier.Wire` and `Ranvier.CSharp`.

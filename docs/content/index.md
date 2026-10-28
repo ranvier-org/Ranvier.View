@@ -1,10 +1,10 @@
 ---
-title: Ranvier.Views
+title: Ranvier.View
 description: Template components, server rendering, hydration, motion parts and analyzers for Ranvier
 layout: bare
 ---
 
-# Ranvier.Views
+# Ranvier.View
 
 Template components for [Ranvier](https://ranvier-org.github.io/Ranvier/) on .NET and Fable: typed templates and
 view sugar, keyed lists, arms and boundaries, server HTML with hydration, motion parts over anime.js, and analyzers
@@ -17,5 +17,5 @@ Start with [installation and setup](guide/introduction.md), then explore:
 - [Analyzers](analyzers/index.md).
 - [Browser examples](examples/index.md).
 
-The [repository](https://github.com/ranvier-org/Ranvier.Views) contains the libraries, the experiments, runnable
+The [repository](https://github.com/ranvier-org/Ranvier.View) contains the libraries, the experiments, runnable
 examples and the complete test workflows.

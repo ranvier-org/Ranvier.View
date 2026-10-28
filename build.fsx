@@ -118,7 +118,7 @@ module Stage =
         return stage "restore" {
             when' (not quick)
             restoreTools
-            stage "restore solution" { run (cmd $"dotnet restore Ranvier.Views.slnx -p:Configuration={config}") }
+            stage "restore solution" { run (cmd $"dotnet restore Ranvier.View.slnx -p:Configuration={config}") }
         }
     }
 
@@ -132,7 +132,7 @@ module Stage =
 
     let buildSolution = input {
         let! config = Baked.Dotnet.configOrRelease
-        return stage "build solution" { run (cmd $"dotnet build Ranvier.Views.slnx -c {config} --no-restore") }
+        return stage "build solution" { run (cmd $"dotnet build Ranvier.View.slnx -c {config} --no-restore") }
     }
 
     let format = input {
@@ -473,7 +473,7 @@ module Stage =
     }
 
 exit <| rootCommand fsi.CommandLineArgs[1..] {
-    description "Ranvier.Views development, validation and releases"
+    description "Ranvier.View development, validation and releases"
     workingDir Spec.root
     command "tools" {
         description "Restore pinned tools individually to avoid SDK tool-metadata collisions on fresh runners"

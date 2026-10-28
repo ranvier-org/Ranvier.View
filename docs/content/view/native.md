@@ -12,7 +12,7 @@ The goal is to run Ranvier application code natively and use WebCore for the DOM
 JavaScript entirely. You keep familiar view patterns: elements, attributes, events and bindings
 that update the parts of the document that read reactive state.
 
-![A native Ranvier application updates a DOM through WebCore, without a JavaScript compilation step.](/Ranvier.Views/diagrams/native-webcore.svg)
+![A native Ranvier application updates a DOM through WebCore, without a JavaScript compilation step.](/Ranvier.View/diagrams/native-webcore.svg)
 
 For example, a counter still has a button, a click handler and a text binding. A click changes a
 signal; the binding updates the button's text. The deployment work changes how those operations

@@ -2,7 +2,7 @@
 
 ## Repository
 
-Ranvier.Views holds the view layer of [Ranvier](https://github.com/ranvier-org/Ranvier): `Ranvier.View`,
+Ranvier.View holds the view layer of [Ranvier](https://github.com/ranvier-org/Ranvier): `Ranvier.View`,
 `Ranvier.View.Dom`, `Ranvier.View.Anime`, `Fable.Ranvier.Anime` and the `Ranvier.Analyzers` package, with the
 experiments, examples and docs that exercise them. The core packages (`Ranvier`, `Ranvier.Elmish`, `Ranvier.Wire`)
 and the CSS packages (`Ranvier.Css*`) come from NuGet; `dotnet fsi build.fsx -- dev local` switches the core to a
@@ -23,7 +23,7 @@ tag set and ships an audit script (`scripts/audit.fsx`) for FS3390 and conventio
 ## F# semantics — use `fslangmcp`, not grep
 
 The repo ships an `fslangmcp` MCP server (`.mcp.json`, FsLangMCP over FSAC +
-FSharp.Compiler.Service). It loads `Ranvier.Views.slnx`, so it sees exactly the projects the
+FSharp.Compiler.Service). It loads `Ranvier.View.slnx`, so it sees exactly the projects the
 solution references.
 
 Requires the `fslangmcp`, `fsautocomplete` and `fantomas` global tools; `fslangmcp
@@ -42,7 +42,7 @@ short binding names `create` can recur in thousands of members, and `find` resol
   on a clean tree and reports not_found on the same tree with unrelated compile errors. Never
   conclude "no usages" from a `find` taken while `check` says `errors`.
 - `check` — fresh whole-workspace type-check verdict (`clean`/`errors`) with structured
-  diagnostics, no build artifacts. Roughly 8s. An incremental `dotnet build Ranvier.Views.slnx` is
+  diagnostics, no build artifacts. Roughly 8s. An incremental `dotnet build Ranvier.View.slnx` is
   about as fast, so prefer `check` for the structured diagnostics, not for speed.
 - `fcs_refactor_impact` — run this *before* changing any public signature. Returns blast radius,
   whether the symbol is public API (i.e. a breaking change), covering tests, and a verify list.
