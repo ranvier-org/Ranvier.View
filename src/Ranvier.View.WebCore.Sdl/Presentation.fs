@@ -8,24 +8,6 @@ open SDL
 open Ranvier.View.WebCore
 
 module private PresentationNative =
-    [<DllImport("RanvierWebCoreHost", CallingConvention = CallingConvention.Cdecl)>]
-    extern int rv_host_set_accelerated_compositing(nativeint host, int mode)
-
-    [<DllImport("RanvierWebCoreHost", CallingConvention = CallingConvention.Cdecl)>]
-    extern int rv_host_acquire_d3d11_frame(nativeint host, nativeint device, nativeint& frame)
-
-    [<DllImport("RanvierWebCoreHost", CallingConvention = CallingConvention.Cdecl)>]
-    extern int rv_gpu_frame_info(nativeint frame, nativeint& texture, int& width, int& height, int& format)
-
-    [<DllImport("RanvierWebCoreHost", CallingConvention = CallingConvention.Cdecl)>]
-    extern int rv_gpu_frame_release(nativeint frame)
-
-    [<DllImport("RanvierWebCoreHost", CallingConvention = CallingConvention.Cdecl)>]
-    extern int rv_host_attach_uia(nativeint host, nativeint hwnd)
-
-    [<DllImport("RanvierWebCoreHost", CallingConvention = CallingConvention.Cdecl)>]
-    extern int rv_host_detach_uia(nativeint host)
-
     let utf8 (value: string) =
         Encoding.UTF8.GetBytes (value + "\000")
 
@@ -57,7 +39,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
         OperatingSystem.IsWindows ()
         && WebCoreHost.Has "presentation-d3d11"
         && device () <> 0n
-        && PresentationNative.rv_host_set_accelerated_compositing (host.Handle, 1) = 0
+        && RanvierWebCoreAbi.Native.rv_host_set_accelerated_compositing (host.Handle, 1) = 0
 
     let draw texture width height =
         if not (PresentationNative.ok (SDL3.SDL_RenderClear renderer)) then
@@ -174,7 +156,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
 
         if
             not gpuEnabled
-            || PresentationNative.rv_host_acquire_d3d11_frame (host.Handle, device (), &frame)
+            || RanvierWebCoreAbi.Native.rv_host_acquire_d3d11_frame (host.Handle, device (), &frame)
                <> 0
         then
             ValueNone
@@ -184,7 +166,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
                 let mutable width, height, format = 0, 0, 0
 
                 if
-                    PresentationNative.rv_gpu_frame_info (frame, &resource, &width, &height, &format)
+                    RanvierWebCoreAbi.Native.rv_gpu_frame_info (frame, &resource, &width, &height, &format)
                     <> 0
                     || resource = 0n
                     || width <= 0
@@ -222,7 +204,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
                         ValueSome (action gpuTexture width height)
             finally
                 let flushed = PresentationNative.ok (SDL3.SDL_FlushRenderer renderer)
-                let released = PresentationNative.rv_gpu_frame_release frame
+                let released = RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
 
                 if not flushed then
                     raise (PresentationNative.failure "SDL_FlushRenderer")
@@ -302,7 +284,7 @@ module internal WindowAccessibility =
             let hwnd =
                 SDL3.SDL_GetPointerProperty (SDL3.SDL_GetWindowProperties window, key, 0n)
 
-            let result = PresentationNative.rv_host_attach_uia (host.Handle, hwnd)
+            let result = RanvierWebCoreAbi.Native.rv_host_attach_uia (host.Handle, hwnd)
 
             if result = 0 then
                 true
@@ -315,7 +297,7 @@ module internal WindowAccessibility =
 
     /// <summary>Detaches before disposing the page or destroying its native window.</summary>
     let detach (host: WebCoreHost) =
-        let result = PresentationNative.rv_host_detach_uia host.Handle
+        let result = RanvierWebCoreAbi.Native.rv_host_detach_uia host.Handle
 
         if result <> 0 then
             raise (InvalidOperationException $"UI Automation detachment failed: {result}")

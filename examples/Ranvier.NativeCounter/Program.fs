@@ -4,7 +4,7 @@ module Ranvier.NativeCounter.Program
 #nowarn "51"
 
 open System
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier
 open Ranvier.View
 open Ranvier.View.Dom

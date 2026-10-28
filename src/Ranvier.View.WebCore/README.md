@@ -5,12 +5,17 @@ Runs [Ranvier.View](../Ranvier.View/README.md) components on .NET against a nati
 its `Document` takes the same `Mounting.mount` as the browser renderer, and the app forwards window input to it and
 paints it into its window.
 
-Experimental, on Windows x64 and macOS arm64 (macOS 26). The native library comes from
-`Ranvier.WebCore.Native.win-x64` or `Ranvier.WebCore.Native.osx-arm64`. On macOS, create the host and run
-WebCore on the process main thread, shared with SDL's event pump.
+Experimental, on Windows x64, Windows ARM64, Linux x64 and macOS arm64 (macOS 26). The backend references
+the canonical `Ranvier.WebCore` managed interop and `Ranvier.WebCore.Native` aggregate, which selects native
+assets for the application's RID. On macOS, create the host and run WebCore on the process main thread,
+shared with SDL's event pump.
 
 [macOS CI](https://github.com/ranvier-org/Ranvier.Views/actions/runs/40645038498/job/122671771869) passed
 770 tests, with 16 ignored and no failures, including the SDL hidden-window tests.
+
+The subsequent [four-platform CI run](https://github.com/ranvier-org/Ranvier.View/actions/runs/40675534807)
+passed 773 tests per platform, with 16 existing ignored and no failures, plus the visible sample and both
+NativeAOT apps. Windows ARM64 ran on a real ARM runner; Linux used Ubuntu 24.04 with Xvfb.
 
 ```fsharp
 open Ranvier
