@@ -106,6 +106,19 @@ jobs:
         run: dotnet test tests/Ranvier.View.WebCore.Tests -c Release
       - name: Build the native counter example
         run: dotnet build examples/Ranvier.NativeCounter -c Release
+      - name: Publish the NativeAOT smoke app and counter
+        run: |
+          dotnet publish tests/Ranvier.View.WebCore.AotSmoke -c Release -r win-x64 -o artifacts/native-aot/smoke
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet publish examples/Ranvier.NativeCounter -c Release -r win-x64 -o artifacts/native-aot/counter
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run the published NativeAOT smoke app
+        run: ./artifacts/native-aot/smoke/Ranvier.View.WebCore.AotSmoke.exe
+      - name: Smoke the published NativeAOT counter window
+        timeout-minutes: 2
+        env:
+          RANVIER_SMOKE: '1'
+        run: ./artifacts/native-aot/counter/Ranvier.NativeCounter.exe
 
   # macos-26: the osx-arm64 native package needs macOS 26 (decision G12).
   webcore-macos:
@@ -135,6 +148,17 @@ jobs:
         env:
           RANVIER_SMOKE: '1'
         run: dotnet run --project examples/Ranvier.NativeCounter -c Release --no-build
+      - name: Publish the NativeAOT smoke app and counter
+        run: |
+          dotnet publish tests/Ranvier.View.WebCore.AotSmoke -c Release -r osx-arm64 -o artifacts/native-aot/smoke
+          dotnet publish examples/Ranvier.NativeCounter -c Release -r osx-arm64 -o artifacts/native-aot/counter
+      - name: Run the published NativeAOT smoke app
+        run: ./artifacts/native-aot/smoke/Ranvier.View.WebCore.AotSmoke
+      - name: Smoke the published NativeAOT counter window
+        timeout-minutes: 2
+        env:
+          RANVIER_SMOKE: '1'
+        run: ./artifacts/native-aot/counter/Ranvier.NativeCounter
 
   packages:
     name: Packages

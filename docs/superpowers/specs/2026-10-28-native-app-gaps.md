@@ -11,8 +11,8 @@ it and an app a person runs: a window showing Ranvier components, taking input, 
 | Ranvier.WebCore native host | ABI 20 on main. Builds on win-x64, win-arm64, linux-x64, linux-arm64, osx-arm64 in CI; preview.4 publishing to nuget.org |
 | `Ranvier.View.WebCore` | Runs on win-x64 and osx-arm64 (macOS 26); mounts components, paints RGBA and forwards input. macOS CI: 770 passed, 16 ignored, 0 failed |
 | Conformance | ConformanceCases' fifteen modules match the DOM twin, except four pending cases |
-| AOT | `tests/Ranvier.View.WebCore.AotSmoke` mounts and paints; publishing it has not run end to end |
-| Window | `Ranvier.View.WebCore.Sdl` on Windows and macOS 26: paint, mouse, wheel, keys, IME event forwarding, focus, cursor, text/plain clipboard. macOS hidden-window tests pass; visible sample smoke and AOT publish remain to be verified |
+| AOT | Both `tests/Ranvier.View.WebCore.AotSmoke` and the counter sample publish and run on win-x64 with NativeAOT; CI and osx-arm64 verification are next. FSharp.Core reflection and generic-recursion analysis warnings remain visible |
+| Window | `Ranvier.View.WebCore.Sdl` on Windows and macOS 26: paint, mouse, wheel, keys, IME event forwarding, focus, cursor, text/plain clipboard. macOS hidden-window tests and visible sample smoke pass (480x320, scale 1); Retina scale 2 and real IME remain manual checks. Windows NativeAOT smoke app and sample publish and run; CI AOT verification is next |
 | Accessibility | ABI complete; no platform bridge ([help wanted](https://github.com/ranvier-org/Ranvier.WebCore/pull/2)) |
 
 Critical path for a first Windows app: gaps 1, 2 and 3. The rest can follow in any order.
@@ -82,8 +82,13 @@ Windows at least (decision G9: which runners).
 
 ## 4. AOT publish end to end
 
-`tests/Ranvier.View.WebCore.AotSmoke` has not published cleanly: ILC needs `vswhere` (Visual Studio's C++
-linker) on the machine, and it warns from `Interop/Native.fs`.
+Both apps published and ran locally on win-x64 with NativeAOT on 2026-10-28. The smoke app verified mount,
+paint, native click, repaint and listener errors; the sample passed its visible-window smoke. The machine already
+has VS C++ Build Tools. This chat's shell omitted `OS`; setting `OS=Windows_NT` for the publish process fixed the
+initial cross-OS compilation error. NativeAOT reported a non-generic delegate-marshalling warning from
+`Interop/Native.fs`; the generic overload fixes it in the upstream ABI wrapper and the copied wrapper.
+FSharp.Core reflection/trimming and generic-recursion warnings remain visible; these successful app runs cover
+the exercised paths, rather than proving every view feature AOT-safe.
 
 Work:
 
@@ -211,7 +216,10 @@ Round 4, 2026-10-28:
   changes to `Window.Step`. [Run 40645038498, macOS job](https://github.com/ranvier-org/Ranvier.Views/actions/runs/40645038498/job/122671771869)
   passed 770 tests, with 16 ignored, 0 failed and 0 errored, on `macos-26` (arm64). The tests use their own
   entry point through `dotnet run` to keep the bodies on the main thread. Hidden-window paint readback and
-  events through SDL's queue pass; a visible sample, Retina scale and real IME are separate checks.
+  events through SDL's queue pass. The original run is fully green.
+- **Visible macOS sample:** [run 40647793710](https://github.com/ranvier-org/Ranvier.Views/actions/runs/40647793710/job/122680570079)
+  passed the visible counter smoke: 480x320 backing pixels, display scale 1, nonuniform painted content and
+  an SDL `text/plain` clipboard round-trip. Retina scale 2 and a real IME remain manual checks.
 
 The frontier is empty: every decision above is settled.
 

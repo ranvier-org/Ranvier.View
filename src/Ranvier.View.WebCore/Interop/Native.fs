@@ -3135,7 +3135,7 @@ let private invokeHandler (context: nativeint) (event: nativeint) =
         1
 
 let private callback = EventCallback invokeHandler
-let private callbackPointer = Marshal.GetFunctionPointerForDelegate callback
+let private callbackPointer = Marshal.GetFunctionPointerForDelegate<_> callback
 
 /// Runs a dispatching ABI call. Handler exceptions are rethrown after the native dispatch returns, as one
 /// AggregateException.
@@ -3321,7 +3321,7 @@ type Host(width: int, height: int) =
     member _.OnFrame(requested: unit -> unit) =
         let callback = FrameCallback(fun _ -> requested ())
 
-        rv_host_set_frame_callback (handle, Marshal.GetFunctionPointerForDelegate callback, 0n)
+        rv_host_set_frame_callback (handle, Marshal.GetFunctionPointerForDelegate<_> callback, 0n)
         |> check "host_set_frame_callback"
 
         frameCallback <- callback
@@ -3416,7 +3416,7 @@ type Host(width: int, height: int) =
                 | None -> rv_resource_load_fail load
                 |> ignore)
 
-        rv_host_set_resource_handler (handle, Marshal.GetFunctionPointerForDelegate handler, 0n)
+        rv_host_set_resource_handler (handle, Marshal.GetFunctionPointerForDelegate<_> handler, 0n)
         |> check "host_set_resource_handler"
 
         resourceHandler <- handler
