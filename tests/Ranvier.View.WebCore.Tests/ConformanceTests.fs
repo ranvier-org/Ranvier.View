@@ -7,7 +7,7 @@ module Ranvier.View.WebCore.Tests.ConformanceTests
 open System
 open System.Collections.Generic
 open Expecto
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier.View.Testing
 open Ranvier.View.Twin
 open Ranvier.View.WebCore
@@ -122,7 +122,7 @@ let private observeMutations (host: WebCoreHost) (root: Node) : unit -> (string 
 
     let parentOf (node: obj) : obj =
         match node with
-        | :? Node as node -> node.parentNode |> Option.map box |> Option.toObj
+        | :? Node as node -> box node.parentNode
         | _ -> null
 
     // A node inserted from another parent leaves a record on that parent too.
@@ -145,7 +145,7 @@ let private observeMutations (host: WebCoreHost) (root: Node) : unit -> (string 
 
                         let empty =
                             match (if args.Length > 0 then args[0] else null) with
-                            | :? DocumentFragment as fragment -> fragment.firstChild.IsNone
+                            | :? DocumentFragment as fragment -> isNull fragment.firstChild
                             | _ -> false
 
                         let parent = parentOf target
@@ -303,19 +303,6 @@ let private runCase (run: Conformance.Harness -> unit) () =
         webcore actual run
         Expect.sequenceEqual actual expected "the artefacts the twin recorded")
 
-/// <summary>
-/// The cases that need a DOM member the native ABI lacks: a second document (DOMImplementation.createHTMLDocument) and
-/// createElementNS. They are pending until Ranvier.WebCore maps those members.
-/// </summary>
-let private needsAbi =
-    set
-        [
-            "each document keeps its own title and adopts only its own marked elements"
-            "a failed hydration in a document without a window leaves its head as the server wrote it"
-            "a kept head restored after children were added holds the children it held"
-            "an element with a prefix is a mismatch for a template element of its local name, named at its path"
-        ]
-
 [<Tests>]
 let tests =
     testList
@@ -326,10 +313,7 @@ let tests =
                     moduleName
                     [
                         for name, run in cases do
-                            if
-                                Conformance.skippedOn "webcore" name
-                                || needsAbi.Contains name
-                            then
+                            if Conformance.skippedOn "webcore" name then
                                 ptestCase name ignore
                             else
                                 testCase name (runCase run)

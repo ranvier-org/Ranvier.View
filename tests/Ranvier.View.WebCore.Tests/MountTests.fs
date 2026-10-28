@@ -1,7 +1,7 @@
 module Ranvier.View.WebCore.Tests.MountTests
 
 open Expecto
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Ranvier
 open Ranvier.View
 open Ranvier.View.WebCore
@@ -51,7 +51,7 @@ let toggle =
 
 let private items (mount: Mount) =
     let list = mount.Container.querySelectorAll ("li": string)
-    [ for i in 0 .. int list.length - 1 -> list.item (float i) ]
+    [ for i in 0 .. int list.length - 1 -> list.item (uint32 i) ]
 
 [<Tests>]
 let tests =
@@ -63,7 +63,7 @@ let tests =
                 use graph = new Graph ()
                 use mounted = mount host graph counter 1
                 Expect.equal mounted.Text "1" "first render"
-                (mounted.Container.querySelector<HTMLElement> "button").Value.click()
+                (mounted.Container.querySelector "button" :?> HTMLElement).click()
                 host.Cycle ()
                 Expect.equal mounted.Text "2" "after the click"
 
@@ -124,11 +124,11 @@ let tests =
                             [ Fable.Ranvier.Dom.reactiveText (fun () -> $"clicked {count.Value}") ]
                         :> Node)
 
-                let button = host.Document.getElementById("fable").Value
+                let button = host.Document.getElementById ("fable") :?> HTMLElement
                 Expect.equal button.textContent "clicked 0" "first render"
                 button.click ()
                 host.Cycle ()
                 Expect.equal button.textContent "clicked 1" "after a click"
                 mounted.Dispose ()
-                Expect.isNone (host.Document.getElementById "fable") "removed at disposal"
+                Expect.isNull (host.Document.getElementById "fable") "removed at disposal"
         ]

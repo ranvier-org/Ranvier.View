@@ -2,7 +2,7 @@ module Ranvier.View.WebCore.Tests.WindowTests
 
 open System
 open Expecto
-open Fable.Core.TS.Dom
+open Ranvier.Dom
 open Microsoft.FSharp.NativeInterop
 open SDL
 open Ranvier
