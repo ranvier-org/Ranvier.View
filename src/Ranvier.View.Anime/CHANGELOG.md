@@ -1,5 +1,5 @@
 ---
-last_commit_released: c91f875b133499c586ce9f5de8ce24dbf589142c
+last_commit_released: 09686e71a96976e6cd58f2e6d00410b763786775
 updaters:
   - xml:
       file: Ranvier.View.Anime.fsproj
@@ -9,6 +9,12 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.1 - 2026-10-28
+
+### Compatibility
+
+- Rebuild the browser motion adapter against the shared DOM contracts and matching Ranvier.View 0.1.1 release.
 
 ## 0.1.1-alpha.1 - 2026-10-28
 
