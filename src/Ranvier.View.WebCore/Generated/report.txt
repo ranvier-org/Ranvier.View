@@ -1,4 +1,4 @@
-59 classes; 1109 members: 1082 mapped to 1065 of 1070 rv_dom_* functions, 13 hand-written, 14 unmapped
+65 classes; 1213 members: 1186 mapped to 1169 of 1174 rv_dom_* functions, 13 hand-written, 14 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_event_get_current_target: Event.currentTarget (get)
@@ -52,6 +52,12 @@ Members by class (mapped / hand-written / unmapped):
   HTMLProgressElementObject: 6 / 0 / 0
   HTMLSelectElementObject: 39 / 0 / 0
   HTMLSlotElementObject: 5 / 0 / 0
+  HTMLTableCaptionElementObject: 2 / 0 / 0
+  HTMLTableCellElementObject: 29 / 0 / 0
+  HTMLTableColElementObject: 12 / 0 / 0
+  HTMLTableElementObject: 35 / 0 / 0
+  HTMLTableRowElementObject: 15 / 0 / 0
+  HTMLTableSectionElementObject: 11 / 0 / 0
   HTMLTemplateElementObject: 15 / 0 / 0
   HTMLTextAreaElementObject: 48 / 0 / 0
   HTMLUListElementObject: 4 / 0 / 0

@@ -309,6 +309,22 @@ module Stage =
     }
 
     /// The analyzers' unit tests and the compiler facts the analyzers describe.
+    let nativeApi = stage "shared native API conformance" {
+        run "dotnet run --project tests/NativeApi.Conformance/Native.fsproj -c Release"
+    }
+
+    let nativeApiBrowser = input {
+        let! npm = npm "tests/NativeApi.Conformance"
+        and! chromium = chromium "tests/NativeApi.Conformance"
+        return stage "shared browser API conformance" {
+            npm
+            chromium
+            run "dotnet restore tests/NativeApi.Conformance/Browser.fsproj"
+            run "dotnet fickl tests/NativeApi.Conformance/Browser.fsproj --outDir tests/NativeApi.Conformance/generated --configuration Release"
+            run "node tests/NativeApi.Conformance/browser.mjs"
+        }
+    }
+
     let analyzerChecks = stage "analyzers" {
         run "dotnet test tools/Ranvier.Analyzers.Tests -c Release"
         run "dotnet fsi tools/Ranvier.Analyzers.Truth/Truth.fsx"
@@ -500,6 +516,14 @@ exit <| rootCommand fsi.CommandLineArgs[1..] {
         alias "tests"
         description "Run view checks; --group selects a CI shard (default: all)"
         Command.pipeline { Stage.restore; Stage.buildSolution; Stage.tests }
+    }
+    command "native-api" {
+        description "Run shared API conformance on native WebCore"
+        Command.pipeline { Stage.nativeApi }
+    }
+    command "native-api-browser" {
+        description "Run shared API conformance in Chromium (--quick reuses installed browser tools)"
+        Command.pipeline { Stage.nativeApiBrowser }
     }
     command "ci" {
         description "Run every CI gate locally and pack the validated libraries"

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Tables.fs" />
+    <Compile Include="Browser.fs" />
+    <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" />
+    <PackageReference Include="Fable.Core" Version="5.3.0" />
+  </ItemGroup>
+</Project>
