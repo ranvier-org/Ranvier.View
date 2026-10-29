@@ -16125,10 +16125,218 @@
       "description": "CSS.supports tests whether the live renderer accepts a property/value or supports-condition; catalogue membership and valid-value testing are different operations.",
       "acceptance": "Test supported, invalid and unknown property/value/condition inputs against the actual renderer; catalogue membership alone must not return support.",
       "consumes": "Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.",
-      "state": "not_started",
-      "memberContracts": [],
-      "publicApiSnapshot": null,
-      "memberContractStatus": "pending exact source signatures and clean FCS API snapshot"
+      "state": "shared_native_browser_aot_verified_windows",
+      "memberContracts": [
+        {
+          "interface": "DOMCSSNamespace",
+          "member": "supports",
+          "contractOwner": "CSS",
+          "kind": "namespace_operation",
+          "function": "rv_dom_css_supports_2",
+          "conditional": null,
+          "parameters": [
+            {
+              "ctype": "RvNode*",
+              "name": "target"
+            },
+            {
+              "ctype": "const uint8_t*",
+              "name": "property"
+            },
+            {
+              "ctype": "int32_t",
+              "name": "property_length"
+            },
+            {
+              "ctype": "const uint8_t*",
+              "name": "value"
+            },
+            {
+              "ctype": "int32_t",
+              "name": "value_length"
+            },
+            {
+              "ctype": "int32_t*",
+              "name": "result"
+            }
+          ],
+          "arguments": [
+            {
+              "name": "property",
+              "idlType": "DOMString",
+              "idl": {
+                "name": "DOMString",
+                "nullable": false,
+                "subtypes": []
+              },
+              "optional": false,
+              "default": null,
+              "variadic": false,
+              "mapping": {
+                "kind": "string",
+                "ctype": null,
+                "interface": null,
+                "root": null,
+                "class": null,
+                "enum": null,
+                "label": null,
+                "nullable": false,
+                "atom": false,
+                "subtypes": []
+              }
+            },
+            {
+              "name": "value",
+              "idlType": "DOMString",
+              "idl": {
+                "name": "DOMString",
+                "nullable": false,
+                "subtypes": []
+              },
+              "optional": false,
+              "default": null,
+              "variadic": false,
+              "mapping": {
+                "kind": "string",
+                "ctype": null,
+                "interface": null,
+                "root": null,
+                "class": null,
+                "enum": null,
+                "label": null,
+                "nullable": false,
+                "atom": false,
+                "subtypes": []
+              }
+            }
+          ],
+          "returnIdl": {
+            "name": "boolean",
+            "nullable": false,
+            "subtypes": []
+          },
+          "returns": {
+            "kind": "bool",
+            "ctype": "int32_t",
+            "interface": null,
+            "root": null,
+            "class": null,
+            "enum": null,
+            "label": null,
+            "nullable": false,
+            "atom": false,
+            "subtypes": []
+          },
+          "receiver": "Document",
+          "namespace": "CSS",
+          "feature": "dom-css-supports",
+          "binding": "facade",
+          "stringInputs": "utf8-lengths"
+        },
+        {
+          "interface": "DOMCSSNamespace",
+          "member": "supports",
+          "contractOwner": "CSS",
+          "kind": "namespace_operation",
+          "function": "rv_dom_css_supports_1",
+          "conditional": null,
+          "parameters": [
+            {
+              "ctype": "RvNode*",
+              "name": "target"
+            },
+            {
+              "ctype": "const uint8_t*",
+              "name": "condition_text"
+            },
+            {
+              "ctype": "int32_t",
+              "name": "condition_text_length"
+            },
+            {
+              "ctype": "int32_t*",
+              "name": "result"
+            }
+          ],
+          "arguments": [
+            {
+              "name": "conditionText",
+              "idlType": "DOMString",
+              "idl": {
+                "name": "DOMString",
+                "nullable": false,
+                "subtypes": []
+              },
+              "optional": false,
+              "default": null,
+              "variadic": false,
+              "mapping": {
+                "kind": "string",
+                "ctype": null,
+                "interface": null,
+                "root": null,
+                "class": null,
+                "enum": null,
+                "label": null,
+                "nullable": false,
+                "atom": false,
+                "subtypes": []
+              }
+            }
+          ],
+          "returnIdl": {
+            "name": "boolean",
+            "nullable": false,
+            "subtypes": []
+          },
+          "returns": {
+            "kind": "bool",
+            "ctype": "int32_t",
+            "interface": null,
+            "root": null,
+            "class": null,
+            "enum": null,
+            "label": null,
+            "nullable": false,
+            "atom": false,
+            "subtypes": []
+          },
+          "receiver": "Document",
+          "namespace": "CSS",
+          "feature": "dom-css-supports",
+          "binding": "facade",
+          "stringInputs": "utf8-lengths"
+        }
+      ],
+      "publicApiSnapshot": "css-query-public-api.json",
+      "memberContractStatus": "Two Supports overloads fixed; borrowed document service, null DOMString conversion, complete input, live owner-thread context",
+      "files": {
+        "core": [
+          "src/Ranvier.Dom/CssQueries.fs",
+          "src/Fable.Ranvier.Dom/BrowserCssQueries.fs"
+        ],
+        "views": [
+          "src/Ranvier.View.WebCore/CssQueries.fs",
+          "tests/NativeApi.Conformance/CssSupport.fs"
+        ],
+        "native": [
+          "gen/idl.py",
+          "gen/domgen.py",
+          "gen/dom.json",
+          "tests/abi/css_supports.py"
+        ]
+      },
+      "sharedPublicSignatures": [
+        "Ranvier.Dom.CssQueryService.Supports(property: string, value: string) -> bool",
+        "Ranvier.Dom.CssQueryService.Supports(conditionText: string) -> bool",
+        "Ranvier.Dom.CssQueries.forDocument(document: Document) -> CssQueryService [browser]",
+        "Ranvier.View.WebCore.CssQueries.forHost(host: WebCoreHost) -> CssQueryService [native]"
+      ],
+      "remaining": [
+        "traced package consumers",
+        "official alpha.10 and preview.9 packages",
+        "supported-platform CI"
+      ]
     },
     {
       "id": "C04",

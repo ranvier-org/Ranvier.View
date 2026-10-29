@@ -22,7 +22,7 @@
 
     <!-- RanvierWebCoreNativeDir holds runtimes/<rid>/native for local native runtime checks. -->
     <PropertyGroup>
-        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.0-preview.8</RanvierWebCoreNativeVersion>
+        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.0-preview.9</RanvierWebCoreNativeVersion>
         <UseLocalRanvierWebCore Condition="'$(UseLocalRanvierWebCore)' == ''">false</UseLocalRanvierWebCore>
         <RanvierWebCoreRoot Condition="'$(RanvierWebCoreRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../Ranvier.WebCore'))</RanvierWebCoreRoot>
         <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</RanvierWebCoreNativeRid>
@@ -56,6 +56,7 @@
         <Compile Include="Generated/Objects.fs" />
         <Compile Include="Host.fs" />
         <Compile Include="StyleSheets.fs" />
+        <Compile Include="CssQueries.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />

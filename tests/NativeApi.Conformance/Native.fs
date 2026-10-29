@@ -4,6 +4,17 @@ open Ranvier.View.WebCore
 
 [<EntryPoint>]
 let main _ =
+    let mutable nullQueryHostRejected = false
+
+    try
+        CssQueries.forHost Unchecked.defaultof<WebCoreHost>
+        |> ignore
+    with :? System.ArgumentNullException ->
+        nullQueryHostRejected <- true
+
+    if not nullQueryHostRejected then
+        failwith "CSS query provider accepted a null host"
+
     let host = WebCoreHost.Create (320, 240)
     let session = host.Session
 
@@ -12,6 +23,9 @@ let main _ =
         System.Console.WriteLine $"NATIVE_API D10_VIEW PASS assertions={viewTables}"
         let cssEscaping = CssEscaping.run host.Document
         System.Console.WriteLine $"NATIVE_API C05 PASS assertions={cssEscaping}"
+        let cssQueries = CssQueries.forHost host
+        let cssSupport = CssSupport.run cssQueries
+        System.Console.WriteLine $"NATIVE_API C03 PASS assertions={cssSupport}"
         let checks = Tables.run host.Document
         System.Console.WriteLine $"NATIVE_API D10 PASS assertions={checks}"
         let hyperlinks = Hyperlinks.run host.Document
@@ -105,6 +119,23 @@ let main _ =
         if not wrongThreadRejected then
             failwith "Stylesheet replacement was not rejected off the owning thread"
 
+        let mutable queryWrongThreadRejected = false
+
+        let queryWorker =
+            System.Threading.Thread (
+                System.Threading.ThreadStart (fun () ->
+                    try
+                        cssQueries.Supports "(display: block)" |> ignore
+                    with :? System.InvalidOperationException ->
+                        queryWrongThreadRejected <- true)
+            )
+
+        queryWorker.Start ()
+        queryWorker.Join ()
+
+        if not queryWrongThreadRejected then
+            failwith "CSS support query was not rejected off the owning thread"
+
         let mutable terminal = ""
 
         Async.StartWithContinuations (
@@ -118,6 +149,28 @@ let main _ =
             failwith "Stylesheet replacement completed without a checkpoint"
 
         (host :> System.IDisposable).Dispose()
+
+        let mutable disposedQueryRejected = false
+
+        try
+            cssQueries.Supports ("display", "block") |> ignore
+        with :? System.ObjectDisposedException ->
+            disposedQueryRejected <- true
+
+        if not disposedQueryRejected then
+            failwith "CSS support query accepted a disposed host"
+
+        let mutable disposedFactoryRejected = false
+
+        try
+            CssQueries.forHost host |> ignore
+        with :? System.ObjectDisposedException ->
+            disposedFactoryRejected <- true
+
+        if not disposedFactoryRejected then
+            failwith "CSS query provider accepted a disposed host"
+
+        System.Console.WriteLine "NATIVE_API C03 LIFETIME PASS assertions=4"
 
         if terminal <> "cancel" then
             failwith $"Host disposal did not terminate pending replacement: {terminal}"

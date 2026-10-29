@@ -13,6 +13,9 @@ let private post (action: unit -> unit) : unit = jsNative
 [<Emit("$0.ownerDocument.defaultView.getComputedStyle($0).getPropertyValue($1)")>]
 let private computed (element: HTMLElement) (property: string) : string = jsNative
 
+[<Emit("document.implementation.createHTMLDocument('')")>]
+let private windowlessDocument () : Document = jsNative
+
 [<Emit("""(() => {
     if ($0(null) !== globalThis.CSS.escape(null)) throw new Error('CSS.escape null conversion differs');
     let checks = 1;
@@ -32,6 +35,25 @@ let run () =
     async {
         let document = document ()
         let cssEscaping = CssEscaping.run document
+        let cssSupport = CssSupport.run (CssQueries.forDocument document)
+        let mutable queryContextChecks = 0
+
+        try
+            CssQueries.forDocument Unchecked.defaultof<Document>
+            |> ignore
+
+            failwith "CSS query provider accepted a null document"
+        with :? System.ArgumentNullException ->
+            queryContextChecks <- queryContextChecks + 1
+
+        try
+            CssQueries.forDocument (windowlessDocument ())
+            |> ignore
+
+            failwith "CSS query provider accepted a document without a Window"
+        with :? System.NotSupportedException ->
+            queryContextChecks <- queryContextChecks + 1
+
         let cssOracle = cssEscapeOracle CSS.escape
         let tables = Tables.run document
         let viewTables = ViewTables.run document
@@ -53,6 +75,8 @@ let run () =
             {|
                 tables = tables
                 cssEscaping = cssEscaping
+                cssSupport = cssSupport
+                queryContextChecks = queryContextChecks
                 cssOracle = cssOracle
                 viewTables = viewTables
                 reflection = reflection

@@ -1,0 +1,37 @@
+{
+  "status": "ok",
+  "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+  "optionsSource": "ionide-proj-info",
+  "includeInternal": false,
+  "namespaceFilter": "CssQueryService",
+  "entityCount": 1,
+  "memberCount": 2,
+  "entities": [
+    {
+      "fullName": "Ranvier.Dom.CssQueryService",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "Supports",
+          "kind": "method",
+          "signature": "Supports(conditionText: string) -> bool",
+          "accessibility": "public"
+        },
+        {
+          "name": "Supports",
+          "kind": "method",
+          "signature": "Supports(property: string, value: string) -> bool",
+          "accessibility": "public"
+        }
+      ]
+    }
+  ],
+  "truncated": false,
+  "nextCursor": null,
+  "totalEstimate": {
+    "entities": 1
+  },
+  "pageOffset": 0,
+  "pageSize": 20
+}

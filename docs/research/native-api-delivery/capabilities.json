@@ -4,10 +4,10 @@
   "releaseNativeInterfaces": 62,
   "releaseGeneratedFunctions": 1070,
   "workingBranch": {
-    "name": "codex/native-api-stylesheet-adoption",
-    "commit": "2093ee9a2b76844781eb9797137bbf62b6125f83",
+    "name": "codex/native-api-css-queries",
+    "commit": "af71cfcebbea107d0addc07723edf812fa528269",
     "interfaces": 127,
-    "functions": 1695,
+    "functions": 1697,
     "runtimeTypeQueries": 3,
     "addedFunctions": [
       "rv_dom_css_condition_rule_get_condition_text",
@@ -287,6 +287,8 @@
       "rv_dom_css_style_sheet_insert_rule",
       "rv_dom_css_style_sheet_remove_rule",
       "rv_dom_css_style_sheet_replace_sync",
+      "rv_dom_css_supports_1",
+      "rv_dom_css_supports_2",
       "rv_dom_css_view_transition_rule_get_navigation",
       "rv_dom_css_view_transition_rule_get_types",
       "rv_dom_document_get_adopted_style_sheets",
@@ -699,6 +701,15 @@
           "profile": "CSSOM 2021",
           "provider": "shared pure F# facade",
           "publicPackageAcceptance": "alpha.9 pending"
+        },
+        "C03": {
+          "state": "in_progress",
+          "nativeRuntimeAssertions": 72,
+          "sharedAdapterAssertions": 32,
+          "nativeAotAssertions": 32,
+          "nativeLifetimeAssertions": 4,
+          "provider": "actual document CSS parser; dom-css-supports",
+          "publicPackageAcceptance": "alpha.10/preview.9 pending"
         }
       },
       "runtimeProbe": "Selected D09/D10/D11/CSSOM/C07 local runtime fixtures passed; remaining groups not run",
@@ -774,6 +785,14 @@
         "oracleComparisons": 196609,
         "profile": "CSSOM 2021",
         "publicPackageAcceptance": "alpha.9 pending"
+      },
+      "C03": {
+        "engine": "chromium",
+        "state": "in_progress",
+        "assertions": 32,
+        "provider": "document.defaultView.CSS.supports; mangled overloads",
+        "publicPackageAcceptance": "alpha.10 pending",
+        "contextAssertions": 2
       }
     }
   }
