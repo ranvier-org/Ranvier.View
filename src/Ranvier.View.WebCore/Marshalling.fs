@@ -3,6 +3,7 @@ namespace Ranvier.View.WebCore
 open System
 open System.Collections.Generic
 open System.Runtime.InteropServices
+open RanvierWebCoreAbi
 
 /// <summary>Keeps pinned container arrays and UTF-8 buffers alive until the native call returns.</summary>
 [<Sealed>]
@@ -25,6 +26,18 @@ type internal InputScope() =
             let pointer = Marshal.StringToCoTaskMemUTF8 value
             strings.Add pointer
             pointer
+
+    /// <summary>Encodes a WebIDL USVString, retaining embedded NUL bytes.</summary>
+    member _.Bytes(value: string) =
+        Text.Encoding.UTF8.GetBytes (if isNull value then "null" else value)
+
+    /// <summary>Pins a length-delimited string for the duration of this scope.</summary>
+    member this.TextSpan(value: string) =
+        let bytes = this.Bytes value
+        let mutable span = Unchecked.defaultof<NativeDom.RvDomUtf8StringSpan>
+        span.data <- this.Pin (if bytes.Length = 0 then [| 0uy |] else bytes)
+        span.length <- bytes.Length
+        span
 
     interface IDisposable with
         member _.Dispose() =

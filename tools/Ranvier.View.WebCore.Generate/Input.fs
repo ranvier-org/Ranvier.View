@@ -17,7 +17,7 @@ let private numeric (ctype: string) =
     | "double" -> "float"
     | other -> raise (NotSupportedException $"Numeric input transport {other}")
 
-let private accepts (assembly: Reflection.Assembly) (mapping: JsonElement) (t: Type) =
+let private accepts (model: JsonElement) (assembly: Reflection.Assembly) (mapping: JsonElement) (t: Type) =
     match Metadata.text "kind" mapping with
     | "bool" -> t = typeof<bool>
     | "string" -> t = typeof<string>
@@ -26,7 +26,11 @@ let private accepts (assembly: Reflection.Assembly) (mapping: JsonElement) (t: T
     | "event"
     | "object"
     | "dict" ->
-        let expected = assembly.GetType ("Ranvier.Dom." + Metadata.text "interface" mapping)
+        let expected =
+            assembly.GetType (
+                "Ranvier.Dom."
+                + Metadata.publicInterfaceName model (Metadata.text "interface" mapping)
+            )
 
         not (isNull expected)
         && expected.IsAssignableFrom t
@@ -42,10 +46,28 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
     | "number" ->
         let cast = numeric (Metadata.text "ctype" mapping)
         $"{cast} ({value})"
-    | "string" -> $"scope.Text({value})"
+    | "string" ->
+        let mutable transport = Unchecked.defaultof<JsonElement>
+
+        if
+            mapping.TryGetProperty ("stringTransport", &transport)
+            && transport.GetString () = "utf8-lengths"
+        then
+            $"scope.TextSpan({value})"
+        else
+            $"scope.Text({value})"
     | "node"
     | "event"
-    | "object" -> $"Interop.handle (box ({value}))"
+    | "object" ->
+        let root = Metadata.text "root" mapping
+
+        if
+            root = "CSSStyleValue"
+            || root = "CSSOMVariableReferenceValue"
+        then
+            $"Interop.valueHandle this.Session (box ({value}))"
+        else
+            $"Interop.handle (box ({value}))"
     | "enum" ->
         let branches =
             FSharpType.GetUnionCases t
@@ -136,7 +158,7 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
         else
             match
                 arms
-                |> Array.tryFindIndex (fun arm -> accepts t.Assembly arm t)
+                |> Array.tryFindIndex (fun arm -> accepts model t.Assembly arm t)
             with
             | Some index -> armValue index arms[index] t value
             | None ->

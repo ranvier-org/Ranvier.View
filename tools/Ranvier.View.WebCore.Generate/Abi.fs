@@ -33,6 +33,13 @@ type Function =
 
     /// <summary>The parameters after <c>target</c> that carry IDL arguments.</summary>
     member this.Inputs =
+        let mutable transport = Unchecked.defaultof<JsonElement>
+
+        let lengthDelimited =
+            this.Descriptor.ValueKind = JsonValueKind.Object
+            && this.Descriptor.TryGetProperty ("stringInputs", &transport)
+            && transport.GetString () = "utf8-lengths"
+
         this.Parameters
         |> List.tail
         |> List.filter (fun p ->
@@ -42,7 +49,15 @@ type Function =
             | "buffer"
             | "capacity"
             | "length" -> false
-            | _ -> true)
+            | _ ->
+                not (
+                    lengthDelimited
+                    && p.Name.EndsWith "_length"
+                    && (this.Parameters
+                        |> List.exists (fun candidate ->
+                            candidate.Name + "_length" = p.Name
+                            && candidate.FSharp = "byte[]"))
+                ))
 
     /// <summary>The result parameters: <c>result</c>, <c>present</c>, or the string triple.</summary>
     member this.Outputs =
