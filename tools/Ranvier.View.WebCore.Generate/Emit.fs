@@ -907,6 +907,8 @@ let run (input: Input) (tagMap: (string * string * string) list) : string * Entr
 
     emitter.Line (2, "| \"http://www.w3.org/1999/xhtml\", _ -> HTMLElementObject (session, handle)")
     emitter.Line (2, "| \"http://www.w3.org/2000/svg\", _ -> SVGElementObject (session, handle)")
+    if classes.ContainsKey "MathMLElement" then
+        emitter.Line (2, "| \"http://www.w3.org/1998/Math/MathML\", _ -> MathMLElementObject (session, handle)")
     emitter.Line (2, "| _ -> ElementObject (session, handle)")
 
     out.ToString (), List.ofSeq entries

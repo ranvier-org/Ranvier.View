@@ -1,0 +1,24 @@
+{
+  "truncated": false,
+  "entities": [
+    {
+      "fullName": "Ranvier.Dom.SVGElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "viewportElement",
+          "kind": "property",
+          "signature": "viewportElement() -> Ranvier.Dom.SVGElement",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.MathMLElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": []
+    }
+  ]
+}

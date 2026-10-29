@@ -4,9 +4,9 @@
   "releaseNativeInterfaces": 62,
   "releaseGeneratedFunctions": 1070,
   "workingBranch": {
-    "name": "codex/native-api-element-reflection",
-    "interfaces": 91,
-    "functions": 1281,
+    "name": "codex/native-api-svg-mathml",
+    "interfaces": 93,
+    "functions": 1302,
     "addedFunctions": [
       "rv_dom_html_base_element_get_href",
       "rv_dom_html_base_element_get_target",
@@ -218,11 +218,32 @@
       "rv_dom_htmlhr_element_set_color",
       "rv_dom_htmlhr_element_set_no_shade",
       "rv_dom_htmlhr_element_set_size",
-      "rv_dom_htmlhr_element_set_width"
+      "rv_dom_htmlhr_element_set_width",
+      "rv_dom_math_ml_element_blur",
+      "rv_dom_math_ml_element_focus",
+      "rv_dom_math_ml_element_get_autofocus",
+      "rv_dom_math_ml_element_get_dataset",
+      "rv_dom_math_ml_element_get_nonce",
+      "rv_dom_math_ml_element_get_style",
+      "rv_dom_math_ml_element_get_tab_index",
+      "rv_dom_math_ml_element_set_autofocus",
+      "rv_dom_math_ml_element_set_nonce",
+      "rv_dom_math_ml_element_set_tab_index",
+      "rv_dom_svg_element_blur",
+      "rv_dom_svg_element_focus",
+      "rv_dom_svg_element_get_autofocus",
+      "rv_dom_svg_element_get_dataset",
+      "rv_dom_svg_element_get_nonce",
+      "rv_dom_svg_element_get_style",
+      "rv_dom_svg_element_get_tab_index",
+      "rv_dom_svg_element_get_viewport_element",
+      "rv_dom_svg_element_set_autofocus",
+      "rv_dom_svg_element_set_nonce",
+      "rv_dom_svg_element_set_tab_index"
     ],
     "allExistingFunctionSignaturesPreserved": true,
     "runtimeVerified": true,
-    "runtimeEvidenceScope": "D10/D11 only: native269+44 ABI assertions, shared30+205 native JIT/AOT and Chromium; other selected groups unverified"
+    "runtimeEvidenceScope": "Selected D09/D10/D11 only: native ABI95/44/269 and shared24/30/205 JIT/AOT/Chromium, real Tab traversal; other groups unverified"
   },
   "targets": [
     {
@@ -241,6 +262,15 @@
           "sharedAdapter": "passed205",
           "browserParity": "passed205",
           "nativeAot": "passed205"
+        },
+        "D09": {
+          "nativeRuntime": "passed",
+          "assertions": 95,
+          "sharedAdapter": "passed24",
+          "browserParity": "passed24",
+          "nativeAot": "passed24",
+          "tabOrderNative": "passed",
+          "tabOrderChromium": "passed"
         }
       },
       "runtimeProbe": "not_run",
@@ -266,7 +296,7 @@
     }
   ],
   "browser": {
-    "runtimeProbe": "selected D10/D11 passed; remaining groups not run",
+    "runtimeProbe": "Selected D09/D10/D11 passed; remaining groups not run",
     "groupStates": {
       "D10": {
         "engine": "chromium",
@@ -277,6 +307,12 @@
         "engine": "chromium",
         "assertions": 205,
         "state": "passed"
+      },
+      "D09": {
+        "engine": "chromium",
+        "assertions": 24,
+        "state": "passed",
+        "realTabTraversal": "passed"
       }
     }
   }
