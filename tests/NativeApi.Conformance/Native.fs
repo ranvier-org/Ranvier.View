@@ -10,6 +10,8 @@ let main _ =
     try
         let checks = Tables.run host.Document
         System.Console.WriteLine $"NATIVE_API D10 PASS assertions={checks}"
+        let hyperlinks = Hyperlinks.run host.Document
+        System.Console.WriteLine $"NATIVE_API HYPERLINKS PASS assertions={hyperlinks}"
         let reflection = Reflection.run host.Document
         System.Console.WriteLine $"NATIVE_API D11 PASS assertions={reflection}"
         let namespaces = Namespaces.run host.Document (fun () -> host.Frame ())

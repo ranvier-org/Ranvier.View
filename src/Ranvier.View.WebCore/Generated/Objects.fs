@@ -5360,13 +5360,13 @@ and internal ElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "Element.classList" (NativeDom.rv_dom_element_get_class_list (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "Element.classList" (NativeDom.rv_dom_element_get_class_list (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
         member this.slot
             with get () : string =
                 if this.Session.Intercepting then
@@ -5394,13 +5394,13 @@ and internal ElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "Element.part" (NativeDom.rv_dom_element_get_part (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "Element.part" (NativeDom.rv_dom_element_get_part (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
         member this.attributes
             with get () : Ranvier.Dom.NamedNodeMap =
                 if this.Session.Intercepting then
@@ -8278,13 +8278,13 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLFormElement.relList" (NativeDom.rv_dom_html_form_element_get_rel_list (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLFormElement.relList" (NativeDom.rv_dom_html_form_element_get_rel_list (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
         member this.elements
             with get () : Ranvier.Dom.HTMLFormControlsCollection =
                 if this.Session.Intercepting then
@@ -10203,13 +10203,13 @@ and internal HTMLOutputElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLOutputElement.htmlFor" (NativeDom.rv_dom_html_output_element_get_html_for (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLOutputElement.htmlFor" (NativeDom.rv_dom_html_output_element_get_html_for (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
         member this.form
             with get () : Ranvier.Dom.HTMLFormElement =
                 if this.Session.Intercepting then
@@ -13741,13 +13741,13 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLAnchorElement.relList" (NativeDom.rv_dom_html_anchor_element_get_rel_list (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLAnchorElement.relList" (NativeDom.rv_dom_html_anchor_element_get_rel_list (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
         member this.referrerPolicy
             with get () : string =
                 if this.Session.Intercepting then
@@ -14154,13 +14154,13 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLAreaElement.relList" (NativeDom.rv_dom_html_area_element_get_rel_list (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLAreaElement.relList" (NativeDom.rv_dom_html_area_element_get_rel_list (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
         member this.origin
             with get () : string =
                 if this.Session.Intercepting then
@@ -15969,13 +15969,13 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLLinkElement.relList" (NativeDom.rv_dom_html_link_element_get_rel_list (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLLinkElement.relList" (NativeDom.rv_dom_html_link_element_get_rel_list (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
         member this.media
             with get () : string =
                 if this.Session.Intercepting then
@@ -16063,13 +16063,13 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLLinkElement.sizes" (NativeDom.rv_dom_html_link_element_get_sizes (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLLinkElement.sizes" (NativeDom.rv_dom_html_link_element_get_sizes (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
         member this.imageSrcset
             with get () : string =
                 if this.Session.Intercepting then
@@ -16137,13 +16137,13 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLLinkElement.blocking" (NativeDom.rv_dom_html_link_element_get_blocking (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLLinkElement.blocking" (NativeDom.rv_dom_html_link_element_get_blocking (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
         member this.disabled
             with get () : bool =
                 if this.Session.Intercepting then
@@ -16338,13 +16338,13 @@ and internal HTMLStyleElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLStyleElement.blocking" (NativeDom.rv_dom_html_style_element_get_blocking (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLStyleElement.blocking" (NativeDom.rv_dom_html_style_element_get_blocking (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (unbox<Ranvier.Dom.DOMTokenList> (this.Session.Object(result, Kind.TokenList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (DOMTokenListObject(session, handle) :> NativeObject)))))
 
 and internal HTMLVideoElementObject(session: Session, handle: nativeint) =
     inherit HTMLMediaElementObject(session, handle)

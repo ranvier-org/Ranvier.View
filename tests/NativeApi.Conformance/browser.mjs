@@ -42,12 +42,13 @@ try {
       }));
     }
   });
-  if (checks.tables !== 30 || checks.reflection < 200 || checks.namespaces < 24 || checks.cssom < 58 || checks.svgCssom < 31 || checks.construction < 40) throw new Error(`Insufficient API assertions: ${JSON.stringify(checks)}`);
+  if (checks.tables !== 30 || checks.reflection < 200 || checks.namespaces < 24 || checks.hyperlinks < 60 || checks.cssom < 58 || checks.svgCssom < 31 || checks.construction < 40) throw new Error(`Insufficient API assertions: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API D10 PASS assertions=${checks.tables} engine=chromium`);
   console.log(`BROWSER_API D11 PASS assertions=${checks.reflection} engine=chromium`);
   console.log(`BROWSER_API D09 PASS assertions=${checks.namespaces} engine=chromium`);
   console.log(`BROWSER_API CSSOM PASS assertions=${checks.cssom} engine=chromium`);
   console.log(`BROWSER_API SVG_CSSOM PASS assertions=${checks.svgCssom} engine=chromium`);
+  console.log(`BROWSER_API HYPERLINKS PASS assertions=${checks.hyperlinks} engine=chromium`);
   console.log(`BROWSER_API C07 PASS assertions=${checks.construction} engine=chromium`);
   await page.locator('#native-api-svg').focus();
   await page.keyboard.press('Tab');

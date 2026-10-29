@@ -678,6 +678,12 @@
           "sharedAdapterAssertions": 31,
           "nativeAotAssertions": 31,
           "publicPackageAcceptance": "pending"
+        },
+        "AREA_HYPERLINKS": {
+          "state": "slice_verified",
+          "sharedAdapterAssertions": 60,
+          "nativeAotAssertions": 60,
+          "publicPackageAcceptance": "pending"
         }
       },
       "runtimeProbe": "Selected D09/D10/D11/CSSOM/C07 local runtime fixtures passed; remaining groups not run",
@@ -734,6 +740,11 @@
         "state": "slice_verified",
         "engine": "chromium",
         "assertions": 31
+      },
+      "AREA_HYPERLINKS": {
+        "state": "slice_verified",
+        "engine": "chromium",
+        "assertions": 60
       }
     }
   }

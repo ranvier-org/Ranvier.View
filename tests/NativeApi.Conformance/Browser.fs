@@ -19,6 +19,7 @@ let run () =
         let document = document ()
         let tables = Tables.run document
         let reflection = Reflection.run document
+        let hyperlinks = Hyperlinks.run document
         let cssom = Stylesheets.run document
         let svgCssom = Stylesheets.runSvg document
 
@@ -35,6 +36,7 @@ let run () =
             {|
                 tables = tables
                 reflection = reflection
+                hyperlinks = hyperlinks
                 cssom = cssom
                 svgCssom = svgCssom
                 namespaces = namespaces

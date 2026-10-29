@@ -13768,6 +13768,15 @@
             }
           }
         ]
+      },
+      "areaHyperlinkAcceptance": {
+        "fixture": "tests/NativeApi.Conformance/Hyperlinks.fs",
+        "assertions": 60,
+        "nativeWindowsJit": "passed",
+        "nativeWindowsAot": "passed",
+        "chromium": "passed",
+        "coverage": "All declared HTMLAreaElement properties plus inherited href/target: reflection, live relList identity/mutation, parsed URL reads and accumulated component setter effects",
+        "scope": "Dedicated Area slice verified; original group and published platform acceptance remain in progress"
       }
     },
     {
