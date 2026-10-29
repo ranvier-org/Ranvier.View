@@ -42,6 +42,13 @@ and the browser/analyzer/package gates. [Strict public-runtime GPU integration](
 also passed all 18 jobs. Fully published normal/traced CPU/GPU consumers are checked by the
 [package acceptance workflow](../../.github/workflows/published-native-packages.yml).
 
+[Final public-package acceptance](https://github.com/ranvier-org/Ranvier.View/actions/runs/40793629803)
+passed all four normal/traced CPU/GPU jobs: 16 app runs, 120 smoke assertions, eight independent UIA
+checks and 16 native/resource payload verifications, with fresh official-feed restores and no producer
+project references. Package-only normal/traced Fable/browser counters also pass with the explicit
+Fable DOM companion. The shared View metadata retains standard Fable.Core attributes; native runtime
+graphs contain no Xantham or legacy Fable.Ranvier binding packages.
+
 ```fsharp
 open Ranvier
 open Ranvier.View

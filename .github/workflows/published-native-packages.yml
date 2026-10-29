@@ -91,7 +91,11 @@ jobs:
           & ./artifacts/published-native/aot/Smoke/Ranvier.View.WebCore.AotSmoke.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $counter = (Resolve-Path -LiteralPath ./artifacts/published-native/aot/Counter/Ranvier.NativeCounter.exe).Path
-          $process = Start-Process -FilePath $counter -WindowStyle Normal -Wait -PassThru
+          $stdout = Join-Path (Split-Path -Parent $counter) 'counter.stdout.log'
+          $stderr = Join-Path (Split-Path -Parent $counter) 'counter.stderr.log'
+          $process = Start-Process -FilePath $counter -WindowStyle Normal -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          Get-Content -LiteralPath $stdout
+          Get-Content -LiteralPath $stderr
           if ($process.ExitCode -ne 0) { exit $process.ExitCode }
       - name: Preserve restore graphs and executable output evidence
         if: always()
@@ -101,4 +105,5 @@ jobs:
           path: |
             tests/native-packages/**/obj/project.assets.json
             artifacts/published-native/**/Ranvier*.deps.json
+            artifacts/published-native/**/*.log
           if-no-files-found: ignore

@@ -144,3 +144,9 @@ a failing enabled GPU lane fails the aggregate CI result. An empty version disab
 not count as GPU verification. [Run 40784192253](https://github.com/ranvier-org/Ranvier.View/actions/runs/40784192253)
 passed all 18 jobs with public GPU preview.7: JIT and NativeAOT each presented two shared frames at
 480x320/scale 1 and passed clipboard and independent UIA tree/action/teardown checks.
+
+[Final fully public acceptance](https://github.com/ranvier-org/Ranvier.View/actions/runs/40793629803)
+passed all four normal/traced Slim/GPU jobs. Both apps ran under JIT and NativeAOT in each job: all
+eight visible Counter runs passed clipboard/backbuffer and independent UIA checks. Each GPU Counter
+recorded two shared frames; Slim Counters recorded zero. NativeAOT stdout/stderr logs are preserved as
+artifacts. Every selected native/resource file matches its public package manifest (24 Slim or 26 GPU).
