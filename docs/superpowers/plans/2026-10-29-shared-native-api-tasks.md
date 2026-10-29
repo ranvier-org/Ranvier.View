@@ -17,6 +17,8 @@
 
 ## Scope snapshot
 
+Live tracking: [GitHub Project: Shared browser/native API delivery](https://github.com/orgs/ranvier-org/projects/1). Agents record acceptance evidence, remaining scope, repository ownership and linked delivery PRs there; see [tracking instructions](../../research/native-api-delivery/project-tracking.md). API-group closure and individual PR completion are separate.
+
 - Current goal: **98 required `x` groups and 5 conditional `!` groups**, each represented once below.
 - Next goal: **53 deferred `?` groups**, explicitly listed at the end; no implementation work for them is included here.
 - The six blank selections are removed from the working checklist and omitted as tasks. The historical source ledger remains unchanged evidence of the full audit.
