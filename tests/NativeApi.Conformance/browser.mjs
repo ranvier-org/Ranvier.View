@@ -31,8 +31,9 @@ try {
   const page = await browser.newPage();
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
   const checks = await page.evaluate(async () => (await import('/Browser.js')).run());
-  if (!Number.isInteger(checks) || checks < 30) throw new Error(`Insufficient table assertions: ${checks}`);
-  console.log(`BROWSER_API D10 PASS assertions=${checks} engine=chromium`);
+  if (checks.tables !== 30 || checks.reflection < 200) throw new Error(`Insufficient API assertions: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API D10 PASS assertions=${checks.tables} engine=chromium`);
+  console.log(`BROWSER_API D11 PASS assertions=${checks.reflection} engine=chromium`);
 } finally {
   if (browser) await browser.close();
   await new Promise(resolve => server.close(resolve));

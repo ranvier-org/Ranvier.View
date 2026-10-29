@@ -6,6 +6,9 @@ open Ranvier.Dom
 [<Emit("document")>]
 let private document () : Document = jsNative
 
-/// <summary>Runs the shared table assertions against the browser document.</summary>
+/// <summary>Runs the shared table and HTML reflection assertions against the browser document.</summary>
 let run () =
-    Tables.run (document ())
+    {|
+        tables = Tables.run (document ())
+        reflection = Reflection.run (document ())
+    |}

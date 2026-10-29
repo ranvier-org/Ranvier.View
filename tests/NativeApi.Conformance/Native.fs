@@ -10,11 +10,13 @@ let main _ =
     try
         let checks = Tables.run host.Document
         System.Console.WriteLine $"NATIVE_API D10 PASS assertions={checks}"
+        let reflection = Reflection.run host.Document
+        System.Console.WriteLine $"NATIVE_API D11 PASS assertions={reflection}"
     finally
         (host :> System.IDisposable).Dispose()
 
     if session.LiveObjects <> 0 then
-        failwith $"D10 leaked {session.LiveObjects} managed native objects"
+        failwith $"Shared API fixtures leaked {session.LiveObjects} managed native objects"
 
-    System.Console.WriteLine "NATIVE_API D10 TEARDOWN PASS"
+    System.Console.WriteLine "NATIVE_API TEARDOWN PASS groups=D10,D11"
     0

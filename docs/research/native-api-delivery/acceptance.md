@@ -24,3 +24,15 @@
 
 - Repeatable build.fsx native-api/browser actions are wired into Windows x64/ARM64, macOS and Linux native lanes plus a Chromium lane. Browser action passes locally. The draft Views stack requires Core alpha.3 and Native preview.8 publication before official-package CI can pass; these versions are not yet published.
 - Core docs-map stale-event fix passes all 106 traced tests locally; the follow-up commit is pushed to PR #252 for CI verification.
+
+## D11 native reflection batch
+
+- Scope: 23 configured HTML semantic/reflection interfaces; 107 new native functions (91 interfaces/1281 functions total). No new generator omissions; all 1174 prior ABI parameter signatures preserved.
+- Observed RED/GREEN on configured scope and checked multi-tag casts; generator batch16/16 tests pass. Generated shared contracts compile net10.0/netstandard2.1 with zero warnings/errors.
+- Real C++ compile first failed for missing TypeCastTraits of HTMLModElement/HTMLPreElement/HTMLQuoteElement. Existing HTMLElement type check plus namespace-qualified tag guards resolve those three casts; all other casts retain their original behavior. Glue and host compile/link pass.
+- Native fixture is RED against preview.7 (missing rv_dom_html_base_element_set_href), GREEN against the private build:269 assertions for setters/getters, UTF-8, wrong-interface rejection, legacy tag aliases and live datalist/map collections. Datalist initially failed at runtime because its factory setting was disabled; enabling the existing engine feature fixes creation and live options. The table regression fixture remains44/44 pass.
+- Core/Views/browser/AOT/platform matrix integration for D11 remains incomplete; no claim of complete delivery.
+
+- D11 shared contracts: Core PR253 pins native27a1fe8b, 23 public interfaces/56 declared members, all four alpha.4 package variants built and consumed successfully; actual missing dateTime assertion is RED against alpha.3 and GREEN against alpha.4. Complete paginated API snapshot is d11-public-api.json.
+- D11 shared behavior: static F# calls test property/attribute reflection both ways, tag aliases and live datalist/map collections. All205 assertions pass in real Chromium, native Windows x64 JIT and NativeAOT; D10 remains30/30 in the same fixture and teardown is clean. Generated wrappers map all D11 members with zero additional omissions.
+- Core PR252 merged at efaa13cc after both CI and required Perf result succeeded. Main CI40820661010 passed. Trusted publish40821109843 reports all four alpha.3 uploads accepted; public NuGet version indexes still omit alpha.3 at this check, so published-package consumption remains pending indexing. No credentials were handled.

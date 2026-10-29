@@ -1,0 +1,501 @@
+{
+  "status": "ok",
+  "truncated": false,
+  "entities": [
+    {
+      "fullName": "Ranvier.Dom.HTMLBRElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "clear",
+          "kind": "property",
+          "signature": "clear() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLBaseElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "href",
+          "kind": "property",
+          "signature": "href() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "target",
+          "kind": "property",
+          "signature": "target() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLDListElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "compact",
+          "kind": "property",
+          "signature": "compact() -> bool",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLDataElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "value",
+          "kind": "property",
+          "signature": "value() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLDataListElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "options",
+          "kind": "property",
+          "signature": "options() -> Ranvier.Dom.HTMLCollection",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLDirectoryElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "compact",
+          "kind": "property",
+          "signature": "compact() -> bool",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLFontElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "color",
+          "kind": "property",
+          "signature": "color() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "face",
+          "kind": "property",
+          "signature": "face() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "size",
+          "kind": "property",
+          "signature": "size() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLHRElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "align",
+          "kind": "property",
+          "signature": "align() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "color",
+          "kind": "property",
+          "signature": "color() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "noShade",
+          "kind": "property",
+          "signature": "noShade() -> bool",
+          "accessibility": "public"
+        },
+        {
+          "name": "size",
+          "kind": "property",
+          "signature": "size() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "width",
+          "kind": "property",
+          "signature": "width() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLHeadingElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "align",
+          "kind": "property",
+          "signature": "align() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLHtmlElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "version",
+          "kind": "property",
+          "signature": "version() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLMapElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "areas",
+          "kind": "property",
+          "signature": "areas() -> Ranvier.Dom.HTMLCollection",
+          "accessibility": "public"
+        },
+        {
+          "name": "name",
+          "kind": "property",
+          "signature": "name() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLMarqueeElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "behavior",
+          "kind": "property",
+          "signature": "behavior() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "bgColor",
+          "kind": "property",
+          "signature": "bgColor() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "direction",
+          "kind": "property",
+          "signature": "direction() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "height",
+          "kind": "property",
+          "signature": "height() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "hspace",
+          "kind": "property",
+          "signature": "hspace() -> uint32",
+          "accessibility": "public"
+        },
+        {
+          "name": "loop",
+          "kind": "property",
+          "signature": "loop() -> int",
+          "accessibility": "public"
+        },
+        {
+          "name": "scrollAmount",
+          "kind": "property",
+          "signature": "scrollAmount() -> uint32",
+          "accessibility": "public"
+        },
+        {
+          "name": "scrollDelay",
+          "kind": "property",
+          "signature": "scrollDelay() -> uint32",
+          "accessibility": "public"
+        },
+        {
+          "name": "start",
+          "kind": "method",
+          "signature": "start() -> unit",
+          "accessibility": "public"
+        },
+        {
+          "name": "stop",
+          "kind": "method",
+          "signature": "stop() -> unit",
+          "accessibility": "public"
+        },
+        {
+          "name": "trueSpeed",
+          "kind": "property",
+          "signature": "trueSpeed() -> bool",
+          "accessibility": "public"
+        },
+        {
+          "name": "vspace",
+          "kind": "property",
+          "signature": "vspace() -> uint32",
+          "accessibility": "public"
+        },
+        {
+          "name": "width",
+          "kind": "property",
+          "signature": "width() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLMenuElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "compact",
+          "kind": "property",
+          "signature": "compact() -> bool",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLMetaElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "content",
+          "kind": "property",
+          "signature": "content() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "httpEquiv",
+          "kind": "property",
+          "signature": "httpEquiv() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "media",
+          "kind": "property",
+          "signature": "media() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "name",
+          "kind": "property",
+          "signature": "name() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "scheme",
+          "kind": "property",
+          "signature": "scheme() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLModElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "cite",
+          "kind": "property",
+          "signature": "cite() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "dateTime",
+          "kind": "property",
+          "signature": "dateTime() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLParamElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "name",
+          "kind": "property",
+          "signature": "name() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "type",
+          "kind": "property",
+          "signature": "type() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "value",
+          "kind": "property",
+          "signature": "value() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "valueType",
+          "kind": "property",
+          "signature": "valueType() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLPictureElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": []
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLPreElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "width",
+          "kind": "property",
+          "signature": "width() -> int",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLQuoteElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "cite",
+          "kind": "property",
+          "signature": "cite() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLSelectedContentElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": []
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLSourceElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "attachmentIdentifier",
+          "kind": "property",
+          "signature": "attachmentIdentifier() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "height",
+          "kind": "property",
+          "signature": "height() -> uint32",
+          "accessibility": "public"
+        },
+        {
+          "name": "media",
+          "kind": "property",
+          "signature": "media() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "sizes",
+          "kind": "property",
+          "signature": "sizes() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "src",
+          "kind": "property",
+          "signature": "src() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "srcset",
+          "kind": "property",
+          "signature": "srcset() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "type",
+          "kind": "property",
+          "signature": "type() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "width",
+          "kind": "property",
+          "signature": "width() -> uint32",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLTimeElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "dateTime",
+          "kind": "property",
+          "signature": "dateTime() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLTitleElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "text",
+          "kind": "property",
+          "signature": "text() -> string",
+          "accessibility": "public"
+        }
+      ]
+    }
+  ]
+}

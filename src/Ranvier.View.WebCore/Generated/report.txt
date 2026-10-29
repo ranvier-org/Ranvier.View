@@ -1,4 +1,4 @@
-65 classes; 1213 members: 1186 mapped to 1169 of 1174 rv_dom_* functions, 13 hand-written, 14 unmapped
+86 classes; 1320 members: 1293 mapped to 1276 of 1281 rv_dom_* functions, 13 hand-written, 14 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_event_get_current_target: Event.currentTarget (get)
@@ -29,29 +29,48 @@ Members by class (mapped / hand-written / unmapped):
   FocusEventObject: 1 / 0 / 0
   HTMLAnchorElementObject: 46 / 0 / 0
   HTMLAreaElementObject: 0 / 0 / 4
+  HTMLBRElementObject: 2 / 0 / 0
+  HTMLBaseElementObject: 4 / 0 / 0
   HTMLBodyElementObject: 12 / 0 / 0
   HTMLButtonElementObject: 34 / 0 / 0
   HTMLCollectionObject: 3 / 0 / 0
+  HTMLDListElementObject: 2 / 0 / 0
+  HTMLDataElementObject: 2 / 0 / 0
+  HTMLDataListElementObject: 1 / 0 / 0
   HTMLDetailsElementObject: 4 / 0 / 0
   HTMLDialogElementObject: 10 / 0 / 0
+  HTMLDirectoryElementObject: 2 / 0 / 0
   HTMLDivElementObject: 2 / 0 / 0
   HTMLElementObject: 67 / 0 / 0
   HTMLFieldSetElementObject: 13 / 0 / 0
+  HTMLFontElementObject: 6 / 0 / 0
   HTMLFormElementObject: 28 / 0 / 0
+  HTMLHRElementObject: 10 / 0 / 0
+  HTMLHeadingElementObject: 2 / 0 / 0
+  HTMLHtmlElementObject: 2 / 0 / 0
   HTMLImageElementObject: 49 / 0 / 0
   HTMLInputElementObject: 101 / 0 / 0
   HTMLLIElementObject: 4 / 0 / 0
   HTMLLabelElementObject: 4 / 0 / 0
   HTMLLegendElementObject: 3 / 0 / 0
+  HTMLMapElementObject: 3 / 0 / 0
+  HTMLMarqueeElementObject: 24 / 0 / 0
+  HTMLMenuElementObject: 2 / 0 / 0
+  HTMLMetaElementObject: 10 / 0 / 0
   HTMLMeterElementObject: 13 / 0 / 0
+  HTMLModElementObject: 4 / 0 / 0
   HTMLOListElementObject: 8 / 0 / 0
   HTMLOptGroupElementObject: 4 / 0 / 0
   HTMLOptionElementObject: 14 / 0 / 0
   HTMLOutputElementObject: 16 / 0 / 0
   HTMLParagraphElementObject: 2 / 0 / 0
+  HTMLParamElementObject: 8 / 0 / 0
+  HTMLPreElementObject: 2 / 0 / 0
   HTMLProgressElementObject: 6 / 0 / 0
+  HTMLQuoteElementObject: 2 / 0 / 0
   HTMLSelectElementObject: 39 / 0 / 0
   HTMLSlotElementObject: 5 / 0 / 0
+  HTMLSourceElementObject: 15 / 0 / 0
   HTMLTableCaptionElementObject: 2 / 0 / 0
   HTMLTableCellElementObject: 29 / 0 / 0
   HTMLTableColElementObject: 12 / 0 / 0
@@ -60,6 +79,8 @@ Members by class (mapped / hand-written / unmapped):
   HTMLTableSectionElementObject: 11 / 0 / 0
   HTMLTemplateElementObject: 15 / 0 / 0
   HTMLTextAreaElementObject: 48 / 0 / 0
+  HTMLTimeElementObject: 2 / 0 / 0
+  HTMLTitleElementObject: 2 / 0 / 0
   HTMLUListElementObject: 4 / 0 / 0
   InputEventObject: 2 / 2 / 0
   KeyboardEventObject: 12 / 1 / 0
