@@ -14,6 +14,11 @@ OFFICIAL = 'https://api.nuget.org/v3/index.json'
 FIXTURES = 'tests/NativeApi.Conformance/'
 
 
+def configure_console():
+    for stream in [sys.stdout, sys.stderr]:
+        stream.reconfigure(encoding='utf-8')
+
+
 def validate_profile(profile):
     if not re.fullmatch('[0-9a-f]{40}', profile.get('source_commit', '')):
         raise ValueError('Fixture source_commit must be an immutable full commit.')
@@ -102,6 +107,7 @@ def package_references(profile, target, suffix):
 
 
 def main():
+    configure_console()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--profile', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True, help='New directory; existing directories are refused.')

@@ -1,8 +1,10 @@
 import importlib.util
+import io
 import json
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import patch
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
@@ -12,6 +14,16 @@ spec.loader.exec_module(gate)
 
 
 class PublishedSharedApiTests(unittest.TestCase):
+    def test_windows_console_preserves_unicode_child_progress(self):
+        data = io.BytesIO()
+        console = io.TextIOWrapper(data, encoding='cp1252', newline='\n')
+        with self.assertRaises(UnicodeEncodeError):
+            console.write('████████')
+        with patch.object(sys, 'stdout', console), patch.object(sys, 'stderr', console):
+            gate.configure_console()
+            print('Playwright progress: ████████', flush=True)
+        self.assertEqual(data.getvalue().decode('utf-8'), 'Playwright progress: ████████\n')
+
     def test_release_profile_and_traced_browser_recipe(self):
         profile = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.2.json').read_text())
         gate.validate_profile(profile)
