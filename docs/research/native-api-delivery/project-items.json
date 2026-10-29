@@ -31,8 +31,8 @@
       "title": "HTML table object APIs",
       "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/19",
       "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhh60",
-      "status": "In Progress",
-      "phase": "Release pending"
+      "status": "Done",
+      "phase": "Accepted"
     },
     {
       "id": "D11",
@@ -140,7 +140,7 @@
       "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/31",
       "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiGw",
       "status": "In Progress",
-      "phase": "Verification"
+      "phase": "Implementation"
     },
     {
       "id": "C07",
@@ -158,7 +158,7 @@
       "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/33",
       "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiHo",
       "status": "In Progress",
-      "phase": "Implementation"
+      "phase": "Verification"
     },
     {
       "id": "C09",
@@ -176,7 +176,7 @@
       "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/35",
       "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiIs",
       "status": "In Progress",
-      "phase": "Implementation"
+      "phase": "Verification"
     },
     {
       "id": "C11",
@@ -1067,6 +1067,39 @@
       "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEiAhk",
       "groups": "C03",
       "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.View/pull/8",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEkg1A",
+      "groups": null,
+      "status": "Done",
+      "trackingKind": "Supporting maintenance PR",
+      "relatedIssue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/120"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.View/pull/9",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEkuB0",
+      "groups": null,
+      "status": "In Progress",
+      "trackingKind": "Supporting acceptance tooling PR"
+    }
+  ],
+  "supportingIssues": [
+    {
+      "key": "windows-gpu-cohort",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/120",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEkHzs",
+      "status": "In Progress",
+      "phase": "Implementation",
+      "scope": "Supporting authorized Windows GPU cohort maintenance; outside103 selected API groups; Linux/macOS GPU remains paused",
+      "relatedRepositories": [
+        "ranvier-org/Ranvier.WebCore",
+        "ranvier-org/Ranvier.View"
+      ],
+      "relatedPullRequests": [
+        "https://github.com/ranvier-org/Ranvier.View/pull/7",
+        "https://github.com/ranvier-org/Ranvier.View/pull/8"
+      ]
     }
   ]
 }

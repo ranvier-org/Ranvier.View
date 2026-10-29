@@ -175,7 +175,7 @@ Each task consumes the common contract/capability/ownership conventions and prod
   - **Consumes:** Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.
   - **Acceptance:** An SVG/MathML node supports selected style/data/focus members through the shared interface; test SVG style priority/removal, focus/tab order and namespace identity without treating a node as HTMLElement.
 
-- [ ] **D10: HTML table object APIs** (required x; Engine).
+- [x] **D10: HTML table object APIs** (required x; Engine).
   - **Deliver:** HTMLTableElement/Section/Row/Cell/Col/Caption collections, insertion/deletion and reflected properties support grids and rich table editors.
   - **Consumes:** Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.
   - **Acceptance:** Create a table via existing View tags, insert/delete rows/cells through specialized APIs and verify row/section collections and reflected spans against browser results.

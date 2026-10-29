@@ -1045,7 +1045,7 @@
       "description": "HTMLTableElement/Section/Row/Cell/Col/Caption collections, insertion/deletion and reflected properties support grids and rich table editors.",
       "acceptance": "Create a table via existing View tags, insert/delete rows/cells through specialized APIs and verify row/section collections and reflected spans against browser results.",
       "consumes": "Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.",
-      "state": "shared_native_browser_verified_windows",
+      "state": "accepted",
       "memberContracts": [
         {
           "interface": "HTMLTableElement",
@@ -6291,6 +6291,48 @@
         "coverage": "Authored table/caption/colgroup/col/thead/tbody/tfoot/tr/th/td tags, six typed table interface families, live mutation and mount disposal",
         "contracts": "official Ranvier.Dom/Fable.Ranvier.Dom alpha.8, fresh nuget.org-only cache",
         "remaining": "Other-platform shared JIT/AOT, public native preview.8 consumption and full original group audit"
+      },
+      "acceptanceResult": {
+        "accepted": true,
+        "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/19",
+        "profile": "existing CPU slim native + Chromium",
+        "sourceCommit": "a097f8ec448f8974022f8416ccbf3fabf20493a4",
+        "packages": {
+          "View": "0.1.2",
+          "View.WebCore": "0.1.0-alpha.2",
+          "DOM": "0.1.0-alpha.11",
+          "native": "0.1.0-preview.10",
+          "CSS.DOM": "0.1.0-alpha.1"
+        },
+        "requirements": [
+          "six table interfaces/62 declarations/104 native functions source/API ledger",
+          "authored View table/caption/colgroup/col/head/body/foot/row/header/data tags",
+          "specialized row/cell insert/delete and live collections",
+          "section/table row order/index and reflected cell/column spans",
+          "View mount disposal and marker removal"
+        ],
+        "counts": {
+          "Tables": 30,
+          "ViewTables": 29,
+          "nativeRaw": 44
+        },
+        "platformCi": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40923137860",
+        "publication": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40927498585",
+        "officialHostedConsumer": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40930899252",
+        "officialModes": [
+          "normal Windows JIT",
+          "normal Windows NativeAOT",
+          "normal Chromium",
+          "traced Windows JIT",
+          "traced Windows NativeAOT",
+          "traced Chromium"
+        ],
+        "sharedAssertionsPerMode": 685,
+        "provenance": "fresh official-only isolated package consumers; matching View nuspec/fixture source; ABI21/all24 payload hashes; normal/traced graph and five runtime markers",
+        "nativeLifetimeChecks": 17,
+        "browserContextChecks": 4,
+        "remainingOwnScope": [],
+        "limits": "existing CPU slim profile; separate GPU maintenance issue120 remains open; C06 reserved-name lookup regression is separate and reopens that group"
       }
     },
     {

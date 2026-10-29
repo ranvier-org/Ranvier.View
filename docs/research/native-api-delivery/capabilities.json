@@ -649,11 +649,13 @@
       "rid": "win-x64",
       "groupStates": {
         "D10": {
-          "nativeRuntime": "passed",
-          "assertions": 44,
-          "sharedAdapter": "passed30",
-          "browserParity": "passed30",
-          "nativeAot": "passed30"
+          "state": "accepted",
+          "tableAssertions": 30,
+          "authoredViewAssertions": 29,
+          "jit": "platform source CI passed",
+          "nativeAot": "platform source CI passed",
+          "officialConsumers": "normal/traced Windows JIT/AOT passed",
+          "profile": "CPU slim"
         },
         "D11": {
           "nativeRuntime": "passed",
@@ -818,6 +820,15 @@
           "nativeAot": "passed",
           "publicPackageAcceptance": "Core alpha.11/native preview.10",
           "acceptanceJob": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566827203"
+        },
+        "D10": {
+          "state": "accepted",
+          "tableAssertions": 30,
+          "authoredViewAssertions": 29,
+          "jit": "platform source CI passed",
+          "nativeAot": "platform source CI passed",
+          "officialConsumers": "normal/traced Windows JIT/AOT passed",
+          "profile": "CPU slim"
         }
       },
       "runtimeProbe": "not_run",
@@ -848,6 +859,15 @@
           "nativeAot": "passed",
           "publicPackageAcceptance": "Core alpha.11/native preview.10",
           "acceptanceJob": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826382"
+        },
+        "D10": {
+          "state": "accepted",
+          "tableAssertions": 30,
+          "authoredViewAssertions": 29,
+          "jit": "platform source CI passed",
+          "nativeAot": "platform source CI passed",
+          "officialConsumers": "normal/traced Windows JIT/AOT passed",
+          "profile": "CPU slim"
         }
       },
       "runtimeProbe": "not_run",
@@ -882,6 +902,15 @@
           "nativeAot": "passed",
           "publicPackageAcceptance": "Core alpha.11/native preview.10",
           "acceptanceJob": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826870"
+        },
+        "D10": {
+          "state": "accepted",
+          "tableAssertions": 30,
+          "authoredViewAssertions": 29,
+          "jit": "platform source CI passed",
+          "nativeAot": "platform source CI passed",
+          "officialConsumers": "normal/traced Windows JIT/AOT passed",
+          "profile": "CPU slim"
         }
       },
       "runtimeProbe": "not_run",
@@ -914,9 +943,14 @@
     "runtimeProbe": "Selected D09/D10/D11/CSSOM/C07 passed; remaining groups not run",
     "groupStates": {
       "D10": {
+        "state": "accepted",
         "engine": "chromium",
-        "assertions": 30,
-        "state": "passed"
+        "tableAssertions": 30,
+        "authoredViewAssertions": 29,
+        "officialProfiles": [
+          "normal",
+          "traced"
+        ]
       },
       "D11": {
         "engine": "chromium",
