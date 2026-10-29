@@ -12,10 +12,15 @@
     <Compile Include="Hyperlinks.fs" />
     <Compile Include="Namespaces.fs" />
     <Compile Include="Stylesheets.fs" />
+    <Compile Include="RuleMutations.fs" />
     <Compile Include="CssEscaping.fs" />
     <Compile Include="CssSupport.fs" />
     <Compile Include="ComputedStyles.fs" />
     <Compile Include="TypedStyles.fs" />
+    <Compile Include="FragmentRectangles.fs" />
+    <Compile Include="FontTransitionRules.fs" />
+    <Compile Include="ConditionalRules.fs" />
+    <Compile Include="CascadeRules.fs" />
     <Compile Include="SheetConstruction.fs" />
     <Compile Include="Browser.fs" />
     <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" Condition="'$(NativeApiContractRoot)' == ''" />

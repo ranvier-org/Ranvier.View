@@ -19,6 +19,12 @@ let private windowlessDocument () : Document = jsNative
 [<Emit("$0.name || 'Error'")>]
 let private errorName (error: exn) : string = jsNative
 
+[<Emit("[globalThis.innerWidth, globalThis.innerHeight]")>]
+let private viewportSize () : struct (int * int) = jsNative
+
+[<Emit("globalThis.__nativeApiResizeViewport($0, $1)")>]
+let private resizeViewport (width: int) (height: int) : JS.Promise<unit> = jsNative
+
 [<Emit("""(() => {
     if ($0(null) !== globalThis.CSS.escape(null)) throw new Error('CSS.escape null conversion differs');
     let checks = 1;
@@ -44,6 +50,9 @@ let run () =
             ComputedStyles.run document (fun () -> Ranvier.Dom.ComputedStyles.forDocument document) errorName
 
         let mutable computedContextChecks = 0
+        let fragmentRectangles = FragmentRectangles.run document
+        let fontRules, fontWidthAlias = FontTransitionRules.fonts document
+        let transitionRules = FontTransitionRules.transitions document
 
         let typedStyles =
             TypedStyles.run document (Ranvier.Dom.ComputedStyles.forDocument document) errorName
@@ -89,6 +98,10 @@ let run () =
         let reflection = Reflection.run document
         let hyperlinks = Hyperlinks.run document
         let cssom = Stylesheets.run document
+
+        let ruleMutations =
+            RuleMutations.run document (Ranvier.Dom.ComputedStyles.forDocument document) errorName
+
         let svgCssom = Stylesheets.runSvg document
 
         let namespaces =
@@ -100,13 +113,33 @@ let run () =
         let! construction =
             SheetConstruction.run document (fun () -> StyleSheets.forDocument document) checkpoint computed
 
+        let! conditionalRules =
+            ConditionalRules.run
+                document
+                (Ranvier.Dom.ComputedStyles.forDocument document)
+                (viewportSize ())
+                (fun width height -> resizeViewport width height |> Async.AwaitPromise)
+                errorName
+
+        let! cascadeRules, scopeRules, nestedDeclarations, importContentsReadable =
+            CascadeRules.run document (Ranvier.Dom.ComputedStyles.forDocument document) (fun () -> Async.Sleep 1) errorName
+
         return
             {|
+                cascadeRules = cascadeRules
+                scopeRules = scopeRules
+                nestedDeclarations = nestedDeclarations
+                importContentsReadable = importContentsReadable
                 tables = tables
                 cssEscaping = cssEscaping
                 cssSupport = cssSupport
                 computedStyles = computedStyles
                 typedStyles = typedStyles
+                fragmentRectangles = fragmentRectangles
+                fontRules = fontRules
+                fontWidthAlias = fontWidthAlias
+                transitionRules = transitionRules
+                conditionalRules = conditionalRules
                 computedContextChecks = computedContextChecks
                 queryContextChecks = queryContextChecks
                 cssOracle = cssOracle
@@ -115,6 +148,7 @@ let run () =
                 reflection = reflection
                 hyperlinks = hyperlinks
                 cssom = cssom
+                ruleMutations = ruleMutations
                 svgCssom = svgCssom
                 namespaces = namespaces
                 construction = construction

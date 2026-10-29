@@ -267,7 +267,16 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
 
         if
             query.IsSome
-            || List.contains root [ "CSSRuleList"; "StyleSheetList"; "MediaList"; "DOMTokenList" ]
+            || List.contains
+                root
+                [
+                    "CSSRuleList"
+                    "StyleSheetList"
+                    "MediaList"
+                    "DOMTokenList"
+                    "DOMRectList"
+                    "DOMRectReadOnly"
+                ]
         then
             let kind = ctx.Input.Kinds[root]
 

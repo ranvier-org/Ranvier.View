@@ -52,12 +52,57 @@ let main _ =
         System.Console.WriteLine $"NATIVE_API C01_C02 PASS assertions={computedStyles}"
         let computedService = Ranvier.View.WebCore.ComputedStyles.forHost host
 
+        let ruleMutations =
+            RuleMutations.run host.Document computedService (function
+                | WebCoreDomException (name, _) -> name
+                | error -> error.GetType().Name)
+
+        System.Console.WriteLine $"NATIVE_API C08 PASS assertions={ruleMutations}"
+
         let typedStyles =
             TypedStyles.run host.Document computedService (function
                 | WebCoreDomException (name, _) -> name
                 | error -> error.GetType().Name)
 
         System.Console.WriteLine $"NATIVE_API C04 PASS assertions={typedStyles}"
+        let fragmentRectangles = FragmentRectangles.run host.Document
+        System.Console.WriteLine $"NATIVE_API G06 PASS assertions={fragmentRectangles}"
+        let fontRules, fontWidthAlias = FontTransitionRules.fonts host.Document
+        System.Console.WriteLine $"NATIVE_API C18 PASS assertions={fontRules}"
+        System.Console.WriteLine $"NATIVE_API C18 CAPABILITY fontWidthAlias={fontWidthAlias}"
+        let transitionRules = FontTransitionRules.transitions host.Document
+        System.Console.WriteLine $"NATIVE_API C22 PASS assertions={transitionRules}"
+        let lifetimeRectangles = host.Document.body.getClientRects ()
+        let lifetimeRectangle = lifetimeRectangles.item 0u
+
+        if isNull lifetimeRectangle then
+            failwith "Rendered body has no lifetime-test rectangle"
+
+        let rectangleReads =
+            [|
+                (fun () -> lifetimeRectangles.length |> ignore)
+                (fun () -> lifetimeRectangles.item 0u |> ignore)
+                (fun () -> lifetimeRectangle.left |> ignore)
+            |]
+
+        for read in rectangleReads do
+            let mutable rejected = false
+
+            let worker =
+                System.Threading.Thread (
+                    System.Threading.ThreadStart (fun () ->
+                        try
+                            read ()
+                        with :? System.InvalidOperationException ->
+                            rejected <- true)
+                )
+
+            worker.Start ()
+            worker.Join ()
+
+            if not rejected then
+                failwith "Fragment geometry read accepted the wrong thread"
+
         let lifetimeComputedElement = host.Document.body
         let lifetimeComputedStyle = computedService.Get (lifetimeComputedElement, None)
         let lifetimeTypedStyle = lifetimeComputedElement.style
@@ -113,6 +158,37 @@ let main _ =
         Async.StartImmediate (
             async {
                 try
+                    let originalViewport = host.PaintSize
+
+                    let! conditionalRules =
+                        ConditionalRules.run
+                            host.Document
+                            computedService
+                            originalViewport
+                            (fun width height ->
+                                async {
+                                    host.Resize (width, height)
+                                    host.Frame ()
+                                })
+                            (function
+                             | WebCoreDomException (name, _) -> name
+                             | error -> error.GetType().Name)
+
+                    if host.PaintSize <> originalViewport then
+                        failwith "Conditional rules did not restore the original viewport"
+
+                    System.Console.WriteLine $"NATIVE_API C09 PASS assertions={conditionalRules}"
+
+                    let! cascadeRules, scopeRules, nestedDeclarations, importContentsReadable =
+                        CascadeRules.run host.Document computedService (fun () -> Async.Sleep 1) (function
+                            | WebCoreDomException (name, _) -> name
+                            | error -> error.GetType().Name)
+
+                    System.Console.WriteLine $"NATIVE_API C10 PASS assertions={cascadeRules}"
+
+                    System.Console.WriteLine
+                        $"NATIVE_API C10 CAPABILITY scopeRules={scopeRules} nestedDeclarations={nestedDeclarations} importContentsReadable={importContentsReadable}"
+
                     let! checks =
                         SheetConstruction.run host.Document (fun () -> StyleSheets.forHost host) checkpoint computed
 
@@ -234,6 +310,23 @@ let main _ =
             failwith "Stylesheet replacement completed without a checkpoint"
 
         (host :> System.IDisposable).Dispose()
+
+        for value in [ box lifetimeRectangles; box lifetimeRectangle ] do
+            if (value :?> NativeObject).Handle <> 0n then
+                failwith "Disposed host retained a fragment geometry handle"
+
+        for read in rectangleReads do
+            let mutable rejected = false
+
+            try
+                read ()
+            with :? System.ObjectDisposedException ->
+                rejected <- true
+
+            if not rejected then
+                failwith "Fragment geometry read accepted a disposed host"
+
+        System.Console.WriteLine "NATIVE_API G06 LIFETIME PASS assertions=8"
 
         let mutable disposedQueryRejected = false
 

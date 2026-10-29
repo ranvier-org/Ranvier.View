@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "releaseAbi": 21,
-  "releaseNativeInterfaces": 127,
-  "releaseGeneratedFunctions": 1695,
+  "releaseNativeInterfaces": 128,
+  "releaseGeneratedFunctions": 1702,
   "workingBranch": {
-    "name": "codex/native-api-computed-style",
-    "commit": "99d5a7720aedf51996b97de09c03f1df5360a3aa",
-    "interfaces": 127,
-    "functions": 1698,
+    "name": "codex/native-api-fragment-rectangles",
+    "commit": "58a9980bf69196752a070fc832095249d26fca2b",
+    "interfaces": 128,
+    "functions": 1702,
     "runtimeTypeQueries": 3,
     "addedFunctions": [
       "rv_dom_css_condition_rule_get_condition_text",
@@ -637,7 +637,11 @@
       "rv_dom_svg_style_element_set_media",
       "rv_dom_svg_style_element_set_title",
       "rv_dom_svg_style_element_set_type",
-      "rv_dom_window_get_computed_style"
+      "rv_dom_window_get_computed_style",
+      "rv_dom_element_get_client_rects",
+      "rv_dom_range_get_client_rects",
+      "rv_dom_dom_rect_list_get_length",
+      "rv_dom_dom_rect_list_item"
     ]
   },
   "targets": [
@@ -645,11 +649,13 @@
       "rid": "win-x64",
       "groupStates": {
         "D10": {
-          "nativeRuntime": "passed",
-          "assertions": 44,
-          "sharedAdapter": "passed30",
-          "browserParity": "passed30",
-          "nativeAot": "passed30"
+          "state": "accepted",
+          "tableAssertions": 30,
+          "authoredViewAssertions": 29,
+          "jit": "platform source CI passed",
+          "nativeAot": "platform source CI passed",
+          "officialConsumers": "normal/traced Windows JIT/AOT passed",
+          "profile": "CPU slim"
         },
         "D11": {
           "nativeRuntime": "passed",
@@ -696,12 +702,16 @@
           "nativeRuntimePackage": "preview.8 pending"
         },
         "C05": {
-          "state": "profile_verified",
+          "state": "accepted",
           "sharedAdapterAssertions": 45,
           "nativeAotAssertions": 45,
           "profile": "CSSOM 2021",
           "provider": "shared pure F# facade",
-          "publicPackageAcceptance": "alpha.9 pending"
+          "publicPackageAcceptance": "Core alpha.11/native preview.10",
+          "assertions": 45,
+          "jit": "passed",
+          "nativeAot": "passed",
+          "acceptanceJob": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826923"
         },
         "C03": {
           "state": "in_progress",
@@ -743,6 +753,53 @@
           "nativeAotAssertions": 39,
           "nativeLifetimeAssertions": 2,
           "publicPackageAcceptance": "CSSPR2/pairedViews pending"
+        },
+        "G06": {
+          "state": "slice_verified",
+          "jitAssertions": 61,
+          "nativeAotAssertions": 61,
+          "lifetimeAssertions": 8,
+          "contractPackages": "official alpha.12",
+          "nativeRuntime": "official preview.11; local Views source"
+        },
+        "C18": {
+          "state": "slice_verified",
+          "jitAssertions": 51,
+          "nativeAotAssertions": 51,
+          "fontWidthAlias": "available",
+          "nativeRuntime": "official preview.11; local Views source"
+        },
+        "C22": {
+          "state": "slice_verified",
+          "jitAssertions": 23,
+          "nativeAotAssertions": 23,
+          "nativeRuntime": "official preview.11; local Views source"
+        },
+        "C09": {
+          "state": "slice_verified",
+          "jitAssertions": 44,
+          "nativeAotAssertions": 44,
+          "nativeRuntime": "official preview.11",
+          "viewportRestore": "verified"
+        },
+        "C08": {
+          "state": "slice_verified",
+          "jitAssertions": 131,
+          "nativeAotAssertions": 131,
+          "nativeRuntime": "official preview.11; local Views source",
+          "ownNestedStyleRuleMethods": "verified",
+          "cssTextSetter": "successful no-op per pinned source"
+        },
+        "C10": {
+          "state": "slice_verified",
+          "jitAssertions": 91,
+          "nativeAotAssertions": 91,
+          "nativeRuntime": "official preview.11; local Views source",
+          "scopeRules": true,
+          "nestedDeclarations": true,
+          "dataImportedContentsReadable": false,
+          "dataImportedContentsError": "SecurityError",
+          "importReplacement": "whole stylesheet text; live insertion hierarchy differs"
         }
       },
       "runtimeProbe": "Selected D09/D10/D11/CSSOM/C07 local runtime fixtures passed; remaining groups not run",
@@ -755,6 +812,23 @@
           "nativePackagedCi": "passed",
           "nativeCiAssertions": 72,
           "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40869602532"
+        },
+        "C05": {
+          "state": "accepted",
+          "assertions": 45,
+          "jit": "passed",
+          "nativeAot": "passed",
+          "publicPackageAcceptance": "Core alpha.11/native preview.10",
+          "acceptanceJob": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566827203"
+        },
+        "D10": {
+          "state": "accepted",
+          "tableAssertions": 30,
+          "authoredViewAssertions": 29,
+          "jit": "platform source CI passed",
+          "nativeAot": "platform source CI passed",
+          "officialConsumers": "normal/traced Windows JIT/AOT passed",
+          "profile": "CPU slim"
         }
       },
       "runtimeProbe": "not_run",
@@ -777,6 +851,23 @@
           "nativePackagedCi": "passed",
           "nativeCiAssertions": 93,
           "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40876930854"
+        },
+        "C05": {
+          "state": "accepted",
+          "assertions": 45,
+          "jit": "passed",
+          "nativeAot": "passed",
+          "publicPackageAcceptance": "Core alpha.11/native preview.10",
+          "acceptanceJob": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826382"
+        },
+        "D10": {
+          "state": "accepted",
+          "tableAssertions": 30,
+          "authoredViewAssertions": 29,
+          "jit": "platform source CI passed",
+          "nativeAot": "platform source CI passed",
+          "officialConsumers": "normal/traced Windows JIT/AOT passed",
+          "profile": "CPU slim"
         }
       },
       "runtimeProbe": "not_run",
@@ -803,6 +894,23 @@
           "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40876930854",
           "publicPackageAcceptance": "pending",
           "sharedAdapterAcceptance": "pending"
+        },
+        "C05": {
+          "state": "accepted",
+          "assertions": 45,
+          "jit": "passed",
+          "nativeAot": "passed",
+          "publicPackageAcceptance": "Core alpha.11/native preview.10",
+          "acceptanceJob": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826870"
+        },
+        "D10": {
+          "state": "accepted",
+          "tableAssertions": 30,
+          "authoredViewAssertions": 29,
+          "jit": "platform source CI passed",
+          "nativeAot": "platform source CI passed",
+          "officialConsumers": "normal/traced Windows JIT/AOT passed",
+          "profile": "CPU slim"
         }
       },
       "runtimeProbe": "not_run",
@@ -835,9 +943,14 @@
     "runtimeProbe": "Selected D09/D10/D11/CSSOM/C07 passed; remaining groups not run",
     "groupStates": {
       "D10": {
+        "state": "accepted",
         "engine": "chromium",
-        "assertions": 30,
-        "state": "passed"
+        "tableAssertions": 30,
+        "authoredViewAssertions": 29,
+        "officialProfiles": [
+          "normal",
+          "traced"
+        ]
       },
       "D11": {
         "engine": "chromium",
@@ -876,12 +989,13 @@
         "sharedContractPackage": "official alpha.8"
       },
       "C05": {
-        "state": "profile_verified",
+        "state": "accepted",
         "engine": "chromium",
         "assertions": 45,
         "oracleComparisons": 196609,
         "profile": "CSSOM 2021",
-        "publicPackageAcceptance": "alpha.9 pending"
+        "publicPackageAcceptance": "official alpha.11 verified",
+        "acceptanceIssue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/30"
       },
       "C03": {
         "engine": "chromium",
@@ -908,9 +1022,52 @@
         "engine": "chromium",
         "assertions": 39,
         "publicPackageAcceptance": "CSSPR2/pairedViews pending"
+      },
+      "G06": {
+        "state": "slice_verified",
+        "engine": "chromium",
+        "assertions": 74,
+        "contractPackages": "official alpha.12",
+        "remaining": "fixed-font comparison not claimed; other target acceptance pending"
+      },
+      "C18": {
+        "state": "slice_verified",
+        "engine": "chromium",
+        "assertions": 49,
+        "fontWidthAlias": "unavailable",
+        "fontFeatureMaps": "not in selected pinned interface"
+      },
+      "C22": {
+        "state": "slice_verified",
+        "engine": "chromium",
+        "assertions": 23,
+        "execution": "not exercised; separate A11"
+      },
+      "C09": {
+        "state": "slice_verified",
+        "engine": "chromium",
+        "assertions": 44,
+        "viewportRestore": "verified",
+        "subscriptions": "separate G01 scope"
+      },
+      "C08": {
+        "state": "slice_verified",
+        "assertions": 131,
+        "engine": "chromium",
+        "ownNestedStyleRuleMethods": "verified",
+        "cssTextSetter": "successful no-op per pinned source"
+      },
+      "C10": {
+        "state": "slice_verified",
+        "assertions": 93,
+        "engine": "chromium",
+        "scopeRules": true,
+        "nestedDeclarations": true,
+        "dataImportedContentsReadable": true,
+        "importReplacement": "whole stylesheet text; live insertion hierarchy differs"
       }
     }
   },
-  "releaseVersion": "0.1.0-preview.8",
-  "releaseVerification": "Tag40864308532 all five native targets, managed and publish succeeded; official Windows runtime CSSOM407 passed; all24 payload hashes/sizes verified"
+  "releaseVersion": "0.1.0-preview.11",
+  "releaseVerification": "Tag40905413545 succeeded all five native targets, managed and publish; all seven public packages downloaded and all five runtime payload manifests/hashes verified at clean CI source58a9980bf69196752a070fc832095249d26fca2b, ABI21. Official Windows raw probes712 and shared Windows JIT/NativeAOT864 pass; paired published Views/platform conformance remains pending."
 }

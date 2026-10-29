@@ -17,6 +17,8 @@
 
 ## Scope snapshot
 
+Live tracking: [GitHub Project: Shared browser/native API delivery](https://github.com/orgs/ranvier-org/projects/1). Agents record acceptance evidence, remaining scope, repository ownership and linked delivery PRs there; see [tracking instructions](../../research/native-api-delivery/project-tracking.md). API-group closure and individual PR completion are separate.
+
 - Current goal: **98 required `x` groups and 5 conditional `!` groups**, each represented once below.
 - Next goal: **53 deferred `?` groups**, explicitly listed at the end; no implementation work for them is included here.
 - The six blank selections are removed from the working checklist and omitted as tasks. The historical source ledger remains unchanged evidence of the full audit.
@@ -173,7 +175,7 @@ Each task consumes the common contract/capability/ownership conventions and prod
   - **Consumes:** Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.
   - **Acceptance:** An SVG/MathML node supports selected style/data/focus members through the shared interface; test SVG style priority/removal, focus/tab order and namespace identity without treating a node as HTMLElement.
 
-- [ ] **D10: HTML table object APIs** (required x; Engine).
+- [x] **D10: HTML table object APIs** (required x; Engine).
   - **Deliver:** HTMLTableElement/Section/Row/Cell/Col/Caption collections, insertion/deletion and reflected properties support grids and rich table editors.
   - **Consumes:** Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.
   - **Acceptance:** Create a table via existing View tags, insert/delete rows/cells through specialized APIs and verify row/section collections and reflected spans against browser results.
@@ -237,7 +239,7 @@ Each task consumes the common contract/capability/ownership conventions and prod
   - **Consumes:** C01 and existing Ranvier.Css metadata.
   - **Acceptance:** Use the same Ranvier.Css property/value expression against browser and native sinks; verify grammar mismatch rejection, numeric/unit metadata and inline priority/restoration.
 
-- [ ] **C05: CSS identifier escaping** (required x; Facade).
+- [x] **C05: CSS identifier escaping** (required x; Facade). Accepted2026-10-30: [WebCore issue30](https://github.com/ranvier-org/Ranvier.WebCore/issues/30);45 assertions in JIT/NativeAOT on all four supported native platforms,45 Chromium assertions plus196,609 oracle cases, and official normal/traced native/Fable Core consumers. The Core-only function has no new Views-backend publication dependency.
   - **Deliver:** CSS.escape produces safe selector identifiers from arbitrary application strings.
   - **Consumes:** Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.
   - **Acceptance:** Run shared CSS.escape vectors for leading digits, whitespace, punctuation, null/control and non-ASCII characters, then resolve an element through the resulting selector.

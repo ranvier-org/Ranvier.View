@@ -1,0 +1,1105 @@
+{
+  "schemaVersion": 1,
+  "project": "https://github.com/orgs/ranvier-org/projects/1",
+  "scope": {
+    "required": 98,
+    "conditional": 5,
+    "deferred": 53
+  },
+  "groups": [
+    {
+      "id": "D01",
+      "selection": "x",
+      "title": "Filtered tree traversal",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/17",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhh58",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "D09",
+      "selection": "x",
+      "title": "SVG/MathML shared element members",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/18",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhh6c",
+      "status": "In Progress",
+      "phase": "Release pending"
+    },
+    {
+      "id": "D10",
+      "selection": "x",
+      "title": "HTML table object APIs",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/19",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhh60",
+      "status": "Done",
+      "phase": "Accepted"
+    },
+    {
+      "id": "D11",
+      "selection": "x",
+      "title": "Additional HTML semantic/reflection types",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/20",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhh7Y",
+      "status": "In Progress",
+      "phase": "Verification"
+    },
+    {
+      "id": "D12",
+      "selection": "x",
+      "title": "Stylesheet/link element objects",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/21",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhh8Y",
+      "status": "In Progress",
+      "phase": "Implementation"
+    },
+    {
+      "id": "D13",
+      "selection": "x",
+      "title": "Specialized form collections/events",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/22",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhh84",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "D14",
+      "selection": "x",
+      "title": "Form submission semantics",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/23",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhh90",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "D16",
+      "selection": "x",
+      "title": "Specialized dialog/popover/command payloads",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/24",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhh-c",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "D17",
+      "selection": "x",
+      "title": "DOM construction and value factories",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/25",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhh-8",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "C01",
+      "selection": "x",
+      "title": "Computed-style reads",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/26",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhh_s",
+      "status": "In Progress",
+      "phase": "Release pending"
+    },
+    {
+      "id": "C02",
+      "selection": "x",
+      "title": "Pseudo-element computed styles",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/27",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiEs",
+      "status": "In Progress",
+      "phase": "Release pending"
+    },
+    {
+      "id": "C03",
+      "selection": "x",
+      "title": "CSS property/condition support queries",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/28",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiFM",
+      "status": "In Progress",
+      "phase": "Release pending"
+    },
+    {
+      "id": "C04",
+      "selection": "x",
+      "title": "Typed CSS property access",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/29",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiFw",
+      "status": "In Progress",
+      "phase": "Release pending"
+    },
+    {
+      "id": "C05",
+      "selection": "x",
+      "title": "CSS identifier escaping",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/30",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiGU",
+      "status": "Done",
+      "phase": "Accepted"
+    },
+    {
+      "id": "C06",
+      "selection": "x",
+      "title": "Stylesheet discovery/metadata",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/31",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiGw",
+      "status": "In Progress",
+      "phase": "Implementation"
+    },
+    {
+      "id": "C07",
+      "selection": "x",
+      "title": "Stylesheet construction/replacement/adoption",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/32",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiHI",
+      "status": "In Progress",
+      "phase": "Verification"
+    },
+    {
+      "id": "C08",
+      "selection": "x",
+      "title": "Rule enumeration and mutation",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/33",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiHo",
+      "status": "In Progress",
+      "phase": "Verification"
+    },
+    {
+      "id": "C09",
+      "selection": "x",
+      "title": "Conditional rules and media lists",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/34",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiIE",
+      "status": "In Progress",
+      "phase": "Verification"
+    },
+    {
+      "id": "C10",
+      "selection": "x",
+      "title": "Cascade structure",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/35",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiIs",
+      "status": "In Progress",
+      "phase": "Verification"
+    },
+    {
+      "id": "C11",
+      "selection": "x",
+      "title": "CSS keyframe rules",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/36",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiJI",
+      "status": "In Progress",
+      "phase": "Implementation"
+    },
+    {
+      "id": "C12",
+      "selection": "x",
+      "title": "Custom-property registration",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/37",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiSE",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "C13",
+      "selection": "x",
+      "title": "Typed style maps",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/38",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiSs",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "C14",
+      "selection": "x",
+      "title": "Typed CSS value parsing",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/39",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiTU",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "C16",
+      "selection": "x",
+      "title": "Typed transform values",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/40",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiUE",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "C18",
+      "selection": "x",
+      "title": "Font rules/descriptors",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/41",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiU0",
+      "status": "In Progress",
+      "phase": "Verification"
+    },
+    {
+      "id": "C19",
+      "selection": "x",
+      "title": "Counter styles",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/42",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiWE",
+      "status": "In Progress",
+      "phase": "Implementation"
+    },
+    {
+      "id": "C21",
+      "selection": "x",
+      "title": "Position fallback rules",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/43",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiXM",
+      "status": "In Progress",
+      "phase": "Implementation"
+    },
+    {
+      "id": "C22",
+      "selection": "x",
+      "title": "Starting-style/view-transition rules",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/44",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiX4",
+      "status": "In Progress",
+      "phase": "Verification"
+    },
+    {
+      "id": "C25",
+      "selection": "x",
+      "title": "Matched-rule/cascade diagnostics",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/45",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiY4",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "G01",
+      "selection": "x",
+      "title": "Media-query evaluation/subscription",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/46",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiZk",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "G02",
+      "selection": "x",
+      "title": "Viewport dimensions/device scale",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/47",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhig0",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "G03",
+      "selection": "x",
+      "title": "Visual viewport",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/48",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhih4",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "G04",
+      "selection": "x",
+      "title": "Screen/display information",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/49",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiiQ",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "G05",
+      "selection": "x",
+      "title": "Fractional viewport scrolling",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/50",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhii4",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "G06",
+      "selection": "x",
+      "title": "Fragment rectangle lists",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/51",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhijc",
+      "status": "In Progress",
+      "phase": "Release pending"
+    },
+    {
+      "id": "G07",
+      "selection": "x",
+      "title": "Geometry construction/mutation",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/52",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhij8",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "G08",
+      "selection": "x",
+      "title": "Double-precision transform matrices",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/53",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhikc",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "G09",
+      "selection": "x",
+      "title": "Caret hit testing",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/54",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhikw",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "G10",
+      "selection": "x",
+      "title": "Resize observation options/payloads",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/55",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhilY",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "G11",
+      "selection": "x",
+      "title": "Intersection observation options/payloads",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/56",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhimE",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "G12",
+      "selection": "x",
+      "title": "Viewport/document event routing",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/57",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiqU",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "G14",
+      "selection": "x",
+      "title": "Coordinate-space conversion",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/58",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhirE",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "G15",
+      "selection": "x",
+      "title": "OS appearance and input preferences",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/59",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhirg",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "A01",
+      "selection": "x",
+      "title": "Keyframe animation creation",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/60",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhirw",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "A02",
+      "selection": "x",
+      "title": "Effect inspection/mutation",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/61",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhisg",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "A03",
+      "selection": "x",
+      "title": "Animation lifecycle/state",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/62",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhis4",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "A04",
+      "selection": "x",
+      "title": "Commit animated styles",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/63",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhits",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "A05",
+      "selection": "x",
+      "title": "Animation discovery/identity",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/64",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiuQ",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "A06",
+      "selection": "!",
+      "title": "Document/custom timelines",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/65",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiuc",
+      "status": "Todo",
+      "phase": "Conditional evaluation"
+    },
+    {
+      "id": "A07",
+      "selection": "!",
+      "title": "Scroll-driven timelines",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/66",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiu4",
+      "status": "Todo",
+      "phase": "Conditional evaluation"
+    },
+    {
+      "id": "A08",
+      "selection": "!",
+      "title": "View-driven timelines/ranges",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/67",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhizI",
+      "status": "Todo",
+      "phase": "Conditional evaluation"
+    },
+    {
+      "id": "A09",
+      "selection": "!",
+      "title": "Native custom animation effects",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/68",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiz0",
+      "status": "Todo",
+      "phase": "Conditional evaluation"
+    },
+    {
+      "id": "A10",
+      "selection": "x",
+      "title": "Typed animation/transition events",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/69",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhi0s",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "A11",
+      "selection": "!",
+      "title": "View transitions",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/70",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhi1k",
+      "status": "Todo",
+      "phase": "Conditional evaluation"
+    },
+    {
+      "id": "A12",
+      "selection": "x",
+      "title": "Native frame/timer ownership",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/71",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhi2Q",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "T01",
+      "selection": "x",
+      "title": "Font loading/readiness",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/72",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhi2w",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "T02",
+      "selection": "x",
+      "title": "Font construction/registration",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/73",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhi3g",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "T03",
+      "selection": "x",
+      "title": "Custom highlights",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/74",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhi38",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "T04",
+      "selection": "x",
+      "title": "Rich beforeinput/input payloads",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/75",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhi44",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "T06",
+      "selection": "x",
+      "title": "Text segmentation",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/76",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhi6U",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "T09",
+      "selection": "x",
+      "title": "Clipboard formats and file payloads",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/77",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhi-8",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "S01",
+      "selection": "x",
+      "title": "SVG graphics bounds/transforms",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/78",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhi_0",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "S02",
+      "selection": "x",
+      "title": "SVG geometry sampling/hit testing",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/79",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjAg",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "S03",
+      "selection": "x",
+      "title": "SVG shape-specific reflection",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/80",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjBg",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "S04",
+      "selection": "x",
+      "title": "SVG value/list factories",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/81",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjCc",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "S05",
+      "selection": "x",
+      "title": "SVG text metrics/positioning",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/82",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjDU",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "S06",
+      "selection": "x",
+      "title": "SVG root/view controls",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/83",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjEQ",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "S07",
+      "selection": "x",
+      "title": "SVG animation controls",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/84",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjE4",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "S08",
+      "selection": "x",
+      "title": "SVG gradients/patterns/stops",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/85",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjFs",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "S09",
+      "selection": "x",
+      "title": "SVG filters",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/86",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjGo",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "S10",
+      "selection": "x",
+      "title": "SVG clipping/masks/markers",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/87",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjNc",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "S11",
+      "selection": "x",
+      "title": "SVG resource/reuse/content types",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/88",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjOQ",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "S13",
+      "selection": "x",
+      "title": "MathML typed element surface",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/89",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjPI",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "R01",
+      "selection": "x",
+      "title": "Canvas 2D context lifecycle",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/90",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjP8",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "R02",
+      "selection": "x",
+      "title": "Canvas paths and hit testing",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/91",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjRE",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "R03",
+      "selection": "x",
+      "title": "Canvas state/transforms/compositing",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/92",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjR0",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "R04",
+      "selection": "x",
+      "title": "Canvas paints",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/93",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjTA",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "R05",
+      "selection": "x",
+      "title": "Canvas text",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/94",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjUI",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "R06",
+      "selection": "x",
+      "title": "Canvas image/pixel operations",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/95",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjU4",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "R07",
+      "selection": "x",
+      "title": "Canvas export/bitmap transport",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/96",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjVk",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "R09",
+      "selection": "x",
+      "title": "Image readiness and decoding",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/97",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhja8",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "R12",
+      "selection": "x",
+      "title": "Snapshot/export options",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/98",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjb0",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "I01",
+      "selection": "x",
+      "title": "Event cancellation signals",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/99",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjcw",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "I02",
+      "selection": "x",
+      "title": "Standalone/custom event construction",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/100",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjdQ",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "I03",
+      "selection": "x",
+      "title": "Touch event payloads and injection",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/101",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjd8",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "I04",
+      "selection": "x",
+      "title": "Pen/pointer fidelity",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/102",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhje4",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "I06",
+      "selection": "x",
+      "title": "Relative pointer capture/lock",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/103",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjfo",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "I07",
+      "selection": "x",
+      "title": "Drag/drop object model",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/104",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjgo",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "I08",
+      "selection": "x",
+      "title": "Event detail adapters",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/105",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjhc",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "I11",
+      "selection": "x",
+      "title": "Component accessibility internals",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/106",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjiM",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "I12",
+      "selection": "x",
+      "title": "Native focus/activation/input capability state",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/107",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjm8",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "H01",
+      "selection": "x",
+      "title": "Idle work scheduling",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/108",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjns",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "H02",
+      "selection": "x",
+      "title": "Monotonic time and profiling marks",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/109",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjok",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "H05",
+      "selection": "x",
+      "title": "Font/image/resource completion and failures",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/110",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjpM",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "H06",
+      "selection": "x",
+      "title": "Locale/language/time-zone services",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/111",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjp8",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "H07",
+      "selection": "x",
+      "title": "Rendering capability discovery",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/112",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjqg",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "H08",
+      "selection": "x",
+      "title": "Native inspector hooks",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/113",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjrY",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "H11",
+      "selection": "x",
+      "title": "Binary/file value objects",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/114",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjsA",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "H13",
+      "selection": "x",
+      "title": "URL parsing/pattern matching",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/115",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjs8",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "B06",
+      "selection": "x",
+      "title": "Media capability queries",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/116",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjuI",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "B09",
+      "selection": "x",
+      "title": "Notifications/app badges",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/117",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhjzc",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "B10",
+      "selection": "x",
+      "title": "Wake locks",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/118",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhj0Q",
+      "status": "Todo",
+      "phase": "Not started"
+    },
+    {
+      "id": "B22",
+      "selection": "x",
+      "title": "Crypto",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/119",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhj1M",
+      "status": "Todo",
+      "phase": "Not started"
+    }
+  ],
+  "deliveryPullRequests": [
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.WebCore/pull/14",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhpS8",
+      "groups": "C03",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.WebCore/pull/15",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhpeM",
+      "groups": "C01, C02",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.WebCore/pull/16",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhpqg",
+      "groups": "G06",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier/pull/259",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhp2E",
+      "groups": "C01, C02",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier/pull/261",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhp-M",
+      "groups": "G06",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.Css/pull/2",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhqHQ",
+      "groups": "C04",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.Css/pull/3",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhqS8",
+      "groups": "C04",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier/pull/260",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhqhE",
+      "groups": "Supporting docs CI",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.View/pull/7",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhqvg",
+      "groups": "D09, D10, D11, D12, C01, C02, C03, C04, C05, C06, C07, C08, C09, C10, C11, C18, C19, C21, C22, G06",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.WebCore/pull/7",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEh-uk",
+      "groups": "D10",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.WebCore/pull/8",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEh-38",
+      "groups": "D11",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.WebCore/pull/10",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEh_Ak",
+      "groups": "D09, D11, D12, C06, C08, C09, C10, C11, C18, C19, C21, C22",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.WebCore/pull/11",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEh_IE",
+      "groups": "D12, C06, C08, C09, C10, C11, C18, C19, C21, C22",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.WebCore/pull/12",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEh_PE",
+      "groups": "C07",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.WebCore/pull/13",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEh_Xo",
+      "groups": "C07",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier/pull/252",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEh_sc",
+      "groups": "D10",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier/pull/253",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEh_1E",
+      "groups": "D11",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier/pull/254",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEh_98",
+      "groups": "D09",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier/pull/255",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEiAFc",
+      "groups": "D11, D12, C06, C08, C09, C10, C11, C18, C19, C21, C22",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier/pull/256",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEiANE",
+      "groups": "C07",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier/pull/257",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEiAYE",
+      "groups": "C05",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier/pull/258",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEiAhk",
+      "groups": "C03",
+      "status": "Done"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.View/pull/8",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEkg1A",
+      "groups": null,
+      "status": "Done",
+      "trackingKind": "Supporting maintenance PR",
+      "relatedIssue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/120"
+    },
+    {
+      "url": "https://github.com/ranvier-org/Ranvier.View/pull/9",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEkuB0",
+      "groups": null,
+      "status": "In Progress",
+      "trackingKind": "Supporting acceptance tooling PR"
+    }
+  ],
+  "supportingIssues": [
+    {
+      "key": "windows-gpu-cohort",
+      "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/120",
+      "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEkHzs",
+      "status": "In Progress",
+      "phase": "Implementation",
+      "scope": "Supporting authorized Windows GPU cohort maintenance; outside103 selected API groups; Linux/macOS GPU remains paused",
+      "relatedRepositories": [
+        "ranvier-org/Ranvier.WebCore",
+        "ranvier-org/Ranvier.View"
+      ],
+      "relatedPullRequests": [
+        "https://github.com/ranvier-org/Ranvier.View/pull/7",
+        "https://github.com/ranvier-org/Ranvier.View/pull/8"
+      ]
+    }
+  ]
+}

@@ -1045,7 +1045,7 @@
       "description": "HTMLTableElement/Section/Row/Cell/Col/Caption collections, insertion/deletion and reflected properties support grids and rich table editors.",
       "acceptance": "Create a table via existing View tags, insert/delete rows/cells through specialized APIs and verify row/section collections and reflected spans against browser results.",
       "consumes": "Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.",
-      "state": "shared_native_browser_verified_windows",
+      "state": "accepted",
       "memberContracts": [
         {
           "interface": "HTMLTableElement",
@@ -6291,6 +6291,48 @@
         "coverage": "Authored table/caption/colgroup/col/thead/tbody/tfoot/tr/th/td tags, six typed table interface families, live mutation and mount disposal",
         "contracts": "official Ranvier.Dom/Fable.Ranvier.Dom alpha.8, fresh nuget.org-only cache",
         "remaining": "Other-platform shared JIT/AOT, public native preview.8 consumption and full original group audit"
+      },
+      "acceptanceResult": {
+        "accepted": true,
+        "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/19",
+        "profile": "existing CPU slim native + Chromium",
+        "sourceCommit": "a097f8ec448f8974022f8416ccbf3fabf20493a4",
+        "packages": {
+          "View": "0.1.2",
+          "View.WebCore": "0.1.0-alpha.2",
+          "DOM": "0.1.0-alpha.11",
+          "native": "0.1.0-preview.10",
+          "CSS.DOM": "0.1.0-alpha.1"
+        },
+        "requirements": [
+          "six table interfaces/62 declarations/104 native functions source/API ledger",
+          "authored View table/caption/colgroup/col/head/body/foot/row/header/data tags",
+          "specialized row/cell insert/delete and live collections",
+          "section/table row order/index and reflected cell/column spans",
+          "View mount disposal and marker removal"
+        ],
+        "counts": {
+          "Tables": 30,
+          "ViewTables": 29,
+          "nativeRaw": 44
+        },
+        "platformCi": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40923137860",
+        "publication": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40927498585",
+        "officialHostedConsumer": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40930899252",
+        "officialModes": [
+          "normal Windows JIT",
+          "normal Windows NativeAOT",
+          "normal Chromium",
+          "traced Windows JIT",
+          "traced Windows NativeAOT",
+          "traced Chromium"
+        ],
+        "sharedAssertionsPerMode": 685,
+        "provenance": "fresh official-only isolated package consumers; matching View nuspec/fixture source; ABI21/all24 payload hashes; normal/traced graph and five runtime markers",
+        "nativeLifetimeChecks": 17,
+        "browserContextChecks": 4,
+        "remainingOwnScope": [],
+        "limits": "existing CPU slim profile; separate GPU maintenance issue120 remains open; C06 reserved-name lookup regression is separate and reopens that group"
       }
     },
     {
@@ -16662,7 +16704,18 @@
         "supported-platform shared CI",
         "CSS adapter trusted publication and official consumption",
         "paired Views package acceptance"
-      ]
+      ],
+      "officialPackageVerification": {
+        "adapterRelease": "https://github.com/ranvier-org/Ranvier.Css/actions/runs/40887477904",
+        "tracedDependencyRepair": "https://github.com/ranvier-org/Ranvier.Css/actions/runs/40896943883",
+        "isolatedVariants": "all4 normal/traced native/Fable fresh cohort restores and execution passed",
+        "chromiumNormalAssertions": 39,
+        "chromiumTracedAssertions": 39,
+        "windowsJitNormalAssertions": 39,
+        "windowsJitTracedAssertions": 39,
+        "domPackages": "official alpha.11 browser, official alpha.12 latest native",
+        "remaining": "native engine remains private in shared fixtures; other-platform shared behavior and paired Views release pending"
+      }
     },
     {
       "id": "C05",
@@ -16673,7 +16726,7 @@
       "description": "CSS.escape produces safe selector identifiers from arbitrary application strings.",
       "acceptance": "Run shared CSS.escape vectors for leading digits, whitespace, punctuation, null/control and non-ASCII characters, then resolve an element through the resulting selector.",
       "consumes": "Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.",
-      "state": "in_progress",
+      "state": "accepted",
       "memberContracts": [
         {
           "owner": "Ranvier.Dom.CSS",
@@ -16704,6 +16757,31 @@
         "windowsAot": "passed",
         "chromium": "passed",
         "otherPlatforms": "pending CI"
+      },
+      "acceptedAt": "2026-10-30",
+      "acceptanceIssue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/30",
+      "acceptanceEvidence": {
+        "scope": "Core-only CSS.escape:string->string; CSSOM26August2021 profile; no new native ABI or Views backend implementation dependency",
+        "nativeAssertionsPerJitAndAotRun": 45,
+        "serializationVectors": 35,
+        "realSelectorRoundTrips": 10,
+        "platformJobs": {
+          "win-x64": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826923",
+          "win-arm64": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566827203",
+          "linux-x64": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826382",
+          "osx-arm64": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826870"
+        },
+        "chromium": {
+          "assertions": 45,
+          "oracleComparisons": 196609,
+          "job": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566827438"
+        },
+        "normalTracedNativeFableConsumers": "https://github.com/ranvier-org/Ranvier/actions/runs/40881215249/job/123473012510",
+        "officialCorePublish": "https://github.com/ranvier-org/Ranvier/actions/runs/40882196652",
+        "officialCorePackages": "all4 alpha.11 packages verified releasecommit939df32b; identical CSS source; prior isolated official consumption passes",
+        "nativeRuntime": "official preview.10; normal platform lanes have no producer/runtime overrides",
+        "independentAcceptanceAudit": "track_api_acceptance verified original task scope, official consumers, exact four native JIT/AOT and Chromium logs; issue closed COMPLETED",
+        "unrelatedCi": "Views sugar generated-output mismatch still requires repair for overall goal; it does not invalidate this Core-only API acceptance"
       }
     },
     {
@@ -18179,10 +18257,95 @@
       "description": "CSSRule/CSSRuleList, CSSStyleRule and grouping-rule insertRule/deleteRule expose selectors, declaration blocks, cssText and nested rules.",
       "acceptance": "Insert/edit/delete nested rules and compare parsed selectors/declarations and resulting computed styles; test invalid syntax/index errors.",
       "consumes": "C06/C07.",
-      "state": "native_windows_slice_verified",
-      "memberContracts": [],
-      "publicApiSnapshot": null,
-      "memberContractStatus": "pending exact source signatures and clean FCS API snapshot",
+      "state": "shared_native_browser_verified_windows",
+      "memberContracts": [
+        {
+          "interface": "CSSGroupingRule",
+          "member": "cssRules",
+          "kind": "property",
+          "signature": "cssRules() -> Ranvier.Dom.CSSRuleList"
+        },
+        {
+          "interface": "CSSGroupingRule",
+          "member": "deleteRule",
+          "kind": "method",
+          "signature": "deleteRule(index: uint32) -> unit"
+        },
+        {
+          "interface": "CSSGroupingRule",
+          "member": "insertRule",
+          "kind": "method",
+          "signature": "insertRule(rule: string, index: uint32 option) -> uint32"
+        },
+        {
+          "interface": "CSSRule",
+          "member": "cssText",
+          "kind": "property",
+          "signature": "cssText() -> string"
+        },
+        {
+          "interface": "CSSRule",
+          "member": "parentRule",
+          "kind": "property",
+          "signature": "parentRule() -> Ranvier.Dom.CSSRule"
+        },
+        {
+          "interface": "CSSRule",
+          "member": "parentStyleSheet",
+          "kind": "property",
+          "signature": "parentStyleSheet() -> Ranvier.Dom.CSSStyleSheet"
+        },
+        {
+          "interface": "CSSRule",
+          "member": "type",
+          "kind": "property",
+          "signature": "type() -> uint16"
+        },
+        {
+          "interface": "CSSRuleList",
+          "member": "item",
+          "kind": "method",
+          "signature": "item(index: uint32) -> Ranvier.Dom.CSSRule"
+        },
+        {
+          "interface": "CSSRuleList",
+          "member": "length",
+          "kind": "property",
+          "signature": "length() -> uint32"
+        },
+        {
+          "interface": "CSSStyleRule",
+          "member": "cssRules",
+          "kind": "property",
+          "signature": "cssRules() -> Ranvier.Dom.CSSRuleList"
+        },
+        {
+          "interface": "CSSStyleRule",
+          "member": "deleteRule",
+          "kind": "method",
+          "signature": "deleteRule(index: uint32) -> unit"
+        },
+        {
+          "interface": "CSSStyleRule",
+          "member": "insertRule",
+          "kind": "method",
+          "signature": "insertRule(rule: string, index: uint32 option) -> uint32"
+        },
+        {
+          "interface": "CSSStyleRule",
+          "member": "selectorText",
+          "kind": "property",
+          "signature": "selectorText() -> string"
+        },
+        {
+          "interface": "CSSStyleRule",
+          "member": "style",
+          "kind": "property",
+          "signature": "style() -> Ranvier.Dom.CSSStyleProperties"
+        }
+      ],
+      "publicApiSnapshot": "rule-mutations-public-api.json",
+      "memberContractStatus": "four complete active interfaces captured through FCS; fourteen declared members; accessors and IDL qualifications retained in source profile",
       "plannedCssomExpansion": {
         "state": "source_contract_fixed_before_implementation",
         "pinnedWebCore": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
@@ -19160,6 +19323,47 @@
         "sharedManagedConformance": "pending",
         "platformMatrix": "pending",
         "release": "pending"
+      },
+      "publicApiSnapshotSha256": "07bd7b78c8fd0ca35ece7f6fffbfc1fca7a114799dc536943efef177303a34e1",
+      "sourceProfile": {
+        "webCore": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
+        "native": "58a9980bf69196752a070fc832095249d26fca2b",
+        "cssTextSetter": "CSSRule.setCssText succeeds without changing state",
+        "selectorTextSetter": "invalid syntax preserves selector and state without throwing",
+        "CSSStyleRule": "Own cssRules/insertRule/deleteRule; inherits CSSRule, not CSSGroupingRule",
+        "nullableItem": "CSSRuleList.item returns actual null out of range",
+        "optionalIndex": "insertRule omitted index defaults to zero",
+        "style": "SameObject CSSStyleProperties, PutForwards=cssText; edit declaration block through .style.cssText",
+        "groupingList": "SameObject CSSRuleList"
+      },
+      "verification": {
+        "fixture": "tests/NativeApi.Conformance/RuleMutations.fs",
+        "windowsJitAssertions": 131,
+        "windowsNativeAotAssertions": 131,
+        "chromiumAssertions": 131,
+        "domPackages": "official Corealpha12 normal",
+        "cssPackages": "official adapteralpha1",
+        "nativeRuntime": "official WebCore/native preview11; no source/private runtime overrides",
+        "nativeSource": "58a9980bf69196752a070fc832095249d26fca2b",
+        "backend": "local Views source; published paired backend still pending",
+        "errors": "SyntaxError/IndexSizeError/HierarchyRequestError preserve complete serialization, counts, every sibling identity and four live computed dimensions",
+        "effects": "nested grouping/style-rule default insertion, selector and declaration edits, priority/removal and deletion alter live width/height; detached retained declarations remain readable",
+        "review": "independent read-only acceptance review found no actionable correctness/scope issue; reviewer did not claim runtime execution",
+        "freshFcs": "clean, zero diagnostics",
+        "xmlAudit": "zero findings",
+        "format": "pass",
+        "teardown": "existing shared runner retains zero objects; 25 native lifetime/context checks, four browser contexts and actual Tab traversal pass",
+        "sharedBatchNativeAssertions": 995,
+        "sharedBatchChromiumAssertions": 1006,
+        "remaining": [
+          "applicable traced/platform/shared gates",
+          "released paired Views backend consumption"
+        ]
+      },
+      "files": {
+        "views": [
+          "tests/NativeApi.Conformance/RuleMutations.fs"
+        ]
       }
     },
     {
@@ -19171,10 +19375,76 @@
       "description": "CSSMediaRule/MediaList, CSSSupportsRule and CSSContainerRule inspect and edit media/supports/container conditions.",
       "acceptance": "Inspect media/supports/container condition text and media-list mutation; assert computed changes after a viewport/container update where the feature is enabled.",
       "consumes": "C08, G01 for live media changes.",
-      "state": "native_windows_slice_verified",
-      "memberContracts": [],
-      "publicApiSnapshot": null,
-      "memberContractStatus": "pending exact source signatures and clean FCS API snapshot",
+      "state": "shared_native_browser_verified_windows",
+      "memberContracts": [
+        {
+          "interface": "CSSGroupingRule",
+          "member": "cssRules",
+          "signature": "CSSRuleList with get",
+          "qualification": "SameObject"
+        },
+        {
+          "interface": "CSSGroupingRule",
+          "member": "insertRule",
+          "signature": "rule: string * ?index: uint32 -> uint32",
+          "qualification": "omitted index defaults to zero"
+        },
+        {
+          "interface": "CSSGroupingRule",
+          "member": "deleteRule",
+          "signature": "index: uint32 -> unit"
+        },
+        {
+          "interface": "CSSConditionRule",
+          "member": "conditionText",
+          "signature": "string with get"
+        },
+        {
+          "interface": "CSSMediaRule",
+          "member": "media",
+          "signature": "MediaList with get",
+          "qualification": "SameObject; PutForwards=mediaText; mutate .media.mediaText"
+        },
+        {
+          "interface": "CSSContainerRule",
+          "member": "containerName",
+          "signature": "string with get"
+        },
+        {
+          "interface": "CSSContainerRule",
+          "member": "containerQuery",
+          "signature": "string with get"
+        },
+        {
+          "interface": "MediaList",
+          "member": "mediaText",
+          "signature": "string with get, set",
+          "qualification": "LegacyNullToEmptyString"
+        },
+        {
+          "interface": "MediaList",
+          "member": "length",
+          "signature": "uint32 with get"
+        },
+        {
+          "interface": "MediaList",
+          "member": "item",
+          "signature": "index: uint32 -> string",
+          "qualification": "nullable IDL result; out-of-range is actual null"
+        },
+        {
+          "interface": "MediaList",
+          "member": "deleteMedium",
+          "signature": "oldMedium: string -> unit"
+        },
+        {
+          "interface": "MediaList",
+          "member": "appendMedium",
+          "signature": "newMedium: string -> unit"
+        }
+      ],
+      "publicApiSnapshot": "conditional-rules-public-api.json",
+      "memberContractStatus": "fresh clean FCS checks and complete six-type public API capture; twelve declarations (thirteen accessor/operation contracts)",
       "plannedCssomExpansion": {
         "state": "source_contract_fixed_before_implementation",
         "pinnedWebCore": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
@@ -19378,7 +19648,36 @@
         "sharedManagedConformance": "pending",
         "platformMatrix": "pending",
         "release": "pending"
-      }
+      },
+      "verification": {
+        "fixture": "tests/NativeApi.Conformance/ConditionalRules.fs",
+        "windowsJitAssertions": 44,
+        "windowsNativeAotAssertions": 44,
+        "chromiumAssertions": 44,
+        "domPackages": "official alpha.12 normal package",
+        "nativeRuntime": "official WebCore and native preview.11 packages, fresh isolated restore cache; no source/runtime overrides",
+        "nativeSource": "58a9980bf69196752a070fc832095249d26fca2b",
+        "effects": "actual viewport changes, live media edits and named-container width changes alter computed width/height; original viewport restored",
+        "errors": "NotFoundError preserves media list; IndexSizeError preserves complete rule serialization, child identity and computed height",
+        "teardown": "fixture nodes removed; shared runner reports zero retained objects; existing 25 native lifetime/context checks pass",
+        "review": "independent review found weak failed-insertion atomicity assertion; strengthened to serialized rules, child identity and computed result",
+        "remaining": [
+          "applicable traced/platform/shared gates",
+          "published paired Views backend consumption"
+        ]
+      },
+      "files": {
+        "views": [
+          "tests/NativeApi.Conformance/ConditionalRules.fs"
+        ]
+      },
+      "sourceProfile": {
+        "declaredSurface": "MediaList.mediaText get/set (LegacyNullToEmptyString), length, nullable item, appendMedium/deleteMedium; CSSMediaRule.media; inherited readonly conditionText; readonly containerName/containerQuery",
+        "editing": "edit conditions through mediaText or existing stylesheet/grouping edits; no undeclared conditionText/containerQuery setters",
+        "matches": "CSSMediaRule.matches and CSSSupportsRule.matches are commented upstream FIXME declarations, not exported selected members",
+        "subscriptions": "G01 media-change subscriptions remain separate; this fixture proves direct computed effects after controlled updates"
+      },
+      "publicApiSnapshotSha256": "34a262dfecbb0f12e8398636b7c10e6b92fef1647abee8a2e3f106dabfe7947d"
     },
     {
       "id": "C10",
@@ -19389,10 +19688,83 @@
       "description": "CSSLayerBlockRule/StatementRule, CSSScopeRule, CSSNestedDeclarations, CSSImportRule and CSSNamespaceRule expose layers, scopes, nesting and imports.",
       "acceptance": "Read and edit representative layers/scopes/nested/import/namespace structures and verify cascade results; unavailable optional rules produce explicit capability outcomes.",
       "consumes": "C08.",
-      "state": "native_windows_slice_verified",
-      "memberContracts": [],
-      "publicApiSnapshot": null,
-      "memberContractStatus": "pending exact source signatures and clean FCS API snapshot",
+      "state": "shared_native_browser_verified_windows",
+      "memberContracts": [
+        {
+          "interface": "CSSImportRule",
+          "member": "href",
+          "kind": "property",
+          "signature": "href() -> string"
+        },
+        {
+          "interface": "CSSImportRule",
+          "member": "layerName",
+          "kind": "property",
+          "signature": "layerName() -> string"
+        },
+        {
+          "interface": "CSSImportRule",
+          "member": "media",
+          "kind": "property",
+          "signature": "media() -> Ranvier.Dom.MediaList"
+        },
+        {
+          "interface": "CSSImportRule",
+          "member": "styleSheet",
+          "kind": "property",
+          "signature": "styleSheet() -> Ranvier.Dom.CSSStyleSheet"
+        },
+        {
+          "interface": "CSSImportRule",
+          "member": "supportsText",
+          "kind": "property",
+          "signature": "supportsText() -> string"
+        },
+        {
+          "interface": "CSSLayerBlockRule",
+          "member": "name",
+          "kind": "property",
+          "signature": "name() -> string"
+        },
+        {
+          "interface": "CSSLayerStatementRule",
+          "member": "nameList",
+          "kind": "property",
+          "signature": "nameList() -> array<string>"
+        },
+        {
+          "interface": "CSSNamespaceRule",
+          "member": "namespaceURI",
+          "kind": "property",
+          "signature": "namespaceURI() -> string"
+        },
+        {
+          "interface": "CSSNamespaceRule",
+          "member": "prefix",
+          "kind": "property",
+          "signature": "prefix() -> string"
+        },
+        {
+          "interface": "CSSNestedDeclarations",
+          "member": "style",
+          "kind": "property",
+          "signature": "style() -> Ranvier.Dom.CSSStyleProperties"
+        },
+        {
+          "interface": "CSSScopeRule",
+          "member": "end",
+          "kind": "property",
+          "signature": "end() -> string"
+        },
+        {
+          "interface": "CSSScopeRule",
+          "member": "start",
+          "kind": "property",
+          "signature": "start() -> string"
+        }
+      ],
+      "publicApiSnapshot": "cascade-rules-public-api.json",
+      "memberContractStatus": "six complete active interfaces captured through fresh clean FCS; twelve declared readonly properties with inherited editing and IDL qualifications recorded separately",
       "plannedCssomExpansion": {
         "state": "source_contract_fixed_before_implementation",
         "pinnedWebCore": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
@@ -19947,6 +20319,94 @@
         "sharedManagedConformance": "pending",
         "platformMatrix": "pending",
         "release": "pending"
+      },
+      "publicApiSnapshotSha256": "e94f00a5c6938bbfff742cd9a556d4813a4b10da889623c4c4a12a3d5aea1404",
+      "sourceProfile": {
+        "inheritance": {
+          "CSSLayerBlockRule": "CSSGroupingRule",
+          "CSSLayerStatementRule": "CSSRule",
+          "CSSScopeRule": "CSSGroupingRule",
+          "CSSNestedDeclarations": "CSSRule",
+          "CSSImportRule": "CSSRule",
+          "CSSNamespaceRule": "CSSRule"
+        },
+        "allDeclaredPropertiesReadOnly": true,
+        "nullableReturns": [
+          "CSSScopeRule.start",
+          "CSSScopeRule.end",
+          "CSSImportRule.styleSheet",
+          "CSSImportRule.layerName",
+          "CSSImportRule.supportsText"
+        ],
+        "frozenArrays": [
+          "CSSLayerStatementRule.nameList"
+        ],
+        "sameObject": [
+          "CSSNestedDeclarations.style",
+          "CSSImportRule.media",
+          "CSSImportRule.styleSheet"
+        ],
+        "putForwards": {
+          "CSSNestedDeclarations.style": "cssText",
+          "CSSImportRule.media": "mediaText"
+        },
+        "upstreamCommentedNotSelected": []
+      },
+      "runtimeQualifications": {
+        "windowsJitAssertions": 91,
+        "windowsNativeAotAssertions": 91,
+        "chromiumAssertions": 93,
+        "scopeRules": true,
+        "nestedDeclarations": true,
+        "dataImportedSheetContents": {
+          "nativeWebCore": {
+            "readable": false,
+            "errorName": "SecurityError"
+          },
+          "chromium": {
+            "readable": true,
+            "declarationEditChangesComputedWidth": true
+          }
+        },
+        "importReplacement": "Media edits and whole stylesheet text replacement verify actual import cascade. Live insertRule placement around leading layer statements differs between the tested engine versions; no wrapper fallback or invented setter is added.",
+        "acceptance": "Local official-dependency runtime coverage; Views remains local source. Traced/platform and released paired Views package acceptance remain open."
+      },
+      "verification": {
+        "fixture": "tests/NativeApi.Conformance/CascadeRules.fs",
+        "windowsJitAssertions": 91,
+        "windowsNativeAotAssertions": 91,
+        "chromiumAssertions": 93,
+        "domPackages": "official Corealpha12 normal",
+        "cssPackages": "official adapteralpha1",
+        "nativeRuntime": "official WebCore/native preview11; no source/private runtime overrides",
+        "nativeSource": "58a9980bf69196752a070fc832095249d26fca2b",
+        "backend": "local Views source; published paired backend remains pending",
+        "scopeRules": true,
+        "nestedDeclarations": true,
+        "dataImportedContents": {
+          "windows": "exact SecurityError",
+          "chromium": "inspection and declaration edit pass"
+        },
+        "effects": "actual normal/important layer priority, scoped bounds, post-nesting declaration mutation/removal, namespace matching and import media/deletion/URL replacement",
+        "importReplacement": "whole stylesheet text replacement; live insertion around leading layer statements has documented different hierarchy restrictions in these engine profiles",
+        "review": "independent root review; strengthened nested-width removal result and initial import readiness; all three runtimes reverified by implementer",
+        "freshFcs": "Core and native clean, zero diagnostics",
+        "xmlAudit": "zero findings",
+        "format": "pass",
+        "teardown": "node/sheet counts restored; shared runner retains zero objects; existing lifetime/context checks and Tab traversal pass",
+        "combinedWindowsJitAssertions": 1086,
+        "combinedChromiumAssertions": 1099,
+        "combinedNativeAot": "pass: integrated final binary1086 assertions,25 native lifetime/context checks, Tab traversal and zero-retained-object teardown",
+        "remaining": [
+          "applicable traced/platform/shared gates",
+          "released paired Views backend consumption"
+        ],
+        "combinedWindowsNativeAotAssertions": 1086
+      },
+      "files": {
+        "views": [
+          "tests/NativeApi.Conformance/CascadeRules.fs"
+        ]
       }
     },
     {
@@ -20630,7 +21090,7 @@
       "description": "CSSFontFaceRule/Descriptors, font-feature-values and font-palette-values rules inspect and edit font configuration.",
       "acceptance": "Inspect parsed @font-face descriptors and feature/palette rules where supported; loaded font/render checks are separate from faithful descriptor inspection.",
       "consumes": "C08; T01/T02 for load-state checks.",
-      "state": "native_windows_slice_verified",
+      "state": "shared_native_browser_verified_windows",
       "memberContracts": [],
       "publicApiSnapshot": null,
       "memberContractStatus": "pending exact source signatures and clean FCS API snapshot",
@@ -23611,6 +24071,45 @@
         "sharedManagedConformance": "pending",
         "platformMatrix": "pending",
         "release": "pending"
+      },
+      "verification": {
+        "fixture": "tests/NativeApi.Conformance/FontTransitionRules.fs",
+        "windowsJitAssertions": 51,
+        "windowsNativeAotAssertions": 51,
+        "chromiumAssertions": 49,
+        "domPackages": "official alpha.12",
+        "nativeRuntime": "private G06 engine; native preview.11 publication pending",
+        "teardown": "shared runner reports zero retained native objects",
+        "xmlAudit": "zero findings",
+        "review": "one P2 weak feature-preservation assertion fixed; full nested body compared after REPL RED/GREEN",
+        "remaining": [
+          "applicable traced/platform/shared gates",
+          "official paired native/backend package consumption"
+        ],
+        "officialRuntimeReverification": {
+          "version": "0.1.0-preview.11",
+          "source": "58a9980bf69196752a070fc832095249d26fca2b",
+          "windowsJit": "pass",
+          "windowsNativeAot": "pass",
+          "sharedBatchNativeAssertions": 864,
+          "sharedBatchChromiumAssertions": 875,
+          "backend": "local Views source; published paired backend/platform acceptance still pending"
+        }
+      },
+      "files": {
+        "views": [
+          "tests/NativeApi.Conformance/FontTransitionRules.fs"
+        ]
+      },
+      "sourceProfile": {
+        "fontFeatureValues": "fontFamily and serialized nested rule definitions; feature map APIs are upstream commented FIXME, not generated members",
+        "fontPaletteValues": "readonly name/family/base/colors; edit through stylesheet replacement",
+        "fontWidthAlias": {
+          "native": "available and tested",
+          "chromium": "unavailable; explicitly reported by fixture"
+        },
+        "serialization": "hex letter case and named/RGB palette serialization differ; production strings remain unmodified",
+        "fontRendering": "font loading/rendering is separate T01/T02 scope"
       }
     },
     {
@@ -32297,7 +32796,7 @@
       "description": "CSSStartingStyleRule/CSSViewTransitionRule inspect entry-transition styles and transition types/navigation policy.",
       "acceptance": "Inspect supported @starting-style/view-transition rule structures; rule inspection passes independently of conditional A11 transition execution.",
       "consumes": "C08; A11 is conditional, not required for rule inspection.",
-      "state": "native_windows_slice_verified",
+      "state": "shared_native_browser_verified_windows",
       "memberContracts": [],
       "publicApiSnapshot": null,
       "memberContractStatus": "pending exact source signatures and clean FCS API snapshot",
@@ -32431,6 +32930,40 @@
         "sharedManagedConformance": "pending",
         "platformMatrix": "pending",
         "release": "pending"
+      },
+      "verification": {
+        "fixture": "tests/NativeApi.Conformance/FontTransitionRules.fs",
+        "windowsJitAssertions": 23,
+        "windowsNativeAotAssertions": 23,
+        "chromiumAssertions": 23,
+        "domPackages": "official alpha.12",
+        "nativeRuntime": "private G06 engine; native preview.11 publication pending",
+        "teardown": "shared runner reports zero retained native objects",
+        "xmlAudit": "zero findings",
+        "review": "one P2 weak feature-preservation assertion fixed; full nested body compared after REPL RED/GREEN",
+        "remaining": [
+          "applicable traced/platform/shared gates",
+          "official paired native/backend package consumption"
+        ],
+        "officialRuntimeReverification": {
+          "version": "0.1.0-preview.11",
+          "source": "58a9980bf69196752a070fc832095249d26fca2b",
+          "windowsJit": "pass",
+          "windowsNativeAot": "pass",
+          "sharedBatchNativeAssertions": 864,
+          "sharedBatchChromiumAssertions": 875,
+          "backend": "local Views source; published paired backend/platform acceptance still pending"
+        }
+      },
+      "files": {
+        "views": [
+          "tests/NativeApi.Conformance/FontTransitionRules.fs"
+        ]
+      },
+      "sourceProfile": {
+        "navigation": "declared metadata; omitted descriptor returns empty string on both tested engines",
+        "types": "ordered string array, including empty case; readonly rule metadata",
+        "execution": "rule inspection is independent of conditional A11 transition execution"
       }
     },
     {
@@ -32526,10 +33059,111 @@
       "description": "Element/Range.getClientRects and DOMRectList expose each rendered line/fragment rather than only the union bounding rectangle.",
       "acceptance": "Measure wrapped text and fragmented inline content; verify each rectangle and its ordering plus the bounding union, including an empty range.",
       "consumes": "Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.",
-      "state": "not_started",
-      "memberContracts": [],
+      "state": "shared_native_browser_verified_windows",
+      "memberContracts": [
+        {
+          "owner": "DOMRectList",
+          "member": "length",
+          "signature": "uint32",
+          "nativeRoute": "DOMRectList.length",
+          "browserRoute": "DOMRectList.length"
+        },
+        {
+          "owner": "DOMRectList",
+          "member": "item",
+          "signature": "uint32 -> DOMRect (AllowNullLiteral; null on out-of-range)",
+          "nativeRoute": "DOMRectList.item",
+          "browserRoute": "DOMRectList.item"
+        },
+        {
+          "owner": "Element",
+          "member": "getClientRects",
+          "signature": "unit -> DOMRectList",
+          "nativeRoute": "Element.getClientRects",
+          "browserRoute": "Element.getClientRects"
+        },
+        {
+          "owner": "Range",
+          "member": "getClientRects",
+          "signature": "unit -> DOMRectList",
+          "nativeRoute": "Range.getClientRects",
+          "browserRoute": "Range.getClientRects"
+        }
+      ],
       "publicApiSnapshot": null,
-      "memberContractStatus": "pending exact source signatures and clean FCS API snapshot"
+      "memberContractStatus": "4 exact generated members;32 generator tests/140 raw ABI assertions; shared Windows JIT/AOT61 and Chromium74 assertions;8 native thread/disposal checks; full platform/released backend acceptance pending",
+      "plan": "docs/superpowers/plans/2026-10-29-fragment-rectangles.md",
+      "files": {
+        "native": [
+          "gen/dom.json",
+          "gen/domgen.py",
+          "gen/dom-api.json",
+          "gen/Ranvier.Dom.fs",
+          "tests/generator/test_domgen.py",
+          "tests/abi/fragment_rectangles.py",
+          "scripts/check_package_api.py",
+          "scripts/release.py",
+          "tests/test_release.py",
+          ".github/workflows/build.yml"
+        ],
+        "core": [
+          "src/Ranvier.Dom/Generated/Dom.fs",
+          ".github/scripts/dom-contracts.json"
+        ],
+        "views": [
+          "src/Ranvier.View.WebCore/Generated/Objects.fs",
+          "tools/Ranvier.View.WebCore.Generate/Emit.fs",
+          "tests/NativeApi.Conformance/FragmentRectangles.fs"
+        ]
+      },
+      "remaining": [
+        "actual generation and native compile/link",
+        "real ABI and shared browser/JIT/AOT fixtures",
+        "wrapper lifetime/ownership",
+        "public/platform acceptance"
+      ],
+      "verification": {
+        "nativeAbiAssertions": 140,
+        "sharedWindowsJitAssertions": 61,
+        "sharedWindowsNativeAotAssertions": 61,
+        "sharedChromiumAssertions": 74,
+        "nativeLifetimeAssertions": 8,
+        "teardown": "zero retained managed native objects",
+        "identityRegression": "real Windows RED repeated item identity; Session.Object cache roots fix GREEN",
+        "officialDomVersion": "0.1.0-alpha.12",
+        "officialDomReleaseCommit": "b248f0d2fd985c56a4440ce744f9f4bbca52c3be",
+        "nativeRuntime": "private G06 engine; preview.11 not released",
+        "fontMetrics": "host monospace invariants; no cross-engine identical-font golden comparison",
+        "aotWarnings": [
+          "FSharp.Core IL3053/IL2104",
+          "SameValueZero.Normal IL2075"
+        ],
+        "remaining": [
+          "other-platform shared fixture",
+          "official native and paired Views package consumption"
+        ],
+        "independentManagedReview": "no critical or important findings; read-only ownership/cache/fixture/package review",
+        "fullWindowsBackend": {
+          "passed": 782,
+          "ignored": 12,
+          "failed": 0,
+          "errored": 0
+        },
+        "analyzerGates": {
+          "view": "passed with build",
+          "library": "passed with build",
+          "examples": "passed with build"
+        },
+        "officialRuntimeReverification": {
+          "version": "0.1.0-preview.11",
+          "source": "58a9980bf69196752a070fc832095249d26fca2b",
+          "windowsJit": "pass",
+          "windowsNativeAot": "pass",
+          "sharedBatchNativeAssertions": 864,
+          "sharedBatchChromiumAssertions": 875,
+          "backend": "local Views source; published paired backend/platform acceptance still pending"
+        }
+      }
     },
     {
       "id": "G07",

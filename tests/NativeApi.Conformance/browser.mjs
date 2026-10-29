@@ -29,6 +29,10 @@ let browser;
 try {
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
+  const originalViewport = page.viewportSize();
+  await page.exposeFunction('__nativeApiResizeViewport', async (width, height) => {
+    await page.setViewportSize({ width, height });
+  });
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
   const checks = await page.evaluate(async () => {
     try {
@@ -36,7 +40,9 @@ try {
     } catch (error) {
       throw new Error(JSON.stringify({
         type: error?.constructor?.name,
+        name: error?.name,
         message: error?.message,
+        stack: error?.stack,
         detail: error?.Message,
         fields: Object.fromEntries(Object.getOwnPropertyNames(error).filter(key => key !== 'stack').map(key => [key, error[key]])),
       }));
@@ -54,12 +60,29 @@ try {
   if (checks.computedStyles !== 42) throw new Error('Computed-style assertions did not run');
   console.log(`BROWSER_API C01_C02 PASS assertions=${checks.computedStyles} engine=chromium`);
   if (checks.typedStyles !== 39) throw new Error('Typed CSS declaration assertions did not run');
+  if (checks.fragmentRectangles < 60) throw new Error('Fragment rectangle assertions did not run');
+  console.log(`BROWSER_API G06 PASS assertions=${checks.fragmentRectangles} engine=chromium`);
+  if (checks.fontRules < 35 || checks.transitionRules < 21) throw new Error('Font/transition rule assertions did not run');
+  console.log(`BROWSER_API C18 PASS assertions=${checks.fontRules} engine=chromium`);
+  console.log(`BROWSER_API C18 CAPABILITY fontWidthAlias=${checks.fontWidthAlias} engine=chromium`);
+  console.log(`BROWSER_API C22 PASS assertions=${checks.transitionRules} engine=chromium`);
+  if (checks.conditionalRules !== 44) throw new Error('Conditional rule assertions did not run');
+  console.log(`BROWSER_API C09 PASS assertions=${checks.conditionalRules} engine=chromium`);
+  if (checks.cascadeRules !== 93) throw new Error('Cascade rule assertions did not run for the pinned Chromium profile');
+  console.log(`BROWSER_API C10 PASS assertions=${checks.cascadeRules} engine=chromium`);
+  console.log(`BROWSER_API C10 CAPABILITY scopeRules=${checks.scopeRules} nestedDeclarations=${checks.nestedDeclarations} importContentsReadable=${checks.importContentsReadable} engine=chromium`);
+  const restoredViewport = page.viewportSize();
+  if (restoredViewport.width !== originalViewport.width || restoredViewport.height !== originalViewport.height) {
+    throw new Error('Conditional rule fixture did not restore the original viewport');
+  }
   console.log(`BROWSER_API C04 PASS assertions=${checks.typedStyles} engine=chromium`);
   if (checks.computedContextChecks !== 2) throw new Error('Computed-style context checks did not run');
   console.log(`BROWSER_API C01_C02 CONTEXT PASS assertions=${checks.computedContextChecks} engine=chromium`);
   console.log(`BROWSER_API D11 PASS assertions=${checks.reflection} engine=chromium`);
   console.log(`BROWSER_API D09 PASS assertions=${checks.namespaces} engine=chromium`);
   console.log(`BROWSER_API CSSOM PASS assertions=${checks.cssom} engine=chromium`);
+  if (checks.ruleMutations !== 131) throw new Error('Nested rule mutation assertions did not run');
+  console.log(`BROWSER_API C08 PASS assertions=${checks.ruleMutations} engine=chromium`);
   console.log(`BROWSER_API SVG_CSSOM PASS assertions=${checks.svgCssom} engine=chromium`);
   console.log(`BROWSER_API HYPERLINKS PASS assertions=${checks.hyperlinks} engine=chromium`);
   console.log(`BROWSER_API C07 PASS assertions=${checks.construction} engine=chromium`);
