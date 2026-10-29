@@ -6,6 +6,198 @@ open global.Ranvier
 open Ranvier.View.Representation
 open Ranvier.View
 
+module private SharedPropertyReceivers =
+#if FABLE_COMPILER
+    let get_HTMLHyperlinkElementUtils_hash (node: obj) : string =
+        Native.expando node "hash"
+
+    let set_HTMLHyperlinkElementUtils_hash (node: obj) (value: string) =
+        Native.setExpando node "hash" value
+#else
+    let get_HTMLHyperlinkElementUtils_hash (node: obj) : string =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``hash``
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``hash``
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_hash"
+
+    let set_HTMLHyperlinkElementUtils_hash (node: obj) (value: string) =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``hash`` <- value
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``hash`` <- value
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_hash"
+#endif
+
+#if FABLE_COMPILER
+    let get_HTMLHyperlinkElementUtils_host (node: obj) : string =
+        Native.expando node "host"
+
+    let set_HTMLHyperlinkElementUtils_host (node: obj) (value: string) =
+        Native.setExpando node "host" value
+#else
+    let get_HTMLHyperlinkElementUtils_host (node: obj) : string =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``host``
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``host``
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_host"
+
+    let set_HTMLHyperlinkElementUtils_host (node: obj) (value: string) =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``host`` <- value
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``host`` <- value
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_host"
+#endif
+
+#if FABLE_COMPILER
+    let get_HTMLHyperlinkElementUtils_hostname (node: obj) : string =
+        Native.expando node "hostname"
+
+    let set_HTMLHyperlinkElementUtils_hostname (node: obj) (value: string) =
+        Native.setExpando node "hostname" value
+#else
+    let get_HTMLHyperlinkElementUtils_hostname (node: obj) : string =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``hostname``
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``hostname``
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_hostname"
+
+    let set_HTMLHyperlinkElementUtils_hostname (node: obj) (value: string) =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``hostname`` <- value
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``hostname`` <- value
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_hostname"
+#endif
+
+#if FABLE_COMPILER
+    let get_HTMLHyperlinkElementUtils_origin (node: obj) : string =
+        Native.expando node "origin"
+#else
+    let get_HTMLHyperlinkElementUtils_origin (node: obj) : string =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``origin``
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``origin``
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_origin"
+#endif
+
+#if FABLE_COMPILER
+    let get_HTMLHyperlinkElementUtils_password (node: obj) : string =
+        Native.expando node "password"
+
+    let set_HTMLHyperlinkElementUtils_password (node: obj) (value: string) =
+        Native.setExpando node "password" value
+#else
+    let get_HTMLHyperlinkElementUtils_password (node: obj) : string =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``password``
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``password``
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_password"
+
+    let set_HTMLHyperlinkElementUtils_password (node: obj) (value: string) =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``password`` <- value
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``password`` <- value
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_password"
+#endif
+
+#if FABLE_COMPILER
+    let get_HTMLHyperlinkElementUtils_pathname (node: obj) : string =
+        Native.expando node "pathname"
+
+    let set_HTMLHyperlinkElementUtils_pathname (node: obj) (value: string) =
+        Native.setExpando node "pathname" value
+#else
+    let get_HTMLHyperlinkElementUtils_pathname (node: obj) : string =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``pathname``
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``pathname``
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_pathname"
+
+    let set_HTMLHyperlinkElementUtils_pathname (node: obj) (value: string) =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``pathname`` <- value
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``pathname`` <- value
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_pathname"
+#endif
+
+#if FABLE_COMPILER
+    let get_HTMLHyperlinkElementUtils_port (node: obj) : string =
+        Native.expando node "port"
+
+    let set_HTMLHyperlinkElementUtils_port (node: obj) (value: string) =
+        Native.setExpando node "port" value
+#else
+    let get_HTMLHyperlinkElementUtils_port (node: obj) : string =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``port``
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``port``
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_port"
+
+    let set_HTMLHyperlinkElementUtils_port (node: obj) (value: string) =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``port`` <- value
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``port`` <- value
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_port"
+#endif
+
+#if FABLE_COMPILER
+    let get_HTMLHyperlinkElementUtils_protocol (node: obj) : string =
+        Native.expando node "protocol"
+
+    let set_HTMLHyperlinkElementUtils_protocol (node: obj) (value: string) =
+        Native.setExpando node "protocol" value
+#else
+    let get_HTMLHyperlinkElementUtils_protocol (node: obj) : string =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``protocol``
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``protocol``
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_protocol"
+
+    let set_HTMLHyperlinkElementUtils_protocol (node: obj) (value: string) =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``protocol`` <- value
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``protocol`` <- value
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_protocol"
+#endif
+
+#if FABLE_COMPILER
+    let get_HTMLHyperlinkElementUtils_search (node: obj) : string =
+        Native.expando node "search"
+
+    let set_HTMLHyperlinkElementUtils_search (node: obj) (value: string) =
+        Native.setExpando node "search" value
+#else
+    let get_HTMLHyperlinkElementUtils_search (node: obj) : string =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``search``
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``search``
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_search"
+
+    let set_HTMLHyperlinkElementUtils_search (node: obj) (value: string) =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``search`` <- value
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``search`` <- value
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_search"
+#endif
+
+#if FABLE_COMPILER
+    let get_HTMLHyperlinkElementUtils_username (node: obj) : string =
+        Native.expando node "username"
+
+    let set_HTMLHyperlinkElementUtils_username (node: obj) (value: string) =
+        Native.setExpando node "username" value
+#else
+    let get_HTMLHyperlinkElementUtils_username (node: obj) : string =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``username``
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``username``
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_username"
+
+    let set_HTMLHyperlinkElementUtils_username (node: obj) (value: string) =
+        match node with
+        | :? Dom.HTMLAnchorElement as receiver -> receiver.``username`` <- value
+        | :? Dom.HTMLAreaElement as receiver -> receiver.``username`` <- value
+        | _ -> invalidArg "node" "Unsupported native receiver for HTMLHyperlinkElementUtils_username"
+#endif
+
 module Properties =
     module ARIAMixin =
         let ``ariaActiveDescendantElement`` (node: #Dom.ARIAMixin) : Dom.Element =
@@ -1471,38 +1663,32 @@ module Properties =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``version`` <- value) read
 
     module HTMLHyperlinkElementUtils =
-#if FABLE_COMPILER
         let ``hash`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
-            Native.expando (box node) "hash"
+            SharedPropertyReceivers.get_HTMLHyperlinkElementUtils_hash (box node)
 
         let hashStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "hash" value) value
+            Typed.staticProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_hash (box node) value) value
 
         let hashReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "hash" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_hash (box node) value) read
 
-#if FABLE_COMPILER
         let ``host`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
-            Native.expando (box node) "host"
+            SharedPropertyReceivers.get_HTMLHyperlinkElementUtils_host (box node)
 
         let hostStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "host" value) value
+            Typed.staticProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_host (box node) value) value
 
         let hostReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "host" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_host (box node) value) read
 
-#if FABLE_COMPILER
         let ``hostname`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
-            Native.expando (box node) "hostname"
+            SharedPropertyReceivers.get_HTMLHyperlinkElementUtils_hostname (box node)
 
         let hostnameStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "hostname" value) value
+            Typed.staticProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_hostname (box node) value) value
 
         let hostnameReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "hostname" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_hostname (box node) value) read
 
         let ``href`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
             node.``href``
@@ -1513,76 +1699,62 @@ module Properties =
         let hrefReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``href`` <- value) read
 
-#if FABLE_COMPILER
         let ``origin`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
-            Native.expando (box node) "origin"
-#endif
+            SharedPropertyReceivers.get_HTMLHyperlinkElementUtils_origin (box node)
 
-#if FABLE_COMPILER
         let ``password`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
-            Native.expando (box node) "password"
+            SharedPropertyReceivers.get_HTMLHyperlinkElementUtils_password (box node)
 
         let passwordStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "password" value) value
+            Typed.staticProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_password (box node) value) value
 
         let passwordReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "password" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_password (box node) value) read
 
-#if FABLE_COMPILER
         let ``pathname`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
-            Native.expando (box node) "pathname"
+            SharedPropertyReceivers.get_HTMLHyperlinkElementUtils_pathname (box node)
 
         let pathnameStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "pathname" value) value
+            Typed.staticProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_pathname (box node) value) value
 
         let pathnameReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "pathname" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_pathname (box node) value) read
 
-#if FABLE_COMPILER
         let ``port`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
-            Native.expando (box node) "port"
+            SharedPropertyReceivers.get_HTMLHyperlinkElementUtils_port (box node)
 
         let portStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "port" value) value
+            Typed.staticProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_port (box node) value) value
 
         let portReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "port" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_port (box node) value) read
 
-#if FABLE_COMPILER
         let ``protocol`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
-            Native.expando (box node) "protocol"
+            SharedPropertyReceivers.get_HTMLHyperlinkElementUtils_protocol (box node)
 
         let protocolStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "protocol" value) value
+            Typed.staticProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_protocol (box node) value) value
 
         let protocolReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "protocol" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_protocol (box node) value) read
 
-#if FABLE_COMPILER
         let ``search`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
-            Native.expando (box node) "search"
+            SharedPropertyReceivers.get_HTMLHyperlinkElementUtils_search (box node)
 
         let searchStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "search" value) value
+            Typed.staticProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_search (box node) value) value
 
         let searchReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "search" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_search (box node) value) read
 
-#if FABLE_COMPILER
         let ``username`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
-            Native.expando (box node) "username"
+            SharedPropertyReceivers.get_HTMLHyperlinkElementUtils_username (box node)
 
         let usernameStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "username" value) value
+            Typed.staticProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_username (box node) value) value
 
         let usernameReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "username" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> SharedPropertyReceivers.set_HTMLHyperlinkElementUtils_username (box node) value) read
 
 #if FABLE_COMPILER
     module HTMLIFrameElement =
