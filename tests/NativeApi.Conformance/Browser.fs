@@ -25,6 +25,37 @@ let private disposalError (error: exn) : string = jsNative
 [<Emit("$0 === undefined ? 'undefined' : $0 === null ? 'null' : typeof $0")>]
 let private classifyString (value: string) : string = jsNative
 
+[<Emit("""(async () => {
+    const frame = document.createElement('iframe');
+    try {
+        frame.srcdoc = '<body>first</body>';
+        let loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        document.body.append(frame); await loaded;
+        const oldDocument = frame.contentDocument;
+        const oldCall = $0(oldDocument);
+        loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        frame.srcdoc = '<body>replacement</body>'; await loaded;
+        if (oldDocument === frame.contentDocument) throw new Error('Document identity did not change');
+        if (oldCall() !== 'TypeError') throw new Error('Old document registration did not fail as observed');
+        if ($0(frame.contentDocument)() !== 'registered') throw new Error('Old provider registered into replacement');
+        return 3;
+    } finally { frame.remove(); }
+})()""")>]
+let private registrationDocumentLifetime (createCall: Document -> System.Func<string>) : JS.Promise<int> = jsNative
+
+let private registrationCall (document: Document) =
+    let service = Ranvier.Dom.CustomProperties.forDocument document
+
+    System.Func<string>(fun () ->
+        try
+            try
+                service.Register (PropertyDefinition.Create ("--c12-document-lifetime", false))
+                "registered"
+            with CustomPropertyException (name, _) ->
+                name
+        finally
+            service.Dispose ())
+
 [<Emit("[globalThis.innerWidth, globalThis.innerHeight]")>]
 let private viewportSize () : struct (int * int) = jsNative
 
@@ -45,12 +76,49 @@ let private resizeViewport (width: int) (height: int) : JS.Promise<unit> = jsNat
 })()""")>]
 let private cssEscapeOracle (escape: string -> string) : int = jsNative
 
+/// <summary>Runs the focused registration fixture and document-navigation ownership proof.</summary>
+let runCustomProperties () =
+    async {
+        let document = document ()
+
+        let count =
+            CustomProperties.run
+                document
+                (fun () -> Ranvier.Dom.CustomProperties.forDocument document)
+                (Ranvier.Dom.ComputedStyles.forDocument document)
+                disposalError
+                "Exception:CustomPropertyService"
+
+        let! context =
+            registrationDocumentLifetime registrationCall
+            |> Async.AwaitPromise
+
+        return
+            {|
+                customProperties = count
+                customPropertyContext = context
+            |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {
         let document = document ()
         let cssEscaping = CssEscaping.run document
         let cssSupport = CssSupport.run (CssQueries.forDocument document)
+
+        let customProperties =
+            CustomProperties.run
+                document
+                (fun () -> Ranvier.Dom.CustomProperties.forDocument document)
+                (Ranvier.Dom.ComputedStyles.forDocument document)
+                disposalError
+                "Exception:CustomPropertyService"
+
+        let! customPropertyContext =
+            registrationDocumentLifetime registrationCall
+            |> Async.AwaitPromise
 
         let computedStyles =
             ComputedStyles.run document (fun () -> Ranvier.Dom.ComputedStyles.forDocument document) errorName
@@ -159,6 +227,8 @@ let run () =
                 tables = tables
                 cssEscaping = cssEscaping
                 cssSupport = cssSupport
+                customProperties = customProperties
+                customPropertyContext = customPropertyContext
                 computedStyles = computedStyles
                 typedStyles = typedStyles
                 fragmentRectangles = fragmentRectangles

@@ -2,8 +2,13 @@ module internal NativeApiConformance.Native
 
 open Ranvier.View.WebCore
 
-[<EntryPoint>]
-let main _ =
+let private runAll () =
+    let registrationLifecycle = CustomPropertyLifecycle.run ()
+
+    if registrationLifecycle <> 10 then
+        failwith "Custom-property lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API C12 LIFETIME PASS assertions={registrationLifecycle}"
     let mutable nullQueryHostRejected = false
 
     try
@@ -51,6 +56,19 @@ let main _ =
 
         System.Console.WriteLine $"NATIVE_API C01_C02 PASS assertions={computedStyles}"
         let computedService = Ranvier.View.WebCore.ComputedStyles.forHost host
+
+        let customProperties =
+            CustomProperties.run
+                host.Document
+                (fun () -> Ranvier.View.WebCore.CustomProperties.forHost host)
+                computedService
+                (fun error -> error.GetType().Name)
+                "ObjectDisposedException"
+
+        if customProperties <> 50 then
+            failwith "Custom-property shared assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API C12 PASS assertions={customProperties}"
 
         let ruleMutations =
             RuleMutations.run host.Document computedService (function
@@ -466,3 +484,35 @@ let main _ =
 
     System.Console.WriteLine "NATIVE_API TEARDOWN PASS groups=D09,D10,D11,CSSOM"
     0
+
+[<EntryPoint>]
+let main args =
+    if Array.contains "--custom-properties-only" args then
+        let lifecycle = CustomPropertyLifecycle.run ()
+        let host = WebCoreHost.Create (320, 240)
+        let session = host.Session
+
+        try
+            let count =
+                CustomProperties.run
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.CustomProperties.forHost host)
+                    (Ranvier.View.WebCore.ComputedStyles.forHost host)
+                    (fun error -> error.GetType().Name)
+                    "ObjectDisposedException"
+
+            if count <> 50 || lifecycle <> 10 then
+                failwith "Custom-property focused shared/lifetime assertions did not run"
+
+            System.Console.WriteLine $"NATIVE_API C12 PASS assertions={count}"
+            System.Console.WriteLine $"NATIVE_API C12 LIFETIME PASS assertions={lifecycle}"
+        finally
+            (host :> System.IDisposable).Dispose()
+
+        if session.LiveObjects <> 0 then
+            failwith $"Custom-property fixture leaked {session.LiveObjects} managed native objects"
+
+        System.Console.WriteLine "NATIVE_API C12 TEARDOWN PASS"
+        0
+    else
+        runAll ()

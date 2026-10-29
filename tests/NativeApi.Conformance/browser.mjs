@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), 'generated');
+const customPropertiesOnly = process.argv.includes('--custom-properties-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
 const server = createServer(async (request, response) => {
@@ -34,9 +35,10 @@ try {
     await page.setViewportSize({ width, height });
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
-  const checks = await page.evaluate(async () => {
+  const checks = await page.evaluate(async focused => {
     try {
-      return await (await import('/Browser.js')).run();
+      const fixture = await import('/Browser.js');
+      return await (focused ? fixture.runCustomProperties() : fixture.run());
     } catch (error) {
       throw new Error(JSON.stringify({
         type: error?.constructor?.name,
@@ -47,7 +49,13 @@ try {
         fields: Object.fromEntries(Object.getOwnPropertyNames(error).filter(key => key !== 'stack').map(key => [key, error[key]])),
       }));
     }
-  });
+  }, customPropertiesOnly);
+  if (checks.customProperties !== 50 || checks.customPropertyContext !== 3) {
+    throw new Error(`Custom-property shared/context assertions did not run: ${JSON.stringify(checks)}`);
+  }
+  console.log(`BROWSER_API C12 PASS assertions=${checks.customProperties} engine=chromium`);
+  console.log(`BROWSER_API C12 CONTEXT PASS assertions=${checks.customPropertyContext} engine=chromium`);
+  if (!customPropertiesOnly) {
   if (checks.cssSupport !== 32 || checks.cssEscaping !== 45 || checks.cssOracle !== 196609 || checks.tables !== 30 || checks.viewTables < 29 || checks.reflection < 200 || checks.namespaces < 24 || checks.hyperlinks < 60 || checks.cssom < 58 || checks.svgCssom < 31 || checks.construction < 40) throw new Error(`Insufficient API assertions: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API D10 PASS assertions=${checks.tables} engine=chromium`);
   console.log(`BROWSER_API D10_VIEW PASS assertions=${checks.viewTables} engine=chromium`);
@@ -102,6 +110,7 @@ try {
     throw new Error('Tab did not move from SVG to MathML in document order');
   }
   console.log('BROWSER_API D09 TAB PASS engine=chromium');
+  }
 } finally {
   if (browser) await browser.close();
   await new Promise(resolve => server.close(resolve));

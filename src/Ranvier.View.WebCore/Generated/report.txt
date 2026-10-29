@@ -1,6 +1,7 @@
-119 classes; 1719 members: 1706 mapped to 1689 of 1702 rv_dom_* functions, 13 hand-written, 0 unmapped
+120 classes; 1723 members: 1710 mapped to 1693 of 1707 rv_dom_* functions, 13 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
+  rv_dom_css_register_property: DOMCSSNamespace.registerProperty (op)
   rv_dom_css_style_sheet_create: CSSStyleSheet.constructor (op)
   rv_dom_css_supports_1: DOMCSSNamespace.supports (op)
   rv_dom_css_supports_2: DOMCSSNamespace.supports (op)
@@ -38,6 +39,7 @@ Members by class (mapped / hand-written / unmapped):
   CSSNestedDeclarationsObject: 1 / 0 / 0
   CSSPositionTryDescriptorsObject: 140 / 0 / 0
   CSSPositionTryRuleObject: 2 / 0 / 0
+  CSSPropertyRuleObject: 4 / 0 / 0
   CSSRuleListObject: 2 / 0 / 0
   CSSRuleObject: 5 / 0 / 0
   CSSScopeRuleObject: 2 / 0 / 0
