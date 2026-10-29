@@ -48,6 +48,13 @@ let main _ =
         System.Console.WriteLine $"NATIVE_API C01_C02 PASS assertions={computedStyles}"
         let computedService = Ranvier.View.WebCore.ComputedStyles.forHost host
 
+        let ruleMutations =
+            RuleMutations.run host.Document computedService (function
+                | WebCoreDomException (name, _) -> name
+                | error -> error.GetType().Name)
+
+        System.Console.WriteLine $"NATIVE_API C08 PASS assertions={ruleMutations}"
+
         let typedStyles =
             TypedStyles.run host.Document computedService (function
                 | WebCoreDomException (name, _) -> name

@@ -18215,10 +18215,95 @@
       "description": "CSSRule/CSSRuleList, CSSStyleRule and grouping-rule insertRule/deleteRule expose selectors, declaration blocks, cssText and nested rules.",
       "acceptance": "Insert/edit/delete nested rules and compare parsed selectors/declarations and resulting computed styles; test invalid syntax/index errors.",
       "consumes": "C06/C07.",
-      "state": "native_windows_slice_verified",
-      "memberContracts": [],
-      "publicApiSnapshot": null,
-      "memberContractStatus": "pending exact source signatures and clean FCS API snapshot",
+      "state": "shared_native_browser_verified_windows",
+      "memberContracts": [
+        {
+          "interface": "CSSGroupingRule",
+          "member": "cssRules",
+          "kind": "property",
+          "signature": "cssRules() -> Ranvier.Dom.CSSRuleList"
+        },
+        {
+          "interface": "CSSGroupingRule",
+          "member": "deleteRule",
+          "kind": "method",
+          "signature": "deleteRule(index: uint32) -> unit"
+        },
+        {
+          "interface": "CSSGroupingRule",
+          "member": "insertRule",
+          "kind": "method",
+          "signature": "insertRule(rule: string, index: uint32 option) -> uint32"
+        },
+        {
+          "interface": "CSSRule",
+          "member": "cssText",
+          "kind": "property",
+          "signature": "cssText() -> string"
+        },
+        {
+          "interface": "CSSRule",
+          "member": "parentRule",
+          "kind": "property",
+          "signature": "parentRule() -> Ranvier.Dom.CSSRule"
+        },
+        {
+          "interface": "CSSRule",
+          "member": "parentStyleSheet",
+          "kind": "property",
+          "signature": "parentStyleSheet() -> Ranvier.Dom.CSSStyleSheet"
+        },
+        {
+          "interface": "CSSRule",
+          "member": "type",
+          "kind": "property",
+          "signature": "type() -> uint16"
+        },
+        {
+          "interface": "CSSRuleList",
+          "member": "item",
+          "kind": "method",
+          "signature": "item(index: uint32) -> Ranvier.Dom.CSSRule"
+        },
+        {
+          "interface": "CSSRuleList",
+          "member": "length",
+          "kind": "property",
+          "signature": "length() -> uint32"
+        },
+        {
+          "interface": "CSSStyleRule",
+          "member": "cssRules",
+          "kind": "property",
+          "signature": "cssRules() -> Ranvier.Dom.CSSRuleList"
+        },
+        {
+          "interface": "CSSStyleRule",
+          "member": "deleteRule",
+          "kind": "method",
+          "signature": "deleteRule(index: uint32) -> unit"
+        },
+        {
+          "interface": "CSSStyleRule",
+          "member": "insertRule",
+          "kind": "method",
+          "signature": "insertRule(rule: string, index: uint32 option) -> uint32"
+        },
+        {
+          "interface": "CSSStyleRule",
+          "member": "selectorText",
+          "kind": "property",
+          "signature": "selectorText() -> string"
+        },
+        {
+          "interface": "CSSStyleRule",
+          "member": "style",
+          "kind": "property",
+          "signature": "style() -> Ranvier.Dom.CSSStyleProperties"
+        }
+      ],
+      "publicApiSnapshot": "rule-mutations-public-api.json",
+      "memberContractStatus": "four complete active interfaces captured through FCS; fourteen declared members; accessors and IDL qualifications retained in source profile",
       "plannedCssomExpansion": {
         "state": "source_contract_fixed_before_implementation",
         "pinnedWebCore": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
@@ -19196,6 +19281,47 @@
         "sharedManagedConformance": "pending",
         "platformMatrix": "pending",
         "release": "pending"
+      },
+      "publicApiSnapshotSha256": "07bd7b78c8fd0ca35ece7f6fffbfc1fca7a114799dc536943efef177303a34e1",
+      "sourceProfile": {
+        "webCore": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
+        "native": "58a9980bf69196752a070fc832095249d26fca2b",
+        "cssTextSetter": "CSSRule.setCssText succeeds without changing state",
+        "selectorTextSetter": "invalid syntax preserves selector and state without throwing",
+        "CSSStyleRule": "Own cssRules/insertRule/deleteRule; inherits CSSRule, not CSSGroupingRule",
+        "nullableItem": "CSSRuleList.item returns actual null out of range",
+        "optionalIndex": "insertRule omitted index defaults to zero",
+        "style": "SameObject CSSStyleProperties, PutForwards=cssText; edit declaration block through .style.cssText",
+        "groupingList": "SameObject CSSRuleList"
+      },
+      "verification": {
+        "fixture": "tests/NativeApi.Conformance/RuleMutations.fs",
+        "windowsJitAssertions": 131,
+        "windowsNativeAotAssertions": 131,
+        "chromiumAssertions": 131,
+        "domPackages": "official Corealpha12 normal",
+        "cssPackages": "official adapteralpha1",
+        "nativeRuntime": "official WebCore/native preview11; no source/private runtime overrides",
+        "nativeSource": "58a9980bf69196752a070fc832095249d26fca2b",
+        "backend": "local Views source; published paired backend still pending",
+        "errors": "SyntaxError/IndexSizeError/HierarchyRequestError preserve complete serialization, counts, every sibling identity and four live computed dimensions",
+        "effects": "nested grouping/style-rule default insertion, selector and declaration edits, priority/removal and deletion alter live width/height; detached retained declarations remain readable",
+        "review": "independent read-only acceptance review found no actionable correctness/scope issue; reviewer did not claim runtime execution",
+        "freshFcs": "clean, zero diagnostics",
+        "xmlAudit": "zero findings",
+        "format": "pass",
+        "teardown": "existing shared runner retains zero objects; 25 native lifetime/context checks, four browser contexts and actual Tab traversal pass",
+        "sharedBatchNativeAssertions": 995,
+        "sharedBatchChromiumAssertions": 1006,
+        "remaining": [
+          "applicable traced/platform/shared gates",
+          "released paired Views backend consumption"
+        ]
+      },
+      "files": {
+        "views": [
+          "tests/NativeApi.Conformance/RuleMutations.fs"
+        ]
       }
     },
     {

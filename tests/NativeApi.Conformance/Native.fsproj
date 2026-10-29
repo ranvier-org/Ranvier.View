@@ -13,6 +13,7 @@
     <Compile Include="Hyperlinks.fs" />
     <Compile Include="Namespaces.fs" />
     <Compile Include="Stylesheets.fs" />
+    <Compile Include="RuleMutations.fs" />
     <Compile Include="CssEscaping.fs" />
     <Compile Include="CssSupport.fs" />
     <Compile Include="ComputedStyles.fs" />

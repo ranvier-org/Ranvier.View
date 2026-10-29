@@ -76,6 +76,8 @@ try {
   console.log(`BROWSER_API D11 PASS assertions=${checks.reflection} engine=chromium`);
   console.log(`BROWSER_API D09 PASS assertions=${checks.namespaces} engine=chromium`);
   console.log(`BROWSER_API CSSOM PASS assertions=${checks.cssom} engine=chromium`);
+  if (checks.ruleMutations !== 131) throw new Error('Nested rule mutation assertions did not run');
+  console.log(`BROWSER_API C08 PASS assertions=${checks.ruleMutations} engine=chromium`);
   console.log(`BROWSER_API SVG_CSSOM PASS assertions=${checks.svgCssom} engine=chromium`);
   console.log(`BROWSER_API HYPERLINKS PASS assertions=${checks.hyperlinks} engine=chromium`);
   console.log(`BROWSER_API C07 PASS assertions=${checks.construction} engine=chromium`);

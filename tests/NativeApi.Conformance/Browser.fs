@@ -98,6 +98,10 @@ let run () =
         let reflection = Reflection.run document
         let hyperlinks = Hyperlinks.run document
         let cssom = Stylesheets.run document
+
+        let ruleMutations =
+            RuleMutations.run document (Ranvier.Dom.ComputedStyles.forDocument document) errorName
+
         let svgCssom = Stylesheets.runSvg document
 
         let namespaces =
@@ -137,6 +141,7 @@ let run () =
                 reflection = reflection
                 hyperlinks = hyperlinks
                 cssom = cssom
+                ruleMutations = ruleMutations
                 svgCssom = svgCssom
                 namespaces = namespaces
                 construction = construction

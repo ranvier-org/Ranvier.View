@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "group": "C08",
+  "project": "Ranvier/src/Ranvier.Dom/Ranvier.Dom.fsproj",
+  "sharedDomPackage": "0.1.0-alpha.12",
+  "nativePackage": "0.1.0-preview.11",
+  "sourceProfile": {
+    "webCore": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
+    "native": "58a9980bf69196752a070fc832095249d26fca2b",
+    "cssTextSetter": "CSSRule.setCssText succeeds without changing state",
+    "selectorTextSetter": "invalid syntax preserves selector and state without throwing",
+    "CSSStyleRule": "Own cssRules/insertRule/deleteRule; inherits CSSRule, not CSSGroupingRule",
+    "nullableItem": "CSSRuleList.item returns actual null out of range",
+    "optionalIndex": "insertRule omitted index defaults to zero"
+  },
+  "captures": {
+    "CSSRule": {
+      "status": "ok",
+      "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "includeInternal": false,
+      "namespaceFilter": "Ranvier.Dom.CSSRule",
+      "entityCount": 2,
+      "memberCount": 6,
+      "entities": [
+        {
+          "fullName": "Ranvier.Dom.CSSRule",
+          "kind": "interface",
+          "accessibility": "public",
+          "members": [
+            {
+              "name": "cssText",
+              "kind": "property",
+              "signature": "cssText() -> string",
+              "accessibility": "public"
+            },
+            {
+              "name": "parentRule",
+              "kind": "property",
+              "signature": "parentRule() -> Ranvier.Dom.CSSRule",
+              "accessibility": "public"
+            },
+            {
+              "name": "parentStyleSheet",
+              "kind": "property",
+              "signature": "parentStyleSheet() -> Ranvier.Dom.CSSStyleSheet",
+              "accessibility": "public"
+            },
+            {
+              "name": "type",
+              "kind": "property",
+              "signature": "type() -> uint16",
+              "accessibility": "public"
+            }
+          ]
+        },
+        {
+          "fullName": "Ranvier.Dom.CSSRuleList",
+          "kind": "interface",
+          "accessibility": "public",
+          "members": [
+            {
+              "name": "item",
+              "kind": "method",
+              "signature": "item(index: uint32) -> Ranvier.Dom.CSSRule",
+              "accessibility": "public"
+            },
+            {
+              "name": "length",
+              "kind": "property",
+              "signature": "length() -> uint32",
+              "accessibility": "public"
+            }
+          ]
+        }
+      ],
+      "truncated": false,
+      "nextCursor": null,
+      "totalEstimate": {
+        "entities": 2
+      },
+      "pageOffset": 0,
+      "pageSize": 30
+    },
+    "CSSRuleList": {
+      "status": "ok",
+      "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "includeInternal": false,
+      "namespaceFilter": "Ranvier.Dom.CSSRuleList",
+      "entityCount": 1,
+      "memberCount": 2,
+      "entities": [
+        {
+          "fullName": "Ranvier.Dom.CSSRuleList",
+          "kind": "interface",
+          "accessibility": "public",
+          "members": [
+            {
+              "name": "item",
+              "kind": "method",
+              "signature": "item(index: uint32) -> Ranvier.Dom.CSSRule",
+              "accessibility": "public"
+            },
+            {
+              "name": "length",
+              "kind": "property",
+              "signature": "length() -> uint32",
+              "accessibility": "public"
+            }
+          ]
+        }
+      ],
+      "truncated": false,
+      "nextCursor": null,
+      "totalEstimate": {
+        "entities": 1
+      },
+      "pageOffset": 0,
+      "pageSize": 30
+    },
+    "CSSStyleRule": {
+      "status": "ok",
+      "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "includeInternal": false,
+      "namespaceFilter": "Ranvier.Dom.CSSStyleRule",
+      "entityCount": 1,
+      "memberCount": 5,
+      "entities": [
+        {
+          "fullName": "Ranvier.Dom.CSSStyleRule",
+          "kind": "interface",
+          "accessibility": "public",
+          "members": [
+            {
+              "name": "cssRules",
+              "kind": "property",
+              "signature": "cssRules() -> Ranvier.Dom.CSSRuleList",
+              "accessibility": "public"
+            },
+            {
+              "name": "deleteRule",
+              "kind": "method",
+              "signature": "deleteRule(index: uint32) -> unit",
+              "accessibility": "public"
+            },
+            {
+              "name": "insertRule",
+              "kind": "method",
+              "signature": "insertRule(rule: string, index: uint32 option) -> uint32",
+              "accessibility": "public"
+            },
+            {
+              "name": "selectorText",
+              "kind": "property",
+              "signature": "selectorText() -> string",
+              "accessibility": "public"
+            },
+            {
+              "name": "style",
+              "kind": "property",
+              "signature": "style() -> Ranvier.Dom.CSSStyleProperties",
+              "accessibility": "public"
+            }
+          ]
+        }
+      ],
+      "truncated": false,
+      "nextCursor": null,
+      "totalEstimate": {
+        "entities": 1
+      },
+      "pageOffset": 0,
+      "pageSize": 30
+    },
+    "CSSGroupingRule": {
+      "status": "ok",
+      "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "includeInternal": false,
+      "namespaceFilter": "Ranvier.Dom.CSSGroupingRule",
+      "entityCount": 1,
+      "memberCount": 3,
+      "entities": [
+        {
+          "fullName": "Ranvier.Dom.CSSGroupingRule",
+          "kind": "interface",
+          "accessibility": "public",
+          "members": [
+            {
+              "name": "cssRules",
+              "kind": "property",
+              "signature": "cssRules() -> Ranvier.Dom.CSSRuleList",
+              "accessibility": "public"
+            },
+            {
+              "name": "deleteRule",
+              "kind": "method",
+              "signature": "deleteRule(index: uint32) -> unit",
+              "accessibility": "public"
+            },
+            {
+              "name": "insertRule",
+              "kind": "method",
+              "signature": "insertRule(rule: string, index: uint32 option) -> uint32",
+              "accessibility": "public"
+            }
+          ]
+        }
+      ],
+      "truncated": false,
+      "nextCursor": null,
+      "totalEstimate": {
+        "entities": 1
+      },
+      "pageOffset": 0,
+      "pageSize": 30
+    }
+  },
+  "freshNativeCheck": {
+    "verdict": "clean",
+    "errorCount": 0,
+    "warningCount": 0,
+    "scope": "project"
+  }
+}

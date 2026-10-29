@@ -779,6 +779,14 @@
           "nativeAotAssertions": 44,
           "nativeRuntime": "official preview.11",
           "viewportRestore": "verified"
+        },
+        "C08": {
+          "state": "slice_verified",
+          "jitAssertions": 131,
+          "nativeAotAssertions": 131,
+          "nativeRuntime": "official preview.11; local Views source",
+          "ownNestedStyleRuleMethods": "verified",
+          "cssTextSetter": "successful no-op per pinned source"
         }
       },
       "runtimeProbe": "Selected D09/D10/D11/CSSOM/C07 local runtime fixtures passed; remaining groups not run",
@@ -996,6 +1004,13 @@
         "assertions": 44,
         "viewportRestore": "verified",
         "subscriptions": "separate G01 scope"
+      },
+      "C08": {
+        "state": "slice_verified",
+        "assertions": 131,
+        "engine": "chromium",
+        "ownNestedStyleRuleMethods": "verified",
+        "cssTextSetter": "successful no-op per pinned source"
       }
     }
   },
