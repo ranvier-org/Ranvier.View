@@ -20354,11 +20354,12 @@
         "teardown": "node/sheet counts restored; shared runner retains zero objects; existing lifetime/context checks and Tab traversal pass",
         "combinedWindowsJitAssertions": 1086,
         "combinedChromiumAssertions": 1099,
-        "combinedNativeAot": "pending integrated final binary; separate C08 and C10 full runners passed",
+        "combinedNativeAot": "pass: integrated final binary1086 assertions,25 native lifetime/context checks, Tab traversal and zero-retained-object teardown",
         "remaining": [
           "applicable traced/platform/shared gates",
           "released paired Views backend consumption"
-        ]
+        ],
+        "combinedWindowsNativeAotAssertions": 1086
       },
       "files": {
         "views": [
