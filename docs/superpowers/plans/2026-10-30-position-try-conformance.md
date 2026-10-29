@@ -33,8 +33,9 @@ Core primitives used: the existing shared DOM contracts and host lifetime. View-
 - [x] Build the isolated baseline once: zero warnings/errors. SageFs project loading refuses the per-project intermediate directory; bare session type probes confirm positionArea, width and the hyphenated margin alias. Owned session stopped.
 - [x] Add the shared fixture for parsed metadata, style identity/parent, default overflow, top/left fallback geometry, width/margin updates, invalid input and removal. The numeric helper rejects NaN/infinity through a negated bounded-distance predicate.
 - [x] Run focused Windows JIT and Chromium probes against official dependencies; investigate actual failures before adding production fixes. Chromium passes44; official native preview.11 reproduces the retained-style defect below.
-- [ ] Wire the permanent native/browser runners and exact count/capability guards, then run the batch JIT/AOT/browser gate.
-- [ ] Request independent review; commit and stack a PR without changing frozen cohort profiles. Platform and public-package acceptance remain later gates.
+- [x] Wire the permanent native/browser runners and exact count/capability guards, then run the batch JIT/AOT/browser gate. After merging main f97da4cd forward, the private Windows candidate passes1333 API assertions in each JIT/NativeAOT execution, plus25 lifetime checks, Tab traversal and teardown; Chromium passes1346 plus4 context checks, Tab traversal and196609 CSS escaping oracle cases.
+- [x] Request independent review and commit the source without changing frozen cohort profiles. The fixture, guards, complete API snapshot and additive integration review are clear.
+- [ ] Stack the source PR after Native preview.13 is available for CI. Platform and public-package acceptance remain later gates; the repair is tracked in [WebCore PR123](https://github.com/ranvier-org/Ranvier.WebCore/pull/123).
 
 ## Current evidence and limitations
 
@@ -44,7 +45,7 @@ Baseline source is Views main `653be0b2646dd4423bfbb7ddbcce70f35554d161`. FCS re
 
 Chromium passes all 44 assertions through the shared published alpha.12 contracts. Official native preview.11 passes the descriptor edits and geometry assertions, then fails at the retained `rule.style` read after deleting the rule: `NotSupportedException: CSSPositionTryRule.style is not supported by this WebCore build`.
 
-The generated guard obtains settings exclusively from the current parent sheet's owner/constructor document; deletion clears that parent, so the guard returns Unsupported. This is an implementation defect under investigation. The fixture retains its browser/native common expectation; no unsupported result is substituted for retained-object access.
+The original generated guard obtains settings exclusively from the current parent sheet's owner/constructor document; deletion clears that parent, so the guard returns Unsupported. The repair is implemented in WebCore PR123. The fixture retains its browser/native common expectation; no unsupported result is substituted for retained-object access.
 
 The private counter/context candidate in `C:/wk/native-cssom-detached-context/artifacts/cssom-context/runtime` repairs this defect: the shared fixture passes44 assertions plus zero-object teardown in Windows JIT and NativeAOT. Its direct lifecycle regression passes389 assertions, counter styles86, and existing CSS regressions805. NativeAOT emits the existing FSharp.Core IL3053/IL2104 warnings. These results do not prove released-package or other-platform acceptance; Native preview.13 is reserved for the repair and the full shared batch remains pending.
 
