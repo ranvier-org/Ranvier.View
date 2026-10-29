@@ -80,12 +80,19 @@ try {
   console.log(`BROWSER_API C01_C02 CONTEXT PASS assertions=${checks.computedContextChecks} engine=chromium`);
   console.log(`BROWSER_API D11 PASS assertions=${checks.reflection} engine=chromium`);
   console.log(`BROWSER_API D09 PASS assertions=${checks.namespaces} engine=chromium`);
+  if (checks.viewportOperations !== 30 || checks.semanticOperations !== 26 || checks.attachmentIdentifier !== 'undefined') {
+    throw new Error('Selected D09/D11 operation proof did not run for the pinned Chromium profile');
+  }
+  console.log(`BROWSER_API D09_VIEWPORT PASS assertions=${checks.viewportOperations} engine=chromium`);
+  console.log(`BROWSER_API D11_OPERATIONS PASS assertions=${checks.semanticOperations} engine=chromium`);
+  console.log(`BROWSER_API D11 CAPABILITY attachmentIdentifier=${checks.attachmentIdentifier} engine=chromium`);
   console.log(`BROWSER_API CSSOM PASS assertions=${checks.cssom} engine=chromium`);
   if (checks.ruleMutations !== 131) throw new Error('Nested rule mutation assertions did not run');
   console.log(`BROWSER_API C08 PASS assertions=${checks.ruleMutations} engine=chromium`);
   console.log(`BROWSER_API SVG_CSSOM PASS assertions=${checks.svgCssom} engine=chromium`);
   console.log(`BROWSER_API HYPERLINKS PASS assertions=${checks.hyperlinks} engine=chromium`);
   console.log(`BROWSER_API C07 PASS assertions=${checks.construction} engine=chromium`);
+  if (checks.construction !== 78) throw new Error('Constructed stylesheet preservation assertions did not run');
   await page.locator('#native-api-svg').focus();
   await page.keyboard.press('Tab');
   if (!await page.locator('#native-api-math').evaluate(element => element === element.ownerDocument.activeElement)) {

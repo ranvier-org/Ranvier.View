@@ -9,11 +9,15 @@ open Ranvier.Dom
 /// <param name="createService">Creates a provider owned by this fixture.</param>
 /// <param name="checkpoint">Completes at a microtask checkpoint on the owning loop.</param>
 /// <param name="computed">Reads a computed CSS property after style resolution.</param>
+/// <param name="disposalError">Describes the observable disposed-service error in this compiler profile.</param>
+/// <param name="expectedDisposalError">The exact provider-profile error descriptor required after disposal.</param>
 let run
     (document: Document)
     (createService: unit -> StyleSheetService)
     (checkpoint: unit -> Async<unit>)
     (computed: HTMLElement -> string -> string)
+    (disposalError: exn -> string)
+    (expectedDisposalError: string)
     =
     async {
         use service = createService ()
@@ -54,7 +58,9 @@ let run
         let baseNode = document.createElement "base" :?> HTMLBaseElement
         baseNode.href <- "https://example.test/default/"
         let inlineStyle = document.createElement "style" :?> HTMLStyleElement
-        inlineStyle.textContent <- ".inline-probe { color: red; }"
+        inlineStyle.textContent <- ".inline-probe { width: 73px; color: red; } @media all { .inline-probe { height: 29px; } }"
+        let failureProbe = document.createElement "div" :?> HTMLElement
+        failureProbe.className <- "inline-probe"
         let probe = document.createElement "div" :?> HTMLElement
         probe.className <- "c07-probe"
         probe.style.setProperty ("width", "17px")
@@ -62,6 +68,7 @@ let run
         document.head.appendChild baseNode |> ignore
         document.head.appendChild inlineStyle |> ignore
         document.body.appendChild probe |> ignore
+        document.body.appendChild failureProbe |> ignore
         document.body.appendChild shadowHost |> ignore
 
         try
@@ -126,7 +133,7 @@ let run
                             BaseUrl = Some "https://example.test/explicit/"
                         }
                     |> ignore
-                with _ ->
+                with :? NotSupportedException ->
                     rejected <- true
 
                 equal "unsupported explicit base URL is rejected" true rejected
@@ -141,7 +148,7 @@ let run
                 |> ignore
             with
             | StyleSheetException (name, _) -> invalidBase <- name = "NotAllowedError"
-            | _ when not service.SupportsBaseUrl -> invalidBase <- true
+            | :? NotSupportedException when not service.SupportsBaseUrl -> invalidBase <- true
 
             equal "invalid base URL" true invalidBase
 
@@ -189,19 +196,61 @@ let run
 
             equal "last replacement wins" ".second" ((sheet.cssRules.item 0u :?> CSSStyleRule).selectorText)
 
-            let before = inlineStyle.sheet.cssRules.length
+            let failureSheet = inlineStyle.sheet
+            let failureRules = failureSheet.cssRules
+
+            let retainedRules =
+                [|
+                    for index in 0 .. int failureRules.length - 1 -> failureRules.item (uint32 index)
+                |]
+
+            let serializedRules () =
+                [|
+                    for index in 0 .. int failureRules.length - 1 -> (failureRules.item (uint32 index)).cssText
+                |]
+
+            let beforeRules = serializedRules ()
+            let retainedStyle = (retainedRules[0] :?> CSSStyleRule).style
+            let beforeDeclaration = retainedStyle.cssText
+            let beforeWidth = computed failureProbe "width"
+            let beforeHeight = computed failureProbe "height"
+            equal "failed replacement fixture rule count" 2 retainedRules.Length
+            equal "failed replacement baseline width" "73px" beforeWidth
+            equal "failed replacement baseline grouped height" "29px" beforeHeight
+
+            let preserved label =
+                equal (label + " complete rule text") beforeRules (serializedRules ())
+                same (label + " sheet identity") failureSheet inlineStyle.sheet
+                same (label + " list identity") failureRules failureSheet.cssRules
+
+                for index in 0 .. retainedRules.Length - 1 do
+                    same (label + " retained rule identity") retainedRules[index] (failureRules.item (uint32 index))
+                    same (label + " rule parent sheet") failureSheet retainedRules[index].parentStyleSheet
+
+                same (label + " declaration identity") retainedStyle (retainedRules[0] :?> CSSStyleRule).style
+                equal (label + " full declaration text") beforeDeclaration retainedStyle.cssText
+                equal (label + " matching width") beforeWidth (computed failureProbe "width")
+                equal (label + " matching grouped height") beforeHeight (computed failureProbe "height")
 
             let failure =
-                start (service.ReplaceAsync (inlineStyle.sheet, ".forbidden {}")) CancellationToken.None
+                start
+                    (service.ReplaceAsync (
+                        failureSheet,
+                        ".inline-probe { width: 199px; color: blue; } @media all { .inline-probe { height: 101px; } }"
+                    ))
+                    CancellationToken.None
 
             equal "error completion is asynchronous" true (failure().IsNone)
+            preserved "pending failed replacement"
             do! checkpoint ()
 
             match failure () with
             | Some (Choice2Of3 (StyleSheetException (name, _))) -> equal "replace error name" "NotAllowedError" name
             | other -> failwith $"Expected asynchronous stylesheet error: {other}"
 
-            equal "failed replace preserves sheet" before inlineStyle.sheet.cssRules.length
+            preserved "rejected replacement"
+            do! checkpoint ()
+            preserved "late failed replacement checkpoint"
 
             use beforeStart = new CancellationTokenSource ()
             beforeStart.Cancel ()
@@ -231,19 +280,42 @@ let run
             cancelled "service disposal terminates pending work" disposedWork
             do! checkpoint ()
             cancelled "late completion stays cancelled" disposedWork
-            let mutable refused = false
 
-            try
-                disposableService.Create StyleSheetOptions.Default
-                |> ignore
-            with _ ->
-                refused <- true
+            for label, action in
+                [|
+                    "create",
+                    (fun () ->
+                        disposableService.Create StyleSheetOptions.Default
+                        |> ignore)
+                    "get adoption", (fun () -> disposableService.GetAdopted document |> ignore)
+                    "set adoption", (fun () -> disposableService.SetAdopted (document, [||]))
+                |] do
+                let mutable reason = "success"
 
-            equal "disposed service rejects requests" true refused
+                try
+                    action ()
+                with error ->
+                    reason <- disposalError error
+
+                equal ("disposed service rejects " + label) expectedDisposalError reason
+
+            let refusedReplacement =
+                start (disposableService.ReplaceAsync (sheet, ".after-dispose {}")) CancellationToken.None
+
+            match refusedReplacement () with
+            | Some (Choice2Of3 error) -> equal "disposed service rejects replacement" expectedDisposalError (disposalError error)
+            | other -> failwith $"Expected disposed replacement rejection: {other}"
         finally
             service.SetAdopted (document, original)
 
-            for node in [| baseNode :> Node; inlineStyle :> Node; probe :> Node; shadowHost :> Node |] do
+            for node in
+                [|
+                    baseNode :> Node
+                    inlineStyle :> Node
+                    probe :> Node
+                    failureProbe :> Node
+                    shadowHost :> Node
+                |] do
                 if not (isNull (box node.parentNode)) then
                     node.parentNode.removeChild node |> ignore
 

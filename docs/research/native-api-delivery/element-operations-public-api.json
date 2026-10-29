@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    "D09",
+    "D11"
+  ],
+  "revision": "0fe6d91aa5046b34b00a6d092153d6be390041fb plus ElementOperations fixture",
+  "project": "C:/wk/rv-c10-cascade/tests/NativeApi.Conformance/Native.fsproj",
+  "packages": {
+    "dom": "0.1.0-alpha.12",
+    "cssDom": "0.1.0-alpha.1",
+    "native": "0.1.0-preview.11"
+  },
+  "sourcePin": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
+  "apiResults": {
+    "Ranvier.Dom.SVGElement": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\r\n  \"status\": \"ok\",\r\n  \"packageId\": \"Ranvier.Dom\",\r\n  \"typeName\": \"Ranvier.Dom.SVGElement\",\r\n  \"matchedTypes\": [\r\n    \"Ranvier.Dom.SVGElement\"\r\n  ],\r\n  \"projectFileName\": \"C:\\\\wk\\\\rv-c10-cascade\\\\tests\\\\NativeApi.Conformance\\\\Native.fsproj\",\r\n  \"optionsSource\": \"ionide-proj-info\",\r\n  \"includeNonPublic\": false,\r\n  \"results\": [\r\n    {\r\n      \"name\": \"viewportElement\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"viewportElement() -> Ranvier.Dom.SVGElement\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    }\r\n  ],\r\n  \"truncated\": false,\r\n  \"nextCursor\": null,\r\n  \"totalEstimate\": {\r\n    \"members\": 1\r\n  },\r\n  \"pageOffset\": 0,\r\n  \"pageSize\": 500\r\n}"
+        }
+      ]
+    },
+    "Ranvier.Dom.HTMLMarqueeElement": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\r\n  \"status\": \"ok\",\r\n  \"packageId\": \"Ranvier.Dom\",\r\n  \"typeName\": \"Ranvier.Dom.HTMLMarqueeElement\",\r\n  \"matchedTypes\": [\r\n    \"Ranvier.Dom.HTMLMarqueeElement\"\r\n  ],\r\n  \"projectFileName\": \"C:\\\\wk\\\\rv-c10-cascade\\\\tests\\\\NativeApi.Conformance\\\\Native.fsproj\",\r\n  \"optionsSource\": \"ionide-proj-info\",\r\n  \"includeNonPublic\": false,\r\n  \"results\": [\r\n    {\r\n      \"name\": \"start\",\r\n      \"kind\": \"method\",\r\n      \"signature\": \"start() -> Microsoft.FSharp.Core.unit\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"stop\",\r\n      \"kind\": \"method\",\r\n      \"signature\": \"stop() -> Microsoft.FSharp.Core.unit\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"width\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"width() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"scrollAmount\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"scrollAmount() -> Microsoft.FSharp.Core.uint32\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"vspace\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"vspace() -> Microsoft.FSharp.Core.uint32\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"behavior\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"behavior() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"scrollDelay\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"scrollDelay() -> Microsoft.FSharp.Core.uint32\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"loop\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"loop() -> Microsoft.FSharp.Core.int\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"height\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"height() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"hspace\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"hspace() -> Microsoft.FSharp.Core.uint32\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"bgColor\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"bgColor() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"trueSpeed\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"trueSpeed() -> Microsoft.FSharp.Core.bool\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"direction\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"direction() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    }\r\n  ],\r\n  \"truncated\": false,\r\n  \"nextCursor\": null,\r\n  \"totalEstimate\": {\r\n    \"members\": 13\r\n  },\r\n  \"pageOffset\": 0,\r\n  \"pageSize\": 500\r\n}"
+        }
+      ]
+    },
+    "Ranvier.Dom.HTMLSourceElement": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\r\n  \"status\": \"ok\",\r\n  \"packageId\": \"Ranvier.Dom\",\r\n  \"typeName\": \"Ranvier.Dom.HTMLSourceElement\",\r\n  \"matchedTypes\": [\r\n    \"Ranvier.Dom.HTMLSourceElement\"\r\n  ],\r\n  \"projectFileName\": \"C:\\\\wk\\\\rv-c10-cascade\\\\tests\\\\NativeApi.Conformance\\\\Native.fsproj\",\r\n  \"optionsSource\": \"ionide-proj-info\",\r\n  \"includeNonPublic\": false,\r\n  \"results\": [\r\n    {\r\n      \"name\": \"sizes\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"sizes() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"src\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"src() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"width\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"width() -> Microsoft.FSharp.Core.uint32\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"type\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"type() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"media\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"media() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"srcset\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"srcset() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"attachmentIdentifier\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"attachmentIdentifier() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"height\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"height() -> Microsoft.FSharp.Core.uint32\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    }\r\n  ],\r\n  \"truncated\": false,\r\n  \"nextCursor\": null,\r\n  \"totalEstimate\": {\r\n    \"members\": 8\r\n  },\r\n  \"pageOffset\": 0,\r\n  \"pageSize\": 500\r\n}"
+        }
+      ]
+    }
+  }
+}
