@@ -19,6 +19,12 @@ let private windowlessDocument () : Document = jsNative
 [<Emit("$0.name || 'Error'")>]
 let private errorName (error: exn) : string = jsNative
 
+[<Emit("$0.constructor.name + ':' + $0.message")>]
+let private disposalError (error: exn) : string = jsNative
+
+[<Emit("$0 === undefined ? 'undefined' : $0 === null ? 'null' : typeof $0")>]
+let private classifyString (value: string) : string = jsNative
+
 [<Emit("[globalThis.innerWidth, globalThis.innerHeight]")>]
 let private viewportSize () : struct (int * int) = jsNative
 
@@ -110,11 +116,31 @@ let run () =
         let namespaces =
             Namespaces.run document (fun () -> document.body.getBoundingClientRect () |> ignore)
 
+        let viewportOperations = ElementOperations.viewport document
+
+        let! semanticOperations, attachmentIdentifier =
+            ElementOperations.semantic
+                document
+                (fun () -> Async.Sleep 20)
+                (fun () -> document.body.getBoundingClientRect () |> ignore)
+                errorName
+                classifyString
+                [ "undefined" ]
+
         let checkpoint () =
             Async.FromContinuations (fun (success, _, _) -> post (fun () -> success ()))
 
         let! construction =
-            SheetConstruction.run document (fun () -> StyleSheets.forDocument document) checkpoint computed
+            SheetConstruction.run
+                document
+                (fun () -> StyleSheets.forDocument document)
+                checkpoint
+                computed
+                disposalError
+                "Exception:StyleSheetService"
+
+        let! sheetElements, failedLinkSheet =
+            SheetElements.run document computed (fun () -> Async.Sleep 10) errorName
 
         let! conditionalRules =
             ConditionalRules.run
@@ -156,7 +182,12 @@ let run () =
                 ruleMutations = ruleMutations
                 svgCssom = svgCssom
                 namespaces = namespaces
+                viewportOperations = viewportOperations
+                semanticOperations = semanticOperations
+                attachmentIdentifier = attachmentIdentifier
                 construction = construction
+                sheetElements = sheetElements
+                failedLinkSheet = failedLinkSheet
             |}
     }
     |> Async.StartAsPromise

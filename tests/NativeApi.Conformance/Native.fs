@@ -138,6 +138,12 @@ let main _ =
         System.Console.WriteLine $"NATIVE_API D11 PASS assertions={reflection}"
         let namespaces = Namespaces.run host.Document (fun () -> host.Frame ())
         System.Console.WriteLine $"NATIVE_API D09 PASS assertions={namespaces}"
+        let viewportOperations = ElementOperations.viewport host.Document
+
+        if viewportOperations <> 30 then
+            failwith "Selected SVG viewport assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API D09_VIEWPORT PASS assertions={viewportOperations}"
         let svgStylesheets = Stylesheets.runSvg host.Document
         System.Console.WriteLine $"NATIVE_API SVG_CSSOM PASS assertions={svgStylesheets}"
         let stylesheets = Stylesheets.run host.Document
@@ -198,8 +204,46 @@ let main _ =
                     System.Console.WriteLine
                         $"NATIVE_API C10 CAPABILITY scopeRules={scopeRules} nestedDeclarations={nestedDeclarations} importContentsReadable={importContentsReadable}"
 
+                    let! semanticOperations, attachmentIdentifier =
+                        ElementOperations.semantic
+                            host.Document
+                            (fun () -> Async.Sleep 20)
+                            (fun () -> host.Frame ())
+                            (function
+                            | WebCoreDomException (name, _) -> name
+                            | error -> error.GetType().Name)
+                            (fun value -> if isNull value then "null" else "string")
+                            (if System.OperatingSystem.IsWindows () then
+                                 [ "string:" ]
+                             else
+                                 [ "string:"; "error:NotSupportedException" ])
+
+                    if semanticOperations <> 26 then
+                        failwith "Selected HTML operation assertions did not run"
+
+                    System.Console.WriteLine $"NATIVE_API D11_OPERATIONS PASS assertions={semanticOperations}"
+                    System.Console.WriteLine $"NATIVE_API D11 CAPABILITY attachmentIdentifier={attachmentIdentifier}"
+
+                    let! sheetElements, failedLinkSheet =
+                        SheetElements.run host.Document computed (fun () -> Async.Sleep 10) (function
+                            | WebCoreDomException (name, _) -> name
+                            | error -> error.GetType().Name)
+
+                    System.Console.WriteLine $"NATIVE_API D12 PASS assertions={sheetElements}"
+
+                    if sheetElements <> 109 then
+                        failwith "Stylesheet/link element assertions did not run"
+
+                    System.Console.WriteLine $"NATIVE_API D12 CAPABILITY failedLinkSheet={failedLinkSheet}"
+
                     let! checks =
-                        SheetConstruction.run host.Document (fun () -> StyleSheets.forHost host) checkpoint computed
+                        SheetConstruction.run
+                            host.Document
+                            (fun () -> StyleSheets.forHost host)
+                            checkpoint
+                            computed
+                            (fun error -> error.GetType().Name)
+                            "ObjectDisposedException"
 
                     construction <- Some (Ok checks)
                 with error ->
@@ -214,7 +258,11 @@ let main _ =
             host.Cycle 1
 
         match construction with
-        | Some (Ok checks) -> System.Console.WriteLine $"NATIVE_API C07 PASS assertions={checks}"
+        | Some (Ok checks) ->
+            if checks <> 78 then
+                failwith "Constructed stylesheet preservation assertions did not run"
+
+            System.Console.WriteLine $"NATIVE_API C07 PASS assertions={checks}"
         | Some (Error error) -> raise error
         | None -> failwith "Stylesheet construction fixture did not complete within 20 seconds"
 
