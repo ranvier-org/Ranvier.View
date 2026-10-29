@@ -319,7 +319,7 @@ module Stage =
         return stage "shared browser API conformance" {
             npm
             chromium
-            run "dotnet restore tests/NativeApi.Conformance/Browser.fsproj"
+            run "dotnet restore tests/NativeApi.Conformance/Browser.fsproj -p:Configuration=Release"
             run "dotnet fickl tests/NativeApi.Conformance/Browser.fsproj --outDir tests/NativeApi.Conformance/generated --configuration Release"
             run "node tests/NativeApi.Conformance/browser.mjs"
         }

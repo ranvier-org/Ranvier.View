@@ -8,6 +8,8 @@ let main _ =
     let session = host.Session
 
     try
+        let viewTables = ViewTables.run host.Document
+        System.Console.WriteLine $"NATIVE_API D10_VIEW PASS assertions={viewTables}"
         let checks = Tables.run host.Document
         System.Console.WriteLine $"NATIVE_API D10 PASS assertions={checks}"
         let hyperlinks = Hyperlinks.run host.Document

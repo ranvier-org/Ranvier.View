@@ -1,6 +1,6 @@
 # Shared native API conformance
 
-The fixtures execute the same typed assertions through shared DOM contracts on native WebCore and a real Chromium document. Current slice coverage is 448 assertions: tables, HTML reflection, Area hyperlinks, SVG/MathML members, CSSOM, SVG stylesheets and constructed/adopted sheets. Native teardown and stylesheet lifetime checks run separately.
+The fixtures execute the same typed assertions through shared DOM contracts on native WebCore and a real Chromium document. Current slice coverage is 477 assertions: DOM and authored View tables, HTML reflection, Area hyperlinks, SVG/MathML members, CSSOM, SVG stylesheets and constructed/adopted sheets. Native teardown and stylesheet lifetime checks run separately.
 
 From the repository root, with the matching DOM and native packages published:
 
@@ -13,7 +13,7 @@ The equivalent individual steps are:
 
 ```text
 dotnet run --project tests/NativeApi.Conformance/Native.fsproj -c Release
-dotnet restore tests/NativeApi.Conformance/Browser.fsproj
+dotnet restore tests/NativeApi.Conformance/Browser.fsproj -p:Configuration=Release
 dotnet fickl tests/NativeApi.Conformance/Browser.fsproj --outDir tests/NativeApi.Conformance/generated --configuration Release
 npm ci --prefix tests/NativeApi.Conformance
 npm exec --prefix tests/NativeApi.Conformance -- playwright install chromium

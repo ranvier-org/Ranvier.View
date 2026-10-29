@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Tables.fs" />
+    <Compile Include="ViewTables.fs" />
     <Compile Include="Reflection.fs" />
     <Compile Include="Hyperlinks.fs" />
     <Compile Include="Namespaces.fs" />
@@ -14,6 +15,7 @@
     <Compile Include="Browser.fs" />
     <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" Condition="'$(NativeApiContractRoot)' == ''" />
     <ProjectReference Include="$(NativeApiContractRoot)/src/Fable.Ranvier.Dom/Fable.Ranvier.Dom.fsproj" Condition="'$(NativeApiContractRoot)' != ''" />
+    <ProjectReference Include="../../src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj" />
     <PackageReference Include="Fable.Core" Version="5.3.0" />
   </ItemGroup>
 </Project>

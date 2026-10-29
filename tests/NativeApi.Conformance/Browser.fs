@@ -18,6 +18,7 @@ let run () =
     async {
         let document = document ()
         let tables = Tables.run document
+        let viewTables = ViewTables.run document
         let reflection = Reflection.run document
         let hyperlinks = Hyperlinks.run document
         let cssom = Stylesheets.run document
@@ -35,6 +36,7 @@ let run () =
         return
             {|
                 tables = tables
+                viewTables = viewTables
                 reflection = reflection
                 hyperlinks = hyperlinks
                 cssom = cssom

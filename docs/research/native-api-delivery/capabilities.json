@@ -684,10 +684,17 @@
           "sharedAdapterAssertions": 60,
           "nativeAotAssertions": 60,
           "publicPackageAcceptance": "pending"
+        },
+        "D10_VIEW": {
+          "state": "slice_verified",
+          "sharedAdapterAssertions": 29,
+          "nativeAotAssertions": 29,
+          "sharedContractPackage": "official alpha.8",
+          "nativeRuntimePackage": "preview.8 pending"
         }
       },
       "runtimeProbe": "Selected D09/D10/D11/CSSOM/C07 local runtime fixtures passed; remaining groups not run",
-      "nativeAotProbe": "Selected shared fixtures passed; FSharp.Core IL3053/IL2104 warnings remain"
+      "nativeAotProbe": "477 selected shared assertions plus Tab and four stylesheet lifetime checks pass; FSharp.Core IL3053/IL2104 and existing SameValueZero.Normal IL2075 reflection warnings remain"
     },
     {
       "rid": "win-arm64",
@@ -745,6 +752,12 @@
         "state": "slice_verified",
         "engine": "chromium",
         "assertions": 60
+      },
+      "D10_VIEW": {
+        "state": "slice_verified",
+        "engine": "chromium",
+        "assertions": 29,
+        "sharedContractPackage": "official alpha.8"
       }
     }
   }

@@ -6279,7 +6279,19 @@
         "tests/NativeApi.Conformance/Tables.fs",
         "tests/NativeApi.Conformance/Native.fs",
         "tests/NativeApi.Conformance/Browser.fs"
-      ]
+      ],
+      "viewTagAcceptance": {
+        "fixture": "tests/NativeApi.Conformance/ViewTables.fs",
+        "assertions": 29,
+        "targets": {
+          "windowsJit": "passed",
+          "windowsAot": "passed",
+          "chromium": "passed"
+        },
+        "coverage": "Authored table/caption/colgroup/col/thead/tbody/tfoot/tr/th/td tags, six typed table interface families, live mutation and mount disposal",
+        "contracts": "official Ranvier.Dom/Fable.Ranvier.Dom alpha.8, fresh nuget.org-only cache",
+        "remaining": "Other-platform shared JIT/AOT, public native preview.8 consumption and full original group audit"
+      }
     },
     {
       "id": "D11",
@@ -32963,5 +32975,13 @@
       "Intern wrappers by root kind and object identity; release duplicate native references and all owned handles at teardown."
     ],
     "acceptance": "Same shared style/rule fixture casts every selected concrete rule and descriptor type on browser/native; repeated parent/sheet/list/declaration reads preserve identity; teardown and wrong-thread/null cases pass."
+  },
+  "sharedContractRelease": {
+    "version": "0.1.0-alpha.8",
+    "revision": "edabc3b9271bacc4a8330d9a26ae0d25585697a8",
+    "publishRun": "https://github.com/ranvier-org/Ranvier/actions/runs/40856768408",
+    "publicDownloads": "all four packages downloaded from NuGet flat-container",
+    "isolatedConsumers": "normal/traced native identity/service and Fable compiled browser consumers pass",
+    "integration": "477 shared runtime assertions pass native Windows JIT/AOT and Chromium through official shared contracts; native engine remains private pending preview.8 release"
   }
 }

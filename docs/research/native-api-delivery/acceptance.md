@@ -125,3 +125,14 @@ This is generated adapter progress, not completed CSSOM behaviour. Rule/descript
 - View-tag construction, published package integration, remaining platform acceptance and the full 103-group implementation/audit remain required. No conditional item is deferred.
 
 - Independent read-only review of the DOMTokenList cache fix and shared Area fixture found no actionable bugs/regressions; owned references, weak caching, owner anchoring, disposal and AOT construction were inspected.
+
+## Official alpha.8 consumption and authored table acceptance
+
+- All four official alpha.8 contract packages now download from NuGet. Isolated normal/traced .NET identity/service consumers and compiled Fable browser consumers pass against those downloaded packages. The task-owned Views restore configuration now uses nuget.org exclusively and a fresh cache at C:/wk/rv-official-alpha8-cache; source project overrides for shared contracts are absent. Native interop/runtime still use the local engine while preview.8 is pending.
+- The new authored View-tag fixture passes **29 assertions** in Windows JIT, Windows NativeAOT and real Chromium. It mounts table/caption/column/section/row/header/data-cell tags, casts the resulting nodes through all six table interface families, verifies spans/row indices/live insertion/deletion and disposes the complete mount including markers.
+- The same complete shared batch now passes **477 assertions**, plus real Tab traversal and four native stylesheet lifetime checks. The build.fsx native-api-browser --quick pipeline passes using the official contracts and existing browser installation. Browser restore now explicitly uses Release to match its Fable compilation and referenced View projects.
+- CI now publishes and runs the shared NativeApi.Conformance executable under NativeAOT in the existing Windows x64/ARM64, macOS arm64 and Linux x64 lanes. These new platform gates are wired but have not run remotely yet. The separate existing smoke app and counter gates remain in place.
+- Adding a real View mount makes existing SameValueZero.Normal option-reflection code reachable to the AOT analyzer. The publish reports IL2075 at Native.fs lines 238, 243 and 244 in addition to FSharp.Core IL3053/IL2104. The published fixture executes successfully; this does not prove every option-key instantiation preserves its reflected members. Size-trimming work remains paused, and no warning-free AOT claim is made.
+- Native PR13's macOS and Linux ARM64 builds have passed; Windows x64/ARM64 and Linux x64 remain running in 40851368857 at this checkpoint. No native preview.8 release or non-Windows shared runtime/AOT acceptance is claimed.
+
+- The new View fixture XML audit reports zero findings, and its fresh FCS project check is clean. Independent read-only review of the fixture, runner wiring, Release restore and all four AOT CI targets found no actionable issues.
