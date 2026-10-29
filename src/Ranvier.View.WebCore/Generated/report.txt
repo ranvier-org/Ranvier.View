@@ -1,4 +1,4 @@
-87 classes; 1331 members: 1314 mapped to 1297 of 1302 rv_dom_* functions, 13 hand-written, 4 unmapped
+118 classes; 1707 members: 1693 mapped to 1676 of 1681 rv_dom_* functions, 13 hand-written, 1 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_event_get_current_target: Event.currentTarget (get)
@@ -8,12 +8,37 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_keyboard_event_get_key: KeyboardEvent.key (get)
 
 Unmapped members by reason:
-      4  no ABI function
+      1  no ABI function
 
 Members by class (mapped / hand-written / unmapped):
   AbstractRangeObject: 5 / 0 / 0
   AttrObject: 9 / 0 / 0
-  CSSStyleDeclarationObject: 8 / 0 / 0
+  CSSConditionRuleObject: 1 / 0 / 0
+  CSSContainerRuleObject: 2 / 0 / 0
+  CSSCounterStyleRuleObject: 22 / 0 / 0
+  CSSFontFaceDescriptorsObject: 50 / 0 / 0
+  CSSFontFaceRuleObject: 1 / 0 / 0
+  CSSFontFeatureValuesRuleObject: 2 / 0 / 0
+  CSSFontPaletteValuesRuleObject: 4 / 0 / 0
+  CSSGroupingRuleObject: 3 / 0 / 0
+  CSSImportRuleObject: 5 / 0 / 0
+  CSSKeyframeRuleObject: 3 / 0 / 0
+  CSSKeyframesRuleObject: 8 / 0 / 0
+  CSSLayerBlockRuleObject: 1 / 0 / 0
+  CSSLayerStatementRuleObject: 1 / 0 / 0
+  CSSMediaRuleObject: 1 / 0 / 0
+  CSSNamespaceRuleObject: 2 / 0 / 0
+  CSSNestedDeclarationsObject: 1 / 0 / 0
+  CSSPositionTryDescriptorsObject: 140 / 0 / 0
+  CSSPositionTryRuleObject: 2 / 0 / 0
+  CSSRuleListObject: 2 / 0 / 0
+  CSSRuleObject: 5 / 0 / 0
+  CSSScopeRuleObject: 2 / 0 / 0
+  CSSStyleDeclarationObject: 10 / 0 / 0
+  CSSStylePropertiesObject: 2 / 0 / 0
+  CSSStyleRuleObject: 6 / 0 / 0
+  CSSStyleSheetObject: 8 / 0 / 0
+  CSSViewTransitionRuleObject: 2 / 0 / 0
   CharacterDataObject: 14 / 0 / 0
   CompositionEventObject: 1 / 0 / 0
   DOMImplementationObject: 2 / 0 / 0
@@ -22,13 +47,13 @@ Members by class (mapped / hand-written / unmapped):
   DOMStringMapObject: 3 / 0 / 0
   DOMTokenListObject: 10 / 0 / 0
   DocumentFragmentObject: 11 / 0 / 0
-  DocumentObject: 69 / 0 / 0
+  DocumentObject: 70 / 0 / 0
   ElementObject: 179 / 0 / 0
   EventObject: 17 / 1 / 0
   EventTargetObject: 0 / 9 / 0
   FocusEventObject: 1 / 0 / 0
   HTMLAnchorElementObject: 46 / 0 / 0
-  HTMLAreaElementObject: 0 / 0 / 4
+  HTMLAreaElementObject: 38 / 0 / 0
   HTMLBRElementObject: 2 / 0 / 0
   HTMLBaseElementObject: 4 / 0 / 0
   HTMLBodyElementObject: 12 / 0 / 0
@@ -53,6 +78,7 @@ Members by class (mapped / hand-written / unmapped):
   HTMLLIElementObject: 4 / 0 / 0
   HTMLLabelElementObject: 4 / 0 / 0
   HTMLLegendElementObject: 3 / 0 / 0
+  HTMLLinkElementObject: 36 / 0 / 0
   HTMLMapElementObject: 3 / 0 / 0
   HTMLMarqueeElementObject: 24 / 0 / 0
   HTMLMenuElementObject: 2 / 0 / 0
@@ -71,6 +97,7 @@ Members by class (mapped / hand-written / unmapped):
   HTMLSelectElementObject: 39 / 0 / 0
   HTMLSlotElementObject: 5 / 0 / 0
   HTMLSourceElementObject: 15 / 0 / 0
+  HTMLStyleElementObject: 8 / 0 / 0
   HTMLTableCaptionElementObject: 2 / 0 / 0
   HTMLTableCellElementObject: 29 / 0 / 0
   HTMLTableColElementObject: 12 / 0 / 0
@@ -85,6 +112,7 @@ Members by class (mapped / hand-written / unmapped):
   InputEventObject: 2 / 2 / 0
   KeyboardEventObject: 12 / 1 / 0
   MathMLElementObject: 10 / 0 / 0
+  MediaListObject: 6 / 0 / 0
   MouseEventObject: 20 / 0 / 0
   NamedNodeMapObject: 8 / 0 / 0
   NodeListObject: 2 / 0 / 0
@@ -93,14 +121,14 @@ Members by class (mapped / hand-written / unmapped):
   RadioNodeListObject: 2 / 0 / 0
   RangeObject: 25 / 0 / 0
   SVGElementObject: 11 / 0 / 0
-  ShadowRootObject: 17 / 0 / 0
+  SVGStyleElementObject: 0 / 0 / 1
+  ShadowRootObject: 18 / 0 / 0
+  StyleSheetListObject: 3 / 0 / 0
+  StyleSheetObject: 8 / 0 / 0
   TextObject: 3 / 0 / 0
   UIEventObject: 6 / 0 / 0
   ValidityStateObject: 11 / 0 / 0
   WheelEventObject: 7 / 0 / 0
 
 Unmapped members:
-  HTMLAreaElementObject HTMLHyperlinkElementUtils.href (getter): no ABI function
-  HTMLAreaElementObject HTMLHyperlinkElementUtils.href (setter): no ABI function
-  HTMLAreaElementObject HTMLHyperlinkElementUtils.target (getter): no ABI function
-  HTMLAreaElementObject HTMLHyperlinkElementUtils.target (setter): no ABI function
+  SVGStyleElementObject LinkStyle.sheet (getter): no ABI function

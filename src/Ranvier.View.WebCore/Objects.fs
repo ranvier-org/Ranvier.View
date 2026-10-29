@@ -48,6 +48,21 @@ module internal Kind =
     [<Literal>]
     let NamedNodeMap = 12
 
+    [<Literal>]
+    let CSSRule = 13
+
+    [<Literal>]
+    let CSSRuleList = 14
+
+    [<Literal>]
+    let StyleSheet = 15
+
+    [<Literal>]
+    let StyleSheetList = 16
+
+    [<Literal>]
+    let MediaList = 17
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -136,6 +151,11 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.Validity -> NativeDom.rv_dom_validity_state_release handle
         | Kind.DOMImplementation -> NativeDom.rv_dom_dom_implementation_release handle
         | Kind.NamedNodeMap -> NativeDom.rv_dom_named_node_map_release handle
+        | Kind.CSSRule -> NativeDom.rv_dom_css_rule_release handle
+        | Kind.CSSRuleList -> NativeDom.rv_dom_css_rule_list_release handle
+        | Kind.StyleSheet -> NativeDom.rv_dom_style_sheet_release handle
+        | Kind.StyleSheetList -> NativeDom.rv_dom_style_sheet_list_release handle
+        | Kind.MediaList -> NativeDom.rv_dom_media_list_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =
