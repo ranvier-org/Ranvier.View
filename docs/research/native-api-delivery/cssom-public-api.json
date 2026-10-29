@@ -1,0 +1,1333 @@
+{
+  "nativeRevision": "32740b8e721aee940a61359f22a46498c0473974",
+  "scope": "Declared CSS* members only; inherited members and other namespaces are not included.",
+  "before": {
+    "status": "ok",
+    "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+    "optionsSource": "ionide-proj-info",
+    "includeInternal": false,
+    "namespaceFilter": "Ranvier.Dom.CSS",
+    "entityCount": 3,
+    "memberCount": 7,
+    "entities": [
+      {
+        "fullName": "Ranvier.Dom.CSSStyleDeclaration",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "cssText",
+            "kind": "property",
+            "signature": "cssText() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "getPropertyPriority",
+            "kind": "method",
+            "signature": "getPropertyPriority(property: string) -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "getPropertyValue",
+            "kind": "method",
+            "signature": "getPropertyValue(property: string) -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "item",
+            "kind": "method",
+            "signature": "item(index: uint32) -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "length",
+            "kind": "property",
+            "signature": "length() -> uint32",
+            "accessibility": "public"
+          },
+          {
+            "name": "removeProperty",
+            "kind": "method",
+            "signature": "removeProperty(property: string) -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "setProperty",
+            "kind": "method",
+            "signature": "setProperty(property: string, value: string, priority: string option) -> unit",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSStyleProperties",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": []
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSStyleSheet",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": []
+      }
+    ],
+    "truncated": false,
+    "nextCursor": null,
+    "totalEstimate": {
+      "entities": 3
+    },
+    "pageOffset": 0,
+    "pageSize": 500
+  },
+  "after": {
+    "status": "ok",
+    "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+    "optionsSource": "ionide-proj-info",
+    "includeInternal": false,
+    "namespaceFilter": "Ranvier.Dom.CSS",
+    "entityCount": 28,
+    "memberCount": 173,
+    "entities": [
+      {
+        "fullName": "Ranvier.Dom.CSSConditionRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "conditionText",
+            "kind": "property",
+            "signature": "conditionText() -> string",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSContainerRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "containerName",
+            "kind": "property",
+            "signature": "containerName() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "containerQuery",
+            "kind": "property",
+            "signature": "containerQuery() -> string",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSCounterStyleRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "additiveSymbols",
+            "kind": "property",
+            "signature": "additiveSymbols() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "fallback",
+            "kind": "property",
+            "signature": "fallback() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "name",
+            "kind": "property",
+            "signature": "name() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "negative",
+            "kind": "property",
+            "signature": "negative() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "pad",
+            "kind": "property",
+            "signature": "pad() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "prefix",
+            "kind": "property",
+            "signature": "prefix() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "range",
+            "kind": "property",
+            "signature": "range() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "speakAs",
+            "kind": "property",
+            "signature": "speakAs() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "suffix",
+            "kind": "property",
+            "signature": "suffix() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "symbols",
+            "kind": "property",
+            "signature": "symbols() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "system",
+            "kind": "property",
+            "signature": "system() -> string",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSFontFaceDescriptors",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "ascent-override",
+            "kind": "property",
+            "signature": "ascent-override() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "ascentOverride",
+            "kind": "property",
+            "signature": "ascentOverride() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "descent-override",
+            "kind": "property",
+            "signature": "descent-override() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "descentOverride",
+            "kind": "property",
+            "signature": "descentOverride() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "font-display",
+            "kind": "property",
+            "signature": "font-display() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "font-family",
+            "kind": "property",
+            "signature": "font-family() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "font-feature-settings",
+            "kind": "property",
+            "signature": "font-feature-settings() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "font-stretch",
+            "kind": "property",
+            "signature": "font-stretch() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "font-style",
+            "kind": "property",
+            "signature": "font-style() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "font-weight",
+            "kind": "property",
+            "signature": "font-weight() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "font-width",
+            "kind": "property",
+            "signature": "font-width() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "fontDisplay",
+            "kind": "property",
+            "signature": "fontDisplay() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "fontFamily",
+            "kind": "property",
+            "signature": "fontFamily() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "fontFeatureSettings",
+            "kind": "property",
+            "signature": "fontFeatureSettings() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "fontStretch",
+            "kind": "property",
+            "signature": "fontStretch() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "fontStyle",
+            "kind": "property",
+            "signature": "fontStyle() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "fontWeight",
+            "kind": "property",
+            "signature": "fontWeight() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "fontWidth",
+            "kind": "property",
+            "signature": "fontWidth() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "line-gap-override",
+            "kind": "property",
+            "signature": "line-gap-override() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "lineGapOverride",
+            "kind": "property",
+            "signature": "lineGapOverride() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "size-adjust",
+            "kind": "property",
+            "signature": "size-adjust() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "sizeAdjust",
+            "kind": "property",
+            "signature": "sizeAdjust() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "src",
+            "kind": "property",
+            "signature": "src() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "unicode-range",
+            "kind": "property",
+            "signature": "unicode-range() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "unicodeRange",
+            "kind": "property",
+            "signature": "unicodeRange() -> string",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSFontFaceRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "style",
+            "kind": "property",
+            "signature": "style() -> Ranvier.Dom.CSSFontFaceDescriptors",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSFontFeatureValuesRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "fontFamily",
+            "kind": "property",
+            "signature": "fontFamily() -> string",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSFontPaletteValuesRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "basePalette",
+            "kind": "property",
+            "signature": "basePalette() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "fontFamily",
+            "kind": "property",
+            "signature": "fontFamily() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "name",
+            "kind": "property",
+            "signature": "name() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "overrideColors",
+            "kind": "property",
+            "signature": "overrideColors() -> string",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSGroupingRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "cssRules",
+            "kind": "property",
+            "signature": "cssRules() -> Ranvier.Dom.CSSRuleList",
+            "accessibility": "public"
+          },
+          {
+            "name": "deleteRule",
+            "kind": "method",
+            "signature": "deleteRule(index: uint32) -> unit",
+            "accessibility": "public"
+          },
+          {
+            "name": "insertRule",
+            "kind": "method",
+            "signature": "insertRule(rule: string, index: uint32 option) -> uint32",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSImportRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "href",
+            "kind": "property",
+            "signature": "href() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "layerName",
+            "kind": "property",
+            "signature": "layerName() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "media",
+            "kind": "property",
+            "signature": "media() -> Ranvier.Dom.MediaList",
+            "accessibility": "public"
+          },
+          {
+            "name": "styleSheet",
+            "kind": "property",
+            "signature": "styleSheet() -> Ranvier.Dom.CSSStyleSheet",
+            "accessibility": "public"
+          },
+          {
+            "name": "supportsText",
+            "kind": "property",
+            "signature": "supportsText() -> string",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSKeyframeRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "keyText",
+            "kind": "property",
+            "signature": "keyText() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "style",
+            "kind": "property",
+            "signature": "style() -> Ranvier.Dom.CSSStyleProperties",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSKeyframesRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "appendRule",
+            "kind": "method",
+            "signature": "appendRule(rule: string) -> unit",
+            "accessibility": "public"
+          },
+          {
+            "name": "cssRules",
+            "kind": "property",
+            "signature": "cssRules() -> Ranvier.Dom.CSSRuleList",
+            "accessibility": "public"
+          },
+          {
+            "name": "deleteRule",
+            "kind": "method",
+            "signature": "deleteRule(key: string) -> unit",
+            "accessibility": "public"
+          },
+          {
+            "name": "findRule",
+            "kind": "method",
+            "signature": "findRule(key: string) -> Ranvier.Dom.CSSKeyframeRule",
+            "accessibility": "public"
+          },
+          {
+            "name": "item",
+            "kind": "method",
+            "signature": "item(index: uint32) -> Ranvier.Dom.CSSKeyframeRule",
+            "accessibility": "public"
+          },
+          {
+            "name": "length",
+            "kind": "property",
+            "signature": "length() -> uint32",
+            "accessibility": "public"
+          },
+          {
+            "name": "name",
+            "kind": "property",
+            "signature": "name() -> string",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSLayerBlockRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "name",
+            "kind": "property",
+            "signature": "name() -> string",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSLayerStatementRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "nameList",
+            "kind": "property",
+            "signature": "nameList() -> array<string>",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSMediaRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "media",
+            "kind": "property",
+            "signature": "media() -> Ranvier.Dom.MediaList",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSNamespaceRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "namespaceURI",
+            "kind": "property",
+            "signature": "namespaceURI() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "prefix",
+            "kind": "property",
+            "signature": "prefix() -> string",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSNestedDeclarations",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "style",
+            "kind": "property",
+            "signature": "style() -> Ranvier.Dom.CSSStyleProperties",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSPositionTryDescriptors",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "align-self",
+            "kind": "property",
+            "signature": "align-self() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "alignSelf",
+            "kind": "property",
+            "signature": "alignSelf() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "block-size",
+            "kind": "property",
+            "signature": "block-size() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "blockSize",
+            "kind": "property",
+            "signature": "blockSize() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "bottom",
+            "kind": "property",
+            "signature": "bottom() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "height",
+            "kind": "property",
+            "signature": "height() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "inline-size",
+            "kind": "property",
+            "signature": "inline-size() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "inlineSize",
+            "kind": "property",
+            "signature": "inlineSize() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "inset",
+            "kind": "property",
+            "signature": "inset() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "inset-block",
+            "kind": "property",
+            "signature": "inset-block() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "inset-block-end",
+            "kind": "property",
+            "signature": "inset-block-end() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "inset-block-start",
+            "kind": "property",
+            "signature": "inset-block-start() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "inset-inline",
+            "kind": "property",
+            "signature": "inset-inline() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "inset-inline-end",
+            "kind": "property",
+            "signature": "inset-inline-end() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "inset-inline-start",
+            "kind": "property",
+            "signature": "inset-inline-start() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "insetBlock",
+            "kind": "property",
+            "signature": "insetBlock() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "insetBlockEnd",
+            "kind": "property",
+            "signature": "insetBlockEnd() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "insetBlockStart",
+            "kind": "property",
+            "signature": "insetBlockStart() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "insetInline",
+            "kind": "property",
+            "signature": "insetInline() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "insetInlineEnd",
+            "kind": "property",
+            "signature": "insetInlineEnd() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "insetInlineStart",
+            "kind": "property",
+            "signature": "insetInlineStart() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "justify-self",
+            "kind": "property",
+            "signature": "justify-self() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "justifySelf",
+            "kind": "property",
+            "signature": "justifySelf() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "left",
+            "kind": "property",
+            "signature": "left() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "margin",
+            "kind": "property",
+            "signature": "margin() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "margin-block",
+            "kind": "property",
+            "signature": "margin-block() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "margin-block-end",
+            "kind": "property",
+            "signature": "margin-block-end() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "margin-block-start",
+            "kind": "property",
+            "signature": "margin-block-start() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "margin-bottom",
+            "kind": "property",
+            "signature": "margin-bottom() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "margin-inline",
+            "kind": "property",
+            "signature": "margin-inline() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "margin-inline-end",
+            "kind": "property",
+            "signature": "margin-inline-end() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "margin-inline-start",
+            "kind": "property",
+            "signature": "margin-inline-start() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "margin-left",
+            "kind": "property",
+            "signature": "margin-left() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "margin-right",
+            "kind": "property",
+            "signature": "margin-right() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "margin-top",
+            "kind": "property",
+            "signature": "margin-top() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "marginBlock",
+            "kind": "property",
+            "signature": "marginBlock() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "marginBlockEnd",
+            "kind": "property",
+            "signature": "marginBlockEnd() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "marginBlockStart",
+            "kind": "property",
+            "signature": "marginBlockStart() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "marginBottom",
+            "kind": "property",
+            "signature": "marginBottom() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "marginInline",
+            "kind": "property",
+            "signature": "marginInline() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "marginInlineEnd",
+            "kind": "property",
+            "signature": "marginInlineEnd() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "marginInlineStart",
+            "kind": "property",
+            "signature": "marginInlineStart() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "marginLeft",
+            "kind": "property",
+            "signature": "marginLeft() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "marginRight",
+            "kind": "property",
+            "signature": "marginRight() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "marginTop",
+            "kind": "property",
+            "signature": "marginTop() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "max-block-size",
+            "kind": "property",
+            "signature": "max-block-size() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "max-height",
+            "kind": "property",
+            "signature": "max-height() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "max-inline-size",
+            "kind": "property",
+            "signature": "max-inline-size() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "max-width",
+            "kind": "property",
+            "signature": "max-width() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "maxBlockSize",
+            "kind": "property",
+            "signature": "maxBlockSize() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "maxHeight",
+            "kind": "property",
+            "signature": "maxHeight() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "maxInlineSize",
+            "kind": "property",
+            "signature": "maxInlineSize() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "maxWidth",
+            "kind": "property",
+            "signature": "maxWidth() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "min-block-size",
+            "kind": "property",
+            "signature": "min-block-size() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "min-height",
+            "kind": "property",
+            "signature": "min-height() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "min-inline-size",
+            "kind": "property",
+            "signature": "min-inline-size() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "min-width",
+            "kind": "property",
+            "signature": "min-width() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "minBlockSize",
+            "kind": "property",
+            "signature": "minBlockSize() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "minHeight",
+            "kind": "property",
+            "signature": "minHeight() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "minInlineSize",
+            "kind": "property",
+            "signature": "minInlineSize() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "minWidth",
+            "kind": "property",
+            "signature": "minWidth() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "place-self",
+            "kind": "property",
+            "signature": "place-self() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "placeSelf",
+            "kind": "property",
+            "signature": "placeSelf() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "position-anchor",
+            "kind": "property",
+            "signature": "position-anchor() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "position-area",
+            "kind": "property",
+            "signature": "position-area() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "positionAnchor",
+            "kind": "property",
+            "signature": "positionAnchor() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "positionArea",
+            "kind": "property",
+            "signature": "positionArea() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "right",
+            "kind": "property",
+            "signature": "right() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "top",
+            "kind": "property",
+            "signature": "top() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "width",
+            "kind": "property",
+            "signature": "width() -> string",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSPositionTryRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "name",
+            "kind": "property",
+            "signature": "name() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "style",
+            "kind": "property",
+            "signature": "style() -> Ranvier.Dom.CSSPositionTryDescriptors",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "cssText",
+            "kind": "property",
+            "signature": "cssText() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "parentRule",
+            "kind": "property",
+            "signature": "parentRule() -> Ranvier.Dom.CSSRule",
+            "accessibility": "public"
+          },
+          {
+            "name": "parentStyleSheet",
+            "kind": "property",
+            "signature": "parentStyleSheet() -> Ranvier.Dom.CSSStyleSheet",
+            "accessibility": "public"
+          },
+          {
+            "name": "type",
+            "kind": "property",
+            "signature": "type() -> uint16",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSRuleList",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "item",
+            "kind": "method",
+            "signature": "item(index: uint32) -> Ranvier.Dom.CSSRule",
+            "accessibility": "public"
+          },
+          {
+            "name": "length",
+            "kind": "property",
+            "signature": "length() -> uint32",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSScopeRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "end",
+            "kind": "property",
+            "signature": "end() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "start",
+            "kind": "property",
+            "signature": "start() -> string",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSStartingStyleRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": []
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSStyleDeclaration",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "cssRules",
+            "kind": "property",
+            "signature": "cssRules() -> Ranvier.Dom.CSSRuleList",
+            "accessibility": "public"
+          },
+          {
+            "name": "cssText",
+            "kind": "property",
+            "signature": "cssText() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "getPropertyPriority",
+            "kind": "method",
+            "signature": "getPropertyPriority(property: string) -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "getPropertyValue",
+            "kind": "method",
+            "signature": "getPropertyValue(property: string) -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "item",
+            "kind": "method",
+            "signature": "item(index: uint32) -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "length",
+            "kind": "property",
+            "signature": "length() -> uint32",
+            "accessibility": "public"
+          },
+          {
+            "name": "parentRule",
+            "kind": "property",
+            "signature": "parentRule() -> Ranvier.Dom.CSSRule",
+            "accessibility": "public"
+          },
+          {
+            "name": "removeProperty",
+            "kind": "method",
+            "signature": "removeProperty(property: string) -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "setProperty",
+            "kind": "method",
+            "signature": "setProperty(property: string, value: string, priority: string option) -> unit",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSStyleProperties",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "cssFloat",
+            "kind": "property",
+            "signature": "cssFloat() -> string",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSStyleRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "cssRules",
+            "kind": "property",
+            "signature": "cssRules() -> Ranvier.Dom.CSSRuleList",
+            "accessibility": "public"
+          },
+          {
+            "name": "deleteRule",
+            "kind": "method",
+            "signature": "deleteRule(index: uint32) -> unit",
+            "accessibility": "public"
+          },
+          {
+            "name": "insertRule",
+            "kind": "method",
+            "signature": "insertRule(rule: string, index: uint32 option) -> uint32",
+            "accessibility": "public"
+          },
+          {
+            "name": "selectorText",
+            "kind": "property",
+            "signature": "selectorText() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "style",
+            "kind": "property",
+            "signature": "style() -> Ranvier.Dom.CSSStyleProperties",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSStyleSheet",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "addRule",
+            "kind": "method",
+            "signature": "addRule(selector: string option, style: string option, index: uint32 option) -> int",
+            "accessibility": "public"
+          },
+          {
+            "name": "cssRules",
+            "kind": "property",
+            "signature": "cssRules() -> Ranvier.Dom.CSSRuleList",
+            "accessibility": "public"
+          },
+          {
+            "name": "deleteRule",
+            "kind": "method",
+            "signature": "deleteRule(index: uint32) -> unit",
+            "accessibility": "public"
+          },
+          {
+            "name": "insertRule",
+            "kind": "method",
+            "signature": "insertRule(rule: string, index: uint32 option) -> uint32",
+            "accessibility": "public"
+          },
+          {
+            "name": "ownerRule",
+            "kind": "property",
+            "signature": "ownerRule() -> Ranvier.Dom.CSSRule",
+            "accessibility": "public"
+          },
+          {
+            "name": "removeRule",
+            "kind": "method",
+            "signature": "removeRule(index: uint32 option) -> unit",
+            "accessibility": "public"
+          },
+          {
+            "name": "replaceSync",
+            "kind": "method",
+            "signature": "replaceSync(text: string) -> unit",
+            "accessibility": "public"
+          },
+          {
+            "name": "rules",
+            "kind": "property",
+            "signature": "rules() -> Ranvier.Dom.CSSRuleList",
+            "accessibility": "public"
+          }
+        ]
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSSupportsRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": []
+      },
+      {
+        "fullName": "Ranvier.Dom.CSSViewTransitionRule",
+        "kind": "interface",
+        "accessibility": "public",
+        "members": [
+          {
+            "name": "navigation",
+            "kind": "property",
+            "signature": "navigation() -> string",
+            "accessibility": "public"
+          },
+          {
+            "name": "types",
+            "kind": "property",
+            "signature": "types() -> array<string>",
+            "accessibility": "public"
+          }
+        ]
+      }
+    ],
+    "truncated": false,
+    "nextCursor": null,
+    "totalEstimate": {
+      "entities": 28
+    },
+    "pageOffset": 0,
+    "pageSize": 500
+  }
+}
