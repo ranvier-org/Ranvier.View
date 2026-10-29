@@ -92,6 +92,7 @@ try {
   console.log(`BROWSER_API SVG_CSSOM PASS assertions=${checks.svgCssom} engine=chromium`);
   console.log(`BROWSER_API HYPERLINKS PASS assertions=${checks.hyperlinks} engine=chromium`);
   console.log(`BROWSER_API C07 PASS assertions=${checks.construction} engine=chromium`);
+  if (checks.construction !== 78) throw new Error('Constructed stylesheet preservation assertions did not run');
   await page.locator('#native-api-svg').focus();
   await page.keyboard.press('Tab');
   if (!await page.locator('#native-api-math').evaluate(element => element === element.ownerDocument.activeElement)) {

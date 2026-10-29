@@ -19,6 +19,9 @@ let private windowlessDocument () : Document = jsNative
 [<Emit("$0.name || 'Error'")>]
 let private errorName (error: exn) : string = jsNative
 
+[<Emit("$0.constructor.name + ':' + $0.message")>]
+let private disposalError (error: exn) : string = jsNative
+
 [<Emit("$0 === undefined ? 'undefined' : $0 === null ? 'null' : typeof $0")>]
 let private classifyString (value: string) : string = jsNative
 
@@ -125,7 +128,13 @@ let run () =
             Async.FromContinuations (fun (success, _, _) -> post (fun () -> success ()))
 
         let! construction =
-            SheetConstruction.run document (fun () -> StyleSheets.forDocument document) checkpoint computed
+            SheetConstruction.run
+                document
+                (fun () -> StyleSheets.forDocument document)
+                checkpoint
+                computed
+                disposalError
+                "Exception:StyleSheetService"
 
         let! conditionalRules =
             ConditionalRules.run

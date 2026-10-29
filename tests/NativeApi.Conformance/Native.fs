@@ -216,7 +216,13 @@ let main _ =
                     System.Console.WriteLine $"NATIVE_API D11 CAPABILITY attachmentIdentifier={attachmentIdentifier}"
 
                     let! checks =
-                        SheetConstruction.run host.Document (fun () -> StyleSheets.forHost host) checkpoint computed
+                        SheetConstruction.run
+                            host.Document
+                            (fun () -> StyleSheets.forHost host)
+                            checkpoint
+                            computed
+                            (fun error -> error.GetType().Name)
+                            "ObjectDisposedException"
 
                     construction <- Some (Ok checks)
                 with error ->
@@ -231,7 +237,11 @@ let main _ =
             host.Cycle 1
 
         match construction with
-        | Some (Ok checks) -> System.Console.WriteLine $"NATIVE_API C07 PASS assertions={checks}"
+        | Some (Ok checks) ->
+            if checks <> 78 then
+                failwith "Constructed stylesheet preservation assertions did not run"
+
+            System.Console.WriteLine $"NATIVE_API C07 PASS assertions={checks}"
         | Some (Error error) -> raise error
         | None -> failwith "Stylesheet construction fixture did not complete within 20 seconds"
 
