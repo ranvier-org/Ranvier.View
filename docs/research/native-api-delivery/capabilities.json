@@ -787,6 +787,17 @@
           "nativeRuntime": "official preview.11; local Views source",
           "ownNestedStyleRuleMethods": "verified",
           "cssTextSetter": "successful no-op per pinned source"
+        },
+        "C10": {
+          "state": "slice_verified",
+          "jitAssertions": 91,
+          "nativeAotAssertions": 91,
+          "nativeRuntime": "official preview.11; local Views source",
+          "scopeRules": true,
+          "nestedDeclarations": true,
+          "dataImportedContentsReadable": false,
+          "dataImportedContentsError": "SecurityError",
+          "importReplacement": "whole stylesheet text; live insertion hierarchy differs"
         }
       },
       "runtimeProbe": "Selected D09/D10/D11/CSSOM/C07 local runtime fixtures passed; remaining groups not run",
@@ -1011,6 +1022,15 @@
         "engine": "chromium",
         "ownNestedStyleRuleMethods": "verified",
         "cssTextSetter": "successful no-op per pinned source"
+      },
+      "C10": {
+        "state": "slice_verified",
+        "assertions": 93,
+        "engine": "chromium",
+        "scopeRules": true,
+        "nestedDeclarations": true,
+        "dataImportedContentsReadable": true,
+        "importReplacement": "whole stylesheet text; live insertion hierarchy differs"
       }
     }
   },

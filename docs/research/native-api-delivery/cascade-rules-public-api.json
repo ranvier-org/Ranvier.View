@@ -1,0 +1,340 @@
+{
+  "schemaVersion": 1,
+  "group": "C10",
+  "capturedAtUtc": "2026-10-29 18:26:09 UTC",
+  "project": "C:/Users/shaya/.codex/worktrees/native-api-contracts/Ranvier/src/Ranvier.Dom/Ranvier.Dom.fsproj",
+  "viewsRevision": "c97ec0131b0f64a369698c167bc8eec0f84c733b",
+  "sourceProfile": {
+    "webCoreRevision": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
+    "nativeRevision": "58a9980bf69196752a070fc832095249d26fca2b",
+    "sharedDomPackageVersion": "0.1.0-alpha.12",
+    "nativePackageVersion": "0.1.0-preview.11"
+  },
+  "scope": "All declared members of six selected C10 interfaces; CSSGroupingRule inherited editing and CSSRule base members are recorded separately in the source ledger.",
+  "contractNotes": {
+    "inheritance": {
+      "CSSLayerBlockRule": "CSSGroupingRule",
+      "CSSLayerStatementRule": "CSSRule",
+      "CSSScopeRule": "CSSGroupingRule",
+      "CSSNestedDeclarations": "CSSRule",
+      "CSSImportRule": "CSSRule",
+      "CSSNamespaceRule": "CSSRule"
+    },
+    "allDeclaredPropertiesReadOnly": true,
+    "nullableReturns": [
+      "CSSScopeRule.start",
+      "CSSScopeRule.end",
+      "CSSImportRule.styleSheet",
+      "CSSImportRule.layerName",
+      "CSSImportRule.supportsText"
+    ],
+    "frozenArrays": [
+      "CSSLayerStatementRule.nameList"
+    ],
+    "sameObject": [
+      "CSSNestedDeclarations.style",
+      "CSSImportRule.media",
+      "CSSImportRule.styleSheet"
+    ],
+    "putForwards": {
+      "CSSNestedDeclarations.style": "cssText",
+      "CSSImportRule.media": "mediaText"
+    },
+    "upstreamCommentedNotSelected": []
+  },
+  "runtimeQualifications": {
+    "windowsJitAssertions": 91,
+    "windowsNativeAotAssertions": 91,
+    "chromiumAssertions": 93,
+    "scopeRules": true,
+    "nestedDeclarations": true,
+    "dataImportedSheetContents": {
+      "nativeWebCore": {
+        "readable": false,
+        "errorName": "SecurityError"
+      },
+      "chromium": {
+        "readable": true,
+        "declarationEditChangesComputedWidth": true
+      }
+    },
+    "importReplacement": "Media edits and whole stylesheet text replacement verify actual import cascade. Live insertRule placement around leading layer statements differs between the tested engine versions; no wrapper fallback or invented setter is added.",
+    "acceptance": "Local official-dependency runtime coverage; Views remains local source. Traced/platform and released paired Views package acceptance remain open."
+  },
+  "cleanChecks": {
+    "core": {
+      "status": "succeeded",
+      "verdict": "clean",
+      "analyzed": true,
+      "scope": "project",
+      "speed": "trusted",
+      "errorCount": 0,
+      "warningCount": 0,
+      "diagnosticsFileCount": 0,
+      "files": [],
+      "diagnostics": [],
+      "diagnosticsTruncated": false,
+      "escalated": "fcs-reanalyze",
+      "via": "fcs",
+      "fresh": true,
+      "groundTruth": true,
+      "totalDiagnostics": 0,
+      "infoCount": 0,
+      "belowSeverityFloorCount": 0,
+      "diagnosticsNote": null,
+      "reason": null,
+      "projectFileName": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "projectsSwept": 1
+    },
+    "nativeConformance": {
+      "status": "succeeded",
+      "verdict": "clean",
+      "analyzed": true,
+      "scope": "project",
+      "speed": "trusted",
+      "errorCount": 0,
+      "warningCount": 0,
+      "diagnosticsFileCount": 0,
+      "files": [],
+      "diagnostics": [],
+      "diagnosticsTruncated": false,
+      "escalated": "fcs-reanalyze",
+      "via": "fcs",
+      "fresh": true,
+      "groundTruth": true,
+      "totalDiagnostics": 0,
+      "infoCount": 0,
+      "belowSeverityFloorCount": 0,
+      "diagnosticsNote": null,
+      "reason": null,
+      "projectFileName": "C:\\wk\\rv-c10-cascade\\tests\\NativeApi.Conformance\\Native.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "projectsSwept": 1
+    }
+  },
+  "publicApiResults": [
+    {
+      "status": "ok",
+      "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "includeInternal": false,
+      "namespaceFilter": "Ranvier.Dom.CSSLayerBlockRule",
+      "entityCount": 1,
+      "memberCount": 1,
+      "entities": [
+        {
+          "fullName": "Ranvier.Dom.CSSLayerBlockRule",
+          "kind": "interface",
+          "accessibility": "public",
+          "members": [
+            {
+              "name": "name",
+              "kind": "property",
+              "signature": "name() -> string",
+              "accessibility": "public"
+            }
+          ]
+        }
+      ],
+      "truncated": false,
+      "nextCursor": null,
+      "totalEstimate": {
+        "entities": 1
+      },
+      "pageOffset": 0,
+      "pageSize": 20
+    },
+    {
+      "status": "ok",
+      "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "includeInternal": false,
+      "namespaceFilter": "Ranvier.Dom.CSSLayerStatementRule",
+      "entityCount": 1,
+      "memberCount": 1,
+      "entities": [
+        {
+          "fullName": "Ranvier.Dom.CSSLayerStatementRule",
+          "kind": "interface",
+          "accessibility": "public",
+          "members": [
+            {
+              "name": "nameList",
+              "kind": "property",
+              "signature": "nameList() -> array<string>",
+              "accessibility": "public"
+            }
+          ]
+        }
+      ],
+      "truncated": false,
+      "nextCursor": null,
+      "totalEstimate": {
+        "entities": 1
+      },
+      "pageOffset": 0,
+      "pageSize": 20
+    },
+    {
+      "status": "ok",
+      "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "includeInternal": false,
+      "namespaceFilter": "Ranvier.Dom.CSSScopeRule",
+      "entityCount": 1,
+      "memberCount": 2,
+      "entities": [
+        {
+          "fullName": "Ranvier.Dom.CSSScopeRule",
+          "kind": "interface",
+          "accessibility": "public",
+          "members": [
+            {
+              "name": "end",
+              "kind": "property",
+              "signature": "end() -> string",
+              "accessibility": "public"
+            },
+            {
+              "name": "start",
+              "kind": "property",
+              "signature": "start() -> string",
+              "accessibility": "public"
+            }
+          ]
+        }
+      ],
+      "truncated": false,
+      "nextCursor": null,
+      "totalEstimate": {
+        "entities": 1
+      },
+      "pageOffset": 0,
+      "pageSize": 20
+    },
+    {
+      "status": "ok",
+      "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "includeInternal": false,
+      "namespaceFilter": "Ranvier.Dom.CSSNestedDeclarations",
+      "entityCount": 1,
+      "memberCount": 1,
+      "entities": [
+        {
+          "fullName": "Ranvier.Dom.CSSNestedDeclarations",
+          "kind": "interface",
+          "accessibility": "public",
+          "members": [
+            {
+              "name": "style",
+              "kind": "property",
+              "signature": "style() -> Ranvier.Dom.CSSStyleProperties",
+              "accessibility": "public"
+            }
+          ]
+        }
+      ],
+      "truncated": false,
+      "nextCursor": null,
+      "totalEstimate": {
+        "entities": 1
+      },
+      "pageOffset": 0,
+      "pageSize": 20
+    },
+    {
+      "status": "ok",
+      "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "includeInternal": false,
+      "namespaceFilter": "Ranvier.Dom.CSSImportRule",
+      "entityCount": 1,
+      "memberCount": 5,
+      "entities": [
+        {
+          "fullName": "Ranvier.Dom.CSSImportRule",
+          "kind": "interface",
+          "accessibility": "public",
+          "members": [
+            {
+              "name": "href",
+              "kind": "property",
+              "signature": "href() -> string",
+              "accessibility": "public"
+            },
+            {
+              "name": "layerName",
+              "kind": "property",
+              "signature": "layerName() -> string",
+              "accessibility": "public"
+            },
+            {
+              "name": "media",
+              "kind": "property",
+              "signature": "media() -> Ranvier.Dom.MediaList",
+              "accessibility": "public"
+            },
+            {
+              "name": "styleSheet",
+              "kind": "property",
+              "signature": "styleSheet() -> Ranvier.Dom.CSSStyleSheet",
+              "accessibility": "public"
+            },
+            {
+              "name": "supportsText",
+              "kind": "property",
+              "signature": "supportsText() -> string",
+              "accessibility": "public"
+            }
+          ]
+        }
+      ],
+      "truncated": false,
+      "nextCursor": null,
+      "totalEstimate": {
+        "entities": 1
+      },
+      "pageOffset": 0,
+      "pageSize": 20
+    },
+    {
+      "status": "ok",
+      "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "includeInternal": false,
+      "namespaceFilter": "Ranvier.Dom.CSSNamespaceRule",
+      "entityCount": 1,
+      "memberCount": 2,
+      "entities": [
+        {
+          "fullName": "Ranvier.Dom.CSSNamespaceRule",
+          "kind": "interface",
+          "accessibility": "public",
+          "members": [
+            {
+              "name": "namespaceURI",
+              "kind": "property",
+              "signature": "namespaceURI() -> string",
+              "accessibility": "public"
+            },
+            {
+              "name": "prefix",
+              "kind": "property",
+              "signature": "prefix() -> string",
+              "accessibility": "public"
+            }
+          ]
+        }
+      ],
+      "truncated": false,
+      "nextCursor": null,
+      "totalEstimate": {
+        "entities": 1
+      },
+      "pageOffset": 0,
+      "pageSize": 20
+    }
+  ]
+}

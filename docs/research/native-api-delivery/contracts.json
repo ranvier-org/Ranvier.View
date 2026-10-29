@@ -19646,10 +19646,83 @@
       "description": "CSSLayerBlockRule/StatementRule, CSSScopeRule, CSSNestedDeclarations, CSSImportRule and CSSNamespaceRule expose layers, scopes, nesting and imports.",
       "acceptance": "Read and edit representative layers/scopes/nested/import/namespace structures and verify cascade results; unavailable optional rules produce explicit capability outcomes.",
       "consumes": "C08.",
-      "state": "native_windows_slice_verified",
-      "memberContracts": [],
-      "publicApiSnapshot": null,
-      "memberContractStatus": "pending exact source signatures and clean FCS API snapshot",
+      "state": "shared_native_browser_verified_windows",
+      "memberContracts": [
+        {
+          "interface": "CSSImportRule",
+          "member": "href",
+          "kind": "property",
+          "signature": "href() -> string"
+        },
+        {
+          "interface": "CSSImportRule",
+          "member": "layerName",
+          "kind": "property",
+          "signature": "layerName() -> string"
+        },
+        {
+          "interface": "CSSImportRule",
+          "member": "media",
+          "kind": "property",
+          "signature": "media() -> Ranvier.Dom.MediaList"
+        },
+        {
+          "interface": "CSSImportRule",
+          "member": "styleSheet",
+          "kind": "property",
+          "signature": "styleSheet() -> Ranvier.Dom.CSSStyleSheet"
+        },
+        {
+          "interface": "CSSImportRule",
+          "member": "supportsText",
+          "kind": "property",
+          "signature": "supportsText() -> string"
+        },
+        {
+          "interface": "CSSLayerBlockRule",
+          "member": "name",
+          "kind": "property",
+          "signature": "name() -> string"
+        },
+        {
+          "interface": "CSSLayerStatementRule",
+          "member": "nameList",
+          "kind": "property",
+          "signature": "nameList() -> array<string>"
+        },
+        {
+          "interface": "CSSNamespaceRule",
+          "member": "namespaceURI",
+          "kind": "property",
+          "signature": "namespaceURI() -> string"
+        },
+        {
+          "interface": "CSSNamespaceRule",
+          "member": "prefix",
+          "kind": "property",
+          "signature": "prefix() -> string"
+        },
+        {
+          "interface": "CSSNestedDeclarations",
+          "member": "style",
+          "kind": "property",
+          "signature": "style() -> Ranvier.Dom.CSSStyleProperties"
+        },
+        {
+          "interface": "CSSScopeRule",
+          "member": "end",
+          "kind": "property",
+          "signature": "end() -> string"
+        },
+        {
+          "interface": "CSSScopeRule",
+          "member": "start",
+          "kind": "property",
+          "signature": "start() -> string"
+        }
+      ],
+      "publicApiSnapshot": "cascade-rules-public-api.json",
+      "memberContractStatus": "six complete active interfaces captured through fresh clean FCS; twelve declared readonly properties with inherited editing and IDL qualifications recorded separately",
       "plannedCssomExpansion": {
         "state": "source_contract_fixed_before_implementation",
         "pinnedWebCore": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
@@ -20204,6 +20277,93 @@
         "sharedManagedConformance": "pending",
         "platformMatrix": "pending",
         "release": "pending"
+      },
+      "publicApiSnapshotSha256": "e94f00a5c6938bbfff742cd9a556d4813a4b10da889623c4c4a12a3d5aea1404",
+      "sourceProfile": {
+        "inheritance": {
+          "CSSLayerBlockRule": "CSSGroupingRule",
+          "CSSLayerStatementRule": "CSSRule",
+          "CSSScopeRule": "CSSGroupingRule",
+          "CSSNestedDeclarations": "CSSRule",
+          "CSSImportRule": "CSSRule",
+          "CSSNamespaceRule": "CSSRule"
+        },
+        "allDeclaredPropertiesReadOnly": true,
+        "nullableReturns": [
+          "CSSScopeRule.start",
+          "CSSScopeRule.end",
+          "CSSImportRule.styleSheet",
+          "CSSImportRule.layerName",
+          "CSSImportRule.supportsText"
+        ],
+        "frozenArrays": [
+          "CSSLayerStatementRule.nameList"
+        ],
+        "sameObject": [
+          "CSSNestedDeclarations.style",
+          "CSSImportRule.media",
+          "CSSImportRule.styleSheet"
+        ],
+        "putForwards": {
+          "CSSNestedDeclarations.style": "cssText",
+          "CSSImportRule.media": "mediaText"
+        },
+        "upstreamCommentedNotSelected": []
+      },
+      "runtimeQualifications": {
+        "windowsJitAssertions": 91,
+        "windowsNativeAotAssertions": 91,
+        "chromiumAssertions": 93,
+        "scopeRules": true,
+        "nestedDeclarations": true,
+        "dataImportedSheetContents": {
+          "nativeWebCore": {
+            "readable": false,
+            "errorName": "SecurityError"
+          },
+          "chromium": {
+            "readable": true,
+            "declarationEditChangesComputedWidth": true
+          }
+        },
+        "importReplacement": "Media edits and whole stylesheet text replacement verify actual import cascade. Live insertRule placement around leading layer statements differs between the tested engine versions; no wrapper fallback or invented setter is added.",
+        "acceptance": "Local official-dependency runtime coverage; Views remains local source. Traced/platform and released paired Views package acceptance remain open."
+      },
+      "verification": {
+        "fixture": "tests/NativeApi.Conformance/CascadeRules.fs",
+        "windowsJitAssertions": 91,
+        "windowsNativeAotAssertions": 91,
+        "chromiumAssertions": 93,
+        "domPackages": "official Corealpha12 normal",
+        "cssPackages": "official adapteralpha1",
+        "nativeRuntime": "official WebCore/native preview11; no source/private runtime overrides",
+        "nativeSource": "58a9980bf69196752a070fc832095249d26fca2b",
+        "backend": "local Views source; published paired backend remains pending",
+        "scopeRules": true,
+        "nestedDeclarations": true,
+        "dataImportedContents": {
+          "windows": "exact SecurityError",
+          "chromium": "inspection and declaration edit pass"
+        },
+        "effects": "actual normal/important layer priority, scoped bounds, post-nesting declaration mutation/removal, namespace matching and import media/deletion/URL replacement",
+        "importReplacement": "whole stylesheet text replacement; live insertion around leading layer statements has documented different hierarchy restrictions in these engine profiles",
+        "review": "independent root review; strengthened nested-width removal result and initial import readiness; all three runtimes reverified by implementer",
+        "freshFcs": "Core and native clean, zero diagnostics",
+        "xmlAudit": "zero findings",
+        "format": "pass",
+        "teardown": "node/sheet counts restored; shared runner retains zero objects; existing lifetime/context checks and Tab traversal pass",
+        "combinedWindowsJitAssertions": 1086,
+        "combinedChromiumAssertions": 1099,
+        "combinedNativeAot": "pending integrated final binary; separate C08 and C10 full runners passed",
+        "remaining": [
+          "applicable traced/platform/shared gates",
+          "released paired Views backend consumption"
+        ]
+      },
+      "files": {
+        "views": [
+          "tests/NativeApi.Conformance/CascadeRules.fs"
+        ]
       }
     },
     {
