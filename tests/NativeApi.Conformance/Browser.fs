@@ -136,6 +136,9 @@ let run () =
                 disposalError
                 "Exception:StyleSheetService"
 
+        let! sheetElements, failedLinkSheet =
+            SheetElements.run document computed (fun () -> Async.Sleep 10) errorName
+
         let! conditionalRules =
             ConditionalRules.run
                 document
@@ -178,6 +181,8 @@ let run () =
                 semanticOperations = semanticOperations
                 attachmentIdentifier = attachmentIdentifier
                 construction = construction
+                sheetElements = sheetElements
+                failedLinkSheet = failedLinkSheet
             |}
     }
     |> Async.StartAsPromise
