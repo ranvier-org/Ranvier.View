@@ -1,5 +1,18 @@
 # Native API delivery acceptance evidence
 
+## C18/C22 shared rule verification
+
+- New shared FontTransitionRules.fs passes51 C18 font-rule assertions in Windows JIT/NativeAOT and49 in Chromium; C22 starting-style/view-transition inspection passes23 on each. Font-face parsing/aliases/edit/removal, feature-family mutation, all palette getters/replacement/retention, starting-style child edits and readonly transition navigation/types/defaults/replacement are exercised. Native teardown leaves zero retained objects.
+- Native font-width aliases are present; the tested Chromium lacks them. The fixture explicitly reports that capability and exercises the supported surface. Feature-map attributes are commented upstream FIXME in the pinned IDL and are not advertised as generated members. Palette named/RGB serialization and unicode-range hex case differ; production results remain unmodified. Declared transition navigation is empty when omitted, and rule inspection does not execute conditional A11 transitions.
+- Independent review found a P2 assertion weakness that could accept lost feature values/blocks. Pure REPL RED reproduced that false acceptance; the corrected complete nested-body comparison passes real JIT/AOT/Chromium execution. Fresh FCS check is clean, XML audit has0 findings and formatting passes. The combined batch now passes770 native/781 browser assertions, plus Tab,25 native lifetime/context and4 browser context checks. Existing AOT warnings remain.
+- This adds verification of existing implementations, with no production source change; the already-passing G06 backend782/12 and View/library/examples analyzer gates were not repeated for additional fixture coverage. Applicable traced/platform gates and official paired backend acceptance remain pending. C18/C22 remain incomplete.
+
+## Native publication and delivery CI follow-up
+
+- Native preview.10 run40886912646 passed all five targets, managed packaging and publication. All seven official packages download. Every payload hash/source/ABI21 matches: win-x64 24 files/79,028,433 bytes; win-arm64 24/76,190,929; linux-x64 1/79,842,033; linux-arm64 1/80,312,553; osx-arm64 4/87,897,424. Official Windows raw CSSqueries72/computed93/CSSOM407 pass.
+- Native PR16 mergedab03a2fc20c07a4f03127f791e60dbf66912a5ab after40889860311 passed all five native targets and managed packaging. The preview.11 tag uses tested58a9980bf69196752a070fc832095249d26fca2b; trusted release40905413545 remains live. The duplicate main run40905330194 was cancelled only after zero changed files were verified against the tested tag source. No preview.11 publication claim.
+- Views PR7 now carries held C01-C04 commit193fc26 against official dependencies. Its initial CI40905920869 found formatting in Reflection.fs and source counter lanes cloning newer Core alpha.12 against alpha.11 wrappers. Agent repair8fdf9fd formats the fixture and pins the alpha.11 Core revision939df32b in those lanes; full formatting/static YAML checks pass. Rerun40907189877 remains live. On the G06/font branch, equivalent repair089d7a2 instead pins matching alpha.12 Coreb248f0d2. No green CI claim for either incomplete delivery gate.
+
 ## GitHub tracking and official C04 dependency follow-up, 2026-10-29
 
 - GitHub Project: https://github.com/orgs/ranvier-org/projects/1 tracks the 98 required and 5 conditional groups. The 53 query groups remain deferred to the next goal. Project completion requires full group acceptance; merging a dependency PR does not close a group.

@@ -54,6 +54,10 @@ try {
   if (checks.typedStyles !== 39) throw new Error('Typed CSS declaration assertions did not run');
   if (checks.fragmentRectangles < 60) throw new Error('Fragment rectangle assertions did not run');
   console.log(`BROWSER_API G06 PASS assertions=${checks.fragmentRectangles} engine=chromium`);
+  if (checks.fontRules < 35 || checks.transitionRules < 21) throw new Error('Font/transition rule assertions did not run');
+  console.log(`BROWSER_API C18 PASS assertions=${checks.fontRules} engine=chromium`);
+  console.log(`BROWSER_API C18 CAPABILITY fontWidthAlias=${checks.fontWidthAlias} engine=chromium`);
+  console.log(`BROWSER_API C22 PASS assertions=${checks.transitionRules} engine=chromium`);
   console.log(`BROWSER_API C04 PASS assertions=${checks.typedStyles} engine=chromium`);
   if (checks.computedContextChecks !== 2) throw new Error('Computed-style context checks did not run');
   console.log(`BROWSER_API C01_C02 CONTEXT PASS assertions=${checks.computedContextChecks} engine=chromium`);

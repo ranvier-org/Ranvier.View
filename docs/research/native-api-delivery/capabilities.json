@@ -755,6 +755,19 @@
           "lifetimeAssertions": 8,
           "contractPackages": "official alpha.12",
           "nativeRuntime": "private G06; preview.11 pending"
+        },
+        "C18": {
+          "state": "slice_verified",
+          "jitAssertions": 51,
+          "nativeAotAssertions": 51,
+          "fontWidthAlias": "available",
+          "nativeRuntime": "private G06"
+        },
+        "C22": {
+          "state": "slice_verified",
+          "jitAssertions": 23,
+          "nativeAotAssertions": 23,
+          "nativeRuntime": "private G06"
         }
       },
       "runtimeProbe": "Selected D09/D10/D11/CSSOM/C07 local runtime fixtures passed; remaining groups not run",
@@ -927,6 +940,19 @@
         "assertions": 74,
         "contractPackages": "official alpha.12",
         "remaining": "fixed-font comparison not claimed; other target acceptance pending"
+      },
+      "C18": {
+        "state": "slice_verified",
+        "engine": "chromium",
+        "assertions": 49,
+        "fontWidthAlias": "unavailable",
+        "fontFeatureMaps": "not in selected pinned interface"
+      },
+      "C22": {
+        "state": "slice_verified",
+        "engine": "chromium",
+        "assertions": 23,
+        "execution": "not exercised; separate A11"
       }
     }
   },

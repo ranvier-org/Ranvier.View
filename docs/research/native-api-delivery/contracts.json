@@ -20641,7 +20641,7 @@
       "description": "CSSFontFaceRule/Descriptors, font-feature-values and font-palette-values rules inspect and edit font configuration.",
       "acceptance": "Inspect parsed @font-face descriptors and feature/palette rules where supported; loaded font/render checks are separate from faithful descriptor inspection.",
       "consumes": "C08; T01/T02 for load-state checks.",
-      "state": "native_windows_slice_verified",
+      "state": "shared_native_browser_verified_windows",
       "memberContracts": [],
       "publicApiSnapshot": null,
       "memberContractStatus": "pending exact source signatures and clean FCS API snapshot",
@@ -23622,6 +23622,36 @@
         "sharedManagedConformance": "pending",
         "platformMatrix": "pending",
         "release": "pending"
+      },
+      "verification": {
+        "fixture": "tests/NativeApi.Conformance/FontTransitionRules.fs",
+        "windowsJitAssertions": 51,
+        "windowsNativeAotAssertions": 51,
+        "chromiumAssertions": 49,
+        "domPackages": "official alpha.12",
+        "nativeRuntime": "private G06 engine; native preview.11 publication pending",
+        "teardown": "shared runner reports zero retained native objects",
+        "xmlAudit": "zero findings",
+        "review": "one P2 weak feature-preservation assertion fixed; full nested body compared after REPL RED/GREEN",
+        "remaining": [
+          "applicable traced/platform/shared gates",
+          "official paired native/backend package consumption"
+        ]
+      },
+      "files": {
+        "views": [
+          "tests/NativeApi.Conformance/FontTransitionRules.fs"
+        ]
+      },
+      "sourceProfile": {
+        "fontFeatureValues": "fontFamily and serialized nested rule definitions; feature map APIs are upstream commented FIXME, not generated members",
+        "fontPaletteValues": "readonly name/family/base/colors; edit through stylesheet replacement",
+        "fontWidthAlias": {
+          "native": "available and tested",
+          "chromium": "unavailable; explicitly reported by fixture"
+        },
+        "serialization": "hex letter case and named/RGB palette serialization differ; production strings remain unmodified",
+        "fontRendering": "font loading/rendering is separate T01/T02 scope"
       }
     },
     {
@@ -32308,7 +32338,7 @@
       "description": "CSSStartingStyleRule/CSSViewTransitionRule inspect entry-transition styles and transition types/navigation policy.",
       "acceptance": "Inspect supported @starting-style/view-transition rule structures; rule inspection passes independently of conditional A11 transition execution.",
       "consumes": "C08; A11 is conditional, not required for rule inspection.",
-      "state": "native_windows_slice_verified",
+      "state": "shared_native_browser_verified_windows",
       "memberContracts": [],
       "publicApiSnapshot": null,
       "memberContractStatus": "pending exact source signatures and clean FCS API snapshot",
@@ -32442,6 +32472,31 @@
         "sharedManagedConformance": "pending",
         "platformMatrix": "pending",
         "release": "pending"
+      },
+      "verification": {
+        "fixture": "tests/NativeApi.Conformance/FontTransitionRules.fs",
+        "windowsJitAssertions": 23,
+        "windowsNativeAotAssertions": 23,
+        "chromiumAssertions": 23,
+        "domPackages": "official alpha.12",
+        "nativeRuntime": "private G06 engine; native preview.11 publication pending",
+        "teardown": "shared runner reports zero retained native objects",
+        "xmlAudit": "zero findings",
+        "review": "one P2 weak feature-preservation assertion fixed; full nested body compared after REPL RED/GREEN",
+        "remaining": [
+          "applicable traced/platform/shared gates",
+          "official paired native/backend package consumption"
+        ]
+      },
+      "files": {
+        "views": [
+          "tests/NativeApi.Conformance/FontTransitionRules.fs"
+        ]
+      },
+      "sourceProfile": {
+        "navigation": "declared metadata; omitted descriptor returns empty string on both tested engines",
+        "types": "ordered string array, including empty case; readonly rule metadata",
+        "execution": "rule inspection is independent of conditional A11 transition execution"
       }
     },
     {

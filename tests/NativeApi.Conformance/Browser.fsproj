@@ -16,6 +16,7 @@
     <Compile Include="ComputedStyles.fs" />
     <Compile Include="TypedStyles.fs" />
     <Compile Include="FragmentRectangles.fs" />
+    <Compile Include="FontTransitionRules.fs" />
     <Compile Include="SheetConstruction.fs" />
     <Compile Include="Browser.fs" />
     <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" Condition="'$(NativeApiContractRoot)' == ''" />

@@ -45,6 +45,8 @@ let run () =
 
         let mutable computedContextChecks = 0
         let fragmentRectangles = FragmentRectangles.run document
+        let fontRules, fontWidthAlias = FontTransitionRules.fonts document
+        let transitionRules = FontTransitionRules.transitions document
 
         let typedStyles =
             TypedStyles.run document (Ranvier.Dom.ComputedStyles.forDocument document) errorName
@@ -108,6 +110,9 @@ let run () =
                 computedStyles = computedStyles
                 typedStyles = typedStyles
                 fragmentRectangles = fragmentRectangles
+                fontRules = fontRules
+                fontWidthAlias = fontWidthAlias
+                transitionRules = transitionRules
                 computedContextChecks = computedContextChecks
                 queryContextChecks = queryContextChecks
                 cssOracle = cssOracle

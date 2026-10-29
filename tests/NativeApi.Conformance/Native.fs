@@ -54,6 +54,11 @@ let main _ =
         System.Console.WriteLine $"NATIVE_API C04 PASS assertions={typedStyles}"
         let fragmentRectangles = FragmentRectangles.run host.Document
         System.Console.WriteLine $"NATIVE_API G06 PASS assertions={fragmentRectangles}"
+        let fontRules, fontWidthAlias = FontTransitionRules.fonts host.Document
+        System.Console.WriteLine $"NATIVE_API C18 PASS assertions={fontRules}"
+        System.Console.WriteLine $"NATIVE_API C18 CAPABILITY fontWidthAlias={fontWidthAlias}"
+        let transitionRules = FontTransitionRules.transitions host.Document
+        System.Console.WriteLine $"NATIVE_API C22 PASS assertions={transitionRules}"
         let lifetimeRectangles = host.Document.body.getClientRects ()
         let lifetimeRectangle = lifetimeRectangles.item 0u
 
