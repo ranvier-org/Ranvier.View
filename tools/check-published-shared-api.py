@@ -19,6 +19,11 @@ def configure_console():
         stream.reconfigure(encoding='utf-8')
 
 
+def expected_shared(profile, target):
+    counts = profile['shared_assertions']
+    return counts[target] if isinstance(counts, dict) else counts
+
+
 def validate_profile(profile):
     if not re.fullmatch('[0-9a-f]{40}', profile.get('source_commit', '')):
         raise ValueError('Fixture source_commit must be an immutable full commit.')
@@ -26,10 +31,27 @@ def validate_profile(profile):
                 'css_dom_version', 'css_bindings_version', 'fsharp_core_version', 'fable_core_version']:
         if not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(?:-[a-zA-Z0-9.]+)?', profile.get(key, '')):
             raise ValueError(f'Invalid exact package version: {key}')
-    for key in ['native_abi', 'shared_assertions', 'native_lifetime_assertions',
+    for key in ['native_abi', 'native_lifetime_assertions',
                 'browser_context_assertions', 'css_escape_oracle']:
         if type(profile.get(key)) is not int or profile[key] <= 0:
             raise ValueError(f'Expected positive integer: {key}')
+    counts = profile.get('shared_assertions')
+    if isinstance(counts, dict) and set(counts) != {'native', 'browser'}:
+        raise ValueError('Shared assertion totals must name both targets.')
+    for target in ['native', 'browser']:
+        count = expected_shared(profile, target)
+        if type(count) is not int or count <= 0:
+            raise ValueError('Shared assertion totals must be positive integers.')
+    modules = profile.get('module_assertions')
+    if modules is not None:
+        if not isinstance(modules, dict) or set(modules) != {'native', 'browser'}:
+            raise ValueError('Module assertions must name both targets.')
+        for target, expected in modules.items():
+            if (not isinstance(expected, dict) or not expected
+                    or any(not re.fullmatch('[A-Z0-9_]+', name) or type(value) is not int or value <= 0
+                           for name, value in expected.items())
+                    or sum(expected.values()) != expected_shared(profile, target)):
+                raise ValueError('Module assertion counts must match the target total.')
 
 
 def compile_names(project):
@@ -74,8 +96,13 @@ def verify_assertions(output, target, variant, profile):
     kind = 'NATIVE' if target == 'native' else 'BROWSER'
     counts = re.findall(kind + r'_API (.+?) PASS assertions=(\d+)', output)
     total = sum(int(value) for name, value in counts if 'LIFETIME' not in name and 'CONTEXT' not in name)
-    if total != profile['shared_assertions'] or ('D11_VIEW_HYPERLINKS', '50') not in counts:
+    if total != expected_shared(profile, target) or ('D11_VIEW_HYPERLINKS', '50') not in counts:
         raise ValueError(f'Incomplete shared assertions: {target}/{variant}: {total}')
+    if 'module_assertions' in profile:
+        modules = [(name, int(value)) for name, value in counts if 'LIFETIME' not in name and 'CONTEXT' not in name]
+        expected = profile['module_assertions'][target]
+        if len(modules) != len(expected) or dict(modules) != expected:
+            raise ValueError(f'Incomplete or duplicate module assertions: {target}/{variant}')
     if kind + '_API D09 TAB PASS' not in output:
         raise ValueError('Tab traversal did not run.')
     if target == 'native':
@@ -221,7 +248,7 @@ def main():
             result = run('browser', 'node', output / 'browser.mjs')
             verify_assertions(result, args.target, args.variant, profile)
         evidence['passed'] = True
-        print(f'OFFICIAL_SHARED_API PASS {args.variant} {args.target} assertions={profile["shared_assertions"]}', flush=True)
+        print(f'OFFICIAL_SHARED_API PASS {args.variant} {args.target} assertions={expected_shared(profile, args.target)}', flush=True)
     finally:
         (output / 'evidence.json').write_text(json.dumps(evidence, indent=2), encoding='utf-8')
 
