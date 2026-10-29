@@ -74,6 +74,15 @@ try {
   console.log(`BROWSER_API C18 PASS assertions=${checks.fontRules} engine=chromium`);
   console.log(`BROWSER_API C18 CAPABILITY fontWidthAlias=${checks.fontWidthAlias} engine=chromium`);
   console.log(`BROWSER_API C22 PASS assertions=${checks.transitionRules} engine=chromium`);
+  if (checks.positionTry !== 44 || !checks.positionTryAvailable) throw new Error(`Position fallback proof incomplete: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API C21 PASS assertions=${checks.positionTry} engine=chromium`);
+  console.log(`BROWSER_API C21 CAPABILITY positionTry=${checks.positionTryAvailable} engine=chromium`);
+  if (checks.counterStyles !== 64) throw new Error(`Counter style proof incomplete: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API C19 PASS assertions=${checks.counterStyles} engine=chromium`);
+  console.log(`BROWSER_API C19 CAPABILITY speakAs=${checks.counterSpeakAs} engine=chromium`);
+  if (checks.keyframeRules !== 82 || !checks.keyframeLength || checks.invalidKeyTextError !== 'SyntaxError') throw new Error(`Keyframe rule proof incomplete: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API C11 PASS assertions=${checks.keyframeRules} engine=chromium`);
+  console.log(`BROWSER_API C11 CAPABILITY length=${checks.keyframeLength} invalidKeyTextError=${checks.invalidKeyTextError} engine=chromium`);
   if (checks.conditionalRules !== 44) throw new Error('Conditional rule assertions did not run');
   console.log(`BROWSER_API C09 PASS assertions=${checks.conditionalRules} engine=chromium`);
   if (checks.cascadeRules !== 93) throw new Error('Cascade rule assertions did not run for the pinned Chromium profile');

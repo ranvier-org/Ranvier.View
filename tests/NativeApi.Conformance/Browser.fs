@@ -128,6 +128,19 @@ let run () =
         let fontRules, fontWidthAlias = FontTransitionRules.fonts document
         let transitionRules = FontTransitionRules.transitions document
 
+        let positionTry, positionTryAvailable =
+            PositionTry.run document (fun () -> document.body.getBoundingClientRect () |> ignore)
+
+        let counterStyles, counterSpeakAs =
+            CounterStyleRules.run document (fun () -> document.body.getBoundingClientRect () |> ignore)
+
+        let keyframeRules, keyframeLength, invalidKeyTextError =
+            KeyframeRules.run
+                document
+                (Ranvier.Dom.ComputedStyles.forDocument document)
+                (fun () -> document.body.getBoundingClientRect () |> ignore)
+                errorName
+
         let typedStyles =
             TypedStyles.run document (Ranvier.Dom.ComputedStyles.forDocument document) errorName
 
@@ -235,6 +248,13 @@ let run () =
                 fontRules = fontRules
                 fontWidthAlias = fontWidthAlias
                 transitionRules = transitionRules
+                positionTry = positionTry
+                positionTryAvailable = positionTryAvailable
+                counterStyles = counterStyles
+                counterSpeakAs = counterSpeakAs
+                keyframeRules = keyframeRules
+                keyframeLength = keyframeLength
+                invalidKeyTextError = invalidKeyTextError
                 conditionalRules = conditionalRules
                 computedContextChecks = computedContextChecks
                 queryContextChecks = queryContextChecks

@@ -90,6 +90,39 @@ let private runAll () =
         System.Console.WriteLine $"NATIVE_API C18 CAPABILITY fontWidthAlias={fontWidthAlias}"
         let transitionRules = FontTransitionRules.transitions host.Document
         System.Console.WriteLine $"NATIVE_API C22 PASS assertions={transitionRules}"
+
+        let positionTry, positionTryAvailable =
+            PositionTry.run host.Document (fun () -> host.Frame ())
+
+        if positionTry <> 44 || not positionTryAvailable then
+            failwith $"Position fallback proof incomplete: assertions={positionTry}, available={positionTryAvailable}"
+
+        System.Console.WriteLine $"NATIVE_API C21 PASS assertions={positionTry}"
+        System.Console.WriteLine $"NATIVE_API C21 CAPABILITY positionTry={positionTryAvailable}"
+
+        let counterStyles, counterSpeakAs =
+            CounterStyleRules.run host.Document (fun () -> host.Frame ())
+
+        if counterStyles <> 64 then
+            failwith $"Counter style proof incomplete: assertions={counterStyles}"
+
+        System.Console.WriteLine $"NATIVE_API C19 PASS assertions={counterStyles}"
+        System.Console.WriteLine $"NATIVE_API C19 CAPABILITY speakAs={counterSpeakAs}"
+
+        let keyframeRules, keyframeLength, invalidKeyTextError =
+            KeyframeRules.run host.Document computedService (fun () -> host.Frame ()) (function
+                | WebCoreDomException (name, _) -> name
+                | error -> error.GetType().Name)
+
+        if
+            keyframeRules <> 82
+            || not keyframeLength
+            || invalidKeyTextError <> ""
+        then
+            failwith $"Keyframe rule proof incomplete: assertions={keyframeRules}, length={keyframeLength}, error={invalidKeyTextError}"
+
+        System.Console.WriteLine $"NATIVE_API C11 PASS assertions={keyframeRules}"
+        System.Console.WriteLine $"NATIVE_API C11 CAPABILITY length={keyframeLength} invalidKeyTextError={invalidKeyTextError}"
         let lifetimeRectangles = host.Document.body.getClientRects ()
         let lifetimeRectangle = lifetimeRectangles.item 0u
 
