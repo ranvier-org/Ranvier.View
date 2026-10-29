@@ -31,10 +31,11 @@ try {
   const page = await browser.newPage();
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
   const checks = await page.evaluate(async () => (await import('/Browser.js')).run());
-  if (checks.tables !== 30 || checks.reflection < 200 || checks.namespaces < 24) throw new Error(`Insufficient API assertions: ${JSON.stringify(checks)}`);
+  if (checks.tables !== 30 || checks.reflection < 200 || checks.namespaces < 24 || checks.cssom < 58) throw new Error(`Insufficient API assertions: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API D10 PASS assertions=${checks.tables} engine=chromium`);
   console.log(`BROWSER_API D11 PASS assertions=${checks.reflection} engine=chromium`);
   console.log(`BROWSER_API D09 PASS assertions=${checks.namespaces} engine=chromium`);
+  console.log(`BROWSER_API CSSOM PASS assertions=${checks.cssom} engine=chromium`);
   await page.locator('#native-api-svg').focus();
   await page.keyboard.press('Tab');
   if (!await page.locator('#native-api-math').evaluate(element => element === element.ownerDocument.activeElement)) {

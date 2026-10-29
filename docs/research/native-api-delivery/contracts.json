@@ -32856,5 +32856,38 @@
     "pr": "https://github.com/ranvier-org/Ranvier/pull/255",
     "state": "local_packages_verified_ci_pending",
     "publicApiSnapshot": "cssom-public-api.json"
+  },
+  "cssomRuntimeTypes": {
+    "state": "contract_fixed_before_implementation",
+    "purpose": "Internal concrete wrapper dispatch for CSSRule, StyleSheet and CSSStyleDeclaration; the browser already provides actual interface identity.",
+    "queries": [
+      {
+        "root": "CSSRule",
+        "function": "rv_dom_css_rule_get_interface_name",
+        "signature": "int32 (CSSRule* target, char* buffer, int32 capacity, int32* length)",
+        "result": "UTF-8 name of the most-derived scoped native interface, or the root interface; borrowed object, no new reference"
+      },
+      {
+        "root": "StyleSheet",
+        "function": "rv_dom_style_sheet_get_interface_name",
+        "signature": "int32 (StyleSheet* target, char* buffer, int32 capacity, int32* length)",
+        "result": "UTF-8 name of the most-derived scoped native interface, or the root interface; borrowed object, no new reference"
+      },
+      {
+        "root": "CSSStyleDeclaration",
+        "function": "rv_dom_css_style_declaration_get_interface_name",
+        "signature": "int32 (CSSStyleDeclaration* target, char* buffer, int32 capacity, int32* length)",
+        "result": "UTF-8 name of the most-derived scoped native interface, or the root interface; borrowed object, no new reference"
+      }
+    ],
+    "errors": "Null target/length returns null-argument; non-owner thread returns wrong-thread; no object mutation or page JavaScript.",
+    "constraints": [
+      "Do not use CSSRule.typeForCSSOM to distinguish modern rules: it returns zero by specification.",
+      "Classify deepest derived interfaces first using checked WebCore casts; preserve compile-time gates.",
+      "Helpers are model runtimeTypeQueries, not invented shared DOM interface members.",
+      "Zero-own-member interfaces still need concrete wrapper implementations.",
+      "Intern wrappers by root kind and object identity; release duplicate native references and all owned handles at teardown."
+    ],
+    "acceptance": "Same shared style/rule fixture casts every selected concrete rule and descriptor type on browser/native; repeated parent/sheet/list/declaration reads preserve identity; teardown and wrong-thread/null cases pass."
   }
 }

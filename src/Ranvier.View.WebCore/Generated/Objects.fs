@@ -48,12 +48,12 @@ and internal CSSRuleObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.CSSRule =
                 let mutable result = 0n
                 Interop.check "CSSRule.parentRule" (NativeDom.rv_dom_css_rule_get_parent_rule (this.Handle, &result))
-                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSRule> else (this.Session.Track (CSSRuleObject (this.Session, result)) :> Ranvier.Dom.CSSRule))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSRule> else (unbox<Ranvier.Dom.CSSRule> (this.Session.Object(result, Kind.CSSRule, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSRule(session, handle))))))
         member this.parentStyleSheet
             with get () : Ranvier.Dom.CSSStyleSheet =
                 let mutable result = 0n
                 Interop.check "CSSRule.parentStyleSheet" (NativeDom.rv_dom_css_rule_get_parent_style_sheet (this.Handle, &result))
-                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleSheet> else (this.Session.Track (CSSStyleSheetObject (this.Session, result)) :> Ranvier.Dom.CSSStyleSheet))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleSheet> else (unbox<Ranvier.Dom.CSSStyleSheet> (this.Session.Object(result, Kind.StyleSheet, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.StyleSheet(session, handle))))))
         member this.``type``
             with get () : uint16 =
                 let mutable result = 0us
@@ -71,7 +71,7 @@ and internal CSSRuleListObject(session: Session, handle: nativeint) =
         member this.item(index: uint32) : Ranvier.Dom.CSSRule =
             let mutable result = 0n
             Interop.check "CSSRuleList.item" (NativeDom.rv_dom_css_rule_list_item (this.Handle, uint32 index, &result))
-            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSRule> else (this.Session.Track (CSSRuleObject (this.Session, result)) :> Ranvier.Dom.CSSRule))
+            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSRule> else (unbox<Ranvier.Dom.CSSRule> (this.Session.Object(result, Kind.CSSRule, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSRule(session, handle))))))
 
 and internal CSSStyleDeclarationObject(session: Session, handle: nativeint) =
     inherit NativeObject(session, handle, Kind.Style)
@@ -85,7 +85,7 @@ and internal CSSStyleDeclarationObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.CSSRuleList =
                 let mutable result = 0n
                 Interop.check "CSSStyleDeclaration.cssRules" (NativeDom.rv_dom_css_style_declaration_get_css_rules (this.Handle, &result))
-                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSRuleList> else (this.Session.Track (CSSRuleListObject (this.Session, result)) :> Ranvier.Dom.CSSRuleList))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSRuleList> else (unbox<Ranvier.Dom.CSSRuleList> (this.Session.Object(result, Kind.CSSRuleList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (CSSRuleListObject(session, handle) :> NativeObject))))))
         member this.length
             with get () : uint32 =
                 let mutable result = 0u
@@ -95,7 +95,7 @@ and internal CSSStyleDeclarationObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.CSSRule =
                 let mutable result = 0n
                 Interop.check "CSSStyleDeclaration.parentRule" (NativeDom.rv_dom_css_style_declaration_get_parent_rule (this.Handle, &result))
-                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSRule> else (this.Session.Track (CSSRuleObject (this.Session, result)) :> Ranvier.Dom.CSSRule))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSRule> else (unbox<Ranvier.Dom.CSSRule> (this.Session.Object(result, Kind.CSSRule, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSRule(session, handle))))))
         member this.item(index: uint32) : string =
             Interop.nonNull (Interop.text "CSSStyleDeclaration.item" (fun buffer capacity length -> NativeDom.rv_dom_css_style_declaration_item (this.Handle, uint32 index, buffer, capacity, length)))
         member this.getPropertyValue(property: string) : string =
@@ -225,7 +225,7 @@ and internal DOMSelectionObject(session: Session, handle: nativeint) =
         member this.getRangeAt(index: uint32) : Ranvier.Dom.Range =
             let mutable result = 0n
             Interop.check "DOMSelection.getRangeAt" (NativeDom.rv_dom_dom_selection_get_range_at (this.Handle, uint32 index, &result))
-            (this.Session.Track (RangeObject (this.Session, result)) :> Ranvier.Dom.Range)
+            (this.Session.Track (RangeObject(this.Session, result)) :> Ranvier.Dom.Range)
         member this.addRange(range: Ranvier.Dom.Range) : unit =
             Interop.check "DOMSelection.addRange" (NativeDom.rv_dom_dom_selection_add_range (this.Handle, Interop.handle (box range)))
         member this.removeRange(range: Ranvier.Dom.Range) : unit =
@@ -237,7 +237,7 @@ and internal DOMSelectionObject(session: Session, handle: nativeint) =
             let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceStaticRange>
             try
                 Interop.check "DOMSelection.getComposedRanges" (NativeDom.rv_dom_dom_selection_get_composed_ranges (this.Handle, null, [| (let values = (shadowRoots) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceShadowRoot> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |], &result))
-                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in NativeDom.rv_dom_abstract_range_retain handle |> ignore; this.Session.Track (StaticRangeObject(this.Session, handle)) :> Ranvier.Dom.StaticRange)))
+                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in NativeDom.rv_dom_abstract_range_retain handle |> ignore; (this.Session.Track (StaticRangeObject(this.Session, handle)) :> Ranvier.Dom.StaticRange))))
             finally
                 NativeDom.rv_dom_sequence_static_range_release(&result)
         member this.getComposedRanges(options: Ranvier.Dom.ShadowRoot, [<System.ParamArray>] shadowRoots: Ranvier.Dom.ShadowRoot array) : Ranvier.Dom.StaticRange array =
@@ -245,7 +245,7 @@ and internal DOMSelectionObject(session: Session, handle: nativeint) =
             let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceStaticRange>
             try
                 Interop.check "DOMSelection.getComposedRanges" (NativeDom.rv_dom_dom_selection_get_composed_ranges (this.Handle, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionShadowRootOrGetComposedRangesOptions> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (options)); result) |], [| (let values = (shadowRoots) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceShadowRoot> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |], &result))
-                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in NativeDom.rv_dom_abstract_range_retain handle |> ignore; this.Session.Track (StaticRangeObject(this.Session, handle)) :> Ranvier.Dom.StaticRange)))
+                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in NativeDom.rv_dom_abstract_range_retain handle |> ignore; (this.Session.Track (StaticRangeObject(this.Session, handle)) :> Ranvier.Dom.StaticRange))))
             finally
                 NativeDom.rv_dom_sequence_static_range_release(&result)
         member this.getComposedRanges(options: Ranvier.Dom.GetComposedRangesOptions, [<System.ParamArray>] shadowRoots: Ranvier.Dom.ShadowRoot array) : Ranvier.Dom.StaticRange array =
@@ -253,7 +253,7 @@ and internal DOMSelectionObject(session: Session, handle: nativeint) =
             let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceStaticRange>
             try
                 Interop.check "DOMSelection.getComposedRanges" (NativeDom.rv_dom_dom_selection_get_composed_ranges (this.Handle, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionShadowRootOrGetComposedRangesOptions> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Pin([| (let mutable result = Unchecked.defaultof<NativeDom.RvDomGetComposedRangesOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomGetComposedRangesOptions>()); result.shadow_roots <- scope.Pin([| (let values = ((options).shadowRoots) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceShadowRoot> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]); result) |]); result) |], [| (let values = (shadowRoots) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceShadowRoot> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |], &result))
-                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in NativeDom.rv_dom_abstract_range_retain handle |> ignore; this.Session.Track (StaticRangeObject(this.Session, handle)) :> Ranvier.Dom.StaticRange)))
+                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in NativeDom.rv_dom_abstract_range_retain handle |> ignore; (this.Session.Track (StaticRangeObject(this.Session, handle)) :> Ranvier.Dom.StaticRange))))
             finally
                 NativeDom.rv_dom_sequence_static_range_release(&result)
         member this.empty() : unit =
@@ -618,7 +618,7 @@ and internal StyleSheetObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.StyleSheet =
                 let mutable result = 0n
                 Interop.check "StyleSheet.parentStyleSheet" (NativeDom.rv_dom_style_sheet_get_parent_style_sheet (this.Handle, &result))
-                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.StyleSheet> else (this.Session.Track (StyleSheetObject (this.Session, result)) :> Ranvier.Dom.StyleSheet))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.StyleSheet> else (unbox<Ranvier.Dom.StyleSheet> (this.Session.Object(result, Kind.StyleSheet, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.StyleSheet(session, handle))))))
         member this.title
             with get () : string =
                 Interop.text "StyleSheet.title" (fun buffer capacity length -> NativeDom.rv_dom_style_sheet_get_title (this.Handle, buffer, capacity, length))
@@ -626,7 +626,7 @@ and internal StyleSheetObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.MediaList =
                 let mutable result = 0n
                 Interop.check "StyleSheet.media" (NativeDom.rv_dom_style_sheet_get_media (this.Handle, &result))
-                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.MediaList> else (this.Session.Track (MediaListObject (this.Session, result)) :> Ranvier.Dom.MediaList))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.MediaList> else (unbox<Ranvier.Dom.MediaList> (this.Session.Object(result, Kind.MediaList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (MediaListObject(session, handle) :> NativeObject))))))
         member this.disabled
             with get () : bool =
                 let mutable result = 0
@@ -646,11 +646,11 @@ and internal StyleSheetListObject(session: Session, handle: nativeint) =
         member this.item(index: uint32) : Ranvier.Dom.StyleSheet =
             let mutable result = 0n
             Interop.check "StyleSheetList.item" (NativeDom.rv_dom_style_sheet_list_item (this.Handle, uint32 index, &result))
-            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.StyleSheet> else (this.Session.Track (StyleSheetObject (this.Session, result)) :> Ranvier.Dom.StyleSheet))
+            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.StyleSheet> else (unbox<Ranvier.Dom.StyleSheet> (this.Session.Object(result, Kind.StyleSheet, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.StyleSheet(session, handle))))))
         member this.namedItem(name: string) : Ranvier.Dom.CSSStyleSheet =
             let mutable result = 0n
             Interop.check "StyleSheetList.namedItem" (NativeDom.rv_dom_style_sheet_list_named_item (this.Handle, (if isNull name then "" else name), &result))
-            (this.Session.Track (CSSStyleSheetObject (this.Session, result)) :> Ranvier.Dom.CSSStyleSheet)
+            (unbox<Ranvier.Dom.CSSStyleSheet> (this.Session.Object(result, Kind.StyleSheet, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.StyleSheet(session, handle)))))
 
 and internal ValidityStateObject(session: Session, handle: nativeint) =
     inherit NativeObject(session, handle, Kind.Validity)
@@ -914,7 +914,7 @@ and internal CSSFontFaceRuleObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.CSSFontFaceDescriptors =
                 let mutable result = 0n
                 Interop.check "CSSFontFaceRule.style" (NativeDom.rv_dom_css_font_face_rule_get_style (this.Handle, &result))
-                (this.Session.Track (CSSFontFaceDescriptorsObject (this.Session, result)) :> Ranvier.Dom.CSSFontFaceDescriptors)
+                (unbox<Ranvier.Dom.CSSFontFaceDescriptors> (this.Session.Object(result, Kind.Style, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleDeclaration(session, handle)))))
 
 and internal CSSFontFeatureValuesRuleObject(session: Session, handle: nativeint) =
     inherit CSSRuleObject(session, handle)
@@ -948,7 +948,7 @@ and internal CSSGroupingRuleObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.CSSRuleList =
                 let mutable result = 0n
                 Interop.check "CSSGroupingRule.cssRules" (NativeDom.rv_dom_css_grouping_rule_get_css_rules (this.Handle, &result))
-                (this.Session.Track (CSSRuleListObject (this.Session, result)) :> Ranvier.Dom.CSSRuleList)
+                (unbox<Ranvier.Dom.CSSRuleList> (this.Session.Object(result, Kind.CSSRuleList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (CSSRuleListObject(session, handle) :> NativeObject)))))
         member this.insertRule(rule: string, ?index: uint32) : uint32 =
             let mutable result = 0u
             Interop.check "CSSGroupingRule.insertRule" (NativeDom.rv_dom_css_grouping_rule_insert_rule (this.Handle, (if isNull rule then "" else rule), (match index with Some x -> uint32 x | None -> 0u), &result))
@@ -966,12 +966,12 @@ and internal CSSImportRuleObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.MediaList =
                 let mutable result = 0n
                 Interop.check "CSSImportRule.media" (NativeDom.rv_dom_css_import_rule_get_media (this.Handle, &result))
-                (this.Session.Track (MediaListObject (this.Session, result)) :> Ranvier.Dom.MediaList)
+                (unbox<Ranvier.Dom.MediaList> (this.Session.Object(result, Kind.MediaList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (MediaListObject(session, handle) :> NativeObject)))))
         member this.styleSheet
             with get () : Ranvier.Dom.CSSStyleSheet =
                 let mutable result = 0n
                 Interop.check "CSSImportRule.styleSheet" (NativeDom.rv_dom_css_import_rule_get_style_sheet (this.Handle, &result))
-                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleSheet> else (this.Session.Track (CSSStyleSheetObject (this.Session, result)) :> Ranvier.Dom.CSSStyleSheet))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleSheet> else (unbox<Ranvier.Dom.CSSStyleSheet> (this.Session.Object(result, Kind.StyleSheet, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.StyleSheet(session, handle))))))
         member this.layerName
             with get () : string =
                 Interop.text "CSSImportRule.layerName" (fun buffer capacity length -> NativeDom.rv_dom_css_import_rule_get_layer_name (this.Handle, buffer, capacity, length))
@@ -991,7 +991,7 @@ and internal CSSKeyframeRuleObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.CSSStyleProperties =
                 let mutable result = 0n
                 Interop.check "CSSKeyframeRule.style" (NativeDom.rv_dom_css_keyframe_rule_get_style (this.Handle, &result))
-                (this.Session.Track (CSSStylePropertiesObject (this.Session, result)) :> Ranvier.Dom.CSSStyleProperties)
+                (unbox<Ranvier.Dom.CSSStyleProperties> (this.Session.Object(result, Kind.Style, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleDeclaration(session, handle)))))
 
 and internal CSSKeyframesRuleObject(session: Session, handle: nativeint) =
     inherit CSSRuleObject(session, handle)
@@ -1005,7 +1005,7 @@ and internal CSSKeyframesRuleObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.CSSRuleList =
                 let mutable result = 0n
                 Interop.check "CSSKeyframesRule.cssRules" (NativeDom.rv_dom_css_keyframes_rule_get_css_rules (this.Handle, &result))
-                (this.Session.Track (CSSRuleListObject (this.Session, result)) :> Ranvier.Dom.CSSRuleList)
+                (unbox<Ranvier.Dom.CSSRuleList> (this.Session.Object(result, Kind.CSSRuleList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (CSSRuleListObject(session, handle) :> NativeObject)))))
         member this.length
             with get () : uint32 =
                 let mutable result = 0u
@@ -1014,7 +1014,7 @@ and internal CSSKeyframesRuleObject(session: Session, handle: nativeint) =
         member this.item(index: uint32) : Ranvier.Dom.CSSKeyframeRule =
             let mutable result = 0n
             Interop.check "CSSKeyframesRule.item" (NativeDom.rv_dom_css_keyframes_rule_item (this.Handle, uint32 index, &result))
-            (this.Session.Track (CSSKeyframeRuleObject (this.Session, result)) :> Ranvier.Dom.CSSKeyframeRule)
+            (unbox<Ranvier.Dom.CSSKeyframeRule> (this.Session.Object(result, Kind.CSSRule, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSRule(session, handle)))))
         member this.appendRule(rule: string) : unit =
             Interop.check "CSSKeyframesRule.appendRule" (NativeDom.rv_dom_css_keyframes_rule_append_rule (this.Handle, (if isNull rule then "" else rule)))
         member this.deleteRule(key: string) : unit =
@@ -1022,7 +1022,7 @@ and internal CSSKeyframesRuleObject(session: Session, handle: nativeint) =
         member this.findRule(key: string) : Ranvier.Dom.CSSKeyframeRule =
             let mutable result = 0n
             Interop.check "CSSKeyframesRule.findRule" (NativeDom.rv_dom_css_keyframes_rule_find_rule (this.Handle, (if isNull key then "" else key), &result))
-            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSKeyframeRule> else (this.Session.Track (CSSKeyframeRuleObject (this.Session, result)) :> Ranvier.Dom.CSSKeyframeRule))
+            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSKeyframeRule> else (unbox<Ranvier.Dom.CSSKeyframeRule> (this.Session.Object(result, Kind.CSSRule, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSRule(session, handle))))))
 
 and internal CSSLayerStatementRuleObject(session: Session, handle: nativeint) =
     inherit CSSRuleObject(session, handle)
@@ -1053,7 +1053,7 @@ and internal CSSNestedDeclarationsObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.CSSStyleProperties =
                 let mutable result = 0n
                 Interop.check "CSSNestedDeclarations.style" (NativeDom.rv_dom_css_nested_declarations_get_style (this.Handle, &result))
-                (this.Session.Track (CSSStylePropertiesObject (this.Session, result)) :> Ranvier.Dom.CSSStyleProperties)
+                (unbox<Ranvier.Dom.CSSStyleProperties> (this.Session.Object(result, Kind.Style, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleDeclaration(session, handle)))))
 
 and internal CSSPositionTryDescriptorsObject(session: Session, handle: nativeint) =
     inherit CSSStyleDeclarationObject(session, handle)
@@ -1419,7 +1419,7 @@ and internal CSSPositionTryRuleObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.CSSPositionTryDescriptors =
                 let mutable result = 0n
                 Interop.check "CSSPositionTryRule.style" (NativeDom.rv_dom_css_position_try_rule_get_style (this.Handle, &result))
-                (this.Session.Track (CSSPositionTryDescriptorsObject (this.Session, result)) :> Ranvier.Dom.CSSPositionTryDescriptors)
+                (unbox<Ranvier.Dom.CSSPositionTryDescriptors> (this.Session.Object(result, Kind.Style, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleDeclaration(session, handle)))))
 
 and internal CSSStylePropertiesObject(session: Session, handle: nativeint) =
     inherit CSSStyleDeclarationObject(session, handle)
@@ -1442,12 +1442,12 @@ and internal CSSStyleRuleObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.CSSStyleProperties =
                 let mutable result = 0n
                 Interop.check "CSSStyleRule.style" (NativeDom.rv_dom_css_style_rule_get_style (this.Handle, &result))
-                (this.Session.Track (CSSStylePropertiesObject (this.Session, result)) :> Ranvier.Dom.CSSStyleProperties)
+                (unbox<Ranvier.Dom.CSSStyleProperties> (this.Session.Object(result, Kind.Style, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleDeclaration(session, handle)))))
         member this.cssRules
             with get () : Ranvier.Dom.CSSRuleList =
                 let mutable result = 0n
                 Interop.check "CSSStyleRule.cssRules" (NativeDom.rv_dom_css_style_rule_get_css_rules (this.Handle, &result))
-                (this.Session.Track (CSSRuleListObject (this.Session, result)) :> Ranvier.Dom.CSSRuleList)
+                (unbox<Ranvier.Dom.CSSRuleList> (this.Session.Object(result, Kind.CSSRuleList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (CSSRuleListObject(session, handle) :> NativeObject)))))
         member this.insertRule(rule: string, ?index: uint32) : uint32 =
             let mutable result = 0u
             Interop.check "CSSStyleRule.insertRule" (NativeDom.rv_dom_css_style_rule_insert_rule (this.Handle, (if isNull rule then "" else rule), (match index with Some x -> uint32 x | None -> 0u), &result))
@@ -1462,17 +1462,17 @@ and internal CSSStyleSheetObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.CSSRule =
                 let mutable result = 0n
                 Interop.check "CSSStyleSheet.ownerRule" (NativeDom.rv_dom_css_style_sheet_get_owner_rule (this.Handle, &result))
-                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSRule> else (this.Session.Track (CSSRuleObject (this.Session, result)) :> Ranvier.Dom.CSSRule))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSRule> else (unbox<Ranvier.Dom.CSSRule> (this.Session.Object(result, Kind.CSSRule, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSRule(session, handle))))))
         member this.cssRules
             with get () : Ranvier.Dom.CSSRuleList =
                 let mutable result = 0n
                 Interop.check "CSSStyleSheet.cssRules" (NativeDom.rv_dom_css_style_sheet_get_css_rules (this.Handle, &result))
-                (this.Session.Track (CSSRuleListObject (this.Session, result)) :> Ranvier.Dom.CSSRuleList)
+                (unbox<Ranvier.Dom.CSSRuleList> (this.Session.Object(result, Kind.CSSRuleList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (CSSRuleListObject(session, handle) :> NativeObject)))))
         member this.rules
             with get () : Ranvier.Dom.CSSRuleList =
                 let mutable result = 0n
                 Interop.check "CSSStyleSheet.rules" (NativeDom.rv_dom_css_style_sheet_get_rules (this.Handle, &result))
-                (this.Session.Track (CSSRuleListObject (this.Session, result)) :> Ranvier.Dom.CSSRuleList)
+                (unbox<Ranvier.Dom.CSSRuleList> (this.Session.Object(result, Kind.CSSRuleList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (CSSRuleListObject(session, handle) :> NativeObject)))))
         member this.insertRule(rule: string, ?index: uint32) : uint32 =
             let mutable result = 0u
             Interop.check "CSSStyleSheet.insertRule" (NativeDom.rv_dom_css_style_sheet_insert_rule (this.Handle, (if isNull rule then "" else rule), (match index with Some x -> uint32 x | None -> 0u), &result))
@@ -1639,13 +1639,13 @@ and internal NodeObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "Node.childNodes" (NativeDom.rv_dom_node_get_child_nodes (this.Handle, &result))
-                            (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList)
+                            (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
                         box result)
                     |> unbox<Ranvier.Dom.NodeList>
                 else
                     let mutable result = 0n
                     Interop.check "Node.childNodes" (NativeDom.rv_dom_node_get_child_nodes (this.Handle, &result))
-                    (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList)
+                    (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
         member this.firstChild
             with get () : Ranvier.Dom.Node =
                 if this.Session.Intercepting then
@@ -2025,7 +2025,7 @@ and internal RangeObject(session: Session, handle: nativeint) =
         member this.cloneRange() : Ranvier.Dom.Range =
             let mutable result = 0n
             Interop.check "Range.cloneRange" (NativeDom.rv_dom_range_clone_range (this.Handle, &result))
-            (this.Session.Track (RangeObject (this.Session, result)) :> Ranvier.Dom.Range)
+            (this.Session.Track (RangeObject(this.Session, result)) :> Ranvier.Dom.Range)
         member this.detach() : unit =
             Interop.check "Range.detach" (NativeDom.rv_dom_range_detach (this.Handle))
         member this.isPointInRange(node: Ranvier.Dom.Node, offset: uint32) : bool =
@@ -2049,7 +2049,7 @@ and internal RangeObject(session: Session, handle: nativeint) =
         member this.getBoundingClientRect() : Ranvier.Dom.DOMRect =
             let mutable result = 0n
             Interop.check "Range.getBoundingClientRect" (NativeDom.rv_dom_range_get_bounding_client_rect (this.Handle, &result))
-            (this.Session.Track (DOMRectObject (this.Session, result)) :> Ranvier.Dom.DOMRect)
+            (this.Session.Track (DOMRectObject(this.Session, result)) :> Ranvier.Dom.DOMRect)
         member this.createContextualFragment(fragment: string) : Ranvier.Dom.DocumentFragment =
             let mutable result = 0n
             Interop.check "Range.createContextualFragment" (NativeDom.rv_dom_range_create_contextual_fragment (this.Handle, (if isNull fragment then "" else fragment), &result))
@@ -2211,13 +2211,13 @@ and internal AttrObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "Attr.style" (NativeDom.rv_dom_attr_get_style (this.Handle, &result))
-                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleProperties> else (this.Session.Track (CSSStylePropertiesObject (this.Session, result)) :> Ranvier.Dom.CSSStyleProperties))
+                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleProperties> else (unbox<Ranvier.Dom.CSSStyleProperties> (this.Session.Object(result, Kind.Style, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleDeclaration(session, handle))))))
                         box result)
                     |> unbox<Ranvier.Dom.CSSStyleProperties>
                 else
                     let mutable result = 0n
                     Interop.check "Attr.style" (NativeDom.rv_dom_attr_get_style (this.Handle, &result))
-                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleProperties> else (this.Session.Track (CSSStylePropertiesObject (this.Session, result)) :> Ranvier.Dom.CSSStyleProperties))
+                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleProperties> else (unbox<Ranvier.Dom.CSSStyleProperties> (this.Session.Object(result, Kind.Style, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleDeclaration(session, handle))))))
 
 and internal CSSConditionRuleObject(session: Session, handle: nativeint) =
     inherit CSSGroupingRuleObject(session, handle)
@@ -2281,7 +2281,7 @@ and internal InputEventObject(session: Session, handle: nativeint) =
             let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceStaticRange>
             try
                 Interop.check "InputEvent.getTargetRanges" (NativeDom.rv_dom_input_event_get_target_ranges (this.Handle, &result))
-                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in NativeDom.rv_dom_abstract_range_retain handle |> ignore; this.Session.Track (StaticRangeObject(this.Session, handle)) :> Ranvier.Dom.StaticRange)))
+                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in NativeDom.rv_dom_abstract_range_retain handle |> ignore; (this.Session.Track (StaticRangeObject(this.Session, handle)) :> Ranvier.Dom.StaticRange))))
             finally
                 NativeDom.rv_dom_sequence_static_range_release(&result)
 
@@ -2471,7 +2471,7 @@ and internal CSSMediaRuleObject(session: Session, handle: nativeint) =
             with get () : Ranvier.Dom.MediaList =
                 let mutable result = 0n
                 Interop.check "CSSMediaRule.media" (NativeDom.rv_dom_css_media_rule_get_media (this.Handle, &result))
-                (this.Session.Track (MediaListObject (this.Session, result)) :> Ranvier.Dom.MediaList)
+                (unbox<Ranvier.Dom.MediaList> (this.Session.Object(result, Kind.MediaList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (MediaListObject(session, handle) :> NativeObject)))))
 
 and internal CSSSupportsRuleObject(session: Session, handle: nativeint) =
     inherit CSSConditionRuleObject(session, handle)
@@ -2487,13 +2487,13 @@ and internal DocumentFragmentObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "ParentNode.children" (NativeDom.rv_dom_document_fragment_get_children (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "ParentNode.children" (NativeDom.rv_dom_document_fragment_get_children (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.firstElementChild
             with get () : Ranvier.Dom.Element =
                 if this.Session.Intercepting then
@@ -2604,13 +2604,13 @@ and internal DocumentFragmentObject(session: Session, handle: nativeint) =
                     let result =
                         let mutable result = 0n
                         Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_document_fragment_query_selector_all (this.Handle, (if isNull selectors then "" else selectors), &result))
-                        (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList)
+                        (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
                     box result)
                 |> unbox<Ranvier.Dom.NodeList>
             else
                 let mutable result = 0n
                 Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_document_fragment_query_selector_all (this.Handle, (if isNull selectors then "" else selectors), &result))
-                (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList)
+                (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
     interface Ranvier.Dom.DocumentFragment with
         member this.getElementById(elementId: string) : Ranvier.Dom.Element =
             if this.Session.Intercepting then
@@ -2925,13 +2925,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "ParentNode.children" (NativeDom.rv_dom_document_get_children (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "ParentNode.children" (NativeDom.rv_dom_document_get_children (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.firstElementChild
             with get () : Ranvier.Dom.Element =
                 if this.Session.Intercepting then
@@ -3042,13 +3042,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let result =
                         let mutable result = 0n
                         Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_document_query_selector_all (this.Handle, (if isNull selectors then "" else selectors), &result))
-                        (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList)
+                        (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
                     box result)
                 |> unbox<Ranvier.Dom.NodeList>
             else
                 let mutable result = 0n
                 Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_document_query_selector_all (this.Handle, (if isNull selectors then "" else selectors), &result))
-                (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList)
+                (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
     interface Ranvier.Dom.Document with
         member this.implementation
             with get () : Ranvier.Dom.DOMImplementation =
@@ -3057,13 +3057,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "Document.implementation" (NativeDom.rv_dom_document_get_implementation (this.Handle, &result))
-                            (this.Session.Track (DOMImplementationObject (this.Session, result)) :> Ranvier.Dom.DOMImplementation)
+                            (this.Session.Track (DOMImplementationObject(this.Session, result)) :> Ranvier.Dom.DOMImplementation)
                         box result)
                     |> unbox<Ranvier.Dom.DOMImplementation>
                 else
                     let mutable result = 0n
                     Interop.check "Document.implementation" (NativeDom.rv_dom_document_get_implementation (this.Handle, &result))
-                    (this.Session.Track (DOMImplementationObject (this.Session, result)) :> Ranvier.Dom.DOMImplementation)
+                    (this.Session.Track (DOMImplementationObject(this.Session, result)) :> Ranvier.Dom.DOMImplementation)
         member this.compatMode
             with get () : string =
                 if this.Session.Intercepting then
@@ -3221,13 +3221,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "Document.images" (NativeDom.rv_dom_document_get_images (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "Document.images" (NativeDom.rv_dom_document_get_images (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.links
             with get () : Ranvier.Dom.HTMLCollection =
                 if this.Session.Intercepting then
@@ -3235,13 +3235,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "Document.links" (NativeDom.rv_dom_document_get_links (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "Document.links" (NativeDom.rv_dom_document_get_links (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.forms
             with get () : Ranvier.Dom.HTMLCollection =
                 if this.Session.Intercepting then
@@ -3249,13 +3249,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "Document.forms" (NativeDom.rv_dom_document_get_forms (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "Document.forms" (NativeDom.rv_dom_document_get_forms (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.scripts
             with get () : Ranvier.Dom.HTMLCollection =
                 if this.Session.Intercepting then
@@ -3263,13 +3263,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "Document.scripts" (NativeDom.rv_dom_document_get_scripts (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "Document.scripts" (NativeDom.rv_dom_document_get_scripts (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.designMode
             with get () : string =
                 if this.Session.Intercepting then
@@ -3297,13 +3297,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "Document.anchors" (NativeDom.rv_dom_document_get_anchors (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "Document.anchors" (NativeDom.rv_dom_document_get_anchors (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.hidden
             with get () : bool =
                 if this.Session.Intercepting then
@@ -3353,13 +3353,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "Document.styleSheets" (NativeDom.rv_dom_document_get_style_sheets (this.Handle, &result))
-                            (this.Session.Track (StyleSheetListObject (this.Session, result)) :> Ranvier.Dom.StyleSheetList)
+                            (unbox<Ranvier.Dom.StyleSheetList> (this.Session.Object(result, Kind.StyleSheetList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (StyleSheetListObject(session, handle) :> NativeObject)))))
                         box result)
                     |> unbox<Ranvier.Dom.StyleSheetList>
                 else
                     let mutable result = 0n
                     Interop.check "Document.styleSheets" (NativeDom.rv_dom_document_get_style_sheets (this.Handle, &result))
-                    (this.Session.Track (StyleSheetListObject (this.Session, result)) :> Ranvier.Dom.StyleSheetList)
+                    (unbox<Ranvier.Dom.StyleSheetList> (this.Session.Object(result, Kind.StyleSheetList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (StyleSheetListObject(session, handle) :> NativeObject)))))
         member this.createElement(localName: string) : Ranvier.Dom.Element =
             if this.Session.Intercepting then
                 Interop.intercept this "createElement" [| box localName |] (fun args ->
@@ -3466,13 +3466,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let result =
                         let mutable result = 0n
                         Interop.check "Document.getElementsByTagName" (NativeDom.rv_dom_document_get_elements_by_tag_name (this.Handle, (if isNull qualifiedName then "" else qualifiedName), &result))
-                        (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                        (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                     box result)
                 |> unbox<Ranvier.Dom.HTMLCollection>
             else
                 let mutable result = 0n
                 Interop.check "Document.getElementsByTagName" (NativeDom.rv_dom_document_get_elements_by_tag_name (this.Handle, (if isNull qualifiedName then "" else qualifiedName), &result))
-                (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.getElementsByTagNameNS(namespaceURI: string, localName: string) : Ranvier.Dom.HTMLCollection =
             if this.Session.Intercepting then
                 Interop.intercept this "getElementsByTagNameNS" [| box namespaceURI; box localName |] (fun args ->
@@ -3481,13 +3481,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let result =
                         let mutable result = 0n
                         Interop.check "Document.getElementsByTagNameNS" (NativeDom.rv_dom_document_get_elements_by_tag_name_ns (this.Handle, namespaceURI, (if isNull localName then "" else localName), &result))
-                        (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                        (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                     box result)
                 |> unbox<Ranvier.Dom.HTMLCollection>
             else
                 let mutable result = 0n
                 Interop.check "Document.getElementsByTagNameNS" (NativeDom.rv_dom_document_get_elements_by_tag_name_ns (this.Handle, namespaceURI, (if isNull localName then "" else localName), &result))
-                (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.getElementsByClassName(classNames: string) : Ranvier.Dom.HTMLCollection =
             if this.Session.Intercepting then
                 Interop.intercept this "getElementsByClassName" [| box classNames |] (fun args ->
@@ -3495,13 +3495,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let result =
                         let mutable result = 0n
                         Interop.check "Document.getElementsByClassName" (NativeDom.rv_dom_document_get_elements_by_class_name (this.Handle, (if isNull classNames then "" else classNames), &result))
-                        (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                        (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                     box result)
                 |> unbox<Ranvier.Dom.HTMLCollection>
             else
                 let mutable result = 0n
                 Interop.check "Document.getElementsByClassName" (NativeDom.rv_dom_document_get_elements_by_class_name (this.Handle, (if isNull classNames then "" else classNames), &result))
-                (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.createDocumentFragment() : Ranvier.Dom.DocumentFragment =
             if this.Session.Intercepting then
                 Interop.intercept this "createDocumentFragment" [|  |] (fun args ->
@@ -3652,13 +3652,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let result =
                         let mutable result = 0n
                         Interop.check "Document.createRange" (NativeDom.rv_dom_document_create_range (this.Handle, &result))
-                        (this.Session.Track (RangeObject (this.Session, result)) :> Ranvier.Dom.Range)
+                        (this.Session.Track (RangeObject(this.Session, result)) :> Ranvier.Dom.Range)
                     box result)
                 |> unbox<Ranvier.Dom.Range>
             else
                 let mutable result = 0n
                 Interop.check "Document.createRange" (NativeDom.rv_dom_document_create_range (this.Handle, &result))
-                (this.Session.Track (RangeObject (this.Session, result)) :> Ranvier.Dom.Range)
+                (this.Session.Track (RangeObject(this.Session, result)) :> Ranvier.Dom.Range)
         member this.caretRangeFromPoint(?x: int, ?y: int) : Ranvier.Dom.Range =
             if this.Session.Intercepting then
                 Interop.intercept this "caretRangeFromPoint" [| box x; box y |] (fun args ->
@@ -3667,13 +3667,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let result =
                         let mutable result = 0n
                         Interop.check "Document.caretRangeFromPoint" (NativeDom.rv_dom_document_caret_range_from_point (this.Handle, (match x with Some x -> int x | None -> 0), (match y with Some x -> int x | None -> 0), &result))
-                        (if result = 0n then Unchecked.defaultof<Ranvier.Dom.Range> else (this.Session.Track (RangeObject (this.Session, result)) :> Ranvier.Dom.Range))
+                        (if result = 0n then Unchecked.defaultof<Ranvier.Dom.Range> else (this.Session.Track (RangeObject(this.Session, result)) :> Ranvier.Dom.Range))
                     box result)
                 |> unbox<Ranvier.Dom.Range>
             else
                 let mutable result = 0n
                 Interop.check "Document.caretRangeFromPoint" (NativeDom.rv_dom_document_caret_range_from_point (this.Handle, (match x with Some x -> int x | None -> 0), (match y with Some x -> int x | None -> 0), &result))
-                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.Range> else (this.Session.Track (RangeObject (this.Session, result)) :> Ranvier.Dom.Range))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.Range> else (this.Session.Track (RangeObject(this.Session, result)) :> Ranvier.Dom.Range))
         member this.ariaNotify(announcement: string) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "ariaNotify" [| box announcement |] (fun args ->
@@ -3704,13 +3704,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let result =
                         let mutable result = 0n
                         Interop.check "Document.getElementsByName" (NativeDom.rv_dom_document_get_elements_by_name (this.Handle, (if isNull elementName then "" else elementName), &result))
-                        (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList)
+                        (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
                     box result)
                 |> unbox<Ranvier.Dom.NodeList>
             else
                 let mutable result = 0n
                 Interop.check "Document.getElementsByName" (NativeDom.rv_dom_document_get_elements_by_name (this.Handle, (if isNull elementName then "" else elementName), &result))
-                (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList)
+                (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
         member this.hasFocus() : bool =
             if this.Session.Intercepting then
                 Interop.intercept this "hasFocus" [|  |] (fun args ->
@@ -3812,13 +3812,13 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let result =
                         let mutable result = 0n
                         Interop.check "Document.getSelection" (NativeDom.rv_dom_document_get_selection (this.Handle, &result))
-                        (if result = 0n then Unchecked.defaultof<Ranvier.Dom.DOMSelection> else (this.Session.Track (DOMSelectionObject (this.Session, result)) :> Ranvier.Dom.DOMSelection))
+                        (if result = 0n then Unchecked.defaultof<Ranvier.Dom.DOMSelection> else (this.Session.Track (DOMSelectionObject(this.Session, result)) :> Ranvier.Dom.DOMSelection))
                     box result)
                 |> unbox<Ranvier.Dom.DOMSelection>
             else
                 let mutable result = 0n
                 Interop.check "Document.getSelection" (NativeDom.rv_dom_document_get_selection (this.Handle, &result))
-                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.DOMSelection> else (this.Session.Track (DOMSelectionObject (this.Session, result)) :> Ranvier.Dom.DOMSelection))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.DOMSelection> else (this.Session.Track (DOMSelectionObject(this.Session, result)) :> Ranvier.Dom.DOMSelection))
         member this.getElementById(elementId: string) : Ranvier.Dom.Element =
             if this.Session.Intercepting then
                 Interop.intercept this "getElementById" [| box elementId |] (fun args ->
@@ -3998,13 +3998,13 @@ and internal ShadowRootObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "ShadowRoot.styleSheets" (NativeDom.rv_dom_shadow_root_get_style_sheets (this.Handle, &result))
-                            (this.Session.Track (StyleSheetListObject (this.Session, result)) :> Ranvier.Dom.StyleSheetList)
+                            (unbox<Ranvier.Dom.StyleSheetList> (this.Session.Object(result, Kind.StyleSheetList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (StyleSheetListObject(session, handle) :> NativeObject)))))
                         box result)
                     |> unbox<Ranvier.Dom.StyleSheetList>
                 else
                     let mutable result = 0n
                     Interop.check "ShadowRoot.styleSheets" (NativeDom.rv_dom_shadow_root_get_style_sheets (this.Handle, &result))
-                    (this.Session.Track (StyleSheetListObject (this.Session, result)) :> Ranvier.Dom.StyleSheetList)
+                    (unbox<Ranvier.Dom.StyleSheetList> (this.Session.Object(result, Kind.StyleSheetList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (StyleSheetListObject(session, handle) :> NativeObject)))))
         member this.fullscreenElement
             with get () : Ranvier.Dom.Element =
                 if this.Session.Intercepting then
@@ -5133,13 +5133,13 @@ and internal ElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "ParentNode.children" (NativeDom.rv_dom_element_get_children (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "ParentNode.children" (NativeDom.rv_dom_element_get_children (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.firstElementChild
             with get () : Ranvier.Dom.Element =
                 if this.Session.Intercepting then
@@ -5250,13 +5250,13 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let result =
                         let mutable result = 0n
                         Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_element_query_selector_all (this.Handle, (if isNull selectors then "" else selectors), &result))
-                        (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList)
+                        (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
                     box result)
                 |> unbox<Ranvier.Dom.NodeList>
             else
                 let mutable result = 0n
                 Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_element_query_selector_all (this.Handle, (if isNull selectors then "" else selectors), &result))
-                (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList)
+                (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
     interface Ranvier.Dom.Slottable with
         member this.assignedSlot
             with get () : Ranvier.Dom.HTMLSlotElement =
@@ -5360,13 +5360,13 @@ and internal ElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "Element.classList" (NativeDom.rv_dom_element_get_class_list (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "Element.classList" (NativeDom.rv_dom_element_get_class_list (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
         member this.slot
             with get () : string =
                 if this.Session.Intercepting then
@@ -5394,13 +5394,13 @@ and internal ElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "Element.part" (NativeDom.rv_dom_element_get_part (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "Element.part" (NativeDom.rv_dom_element_get_part (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
         member this.attributes
             with get () : Ranvier.Dom.NamedNodeMap =
                 if this.Session.Intercepting then
@@ -5408,13 +5408,13 @@ and internal ElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "Element.attributes" (NativeDom.rv_dom_element_get_attributes (this.Handle, &result))
-                            (this.Session.Track (NamedNodeMapObject (this.Session, result)) :> Ranvier.Dom.NamedNodeMap)
+                            (this.Session.Track (NamedNodeMapObject(this.Session, result)) :> Ranvier.Dom.NamedNodeMap)
                         box result)
                     |> unbox<Ranvier.Dom.NamedNodeMap>
                 else
                     let mutable result = 0n
                     Interop.check "Element.attributes" (NativeDom.rv_dom_element_get_attributes (this.Handle, &result))
-                    (this.Session.Track (NamedNodeMapObject (this.Session, result)) :> Ranvier.Dom.NamedNodeMap)
+                    (this.Session.Track (NamedNodeMapObject(this.Session, result)) :> Ranvier.Dom.NamedNodeMap)
         member this.scrollTop
             with get () : int =
                 if this.Session.Intercepting then
@@ -5882,13 +5882,13 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let result =
                         let mutable result = 0n
                         Interop.check "Element.getElementsByTagName" (NativeDom.rv_dom_element_get_elements_by_tag_name (this.Handle, (if isNull qualifiedName then "" else qualifiedName), &result))
-                        (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                        (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                     box result)
                 |> unbox<Ranvier.Dom.HTMLCollection>
             else
                 let mutable result = 0n
                 Interop.check "Element.getElementsByTagName" (NativeDom.rv_dom_element_get_elements_by_tag_name (this.Handle, (if isNull qualifiedName then "" else qualifiedName), &result))
-                (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.getElementsByTagNameNS(namespaceURI: string, localName: string) : Ranvier.Dom.HTMLCollection =
             if this.Session.Intercepting then
                 Interop.intercept this "getElementsByTagNameNS" [| box namespaceURI; box localName |] (fun args ->
@@ -5897,13 +5897,13 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let result =
                         let mutable result = 0n
                         Interop.check "Element.getElementsByTagNameNS" (NativeDom.rv_dom_element_get_elements_by_tag_name_ns (this.Handle, namespaceURI, (if isNull localName then "" else localName), &result))
-                        (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                        (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                     box result)
                 |> unbox<Ranvier.Dom.HTMLCollection>
             else
                 let mutable result = 0n
                 Interop.check "Element.getElementsByTagNameNS" (NativeDom.rv_dom_element_get_elements_by_tag_name_ns (this.Handle, namespaceURI, (if isNull localName then "" else localName), &result))
-                (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.getElementsByClassName(name: string) : Ranvier.Dom.HTMLCollection =
             if this.Session.Intercepting then
                 Interop.intercept this "getElementsByClassName" [| box name |] (fun args ->
@@ -5911,13 +5911,13 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let result =
                         let mutable result = 0n
                         Interop.check "Element.getElementsByClassName" (NativeDom.rv_dom_element_get_elements_by_class_name (this.Handle, (if isNull name then "" else name), &result))
-                        (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                        (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                     box result)
                 |> unbox<Ranvier.Dom.HTMLCollection>
             else
                 let mutable result = 0n
                 Interop.check "Element.getElementsByClassName" (NativeDom.rv_dom_element_get_elements_by_class_name (this.Handle, (if isNull name then "" else name), &result))
-                (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.insertAdjacentElement(where: string, element: Ranvier.Dom.Element) : Ranvier.Dom.Element =
             if this.Session.Intercepting then
                 Interop.intercept this "insertAdjacentElement" [| box where; box element |] (fun args ->
@@ -5973,13 +5973,13 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let result =
                         let mutable result = 0n
                         Interop.check "Element.getBoundingClientRect" (NativeDom.rv_dom_element_get_bounding_client_rect (this.Handle, &result))
-                        (this.Session.Track (DOMRectObject (this.Session, result)) :> Ranvier.Dom.DOMRect)
+                        (this.Session.Track (DOMRectObject(this.Session, result)) :> Ranvier.Dom.DOMRect)
                     box result)
                 |> unbox<Ranvier.Dom.DOMRect>
             else
                 let mutable result = 0n
                 Interop.check "Element.getBoundingClientRect" (NativeDom.rv_dom_element_get_bounding_client_rect (this.Handle, &result))
-                (this.Session.Track (DOMRectObject (this.Session, result)) :> Ranvier.Dom.DOMRect)
+                (this.Session.Track (DOMRectObject(this.Session, result)) :> Ranvier.Dom.DOMRect)
         member this.checkVisibility(?options: Ranvier.Dom.CheckVisibilityOptions) : bool =
             if this.Session.Intercepting then
                 Interop.intercept this "checkVisibility" [| box options |] (fun args ->
@@ -6182,13 +6182,13 @@ and internal MathMLElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "ElementCSSInlineStyle.style" (NativeDom.rv_dom_math_ml_element_get_style (this.Handle, &result))
-                            (this.Session.Track (CSSStylePropertiesObject (this.Session, result)) :> Ranvier.Dom.CSSStyleProperties)
+                            (unbox<Ranvier.Dom.CSSStyleProperties> (this.Session.Object(result, Kind.Style, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleDeclaration(session, handle)))))
                         box result)
                     |> unbox<Ranvier.Dom.CSSStyleProperties>
                 else
                     let mutable result = 0n
                     Interop.check "ElementCSSInlineStyle.style" (NativeDom.rv_dom_math_ml_element_get_style (this.Handle, &result))
-                    (this.Session.Track (CSSStylePropertiesObject (this.Session, result)) :> Ranvier.Dom.CSSStyleProperties)
+                    (unbox<Ranvier.Dom.CSSStyleProperties> (this.Session.Object(result, Kind.Style, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleDeclaration(session, handle)))))
     interface Ranvier.Dom.GlobalEventHandlers
     interface Ranvier.Dom.HTMLOrSVGElement with
         member this.dataset
@@ -6198,13 +6198,13 @@ and internal MathMLElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLOrSVGElement.dataset" (NativeDom.rv_dom_math_ml_element_get_dataset (this.Handle, &result))
-                            (this.Session.Track (DOMStringMapObject (this.Session, result)) :> Ranvier.Dom.DOMStringMap)
+                            (this.Session.Track (DOMStringMapObject(this.Session, result)) :> Ranvier.Dom.DOMStringMap)
                         box result)
                     |> unbox<Ranvier.Dom.DOMStringMap>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLOrSVGElement.dataset" (NativeDom.rv_dom_math_ml_element_get_dataset (this.Handle, &result))
-                    (this.Session.Track (DOMStringMapObject (this.Session, result)) :> Ranvier.Dom.DOMStringMap)
+                    (this.Session.Track (DOMStringMapObject(this.Session, result)) :> Ranvier.Dom.DOMStringMap)
         member this.nonce
             with get () : string =
                 if this.Session.Intercepting then
@@ -6306,13 +6306,13 @@ and internal SVGElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "ElementCSSInlineStyle.style" (NativeDom.rv_dom_svg_element_get_style (this.Handle, &result))
-                            (this.Session.Track (CSSStylePropertiesObject (this.Session, result)) :> Ranvier.Dom.CSSStyleProperties)
+                            (unbox<Ranvier.Dom.CSSStyleProperties> (this.Session.Object(result, Kind.Style, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleDeclaration(session, handle)))))
                         box result)
                     |> unbox<Ranvier.Dom.CSSStyleProperties>
                 else
                     let mutable result = 0n
                     Interop.check "ElementCSSInlineStyle.style" (NativeDom.rv_dom_svg_element_get_style (this.Handle, &result))
-                    (this.Session.Track (CSSStylePropertiesObject (this.Session, result)) :> Ranvier.Dom.CSSStyleProperties)
+                    (unbox<Ranvier.Dom.CSSStyleProperties> (this.Session.Object(result, Kind.Style, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleDeclaration(session, handle)))))
     interface Ranvier.Dom.GlobalEventHandlers
     interface Ranvier.Dom.HTMLOrSVGElement with
         member this.dataset
@@ -6322,13 +6322,13 @@ and internal SVGElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLOrSVGElement.dataset" (NativeDom.rv_dom_svg_element_get_dataset (this.Handle, &result))
-                            (this.Session.Track (DOMStringMapObject (this.Session, result)) :> Ranvier.Dom.DOMStringMap)
+                            (this.Session.Track (DOMStringMapObject(this.Session, result)) :> Ranvier.Dom.DOMStringMap)
                         box result)
                     |> unbox<Ranvier.Dom.DOMStringMap>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLOrSVGElement.dataset" (NativeDom.rv_dom_svg_element_get_dataset (this.Handle, &result))
-                    (this.Session.Track (DOMStringMapObject (this.Session, result)) :> Ranvier.Dom.DOMStringMap)
+                    (this.Session.Track (DOMStringMapObject(this.Session, result)) :> Ranvier.Dom.DOMStringMap)
         member this.nonce
             with get () : string =
                 if this.Session.Intercepting then
@@ -6444,13 +6444,13 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "ElementCSSInlineStyle.style" (NativeDom.rv_dom_html_element_get_style (this.Handle, &result))
-                            (this.Session.Track (CSSStylePropertiesObject (this.Session, result)) :> Ranvier.Dom.CSSStyleProperties)
+                            (unbox<Ranvier.Dom.CSSStyleProperties> (this.Session.Object(result, Kind.Style, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleDeclaration(session, handle)))))
                         box result)
                     |> unbox<Ranvier.Dom.CSSStyleProperties>
                 else
                     let mutable result = 0n
                     Interop.check "ElementCSSInlineStyle.style" (NativeDom.rv_dom_html_element_get_style (this.Handle, &result))
-                    (this.Session.Track (CSSStylePropertiesObject (this.Session, result)) :> Ranvier.Dom.CSSStyleProperties)
+                    (unbox<Ranvier.Dom.CSSStyleProperties> (this.Session.Object(result, Kind.Style, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleDeclaration(session, handle)))))
     interface Ranvier.Dom.ElementContentEditable with
         member this.contentEditable
             with get () : string =
@@ -6535,13 +6535,13 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLOrSVGElement.dataset" (NativeDom.rv_dom_html_element_get_dataset (this.Handle, &result))
-                            (this.Session.Track (DOMStringMapObject (this.Session, result)) :> Ranvier.Dom.DOMStringMap)
+                            (this.Session.Track (DOMStringMapObject(this.Session, result)) :> Ranvier.Dom.DOMStringMap)
                         box result)
                     |> unbox<Ranvier.Dom.DOMStringMap>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLOrSVGElement.dataset" (NativeDom.rv_dom_html_element_get_dataset (this.Handle, &result))
-                    (this.Session.Track (DOMStringMapObject (this.Session, result)) :> Ranvier.Dom.DOMStringMap)
+                    (this.Session.Track (DOMStringMapObject(this.Session, result)) :> Ranvier.Dom.DOMStringMap)
         member this.nonce
             with get () : string =
                 if this.Session.Intercepting then
@@ -7622,13 +7622,13 @@ and internal HTMLDataListElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLDataListElement.options" (NativeDom.rv_dom_html_data_list_element_get_options (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLDataListElement.options" (NativeDom.rv_dom_html_data_list_element_get_options (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
 
 and internal HTMLDetailsElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -7918,13 +7918,13 @@ and internal HTMLFieldSetElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLFieldSetElement.elements" (NativeDom.rv_dom_html_field_set_element_get_elements (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLFieldSetElement.elements" (NativeDom.rv_dom_html_field_set_element_get_elements (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.willValidate
             with get () : bool =
                 if this.Session.Intercepting then
@@ -7946,13 +7946,13 @@ and internal HTMLFieldSetElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLFieldSetElement.validity" (NativeDom.rv_dom_html_field_set_element_get_validity (this.Handle, &result))
-                            (this.Session.Track (ValidityStateObject (this.Session, result)) :> Ranvier.Dom.ValidityState)
+                            (this.Session.Track (ValidityStateObject(this.Session, result)) :> Ranvier.Dom.ValidityState)
                         box result)
                     |> unbox<Ranvier.Dom.ValidityState>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLFieldSetElement.validity" (NativeDom.rv_dom_html_field_set_element_get_validity (this.Handle, &result))
-                    (this.Session.Track (ValidityStateObject (this.Session, result)) :> Ranvier.Dom.ValidityState)
+                    (this.Session.Track (ValidityStateObject(this.Session, result)) :> Ranvier.Dom.ValidityState)
         member this.validationMessage
             with get () : string =
                 if this.Session.Intercepting then
@@ -8278,13 +8278,13 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLFormElement.relList" (NativeDom.rv_dom_html_form_element_get_rel_list (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLFormElement.relList" (NativeDom.rv_dom_html_form_element_get_rel_list (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
         member this.elements
             with get () : Ranvier.Dom.HTMLFormControlsCollection =
                 if this.Session.Intercepting then
@@ -8292,13 +8292,13 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLFormElement.elements" (NativeDom.rv_dom_html_form_element_get_elements (this.Handle, &result))
-                            (this.Session.Track (HTMLFormControlsCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLFormControlsCollection)
+                            (this.Session.Track (HTMLFormControlsCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLFormControlsCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLFormControlsCollection>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLFormElement.elements" (NativeDom.rv_dom_html_form_element_get_elements (this.Handle, &result))
-                    (this.Session.Track (HTMLFormControlsCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLFormControlsCollection)
+                    (this.Session.Track (HTMLFormControlsCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLFormControlsCollection)
         member this.length
             with get () : uint32 =
                 if this.Session.Intercepting then
@@ -8335,7 +8335,7 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                         let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionRadioNodeListOrElementNullable>
                         try
                             Interop.check "HTMLFormElement.namedItem" (NativeDom.rv_dom_html_form_element_named_item (this.Handle, (if isNull name then "" else name), &result))
-                            (if result.present = 0 then None else Some ((match result.tag with | 1 -> Ranvier.Dom.RadioNodeListOrElement.RadioNodeList ((let handle = result.arm0 in NativeDom.rv_dom_node_list_retain handle |> ignore; this.Session.Track (RadioNodeListObject(this.Session, handle)) :> Ranvier.Dom.RadioNodeList)) | 2 -> Ranvier.Dom.RadioNodeListOrElement.Element ((let handle = result.arm1 in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))) | _ -> invalidOp "Unknown RadioNodeListOrElement union tag from WebCore")))
+                            (if result.present = 0 then None else Some ((match result.tag with | 1 -> Ranvier.Dom.RadioNodeListOrElement.RadioNodeList ((let handle = result.arm0 in NativeDom.rv_dom_node_list_retain handle |> ignore; (this.Session.Track (RadioNodeListObject(this.Session, handle)) :> Ranvier.Dom.RadioNodeList))) | 2 -> Ranvier.Dom.RadioNodeListOrElement.Element ((let handle = result.arm1 in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))) | _ -> invalidOp "Unknown RadioNodeListOrElement union tag from WebCore")))
                         finally
                             NativeDom.rv_dom_union_radio_node_list_or_element_nullable_release(&result)
                     box result)
@@ -8344,7 +8344,7 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                 let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionRadioNodeListOrElementNullable>
                 try
                     Interop.check "HTMLFormElement.namedItem" (NativeDom.rv_dom_html_form_element_named_item (this.Handle, (if isNull name then "" else name), &result))
-                    (if result.present = 0 then None else Some ((match result.tag with | 1 -> Ranvier.Dom.RadioNodeListOrElement.RadioNodeList ((let handle = result.arm0 in NativeDom.rv_dom_node_list_retain handle |> ignore; this.Session.Track (RadioNodeListObject(this.Session, handle)) :> Ranvier.Dom.RadioNodeList)) | 2 -> Ranvier.Dom.RadioNodeListOrElement.Element ((let handle = result.arm1 in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))) | _ -> invalidOp "Unknown RadioNodeListOrElement union tag from WebCore")))
+                    (if result.present = 0 then None else Some ((match result.tag with | 1 -> Ranvier.Dom.RadioNodeListOrElement.RadioNodeList ((let handle = result.arm0 in NativeDom.rv_dom_node_list_retain handle |> ignore; (this.Session.Track (RadioNodeListObject(this.Session, handle)) :> Ranvier.Dom.RadioNodeList))) | 2 -> Ranvier.Dom.RadioNodeListOrElement.Element ((let handle = result.arm1 in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))) | _ -> invalidOp "Unknown RadioNodeListOrElement union tag from WebCore")))
                 finally
                     NativeDom.rv_dom_union_radio_node_list_or_element_nullable_release(&result)
         member this.reset() : unit =
@@ -9241,13 +9241,13 @@ and internal HTMLMapElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLMapElement.areas" (NativeDom.rv_dom_html_map_element_get_areas (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLMapElement.areas" (NativeDom.rv_dom_html_map_element_get_areas (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.name
             with get () : string =
                 if this.Session.Intercepting then
@@ -9825,13 +9825,13 @@ and internal HTMLMeterElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLMeterElement.labels" (NativeDom.rv_dom_html_meter_element_get_labels (this.Handle, &result))
-                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList))
+                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList))
                         box result)
                     |> unbox<Ranvier.Dom.NodeList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLMeterElement.labels" (NativeDom.rv_dom_html_meter_element_get_labels (this.Handle, &result))
-                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList))
+                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList))
 
 and internal HTMLModElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -10203,13 +10203,13 @@ and internal HTMLOutputElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLOutputElement.htmlFor" (NativeDom.rv_dom_html_output_element_get_html_for (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLOutputElement.htmlFor" (NativeDom.rv_dom_html_output_element_get_html_for (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
         member this.form
             with get () : Ranvier.Dom.HTMLFormElement =
                 if this.Session.Intercepting then
@@ -10315,13 +10315,13 @@ and internal HTMLOutputElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLOutputElement.validity" (NativeDom.rv_dom_html_output_element_get_validity (this.Handle, &result))
-                            (this.Session.Track (ValidityStateObject (this.Session, result)) :> Ranvier.Dom.ValidityState)
+                            (this.Session.Track (ValidityStateObject(this.Session, result)) :> Ranvier.Dom.ValidityState)
                         box result)
                     |> unbox<Ranvier.Dom.ValidityState>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLOutputElement.validity" (NativeDom.rv_dom_html_output_element_get_validity (this.Handle, &result))
-                    (this.Session.Track (ValidityStateObject (this.Session, result)) :> Ranvier.Dom.ValidityState)
+                    (this.Session.Track (ValidityStateObject(this.Session, result)) :> Ranvier.Dom.ValidityState)
         member this.validationMessage
             with get () : string =
                 if this.Session.Intercepting then
@@ -10339,13 +10339,13 @@ and internal HTMLOutputElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLOutputElement.labels" (NativeDom.rv_dom_html_output_element_get_labels (this.Handle, &result))
-                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList))
+                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList))
                         box result)
                     |> unbox<Ranvier.Dom.NodeList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLOutputElement.labels" (NativeDom.rv_dom_html_output_element_get_labels (this.Handle, &result))
-                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList))
+                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList))
         member this.checkValidity() : bool =
             if this.Session.Intercepting then
                 Interop.intercept this "checkValidity" [|  |] (fun args ->
@@ -10595,13 +10595,13 @@ and internal HTMLProgressElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLProgressElement.labels" (NativeDom.rv_dom_html_progress_element_get_labels (this.Handle, &result))
-                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList))
+                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList))
                         box result)
                     |> unbox<Ranvier.Dom.NodeList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLProgressElement.labels" (NativeDom.rv_dom_html_progress_element_get_labels (this.Handle, &result))
-                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList))
+                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList))
 
 and internal HTMLQuoteElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -10801,13 +10801,13 @@ and internal HTMLSelectElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLSelectElement.options" (NativeDom.rv_dom_html_select_element_get_options (this.Handle, &result))
-                            (this.Session.Track (HTMLOptionsCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLOptionsCollection)
+                            (this.Session.Track (HTMLOptionsCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLOptionsCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLOptionsCollection>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLSelectElement.options" (NativeDom.rv_dom_html_select_element_get_options (this.Handle, &result))
-                    (this.Session.Track (HTMLOptionsCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLOptionsCollection)
+                    (this.Session.Track (HTMLOptionsCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLOptionsCollection)
         member this.length
             with get () : uint32 =
                 if this.Session.Intercepting then
@@ -10839,13 +10839,13 @@ and internal HTMLSelectElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLSelectElement.selectedOptions" (NativeDom.rv_dom_html_select_element_get_selected_options (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLSelectElement.selectedOptions" (NativeDom.rv_dom_html_select_element_get_selected_options (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.selectedIndex
             with get () : int =
                 if this.Session.Intercepting then
@@ -10911,13 +10911,13 @@ and internal HTMLSelectElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLSelectElement.validity" (NativeDom.rv_dom_html_select_element_get_validity (this.Handle, &result))
-                            (this.Session.Track (ValidityStateObject (this.Session, result)) :> Ranvier.Dom.ValidityState)
+                            (this.Session.Track (ValidityStateObject(this.Session, result)) :> Ranvier.Dom.ValidityState)
                         box result)
                     |> unbox<Ranvier.Dom.ValidityState>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLSelectElement.validity" (NativeDom.rv_dom_html_select_element_get_validity (this.Handle, &result))
-                    (this.Session.Track (ValidityStateObject (this.Session, result)) :> Ranvier.Dom.ValidityState)
+                    (this.Session.Track (ValidityStateObject(this.Session, result)) :> Ranvier.Dom.ValidityState)
         member this.validationMessage
             with get () : string =
                 if this.Session.Intercepting then
@@ -10935,13 +10935,13 @@ and internal HTMLSelectElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLSelectElement.labels" (NativeDom.rv_dom_html_select_element_get_labels (this.Handle, &result))
-                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList))
+                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList))
                         box result)
                     |> unbox<Ranvier.Dom.NodeList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLSelectElement.labels" (NativeDom.rv_dom_html_select_element_get_labels (this.Handle, &result))
-                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList))
+                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList))
         member this.item(index: uint32) : Ranvier.Dom.HTMLOptionElement =
             if this.Session.Intercepting then
                 Interop.intercept this "item" [| box index |] (fun args ->
@@ -11882,13 +11882,13 @@ and internal HTMLTableElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLTableElement.tBodies" (NativeDom.rv_dom_html_table_element_get_t_bodies (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLTableElement.tBodies" (NativeDom.rv_dom_html_table_element_get_t_bodies (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.rows
             with get () : Ranvier.Dom.HTMLCollection =
                 if this.Session.Intercepting then
@@ -11896,13 +11896,13 @@ and internal HTMLTableElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLTableElement.rows" (NativeDom.rv_dom_html_table_element_get_rows (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLTableElement.rows" (NativeDom.rv_dom_html_table_element_get_rows (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.align
             with get () : string =
                 if this.Session.Intercepting then
@@ -12225,13 +12225,13 @@ and internal HTMLTableRowElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLTableRowElement.cells" (NativeDom.rv_dom_html_table_row_element_get_cells (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLTableRowElement.cells" (NativeDom.rv_dom_html_table_row_element_get_cells (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.align
             with get () : string =
                 if this.Session.Intercepting then
@@ -12367,13 +12367,13 @@ and internal HTMLTableSectionElementObject(session: Session, handle: nativeint) 
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLTableSectionElement.rows" (NativeDom.rv_dom_html_table_section_element_get_rows (this.Handle, &result))
-                            (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                            (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                         box result)
                     |> unbox<Ranvier.Dom.HTMLCollection>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLTableSectionElement.rows" (NativeDom.rv_dom_html_table_section_element_get_rows (this.Handle, &result))
-                    (this.Session.Track (HTMLCollectionObject (this.Session, result)) :> Ranvier.Dom.HTMLCollection)
+                    (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.align
             with get () : string =
                 if this.Session.Intercepting then
@@ -12999,13 +12999,13 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLTextAreaElement.validity" (NativeDom.rv_dom_html_text_area_element_get_validity (this.Handle, &result))
-                            (this.Session.Track (ValidityStateObject (this.Session, result)) :> Ranvier.Dom.ValidityState)
+                            (this.Session.Track (ValidityStateObject(this.Session, result)) :> Ranvier.Dom.ValidityState)
                         box result)
                     |> unbox<Ranvier.Dom.ValidityState>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLTextAreaElement.validity" (NativeDom.rv_dom_html_text_area_element_get_validity (this.Handle, &result))
-                    (this.Session.Track (ValidityStateObject (this.Session, result)) :> Ranvier.Dom.ValidityState)
+                    (this.Session.Track (ValidityStateObject(this.Session, result)) :> Ranvier.Dom.ValidityState)
         member this.validationMessage
             with get () : string =
                 if this.Session.Intercepting then
@@ -13023,13 +13023,13 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLTextAreaElement.labels" (NativeDom.rv_dom_html_text_area_element_get_labels (this.Handle, &result))
-                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList))
+                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList))
                         box result)
                     |> unbox<Ranvier.Dom.NodeList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLTextAreaElement.labels" (NativeDom.rv_dom_html_text_area_element_get_labels (this.Handle, &result))
-                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList))
+                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList))
         member this.selectionStart
             with get () : uint32 =
                 if this.Session.Intercepting then
@@ -13646,13 +13646,13 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLAnchorElement.relList" (NativeDom.rv_dom_html_anchor_element_get_rel_list (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLAnchorElement.relList" (NativeDom.rv_dom_html_anchor_element_get_rel_list (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
         member this.referrerPolicy
             with get () : string =
                 if this.Session.Intercepting then
@@ -14059,13 +14059,13 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLAreaElement.relList" (NativeDom.rv_dom_html_area_element_get_rel_list (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLAreaElement.relList" (NativeDom.rv_dom_html_area_element_get_rel_list (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
         member this.origin
             with get () : string =
                 if this.Session.Intercepting then
@@ -14576,13 +14576,13 @@ and internal HTMLButtonElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLButtonElement.validity" (NativeDom.rv_dom_html_button_element_get_validity (this.Handle, &result))
-                            (this.Session.Track (ValidityStateObject (this.Session, result)) :> Ranvier.Dom.ValidityState)
+                            (this.Session.Track (ValidityStateObject(this.Session, result)) :> Ranvier.Dom.ValidityState)
                         box result)
                     |> unbox<Ranvier.Dom.ValidityState>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLButtonElement.validity" (NativeDom.rv_dom_html_button_element_get_validity (this.Handle, &result))
-                    (this.Session.Track (ValidityStateObject (this.Session, result)) :> Ranvier.Dom.ValidityState)
+                    (this.Session.Track (ValidityStateObject(this.Session, result)) :> Ranvier.Dom.ValidityState)
         member this.validationMessage
             with get () : string =
                 if this.Session.Intercepting then
@@ -14600,13 +14600,13 @@ and internal HTMLButtonElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLButtonElement.labels" (NativeDom.rv_dom_html_button_element_get_labels (this.Handle, &result))
-                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList))
+                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList))
                         box result)
                     |> unbox<Ranvier.Dom.NodeList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLButtonElement.labels" (NativeDom.rv_dom_html_button_element_get_labels (this.Handle, &result))
-                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList))
+                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList))
         member this.checkValidity() : bool =
             if this.Session.Intercepting then
                 Interop.intercept this "checkValidity" [|  |] (fun args ->
@@ -15505,13 +15505,13 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLInputElement.validity" (NativeDom.rv_dom_html_input_element_get_validity (this.Handle, &result))
-                            (this.Session.Track (ValidityStateObject (this.Session, result)) :> Ranvier.Dom.ValidityState)
+                            (this.Session.Track (ValidityStateObject(this.Session, result)) :> Ranvier.Dom.ValidityState)
                         box result)
                     |> unbox<Ranvier.Dom.ValidityState>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLInputElement.validity" (NativeDom.rv_dom_html_input_element_get_validity (this.Handle, &result))
-                    (this.Session.Track (ValidityStateObject (this.Session, result)) :> Ranvier.Dom.ValidityState)
+                    (this.Session.Track (ValidityStateObject(this.Session, result)) :> Ranvier.Dom.ValidityState)
         member this.validationMessage
             with get () : string =
                 if this.Session.Intercepting then
@@ -15529,13 +15529,13 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLInputElement.labels" (NativeDom.rv_dom_html_input_element_get_labels (this.Handle, &result))
-                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList))
+                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList))
                         box result)
                     |> unbox<Ranvier.Dom.NodeList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLInputElement.labels" (NativeDom.rv_dom_html_input_element_get_labels (this.Handle, &result))
-                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject (this.Session, result)) :> Ranvier.Dom.NodeList))
+                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.NodeList> else (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList))
         member this.selectionStart
             with get () : uint32 option =
                 if this.Session.Intercepting then
@@ -15779,13 +15779,13 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "LinkStyle.sheet" (NativeDom.rv_dom_html_link_element_get_sheet (this.Handle, &result))
-                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleSheet> else (this.Session.Track (CSSStyleSheetObject (this.Session, result)) :> Ranvier.Dom.CSSStyleSheet))
+                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleSheet> else (unbox<Ranvier.Dom.CSSStyleSheet> (this.Session.Object(result, Kind.StyleSheet, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.StyleSheet(session, handle))))))
                         box result)
                     |> unbox<Ranvier.Dom.CSSStyleSheet>
                 else
                     let mutable result = 0n
                     Interop.check "LinkStyle.sheet" (NativeDom.rv_dom_html_link_element_get_sheet (this.Handle, &result))
-                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleSheet> else (this.Session.Track (CSSStyleSheetObject (this.Session, result)) :> Ranvier.Dom.CSSStyleSheet))
+                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleSheet> else (unbox<Ranvier.Dom.CSSStyleSheet> (this.Session.Object(result, Kind.StyleSheet, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.StyleSheet(session, handle))))))
     interface Ranvier.Dom.HTMLLinkElement with
         member this.href
             with get () : string =
@@ -15874,13 +15874,13 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLLinkElement.relList" (NativeDom.rv_dom_html_link_element_get_rel_list (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLLinkElement.relList" (NativeDom.rv_dom_html_link_element_get_rel_list (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
         member this.media
             with get () : string =
                 if this.Session.Intercepting then
@@ -15968,13 +15968,13 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLLinkElement.sizes" (NativeDom.rv_dom_html_link_element_get_sizes (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLLinkElement.sizes" (NativeDom.rv_dom_html_link_element_get_sizes (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
         member this.imageSrcset
             with get () : string =
                 if this.Session.Intercepting then
@@ -16042,13 +16042,13 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLLinkElement.blocking" (NativeDom.rv_dom_html_link_element_get_blocking (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLLinkElement.blocking" (NativeDom.rv_dom_html_link_element_get_blocking (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
         member this.disabled
             with get () : bool =
                 if this.Session.Intercepting then
@@ -16164,13 +16164,13 @@ and internal HTMLStyleElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "LinkStyle.sheet" (NativeDom.rv_dom_html_style_element_get_sheet (this.Handle, &result))
-                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleSheet> else (this.Session.Track (CSSStyleSheetObject (this.Session, result)) :> Ranvier.Dom.CSSStyleSheet))
+                            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleSheet> else (unbox<Ranvier.Dom.CSSStyleSheet> (this.Session.Object(result, Kind.StyleSheet, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.StyleSheet(session, handle))))))
                         box result)
                     |> unbox<Ranvier.Dom.CSSStyleSheet>
                 else
                     let mutable result = 0n
                     Interop.check "LinkStyle.sheet" (NativeDom.rv_dom_html_style_element_get_sheet (this.Handle, &result))
-                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleSheet> else (this.Session.Track (CSSStyleSheetObject (this.Session, result)) :> Ranvier.Dom.CSSStyleSheet))
+                    (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSStyleSheet> else (unbox<Ranvier.Dom.CSSStyleSheet> (this.Session.Object(result, Kind.StyleSheet, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.StyleSheet(session, handle))))))
     interface Ranvier.Dom.HTMLStyleElement with
         member this.disabled
             with get () : bool =
@@ -16243,13 +16243,13 @@ and internal HTMLStyleElementObject(session: Session, handle: nativeint) =
                         let result =
                             let mutable result = 0n
                             Interop.check "HTMLStyleElement.blocking" (NativeDom.rv_dom_html_style_element_get_blocking (this.Handle, &result))
-                            (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                            (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
                         box result)
                     |> unbox<Ranvier.Dom.DOMTokenList>
                 else
                     let mutable result = 0n
                     Interop.check "HTMLStyleElement.blocking" (NativeDom.rv_dom_html_style_element_get_blocking (this.Handle, &result))
-                    (this.Session.Track (DOMTokenListObject (this.Session, result)) :> Ranvier.Dom.DOMTokenList)
+                    (this.Session.Track (DOMTokenListObject(this.Session, result)) :> Ranvier.Dom.DOMTokenList)
 
 and internal HTMLVideoElementObject(session: Session, handle: nativeint) =
     inherit HTMLMediaElementObject(session, handle)
@@ -16301,6 +16301,62 @@ and internal SVGTextElementObject(session: Session, handle: nativeint) =
 
 /// <summary>Wraps an element using its namespace and tag from the IDL tag catalogues.</summary>
 and [<AbstractClass; Sealed>] internal Classes =
+    static member CSSRule(session: Session, handle: nativeint) : NativeObject =
+        if Native.rv_abi_has "dom-type-query:CSSRule" = 0 then Interop.unsupported<unit> "CSSRule runtime interface"
+        let interfaceName = Interop.text "CSSRule runtime interface" (fun buffer capacity length -> NativeDom.rv_dom_css_rule_get_interface_name(handle, buffer, capacity, length))
+        let wrapped: NativeObject =
+            match interfaceName with
+            | "CSSContainerRule" -> CSSContainerRuleObject(session, handle)
+            | "CSSMediaRule" -> CSSMediaRuleObject(session, handle)
+            | "CSSSupportsRule" -> CSSSupportsRuleObject(session, handle)
+            | "CSSConditionRule" -> CSSConditionRuleObject(session, handle)
+            | "CSSLayerBlockRule" -> CSSLayerBlockRuleObject(session, handle)
+            | "CSSScopeRule" -> CSSScopeRuleObject(session, handle)
+            | "CSSStartingStyleRule" -> CSSStartingStyleRuleObject(session, handle)
+            | "CSSCounterStyleRule" -> CSSCounterStyleRuleObject(session, handle)
+            | "CSSFontFaceRule" -> CSSFontFaceRuleObject(session, handle)
+            | "CSSFontFeatureValuesRule" -> CSSFontFeatureValuesRuleObject(session, handle)
+            | "CSSFontPaletteValuesRule" -> CSSFontPaletteValuesRuleObject(session, handle)
+            | "CSSGroupingRule" -> CSSGroupingRuleObject(session, handle)
+            | "CSSImportRule" -> CSSImportRuleObject(session, handle)
+            | "CSSKeyframeRule" -> CSSKeyframeRuleObject(session, handle)
+            | "CSSKeyframesRule" -> CSSKeyframesRuleObject(session, handle)
+            | "CSSLayerStatementRule" -> CSSLayerStatementRuleObject(session, handle)
+            | "CSSNamespaceRule" -> CSSNamespaceRuleObject(session, handle)
+            | "CSSNestedDeclarations" -> CSSNestedDeclarationsObject(session, handle)
+            | "CSSPositionTryRule" -> CSSPositionTryRuleObject(session, handle)
+            | "CSSStyleRule" -> CSSStyleRuleObject(session, handle)
+            | "CSSViewTransitionRule" -> CSSViewTransitionRuleObject(session, handle)
+            | "CSSRule" -> CSSRuleObject(session, handle)
+            | name -> invalidOp ("Unknown CSSRule runtime interface: " + name)
+        wrapped
+
+    static member StyleSheet(session: Session, handle: nativeint) : NativeObject =
+        if Native.rv_abi_has "dom-type-query:StyleSheet" = 0 then Interop.unsupported<unit> "StyleSheet runtime interface"
+        let interfaceName = Interop.text "StyleSheet runtime interface" (fun buffer capacity length -> NativeDom.rv_dom_style_sheet_get_interface_name(handle, buffer, capacity, length))
+        let mutable ownerNode = 0n
+        Interop.check "StyleSheet.ownerNode" (NativeDom.rv_dom_style_sheet_get_owner_node(handle, &ownerNode))
+        let owner = session.Node ownerNode
+        let wrapped: NativeObject =
+            match interfaceName with
+            | "CSSStyleSheet" -> CSSStyleSheetObject(session, handle)
+            | "StyleSheet" -> StyleSheetObject(session, handle)
+            | name -> invalidOp ("Unknown StyleSheet runtime interface: " + name)
+        wrapped.KeepAlive owner
+        wrapped
+
+    static member CSSStyleDeclaration(session: Session, handle: nativeint) : NativeObject =
+        if Native.rv_abi_has "dom-type-query:CSSStyleDeclaration" = 0 then Interop.unsupported<unit> "CSSStyleDeclaration runtime interface"
+        let interfaceName = Interop.text "CSSStyleDeclaration runtime interface" (fun buffer capacity length -> NativeDom.rv_dom_css_style_declaration_get_interface_name(handle, buffer, capacity, length))
+        let wrapped: NativeObject =
+            match interfaceName with
+            | "CSSFontFaceDescriptors" -> CSSFontFaceDescriptorsObject(session, handle)
+            | "CSSPositionTryDescriptors" -> CSSPositionTryDescriptorsObject(session, handle)
+            | "CSSStyleProperties" -> CSSStylePropertiesObject(session, handle)
+            | "CSSStyleDeclaration" -> CSSStyleDeclarationObject(session, handle)
+            | name -> invalidOp ("Unknown CSSStyleDeclaration runtime interface: " + name)
+        wrapped
+
     /// <summary>The wrapper class matching the element's namespace and tag.</summary>
     static member Element(session: Session, handle: nativeint, tag: string) : NativeObject =
         let ns = Interop.text "Element.namespaceURI" (fun buffer capacity length -> NativeDom.rv_dom_element_get_namespace_uri(handle, buffer, capacity, length))

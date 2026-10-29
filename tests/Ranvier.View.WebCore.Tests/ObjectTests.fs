@@ -77,13 +77,18 @@ let tests =
                     (host :> IDisposable).Dispose()
                     Expect.equal (box element :?> NativeObject).Handle 0n "released at disposal")
 
-            hostCase "an unmapped member raises NotSupportedException naming it"
+            hostCase "area hyperlinks use the engine URL reflection"
             <| fun host ->
                 let element = host.Document.createElement "area" :?> HTMLAreaElement
+                element.href <- "https://example.invalid/area"
+                Expect.equal element.href "https://example.invalid/area" "the typed hyperlink getter"
+                Expect.equal (element.getAttribute "href") "https://example.invalid/area" "the reflected attribute"
 
-                Expect.throwsC (fun () -> element.href |> ignore) (fun e ->
+            testCase "an unsupported ABI result names the unavailable member"
+            <| fun _ ->
+                Expect.throwsC (fun () -> Interop.check "Fixture.operation" -9) (fun e ->
                     Expect.isTrue (e :? NotSupportedException) "the exception type"
-                    Expect.stringContains e.Message "HTMLHyperlinkElementUtils.href is not available in the native backend" "the message")
+                    Expect.stringContains e.Message "Fixture.operation is not supported by this WebCore build" "the operation name")
 
             hostCase "a DOM exception carries its name"
             <| fun host ->

@@ -14,6 +14,8 @@ let main _ =
         System.Console.WriteLine $"NATIVE_API D11 PASS assertions={reflection}"
         let namespaces = Namespaces.run host.Document (fun () -> host.Frame ())
         System.Console.WriteLine $"NATIVE_API D09 PASS assertions={namespaces}"
+        let stylesheets = Stylesheets.run host.Document
+        System.Console.WriteLine $"NATIVE_API CSSOM PASS assertions={stylesheets}"
 
         let svg =
             host.Document.getElementById ("native-api-svg") :?> Ranvier.Dom.HTMLOrSVGElement
@@ -35,5 +37,5 @@ let main _ =
     if session.LiveObjects <> 0 then
         failwith $"Shared API fixtures leaked {session.LiveObjects} managed native objects"
 
-    System.Console.WriteLine "NATIVE_API TEARDOWN PASS groups=D09,D10,D11"
+    System.Console.WriteLine "NATIVE_API TEARDOWN PASS groups=D09,D10,D11,CSSOM"
     0

@@ -9,6 +9,7 @@
     <Compile Include="Tables.fs" />
     <Compile Include="Reflection.fs" />
     <Compile Include="Namespaces.fs" />
+    <Compile Include="Stylesheets.fs" />
     <Compile Include="Native.fs" />
     <ProjectReference Include="../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />
   </ItemGroup>

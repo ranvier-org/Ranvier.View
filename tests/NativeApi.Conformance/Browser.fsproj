@@ -8,6 +8,7 @@
     <Compile Include="Tables.fs" />
     <Compile Include="Reflection.fs" />
     <Compile Include="Namespaces.fs" />
+    <Compile Include="Stylesheets.fs" />
     <Compile Include="Browser.fs" />
     <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" />
     <PackageReference Include="Fable.Core" Version="5.3.0" />
