@@ -1,0 +1,120 @@
+{
+  "project": "C:/Users/shaya/.codex/worktrees/native-api-contracts/Ranvier/src/Ranvier.Dom/Ranvier.Dom.fsproj",
+  "scope": "Four stylesheet service declarations only; generated DOM API and downstream consumers excluded",
+  "entities": [
+    {
+      "fullName": "Ranvier.Dom.StyleSheetException",
+      "kind": "type",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "Message",
+          "kind": "property",
+          "signature": "Message() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.StyleSheetMedia",
+      "kind": "union",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "IsMediaList",
+          "kind": "property",
+          "signature": "IsMediaList() -> bool",
+          "accessibility": "public"
+        },
+        {
+          "name": "IsMediaText",
+          "kind": "property",
+          "signature": "IsMediaText() -> bool",
+          "accessibility": "public"
+        },
+        {
+          "name": "MediaList",
+          "kind": "union-case",
+          "signature": "MediaList of Ranvier.Dom.MediaList",
+          "accessibility": "public"
+        },
+        {
+          "name": "MediaText",
+          "kind": "union-case",
+          "signature": "MediaText of string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.StyleSheetOptions",
+      "kind": "record",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "BaseUrl",
+          "kind": "field",
+          "signature": "BaseUrl: string option",
+          "accessibility": "public"
+        },
+        {
+          "name": "Default",
+          "kind": "property",
+          "signature": "Default() -> Ranvier.Dom.StyleSheetOptions",
+          "accessibility": "public"
+        },
+        {
+          "name": "Disabled",
+          "kind": "field",
+          "signature": "Disabled: bool",
+          "accessibility": "public"
+        },
+        {
+          "name": "Media",
+          "kind": "field",
+          "signature": "Media: Ranvier.Dom.StyleSheetMedia",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.StyleSheetService",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "Create",
+          "kind": "method",
+          "signature": "Create(options: Ranvier.Dom.StyleSheetOptions) -> Ranvier.Dom.CSSStyleSheet",
+          "accessibility": "public"
+        },
+        {
+          "name": "GetAdopted",
+          "kind": "method",
+          "signature": "GetAdopted(scope: Ranvier.Dom.Node) -> array<Ranvier.Dom.CSSStyleSheet>",
+          "accessibility": "public"
+        },
+        {
+          "name": "ReplaceAsync",
+          "kind": "method",
+          "signature": "ReplaceAsync(sheet: Ranvier.Dom.CSSStyleSheet, text: string) -> Microsoft.FSharp.Control.FSharpAsync<Ranvier.Dom.CSSStyleSheet>",
+          "accessibility": "public"
+        },
+        {
+          "name": "SetAdopted",
+          "kind": "method",
+          "signature": "SetAdopted(scope: Ranvier.Dom.Node, sheets: array<Ranvier.Dom.CSSStyleSheet>) -> unit",
+          "accessibility": "public"
+        },
+        {
+          "name": "SupportsBaseUrl",
+          "kind": "property",
+          "signature": "SupportsBaseUrl() -> bool",
+          "accessibility": "public"
+        }
+      ]
+    }
+  ],
+  "pagesRead": 6,
+  "entityCount": 4
+}

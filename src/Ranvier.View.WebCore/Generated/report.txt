@@ -1,14 +1,18 @@
-118 classes; 1707 members: 1693 mapped to 1676 of 1681 rv_dom_* functions, 13 hand-written, 1 unmapped
+118 classes; 1715 members: 1702 mapped to 1685 of 1695 rv_dom_* functions, 13 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
+  rv_dom_css_style_sheet_create: CSSStyleSheet.constructor (op)
+  rv_dom_document_get_adopted_style_sheets: Document.adoptedStyleSheets (get)
+  rv_dom_document_set_adopted_style_sheets: Document.adoptedStyleSheets (set)
   rv_dom_event_get_current_target: Event.currentTarget (get)
   rv_dom_html_select_element_remove_0: HTMLSelectElement.remove (op)
   rv_dom_input_event_get_data: InputEvent.data (get)
   rv_dom_input_event_get_input_type: InputEvent.inputType (get)
   rv_dom_keyboard_event_get_key: KeyboardEvent.key (get)
+  rv_dom_shadow_root_get_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (get)
+  rv_dom_shadow_root_set_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (set)
 
 Unmapped members by reason:
-      1  no ABI function
 
 Members by class (mapped / hand-written / unmapped):
   AbstractRangeObject: 5 / 0 / 0
@@ -121,7 +125,7 @@ Members by class (mapped / hand-written / unmapped):
   RadioNodeListObject: 2 / 0 / 0
   RangeObject: 25 / 0 / 0
   SVGElementObject: 11 / 0 / 0
-  SVGStyleElementObject: 0 / 0 / 1
+  SVGStyleElementObject: 9 / 0 / 0
   ShadowRootObject: 18 / 0 / 0
   StyleSheetListObject: 3 / 0 / 0
   StyleSheetObject: 8 / 0 / 0
@@ -131,4 +135,3 @@ Members by class (mapped / hand-written / unmapped):
   WheelEventObject: 7 / 0 / 0
 
 Unmapped members:
-  SVGStyleElementObject LinkStyle.sheet (getter): no ABI function

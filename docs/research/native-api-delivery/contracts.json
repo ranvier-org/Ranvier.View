@@ -17531,10 +17531,57 @@
       "description": "CSSStyleSheet constructors/replace/replaceSync and Document/ShadowRoot.adoptedStyleSheets install reusable stylesheets.",
       "acceptance": "Construct/replace/adopt a sheet in document and shadow scopes; verify rule effects and replacement errors without corrupting a previously valid sheet.",
       "consumes": "C06.",
-      "state": "not_started",
-      "memberContracts": [],
-      "publicApiSnapshot": null,
-      "memberContractStatus": "pending exact source signatures and clean FCS API snapshot"
+      "state": "in_progress",
+      "memberContracts": [
+        {
+          "member": "StyleSheetService.Create",
+          "signature": "StyleSheetOptions -> CSSStyleSheet",
+          "browser": "new document.defaultView.CSSStyleSheet(options)",
+          "native": "rv_dom_css_style_sheet_create"
+        },
+        {
+          "member": "CSSStyleSheet.replaceSync",
+          "signature": "string -> unit",
+          "browser": "sheet.replaceSync(text)",
+          "native": "rv_dom_css_style_sheet_replace_sync"
+        },
+        {
+          "member": "StyleSheetService.ReplaceAsync",
+          "signature": "CSSStyleSheet * string -> Async<CSSStyleSheet>",
+          "browser": "sheet.replace(text), cold Async with owned completion",
+          "native": "engine replaceSync parser then owned host microtask completion"
+        },
+        {
+          "member": "StyleSheetService.GetAdopted",
+          "signature": "Node -> CSSStyleSheet array",
+          "browser": "Array.from(scope.adoptedStyleSheets)",
+          "native": "document/shadow_root_get_adopted_style_sheets; retained sequence decoded to owned wrappers"
+        },
+        {
+          "member": "StyleSheetService.SetAdopted",
+          "signature": "Node * CSSStyleSheet array -> unit",
+          "browser": "scope.adoptedStyleSheets = sheets",
+          "native": "document/shadow_root_set_adopted_style_sheets; borrowed typed sequence"
+        },
+        {
+          "member": "StyleSheetService.Dispose",
+          "signature": "unit -> unit",
+          "browser": "cancel pending continuations and reject new requests",
+          "native": "cancel pending continuations and reject new requests; host disposal also cancels"
+        },
+        {
+          "member": "StyleSheetService.SupportsBaseUrl",
+          "signature": "bool",
+          "browser": "constructor validation probe; observed false on Chromium",
+          "native": "dom-constructor:CSSStyleSheet capability; observed true"
+        }
+      ],
+      "publicApiSnapshot": "stylesheet-service-public-api.json",
+      "memberContractStatus": "fixed; local native/browser/AOT providers verified; platform CI/public package release and browser explicit-base limitation remain",
+      "design": "../../superpowers/plans/2026-10-29-stylesheet-service.md",
+      "profileLimitations": [
+        "Chromium ignores explicit CSSStyleSheetInit.baseURL; facade reports unsupported and rejects explicit options. Native explicit-base resolution verified."
+      ]
     },
     {
       "id": "C08",

@@ -55,6 +55,7 @@
         <Compile Include="Marshalling.fs" />
         <Compile Include="Generated/Objects.fs" />
         <Compile Include="Host.fs" />
+        <Compile Include="StyleSheets.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />

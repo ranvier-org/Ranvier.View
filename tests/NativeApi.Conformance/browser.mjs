@@ -30,12 +30,24 @@ try {
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
-  const checks = await page.evaluate(async () => (await import('/Browser.js')).run());
-  if (checks.tables !== 30 || checks.reflection < 200 || checks.namespaces < 24 || checks.cssom < 58) throw new Error(`Insufficient API assertions: ${JSON.stringify(checks)}`);
+  const checks = await page.evaluate(async () => {
+    try {
+      return await (await import('/Browser.js')).run();
+    } catch (error) {
+      throw new Error(JSON.stringify({
+        type: error?.constructor?.name,
+        message: error?.message,
+        detail: error?.Message,
+        fields: Object.fromEntries(Object.getOwnPropertyNames(error).filter(key => key !== 'stack').map(key => [key, error[key]])),
+      }));
+    }
+  });
+  if (checks.tables !== 30 || checks.reflection < 200 || checks.namespaces < 24 || checks.cssom < 58 || checks.construction < 40) throw new Error(`Insufficient API assertions: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API D10 PASS assertions=${checks.tables} engine=chromium`);
   console.log(`BROWSER_API D11 PASS assertions=${checks.reflection} engine=chromium`);
   console.log(`BROWSER_API D09 PASS assertions=${checks.namespaces} engine=chromium`);
   console.log(`BROWSER_API CSSOM PASS assertions=${checks.cssom} engine=chromium`);
+  console.log(`BROWSER_API C07 PASS assertions=${checks.construction} engine=chromium`);
   await page.locator('#native-api-svg').focus();
   await page.keyboard.press('Tab');
   if (!await page.locator('#native-api-math').evaluate(element => element === element.ownerDocument.activeElement)) {
