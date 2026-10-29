@@ -72,6 +72,15 @@ let main _ =
         System.Console.WriteLine $"NATIVE_API C18 CAPABILITY fontWidthAlias={fontWidthAlias}"
         let transitionRules = FontTransitionRules.transitions host.Document
         System.Console.WriteLine $"NATIVE_API C22 PASS assertions={transitionRules}"
+
+        let positionTry, positionTryAvailable =
+            PositionTry.run host.Document (fun () -> host.Frame ())
+
+        if positionTry <> 44 || not positionTryAvailable then
+            failwith $"Position fallback proof incomplete: assertions={positionTry}, available={positionTryAvailable}"
+
+        System.Console.WriteLine $"NATIVE_API C21 PASS assertions={positionTry}"
+        System.Console.WriteLine $"NATIVE_API C21 CAPABILITY positionTry={positionTryAvailable}"
         let lifetimeRectangles = host.Document.body.getClientRects ()
         let lifetimeRectangle = lifetimeRectangles.item 0u
 

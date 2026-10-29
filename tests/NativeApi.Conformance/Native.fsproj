@@ -20,6 +20,7 @@
     <Compile Include="TypedStyles.fs" />
     <Compile Include="FragmentRectangles.fs" />
     <Compile Include="FontTransitionRules.fs" />
+    <Compile Include="PositionTry.fs" />
     <Compile Include="ConditionalRules.fs" />
     <Compile Include="CascadeRules.fs" />
     <Compile Include="SheetConstruction.fs" />

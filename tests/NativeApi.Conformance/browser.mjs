@@ -66,6 +66,9 @@ try {
   console.log(`BROWSER_API C18 PASS assertions=${checks.fontRules} engine=chromium`);
   console.log(`BROWSER_API C18 CAPABILITY fontWidthAlias=${checks.fontWidthAlias} engine=chromium`);
   console.log(`BROWSER_API C22 PASS assertions=${checks.transitionRules} engine=chromium`);
+  if (checks.positionTry !== 44 || !checks.positionTryAvailable) throw new Error(`Position fallback proof incomplete: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API C21 PASS assertions=${checks.positionTry} engine=chromium`);
+  console.log(`BROWSER_API C21 CAPABILITY positionTry=${checks.positionTryAvailable} engine=chromium`);
   if (checks.conditionalRules !== 44) throw new Error('Conditional rule assertions did not run');
   console.log(`BROWSER_API C09 PASS assertions=${checks.conditionalRules} engine=chromium`);
   if (checks.cascadeRules !== 93) throw new Error('Cascade rule assertions did not run for the pinned Chromium profile');
