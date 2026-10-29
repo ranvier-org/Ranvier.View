@@ -1025,7 +1025,16 @@
       "selectedInterfaces": [
         "SVGElement",
         "MathMLElement"
-      ]
+      ],
+      "svgStyleAcceptance": {
+        "fixture": "tests/NativeApi.Conformance/Stylesheets.fs:runSvg",
+        "assertions": 31,
+        "nativeWindowsJit": "passed",
+        "nativeWindowsAot": "passed",
+        "chromium": "passed",
+        "coverage": "SVGStyleElement reflection, LinkStyle.sheet, live discovery/removal, owner/rule/declaration identity, disabled/media layout and rule editing",
+        "scope": "Partial group acceptance; published package and other-platform shared acceptance remain pending"
+      }
     },
     {
       "id": "D10",
@@ -17520,6 +17529,15 @@
         "sharedManagedConformance": "pending",
         "platformMatrix": "pending",
         "release": "pending"
+      },
+      "svgStyleAcceptance": {
+        "fixture": "tests/NativeApi.Conformance/Stylesheets.fs:runSvg",
+        "assertions": 31,
+        "nativeWindowsJit": "passed",
+        "nativeWindowsAot": "passed",
+        "chromium": "passed",
+        "coverage": "SVGStyleElement reflection, LinkStyle.sheet, live discovery/removal, owner/rule/declaration identity, disabled/media layout and rule editing",
+        "scope": "Partial group acceptance; published package and other-platform shared acceptance remain pending"
       }
     },
     {

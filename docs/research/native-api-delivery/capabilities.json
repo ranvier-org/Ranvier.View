@@ -672,6 +672,12 @@
           "nativeLifetimeAssertions": 4,
           "explicitBaseUrl": true,
           "publicPackageAcceptance": "pending"
+        },
+        "SVG_CSSOM": {
+          "state": "slice_verified",
+          "sharedAdapterAssertions": 31,
+          "nativeAotAssertions": 31,
+          "publicPackageAcceptance": "pending"
         }
       },
       "runtimeProbe": "Selected D09/D10/D11/CSSOM/C07 local runtime fixtures passed; remaining groups not run",
@@ -723,6 +729,11 @@
         "unsupportedExplicitBaseUrl": "rejected",
         "adoptionErrorAtomicity": "snapshot rollback verified",
         "packageProvider": "fresh local alpha.8 package, no source override"
+      },
+      "SVG_CSSOM": {
+        "state": "slice_verified",
+        "engine": "chromium",
+        "assertions": 31
       }
     }
   }

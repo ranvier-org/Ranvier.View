@@ -14,6 +14,8 @@ let main _ =
         System.Console.WriteLine $"NATIVE_API D11 PASS assertions={reflection}"
         let namespaces = Namespaces.run host.Document (fun () -> host.Frame ())
         System.Console.WriteLine $"NATIVE_API D09 PASS assertions={namespaces}"
+        let svgStylesheets = Stylesheets.runSvg host.Document
+        System.Console.WriteLine $"NATIVE_API SVG_CSSOM PASS assertions={svgStylesheets}"
         let stylesheets = Stylesheets.run host.Document
         System.Console.WriteLine $"NATIVE_API CSSOM PASS assertions={stylesheets}"
 

@@ -20,6 +20,7 @@ let run () =
         let tables = Tables.run document
         let reflection = Reflection.run document
         let cssom = Stylesheets.run document
+        let svgCssom = Stylesheets.runSvg document
 
         let namespaces =
             Namespaces.run document (fun () -> document.body.getBoundingClientRect () |> ignore)
@@ -35,6 +36,7 @@ let run () =
                 tables = tables
                 reflection = reflection
                 cssom = cssom
+                svgCssom = svgCssom
                 namespaces = namespaces
                 construction = construction
             |}
