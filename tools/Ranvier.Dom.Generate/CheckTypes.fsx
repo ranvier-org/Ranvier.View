@@ -99,12 +99,14 @@ let cases =
         case
             "shared anchor and area authoring owners"
             """
-let anchor = H.a Tree.ops [| H.Properties.HTMLAnchorElement.downloadStatic "anchor.txt"; H.Properties.HTMLHyperlinkElementUtils.hrefStatic "/anchor"; H.Properties.ARIAMixin.roleStatic "link" |] [||]
-let area = H.area Tree.ops [| H.Properties.HTMLAreaElement.downloadStatic "area.txt"; H.Properties.HTMLHyperlinkElementUtils.hrefStatic "/area"; H.Properties.ARIAMixin.roleStatic "link" |]
+let anchor = H.a Tree.ops [| H.Properties.HTMLAnchorElement.downloadStatic "anchor.txt"; H.Properties.HTMLHyperlinkElementUtils.hrefStatic "/anchor"; H.Properties.HTMLHyperlinkElementUtils.hashStatic "#anchor"; H.Properties.ARIAMixin.roleStatic "link" |] [||]
+let area = H.area Tree.ops [| H.Properties.HTMLAreaElement.downloadStatic "area.txt"; H.Properties.HTMLHyperlinkElementUtils.hrefStatic "/area"; H.Properties.HTMLHyperlinkElementUtils.hashStatic "#area"; H.Properties.ARIAMixin.roleStatic "link" |]
+let readCommon (node: Dom.HTMLHyperlinkElementUtils) =
+    H.Properties.HTMLHyperlinkElementUtils.hash node, H.Properties.HTMLHyperlinkElementUtils.origin node
 let view = Component.define (fun _ () -> ()) (fun t ->
     t.div [||] [|
-        t.a [| t.Props.Anchor.download "anchor.txt"; t.Props.HyperlinkElementUtils.href "/anchor" |] [||]
-        t.area [| t.Props.Area.download "area.txt"; t.Props.HyperlinkElementUtils.href "/area" |]
+        t.a [| t.Props.Anchor.download "anchor.txt"; t.Props.HyperlinkElementUtils.href "/anchor"; t.Props.HyperlinkElementUtils.hash "#anchor" |] [||]
+        t.area [| t.Props.Area.download "area.txt"; t.Props.HyperlinkElementUtils.href "/area"; t.Props.HyperlinkElementUtils.hash "#area" |]
     |])
 """
             None
@@ -122,6 +124,10 @@ let view = Component.define (fun _ () -> ()) (fun t ->
               None with
             Fable = true
         }
+        case
+            "common hyperlink origin stays readonly"
+            "let modifier = H.Properties.HTMLHyperlinkElementUtils.originStatic \"https://example.invalid\""
+            (Some "FS0039")
         case "generic modifiers reject lists" "let view = H.div Tree.ops [] [||]" (Some "FS0001")
         case "generic children reject lists" "let view = H.div Tree.ops [||] []" (Some "FS0001")
         case "bound modifiers reject lists" "let view = H.Program.div [] [||]" (Some "FS0001")
