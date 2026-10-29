@@ -14,6 +14,7 @@
     <Compile Include="Stylesheets.fs" />
     <Compile Include="CssEscaping.fs" />
     <Compile Include="CssSupport.fs" />
+    <Compile Include="ComputedStyles.fs" />
     <Compile Include="SheetConstruction.fs" />
     <Compile Include="Native.fs" />
     <ProjectReference Include="../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />

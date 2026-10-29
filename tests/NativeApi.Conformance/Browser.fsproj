@@ -13,6 +13,7 @@
     <Compile Include="Stylesheets.fs" />
     <Compile Include="CssEscaping.fs" />
     <Compile Include="CssSupport.fs" />
+    <Compile Include="ComputedStyles.fs" />
     <Compile Include="SheetConstruction.fs" />
     <Compile Include="Browser.fs" />
     <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" Condition="'$(NativeApiContractRoot)' == ''" />

@@ -16,6 +16,9 @@ let private computed (element: HTMLElement) (property: string) : string = jsNati
 [<Emit("document.implementation.createHTMLDocument('')")>]
 let private windowlessDocument () : Document = jsNative
 
+[<Emit("$0.name || 'Error'")>]
+let private errorName (error: exn) : string = jsNative
+
 [<Emit("""(() => {
     if ($0(null) !== globalThis.CSS.escape(null)) throw new Error('CSS.escape null conversion differs');
     let checks = 1;
@@ -36,6 +39,28 @@ let run () =
         let document = document ()
         let cssEscaping = CssEscaping.run document
         let cssSupport = CssSupport.run (CssQueries.forDocument document)
+
+        let computedStyles =
+            ComputedStyles.run document (fun () -> Ranvier.Dom.ComputedStyles.forDocument document) errorName
+
+        let mutable computedContextChecks = 0
+
+        try
+            Ranvier.Dom.ComputedStyles.forDocument Unchecked.defaultof<Document>
+            |> ignore
+
+            failwith "Computed-style provider accepted a null document"
+        with :? System.ArgumentNullException ->
+            computedContextChecks <- computedContextChecks + 1
+
+        try
+            Ranvier.Dom.ComputedStyles.forDocument (windowlessDocument ())
+            |> ignore
+
+            failwith "Computed-style provider accepted a document without a Window"
+        with :? System.NotSupportedException ->
+            computedContextChecks <- computedContextChecks + 1
+
         let mutable queryContextChecks = 0
 
         try
@@ -76,6 +101,8 @@ let run () =
                 tables = tables
                 cssEscaping = cssEscaping
                 cssSupport = cssSupport
+                computedStyles = computedStyles
+                computedContextChecks = computedContextChecks
                 queryContextChecks = queryContextChecks
                 cssOracle = cssOracle
                 viewTables = viewTables

@@ -1,0 +1,31 @@
+{
+  "status": "ok",
+  "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+  "optionsSource": "ionide-proj-info",
+  "includeInternal": false,
+  "namespaceFilter": "ComputedStyleService",
+  "entityCount": 1,
+  "memberCount": 1,
+  "entities": [
+    {
+      "fullName": "Ranvier.Dom.ComputedStyleService",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "Get",
+          "kind": "method",
+          "signature": "Get(element: Ranvier.Dom.Element, pseudoElement: string option) -> Ranvier.Dom.CSSStyleDeclaration",
+          "accessibility": "public"
+        }
+      ]
+    }
+  ],
+  "truncated": false,
+  "nextCursor": null,
+  "totalEstimate": {
+    "entities": 1
+  },
+  "pageOffset": 0,
+  "pageSize": 5
+}

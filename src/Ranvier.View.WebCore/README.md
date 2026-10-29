@@ -75,6 +75,16 @@ host.Paint pixels // RGBA, row by row
 
 All calls go on the thread that created the host.
 
+`CssQueries.forHost host` provides document-scoped `CSS.supports` queries through the engine parser.
+`ComputedStyles.forHost host` returns live, read-only declarations for an element or pseudo-element
+through the shared `Ranvier.Dom.ComputedStyleService` contract. Both providers borrow the host and
+require elements from its document; returned declarations expire when the host is disposed.
+Use the matching `forDocument` providers in `Fable.Ranvier.Dom` for browser code.
+
+The shared [conformance fixtures](../../tests/NativeApi.Conformance/README.md) cover element, cascade,
+pseudo-element, live-update and read-only behaviour in Chromium, Windows JIT and Windows NativeAOT.
+Other-platform conformance and official package acceptance are tracked separately.
+
 ## NativeAOT
 
 Publish the smoke app and counter on the target OS:

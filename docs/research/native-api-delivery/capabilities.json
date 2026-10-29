@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "releaseAbi": 21,
-  "releaseNativeInterfaces": 62,
-  "releaseGeneratedFunctions": 1070,
+  "releaseNativeInterfaces": 127,
+  "releaseGeneratedFunctions": 1695,
   "workingBranch": {
-    "name": "codex/native-api-css-queries",
-    "commit": "af71cfcebbea107d0addc07723edf812fa528269",
+    "name": "codex/native-api-computed-style",
+    "commit": "99d5a7720aedf51996b97de09c03f1df5360a3aa",
     "interfaces": 127,
-    "functions": 1697,
+    "functions": 1698,
     "runtimeTypeQueries": 3,
     "addedFunctions": [
       "rv_dom_css_condition_rule_get_condition_text",
@@ -636,7 +636,8 @@
       "rv_dom_svg_style_element_set_disabled",
       "rv_dom_svg_style_element_set_media",
       "rv_dom_svg_style_element_set_title",
-      "rv_dom_svg_style_element_set_type"
+      "rv_dom_svg_style_element_set_type",
+      "rv_dom_window_get_computed_style"
     ]
   },
   "targets": [
@@ -709,28 +710,91 @@
           "nativeAotAssertions": 32,
           "nativeLifetimeAssertions": 4,
           "provider": "actual document CSS parser; dom-css-supports",
-          "publicPackageAcceptance": "alpha.10/preview.9 pending"
+          "publicPackageAcceptance": "alpha.10/preview.9 pending",
+          "nativePackagedCi": "passed",
+          "nativeCiAssertions": 72,
+          "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40869602532"
+        },
+        "C01": {
+          "state": "in_progress",
+          "nativeRuntimeAssertions": 93,
+          "sharedAdapterAssertions": 42,
+          "nativeAotAssertions": 42,
+          "nativeLifetimeAssertions": 7,
+          "publicPackageAcceptance": "alpha.11/preview.10 and paired Views release pending"
+        },
+        "C02": {
+          "state": "in_progress",
+          "nativeRuntimeAssertions": 93,
+          "sharedAdapterAssertions": 42,
+          "nativeAotAssertions": 42,
+          "nativeLifetimeAssertions": 7,
+          "publicPackageAcceptance": "alpha.11/preview.10 and paired Views release pending"
         }
       },
       "runtimeProbe": "Selected D09/D10/D11/CSSOM/C07 local runtime fixtures passed; remaining groups not run",
-      "nativeAotProbe": "477 selected shared assertions plus Tab and four stylesheet lifetime checks pass; FSharp.Core IL3053/IL2104 and existing SameValueZero.Normal IL2075 reflection warnings remain"
+      "nativeAotProbe": "596 shared assertions, Tab and15 native lifetime checks pass; existing IL3053/IL2104 and IL2075 warnings remain"
     },
     {
       "rid": "win-arm64",
-      "groupStates": {},
+      "groupStates": {
+        "C03": {
+          "nativePackagedCi": "passed",
+          "nativeCiAssertions": 72,
+          "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40869602532"
+        }
+      },
       "runtimeProbe": "not_run",
       "nativeAotProbe": "not_run"
     },
     {
       "rid": "linux-x64",
-      "groupStates": {},
+      "groupStates": {
+        "C03": {
+          "nativePackagedCi": "passed",
+          "nativeCiAssertions": 72,
+          "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40869602532"
+        }
+      },
       "runtimeProbe": "not_run",
       "nativeAotProbe": "not_run"
     },
     {
       "rid": "osx-arm64",
-      "groupStates": {},
+      "groupStates": {
+        "C03": {
+          "nativePackagedCi": "passed",
+          "nativeCiAssertions": 72,
+          "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40869602532"
+        },
+        "C01": {
+          "nativePackagedCi": "passed",
+          "nativeCiAssertions": 93,
+          "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40876930854",
+          "publicPackageAcceptance": "pending",
+          "sharedAdapterAcceptance": "pending"
+        },
+        "C02": {
+          "nativePackagedCi": "passed",
+          "nativeCiAssertions": 93,
+          "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40876930854",
+          "publicPackageAcceptance": "pending",
+          "sharedAdapterAcceptance": "pending"
+        }
+      },
       "runtimeProbe": "not_run",
+      "nativeAotProbe": "not_run"
+    },
+    {
+      "rid": "linux-arm64",
+      "groupStates": {
+        "C03": {
+          "nativePackagedCi": "passed",
+          "nativeCiAssertions": 72,
+          "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40869602532"
+        }
+      },
+      "runtimeProbe": "selected native ABI only",
       "nativeAotProbe": "not_run"
     }
   ],
@@ -793,7 +857,21 @@
         "provider": "document.defaultView.CSS.supports; mangled overloads",
         "publicPackageAcceptance": "alpha.10 pending",
         "contextAssertions": 2
+      },
+      "C01": {
+        "state": "in_progress",
+        "engine": "chromium",
+        "assertions": 42,
+        "contextAssertions": 2
+      },
+      "C02": {
+        "state": "in_progress",
+        "engine": "chromium",
+        "assertions": 42,
+        "contextAssertions": 2
       }
     }
-  }
+  },
+  "releaseVersion": "0.1.0-preview.8",
+  "releaseVerification": "Tag40864308532 all five native targets, managed and publish succeeded; official Windows runtime CSSOM407 passed; all24 payload hashes/sizes verified"
 }

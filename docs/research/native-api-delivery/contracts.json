@@ -16097,10 +16097,137 @@
       "description": "wrap `rv_element_computed_style` as an owned/typed F# operation for resolved style values; the native operation already exists.",
       "acceptance": "Cascade inline/inherited/stylesheet values and assert computed opacity/width/custom properties, including absence and post-disposal error handling.",
       "consumes": "Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.",
-      "state": "not_started",
-      "memberContracts": [],
-      "publicApiSnapshot": null,
-      "memberContractStatus": "pending exact source signatures and clean FCS API snapshot"
+      "state": "shared_native_browser_aot_verified_windows",
+      "memberContracts": [
+        {
+          "interface": "DOMWindow",
+          "member": "getComputedStyle",
+          "contractOwner": "Window",
+          "kind": "context_operation",
+          "function": "rv_dom_window_get_computed_style",
+          "conditional": null,
+          "parameters": [
+            {
+              "ctype": "RvNode*",
+              "name": "target"
+            },
+            {
+              "ctype": "RvNode*",
+              "name": "element"
+            },
+            {
+              "ctype": "const uint8_t*",
+              "name": "pseudo_element"
+            },
+            {
+              "ctype": "int32_t",
+              "name": "pseudo_element_length"
+            },
+            {
+              "ctype": "RvCSSStyleDeclaration**",
+              "name": "result"
+            }
+          ],
+          "arguments": [
+            {
+              "name": "element",
+              "idlType": "Element",
+              "idl": {
+                "name": "Element",
+                "nullable": false,
+                "subtypes": []
+              },
+              "optional": false,
+              "default": null,
+              "variadic": false,
+              "mapping": {
+                "kind": "node",
+                "ctype": null,
+                "interface": "Element",
+                "root": null,
+                "class": "Element",
+                "enum": null,
+                "label": null,
+                "nullable": false,
+                "atom": false,
+                "subtypes": []
+              }
+            },
+            {
+              "name": "pseudoElement",
+              "idlType": "CSSOMString?",
+              "idl": {
+                "name": "USVString",
+                "nullable": true,
+                "subtypes": []
+              },
+              "optional": true,
+              "default": "null",
+              "variadic": false,
+              "mapping": {
+                "kind": "string",
+                "ctype": null,
+                "interface": null,
+                "root": null,
+                "class": null,
+                "enum": null,
+                "label": null,
+                "nullable": true,
+                "atom": false,
+                "subtypes": []
+              }
+            }
+          ],
+          "returnIdl": {
+            "name": "CSSStyleDeclaration",
+            "nullable": false,
+            "subtypes": []
+          },
+          "returns": {
+            "kind": "object",
+            "ctype": null,
+            "interface": "CSSStyleDeclaration",
+            "root": "CSSStyleDeclaration",
+            "class": "CSSStyleDeclaration",
+            "enum": null,
+            "label": null,
+            "nullable": false,
+            "atom": false,
+            "subtypes": []
+          },
+          "receiver": "Document",
+          "context": "Window",
+          "feature": "dom-computed-style",
+          "binding": "facade",
+          "stringInputs": "utf8-lengths-nullable"
+        }
+      ],
+      "publicApiSnapshot": "computed-style-public-api.json",
+      "memberContractStatus": "Shared42 + native93 + lifetime7 verified; public/platform acceptance pending",
+      "sharedPublicSignatures": [
+        "Ranvier.Dom.ComputedStyleService.Get(element: Element, pseudoElement: string option) -> CSSStyleDeclaration",
+        "Ranvier.Dom.ComputedStyles.forDocument(document: Document) -> ComputedStyleService [browser]",
+        "Ranvier.View.WebCore.ComputedStyles.forHost(host: WebCoreHost) -> ComputedStyleService [native]"
+      ],
+      "files": {
+        "core": [
+          "src/Ranvier.Dom/ComputedStyles.fs",
+          "src/Fable.Ranvier.Dom/BrowserComputedStyles.fs"
+        ],
+        "views": [
+          "src/Ranvier.View.WebCore/ComputedStyles.fs",
+          "tests/NativeApi.Conformance/ComputedStyles.fs"
+        ],
+        "native": [
+          "gen/dom.json",
+          "gen/domgen.py",
+          "tests/abi/computed_style.py"
+        ]
+      },
+      "remaining": [
+        "official alpha.11 and preview.10 consumption",
+        "supported-platform shared CI"
+      ]
     },
     {
       "id": "C02",
@@ -16111,10 +16238,137 @@
       "description": "extend computed-style querying with a pseudo-element argument for `::before`, `::after` and other generated content.",
       "acceptance": "Read distinct ::before/::after computed values; compare absent pseudo-element behaviour and reject invalid pseudo syntax consistently.",
       "consumes": "Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.",
-      "state": "not_started",
-      "memberContracts": [],
-      "publicApiSnapshot": null,
-      "memberContractStatus": "pending exact source signatures and clean FCS API snapshot"
+      "state": "shared_native_browser_aot_verified_windows",
+      "memberContracts": [
+        {
+          "interface": "DOMWindow",
+          "member": "getComputedStyle",
+          "contractOwner": "Window",
+          "kind": "context_operation",
+          "function": "rv_dom_window_get_computed_style",
+          "conditional": null,
+          "parameters": [
+            {
+              "ctype": "RvNode*",
+              "name": "target"
+            },
+            {
+              "ctype": "RvNode*",
+              "name": "element"
+            },
+            {
+              "ctype": "const uint8_t*",
+              "name": "pseudo_element"
+            },
+            {
+              "ctype": "int32_t",
+              "name": "pseudo_element_length"
+            },
+            {
+              "ctype": "RvCSSStyleDeclaration**",
+              "name": "result"
+            }
+          ],
+          "arguments": [
+            {
+              "name": "element",
+              "idlType": "Element",
+              "idl": {
+                "name": "Element",
+                "nullable": false,
+                "subtypes": []
+              },
+              "optional": false,
+              "default": null,
+              "variadic": false,
+              "mapping": {
+                "kind": "node",
+                "ctype": null,
+                "interface": "Element",
+                "root": null,
+                "class": "Element",
+                "enum": null,
+                "label": null,
+                "nullable": false,
+                "atom": false,
+                "subtypes": []
+              }
+            },
+            {
+              "name": "pseudoElement",
+              "idlType": "CSSOMString?",
+              "idl": {
+                "name": "USVString",
+                "nullable": true,
+                "subtypes": []
+              },
+              "optional": true,
+              "default": "null",
+              "variadic": false,
+              "mapping": {
+                "kind": "string",
+                "ctype": null,
+                "interface": null,
+                "root": null,
+                "class": null,
+                "enum": null,
+                "label": null,
+                "nullable": true,
+                "atom": false,
+                "subtypes": []
+              }
+            }
+          ],
+          "returnIdl": {
+            "name": "CSSStyleDeclaration",
+            "nullable": false,
+            "subtypes": []
+          },
+          "returns": {
+            "kind": "object",
+            "ctype": null,
+            "interface": "CSSStyleDeclaration",
+            "root": "CSSStyleDeclaration",
+            "class": "CSSStyleDeclaration",
+            "enum": null,
+            "label": null,
+            "nullable": false,
+            "atom": false,
+            "subtypes": []
+          },
+          "receiver": "Document",
+          "context": "Window",
+          "feature": "dom-computed-style",
+          "binding": "facade",
+          "stringInputs": "utf8-lengths-nullable"
+        }
+      ],
+      "publicApiSnapshot": "computed-style-public-api.json",
+      "memberContractStatus": "Shared42 + native93 + lifetime7 verified; public/platform acceptance pending",
+      "sharedPublicSignatures": [
+        "Ranvier.Dom.ComputedStyleService.Get(element: Element, pseudoElement: string option) -> CSSStyleDeclaration",
+        "Ranvier.Dom.ComputedStyles.forDocument(document: Document) -> ComputedStyleService [browser]",
+        "Ranvier.View.WebCore.ComputedStyles.forHost(host: WebCoreHost) -> ComputedStyleService [native]"
+      ],
+      "files": {
+        "core": [
+          "src/Ranvier.Dom/ComputedStyles.fs",
+          "src/Fable.Ranvier.Dom/BrowserComputedStyles.fs"
+        ],
+        "views": [
+          "src/Ranvier.View.WebCore/ComputedStyles.fs",
+          "tests/NativeApi.Conformance/ComputedStyles.fs"
+        ],
+        "native": [
+          "gen/dom.json",
+          "gen/domgen.py",
+          "tests/abi/computed_style.py"
+        ]
+      },
+      "remaining": [
+        "official alpha.11 and preview.10 consumption",
+        "supported-platform shared CI"
+      ]
     },
     {
       "id": "C03",
@@ -16333,9 +16587,8 @@
         "Ranvier.View.WebCore.CssQueries.forHost(host: WebCoreHost) -> CssQueryService [native]"
       ],
       "remaining": [
-        "traced package consumers",
-        "official alpha.10 and preview.9 packages",
-        "supported-platform CI"
+        "official preview.10 runtime and paired Views package consumption",
+        "remaining supported-platform shared CI"
       ]
     },
     {

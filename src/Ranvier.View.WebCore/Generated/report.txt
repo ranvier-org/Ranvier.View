@@ -1,7 +1,9 @@
-118 classes; 1715 members: 1702 mapped to 1685 of 1695 rv_dom_* functions, 13 hand-written, 0 unmapped
+118 classes; 1715 members: 1702 mapped to 1685 of 1698 rv_dom_* functions, 13 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_css_style_sheet_create: CSSStyleSheet.constructor (op)
+  rv_dom_css_supports_1: DOMCSSNamespace.supports (op)
+  rv_dom_css_supports_2: DOMCSSNamespace.supports (op)
   rv_dom_document_get_adopted_style_sheets: Document.adoptedStyleSheets (get)
   rv_dom_document_set_adopted_style_sheets: Document.adoptedStyleSheets (set)
   rv_dom_event_get_current_target: Event.currentTarget (get)
@@ -11,6 +13,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_keyboard_event_get_key: KeyboardEvent.key (get)
   rv_dom_shadow_root_get_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (get)
   rv_dom_shadow_root_set_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (set)
+  rv_dom_window_get_computed_style: DOMWindow.getComputedStyle (op)
 
 Unmapped members by reason:
 

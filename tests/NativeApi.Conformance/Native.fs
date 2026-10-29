@@ -15,6 +15,17 @@ let main _ =
     if not nullQueryHostRejected then
         failwith "CSS query provider accepted a null host"
 
+    let mutable nullComputedHostRejected = false
+
+    try
+        Ranvier.View.WebCore.ComputedStyles.forHost Unchecked.defaultof<WebCoreHost>
+        |> ignore
+    with :? System.ArgumentNullException ->
+        nullComputedHostRejected <- true
+
+    if not nullComputedHostRejected then
+        failwith "Computed-style provider accepted a null host"
+
     let host = WebCoreHost.Create (320, 240)
     let session = host.Session
 
@@ -26,6 +37,30 @@ let main _ =
         let cssQueries = CssQueries.forHost host
         let cssSupport = CssSupport.run cssQueries
         System.Console.WriteLine $"NATIVE_API C03 PASS assertions={cssSupport}"
+
+        let computedStyles =
+            ComputedStyles.run host.Document (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost host) (function
+                | WebCoreDomException (name, _) -> name
+                | error -> error.GetType().Name)
+
+        System.Console.WriteLine $"NATIVE_API C01_C02 PASS assertions={computedStyles}"
+        let computedService = Ranvier.View.WebCore.ComputedStyles.forHost host
+        let lifetimeComputedElement = host.Document.body
+        let lifetimeComputedStyle = computedService.Get (lifetimeComputedElement, None)
+        let mutable foreignHostRejected = false
+
+        do
+            use otherHost = WebCoreHost.Create (16, 16)
+
+            try
+                computedService.Get (otherHost.Document.body, None)
+                |> ignore
+            with :? System.ArgumentException ->
+                foreignHostRejected <- true
+
+        if not foreignHostRejected then
+            failwith "Computed-style provider accepted another host's element"
+
         let checks = Tables.run host.Document
         System.Console.WriteLine $"NATIVE_API D10 PASS assertions={checks}"
         let hyperlinks = Hyperlinks.run host.Document
@@ -136,6 +171,24 @@ let main _ =
         if not queryWrongThreadRejected then
             failwith "CSS support query was not rejected off the owning thread"
 
+        let mutable computedWrongThreadRejected = false
+
+        let computedWorker =
+            System.Threading.Thread (
+                System.Threading.ThreadStart (fun () ->
+                    try
+                        computedService.Get (lifetimeComputedElement, None)
+                        |> ignore
+                    with :? System.InvalidOperationException ->
+                        computedWrongThreadRejected <- true)
+            )
+
+        computedWorker.Start ()
+        computedWorker.Join ()
+
+        if not computedWrongThreadRejected then
+            failwith "Computed-style query was not rejected off the owning thread"
+
         let mutable terminal = ""
 
         Async.StartWithContinuations (
@@ -171,6 +224,47 @@ let main _ =
             failwith "CSS query provider accepted a disposed host"
 
         System.Console.WriteLine "NATIVE_API C03 LIFETIME PASS assertions=4"
+
+        let mutable disposedComputedRejected = false
+
+        try
+            computedService.Get (lifetimeComputedElement, None)
+            |> ignore
+        with :? System.ObjectDisposedException ->
+            disposedComputedRejected <- true
+
+        if not disposedComputedRejected then
+            failwith "Computed-style query accepted a disposed host"
+
+        let mutable disposedComputedFactoryRejected = false
+
+        try
+            Ranvier.View.WebCore.ComputedStyles.forHost host
+            |> ignore
+        with :? System.ObjectDisposedException ->
+            disposedComputedFactoryRejected <- true
+
+        if not disposedComputedFactoryRejected then
+            failwith "Computed-style provider accepted a disposed host"
+
+        if
+            (box lifetimeComputedStyle :?> NativeObject).Handle
+            <> 0n
+        then
+            failwith "Disposed host retained a computed declaration handle"
+
+        let mutable disposedDeclarationRejected = false
+
+        try
+            lifetimeComputedStyle.getPropertyValue "width"
+            |> ignore
+        with :? System.ObjectDisposedException ->
+            disposedDeclarationRejected <- true
+
+        if not disposedDeclarationRejected then
+            failwith "Computed declaration accepted a read after host disposal"
+
+        System.Console.WriteLine "NATIVE_API C01_C02 LIFETIME PASS assertions=7"
 
         if terminal <> "cancel" then
             failwith $"Host disposal did not terminate pending replacement: {terminal}"

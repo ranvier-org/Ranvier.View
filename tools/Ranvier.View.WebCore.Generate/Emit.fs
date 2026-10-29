@@ -404,7 +404,7 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
     | Some reason -> Error reason
     | None ->
         let args =
-            "this.Handle"
+            "Interop.handle (box this)"
             :: (inputs
                 |> List.map (function
                     | Ok e -> e
