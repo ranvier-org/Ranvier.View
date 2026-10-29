@@ -24,6 +24,7 @@
     <Compile Include="ConditionalRules.fs" />
     <Compile Include="CascadeRules.fs" />
     <Compile Include="SheetConstruction.fs" />
+    <Compile Include="SheetElements.fs" />
     <Compile Include="Native.fs" />
     <ProjectReference Include="../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />
     <PackageReference Include="Ranvier.Css.Dom$(RanvierPackageSuffix)" Version="0.1.0-alpha.1" />

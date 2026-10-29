@@ -215,6 +215,18 @@ let main _ =
                     System.Console.WriteLine $"NATIVE_API D11_OPERATIONS PASS assertions={semanticOperations}"
                     System.Console.WriteLine $"NATIVE_API D11 CAPABILITY attachmentIdentifier={attachmentIdentifier}"
 
+                    let! sheetElements, failedLinkSheet =
+                        SheetElements.run host.Document computed (fun () -> Async.Sleep 10) (function
+                            | WebCoreDomException (name, _) -> name
+                            | error -> error.GetType().Name)
+
+                    System.Console.WriteLine $"NATIVE_API D12 PASS assertions={sheetElements}"
+
+                    if sheetElements <> 109 then
+                        failwith "Stylesheet/link element assertions did not run"
+
+                    System.Console.WriteLine $"NATIVE_API D12 CAPABILITY failedLinkSheet={failedLinkSheet}"
+
                     let! checks =
                         SheetConstruction.run
                             host.Document

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "group": "D12",
+  "baseRevision": "d37625ff9db7e062eae8d36af15bd5461d8cf616",
+  "project": "C:/wk/rv-c10-cascade/tests/NativeApi.Conformance/Native.fsproj",
+  "sourcePin": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
+  "packageProfile": {
+    "core": "0.1.0-alpha.12",
+    "cssDom": "0.1.0-alpha.1",
+    "native": "0.1.0-preview.11"
+  },
+  "freshChecks": {
+    "native": {
+      "verdict": "clean",
+      "errors": 0,
+      "warnings": 0
+    },
+    "browser": {
+      "verdict": "clean",
+      "errors": 0,
+      "warnings": 0
+    }
+  },
+  "apiResults": {
+    "Ranvier.Dom.HTMLStyleElement": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\r\n  \"status\": \"ok\",\r\n  \"packageId\": \"Ranvier.Dom\",\r\n  \"typeName\": \"Ranvier.Dom.HTMLStyleElement\",\r\n  \"matchedTypes\": [\r\n    \"Ranvier.Dom.HTMLStyleElement\"\r\n  ],\r\n  \"projectFileName\": \"C:\\\\wk\\\\rv-c10-cascade\\\\tests\\\\NativeApi.Conformance\\\\Native.fsproj\",\r\n  \"optionsSource\": \"ionide-proj-info\",\r\n  \"includeNonPublic\": false,\r\n  \"results\": [\r\n    {\r\n      \"name\": \"type\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"type() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"media\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"media() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"blocking\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"blocking() -> Ranvier.Dom.DOMTokenList\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"disabled\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"disabled() -> Microsoft.FSharp.Core.bool\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    }\r\n  ],\r\n  \"truncated\": false,\r\n  \"nextCursor\": null,\r\n  \"totalEstimate\": {\r\n    \"members\": 4\r\n  },\r\n  \"pageOffset\": 0,\r\n  \"pageSize\": 500\r\n}"
+        }
+      ]
+    },
+    "Ranvier.Dom.HTMLLinkElement": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\r\n  \"status\": \"ok\",\r\n  \"packageId\": \"Ranvier.Dom\",\r\n  \"typeName\": \"Ranvier.Dom.HTMLLinkElement\",\r\n  \"matchedTypes\": [\r\n    \"Ranvier.Dom.HTMLLinkElement\"\r\n  ],\r\n  \"projectFileName\": \"C:\\\\wk\\\\rv-c10-cascade\\\\tests\\\\NativeApi.Conformance\\\\Native.fsproj\",\r\n  \"optionsSource\": \"ionide-proj-info\",\r\n  \"includeNonPublic\": false,\r\n  \"results\": [\r\n    {\r\n      \"name\": \"rel\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"rel() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"sizes\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"sizes() -> Ranvier.Dom.DOMTokenList\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"relList\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"relList() -> Ranvier.Dom.DOMTokenList\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"href\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"href() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"target\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"target() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"fetchPriority\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"fetchPriority() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"referrerPolicy\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"referrerPolicy() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"disabled\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"disabled() -> Microsoft.FSharp.Core.bool\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"blocking\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"blocking() -> Ranvier.Dom.DOMTokenList\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"type\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"type() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"imageSizes\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"imageSizes() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"as\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"as() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"hreflang\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"hreflang() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"integrity\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"integrity() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"imageSrcset\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"imageSrcset() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"rev\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"rev() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"charset\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"charset() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"crossOrigin\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"crossOrigin() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    },\r\n    {\r\n      \"name\": \"media\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"media() -> Microsoft.FSharp.Core.string\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    }\r\n  ],\r\n  \"truncated\": false,\r\n  \"nextCursor\": null,\r\n  \"totalEstimate\": {\r\n    \"members\": 19\r\n  },\r\n  \"pageOffset\": 0,\r\n  \"pageSize\": 500\r\n}"
+        }
+      ]
+    },
+    "Ranvier.Dom.LinkStyle": {
+      "content": [
+        {
+          "type": "text",
+          "text": "{\r\n  \"status\": \"ok\",\r\n  \"packageId\": \"Ranvier.Dom\",\r\n  \"typeName\": \"Ranvier.Dom.LinkStyle\",\r\n  \"matchedTypes\": [\r\n    \"Ranvier.Dom.LinkStyle\"\r\n  ],\r\n  \"projectFileName\": \"C:\\\\wk\\\\rv-c10-cascade\\\\tests\\\\NativeApi.Conformance\\\\Native.fsproj\",\r\n  \"optionsSource\": \"ionide-proj-info\",\r\n  \"includeNonPublic\": false,\r\n  \"results\": [\r\n    {\r\n      \"name\": \"sheet\",\r\n      \"kind\": \"property\",\r\n      \"signature\": \"sheet() -> Ranvier.Dom.CSSStyleSheet\",\r\n      \"accessibility\": \"public\",\r\n      \"isObsolete\": false,\r\n      \"xmlDocSummary\": null\r\n    }\r\n  ],\r\n  \"truncated\": false,\r\n  \"nextCursor\": null,\r\n  \"totalEstimate\": {\r\n    \"members\": 1\r\n  },\r\n  \"pageOffset\": 0,\r\n  \"pageSize\": 500\r\n}"
+        }
+      ]
+    }
+  }
+}
