@@ -63,6 +63,9 @@ module internal Kind =
     [<Literal>]
     let MediaList = 17
 
+    [<Literal>]
+    let RectList = 18
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -170,6 +173,7 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.StyleSheet -> NativeDom.rv_dom_style_sheet_release handle
         | Kind.StyleSheetList -> NativeDom.rv_dom_style_sheet_list_release handle
         | Kind.MediaList -> NativeDom.rv_dom_media_list_release handle
+        | Kind.RectList -> NativeDom.rv_dom_dom_rect_list_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =

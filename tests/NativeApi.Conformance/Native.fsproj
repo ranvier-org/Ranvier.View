@@ -16,6 +16,7 @@
     <Compile Include="CssSupport.fs" />
     <Compile Include="ComputedStyles.fs" />
     <Compile Include="TypedStyles.fs" />
+    <Compile Include="FragmentRectangles.fs" />
     <Compile Include="SheetConstruction.fs" />
     <Compile Include="Native.fs" />
     <ProjectReference Include="../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />

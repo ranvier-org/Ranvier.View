@@ -1,4 +1,4 @@
-118 classes; 1715 members: 1702 mapped to 1685 of 1698 rv_dom_* functions, 13 hand-written, 0 unmapped
+119 classes; 1719 members: 1706 mapped to 1689 of 1702 rv_dom_* functions, 13 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_css_style_sheet_create: CSSStyleSheet.constructor (op)
@@ -49,13 +49,14 @@ Members by class (mapped / hand-written / unmapped):
   CharacterDataObject: 14 / 0 / 0
   CompositionEventObject: 1 / 0 / 0
   DOMImplementationObject: 2 / 0 / 0
+  DOMRectListObject: 2 / 0 / 0
   DOMRectReadOnlyObject: 8 / 0 / 0
   DOMSelectionObject: 31 / 0 / 0
   DOMStringMapObject: 3 / 0 / 0
   DOMTokenListObject: 10 / 0 / 0
   DocumentFragmentObject: 11 / 0 / 0
   DocumentObject: 70 / 0 / 0
-  ElementObject: 179 / 0 / 0
+  ElementObject: 180 / 0 / 0
   EventObject: 17 / 1 / 0
   EventTargetObject: 0 / 9 / 0
   FocusEventObject: 1 / 0 / 0
@@ -126,7 +127,7 @@ Members by class (mapped / hand-written / unmapped):
   NodeObject: 31 / 0 / 0
   PointerEventObject: 14 / 0 / 0
   RadioNodeListObject: 2 / 0 / 0
-  RangeObject: 25 / 0 / 0
+  RangeObject: 26 / 0 / 0
   SVGElementObject: 11 / 0 / 0
   SVGStyleElementObject: 9 / 0 / 0
   ShadowRootObject: 18 / 0 / 0

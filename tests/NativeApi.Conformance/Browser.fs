@@ -44,6 +44,7 @@ let run () =
             ComputedStyles.run document (fun () -> Ranvier.Dom.ComputedStyles.forDocument document) errorName
 
         let mutable computedContextChecks = 0
+        let fragmentRectangles = FragmentRectangles.run document
 
         let typedStyles =
             TypedStyles.run document (Ranvier.Dom.ComputedStyles.forDocument document) errorName
@@ -106,6 +107,7 @@ let run () =
                 cssSupport = cssSupport
                 computedStyles = computedStyles
                 typedStyles = typedStyles
+                fragmentRectangles = fragmentRectangles
                 computedContextChecks = computedContextChecks
                 queryContextChecks = queryContextChecks
                 cssOracle = cssOracle

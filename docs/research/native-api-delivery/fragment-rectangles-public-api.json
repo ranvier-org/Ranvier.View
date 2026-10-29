@@ -1,0 +1,52 @@
+{
+  "scope": "G06 exact list declaration and added Element/Range members",
+  "nativeCommit": "58a9980bf69196752a070fc832095249d26fca2b",
+  "project": "C:/Users/shaya/.codex/worktrees/native-api-contracts/Ranvier/src/Ranvier.Dom/Ranvier.Dom.fsproj",
+  "entities": [
+    {
+      "fullName": "Ranvier.Dom.DOMRectList",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "item",
+          "kind": "method",
+          "signature": "item(index: uint32) -> Ranvier.Dom.DOMRect",
+          "accessibility": "public"
+        },
+        {
+          "name": "length",
+          "kind": "property",
+          "signature": "length() -> uint32",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.Element",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "getClientRects",
+          "kind": "method",
+          "signature": "getClientRects() -> Ranvier.Dom.DOMRectList",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.Range",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "getClientRects",
+          "kind": "method",
+          "signature": "getClientRects() -> Ranvier.Dom.DOMRectList",
+          "accessibility": "public"
+        }
+      ]
+    }
+  ]
+}

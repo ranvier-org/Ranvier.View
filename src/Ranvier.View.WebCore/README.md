@@ -81,6 +81,12 @@ through the shared `Ranvier.Dom.ComputedStyleService` contract. Both providers b
 require elements from its document; returned declarations expire when the host is disposed.
 Use the matching `forDocument` providers in `Fable.Ranvier.Dom` for browser code.
 
+`Element.getClientRects()` and `Range.getClientRects()` return retained fragment snapshots through
+`DOMRectList`. Its `length` and `item(uint32)` preserve engine ordering and double-precision rectangle
+coordinates; an out-of-range item is null. Repeated reads of an item preserve wrapper identity.
+Snapshots remain readable after layout changes or element removal and expire with their owning host.
+Collapsed ranges inside rendered text may have a zero-width caret rectangle.
+
 The shared [conformance fixtures](../../tests/NativeApi.Conformance/README.md) cover element, cascade,
 pseudo-element, live-update and read-only behaviour in Chromium, Windows JIT and Windows NativeAOT.
 Other-platform conformance and official package acceptance are tracked separately.

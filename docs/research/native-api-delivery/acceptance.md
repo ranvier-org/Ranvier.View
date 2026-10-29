@@ -1,5 +1,23 @@
 # Native API delivery acceptance evidence
 
+## GitHub tracking and official C04 dependency follow-up, 2026-10-29
+
+- GitHub Project: https://github.com/orgs/ranvier-org/projects/1 tracks the 98 required and 5 conditional groups. The 53 query groups remain deferred to the next goal. Project completion requires full group acceptance; merging a dependency PR does not close a group.
+- CSS PR2 merged77aa632e3f2d4bff2476b5d9dcab3e3254a4cd23; trusted publication40887477904 supplied all four adapter packages0.1.0-alpha.1. Their published Fable sources and DOM alpha.11 dependencies were verified.
+- A fresh traced consumer exposed missing Ranvier.Css.Traced and Ranvier.Css.Bindings.Traced0.1.1-alpha.1 dependencies (NU1102). CSS PR3 repaired traced-parent packing and added an isolated four-variant package consumption gate. It mergedef6916ffb5c13c8f7f9b349ac2d1424a6c31cade after checks passed; CI40896175768 and trusted publication40896943883 succeeded.
+- Both missing official traced parents now download from NuGet with the expected release commit. Fresh isolated restores and executable trace-metadata checks pass for all four native/Fable normal/traced adapter combinations using exclusively official CSS packages.
+- Actual Chromium executes the same39 typed-style assertions through the official traced Fable adapter and official DOM alpha.11 packages. Normal official browser and Windows JIT consumers passed previously. The traced Windows actual-engine fixture now passes39 typed-style assertions within696 shared assertions plus25 lifetime/context checks, consuming official DOM alpha.12 and CSS packages with the private G06 engine. Other-platform shared behavior and paired Views package release remain outstanding. No full API group is newly complete.
+
+## G06 shared fragment geometry, 2026-10-29
+
+- Native PR16 exports4 additive functions,128 interfaces/1702 functions, preserves1698 previous model records, and passes32 generator tests plus140 Windows ABI assertions. Private packaged probes also pass CSSsupports72/computedstyle93/fragment140; release CLI5 and package-contract4 tests pass. Independent native review and the packaged-probe repair review have no remaining actionable findings.
+- Core PR261 mergedb248f0d2fd985c56a4440ce744f9f4bbca52c3be after CI40891169151, Perf40891169521 and canonical checks passed. Publication40895147277 succeeded. All four official alpha.12 packages were downloaded and verified for repository commit, fragment members and Fable browser-provider files.
+- Actual native shared fixture failed repeated DOMRectList.item wrapper identity before the cache fix. DOMRectList and DOMRectReadOnly return roots now use Session.Object; nullable indices and retained native ownership remain intact. Release kind18 covers lists. Generator reports119 classes/1719 members,1706 mapped/13 handwritten/zero unmapped.
+- Shared G06 fixture passes61 assertions in Windows JIT and NativeAOT and74 in Chromium, with8 additional native thread/disposal checks. The same fixture covers line fragments, Range selection and collapsed-text caret, bounding union, fractional coordinates, empty/hidden/detached results, and immutable snapshots after resize/detach. Host fonts yield different wrapping; identical cross-engine font metrics are not claimed.
+- Combined shared fixture passes696 WebCore assertions and709 Chromium assertions, plus Tab,25 native lifetime/context checks and4 browser context checks. Native teardown leaves zero retained managed native objects. The full Windows backend suite passes782 tests,12 existing skips,0 failed/errored. Fresh Native fixture FCS check has0 errors/warnings; the new fixture XML audit has0 findings.
+- Official DOMalpha.12 and CSS packages are consumed through a fresh cache; native G06 engine remains private. Fickl must perform its browser restore: --noRestore after an ordinary native restore mixes DOM assembly variants and fails browser-provider resolution. Browser compilation and runtime pass with Fickl's restore.
+- Independent managed review has no critical/important findings and confirms retained-reference cache ownership, current DOMRect return compatibility, list release wiring and fixture coverage. The View, library and examples analyzer gates all pass with builds. Normal/traced Windows JIT share the passing fixture. NativeAOT retains existing FSharp.Core IL3053/IL2104 and SameValueZero.Normal IL2075 warnings. Other-platform shared fixtures, public native preview.11 and paired Views package acceptance remain outstanding. G06 remains incomplete.
+
 ## Initialization and native table generation
 
 - Required scope: 98 x groups; conditional scope: A06, A07, A08, A09, A11; 53 ? groups deferred to the next goal.

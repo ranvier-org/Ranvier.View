@@ -1,6 +1,6 @@
 # Shared native API conformance
 
-The fixtures execute the same typed assertions through shared DOM contracts on native WebCore and a real Chromium document. Current slice coverage is 635 assertions: DOM and authored View tables, HTML reflection, Area hyperlinks, SVG/MathML members, CSSOM, SVG stylesheets, constructed/adopted sheets, CSS identifier escaping, document-scoped CSS support queries and live computed styles/pseudo-elements and typed Ranvier.Css declaration sinks. Chromium additionally compares 196,609 cases with its native CSS.escape implementation. Native teardown and 17 stylesheet/query/computed-style/typed-style lifetime checks run separately, together with real Tab traversal. Chromium also checks invalid document contexts.
+The fixtures execute the same typed assertions through shared DOM contracts on native WebCore and a real Chromium document. Current slice coverage is 696 WebCore assertions and 709 Chromium assertions: DOM and authored View tables, HTML reflection, Area hyperlinks, SVG/MathML members, CSSOM, SVG stylesheets, constructed/adopted sheets, CSS identifier escaping, document-scoped CSS support queries, live computed styles/pseudo-elements, typed Ranvier.Css declaration sinks and fragment rectangles. Host monospace fonts produce different line counts in the geometry fixture; each engine must satisfy the same geometry invariants. Chromium additionally compares 196,609 cases with its native CSS.escape implementation. Native teardown and 25 stylesheet/query/computed-style/typed-style/geometry lifetime checks run separately, together with real Tab traversal. Chromium also checks four invalid document contexts.
 
 From the repository root, with the matching DOM and native packages published:
 
@@ -21,6 +21,10 @@ node tests/NativeApi.Conformance/browser.mjs
 ```
 
 For development, the native runner accepts the backend's existing `UseLocalRanvierWebCore`, `RanvierWebCoreRoot` and `RanvierWebCoreNativeDir` properties. Use an isolated restore configuration for unpublished contract packages; do not place local package overrides in committed configuration. `NATIVE_API_BROWSER_PACKAGE` optionally identifies an existing package.json with the pinned Playwright installation.
+
+Let Fickl perform its own browser restore. Using `--noRestore` after an ordinary native restore can combine native and Fable DOM assemblies and hide browser providers.
+
+`FragmentRectangles.fs` verifies retained Element/Range line fragments, nullable indexing, repeated item identity, fractional coordinates, bounding union, collapsed-text caret geometry and snapshots after resize/removal. Native checks also reject list/item/rectangle reads from the wrong thread and after host disposal. These are geometry invariants within each engine, rather than golden measurements from an identical bundled font.
 
 The native runner can also be published with `-r <rid> --self-contained -p:PublishAot=true`. The current shared fixtures also pass as Windows x64 NativeAOT; remaining platform/package acceptance, selected groups and the whole view acceptance suite have separate gates.
 

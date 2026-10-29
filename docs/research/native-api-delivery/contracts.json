@@ -16662,7 +16662,18 @@
         "supported-platform shared CI",
         "CSS adapter trusted publication and official consumption",
         "paired Views package acceptance"
-      ]
+      ],
+      "officialPackageVerification": {
+        "adapterRelease": "https://github.com/ranvier-org/Ranvier.Css/actions/runs/40887477904",
+        "tracedDependencyRepair": "https://github.com/ranvier-org/Ranvier.Css/actions/runs/40896943883",
+        "isolatedVariants": "all4 normal/traced native/Fable fresh cohort restores and execution passed",
+        "chromiumNormalAssertions": 39,
+        "chromiumTracedAssertions": 39,
+        "windowsJitNormalAssertions": 39,
+        "windowsJitTracedAssertions": 39,
+        "domPackages": "official alpha.11 browser, official alpha.12 latest native",
+        "remaining": "native engine remains private in shared fixtures; other-platform shared behavior and paired Views release pending"
+      }
     },
     {
       "id": "C05",
@@ -32526,10 +32537,102 @@
       "description": "Element/Range.getClientRects and DOMRectList expose each rendered line/fragment rather than only the union bounding rectangle.",
       "acceptance": "Measure wrapped text and fragmented inline content; verify each rectangle and its ordering plus the bounding union, including an empty range.",
       "consumes": "Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.",
-      "state": "not_started",
-      "memberContracts": [],
+      "state": "shared_native_browser_verified_windows",
+      "memberContracts": [
+        {
+          "owner": "DOMRectList",
+          "member": "length",
+          "signature": "uint32",
+          "nativeRoute": "DOMRectList.length",
+          "browserRoute": "DOMRectList.length"
+        },
+        {
+          "owner": "DOMRectList",
+          "member": "item",
+          "signature": "uint32 -> DOMRect (AllowNullLiteral; null on out-of-range)",
+          "nativeRoute": "DOMRectList.item",
+          "browserRoute": "DOMRectList.item"
+        },
+        {
+          "owner": "Element",
+          "member": "getClientRects",
+          "signature": "unit -> DOMRectList",
+          "nativeRoute": "Element.getClientRects",
+          "browserRoute": "Element.getClientRects"
+        },
+        {
+          "owner": "Range",
+          "member": "getClientRects",
+          "signature": "unit -> DOMRectList",
+          "nativeRoute": "Range.getClientRects",
+          "browserRoute": "Range.getClientRects"
+        }
+      ],
       "publicApiSnapshot": null,
-      "memberContractStatus": "pending exact source signatures and clean FCS API snapshot"
+      "memberContractStatus": "4 exact generated members;32 generator tests/140 raw ABI assertions; shared Windows JIT/AOT61 and Chromium74 assertions;8 native thread/disposal checks; full platform/released backend acceptance pending",
+      "plan": "docs/superpowers/plans/2026-10-29-fragment-rectangles.md",
+      "files": {
+        "native": [
+          "gen/dom.json",
+          "gen/domgen.py",
+          "gen/dom-api.json",
+          "gen/Ranvier.Dom.fs",
+          "tests/generator/test_domgen.py",
+          "tests/abi/fragment_rectangles.py",
+          "scripts/check_package_api.py",
+          "scripts/release.py",
+          "tests/test_release.py",
+          ".github/workflows/build.yml"
+        ],
+        "core": [
+          "src/Ranvier.Dom/Generated/Dom.fs",
+          ".github/scripts/dom-contracts.json"
+        ],
+        "views": [
+          "src/Ranvier.View.WebCore/Generated/Objects.fs",
+          "tools/Ranvier.View.WebCore.Generate/Emit.fs",
+          "tests/NativeApi.Conformance/FragmentRectangles.fs"
+        ]
+      },
+      "remaining": [
+        "actual generation and native compile/link",
+        "real ABI and shared browser/JIT/AOT fixtures",
+        "wrapper lifetime/ownership",
+        "public/platform acceptance"
+      ],
+      "verification": {
+        "nativeAbiAssertions": 140,
+        "sharedWindowsJitAssertions": 61,
+        "sharedWindowsNativeAotAssertions": 61,
+        "sharedChromiumAssertions": 74,
+        "nativeLifetimeAssertions": 8,
+        "teardown": "zero retained managed native objects",
+        "identityRegression": "real Windows RED repeated item identity; Session.Object cache roots fix GREEN",
+        "officialDomVersion": "0.1.0-alpha.12",
+        "officialDomReleaseCommit": "b248f0d2fd985c56a4440ce744f9f4bbca52c3be",
+        "nativeRuntime": "private G06 engine; preview.11 not released",
+        "fontMetrics": "host monospace invariants; no cross-engine identical-font golden comparison",
+        "aotWarnings": [
+          "FSharp.Core IL3053/IL2104",
+          "SameValueZero.Normal IL2075"
+        ],
+        "remaining": [
+          "other-platform shared fixture",
+          "official native and paired Views package consumption"
+        ],
+        "independentManagedReview": "no critical or important findings; read-only ownership/cache/fixture/package review",
+        "fullWindowsBackend": {
+          "passed": 782,
+          "ignored": 12,
+          "failed": 0,
+          "errored": 0
+        },
+        "analyzerGates": {
+          "view": "passed with build",
+          "library": "passed with build",
+          "examples": "passed with build"
+        }
+      }
     },
     {
       "id": "G07",

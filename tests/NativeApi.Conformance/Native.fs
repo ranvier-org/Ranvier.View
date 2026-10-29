@@ -52,6 +52,39 @@ let main _ =
                 | error -> error.GetType().Name)
 
         System.Console.WriteLine $"NATIVE_API C04 PASS assertions={typedStyles}"
+        let fragmentRectangles = FragmentRectangles.run host.Document
+        System.Console.WriteLine $"NATIVE_API G06 PASS assertions={fragmentRectangles}"
+        let lifetimeRectangles = host.Document.body.getClientRects ()
+        let lifetimeRectangle = lifetimeRectangles.item 0u
+
+        if isNull lifetimeRectangle then
+            failwith "Rendered body has no lifetime-test rectangle"
+
+        let rectangleReads =
+            [|
+                (fun () -> lifetimeRectangles.length |> ignore)
+                (fun () -> lifetimeRectangles.item 0u |> ignore)
+                (fun () -> lifetimeRectangle.left |> ignore)
+            |]
+
+        for read in rectangleReads do
+            let mutable rejected = false
+
+            let worker =
+                System.Threading.Thread (
+                    System.Threading.ThreadStart (fun () ->
+                        try
+                            read ()
+                        with :? System.InvalidOperationException ->
+                            rejected <- true)
+                )
+
+            worker.Start ()
+            worker.Join ()
+
+            if not rejected then
+                failwith "Fragment geometry read accepted the wrong thread"
+
         let lifetimeComputedElement = host.Document.body
         let lifetimeComputedStyle = computedService.Get (lifetimeComputedElement, None)
         let lifetimeTypedStyle = lifetimeComputedElement.style
@@ -228,6 +261,23 @@ let main _ =
             failwith "Stylesheet replacement completed without a checkpoint"
 
         (host :> System.IDisposable).Dispose()
+
+        for value in [ box lifetimeRectangles; box lifetimeRectangle ] do
+            if (value :?> NativeObject).Handle <> 0n then
+                failwith "Disposed host retained a fragment geometry handle"
+
+        for read in rectangleReads do
+            let mutable rejected = false
+
+            try
+                read ()
+            with :? System.ObjectDisposedException ->
+                rejected <- true
+
+            if not rejected then
+                failwith "Fragment geometry read accepted a disposed host"
+
+        System.Console.WriteLine "NATIVE_API G06 LIFETIME PASS assertions=8"
 
         let mutable disposedQueryRejected = false
 

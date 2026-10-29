@@ -57,6 +57,7 @@ let private kinds =
             "Selection", "Kind.Selection"
             "DOMSelection", "Kind.Selection"
             "DOMRectReadOnly", "Kind.Rect"
+            "DOMRectList", "Kind.RectList"
             "NodeList", "Kind.NodeList"
             "HTMLCollection", "Kind.Collection"
             "HTMLCollectionOf`1", "Kind.Collection"
