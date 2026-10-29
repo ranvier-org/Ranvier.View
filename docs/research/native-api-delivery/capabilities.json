@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "releaseAbi": 21,
-  "releaseNativeInterfaces": 127,
-  "releaseGeneratedFunctions": 1695,
+  "releaseNativeInterfaces": 128,
+  "releaseGeneratedFunctions": 1702,
   "workingBranch": {
     "name": "codex/native-api-fragment-rectangles",
     "commit": "58a9980bf69196752a070fc832095249d26fca2b",
@@ -758,20 +758,27 @@
           "nativeAotAssertions": 61,
           "lifetimeAssertions": 8,
           "contractPackages": "official alpha.12",
-          "nativeRuntime": "private G06; preview.11 pending"
+          "nativeRuntime": "official preview.11; local Views source"
         },
         "C18": {
           "state": "slice_verified",
           "jitAssertions": 51,
           "nativeAotAssertions": 51,
           "fontWidthAlias": "available",
-          "nativeRuntime": "private G06"
+          "nativeRuntime": "official preview.11; local Views source"
         },
         "C22": {
           "state": "slice_verified",
           "jitAssertions": 23,
           "nativeAotAssertions": 23,
-          "nativeRuntime": "private G06"
+          "nativeRuntime": "official preview.11; local Views source"
+        },
+        "C09": {
+          "state": "slice_verified",
+          "jitAssertions": 44,
+          "nativeAotAssertions": 44,
+          "nativeRuntime": "official preview.11",
+          "viewportRestore": "verified"
         }
       },
       "runtimeProbe": "Selected D09/D10/D11/CSSOM/C07 local runtime fixtures passed; remaining groups not run",
@@ -982,9 +989,16 @@
         "engine": "chromium",
         "assertions": 23,
         "execution": "not exercised; separate A11"
+      },
+      "C09": {
+        "state": "slice_verified",
+        "engine": "chromium",
+        "assertions": 44,
+        "viewportRestore": "verified",
+        "subscriptions": "separate G01 scope"
       }
     }
   },
-  "releaseVersion": "0.1.0-preview.8",
-  "releaseVerification": "Tag40864308532 all five native targets, managed and publish succeeded; official Windows runtime CSSOM407 passed; all24 payload hashes/sizes verified"
+  "releaseVersion": "0.1.0-preview.11",
+  "releaseVerification": "Tag40905413545 succeeded all five native targets, managed and publish; all seven public packages downloaded and all five runtime payload manifests/hashes verified at clean CI source58a9980bf69196752a070fc832095249d26fca2b, ABI21. Official Windows raw probes712 and shared Windows JIT/NativeAOT864 pass; paired published Views/platform conformance remains pending."
 }

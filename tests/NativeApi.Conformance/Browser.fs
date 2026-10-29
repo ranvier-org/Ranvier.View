@@ -19,6 +19,12 @@ let private windowlessDocument () : Document = jsNative
 [<Emit("$0.name || 'Error'")>]
 let private errorName (error: exn) : string = jsNative
 
+[<Emit("[globalThis.innerWidth, globalThis.innerHeight]")>]
+let private viewportSize () : struct (int * int) = jsNative
+
+[<Emit("globalThis.__nativeApiResizeViewport($0, $1)")>]
+let private resizeViewport (width: int) (height: int) : JS.Promise<unit> = jsNative
+
 [<Emit("""(() => {
     if ($0(null) !== globalThis.CSS.escape(null)) throw new Error('CSS.escape null conversion differs');
     let checks = 1;
@@ -88,6 +94,7 @@ let run () =
         let cssOracle = cssEscapeOracle CSS.escape
         let tables = Tables.run document
         let viewTables = ViewTables.run document
+        let viewHyperlinks = ViewHyperlinks.run document
         let reflection = Reflection.run document
         let hyperlinks = Hyperlinks.run document
         let cssom = Stylesheets.run document
@@ -102,6 +109,14 @@ let run () =
         let! construction =
             SheetConstruction.run document (fun () -> StyleSheets.forDocument document) checkpoint computed
 
+        let! conditionalRules =
+            ConditionalRules.run
+                document
+                (Ranvier.Dom.ComputedStyles.forDocument document)
+                (viewportSize ())
+                (fun width height -> resizeViewport width height |> Async.AwaitPromise)
+                errorName
+
         return
             {|
                 tables = tables
@@ -113,10 +128,12 @@ let run () =
                 fontRules = fontRules
                 fontWidthAlias = fontWidthAlias
                 transitionRules = transitionRules
+                conditionalRules = conditionalRules
                 computedContextChecks = computedContextChecks
                 queryContextChecks = queryContextChecks
                 cssOracle = cssOracle
                 viewTables = viewTables
+                viewHyperlinks = viewHyperlinks
                 reflection = reflection
                 hyperlinks = hyperlinks
                 cssom = cssom

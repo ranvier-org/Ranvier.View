@@ -19207,10 +19207,76 @@
       "description": "CSSMediaRule/MediaList, CSSSupportsRule and CSSContainerRule inspect and edit media/supports/container conditions.",
       "acceptance": "Inspect media/supports/container condition text and media-list mutation; assert computed changes after a viewport/container update where the feature is enabled.",
       "consumes": "C08, G01 for live media changes.",
-      "state": "native_windows_slice_verified",
-      "memberContracts": [],
-      "publicApiSnapshot": null,
-      "memberContractStatus": "pending exact source signatures and clean FCS API snapshot",
+      "state": "shared_native_browser_verified_windows",
+      "memberContracts": [
+        {
+          "interface": "CSSGroupingRule",
+          "member": "cssRules",
+          "signature": "CSSRuleList with get",
+          "qualification": "SameObject"
+        },
+        {
+          "interface": "CSSGroupingRule",
+          "member": "insertRule",
+          "signature": "rule: string * ?index: uint32 -> uint32",
+          "qualification": "omitted index defaults to zero"
+        },
+        {
+          "interface": "CSSGroupingRule",
+          "member": "deleteRule",
+          "signature": "index: uint32 -> unit"
+        },
+        {
+          "interface": "CSSConditionRule",
+          "member": "conditionText",
+          "signature": "string with get"
+        },
+        {
+          "interface": "CSSMediaRule",
+          "member": "media",
+          "signature": "MediaList with get",
+          "qualification": "SameObject; PutForwards=mediaText; mutate .media.mediaText"
+        },
+        {
+          "interface": "CSSContainerRule",
+          "member": "containerName",
+          "signature": "string with get"
+        },
+        {
+          "interface": "CSSContainerRule",
+          "member": "containerQuery",
+          "signature": "string with get"
+        },
+        {
+          "interface": "MediaList",
+          "member": "mediaText",
+          "signature": "string with get, set",
+          "qualification": "LegacyNullToEmptyString"
+        },
+        {
+          "interface": "MediaList",
+          "member": "length",
+          "signature": "uint32 with get"
+        },
+        {
+          "interface": "MediaList",
+          "member": "item",
+          "signature": "index: uint32 -> string",
+          "qualification": "nullable IDL result; out-of-range is actual null"
+        },
+        {
+          "interface": "MediaList",
+          "member": "deleteMedium",
+          "signature": "oldMedium: string -> unit"
+        },
+        {
+          "interface": "MediaList",
+          "member": "appendMedium",
+          "signature": "newMedium: string -> unit"
+        }
+      ],
+      "publicApiSnapshot": "conditional-rules-public-api.json",
+      "memberContractStatus": "fresh clean FCS checks and complete six-type public API capture; twelve declarations (thirteen accessor/operation contracts)",
       "plannedCssomExpansion": {
         "state": "source_contract_fixed_before_implementation",
         "pinnedWebCore": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
@@ -19414,7 +19480,36 @@
         "sharedManagedConformance": "pending",
         "platformMatrix": "pending",
         "release": "pending"
-      }
+      },
+      "verification": {
+        "fixture": "tests/NativeApi.Conformance/ConditionalRules.fs",
+        "windowsJitAssertions": 44,
+        "windowsNativeAotAssertions": 44,
+        "chromiumAssertions": 44,
+        "domPackages": "official alpha.12 normal package",
+        "nativeRuntime": "official WebCore and native preview.11 packages, fresh isolated restore cache; no source/runtime overrides",
+        "nativeSource": "58a9980bf69196752a070fc832095249d26fca2b",
+        "effects": "actual viewport changes, live media edits and named-container width changes alter computed width/height; original viewport restored",
+        "errors": "NotFoundError preserves media list; IndexSizeError preserves complete rule serialization, child identity and computed height",
+        "teardown": "fixture nodes removed; shared runner reports zero retained objects; existing 25 native lifetime/context checks pass",
+        "review": "independent review found weak failed-insertion atomicity assertion; strengthened to serialized rules, child identity and computed result",
+        "remaining": [
+          "applicable traced/platform/shared gates",
+          "published paired Views backend consumption"
+        ]
+      },
+      "files": {
+        "views": [
+          "tests/NativeApi.Conformance/ConditionalRules.fs"
+        ]
+      },
+      "sourceProfile": {
+        "declaredSurface": "MediaList.mediaText get/set (LegacyNullToEmptyString), length, nullable item, appendMedium/deleteMedium; CSSMediaRule.media; inherited readonly conditionText; readonly containerName/containerQuery",
+        "editing": "edit conditions through mediaText or existing stylesheet/grouping edits; no undeclared conditionText/containerQuery setters",
+        "matches": "CSSMediaRule.matches and CSSSupportsRule.matches are commented upstream FIXME declarations, not exported selected members",
+        "subscriptions": "G01 media-change subscriptions remain separate; this fixture proves direct computed effects after controlled updates"
+      },
+      "publicApiSnapshotSha256": "34a262dfecbb0f12e8398636b7c10e6b92fef1647abee8a2e3f106dabfe7947d"
     },
     {
       "id": "C10",
@@ -23661,7 +23756,16 @@
         "remaining": [
           "applicable traced/platform/shared gates",
           "official paired native/backend package consumption"
-        ]
+        ],
+        "officialRuntimeReverification": {
+          "version": "0.1.0-preview.11",
+          "source": "58a9980bf69196752a070fc832095249d26fca2b",
+          "windowsJit": "pass",
+          "windowsNativeAot": "pass",
+          "sharedBatchNativeAssertions": 864,
+          "sharedBatchChromiumAssertions": 875,
+          "backend": "local Views source; published paired backend/platform acceptance still pending"
+        }
       },
       "files": {
         "views": [
@@ -32511,7 +32615,16 @@
         "remaining": [
           "applicable traced/platform/shared gates",
           "official paired native/backend package consumption"
-        ]
+        ],
+        "officialRuntimeReverification": {
+          "version": "0.1.0-preview.11",
+          "source": "58a9980bf69196752a070fc832095249d26fca2b",
+          "windowsJit": "pass",
+          "windowsNativeAot": "pass",
+          "sharedBatchNativeAssertions": 864,
+          "sharedBatchChromiumAssertions": 875,
+          "backend": "local Views source; published paired backend/platform acceptance still pending"
+        }
       },
       "files": {
         "views": [
@@ -32711,6 +32824,15 @@
           "view": "passed with build",
           "library": "passed with build",
           "examples": "passed with build"
+        },
+        "officialRuntimeReverification": {
+          "version": "0.1.0-preview.11",
+          "source": "58a9980bf69196752a070fc832095249d26fca2b",
+          "windowsJit": "pass",
+          "windowsNativeAot": "pass",
+          "sharedBatchNativeAssertions": 864,
+          "sharedBatchChromiumAssertions": 875,
+          "backend": "local Views source; published paired backend/platform acceptance still pending"
         }
       }
     },

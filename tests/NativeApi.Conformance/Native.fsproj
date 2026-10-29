@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="Tables.fs" />
     <Compile Include="ViewTables.fs" />
+    <Compile Include="ViewHyperlinks.fs" />
     <Compile Include="Reflection.fs" />
     <Compile Include="Hyperlinks.fs" />
     <Compile Include="Namespaces.fs" />
@@ -18,6 +19,7 @@
     <Compile Include="TypedStyles.fs" />
     <Compile Include="FragmentRectangles.fs" />
     <Compile Include="FontTransitionRules.fs" />
+    <Compile Include="ConditionalRules.fs" />
     <Compile Include="SheetConstruction.fs" />
     <Compile Include="Native.fs" />
     <ProjectReference Include="../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />

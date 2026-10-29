@@ -32,6 +32,8 @@ let main _ =
     try
         let viewTables = ViewTables.run host.Document
         System.Console.WriteLine $"NATIVE_API D10_VIEW PASS assertions={viewTables}"
+        let viewHyperlinks = ViewHyperlinks.run host.Document
+        System.Console.WriteLine $"NATIVE_API D11_VIEW_HYPERLINKS PASS assertions={viewHyperlinks}"
         let cssEscaping = CssEscaping.run host.Document
         System.Console.WriteLine $"NATIVE_API C05 PASS assertions={cssEscaping}"
         let cssQueries = CssQueries.forHost host
@@ -145,6 +147,27 @@ let main _ =
         Async.StartImmediate (
             async {
                 try
+                    let originalViewport = host.PaintSize
+
+                    let! conditionalRules =
+                        ConditionalRules.run
+                            host.Document
+                            computedService
+                            originalViewport
+                            (fun width height ->
+                                async {
+                                    host.Resize (width, height)
+                                    host.Frame ()
+                                })
+                            (function
+                             | WebCoreDomException (name, _) -> name
+                             | error -> error.GetType().Name)
+
+                    if host.PaintSize <> originalViewport then
+                        failwith "Conditional rules did not restore the original viewport"
+
+                    System.Console.WriteLine $"NATIVE_API C09 PASS assertions={conditionalRules}"
+
                     let! checks =
                         SheetConstruction.run host.Document (fun () -> StyleSheets.forHost host) checkpoint computed
 
