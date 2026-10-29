@@ -21,6 +21,7 @@
     <Compile Include="FragmentRectangles.fs" />
     <Compile Include="FontTransitionRules.fs" />
     <Compile Include="ConditionalRules.fs" />
+    <Compile Include="CascadeRules.fs" />
     <Compile Include="SheetConstruction.fs" />
     <Compile Include="Native.fs" />
     <ProjectReference Include="../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />

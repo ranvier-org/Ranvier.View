@@ -40,7 +40,9 @@ try {
     } catch (error) {
       throw new Error(JSON.stringify({
         type: error?.constructor?.name,
+        name: error?.name,
         message: error?.message,
+        stack: error?.stack,
         detail: error?.Message,
         fields: Object.fromEntries(Object.getOwnPropertyNames(error).filter(key => key !== 'stack').map(key => [key, error[key]])),
       }));
@@ -66,6 +68,9 @@ try {
   console.log(`BROWSER_API C22 PASS assertions=${checks.transitionRules} engine=chromium`);
   if (checks.conditionalRules !== 44) throw new Error('Conditional rule assertions did not run');
   console.log(`BROWSER_API C09 PASS assertions=${checks.conditionalRules} engine=chromium`);
+  if (checks.cascadeRules < 60) throw new Error('Cascade rule assertions did not run');
+  console.log(`BROWSER_API C10 PASS assertions=${checks.cascadeRules} engine=chromium`);
+  console.log(`BROWSER_API C10 CAPABILITY scopeRules=${checks.scopeRules} nestedDeclarations=${checks.nestedDeclarations} importContentsReadable=${checks.importContentsReadable} engine=chromium`);
   const restoredViewport = page.viewportSize();
   if (restoredViewport.width !== originalViewport.width || restoredViewport.height !== originalViewport.height) {
     throw new Error('Conditional rule fixture did not restore the original viewport');

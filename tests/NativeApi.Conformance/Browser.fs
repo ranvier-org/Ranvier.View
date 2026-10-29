@@ -121,8 +121,15 @@ let run () =
                 (fun width height -> resizeViewport width height |> Async.AwaitPromise)
                 errorName
 
+        let! cascadeRules, scopeRules, nestedDeclarations, importContentsReadable =
+            CascadeRules.run document (Ranvier.Dom.ComputedStyles.forDocument document) (fun () -> Async.Sleep 1) errorName
+
         return
             {|
+                cascadeRules = cascadeRules
+                scopeRules = scopeRules
+                nestedDeclarations = nestedDeclarations
+                importContentsReadable = importContentsReadable
                 tables = tables
                 cssEscaping = cssEscaping
                 cssSupport = cssSupport

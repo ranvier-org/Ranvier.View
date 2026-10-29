@@ -179,6 +179,16 @@ let main _ =
 
                     System.Console.WriteLine $"NATIVE_API C09 PASS assertions={conditionalRules}"
 
+                    let! cascadeRules, scopeRules, nestedDeclarations, importContentsReadable =
+                        CascadeRules.run host.Document computedService (fun () -> Async.Sleep 1) (function
+                            | WebCoreDomException (name, _) -> name
+                            | error -> error.GetType().Name)
+
+                    System.Console.WriteLine $"NATIVE_API C10 PASS assertions={cascadeRules}"
+
+                    System.Console.WriteLine
+                        $"NATIVE_API C10 CAPABILITY scopeRules={scopeRules} nestedDeclarations={nestedDeclarations} importContentsReadable={importContentsReadable}"
+
                     let! checks =
                         SheetConstruction.run host.Document (fun () -> StyleSheets.forHost host) checkpoint computed
 
