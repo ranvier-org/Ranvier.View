@@ -700,12 +700,16 @@
           "nativeRuntimePackage": "preview.8 pending"
         },
         "C05": {
-          "state": "profile_verified",
+          "state": "accepted",
           "sharedAdapterAssertions": 45,
           "nativeAotAssertions": 45,
           "profile": "CSSOM 2021",
           "provider": "shared pure F# facade",
-          "publicPackageAcceptance": "alpha.9 pending"
+          "publicPackageAcceptance": "Core alpha.11/native preview.10",
+          "assertions": 45,
+          "jit": "passed",
+          "nativeAot": "passed",
+          "acceptanceJob": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826923"
         },
         "C03": {
           "state": "in_progress",
@@ -780,6 +784,14 @@
           "nativePackagedCi": "passed",
           "nativeCiAssertions": 72,
           "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40869602532"
+        },
+        "C05": {
+          "state": "accepted",
+          "assertions": 45,
+          "jit": "passed",
+          "nativeAot": "passed",
+          "publicPackageAcceptance": "Core alpha.11/native preview.10",
+          "acceptanceJob": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566827203"
         }
       },
       "runtimeProbe": "not_run",
@@ -802,6 +814,14 @@
           "nativePackagedCi": "passed",
           "nativeCiAssertions": 93,
           "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40876930854"
+        },
+        "C05": {
+          "state": "accepted",
+          "assertions": 45,
+          "jit": "passed",
+          "nativeAot": "passed",
+          "publicPackageAcceptance": "Core alpha.11/native preview.10",
+          "acceptanceJob": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826382"
         }
       },
       "runtimeProbe": "not_run",
@@ -828,6 +848,14 @@
           "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40876930854",
           "publicPackageAcceptance": "pending",
           "sharedAdapterAcceptance": "pending"
+        },
+        "C05": {
+          "state": "accepted",
+          "assertions": 45,
+          "jit": "passed",
+          "nativeAot": "passed",
+          "publicPackageAcceptance": "Core alpha.11/native preview.10",
+          "acceptanceJob": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826870"
         }
       },
       "runtimeProbe": "not_run",
@@ -901,12 +929,13 @@
         "sharedContractPackage": "official alpha.8"
       },
       "C05": {
-        "state": "profile_verified",
+        "state": "accepted",
         "engine": "chromium",
         "assertions": 45,
         "oracleComparisons": 196609,
         "profile": "CSSOM 2021",
-        "publicPackageAcceptance": "alpha.9 pending"
+        "publicPackageAcceptance": "official alpha.11 verified",
+        "acceptanceIssue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/30"
       },
       "C03": {
         "engine": "chromium",

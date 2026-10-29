@@ -130,8 +130,8 @@
       "title": "CSS identifier escaping",
       "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/30",
       "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiGU",
-      "status": "In Progress",
-      "phase": "Verification"
+      "status": "Done",
+      "phase": "Accepted"
     },
     {
       "id": "C06",
@@ -230,7 +230,7 @@
       "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/41",
       "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiU0",
       "status": "In Progress",
-      "phase": "Implementation"
+      "phase": "Verification"
     },
     {
       "id": "C19",
@@ -257,7 +257,7 @@
       "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/44",
       "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiX4",
       "status": "In Progress",
-      "phase": "Implementation"
+      "phase": "Verification"
     },
     {
       "id": "C25",
@@ -952,7 +952,7 @@
       "url": "https://github.com/ranvier-org/Ranvier.WebCore/pull/16",
       "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhpqg",
       "groups": "G06",
-      "status": "In Progress"
+      "status": "Done"
     },
     {
       "url": "https://github.com/ranvier-org/Ranvier/pull/259",

@@ -16684,7 +16684,7 @@
       "description": "CSS.escape produces safe selector identifiers from arbitrary application strings.",
       "acceptance": "Run shared CSS.escape vectors for leading digits, whitespace, punctuation, null/control and non-ASCII characters, then resolve an element through the resulting selector.",
       "consumes": "Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.",
-      "state": "in_progress",
+      "state": "accepted",
       "memberContracts": [
         {
           "owner": "Ranvier.Dom.CSS",
@@ -16715,6 +16715,31 @@
         "windowsAot": "passed",
         "chromium": "passed",
         "otherPlatforms": "pending CI"
+      },
+      "acceptedAt": "2026-10-30",
+      "acceptanceIssue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/30",
+      "acceptanceEvidence": {
+        "scope": "Core-only CSS.escape:string->string; CSSOM26August2021 profile; no new native ABI or Views backend implementation dependency",
+        "nativeAssertionsPerJitAndAotRun": 45,
+        "serializationVectors": 35,
+        "realSelectorRoundTrips": 10,
+        "platformJobs": {
+          "win-x64": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826923",
+          "win-arm64": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566827203",
+          "linux-x64": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826382",
+          "osx-arm64": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826870"
+        },
+        "chromium": {
+          "assertions": 45,
+          "oracleComparisons": 196609,
+          "job": "https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566827438"
+        },
+        "normalTracedNativeFableConsumers": "https://github.com/ranvier-org/Ranvier/actions/runs/40881215249/job/123473012510",
+        "officialCorePublish": "https://github.com/ranvier-org/Ranvier/actions/runs/40882196652",
+        "officialCorePackages": "all4 alpha.11 packages verified releasecommit939df32b; identical CSS source; prior isolated official consumption passes",
+        "nativeRuntime": "official preview.10; normal platform lanes have no producer/runtime overrides",
+        "independentAcceptanceAudit": "track_api_acceptance verified original task scope, official consumers, exact four native JIT/AOT and Chromium logs; issue closed COMPLETED",
+        "unrelatedCi": "Views sugar generated-output mismatch still requires repair for overall goal; it does not invalidate this Core-only API acceptance"
       }
     },
     {

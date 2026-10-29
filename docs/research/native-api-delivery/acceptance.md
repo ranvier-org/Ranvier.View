@@ -1,5 +1,13 @@
 # Native API delivery acceptance evidence
 
+## Accepted C05: CSS identifier escaping, 2026-10-30
+
+Independent acceptance review closed [WebCore issue30](https://github.com/ranvier-org/Ranvier.WebCore/issues/30) as COMPLETED and marked its project item Accepted/Done. The original Core-only CSS.escape scope and relevant global gates are proven; no new native ABI or Views backend publication is required for this function.
+
+- 45 assertions (35 serialization vectors and10 real querySelector identity round-trips) pass under JIT and NativeAOT in each supported platform lane: [Windows x64](https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826923), [Windows ARM64](https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566827203), [Linux x64](https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826382), [macOS ARM64](https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566826870). Source8fdf9fd uses public Core DOMalpha.11/nativepreview.10 with no normal-lane producer/runtime overrides.
+- [Chromium](https://github.com/ranvier-org/Ranvier.View/actions/runs/40907189877/job/123566827438) passes45 assertions plus196,609 native CSS.escape oracle comparisons. [All four normal/traced native/Fable Core consumers](https://github.com/ranvier-org/Ranvier/actions/runs/40881215249/job/123473012510) pass direct CSS.escape checks. [Official publication](https://github.com/ranvier-org/Ranvier/actions/runs/40882196652), exact package commits/shared CSS source and prior isolated official consumption are verified.
+- The overall Views pipeline's sugar generated-output failure remains an active goal repair. It is unrelated to this Core-only function and does not block its independently proven acceptance. Scope remains98 required+5 conditional groups, with53 deferred; counts are1 accepted,19 in progress,83 not started/conditional. No other group is accepted by this closure.
+
 ## C18/C22 shared rule verification
 
 - New shared FontTransitionRules.fs passes51 C18 font-rule assertions in Windows JIT/NativeAOT and49 in Chromium; C22 starting-style/view-transition inspection passes23 on each. Font-face parsing/aliases/edit/removal, feature-family mutation, all palette getters/replacement/retention, starting-style child edits and readonly transition navigation/types/defaults/replacement are exercised. Native teardown leaves zero retained objects.
