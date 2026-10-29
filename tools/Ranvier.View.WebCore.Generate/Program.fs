@@ -63,6 +63,11 @@ let private kinds =
             "ValidityState", "Kind.Validity"
             "DOMImplementation", "Kind.DOMImplementation"
             "NamedNodeMap", "Kind.NamedNodeMap"
+            "CSSRule", "Kind.CSSRule"
+            "CSSRuleList", "Kind.CSSRuleList"
+            "StyleSheet", "Kind.StyleSheet"
+            "StyleSheetList", "Kind.StyleSheetList"
+            "MediaList", "Kind.MediaList"
         ]
 
 [<EntryPoint>]

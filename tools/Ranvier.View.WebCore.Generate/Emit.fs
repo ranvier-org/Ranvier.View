@@ -247,6 +247,41 @@ let private releaseContainer (ctx: Context) (mapping: JsonElement) =
     |> Array.find (fun item -> Metadata.text "ctype" (item.GetProperty "mapping") = ctype)
     |> Metadata.text "releaseFunction"
 
+let private runtimeQueries (model: JsonElement) =
+    let mutable queries = Unchecked.defaultof<JsonElement>
+
+    if model.TryGetProperty ("runtimeTypeQueries", &queries) then
+        queries.EnumerateArray () |> Seq.toArray
+    else
+        [||]
+
+let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) (value: string) =
+    match classFor ctx managed with
+    | None -> Error $"returns {name managed}, which has no class"
+    | Some cls ->
+        let root = Metadata.text "root" mapping
+
+        let query =
+            runtimeQueries ctx.Input.Model
+            |> Array.tryFind (fun row -> Metadata.text "root" row = root)
+
+        if
+            query.IsSome
+            || List.contains root [ "CSSRuleList"; "StyleSheetList"; "MediaList"; "DOMTokenList" ]
+        then
+            let kind = ctx.Input.Kinds[root]
+
+            let create =
+                if query.IsSome then
+                    $"Classes.{root}(session, handle)"
+                else
+                    $"({cls}(session, handle) :> NativeObject)"
+
+            Ok
+                $"(unbox<{name managed}> (this.Session.Object({value}, {kind}, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> {create}))))"
+        else
+            Ok $"(this.Session.Track ({cls}(this.Session, {value})) :> {name managed})"
+
 let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (value: string) : Result<string, string> =
     let kind = Metadata.text "kind" mapping
     let plain = optionOf managed |> Option.defaultValue managed
@@ -280,13 +315,10 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
 
         Ok $"(let handle = {value} in Native.{retain} handle |> ignore; unbox<{name plain}> (this.Session.{session} handle))"
     | "object" ->
-        match classFor ctx plain with
-        | None -> Error $"returns {name plain}, which has no class"
-        | Some cls ->
-            let root = Metadata.text "root" mapping |> snake
+        let root = Metadata.text "root" mapping |> snake
 
-            Ok
-                $"(let handle = {value} in NativeDom.rv_dom_{root}_retain handle |> ignore; this.Session.Track ({cls}(this.Session, handle)) :> {name plain})"
+        wrappedObject ctx mapping plain "handle"
+        |> Result.map (fun wrapped -> $"(let handle = {value} in NativeDom.rv_dom_{root}_retain handle |> ignore; {wrapped})")
     | "sequence" when plain.IsArray ->
         let element = plain.GetElementType ()
         let mapping = (Metadata.items "subtypes" mapping)[0]
@@ -372,7 +404,7 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
     | Some reason -> Error reason
     | None ->
         let args =
-            "this.Handle"
+            "Interop.handle (box this)"
             :: (inputs
                 |> List.map (function
                     | Ok e -> e
@@ -461,17 +493,14 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
                     else
                         finish $"unbox<{name inner}> ({wrapped})"
             | "nativeint&" ->
-                match classFor ctx inner with
-                | Some cls ->
-                    let created = $"(this.Session.Track ({cls} (this.Session, result)) :> {name inner})"
-
+                wrappedObject ctx resultMapping inner "result"
+                |> Result.bind (fun created ->
                     if nullable then
                         finish $"(if result = 0n then None else Some {created})"
                     elif resultMapping.GetProperty("nullable").GetBoolean() then
                         finish $"(if result = 0n then Unchecked.defaultof<{name inner}> else {created})"
                     else
-                        finish created
-                | None -> Error $"returns {name returns}, which has no class"
+                        finish created)
             | "int&" when inner = typeof<bool> -> scalar "result <> 0"
             | ("int&" | "uint32&" | "float&" | "int16&" | "uint16&" | "float32&" | "int64&" | "uint64&") when numericType inner ->
                 scalar $"{name inner} result"
@@ -884,6 +913,42 @@ let run (input: Input) (tagMap: (string * string * string) list) : string * Entr
     out.AppendLine "and [<AbstractClass; Sealed>] internal Classes ="
     |> ignore
 
+    for query in runtimeQueries input.Model do
+        let root = Metadata.text "root" query
+        let nativeQuery = Metadata.text "function" query
+        let feature = Metadata.text "feature" query
+        emitter.Line (1, $"static member {root}(session: Session, handle: nativeint) : NativeObject =")
+        emitter.Line (2, $"if Native.rv_abi_has \"{feature}\" = 0 then Interop.unsupported<unit> \"{root} runtime interface\"")
+
+        emitter.Line (
+            2,
+            $"let interfaceName = Interop.text \"{root} runtime interface\" (fun buffer capacity length -> NativeDom.{nativeQuery}(handle, buffer, capacity, length))"
+        )
+
+        if root = "StyleSheet" then
+            emitter.Line (2, "let mutable ownerNode = 0n")
+            emitter.Line (2, "Interop.check \"StyleSheet.ownerNode\" (NativeDom.rv_dom_style_sheet_get_owner_node(handle, &ownerNode))")
+            emitter.Line (2, "let owner = session.Node ownerNode")
+
+        emitter.Line (2, "let wrapped: NativeObject =")
+        emitter.Line (3, "match interfaceName with")
+
+        for interfaceName in query.GetProperty("interfaces").EnumerateArray() do
+            let interfaceName = interfaceName.GetString ()
+
+            if not (classes.ContainsKey interfaceName) then
+                invalidOp $"Native runtime interface {interfaceName} has no managed wrapper"
+
+            emitter.Line (3, $"| \"{interfaceName}\" -> {interfaceName}Object(session, handle)")
+
+        emitter.Line (3, $"| name -> invalidOp (\"Unknown {root} runtime interface: \" + name)")
+
+        if root = "StyleSheet" then
+            emitter.Line (2, "wrapped.KeepAlive owner")
+
+        emitter.Line (2, "wrapped")
+        out.AppendLine () |> ignore
+
     emitter.Line (1, "/// <summary>The wrapper class matching the element's namespace and tag.</summary>")
     emitter.Line (1, "static member Element(session: Session, handle: nativeint, tag: string) : NativeObject =")
 
@@ -907,6 +972,10 @@ let run (input: Input) (tagMap: (string * string * string) list) : string * Entr
 
     emitter.Line (2, "| \"http://www.w3.org/1999/xhtml\", _ -> HTMLElementObject (session, handle)")
     emitter.Line (2, "| \"http://www.w3.org/2000/svg\", _ -> SVGElementObject (session, handle)")
+
+    if classes.ContainsKey "MathMLElement" then
+        emitter.Line (2, "| \"http://www.w3.org/1998/Math/MathML\", _ -> MathMLElementObject (session, handle)")
+
     emitter.Line (2, "| _ -> ElementObject (session, handle)")
 
     out.ToString (), List.ofSeq entries

@@ -85,6 +85,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let mutable manual = false
 
     let context = HostContext (posted, thread)
+    let disposedEvent = Event<unit>()
     let previousContext = SynchronizationContext.Current
     let mutable nextId = 1
     let mutable inInput = 0
@@ -219,6 +220,21 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     /// <summary>The managed objects of the page: its node and event table and the release queue.</summary>
     member _.Session = session
+
+    /// <summary>Rejects calls after disposal or from another thread.</summary>
+    member internal _.EnsureActive() =
+        if Environment.CurrentManagedThreadId <> thread then
+            raise (InvalidOperationException "A WebCore operation requires the thread that created the host")
+
+        if disposed then
+            raise (ObjectDisposedException (nameof WebCoreHost))
+
+    /// <summary>Posts a callback to the host's thread-safe work queue.</summary>
+    member internal _.PostToOwner(action: unit -> unit) =
+        context.Post (SendOrPostCallback (fun _ -> action ()), null)
+
+    /// <summary>Runs after owned DOM references have been detached at host disposal.</summary>
+    member internal _.Disposed = disposedEvent.Publish
 
     /// <summary>The page's document, an HTML document with an empty head and body at creation.</summary>
     member _.Document = document
@@ -662,5 +678,11 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
                 Events.RemoveAll session
                 session.Dispose ()
+
+                try
+                    disposedEvent.Trigger ()
+                with error ->
+                    record error
+
                 Native.rv_host_destroy handle
                 GC.KeepAlive frameCallback

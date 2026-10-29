@@ -1,0 +1,32 @@
+{
+  "status": "ok",
+  "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+  "optionsSource": "ionide-proj-info",
+  "includeInternal": false,
+  "namespaceFilter": "Ranvier.Dom.CSS",
+  "entityCount": 1,
+  "memberCount": 1,
+  "entities": [
+    {
+      "fullName": "Ranvier.Dom.CSS",
+      "kind": "module",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "escape",
+          "kind": "function",
+          "signature": "escape(identifier: string) -> string",
+          "accessibility": "public"
+        }
+      ]
+    }
+  ],
+  "truncated": false,
+  "nextCursor": null,
+  "totalEstimate": {
+    "entities": 1
+  },
+  "pageOffset": 0,
+  "pageSize": 200,
+  "entityFilter": "Exact fullName Ranvier.Dom.CSS; 29 namespace-prefix matches inspected"
+}

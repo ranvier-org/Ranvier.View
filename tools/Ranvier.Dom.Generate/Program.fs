@@ -223,16 +223,21 @@ type PropertyBinding =
         Owner: string
         ValueType: string
         BrowserOnly: bool
+        Facade: string option
     }
 
 let propertyRead (binding: PropertyBinding) name =
-    if binding.BrowserOnly then
+    if binding.Facade.IsSome then
+        $"SharedPropertyReceivers.get_{binding.Facade.Value} (box node)"
+    elif binding.BrowserOnly then
         $"Native.expando (box node) \"{name}\""
     else
         $"node.``{name}``"
 
 let propertyWrite (binding: PropertyBinding) name =
-    if binding.BrowserOnly then
+    if binding.Facade.IsSome then
+        $"SharedPropertyReceivers.set_{binding.Facade.Value} (box node) value"
+    elif binding.BrowserOnly then
         $"Native.setExpando (box node) \"{name}\" value"
     else
         $"node.``{name}`` <- value"
@@ -405,6 +410,9 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
     let propertyBindings =
         System.Collections.Generic.Dictionary<string * string, PropertyBinding>()
 
+    let receiverFacades =
+        System.Collections.Generic.SortedDictionary<string, string * string * string array * bool>()
+
     let templateGroupEvents =
         System.Collections.Generic.SortedDictionary<string, System.Collections.Generic.SortedDictionary<string, string * string>>()
 
@@ -521,6 +529,12 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
 
     let tagMapNative = nativeType (catalogueFor tagMap)
 
+    let sharedTagTypes =
+        tags
+        |> Array.map (fun tag -> (property tagMapNative tag.Name).PropertyType)
+        |> Array.distinct
+        |> Array.map (fun native -> native, RanvierSharedDomTypes.contract sharedAssembly native)
+
     for tagSymbol in tags |> Array.sortBy _.Name do
         let tag = tagSymbol.Name
 
@@ -632,9 +646,51 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
                     let ownerKey = "Dom." + owner.Name
                     let sharedNative = RanvierSharedDomTypes.contract sharedAssembly native
 
-                    let sharedProperty =
+                    let candidate =
                         allProperties sharedNative
                         |> Array.tryFind (fun candidate -> candidate.Name = memberName)
+
+                    let receiverTypes =
+                        sharedTagTypes
+                        |> Array.choose (fun (browserTag, sharedTag) ->
+                            if owner.IsAssignableFrom browserTag then
+                                Some sharedTag
+                            else
+                                None)
+                        |> Array.distinct
+
+                    let commonReceiver =
+                        candidate
+                        |> Option.exists (fun candidate ->
+                            sharedTagTypes
+                            |> Array.forall (fun (browserTag, sharedTag) ->
+                                not (owner.IsAssignableFrom browserTag)
+                                || candidate.DeclaringType.IsAssignableFrom sharedTag))
+
+                    let facadeOwner =
+                        if commonReceiver then
+                            None
+                        else
+                            try
+                                Some (RanvierSharedDomTypes.contract sharedAssembly owner)
+                            with :? TypeLoadException ->
+                                None
+
+                    let facade =
+                        candidate
+                        |> Option.filter (fun candidate ->
+                            facadeOwner.IsSome
+                            && receiverTypes.Length > 0
+                            && receiverTypes
+                               |> Array.forall (fun receiver ->
+                                   allProperties receiver
+                                   |> Array.exists (fun property ->
+                                       property.Name = memberName
+                                       && property.PropertyType = candidate.PropertyType
+                                       && property.CanWrite = candidate.CanWrite)))
+                        |> Option.map (fun _ -> owner.Name + "_" + memberName)
+
+                    let sharedProperty = if commonReceiver || facade.IsSome then candidate else None
 
                     let projected =
                         sharedProperty
@@ -647,12 +703,21 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
                     let binding =
                         match projected with
                         | Some (candidate, valueType) ->
-                            let ownerName = RanvierSharedDomTypes.render sharedAssembly candidate.DeclaringType
+                            let ownerName =
+                                RanvierSharedDomTypes.render
+                                    sharedAssembly
+                                    (facadeOwner
+                                     |> Option.defaultValue candidate.DeclaringType)
+
+                            if facade.IsSome then
+                                receiverFacades[facade.Value] <-
+                                    memberName, valueType, Array.map (RanvierSharedDomTypes.render sharedAssembly) receiverTypes, candidate.CanWrite
 
                             {
                                 Owner = ownerName
                                 ValueType = valueType
                                 BrowserOnly = false
+                                Facade = facade
                             }
                         | None ->
                             let constraintType =
@@ -668,6 +733,7 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
                                 Owner = RanvierSharedDomTypes.render sharedAssembly constraintType
                                 ValueType = RanvierSharedDomTypes.browserValue sharedAssembly nativeProperty.PropertyType
                                 BrowserOnly = true
+                                Facade = None
                             }
 
                     let ownerName, valueType = binding.Owner, binding.ValueType
@@ -843,6 +909,39 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
         require (getters + listeners > 0) $"No usable members for tag: {tag}"
         counts.Add (tag, getters, setters, listeners)
 
+    let receiverLines = ResizeArray<string>()
+
+    if receiverFacades.Count > 0 then
+        receiverLines.Add "module private SharedPropertyReceivers ="
+
+        for KeyValue (key, (memberName, valueType, receivers, writable)) in receiverFacades do
+            receiverLines.Add "#if FABLE_COMPILER"
+            receiverLines.Add $"    let get_{key} (node: obj) : {valueType} = Native.expando node \"{memberName}\""
+
+            if writable then
+                receiverLines.Add $"    let set_{key} (node: obj) (value: {valueType}) = Native.setExpando node \"{memberName}\" value"
+
+            receiverLines.Add "#else"
+            receiverLines.Add $"    let get_{key} (node: obj) : {valueType} ="
+            receiverLines.Add "        match node with"
+
+            for receiver in receivers do
+                receiverLines.Add $"        | :? {receiver} as receiver -> receiver.``{memberName}``"
+
+            receiverLines.Add $"        | _ -> invalidArg \"node\" \"Unsupported native receiver for {key}\""
+
+            if writable then
+                receiverLines.Add $"    let set_{key} (node: obj) (value: {valueType}) ="
+                receiverLines.Add "        match node with"
+
+                for receiver in receivers do
+                    receiverLines.Add $"        | :? {receiver} as receiver -> receiver.``{memberName}`` <- value"
+
+                receiverLines.Add $"        | _ -> invalidArg \"node\" \"Unsupported native receiver for {key}\""
+
+            receiverLines.Add "#endif"
+            receiverLines.Add ""
+
     let shared = ResizeArray<string>()
     shared.Add "module Properties ="
 
@@ -873,7 +972,7 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
         shared.Add $"        Typed.listener \"{event.Key}\" (fun event -> handler (unbox event))"
         shared.Add ""
 
-    lines.InsertRange (headerLength, shared)
+    lines.InsertRange (headerLength, Seq.append receiverLines shared)
 
     let policyPath = Path.Combine (policyRoot, "attributes.json")
     use attributePolicy = JsonDocument.Parse (File.ReadAllBytes policyPath)
@@ -1204,6 +1303,7 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
     tEmit "open Ranvier.View.Representation"
     tEmit "open Ranvier.View.Template"
     tEmit ""
+    t.AddRange receiverLines
 
     let flatOwner (owner: Type) =
         owner.IsAssignableFrom typeof<Dom.HTMLElement>

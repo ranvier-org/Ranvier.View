@@ -48,6 +48,21 @@ module internal Kind =
     [<Literal>]
     let NamedNodeMap = 12
 
+    [<Literal>]
+    let CSSRule = 13
+
+    [<Literal>]
+    let CSSRuleList = 14
+
+    [<Literal>]
+    let StyleSheet = 15
+
+    [<Literal>]
+    let StyleSheetList = 16
+
+    [<Literal>]
+    let MediaList = 17
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -74,6 +89,7 @@ type internal Registration(target: nativeint, eventType: string, capture: bool, 
 [<AbstractClass; AllowNullLiteral>]
 type NativeObject(session: Session, handle: nativeint, kind: int) =
     let mutable handle = handle
+    let lifetimeAnchors = List<NativeObject>()
 
     /// <summary>The session of the host the object belongs to.</summary>
     member _.Session = session
@@ -82,6 +98,14 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
     member _.Handle = handle
 
     member internal _.Kind = kind
+
+    /// <summary>Keeps an owner wrapper reachable until this object is detached or collected.</summary>
+    member internal this.KeepAlive(anchor: NativeObject) =
+        if
+            not (isNull anchor)
+            && not (obj.ReferenceEquals (this, anchor))
+        then
+            lifetimeAnchors.Add anchor
 
     member val internal Expandos: Ranvier.View.Native.ExpandoSlots = null with get, set
 
@@ -98,6 +122,7 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
         if handle <> 0n then
             Session.Release (kind, handle)
             handle <- 0n
+            lifetimeAnchors.Clear ()
             GC.SuppressFinalize this
 
     override _.Finalize() =
@@ -113,6 +138,10 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
 /// </summary>
 and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
     let table = Dictionary<nativeint, WeakReference<NativeObject>>()
+
+    let objectTable =
+        Dictionary<struct (int * nativeint), WeakReference<NativeObject>>()
+
     let others = List<WeakReference<NativeObject>>()
     let releases = ConcurrentQueue<struct (int * nativeint)>()
     let held = HashSet<NativeObject>(HashIdentity.Reference)
@@ -136,6 +165,11 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.Validity -> NativeDom.rv_dom_validity_state_release handle
         | Kind.DOMImplementation -> NativeDom.rv_dom_dom_implementation_release handle
         | Kind.NamedNodeMap -> NativeDom.rv_dom_named_node_map_release handle
+        | Kind.CSSRule -> NativeDom.rv_dom_css_rule_release handle
+        | Kind.CSSRuleList -> NativeDom.rv_dom_css_rule_list_release handle
+        | Kind.StyleSheet -> NativeDom.rv_dom_style_sheet_release handle
+        | Kind.StyleSheetList -> NativeDom.rv_dom_style_sheet_list_release handle
+        | Kind.MediaList -> NativeDom.rv_dom_media_list_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =
@@ -283,6 +317,36 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         others.Add (WeakReference<NativeObject>(target))
         target
 
+    /// <summary>Consumes an owned reference, reusing a live wrapper or creating one anchored to its owner.</summary>
+    member internal this.Object(handle: nativeint, kind: int, owner: NativeObject, factory: Func<Session, nativeint, NativeObject>) =
+        if handle = 0n then
+            null
+        elif disposed then
+            Session.Release (kind, handle)
+            raise (ObjectDisposedException (nameof Session))
+        else
+            let key = struct (kind, handle)
+            let mutable existing = null
+
+            match objectTable.TryGetValue key with
+            | true, weak when
+                weak.TryGetTarget (&existing)
+                && existing.Handle = handle
+                ->
+                Session.Release (kind, handle)
+                existing
+            | _ ->
+                let created =
+                    try
+                        factory.Invoke (this, handle)
+                    with _ ->
+                        Session.Release (kind, handle)
+                        reraise ()
+
+                created.KeepAlive owner
+                objectTable[key] <- WeakReference<NativeObject>(created)
+                this.Track created
+
     member internal _.QueueRelease(kind: int, handle: nativeint) =
         if not disposed then
             releases.Enqueue (struct (kind, handle))
@@ -301,6 +365,12 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
                     | true, _ -> ()
                     | _ -> table.Remove handle |> ignore
                 | _ -> ()
+            else
+                let key = struct (kind, handle)
+
+                match objectTable.TryGetValue key with
+                | true, weak when not (fst (weak.TryGetTarget ())) -> objectTable.Remove key |> ignore
+                | _ -> ()
 
             Session.Release (kind, handle)
             released <- released + 1
@@ -312,19 +382,27 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
     /// <summary>Releases every reference, live objects included; their handles read zero afterwards.</summary>
     member this.Dispose() =
         if not disposed then
+            let live =
+                Seq.append table.Values others
+                |> Seq.choose (fun weak ->
+                    match weak.TryGetTarget () with
+                    | true, target -> Some target
+                    | _ -> None)
+                |> Seq.toArray
+
             GC.Collect ()
             GC.WaitForPendingFinalizers ()
             this.Drain ()
             disposed <- true
 
-            for weak in Seq.append table.Values others do
-                match weak.TryGetTarget () with
-                | true, target -> target.Detach ()
-                | _ -> ()
+            for target in live do
+                target.Detach ()
 
             table.Clear ()
+            objectTable.Clear ()
             others.Clear ()
             held.Clear ()
+            GC.KeepAlive live
 
     interface IDisposable with
         member this.Dispose() =

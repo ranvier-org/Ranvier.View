@@ -55,9 +55,17 @@ jobs:
           key: nuget-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('**/*.fsproj', '**/Directory.Build.*', 'nuget.config', '.config/dotnet-tools.json') }}
           restore-keys: nuget-${{ runner.os }}-${{ matrix.group }}-
       # The counters suites compile core with RanvierCounters=true, which the published Ranvier package omits.
+      - name: Check out the Core revision matching DOM alpha.11
+        if: matrix.group == 'view' || matrix.group == 'arms'
+        uses: actions/checkout@v7
+        with:
+          repository: ranvier-org/Ranvier
+          ref: 939df32b6af78ef207a9e95e5d1c0e7aee53c35a
+          path: .ci/ranvier
+          persist-credentials: false
       - name: Reference the core source for the counters suites
         if: matrix.group == 'view' || matrix.group == 'arms'
-        run: dotnet fsi build.fsx -- dev local
+        run: dotnet fsi build.fsx -- dev local --ranvier-root "${{ github.workspace }}/.ci/ranvier"
       - name: Run the same view checks as local development
         run: dotnet fsi build.fsx -- test --group ${{ matrix.group }}
       - name: Upload the Playwright reports
@@ -129,6 +137,8 @@ jobs:
           dotnet --info
       - name: Test Ranvier.View.WebCore.Tests
         run: dotnet test tests/Ranvier.View.WebCore.Tests -c Release
+      - name: Shared native API conformance
+        run: dotnet fsi build.fsx -- native-api
       - name: Verify wrappers against the restored canonical model and DOM contracts
         if: matrix.rid == 'win-x64'
         run: |
@@ -154,8 +164,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet publish examples/Ranvier.NativeCounter -c Release -r ${{ matrix.rid }} -o artifacts/native-aot/counter
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet publish tests/NativeApi.Conformance/Native.fsproj -c Release -r ${{ matrix.rid }} -p:PublishAot=true -o artifacts/native-aot/api
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Run the published NativeAOT smoke app
         run: ./artifacts/native-aot/smoke/Ranvier.View.WebCore.AotSmoke.exe
+      - name: Shared NativeAOT API conformance
+        run: ./artifacts/native-aot/api/Native.exe
       - name: Smoke the published NativeAOT counter window
         timeout-minutes: 2
         env:
@@ -240,6 +254,8 @@ jobs:
       # to the test bodies.
       - name: Test Ranvier.View.WebCore.Tests
         run: dotnet run --project tests/Ranvier.View.WebCore.Tests -c Release
+      - name: Shared native API conformance
+        run: dotnet fsi build.fsx -- native-api
       - name: Build the native counter example
         run: dotnet build examples/Ranvier.NativeCounter -c Release
       - name: Smoke the visible native counter window
@@ -251,8 +267,11 @@ jobs:
         run: |
           dotnet publish tests/Ranvier.View.WebCore.AotSmoke -c Release -r osx-arm64 -o artifacts/native-aot/smoke
           dotnet publish examples/Ranvier.NativeCounter -c Release -r osx-arm64 -o artifacts/native-aot/counter
+          dotnet publish tests/NativeApi.Conformance/Native.fsproj -c Release -r osx-arm64 -p:PublishAot=true -o artifacts/native-aot/api
       - name: Run the published NativeAOT smoke app
         run: ./artifacts/native-aot/smoke/Ranvier.View.WebCore.AotSmoke
+      - name: Shared NativeAOT API conformance
+        run: ./artifacts/native-aot/api/Native
       - name: Smoke the published NativeAOT counter window
         timeout-minutes: 2
         env:
@@ -287,6 +306,8 @@ jobs:
             libwebp7 libwebpdemux2 libwebpmux3 libatomic1 libfreetype6 libfontconfig1 libwoff1 libdrm2 libegl1 libgles2
       - name: Test Ranvier.View.WebCore.Tests
         run: xvfb-run -a dotnet run --project tests/Ranvier.View.WebCore.Tests -c Release
+      - name: Shared native API conformance
+        run: xvfb-run -a dotnet fsi build.fsx -- native-api
       - name: Build the native counter example
         run: dotnet build examples/Ranvier.NativeCounter -c Release
       - name: Smoke the visible native counter window
@@ -298,13 +319,33 @@ jobs:
         run: |
           dotnet publish tests/Ranvier.View.WebCore.AotSmoke -c Release -r linux-x64 -o artifacts/native-aot/smoke
           dotnet publish examples/Ranvier.NativeCounter -c Release -r linux-x64 -o artifacts/native-aot/counter
+          dotnet publish tests/NativeApi.Conformance/Native.fsproj -c Release -r linux-x64 -p:PublishAot=true -o artifacts/native-aot/api
       - name: Run the published NativeAOT smoke app
         run: ./artifacts/native-aot/smoke/Ranvier.View.WebCore.AotSmoke
+      - name: Shared NativeAOT API conformance
+        run: xvfb-run -a ./artifacts/native-aot/api/Native
       - name: Smoke the published NativeAOT counter window
         timeout-minutes: 2
         env:
           RANVIER_SMOKE: '1'
         run: xvfb-run -a ./artifacts/native-aot/counter/Ranvier.NativeCounter
+
+  native-api-browser:
+    name: Shared browser API conformance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26'
+      - run: dotnet fsi build.fsx -- tools
+      - run: dotnet fsi build.fsx -- native-api-browser
 
   packages:
     name: Packages
@@ -340,12 +381,12 @@ jobs:
 
   result:
     name: CI result
-    needs: [views, analyze, webcore, webcore-gpu, webcore-macos, webcore-linux, packages, format]
+    needs: [views, analyze, webcore, webcore-gpu, webcore-macos, webcore-linux, native-api-browser, packages, format]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - env:
-          RESULTS: ${{ needs.views.result }} ${{ needs.analyze.result }} ${{ needs.webcore.result }} ${{ needs['webcore-macos'].result }} ${{ needs['webcore-linux'].result }} ${{ needs.packages.result }} ${{ needs.format.result }}
+          RESULTS: ${{ needs.views.result }} ${{ needs.analyze.result }} ${{ needs.webcore.result }} ${{ needs['webcore-macos'].result }} ${{ needs['webcore-linux'].result }} ${{ needs['native-api-browser'].result }} ${{ needs.packages.result }} ${{ needs.format.result }}
           GPU_ENABLED: ${{ github.event_name == 'workflow_dispatch' && inputs.gpu_runtime_version != '' }}
           GPU_RESULT: ${{ needs['webcore-gpu'].result }}
         run: |

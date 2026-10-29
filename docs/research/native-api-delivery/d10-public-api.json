@@ -1,0 +1,432 @@
+{
+  "status": "ok",
+  "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+  "optionsSource": "ionide-proj-info",
+  "includeInternal": false,
+  "namespaceFilter": "Ranvier.Dom.HTMLTable",
+  "entityCount": 6,
+  "memberCount": 62,
+  "entities": [
+    {
+      "fullName": "Ranvier.Dom.HTMLTableCaptionElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "align",
+          "kind": "property",
+          "signature": "align() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLTableCellElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "abbr",
+          "kind": "property",
+          "signature": "abbr() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "align",
+          "kind": "property",
+          "signature": "align() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "axis",
+          "kind": "property",
+          "signature": "axis() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "bgColor",
+          "kind": "property",
+          "signature": "bgColor() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "cellIndex",
+          "kind": "property",
+          "signature": "cellIndex() -> int",
+          "accessibility": "public"
+        },
+        {
+          "name": "ch",
+          "kind": "property",
+          "signature": "ch() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "chOff",
+          "kind": "property",
+          "signature": "chOff() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "colSpan",
+          "kind": "property",
+          "signature": "colSpan() -> uint32",
+          "accessibility": "public"
+        },
+        {
+          "name": "headers",
+          "kind": "property",
+          "signature": "headers() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "height",
+          "kind": "property",
+          "signature": "height() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "noWrap",
+          "kind": "property",
+          "signature": "noWrap() -> bool",
+          "accessibility": "public"
+        },
+        {
+          "name": "rowSpan",
+          "kind": "property",
+          "signature": "rowSpan() -> uint32",
+          "accessibility": "public"
+        },
+        {
+          "name": "scope",
+          "kind": "property",
+          "signature": "scope() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "vAlign",
+          "kind": "property",
+          "signature": "vAlign() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "width",
+          "kind": "property",
+          "signature": "width() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLTableColElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "align",
+          "kind": "property",
+          "signature": "align() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "ch",
+          "kind": "property",
+          "signature": "ch() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "chOff",
+          "kind": "property",
+          "signature": "chOff() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "span",
+          "kind": "property",
+          "signature": "span() -> uint32",
+          "accessibility": "public"
+        },
+        {
+          "name": "vAlign",
+          "kind": "property",
+          "signature": "vAlign() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "width",
+          "kind": "property",
+          "signature": "width() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLTableElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "align",
+          "kind": "property",
+          "signature": "align() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "bgColor",
+          "kind": "property",
+          "signature": "bgColor() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "border",
+          "kind": "property",
+          "signature": "border() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "caption",
+          "kind": "property",
+          "signature": "caption() -> Ranvier.Dom.HTMLTableCaptionElement",
+          "accessibility": "public"
+        },
+        {
+          "name": "cellPadding",
+          "kind": "property",
+          "signature": "cellPadding() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "cellSpacing",
+          "kind": "property",
+          "signature": "cellSpacing() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "createCaption",
+          "kind": "method",
+          "signature": "createCaption() -> Ranvier.Dom.HTMLTableCaptionElement",
+          "accessibility": "public"
+        },
+        {
+          "name": "createTBody",
+          "kind": "method",
+          "signature": "createTBody() -> Ranvier.Dom.HTMLTableSectionElement",
+          "accessibility": "public"
+        },
+        {
+          "name": "createTFoot",
+          "kind": "method",
+          "signature": "createTFoot() -> Ranvier.Dom.HTMLTableSectionElement",
+          "accessibility": "public"
+        },
+        {
+          "name": "createTHead",
+          "kind": "method",
+          "signature": "createTHead() -> Ranvier.Dom.HTMLTableSectionElement",
+          "accessibility": "public"
+        },
+        {
+          "name": "deleteCaption",
+          "kind": "method",
+          "signature": "deleteCaption() -> unit",
+          "accessibility": "public"
+        },
+        {
+          "name": "deleteRow",
+          "kind": "method",
+          "signature": "deleteRow(index: int) -> unit",
+          "accessibility": "public"
+        },
+        {
+          "name": "deleteTFoot",
+          "kind": "method",
+          "signature": "deleteTFoot() -> unit",
+          "accessibility": "public"
+        },
+        {
+          "name": "deleteTHead",
+          "kind": "method",
+          "signature": "deleteTHead() -> unit",
+          "accessibility": "public"
+        },
+        {
+          "name": "frame",
+          "kind": "property",
+          "signature": "frame() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "insertRow",
+          "kind": "method",
+          "signature": "insertRow(index: int option) -> Ranvier.Dom.HTMLTableRowElement",
+          "accessibility": "public"
+        },
+        {
+          "name": "rows",
+          "kind": "property",
+          "signature": "rows() -> Ranvier.Dom.HTMLCollection",
+          "accessibility": "public"
+        },
+        {
+          "name": "rules",
+          "kind": "property",
+          "signature": "rules() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "summary",
+          "kind": "property",
+          "signature": "summary() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "tBodies",
+          "kind": "property",
+          "signature": "tBodies() -> Ranvier.Dom.HTMLCollection",
+          "accessibility": "public"
+        },
+        {
+          "name": "tFoot",
+          "kind": "property",
+          "signature": "tFoot() -> Ranvier.Dom.HTMLTableSectionElement",
+          "accessibility": "public"
+        },
+        {
+          "name": "tHead",
+          "kind": "property",
+          "signature": "tHead() -> Ranvier.Dom.HTMLTableSectionElement",
+          "accessibility": "public"
+        },
+        {
+          "name": "width",
+          "kind": "property",
+          "signature": "width() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLTableRowElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "align",
+          "kind": "property",
+          "signature": "align() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "bgColor",
+          "kind": "property",
+          "signature": "bgColor() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "cells",
+          "kind": "property",
+          "signature": "cells() -> Ranvier.Dom.HTMLCollection",
+          "accessibility": "public"
+        },
+        {
+          "name": "ch",
+          "kind": "property",
+          "signature": "ch() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "chOff",
+          "kind": "property",
+          "signature": "chOff() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "deleteCell",
+          "kind": "method",
+          "signature": "deleteCell(index: int) -> unit",
+          "accessibility": "public"
+        },
+        {
+          "name": "insertCell",
+          "kind": "method",
+          "signature": "insertCell(index: int option) -> Ranvier.Dom.HTMLElement",
+          "accessibility": "public"
+        },
+        {
+          "name": "rowIndex",
+          "kind": "property",
+          "signature": "rowIndex() -> int",
+          "accessibility": "public"
+        },
+        {
+          "name": "sectionRowIndex",
+          "kind": "property",
+          "signature": "sectionRowIndex() -> int",
+          "accessibility": "public"
+        },
+        {
+          "name": "vAlign",
+          "kind": "property",
+          "signature": "vAlign() -> string",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Dom.HTMLTableSectionElement",
+      "kind": "interface",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "align",
+          "kind": "property",
+          "signature": "align() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "ch",
+          "kind": "property",
+          "signature": "ch() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "chOff",
+          "kind": "property",
+          "signature": "chOff() -> string",
+          "accessibility": "public"
+        },
+        {
+          "name": "deleteRow",
+          "kind": "method",
+          "signature": "deleteRow(index: int) -> unit",
+          "accessibility": "public"
+        },
+        {
+          "name": "insertRow",
+          "kind": "method",
+          "signature": "insertRow(index: int option) -> Ranvier.Dom.HTMLTableRowElement",
+          "accessibility": "public"
+        },
+        {
+          "name": "rows",
+          "kind": "property",
+          "signature": "rows() -> Ranvier.Dom.HTMLCollection",
+          "accessibility": "public"
+        },
+        {
+          "name": "vAlign",
+          "kind": "property",
+          "signature": "vAlign() -> string",
+          "accessibility": "public"
+        }
+      ]
+    }
+  ],
+  "truncated": false,
+  "nextCursor": null,
+  "totalEstimate": {
+    "entities": 6
+  },
+  "pageOffset": 0,
+  "pageSize": 200
+}

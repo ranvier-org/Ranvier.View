@@ -1,0 +1,251 @@
+module internal NativeApiConformance.SheetConstruction
+
+open System
+open System.Threading
+open Ranvier.Dom
+
+/// <summary>Checks constructed sheets, ordered adoption and asynchronous completion on a live engine.</summary>
+/// <param name="document">The fixture's page document.</param>
+/// <param name="createService">Creates a provider owned by this fixture.</param>
+/// <param name="checkpoint">Completes at a microtask checkpoint on the owning loop.</param>
+/// <param name="computed">Reads a computed CSS property after style resolution.</param>
+let run
+    (document: Document)
+    (createService: unit -> StyleSheetService)
+    (checkpoint: unit -> Async<unit>)
+    (computed: HTMLElement -> string -> string)
+    =
+    async {
+        use service = createService ()
+        let mutable checks = 0
+
+        let equal label expected actual =
+            checks <- checks + 1
+
+            if expected <> actual then
+                failwith $"{label}: expected {expected}, got {actual}"
+
+        let same label expected actual =
+            checks <- checks + 1
+
+            if not (obj.ReferenceEquals (expected, actual)) then
+                failwith $"{label}: object identity changed"
+
+        let start work token =
+            let mutable outcome: Choice<CSSStyleSheet, exn, OperationCanceledException> option =
+                None
+
+            Async.StartWithContinuations (
+                work,
+                (fun value -> outcome <- Some (Choice1Of3 value)),
+                (fun error -> outcome <- Some (Choice2Of3 error)),
+                (fun error -> outcome <- Some (Choice3Of3 error)),
+                cancellationToken = token
+            )
+
+            fun () -> outcome
+
+        let cancelled label read =
+            match read () with
+            | Some (Choice3Of3 _) -> equal label true true
+            | other -> failwith $"{label}: expected cancellation, got {other}"
+
+        let original = service.GetAdopted document
+        let baseNode = document.createElement "base" :?> HTMLBaseElement
+        baseNode.href <- "https://example.test/default/"
+        let inlineStyle = document.createElement "style" :?> HTMLStyleElement
+        inlineStyle.textContent <- ".inline-probe { color: red; }"
+        let probe = document.createElement "div" :?> HTMLElement
+        probe.className <- "c07-probe"
+        probe.style.setProperty ("width", "17px")
+        let shadowHost = document.createElement "div" :?> HTMLElement
+        document.head.appendChild baseNode |> ignore
+        document.head.appendChild inlineStyle |> ignore
+        document.body.appendChild probe |> ignore
+        document.body.appendChild shadowHost |> ignore
+
+        try
+            let sheet = service.Create StyleSheetOptions.Default
+            equal "default enabled" false sheet.disabled
+            equal "default media" "" sheet.media.mediaText
+            equal "initial empty rules" 0u sheet.cssRules.length
+            equal "no owner node" true (isNull (box sheet.ownerNode))
+            sheet.replaceSync ".c07-probe { width: 31px !important; background-image: url(pixel.png); }"
+            service.SetAdopted (document, [| sheet |])
+            equal "document adoption layout" 31 probe.clientWidth
+            equal "default base URL" "url(\"https://example.test/default/pixel.png\")" (computed probe "background-image")
+            let first = service.GetAdopted document
+            equal "one adopted sheet" 1 first.Length
+            same "adopted identity" sheet first[0]
+
+            let explicitBase =
+                if service.SupportsBaseUrl then
+                    Some "https://example.test/explicit/"
+                else
+                    None
+
+            let other =
+                service.Create
+                    { StyleSheetOptions.Default with
+                        Disabled = true
+                        Media = MediaText "print"
+                        BaseUrl = explicitBase
+                    }
+
+            equal "constructor disabled" true other.disabled
+            equal "constructor media text" "print" other.media.mediaText
+            first[0] <- other
+            same "adoption snapshot independence" sheet ((service.GetAdopted document)[0])
+
+            let copiedMedia =
+                service.Create
+                    { StyleSheetOptions.Default with
+                        Media = MediaList other.media
+                    }
+
+            other.media.mediaText <- "screen"
+            equal "constructor copies media list" "print" copiedMedia.media.mediaText
+            other.disabled <- false
+            other.replaceSync ".c07-probe { width: 43px !important; background-image: url(second.png); }"
+            service.SetAdopted (document, [| sheet; other; sheet |])
+            let duplicate = service.GetAdopted document
+            equal "duplicate count" 3 duplicate.Length
+            same "ordered second sheet" other duplicate[1]
+            same "duplicate identity" duplicate[0] duplicate[2]
+            equal "adoption cascade order" 31 probe.clientWidth
+            service.SetAdopted (document, [| other |])
+
+            if service.SupportsBaseUrl then
+                equal "explicit base URL" "url(\"https://example.test/explicit/second.png\")" (computed probe "background-image")
+            else
+                let mutable rejected = false
+
+                try
+                    service.Create
+                        { StyleSheetOptions.Default with
+                            BaseUrl = Some "https://example.test/explicit/"
+                        }
+                    |> ignore
+                with _ ->
+                    rejected <- true
+
+                equal "unsupported explicit base URL is rejected" true rejected
+
+            let mutable invalidBase = false
+
+            try
+                service.Create
+                    { StyleSheetOptions.Default with
+                        BaseUrl = Some "http://["
+                    }
+                |> ignore
+            with
+            | StyleSheetException (name, _) -> invalidBase <- name = "NotAllowedError"
+            | _ when not service.SupportsBaseUrl -> invalidBase <- true
+
+            equal "invalid base URL" true invalidBase
+
+            let mutable invalidAdoption = false
+
+            try
+                service.SetAdopted (document, [| sheet; inlineStyle.sheet |])
+            with StyleSheetException (name, _) ->
+                invalidAdoption <- name = "NotAllowedError"
+
+            equal "reject non-constructed adoption" true invalidAdoption
+            same "failed adoption preserves old list" other ((service.GetAdopted document)[0])
+            service.SetAdopted (document, [||])
+            equal "cleared document layout" 17 probe.clientWidth
+
+            let init = ShadowRootInit ()
+            init.mode <- ShadowRootMode.Open
+            init.slotAssignment <- SlotAssignmentMode.Named
+            let shadow = shadowHost.attachShadow init
+            shadow.appendChild probe |> ignore
+            service.SetAdopted (shadow, [| sheet |])
+            equal "shadow adoption layout" 31 probe.clientWidth
+            same "shadow adopted identity" sheet ((service.GetAdopted shadow)[0])
+            service.SetAdopted (shadow, [||])
+            equal "cleared shadow layout" 17 probe.clientWidth
+
+            let cold = service.ReplaceAsync (sheet, ".cold { opacity: 0.2; }")
+            equal "replace is cold" ".c07-probe" ((sheet.cssRules.item 0u :?> CSSStyleRule).selectorText)
+            let firstReplacement = start cold CancellationToken.None
+            equal "completion is asynchronous" true (firstReplacement().IsNone)
+            equal "parse starts with operation" ".cold" ((sheet.cssRules.item 0u :?> CSSStyleRule).selectorText)
+            sheet.replaceSync ".between { opacity: 0.3; }"
+            sheet.insertRule (".inserted {}", 0u) |> ignore
+
+            let secondReplacement =
+                start (service.ReplaceAsync (sheet, ".second { opacity: 0.4; }")) CancellationToken.None
+
+            do! checkpoint ()
+
+            match firstReplacement (), secondReplacement () with
+            | Some (Choice1Of3 first), Some (Choice1Of3 second) ->
+                same "first async identity" sheet first
+                same "second async identity" sheet second
+            | other -> failwith $"Concurrent replacements failed: {other}"
+
+            equal "last replacement wins" ".second" ((sheet.cssRules.item 0u :?> CSSStyleRule).selectorText)
+
+            let before = inlineStyle.sheet.cssRules.length
+
+            let failure =
+                start (service.ReplaceAsync (inlineStyle.sheet, ".forbidden {}")) CancellationToken.None
+
+            equal "error completion is asynchronous" true (failure().IsNone)
+            do! checkpoint ()
+
+            match failure () with
+            | Some (Choice2Of3 (StyleSheetException (name, _))) -> equal "replace error name" "NotAllowedError" name
+            | other -> failwith $"Expected asynchronous stylesheet error: {other}"
+
+            equal "failed replace preserves sheet" before inlineStyle.sheet.cssRules.length
+
+            use beforeStart = new CancellationTokenSource ()
+            beforeStart.Cancel ()
+
+            let preCancelled =
+                start (service.ReplaceAsync (sheet, ".should-not-parse {}")) beforeStart.Token
+
+            cancelled "cancel before start" preCancelled
+            equal "cancelled cold operation did not parse" ".second" ((sheet.cssRules.item 0u :?> CSSStyleRule).selectorText)
+            use during = new CancellationTokenSource ()
+
+            let interrupted =
+                start (service.ReplaceAsync (sheet, ".parsed-before-cancel {}")) during.Token
+
+            during.Cancel ()
+            do! checkpoint ()
+            cancelled "cancel before delivery" interrupted
+            equal "cancel preserves parsed result" ".parsed-before-cancel" ((sheet.cssRules.item 0u :?> CSSStyleRule).selectorText)
+
+            let disposableService = createService ()
+
+            let disposedWork =
+                start (disposableService.ReplaceAsync (sheet, ".parsed-before-dispose {}")) CancellationToken.None
+
+            disposableService.Dispose ()
+            do! checkpoint ()
+            cancelled "service disposal terminates pending work" disposedWork
+            do! checkpoint ()
+            cancelled "late completion stays cancelled" disposedWork
+            let mutable refused = false
+
+            try
+                disposableService.Create StyleSheetOptions.Default
+                |> ignore
+            with _ ->
+                refused <- true
+
+            equal "disposed service rejects requests" true refused
+        finally
+            service.SetAdopted (document, original)
+
+            for node in [| baseNode :> Node; inlineStyle :> Node; probe :> Node; shadowHost :> Node |] do
+                if not (isNull (box node.parentNode)) then
+                    node.parentNode.removeChild node |> ignore
+
+        return checks
+    }

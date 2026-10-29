@@ -1,0 +1,11 @@
+{
+  "name": "ranvier-native-api-conformance",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:browser": "node browser.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}

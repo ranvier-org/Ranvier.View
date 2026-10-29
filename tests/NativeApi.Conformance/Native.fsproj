@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Tables.fs" />
+    <Compile Include="ViewTables.fs" />
+    <Compile Include="ViewHyperlinks.fs" />
+    <Compile Include="Reflection.fs" />
+    <Compile Include="Hyperlinks.fs" />
+    <Compile Include="Namespaces.fs" />
+    <Compile Include="Stylesheets.fs" />
+    <Compile Include="CssEscaping.fs" />
+    <Compile Include="CssSupport.fs" />
+    <Compile Include="ComputedStyles.fs" />
+    <Compile Include="TypedStyles.fs" />
+    <Compile Include="SheetConstruction.fs" />
+    <Compile Include="Native.fs" />
+    <ProjectReference Include="../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />
+    <PackageReference Include="Ranvier.Css.Dom$(RanvierPackageSuffix)" Version="0.1.0-alpha.1" />
+    <PackageReference Include="Ranvier.Css.Bindings$(RanvierPackageSuffix)" Version="0.1.1-alpha.1" />
+  </ItemGroup>
+</Project>
