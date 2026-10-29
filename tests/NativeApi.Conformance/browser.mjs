@@ -51,6 +51,8 @@ try {
   console.log(`BROWSER_API C03 CONTEXT PASS assertions=${checks.queryContextChecks} engine=chromium`);
   if (checks.computedStyles !== 42) throw new Error('Computed-style assertions did not run');
   console.log(`BROWSER_API C01_C02 PASS assertions=${checks.computedStyles} engine=chromium`);
+  if (checks.typedStyles !== 39) throw new Error('Typed CSS declaration assertions did not run');
+  console.log(`BROWSER_API C04 PASS assertions=${checks.typedStyles} engine=chromium`);
   if (checks.computedContextChecks !== 2) throw new Error('Computed-style context checks did not run');
   console.log(`BROWSER_API C01_C02 CONTEXT PASS assertions=${checks.computedContextChecks} engine=chromium`);
   console.log(`BROWSER_API D11 PASS assertions=${checks.reflection} engine=chromium`);

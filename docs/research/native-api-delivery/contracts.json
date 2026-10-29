@@ -16600,10 +16600,69 @@
       "description": "reuse Ranvier.Css names, grammar markers, literal/unit metadata and serialization for typed native style/animation operations.",
       "acceptance": "Use the same Ranvier.Css property/value expression against browser and native sinks; verify grammar mismatch rejection, numeric/unit metadata and inline priority/restoration.",
       "consumes": "C01 and existing Ranvier.Css metadata.",
-      "state": "not_started",
-      "memberContracts": [],
-      "publicApiSnapshot": null,
-      "memberContractStatus": "pending exact source signatures and clean FCS API snapshot"
+      "state": "shared_native_browser_aot_verified_windows",
+      "memberContracts": [
+        {
+          "owner": "Ranvier.Css.Dom.StyleDeclaration",
+          "name": "apply",
+          "signature": "CSSStyleDeclaration -> Declaration -> unit",
+          "nativeRoute": "shared CSSStyleDeclaration wrapper",
+          "browserRoute": "shared CSSStyleDeclaration browser contract"
+        },
+        {
+          "owner": "Ranvier.Css.Dom.StyleDeclaration",
+          "name": "applyMany",
+          "signature": "CSSStyleDeclaration -> seq<Declaration> -> unit",
+          "nativeRoute": "shared CSSStyleDeclaration wrapper",
+          "browserRoute": "shared CSSStyleDeclaration browser contract"
+        },
+        {
+          "owner": "Ranvier.Css.Dom.StyleDeclaration",
+          "name": "read",
+          "signature": "CSSStyleDeclaration -> Declaration -> string * string",
+          "nativeRoute": "shared CSSStyleDeclaration wrapper",
+          "browserRoute": "shared CSSStyleDeclaration browser contract"
+        },
+        {
+          "owner": "Ranvier.Css.Dom.StyleDeclaration",
+          "name": "capture",
+          "signature": "CSSStyleDeclaration -> StyleSnapshot",
+          "nativeRoute": "shared CSSStyleDeclaration wrapper",
+          "browserRoute": "shared CSSStyleDeclaration browser contract"
+        },
+        {
+          "owner": "Ranvier.Css.Dom.StyleDeclaration",
+          "name": "restore",
+          "signature": "CSSStyleDeclaration -> StyleSnapshot -> unit",
+          "nativeRoute": "shared CSSStyleDeclaration wrapper",
+          "browserRoute": "shared CSSStyleDeclaration browser contract"
+        }
+      ],
+      "publicApiSnapshot": "typed-style-public-api.json",
+      "memberContractStatus": "Shared39 and native lifetime2 verified Windows JIT/NativeAOT; Chromium39 verified; official adapters/platform acceptance pending",
+      "plan": "docs/superpowers/plans/2026-10-29-typed-css-dom.md",
+      "files": {
+        "css": [
+          "src/Ranvier.Css.Dom/Ranvier.Css.Dom.fsproj",
+          "src/Ranvier.Css.Dom/StyleDeclaration.fs",
+          "src/Ranvier.Css.Dom/README.md",
+          "src/Fable.Ranvier.Css.Dom/Fable.Ranvier.Css.Dom.fsproj"
+        ],
+        "views": [
+          "tests/NativeApi.Conformance/TypedStyles.fs"
+        ]
+      },
+      "snapshotSemantics": "Opaque whole cssText snapshot; explicit restore replaces complete declaration including later mutations, priority, shorthand ordering and absence",
+      "dependencies": [
+        "existing Ranvier.Css runtime and generated grammar authoring bindings",
+        "Ranvier.Dom alpha.11",
+        "C01 computed declaration service for conformance"
+      ],
+      "remaining": [
+        "supported-platform shared CI",
+        "CSS adapter trusted publication and official consumption",
+        "paired Views package acceptance"
+      ]
     },
     {
       "id": "C05",

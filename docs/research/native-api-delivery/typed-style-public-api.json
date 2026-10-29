@@ -1,0 +1,61 @@
+{
+  "status": "ok",
+  "project": "C:\\wk\\native-typed-css\\src\\Ranvier.Css.Dom\\Ranvier.Css.Dom.fsproj",
+  "optionsSource": "ionide-proj-info",
+  "includeInternal": false,
+  "namespaceFilter": "Ranvier.Css.Dom",
+  "entityCount": 2,
+  "memberCount": 5,
+  "entities": [
+    {
+      "fullName": "Ranvier.Css.Dom.StyleDeclaration",
+      "kind": "module",
+      "accessibility": "public",
+      "members": [
+        {
+          "name": "apply",
+          "kind": "function",
+          "signature": "apply(style: Ranvier.Dom.CSSStyleDeclaration, declaration: Ranvier.Css.Declaration) -> unit",
+          "accessibility": "public"
+        },
+        {
+          "name": "applyMany",
+          "kind": "function",
+          "signature": "applyMany(style: Ranvier.Dom.CSSStyleDeclaration, declarations: seq<Ranvier.Css.Declaration>) -> unit",
+          "accessibility": "public"
+        },
+        {
+          "name": "capture",
+          "kind": "function",
+          "signature": "capture(style: Ranvier.Dom.CSSStyleDeclaration) -> Ranvier.Css.Dom.StyleSnapshot",
+          "accessibility": "public"
+        },
+        {
+          "name": "read",
+          "kind": "function",
+          "signature": "read(style: Ranvier.Dom.CSSStyleDeclaration, declaration: Ranvier.Css.Declaration) -> string * string",
+          "accessibility": "public"
+        },
+        {
+          "name": "restore",
+          "kind": "function",
+          "signature": "restore(style: Ranvier.Dom.CSSStyleDeclaration, snapshot: Ranvier.Css.Dom.StyleSnapshot) -> unit",
+          "accessibility": "public"
+        }
+      ]
+    },
+    {
+      "fullName": "Ranvier.Css.Dom.StyleSnapshot",
+      "kind": "union",
+      "accessibility": "public",
+      "members": []
+    }
+  ],
+  "truncated": false,
+  "nextCursor": null,
+  "totalEstimate": {
+    "entities": 2
+  },
+  "pageOffset": 0,
+  "pageSize": 10
+}

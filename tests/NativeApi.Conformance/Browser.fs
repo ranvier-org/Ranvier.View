@@ -45,6 +45,9 @@ let run () =
 
         let mutable computedContextChecks = 0
 
+        let typedStyles =
+            TypedStyles.run document (Ranvier.Dom.ComputedStyles.forDocument document) errorName
+
         try
             Ranvier.Dom.ComputedStyles.forDocument Unchecked.defaultof<Document>
             |> ignore
@@ -102,6 +105,7 @@ let run () =
                 cssEscaping = cssEscaping
                 cssSupport = cssSupport
                 computedStyles = computedStyles
+                typedStyles = typedStyles
                 computedContextChecks = computedContextChecks
                 queryContextChecks = queryContextChecks
                 cssOracle = cssOracle

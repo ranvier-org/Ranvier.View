@@ -45,8 +45,17 @@ let main _ =
 
         System.Console.WriteLine $"NATIVE_API C01_C02 PASS assertions={computedStyles}"
         let computedService = Ranvier.View.WebCore.ComputedStyles.forHost host
+
+        let typedStyles =
+            TypedStyles.run host.Document computedService (function
+                | WebCoreDomException (name, _) -> name
+                | error -> error.GetType().Name)
+
+        System.Console.WriteLine $"NATIVE_API C04 PASS assertions={typedStyles}"
         let lifetimeComputedElement = host.Document.body
         let lifetimeComputedStyle = computedService.Get (lifetimeComputedElement, None)
+        let lifetimeTypedStyle = lifetimeComputedElement.style
+        let lifetimeTypedDeclaration = Ranvier.Css.Css.width (Ranvier.Css.Css.px 1.)
         let mutable foreignHostRejected = false
 
         do
@@ -189,6 +198,23 @@ let main _ =
         if not computedWrongThreadRejected then
             failwith "Computed-style query was not rejected off the owning thread"
 
+        let mutable typedWrongThreadRejected = false
+
+        let typedWorker =
+            System.Threading.Thread (
+                System.Threading.ThreadStart (fun () ->
+                    try
+                        Ranvier.Css.Dom.StyleDeclaration.apply lifetimeTypedStyle lifetimeTypedDeclaration
+                    with :? System.InvalidOperationException ->
+                        typedWrongThreadRejected <- true)
+            )
+
+        typedWorker.Start ()
+        typedWorker.Join ()
+
+        if not typedWrongThreadRejected then
+            failwith "Typed CSS write was not rejected off the owning thread"
+
         let mutable terminal = ""
 
         Async.StartWithContinuations (
@@ -265,6 +291,18 @@ let main _ =
             failwith "Computed declaration accepted a read after host disposal"
 
         System.Console.WriteLine "NATIVE_API C01_C02 LIFETIME PASS assertions=7"
+
+        let mutable disposedTypedRejected = false
+
+        try
+            Ranvier.Css.Dom.StyleDeclaration.apply lifetimeTypedStyle lifetimeTypedDeclaration
+        with :? System.ObjectDisposedException ->
+            disposedTypedRejected <- true
+
+        if not disposedTypedRejected then
+            failwith "Typed CSS write accepted a disposed host"
+
+        System.Console.WriteLine "NATIVE_API C04 LIFETIME PASS assertions=2"
 
         if terminal <> "cancel" then
             failwith $"Host disposal did not terminate pending replacement: {terminal}"

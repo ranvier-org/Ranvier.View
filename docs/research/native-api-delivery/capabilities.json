@@ -721,7 +721,10 @@
           "sharedAdapterAssertions": 42,
           "nativeAotAssertions": 42,
           "nativeLifetimeAssertions": 7,
-          "publicPackageAcceptance": "alpha.11/preview.10 and paired Views release pending"
+          "publicPackageAcceptance": "alpha.11/preview.10 and paired Views release pending",
+          "nativePackagedCi": "passed",
+          "nativeCiAssertions": 93,
+          "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40876930854"
         },
         "C02": {
           "state": "in_progress",
@@ -729,11 +732,21 @@
           "sharedAdapterAssertions": 42,
           "nativeAotAssertions": 42,
           "nativeLifetimeAssertions": 7,
-          "publicPackageAcceptance": "alpha.11/preview.10 and paired Views release pending"
+          "publicPackageAcceptance": "alpha.11/preview.10 and paired Views release pending",
+          "nativePackagedCi": "passed",
+          "nativeCiAssertions": 93,
+          "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40876930854"
+        },
+        "C04": {
+          "state": "in_progress",
+          "sharedAdapterAssertions": 39,
+          "nativeAotAssertions": 39,
+          "nativeLifetimeAssertions": 2,
+          "publicPackageAcceptance": "CSSPR2/pairedViews pending"
         }
       },
       "runtimeProbe": "Selected D09/D10/D11/CSSOM/C07 local runtime fixtures passed; remaining groups not run",
-      "nativeAotProbe": "596 shared assertions, Tab and15 native lifetime checks pass; existing IL3053/IL2104 and IL2075 warnings remain"
+      "nativeAotProbe": "635 shared assertions, Tab and17 native lifetime checks pass; existing IL3053/IL2104 and IL2075 warnings remain"
     },
     {
       "rid": "win-arm64",
@@ -754,6 +767,16 @@
           "nativePackagedCi": "passed",
           "nativeCiAssertions": 72,
           "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40869602532"
+        },
+        "C01": {
+          "nativePackagedCi": "passed",
+          "nativeCiAssertions": 93,
+          "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40876930854"
+        },
+        "C02": {
+          "nativePackagedCi": "passed",
+          "nativeCiAssertions": 93,
+          "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40876930854"
         }
       },
       "runtimeProbe": "not_run",
@@ -792,6 +815,16 @@
           "nativePackagedCi": "passed",
           "nativeCiAssertions": 72,
           "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40869602532"
+        },
+        "C01": {
+          "nativePackagedCi": "passed",
+          "nativeCiAssertions": 93,
+          "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40876930854"
+        },
+        "C02": {
+          "nativePackagedCi": "passed",
+          "nativeCiAssertions": 93,
+          "nativeCiRun": "https://github.com/ranvier-org/Ranvier.WebCore/actions/runs/40876930854"
         }
       },
       "runtimeProbe": "selected native ABI only",
@@ -869,6 +902,12 @@
         "engine": "chromium",
         "assertions": 42,
         "contextAssertions": 2
+      },
+      "C04": {
+        "state": "in_progress",
+        "engine": "chromium",
+        "assertions": 39,
+        "publicPackageAcceptance": "CSSPR2/pairedViews pending"
       }
     }
   },

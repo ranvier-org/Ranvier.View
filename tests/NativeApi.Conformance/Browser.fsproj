@@ -14,11 +14,14 @@
     <Compile Include="CssEscaping.fs" />
     <Compile Include="CssSupport.fs" />
     <Compile Include="ComputedStyles.fs" />
+    <Compile Include="TypedStyles.fs" />
     <Compile Include="SheetConstruction.fs" />
     <Compile Include="Browser.fs" />
     <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" Condition="'$(NativeApiContractRoot)' == ''" />
     <ProjectReference Include="$(NativeApiContractRoot)/src/Fable.Ranvier.Dom/Fable.Ranvier.Dom.fsproj" Condition="'$(NativeApiContractRoot)' != ''" />
     <ProjectReference Include="../../src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj" />
     <PackageReference Include="Fable.Core" Version="5.3.0" />
+    <PackageReference Include="Fable.Ranvier.Css.Dom" Version="0.1.0-alpha.1" />
+    <PackageReference Include="Ranvier.Css.Bindings" Version="0.1.1-alpha.1" />
   </ItemGroup>
 </Project>
