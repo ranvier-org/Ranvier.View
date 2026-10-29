@@ -12,6 +12,12 @@ on:
         required: true
         default: '0.1.0-preview.7'
         type: string
+      runtime_flavor:
+        description: 'Published runtime flavors to verify (all preserves slim and GPU acceptance)'
+        required: true
+        default: all
+        type: choice
+        options: [all, slim, gpu]
 
 permissions:
   contents: read
@@ -25,7 +31,7 @@ jobs:
       fail-fast: false
       matrix:
         trace: [normal, traced]
-        flavor: [slim, gpu]
+        flavor: ${{ fromJSON(inputs.runtime_flavor == 'slim' && '["slim"]' || inputs.runtime_flavor == 'gpu' && '["gpu"]' || '["slim","gpu"]') }}
     env:
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/published-native-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.trace }}-${{ matrix.flavor }}
       NativeViewPackageVersion: ${{ inputs.view_package_version }}
