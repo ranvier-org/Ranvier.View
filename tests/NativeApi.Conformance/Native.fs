@@ -3,6 +3,12 @@ module internal NativeApiConformance.Native
 open Ranvier.View.WebCore
 
 let private runAll () =
+    let styleValueLifecycle = StyleValueLifecycle.run ()
+
+    if styleValueLifecycle <> 19 then
+        failwith "Typed-style lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API C14 LIFETIME PASS assertions={styleValueLifecycle}"
     let registrationLifecycle = CustomPropertyLifecycle.run ()
 
     if registrationLifecycle <> 10 then
@@ -69,6 +75,20 @@ let private runAll () =
             failwith "Custom-property shared assertions did not run"
 
         System.Console.WriteLine $"NATIVE_API C12 PASS assertions={customProperties}"
+
+        let styleValues =
+            StyleValues.run
+                (fun () -> Ranvier.View.WebCore.StyleValues.forHost host)
+                (function
+                | WebCoreDomException (name, _) -> name
+                | error -> error.GetType().Name)
+                "ObjectDisposedException"
+                (fun value -> value :? Ranvier.Dom.CSSImageValue, value :? Ranvier.Dom.CSSNumericValue)
+
+        if styleValues <> 99 then
+            failwith "Typed-style shared assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API C14 PASS assertions={styleValues}"
 
         let ruleMutations =
             RuleMutations.run host.Document computedService (function
@@ -520,7 +540,36 @@ let private runAll () =
 
 [<EntryPoint>]
 let main args =
-    if Array.contains "--custom-properties-only" args then
+    if Array.contains "--style-values-only" args then
+        let lifecycle = StyleValueLifecycle.run ()
+        let host = WebCoreHost.Create (320, 240)
+        let session = host.Session
+
+        try
+            let count =
+                StyleValues.run
+                    (fun () -> Ranvier.View.WebCore.StyleValues.forHost host)
+                    (function
+                    | WebCoreDomException (name, _) -> name
+                    | error -> error.GetType().Name)
+                    "ObjectDisposedException"
+                    (fun value -> value :? Ranvier.Dom.CSSImageValue, value :? Ranvier.Dom.CSSNumericValue)
+
+            if count <> 99 || lifecycle <> 19 then
+                failwith "Typed-style focused shared/lifetime assertions did not run"
+
+            System.Console.WriteLine $"NATIVE_API C14 PASS assertions={count}"
+            System.Console.WriteLine $"NATIVE_API C14 LIFETIME PASS assertions={lifecycle}"
+        finally
+            (host :> System.IDisposable).Dispose()
+
+        if session.LiveObjects <> 0 then
+            failwith "Typed-style fixture leaked native wrappers"
+
+        System.Console.WriteLine "NATIVE_API C14 TEARDOWN PASS"
+
+        0
+    elif Array.contains "--custom-properties-only" args then
         let lifecycle = CustomPropertyLifecycle.run ()
         let host = WebCoreHost.Create (320, 240)
         let session = host.Session

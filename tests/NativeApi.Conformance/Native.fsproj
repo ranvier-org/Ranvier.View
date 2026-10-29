@@ -19,6 +19,8 @@
     <Compile Include="CssSupport.fs" />
     <Compile Include="ComputedStyles.fs" />
     <Compile Include="CustomProperties.fs" />
+    <Compile Include="StyleValues.fs" />
+    <Compile Include="StyleValueLifecycle.fs" />
     <Compile Include="CustomPropertyLifecycle.fs" />
     <Compile Include="TypedStyles.fs" />
     <Compile Include="FragmentRectangles.fs" />

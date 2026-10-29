@@ -22,6 +22,47 @@ let private errorName (error: exn) : string = jsNative
 [<Emit("$0.constructor.name + ':' + $0.message")>]
 let private disposalError (error: exn) : string = jsNative
 
+[<Emit("[$0 instanceof CSSImageValue, $0 instanceof CSSNumericValue]")>]
+let private styleValueSubtypes (value: CSSStyleValue) : bool * bool = jsNative
+
+[<Emit("$0.constructor.name === 'Exception' ? $0.constructor.name + ':' + $0.message : $0.name || 'Error'")>]
+let private styleValueError (error: exn) : string = jsNative
+
+[<Emit("""(async () => {
+    const frame = document.createElement('iframe');
+    try {
+        frame.srcdoc = '<body>first</body>';
+        let loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        document.body.append(frame); await loaded;
+        const oldDocument = frame.contentDocument;
+        const oldCall = $0(oldDocument);
+        loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        frame.srcdoc = '<body>replacement</body>'; await loaded;
+        if (oldDocument === frame.contentDocument) throw new Error('Document identity did not change');
+        if (oldCall() !== 'inactive:1px') throw new Error('Old parser context stayed active or retained value changed');
+        if ($0(frame.contentDocument)() !== 'active:1px') throw new Error('Replacement parser context failed');
+        return 3;
+    } finally { frame.remove(); }
+})()""")>]
+let private styleValueDocumentLifetime (createCall: Document -> System.Func<string>) : JS.Promise<int> = jsNative
+
+let private styleValueCall document =
+    let service = Ranvier.Dom.StyleValues.forDocument document
+    let retained = service.CreateUnit (1., "px")
+
+    System.Func<string>(fun () ->
+        let outcome =
+            try
+                service.Parse ("width", "1px") |> ignore
+                "active"
+            with _ ->
+                "inactive"
+
+        try
+            outcome + ":" + retained.toString ()
+        finally
+            service.Dispose ())
+
 [<Emit("$0 === undefined ? 'undefined' : $0 === null ? 'null' : typeof $0")>]
 let private classifyString (value: string) : string = jsNative
 
@@ -101,6 +142,28 @@ let runCustomProperties () =
     }
     |> Async.StartAsPromise
 
+/// <summary>Runs focused typed CSS value assertions against the browser document.</summary>
+let runStyleValues () =
+    async {
+        let count =
+            StyleValues.run
+                (fun () -> Ranvier.Dom.StyleValues.forDocument (document ()))
+                styleValueError
+                "Exception:StyleValueService"
+                styleValueSubtypes
+
+        let! context =
+            styleValueDocumentLifetime styleValueCall
+            |> Async.AwaitPromise
+
+        return
+            {|
+                styleValues = count
+                styleValueContext = context
+            |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {
@@ -118,6 +181,13 @@ let run () =
 
         let! customPropertyContext =
             registrationDocumentLifetime registrationCall
+            |> Async.AwaitPromise
+
+        let styleValues =
+            StyleValues.run (fun () -> Ranvier.Dom.StyleValues.forDocument document) styleValueError "Exception:StyleValueService" styleValueSubtypes
+
+        let! styleValueContext =
+            styleValueDocumentLifetime styleValueCall
             |> Async.AwaitPromise
 
         let computedStyles =
@@ -242,6 +312,8 @@ let run () =
                 cssSupport = cssSupport
                 customProperties = customProperties
                 customPropertyContext = customPropertyContext
+                styleValues = styleValues
+                styleValueContext = styleValueContext
                 computedStyles = computedStyles
                 typedStyles = typedStyles
                 fragmentRectangles = fragmentRectangles
