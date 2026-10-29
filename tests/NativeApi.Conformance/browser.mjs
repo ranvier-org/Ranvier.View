@@ -42,9 +42,10 @@ try {
       }));
     }
   });
-  if (checks.tables !== 30 || checks.viewTables < 29 || checks.reflection < 200 || checks.namespaces < 24 || checks.hyperlinks < 60 || checks.cssom < 58 || checks.svgCssom < 31 || checks.construction < 40) throw new Error(`Insufficient API assertions: ${JSON.stringify(checks)}`);
+  if (checks.cssEscaping !== 45 || checks.cssOracle !== 196609 || checks.tables !== 30 || checks.viewTables < 29 || checks.reflection < 200 || checks.namespaces < 24 || checks.hyperlinks < 60 || checks.cssom < 58 || checks.svgCssom < 31 || checks.construction < 40) throw new Error(`Insufficient API assertions: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API D10 PASS assertions=${checks.tables} engine=chromium`);
   console.log(`BROWSER_API D10_VIEW PASS assertions=${checks.viewTables} engine=chromium`);
+  console.log(`BROWSER_API C05 PASS assertions=${checks.cssEscaping} oracle=${checks.cssOracle} engine=chromium`);
   console.log(`BROWSER_API D11 PASS assertions=${checks.reflection} engine=chromium`);
   console.log(`BROWSER_API D09 PASS assertions=${checks.namespaces} engine=chromium`);
   console.log(`BROWSER_API CSSOM PASS assertions=${checks.cssom} engine=chromium`);

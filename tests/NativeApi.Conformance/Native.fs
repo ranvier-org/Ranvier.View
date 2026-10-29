@@ -10,6 +10,8 @@ let main _ =
     try
         let viewTables = ViewTables.run host.Document
         System.Console.WriteLine $"NATIVE_API D10_VIEW PASS assertions={viewTables}"
+        let cssEscaping = CssEscaping.run host.Document
+        System.Console.WriteLine $"NATIVE_API C05 PASS assertions={cssEscaping}"
         let checks = Tables.run host.Document
         System.Console.WriteLine $"NATIVE_API D10 PASS assertions={checks}"
         let hyperlinks = Hyperlinks.run host.Document

@@ -691,6 +691,14 @@
           "nativeAotAssertions": 29,
           "sharedContractPackage": "official alpha.8",
           "nativeRuntimePackage": "preview.8 pending"
+        },
+        "C05": {
+          "state": "profile_verified",
+          "sharedAdapterAssertions": 45,
+          "nativeAotAssertions": 45,
+          "profile": "CSSOM 2021",
+          "provider": "shared pure F# facade",
+          "publicPackageAcceptance": "alpha.9 pending"
         }
       },
       "runtimeProbe": "Selected D09/D10/D11/CSSOM/C07 local runtime fixtures passed; remaining groups not run",
@@ -758,6 +766,14 @@
         "engine": "chromium",
         "assertions": 29,
         "sharedContractPackage": "official alpha.8"
+      },
+      "C05": {
+        "state": "profile_verified",
+        "engine": "chromium",
+        "assertions": 45,
+        "oracleComparisons": 196609,
+        "profile": "CSSOM 2021",
+        "publicPackageAcceptance": "alpha.9 pending"
       }
     }
   }

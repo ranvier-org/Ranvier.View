@@ -16153,10 +16153,38 @@
       "description": "CSS.escape produces safe selector identifiers from arbitrary application strings.",
       "acceptance": "Run shared CSS.escape vectors for leading digits, whitespace, punctuation, null/control and non-ASCII characters, then resolve an element through the resulting selector.",
       "consumes": "Task 0 contract/capability/ownership infrastructure and existing host/DOM primitives.",
-      "state": "not_started",
-      "memberContracts": [],
-      "publicApiSnapshot": null,
-      "memberContractStatus": "pending exact source signatures and clean FCS API snapshot"
+      "state": "in_progress",
+      "memberContracts": [
+        {
+          "owner": "Ranvier.Dom.CSS",
+          "member": "escape",
+          "kind": "function",
+          "signature": "escape(identifier: string) -> string",
+          "input": "Complete UTF-16 text; embedded U+0000 becomes U+FFFD, null reference becomes the string null",
+          "output": "Serialized identifier; non-ASCII UTF-16 code units, including unpaired surrogates, are preserved",
+          "profile": "CSSOM 26 August 2021, matching pinned WebCore and tested Chromium",
+          "specification": "https://www.w3.org/TR/2021/WD-cssom-1-20210826/#serialize-an-identifier",
+          "browserOperation": "Shared F# implementation, verified against real globalThis.CSS.escape",
+          "nativeOperation": "Same pure F# implementation; does not pass strings through null-terminated ABI",
+          "source": "Ranvier:src/Ranvier.Dom/CSS.fs",
+          "dependencies": "Existing framework/Fable standard library only; no additional packages or page JavaScript on native",
+          "ownership": "Pure synchronous function; no document/thread/handle/callback lifetime"
+        }
+      ],
+      "publicApiSnapshot": "css-escape-public-api.json",
+      "memberContractStatus": "exact additive F# API fixed and checked with clean FCS project",
+      "delivery": {
+        "coreRevision": "58824d4655d96021ef98d80e56ef029f97dc1ae9",
+        "corePr": "https://github.com/ranvier-org/Ranvier/pull/257",
+        "version": "0.1.0-alpha.9",
+        "publicPackageAcceptance": "pending",
+        "sharedFixtureAssertions": 45,
+        "chromiumOracleComparisons": 196609,
+        "windowsJit": "passed",
+        "windowsAot": "passed",
+        "chromium": "passed",
+        "otherPlatforms": "pending CI"
+      }
     },
     {
       "id": "C06",

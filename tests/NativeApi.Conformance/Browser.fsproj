@@ -11,6 +11,7 @@
     <Compile Include="Hyperlinks.fs" />
     <Compile Include="Namespaces.fs" />
     <Compile Include="Stylesheets.fs" />
+    <Compile Include="CssEscaping.fs" />
     <Compile Include="SheetConstruction.fs" />
     <Compile Include="Browser.fs" />
     <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" Condition="'$(NativeApiContractRoot)' == ''" />

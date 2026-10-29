@@ -1,6 +1,6 @@
 # Shared native API conformance
 
-The fixtures execute the same typed assertions through shared DOM contracts on native WebCore and a real Chromium document. Current slice coverage is 477 assertions: DOM and authored View tables, HTML reflection, Area hyperlinks, SVG/MathML members, CSSOM, SVG stylesheets and constructed/adopted sheets. Native teardown and stylesheet lifetime checks run separately.
+The fixtures execute the same typed assertions through shared DOM contracts on native WebCore and a real Chromium document. Current slice coverage is 522 assertions: DOM and authored View tables, HTML reflection, Area hyperlinks, SVG/MathML members, CSSOM, SVG stylesheets, constructed/adopted sheets and CSS identifier escaping. Chromium additionally compares 196,609 cases with its native CSS.escape implementation. Native teardown and stylesheet lifetime checks run separately.
 
 From the repository root, with the matching DOM and native packages published:
 
