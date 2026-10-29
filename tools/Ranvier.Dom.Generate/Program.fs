@@ -521,6 +521,12 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
 
     let tagMapNative = nativeType (catalogueFor tagMap)
 
+    let sharedTagTypes =
+        tags
+        |> Array.map (fun tag -> (property tagMapNative tag.Name).PropertyType)
+        |> Array.distinct
+        |> Array.map (fun native -> native, RanvierSharedDomTypes.contract sharedAssembly native)
+
     for tagSymbol in tags |> Array.sortBy _.Name do
         let tag = tagSymbol.Name
 
@@ -635,6 +641,11 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
                     let sharedProperty =
                         allProperties sharedNative
                         |> Array.tryFind (fun candidate -> candidate.Name = memberName)
+                        |> Option.filter (fun candidate ->
+                            sharedTagTypes
+                            |> Array.forall (fun (browserTag, sharedTag) ->
+                                not (owner.IsAssignableFrom browserTag)
+                                || candidate.DeclaringType.IsAssignableFrom sharedTag))
 
                     let projected =
                         sharedProperty

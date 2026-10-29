@@ -689,49 +689,41 @@ module Properties =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``type`` <- value) read
 
     module HTMLAreaElement =
-#if FABLE_COMPILER
         let ``alt`` (node: #Dom.HTMLAreaElement) : string =
-            Native.expando (box node) "alt"
+            node.``alt``
 
         let altStatic<'native when 'native :> Dom.HTMLAreaElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "alt" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``alt`` <- value) value
 
         let altReactive<'native when 'native :> Dom.HTMLAreaElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "alt" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``alt`` <- value) read
 
-#if FABLE_COMPILER
         let ``coords`` (node: #Dom.HTMLAreaElement) : string =
-            Native.expando (box node) "coords"
+            node.``coords``
 
         let coordsStatic<'native when 'native :> Dom.HTMLAreaElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "coords" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``coords`` <- value) value
 
         let coordsReactive<'native when 'native :> Dom.HTMLAreaElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "coords" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``coords`` <- value) read
 
-#if FABLE_COMPILER
         let ``download`` (node: #Dom.HTMLAreaElement) : string =
-            Native.expando (box node) "download"
+            node.``download``
 
         let downloadStatic<'native when 'native :> Dom.HTMLAreaElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "download" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``download`` <- value) value
 
         let downloadReactive<'native when 'native :> Dom.HTMLAreaElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "download" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``download`` <- value) read
 
-#if FABLE_COMPILER
         let ``noHref`` (node: #Dom.HTMLAreaElement) : bool =
-            Native.expando (box node) "noHref"
+            node.``noHref``
 
         let noHrefStatic<'native when 'native :> Dom.HTMLAreaElement> (value: bool) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "noHref" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``noHref`` <- value) value
 
         let noHrefReactive<'native when 'native :> Dom.HTMLAreaElement> (read: unit -> bool) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "noHref" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``noHref`` <- value) read
 
 #if FABLE_COMPILER
         let ``ping`` (node: #Dom.HTMLAreaElement) : string =
@@ -744,43 +736,35 @@ module Properties =
             Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "ping" value) read
 #endif
 
-#if FABLE_COMPILER
         let ``referrerPolicy`` (node: #Dom.HTMLAreaElement) : string =
-            Native.expando (box node) "referrerPolicy"
+            node.``referrerPolicy``
 
         let referrerPolicyStatic<'native when 'native :> Dom.HTMLAreaElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "referrerPolicy" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``referrerPolicy`` <- value) value
 
         let referrerPolicyReactive<'native when 'native :> Dom.HTMLAreaElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "referrerPolicy" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``referrerPolicy`` <- value) read
 
-#if FABLE_COMPILER
         let ``rel`` (node: #Dom.HTMLAreaElement) : string =
-            Native.expando (box node) "rel"
+            node.``rel``
 
         let relStatic<'native when 'native :> Dom.HTMLAreaElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "rel" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``rel`` <- value) value
 
         let relReactive<'native when 'native :> Dom.HTMLAreaElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "rel" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``rel`` <- value) read
 
-#if FABLE_COMPILER
         let ``relList`` (node: #Dom.HTMLAreaElement) : Dom.DOMTokenList =
-            Native.expando (box node) "relList"
-#endif
+            node.``relList``
 
-#if FABLE_COMPILER
         let ``shape`` (node: #Dom.HTMLAreaElement) : string =
-            Native.expando (box node) "shape"
+            node.``shape``
 
         let shapeStatic<'native when 'native :> Dom.HTMLAreaElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "shape" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``shape`` <- value) value
 
         let shapeReactive<'native when 'native :> Dom.HTMLAreaElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "shape" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``shape`` <- value) read
 
         let ``target`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
             node.``target``
@@ -791,31 +775,25 @@ module Properties =
         let targetReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``target`` <- value) read
 
-#if FABLE_COMPILER
     module HTMLBaseElement =
-#if FABLE_COMPILER
         let ``href`` (node: #Dom.HTMLBaseElement) : string =
-            Native.expando (box node) "href"
+            node.``href``
 
         let hrefStatic<'native when 'native :> Dom.HTMLBaseElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "href" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``href`` <- value) value
 
         let hrefReactive<'native when 'native :> Dom.HTMLBaseElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "href" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``href`` <- value) read
 
-#if FABLE_COMPILER
         let ``target`` (node: #Dom.HTMLBaseElement) : string =
-            Native.expando (box node) "target"
+            node.``target``
 
         let targetStatic<'native when 'native :> Dom.HTMLBaseElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "target" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``target`` <- value) value
 
         let targetReactive<'native when 'native :> Dom.HTMLBaseElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "target" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``target`` <- value) read
 
-#endif
     module HTMLBodyElement =
         let ``aLink`` (node: #Dom.HTMLBodyElement) : string =
             node.``aLink``
@@ -871,20 +849,16 @@ module Properties =
         let vLinkReactive<'native when 'native :> Dom.HTMLBodyElement> (read: unit -> string) : Typed.Modifier<'native> =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``vLink`` <- value) read
 
-#if FABLE_COMPILER
     module HTMLBRElement =
-#if FABLE_COMPILER
         let ``clear`` (node: #Dom.HTMLBRElement) : string =
-            Native.expando (box node) "clear"
+            node.``clear``
 
         let clearStatic<'native when 'native :> Dom.HTMLBRElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "clear" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``clear`` <- value) value
 
         let clearReactive<'native when 'native :> Dom.HTMLBRElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "clear" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``clear`` <- value) read
 
-#endif
     module HTMLButtonElement =
         let ``command`` (node: #Dom.HTMLButtonElement) : string =
             node.``command``
@@ -1010,28 +984,20 @@ module Properties =
 #endif
 
 #endif
-#if FABLE_COMPILER
     module HTMLDataElement =
-#if FABLE_COMPILER
         let ``value`` (node: #Dom.HTMLDataElement) : string =
-            Native.expando (box node) "value"
+            node.``value``
 
         let valueStatic<'native when 'native :> Dom.HTMLDataElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "value" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``value`` <- value) value
 
         let valueReactive<'native when 'native :> Dom.HTMLDataElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "value" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``value`` <- value) read
 
-#endif
-#if FABLE_COMPILER
     module HTMLDataListElement =
-#if FABLE_COMPILER
         let ``options`` (node: #Dom.HTMLDataListElement) : Dom.HTMLCollection =
-            Native.expando (box node) "options"
-#endif
+            node.``options``
 
-#endif
     module HTMLDetailsElement =
         let ``name`` (node: #Dom.HTMLDetailsElement) : string =
             node.``name``
@@ -1089,20 +1055,16 @@ module Properties =
         let alignReactive<'native when 'native :> Dom.HTMLDivElement> (read: unit -> string) : Typed.Modifier<'native> =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
     module HTMLDListElement =
-#if FABLE_COMPILER
         let ``compact`` (node: #Dom.HTMLDListElement) : bool =
-            Native.expando (box node) "compact"
+            node.``compact``
 
         let compactStatic<'native when 'native :> Dom.HTMLDListElement> (value: bool) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "compact" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``compact`` <- value) value
 
         let compactReactive<'native when 'native :> Dom.HTMLDListElement> (read: unit -> bool) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "compact" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``compact`` <- value) read
 
-#endif
     module HTMLElement =
         let ``accessKey`` (node: #Dom.HTMLElement) : string =
             node.``accessKey``
@@ -1442,119 +1404,105 @@ module Properties =
         let targetReactive<'native when 'native :> Dom.HTMLFormElement> (read: unit -> string) : Typed.Modifier<'native> =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``target`` <- value) read
 
-#if FABLE_COMPILER
     module HTMLHeadingElement =
-#if FABLE_COMPILER
         let ``align`` (node: #Dom.HTMLHeadingElement) : string =
-            Native.expando (box node) "align"
+            node.``align``
 
         let alignStatic<'native when 'native :> Dom.HTMLHeadingElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``align`` <- value) value
 
         let alignReactive<'native when 'native :> Dom.HTMLHeadingElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``align`` <- value) read
 
-#endif
-#if FABLE_COMPILER
     module HTMLHRElement =
-#if FABLE_COMPILER
         let ``align`` (node: #Dom.HTMLHRElement) : string =
-            Native.expando (box node) "align"
+            node.``align``
 
         let alignStatic<'native when 'native :> Dom.HTMLHRElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``align`` <- value) value
 
         let alignReactive<'native when 'native :> Dom.HTMLHRElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
         let ``color`` (node: #Dom.HTMLHRElement) : string =
-            Native.expando (box node) "color"
+            node.``color``
 
         let colorStatic<'native when 'native :> Dom.HTMLHRElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "color" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``color`` <- value) value
 
         let colorReactive<'native when 'native :> Dom.HTMLHRElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "color" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``color`` <- value) read
 
-#if FABLE_COMPILER
         let ``noShade`` (node: #Dom.HTMLHRElement) : bool =
-            Native.expando (box node) "noShade"
+            node.``noShade``
 
         let noShadeStatic<'native when 'native :> Dom.HTMLHRElement> (value: bool) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "noShade" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``noShade`` <- value) value
 
         let noShadeReactive<'native when 'native :> Dom.HTMLHRElement> (read: unit -> bool) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "noShade" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``noShade`` <- value) read
 
-#if FABLE_COMPILER
         let ``size`` (node: #Dom.HTMLHRElement) : string =
-            Native.expando (box node) "size"
+            node.``size``
 
         let sizeStatic<'native when 'native :> Dom.HTMLHRElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "size" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``size`` <- value) value
 
         let sizeReactive<'native when 'native :> Dom.HTMLHRElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "size" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``size`` <- value) read
 
-#if FABLE_COMPILER
         let ``width`` (node: #Dom.HTMLHRElement) : string =
-            Native.expando (box node) "width"
+            node.``width``
 
         let widthStatic<'native when 'native :> Dom.HTMLHRElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "width" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``width`` <- value) value
 
         let widthReactive<'native when 'native :> Dom.HTMLHRElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "width" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``width`` <- value) read
 
-#endif
-#if FABLE_COMPILER
     module HTMLHtmlElement =
-#if FABLE_COMPILER
         let ``version`` (node: #Dom.HTMLHtmlElement) : string =
-            Native.expando (box node) "version"
+            node.``version``
 
         let versionStatic<'native when 'native :> Dom.HTMLHtmlElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "version" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``version`` <- value) value
 
         let versionReactive<'native when 'native :> Dom.HTMLHtmlElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "version" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``version`` <- value) read
 
-#endif
     module HTMLHyperlinkElementUtils =
-        let ``hash`` (node: #Dom.HTMLAnchorElement) : string =
-            node.``hash``
+#if FABLE_COMPILER
+        let ``hash`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
+            Native.expando (box node) "hash"
 
-        let hashStatic<'native when 'native :> Dom.HTMLAnchorElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> node.``hash`` <- value) value
+        let hashStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "hash" value) value
 
-        let hashReactive<'native when 'native :> Dom.HTMLAnchorElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> node.``hash`` <- value) read
+        let hashReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "hash" value) read
+#endif
 
-        let ``host`` (node: #Dom.HTMLAnchorElement) : string =
-            node.``host``
+#if FABLE_COMPILER
+        let ``host`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
+            Native.expando (box node) "host"
 
-        let hostStatic<'native when 'native :> Dom.HTMLAnchorElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> node.``host`` <- value) value
+        let hostStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "host" value) value
 
-        let hostReactive<'native when 'native :> Dom.HTMLAnchorElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> node.``host`` <- value) read
+        let hostReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "host" value) read
+#endif
 
-        let ``hostname`` (node: #Dom.HTMLAnchorElement) : string =
-            node.``hostname``
+#if FABLE_COMPILER
+        let ``hostname`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
+            Native.expando (box node) "hostname"
 
-        let hostnameStatic<'native when 'native :> Dom.HTMLAnchorElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> node.``hostname`` <- value) value
+        let hostnameStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "hostname" value) value
 
-        let hostnameReactive<'native when 'native :> Dom.HTMLAnchorElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> node.``hostname`` <- value) read
+        let hostnameReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "hostname" value) read
+#endif
 
         let ``href`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
             node.``href``
@@ -1565,62 +1513,76 @@ module Properties =
         let hrefReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``href`` <- value) read
 
-        let ``origin`` (node: #Dom.HTMLAnchorElement) : string =
-            node.``origin``
+#if FABLE_COMPILER
+        let ``origin`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
+            Native.expando (box node) "origin"
+#endif
 
-        let ``password`` (node: #Dom.HTMLAnchorElement) : string =
-            node.``password``
+#if FABLE_COMPILER
+        let ``password`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
+            Native.expando (box node) "password"
 
-        let passwordStatic<'native when 'native :> Dom.HTMLAnchorElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> node.``password`` <- value) value
+        let passwordStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "password" value) value
 
-        let passwordReactive<'native when 'native :> Dom.HTMLAnchorElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> node.``password`` <- value) read
+        let passwordReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "password" value) read
+#endif
 
-        let ``pathname`` (node: #Dom.HTMLAnchorElement) : string =
-            node.``pathname``
+#if FABLE_COMPILER
+        let ``pathname`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
+            Native.expando (box node) "pathname"
 
-        let pathnameStatic<'native when 'native :> Dom.HTMLAnchorElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> node.``pathname`` <- value) value
+        let pathnameStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "pathname" value) value
 
-        let pathnameReactive<'native when 'native :> Dom.HTMLAnchorElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> node.``pathname`` <- value) read
+        let pathnameReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "pathname" value) read
+#endif
 
-        let ``port`` (node: #Dom.HTMLAnchorElement) : string =
-            node.``port``
+#if FABLE_COMPILER
+        let ``port`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
+            Native.expando (box node) "port"
 
-        let portStatic<'native when 'native :> Dom.HTMLAnchorElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> node.``port`` <- value) value
+        let portStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "port" value) value
 
-        let portReactive<'native when 'native :> Dom.HTMLAnchorElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> node.``port`` <- value) read
+        let portReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "port" value) read
+#endif
 
-        let ``protocol`` (node: #Dom.HTMLAnchorElement) : string =
-            node.``protocol``
+#if FABLE_COMPILER
+        let ``protocol`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
+            Native.expando (box node) "protocol"
 
-        let protocolStatic<'native when 'native :> Dom.HTMLAnchorElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> node.``protocol`` <- value) value
+        let protocolStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "protocol" value) value
 
-        let protocolReactive<'native when 'native :> Dom.HTMLAnchorElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> node.``protocol`` <- value) read
+        let protocolReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "protocol" value) read
+#endif
 
-        let ``search`` (node: #Dom.HTMLAnchorElement) : string =
-            node.``search``
+#if FABLE_COMPILER
+        let ``search`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
+            Native.expando (box node) "search"
 
-        let searchStatic<'native when 'native :> Dom.HTMLAnchorElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> node.``search`` <- value) value
+        let searchStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "search" value) value
 
-        let searchReactive<'native when 'native :> Dom.HTMLAnchorElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> node.``search`` <- value) read
+        let searchReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "search" value) read
+#endif
 
-        let ``username`` (node: #Dom.HTMLAnchorElement) : string =
-            node.``username``
+#if FABLE_COMPILER
+        let ``username`` (node: #Dom.HTMLHyperlinkElementUtils) : string =
+            Native.expando (box node) "username"
 
-        let usernameStatic<'native when 'native :> Dom.HTMLAnchorElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> node.``username`` <- value) value
+        let usernameStatic<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (value: string) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "username" value) value
 
-        let usernameReactive<'native when 'native :> Dom.HTMLAnchorElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> node.``username`` <- value) read
+        let usernameReactive<'native when 'native :> Dom.HTMLHyperlinkElementUtils> (read: unit -> string) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "username" value) read
+#endif
 
 #if FABLE_COMPILER
     module HTMLIFrameElement =
@@ -2379,208 +2341,164 @@ module Properties =
         let valueReactive<'native when 'native :> Dom.HTMLLIElement> (read: unit -> int) : Typed.Modifier<'native> =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``value`` <- value) read
 
-#if FABLE_COMPILER
     module HTMLLinkElement =
-#if FABLE_COMPILER
         let ``as`` (node: #Dom.HTMLLinkElement) : string =
-            Native.expando (box node) "as"
+            node.``as``
 
         let asStatic<'native when 'native :> Dom.HTMLLinkElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "as" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``as`` <- value) value
 
         let asReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "as" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``as`` <- value) read
 
-#if FABLE_COMPILER
         let ``blocking`` (node: #Dom.HTMLLinkElement) : Dom.DOMTokenList =
-            Native.expando (box node) "blocking"
-#endif
+            node.``blocking``
 
-#if FABLE_COMPILER
         let ``charset`` (node: #Dom.HTMLLinkElement) : string =
-            Native.expando (box node) "charset"
+            node.``charset``
 
         let charsetStatic<'native when 'native :> Dom.HTMLLinkElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "charset" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``charset`` <- value) value
 
         let charsetReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "charset" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``charset`` <- value) read
 
-#if FABLE_COMPILER
         let ``crossOrigin`` (node: #Dom.HTMLLinkElement) : string =
-            Native.expando (box node) "crossOrigin"
+            node.``crossOrigin``
 
         let crossOriginStatic<'native when 'native :> Dom.HTMLLinkElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "crossOrigin" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``crossOrigin`` <- value) value
 
         let crossOriginReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "crossOrigin" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``crossOrigin`` <- value) read
 
-#if FABLE_COMPILER
         let ``disabled`` (node: #Dom.HTMLLinkElement) : bool =
-            Native.expando (box node) "disabled"
+            node.``disabled``
 
         let disabledStatic<'native when 'native :> Dom.HTMLLinkElement> (value: bool) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "disabled" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``disabled`` <- value) value
 
         let disabledReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> bool) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "disabled" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``disabled`` <- value) read
 
-#if FABLE_COMPILER
         let ``href`` (node: #Dom.HTMLLinkElement) : string =
-            Native.expando (box node) "href"
+            node.``href``
 
         let hrefStatic<'native when 'native :> Dom.HTMLLinkElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "href" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``href`` <- value) value
 
         let hrefReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "href" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``href`` <- value) read
 
-#if FABLE_COMPILER
         let ``hreflang`` (node: #Dom.HTMLLinkElement) : string =
-            Native.expando (box node) "hreflang"
+            node.``hreflang``
 
         let hreflangStatic<'native when 'native :> Dom.HTMLLinkElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "hreflang" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``hreflang`` <- value) value
 
         let hreflangReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "hreflang" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``hreflang`` <- value) read
 
-#if FABLE_COMPILER
         let ``imageSizes`` (node: #Dom.HTMLLinkElement) : string =
-            Native.expando (box node) "imageSizes"
+            node.``imageSizes``
 
         let imageSizesStatic<'native when 'native :> Dom.HTMLLinkElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "imageSizes" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``imageSizes`` <- value) value
 
         let imageSizesReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "imageSizes" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``imageSizes`` <- value) read
 
-#if FABLE_COMPILER
         let ``imageSrcset`` (node: #Dom.HTMLLinkElement) : string =
-            Native.expando (box node) "imageSrcset"
+            node.``imageSrcset``
 
         let imageSrcsetStatic<'native when 'native :> Dom.HTMLLinkElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "imageSrcset" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``imageSrcset`` <- value) value
 
         let imageSrcsetReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "imageSrcset" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``imageSrcset`` <- value) read
 
-#if FABLE_COMPILER
         let ``integrity`` (node: #Dom.HTMLLinkElement) : string =
-            Native.expando (box node) "integrity"
+            node.``integrity``
 
         let integrityStatic<'native when 'native :> Dom.HTMLLinkElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "integrity" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``integrity`` <- value) value
 
         let integrityReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "integrity" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``integrity`` <- value) read
 
-#if FABLE_COMPILER
         let ``media`` (node: #Dom.HTMLLinkElement) : string =
-            Native.expando (box node) "media"
+            node.``media``
 
         let mediaStatic<'native when 'native :> Dom.HTMLLinkElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "media" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``media`` <- value) value
 
         let mediaReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "media" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``media`` <- value) read
 
-#if FABLE_COMPILER
         let ``referrerPolicy`` (node: #Dom.HTMLLinkElement) : string =
-            Native.expando (box node) "referrerPolicy"
+            node.``referrerPolicy``
 
         let referrerPolicyStatic<'native when 'native :> Dom.HTMLLinkElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "referrerPolicy" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``referrerPolicy`` <- value) value
 
         let referrerPolicyReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "referrerPolicy" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``referrerPolicy`` <- value) read
 
-#if FABLE_COMPILER
         let ``rel`` (node: #Dom.HTMLLinkElement) : string =
-            Native.expando (box node) "rel"
+            node.``rel``
 
         let relStatic<'native when 'native :> Dom.HTMLLinkElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "rel" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``rel`` <- value) value
 
         let relReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "rel" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``rel`` <- value) read
 
-#if FABLE_COMPILER
         let ``relList`` (node: #Dom.HTMLLinkElement) : Dom.DOMTokenList =
-            Native.expando (box node) "relList"
-#endif
+            node.``relList``
 
-#if FABLE_COMPILER
         let ``rev`` (node: #Dom.HTMLLinkElement) : string =
-            Native.expando (box node) "rev"
+            node.``rev``
 
         let revStatic<'native when 'native :> Dom.HTMLLinkElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "rev" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``rev`` <- value) value
 
         let revReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "rev" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``rev`` <- value) read
 
-#if FABLE_COMPILER
         let ``sizes`` (node: #Dom.HTMLLinkElement) : Dom.DOMTokenList =
-            Native.expando (box node) "sizes"
-#endif
+            node.``sizes``
 
-#if FABLE_COMPILER
         let ``target`` (node: #Dom.HTMLLinkElement) : string =
-            Native.expando (box node) "target"
+            node.``target``
 
         let targetStatic<'native when 'native :> Dom.HTMLLinkElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "target" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``target`` <- value) value
 
         let targetReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "target" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``target`` <- value) read
 
-#if FABLE_COMPILER
         let ``type`` (node: #Dom.HTMLLinkElement) : string =
-            Native.expando (box node) "type"
+            node.``type``
 
         let typeStatic<'native when 'native :> Dom.HTMLLinkElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "type" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``type`` <- value) value
 
         let typeReactive<'native when 'native :> Dom.HTMLLinkElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "type" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``type`` <- value) read
 
-#endif
-#if FABLE_COMPILER
     module HTMLMapElement =
-#if FABLE_COMPILER
         let ``areas`` (node: #Dom.HTMLMapElement) : Dom.HTMLCollection =
-            Native.expando (box node) "areas"
-#endif
+            node.``areas``
 
-#if FABLE_COMPILER
         let ``name`` (node: #Dom.HTMLMapElement) : string =
-            Native.expando (box node) "name"
+            node.``name``
 
         let nameStatic<'native when 'native :> Dom.HTMLMapElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "name" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``name`` <- value) value
 
         let nameReactive<'native when 'native :> Dom.HTMLMapElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "name" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``name`` <- value) read
 
-#endif
 #if FABLE_COMPILER
     module HTMLMediaElement =
 #if FABLE_COMPILER
@@ -2847,78 +2765,62 @@ module Properties =
 #endif
 
 #endif
-#if FABLE_COMPILER
     module HTMLMenuElement =
-#if FABLE_COMPILER
         let ``compact`` (node: #Dom.HTMLMenuElement) : bool =
-            Native.expando (box node) "compact"
+            node.``compact``
 
         let compactStatic<'native when 'native :> Dom.HTMLMenuElement> (value: bool) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "compact" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``compact`` <- value) value
 
         let compactReactive<'native when 'native :> Dom.HTMLMenuElement> (read: unit -> bool) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "compact" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``compact`` <- value) read
 
-#endif
-#if FABLE_COMPILER
     module HTMLMetaElement =
-#if FABLE_COMPILER
         let ``content`` (node: #Dom.HTMLMetaElement) : string =
-            Native.expando (box node) "content"
+            node.``content``
 
         let contentStatic<'native when 'native :> Dom.HTMLMetaElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "content" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``content`` <- value) value
 
         let contentReactive<'native when 'native :> Dom.HTMLMetaElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "content" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``content`` <- value) read
 
-#if FABLE_COMPILER
         let ``httpEquiv`` (node: #Dom.HTMLMetaElement) : string =
-            Native.expando (box node) "httpEquiv"
+            node.``httpEquiv``
 
         let httpEquivStatic<'native when 'native :> Dom.HTMLMetaElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "httpEquiv" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``httpEquiv`` <- value) value
 
         let httpEquivReactive<'native when 'native :> Dom.HTMLMetaElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "httpEquiv" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``httpEquiv`` <- value) read
 
-#if FABLE_COMPILER
         let ``media`` (node: #Dom.HTMLMetaElement) : string =
-            Native.expando (box node) "media"
+            node.``media``
 
         let mediaStatic<'native when 'native :> Dom.HTMLMetaElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "media" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``media`` <- value) value
 
         let mediaReactive<'native when 'native :> Dom.HTMLMetaElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "media" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``media`` <- value) read
 
-#if FABLE_COMPILER
         let ``name`` (node: #Dom.HTMLMetaElement) : string =
-            Native.expando (box node) "name"
+            node.``name``
 
         let nameStatic<'native when 'native :> Dom.HTMLMetaElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "name" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``name`` <- value) value
 
         let nameReactive<'native when 'native :> Dom.HTMLMetaElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "name" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``name`` <- value) read
 
-#if FABLE_COMPILER
         let ``scheme`` (node: #Dom.HTMLMetaElement) : string =
-            Native.expando (box node) "scheme"
+            node.``scheme``
 
         let schemeStatic<'native when 'native :> Dom.HTMLMetaElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "scheme" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``scheme`` <- value) value
 
         let schemeReactive<'native when 'native :> Dom.HTMLMetaElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "scheme" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``scheme`` <- value) read
 
-#endif
     module HTMLMeterElement =
         let ``high`` (node: #Dom.HTMLMeterElement) : float =
             node.``high``
@@ -2977,31 +2879,25 @@ module Properties =
         let valueReactive<'native when 'native :> Dom.HTMLMeterElement> (read: unit -> float) : Typed.Modifier<'native> =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``value`` <- value) read
 
-#if FABLE_COMPILER
     module HTMLModElement =
-#if FABLE_COMPILER
         let ``cite`` (node: #Dom.HTMLModElement) : string =
-            Native.expando (box node) "cite"
+            node.``cite``
 
         let citeStatic<'native when 'native :> Dom.HTMLModElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "cite" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``cite`` <- value) value
 
         let citeReactive<'native when 'native :> Dom.HTMLModElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "cite" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``cite`` <- value) read
 
-#if FABLE_COMPILER
         let ``dateTime`` (node: #Dom.HTMLModElement) : string =
-            Native.expando (box node) "dateTime"
+            node.``dateTime``
 
         let dateTimeStatic<'native when 'native :> Dom.HTMLModElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "dateTime" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``dateTime`` <- value) value
 
         let dateTimeReactive<'native when 'native :> Dom.HTMLModElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "dateTime" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``dateTime`` <- value) read
 
-#endif
 #if FABLE_COMPILER
     module HTMLObjectElement =
 #if FABLE_COMPILER
@@ -3418,20 +3314,16 @@ module Properties =
         let alignReactive<'native when 'native :> Dom.HTMLParagraphElement> (read: unit -> string) : Typed.Modifier<'native> =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
     module HTMLPreElement =
-#if FABLE_COMPILER
-        let ``width`` (node: #Dom.HTMLPreElement) : float =
-            Native.expando (box node) "width"
+        let ``width`` (node: #Dom.HTMLPreElement) : int =
+            node.``width``
 
-        let widthStatic<'native when 'native :> Dom.HTMLPreElement> (value: float) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "width" value) value
+        let widthStatic<'native when 'native :> Dom.HTMLPreElement> (value: int) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> node.``width`` <- value) value
 
-        let widthReactive<'native when 'native :> Dom.HTMLPreElement> (read: unit -> float) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "width" value) read
-#endif
+        let widthReactive<'native when 'native :> Dom.HTMLPreElement> (read: unit -> int) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``width`` <- value) read
 
-#endif
     module HTMLProgressElement =
         let ``labels`` (node: #Dom.HTMLProgressElement) : Dom.NodeList =
             node.``labels``
@@ -3457,20 +3349,16 @@ module Properties =
         let valueReactive<'native when 'native :> Dom.HTMLProgressElement> (read: unit -> float) : Typed.Modifier<'native> =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``value`` <- value) read
 
-#if FABLE_COMPILER
     module HTMLQuoteElement =
-#if FABLE_COMPILER
         let ``cite`` (node: #Dom.HTMLQuoteElement) : string =
-            Native.expando (box node) "cite"
+            node.``cite``
 
         let citeStatic<'native when 'native :> Dom.HTMLQuoteElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "cite" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``cite`` <- value) value
 
         let citeReactive<'native when 'native :> Dom.HTMLQuoteElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "cite" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``cite`` <- value) read
 
-#endif
 #if FABLE_COMPILER
     module HTMLScriptElement =
 #if FABLE_COMPILER
@@ -3724,624 +3612,488 @@ module Properties =
         let nameReactive<'native when 'native :> Dom.HTMLSlotElement> (read: unit -> string) : Typed.Modifier<'native> =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``name`` <- value) read
 
-#if FABLE_COMPILER
     module HTMLSourceElement =
-#if FABLE_COMPILER
-        let ``height`` (node: #Dom.HTMLSourceElement) : float =
-            Native.expando (box node) "height"
+        let ``height`` (node: #Dom.HTMLSourceElement) : uint32 =
+            node.``height``
 
-        let heightStatic<'native when 'native :> Dom.HTMLSourceElement> (value: float) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "height" value) value
+        let heightStatic<'native when 'native :> Dom.HTMLSourceElement> (value: uint32) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> node.``height`` <- value) value
 
-        let heightReactive<'native when 'native :> Dom.HTMLSourceElement> (read: unit -> float) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "height" value) read
-#endif
+        let heightReactive<'native when 'native :> Dom.HTMLSourceElement> (read: unit -> uint32) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``height`` <- value) read
 
-#if FABLE_COMPILER
         let ``media`` (node: #Dom.HTMLSourceElement) : string =
-            Native.expando (box node) "media"
+            node.``media``
 
         let mediaStatic<'native when 'native :> Dom.HTMLSourceElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "media" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``media`` <- value) value
 
         let mediaReactive<'native when 'native :> Dom.HTMLSourceElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "media" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``media`` <- value) read
 
-#if FABLE_COMPILER
         let ``sizes`` (node: #Dom.HTMLSourceElement) : string =
-            Native.expando (box node) "sizes"
+            node.``sizes``
 
         let sizesStatic<'native when 'native :> Dom.HTMLSourceElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "sizes" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``sizes`` <- value) value
 
         let sizesReactive<'native when 'native :> Dom.HTMLSourceElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "sizes" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``sizes`` <- value) read
 
-#if FABLE_COMPILER
         let ``src`` (node: #Dom.HTMLSourceElement) : string =
-            Native.expando (box node) "src"
+            node.``src``
 
         let srcStatic<'native when 'native :> Dom.HTMLSourceElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "src" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``src`` <- value) value
 
         let srcReactive<'native when 'native :> Dom.HTMLSourceElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "src" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``src`` <- value) read
 
-#if FABLE_COMPILER
         let ``srcset`` (node: #Dom.HTMLSourceElement) : string =
-            Native.expando (box node) "srcset"
+            node.``srcset``
 
         let srcsetStatic<'native when 'native :> Dom.HTMLSourceElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "srcset" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``srcset`` <- value) value
 
         let srcsetReactive<'native when 'native :> Dom.HTMLSourceElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "srcset" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``srcset`` <- value) read
 
-#if FABLE_COMPILER
         let ``type`` (node: #Dom.HTMLSourceElement) : string =
-            Native.expando (box node) "type"
+            node.``type``
 
         let typeStatic<'native when 'native :> Dom.HTMLSourceElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "type" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``type`` <- value) value
 
         let typeReactive<'native when 'native :> Dom.HTMLSourceElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "type" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``type`` <- value) read
 
-#if FABLE_COMPILER
-        let ``width`` (node: #Dom.HTMLSourceElement) : float =
-            Native.expando (box node) "width"
+        let ``width`` (node: #Dom.HTMLSourceElement) : uint32 =
+            node.``width``
 
-        let widthStatic<'native when 'native :> Dom.HTMLSourceElement> (value: float) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "width" value) value
+        let widthStatic<'native when 'native :> Dom.HTMLSourceElement> (value: uint32) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> node.``width`` <- value) value
 
-        let widthReactive<'native when 'native :> Dom.HTMLSourceElement> (read: unit -> float) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "width" value) read
-#endif
+        let widthReactive<'native when 'native :> Dom.HTMLSourceElement> (read: unit -> uint32) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``width`` <- value) read
 
-#endif
-#if FABLE_COMPILER
     module HTMLStyleElement =
-#if FABLE_COMPILER
         let ``blocking`` (node: #Dom.HTMLStyleElement) : Dom.DOMTokenList =
-            Native.expando (box node) "blocking"
-#endif
+            node.``blocking``
 
-#if FABLE_COMPILER
         let ``disabled`` (node: #Dom.HTMLStyleElement) : bool =
-            Native.expando (box node) "disabled"
+            node.``disabled``
 
         let disabledStatic<'native when 'native :> Dom.HTMLStyleElement> (value: bool) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "disabled" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``disabled`` <- value) value
 
         let disabledReactive<'native when 'native :> Dom.HTMLStyleElement> (read: unit -> bool) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "disabled" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``disabled`` <- value) read
 
-#if FABLE_COMPILER
         let ``media`` (node: #Dom.HTMLStyleElement) : string =
-            Native.expando (box node) "media"
+            node.``media``
 
         let mediaStatic<'native when 'native :> Dom.HTMLStyleElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "media" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``media`` <- value) value
 
         let mediaReactive<'native when 'native :> Dom.HTMLStyleElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "media" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``media`` <- value) read
 
-#if FABLE_COMPILER
         let ``type`` (node: #Dom.HTMLStyleElement) : string =
-            Native.expando (box node) "type"
+            node.``type``
 
         let typeStatic<'native when 'native :> Dom.HTMLStyleElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "type" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``type`` <- value) value
 
         let typeReactive<'native when 'native :> Dom.HTMLStyleElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "type" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``type`` <- value) read
 
-#endif
-#if FABLE_COMPILER
     module HTMLTableCaptionElement =
-#if FABLE_COMPILER
         let ``align`` (node: #Dom.HTMLTableCaptionElement) : string =
-            Native.expando (box node) "align"
+            node.``align``
 
         let alignStatic<'native when 'native :> Dom.HTMLTableCaptionElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``align`` <- value) value
 
         let alignReactive<'native when 'native :> Dom.HTMLTableCaptionElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``align`` <- value) read
 
-#endif
-#if FABLE_COMPILER
     module HTMLTableCellElement =
-#if FABLE_COMPILER
         let ``abbr`` (node: #Dom.HTMLTableCellElement) : string =
-            Native.expando (box node) "abbr"
+            node.``abbr``
 
         let abbrStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "abbr" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``abbr`` <- value) value
 
         let abbrReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "abbr" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``abbr`` <- value) read
 
-#if FABLE_COMPILER
         let ``align`` (node: #Dom.HTMLTableCellElement) : string =
-            Native.expando (box node) "align"
+            node.``align``
 
         let alignStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``align`` <- value) value
 
         let alignReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
         let ``axis`` (node: #Dom.HTMLTableCellElement) : string =
-            Native.expando (box node) "axis"
+            node.``axis``
 
         let axisStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "axis" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``axis`` <- value) value
 
         let axisReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "axis" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``axis`` <- value) read
 
-#if FABLE_COMPILER
         let ``bgColor`` (node: #Dom.HTMLTableCellElement) : string =
-            Native.expando (box node) "bgColor"
+            node.``bgColor``
 
         let bgColorStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "bgColor" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``bgColor`` <- value) value
 
         let bgColorReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "bgColor" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``bgColor`` <- value) read
 
-#if FABLE_COMPILER
-        let ``cellIndex`` (node: #Dom.HTMLTableCellElement) : float =
-            Native.expando (box node) "cellIndex"
-#endif
+        let ``cellIndex`` (node: #Dom.HTMLTableCellElement) : int =
+            node.``cellIndex``
 
-#if FABLE_COMPILER
         let ``ch`` (node: #Dom.HTMLTableCellElement) : string =
-            Native.expando (box node) "ch"
+            node.``ch``
 
         let chStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "ch" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``ch`` <- value) value
 
         let chReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "ch" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``ch`` <- value) read
 
-#if FABLE_COMPILER
         let ``chOff`` (node: #Dom.HTMLTableCellElement) : string =
-            Native.expando (box node) "chOff"
+            node.``chOff``
 
         let chOffStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "chOff" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``chOff`` <- value) value
 
         let chOffReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "chOff" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``chOff`` <- value) read
 
-#if FABLE_COMPILER
-        let ``colSpan`` (node: #Dom.HTMLTableCellElement) : float =
-            Native.expando (box node) "colSpan"
+        let ``colSpan`` (node: #Dom.HTMLTableCellElement) : uint32 =
+            node.``colSpan``
 
-        let colSpanStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: float) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "colSpan" value) value
+        let colSpanStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: uint32) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> node.``colSpan`` <- value) value
 
-        let colSpanReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> float) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "colSpan" value) read
-#endif
+        let colSpanReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> uint32) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``colSpan`` <- value) read
 
-#if FABLE_COMPILER
         let ``headers`` (node: #Dom.HTMLTableCellElement) : string =
-            Native.expando (box node) "headers"
+            node.``headers``
 
         let headersStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "headers" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``headers`` <- value) value
 
         let headersReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "headers" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``headers`` <- value) read
 
-#if FABLE_COMPILER
         let ``height`` (node: #Dom.HTMLTableCellElement) : string =
-            Native.expando (box node) "height"
+            node.``height``
 
         let heightStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "height" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``height`` <- value) value
 
         let heightReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "height" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``height`` <- value) read
 
-#if FABLE_COMPILER
         let ``noWrap`` (node: #Dom.HTMLTableCellElement) : bool =
-            Native.expando (box node) "noWrap"
+            node.``noWrap``
 
         let noWrapStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: bool) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "noWrap" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``noWrap`` <- value) value
 
         let noWrapReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> bool) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "noWrap" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``noWrap`` <- value) read
 
-#if FABLE_COMPILER
-        let ``rowSpan`` (node: #Dom.HTMLTableCellElement) : float =
-            Native.expando (box node) "rowSpan"
+        let ``rowSpan`` (node: #Dom.HTMLTableCellElement) : uint32 =
+            node.``rowSpan``
 
-        let rowSpanStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: float) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "rowSpan" value) value
+        let rowSpanStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: uint32) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> node.``rowSpan`` <- value) value
 
-        let rowSpanReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> float) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "rowSpan" value) read
-#endif
+        let rowSpanReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> uint32) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``rowSpan`` <- value) read
 
-#if FABLE_COMPILER
         let ``scope`` (node: #Dom.HTMLTableCellElement) : string =
-            Native.expando (box node) "scope"
+            node.``scope``
 
         let scopeStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "scope" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``scope`` <- value) value
 
         let scopeReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "scope" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``scope`` <- value) read
 
-#if FABLE_COMPILER
         let ``vAlign`` (node: #Dom.HTMLTableCellElement) : string =
-            Native.expando (box node) "vAlign"
+            node.``vAlign``
 
         let vAlignStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "vAlign" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``vAlign`` <- value) value
 
         let vAlignReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "vAlign" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``vAlign`` <- value) read
 
-#if FABLE_COMPILER
         let ``width`` (node: #Dom.HTMLTableCellElement) : string =
-            Native.expando (box node) "width"
+            node.``width``
 
         let widthStatic<'native when 'native :> Dom.HTMLTableCellElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "width" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``width`` <- value) value
 
         let widthReactive<'native when 'native :> Dom.HTMLTableCellElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "width" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``width`` <- value) read
 
-#endif
-#if FABLE_COMPILER
     module HTMLTableColElement =
-#if FABLE_COMPILER
         let ``align`` (node: #Dom.HTMLTableColElement) : string =
-            Native.expando (box node) "align"
+            node.``align``
 
         let alignStatic<'native when 'native :> Dom.HTMLTableColElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``align`` <- value) value
 
         let alignReactive<'native when 'native :> Dom.HTMLTableColElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
         let ``ch`` (node: #Dom.HTMLTableColElement) : string =
-            Native.expando (box node) "ch"
+            node.``ch``
 
         let chStatic<'native when 'native :> Dom.HTMLTableColElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "ch" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``ch`` <- value) value
 
         let chReactive<'native when 'native :> Dom.HTMLTableColElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "ch" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``ch`` <- value) read
 
-#if FABLE_COMPILER
         let ``chOff`` (node: #Dom.HTMLTableColElement) : string =
-            Native.expando (box node) "chOff"
+            node.``chOff``
 
         let chOffStatic<'native when 'native :> Dom.HTMLTableColElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "chOff" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``chOff`` <- value) value
 
         let chOffReactive<'native when 'native :> Dom.HTMLTableColElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "chOff" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``chOff`` <- value) read
 
-#if FABLE_COMPILER
-        let ``span`` (node: #Dom.HTMLTableColElement) : float =
-            Native.expando (box node) "span"
+        let ``span`` (node: #Dom.HTMLTableColElement) : uint32 =
+            node.``span``
 
-        let spanStatic<'native when 'native :> Dom.HTMLTableColElement> (value: float) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "span" value) value
+        let spanStatic<'native when 'native :> Dom.HTMLTableColElement> (value: uint32) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> node.``span`` <- value) value
 
-        let spanReactive<'native when 'native :> Dom.HTMLTableColElement> (read: unit -> float) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "span" value) read
-#endif
+        let spanReactive<'native when 'native :> Dom.HTMLTableColElement> (read: unit -> uint32) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``span`` <- value) read
 
-#if FABLE_COMPILER
         let ``vAlign`` (node: #Dom.HTMLTableColElement) : string =
-            Native.expando (box node) "vAlign"
+            node.``vAlign``
 
         let vAlignStatic<'native when 'native :> Dom.HTMLTableColElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "vAlign" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``vAlign`` <- value) value
 
         let vAlignReactive<'native when 'native :> Dom.HTMLTableColElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "vAlign" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``vAlign`` <- value) read
 
-#if FABLE_COMPILER
         let ``width`` (node: #Dom.HTMLTableColElement) : string =
-            Native.expando (box node) "width"
+            node.``width``
 
         let widthStatic<'native when 'native :> Dom.HTMLTableColElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "width" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``width`` <- value) value
 
         let widthReactive<'native when 'native :> Dom.HTMLTableColElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "width" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``width`` <- value) read
 
-#endif
-#if FABLE_COMPILER
     module HTMLTableElement =
-#if FABLE_COMPILER
         let ``align`` (node: #Dom.HTMLTableElement) : string =
-            Native.expando (box node) "align"
+            node.``align``
 
         let alignStatic<'native when 'native :> Dom.HTMLTableElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``align`` <- value) value
 
         let alignReactive<'native when 'native :> Dom.HTMLTableElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
         let ``bgColor`` (node: #Dom.HTMLTableElement) : string =
-            Native.expando (box node) "bgColor"
+            node.``bgColor``
 
         let bgColorStatic<'native when 'native :> Dom.HTMLTableElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "bgColor" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``bgColor`` <- value) value
 
         let bgColorReactive<'native when 'native :> Dom.HTMLTableElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "bgColor" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``bgColor`` <- value) read
 
-#if FABLE_COMPILER
         let ``border`` (node: #Dom.HTMLTableElement) : string =
-            Native.expando (box node) "border"
+            node.``border``
 
         let borderStatic<'native when 'native :> Dom.HTMLTableElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "border" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``border`` <- value) value
 
         let borderReactive<'native when 'native :> Dom.HTMLTableElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "border" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``border`` <- value) read
 
-#if FABLE_COMPILER
         let ``caption`` (node: #Dom.HTMLTableElement) : Dom.HTMLTableCaptionElement =
-            Native.expando (box node) "caption"
-#endif
+            node.``caption``
 
-#if FABLE_COMPILER
         let ``cellPadding`` (node: #Dom.HTMLTableElement) : string =
-            Native.expando (box node) "cellPadding"
+            node.``cellPadding``
 
         let cellPaddingStatic<'native when 'native :> Dom.HTMLTableElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "cellPadding" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``cellPadding`` <- value) value
 
         let cellPaddingReactive<'native when 'native :> Dom.HTMLTableElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "cellPadding" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``cellPadding`` <- value) read
 
-#if FABLE_COMPILER
         let ``cellSpacing`` (node: #Dom.HTMLTableElement) : string =
-            Native.expando (box node) "cellSpacing"
+            node.``cellSpacing``
 
         let cellSpacingStatic<'native when 'native :> Dom.HTMLTableElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "cellSpacing" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``cellSpacing`` <- value) value
 
         let cellSpacingReactive<'native when 'native :> Dom.HTMLTableElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "cellSpacing" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``cellSpacing`` <- value) read
 
-#if FABLE_COMPILER
         let ``frame`` (node: #Dom.HTMLTableElement) : string =
-            Native.expando (box node) "frame"
+            node.``frame``
 
         let frameStatic<'native when 'native :> Dom.HTMLTableElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "frame" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``frame`` <- value) value
 
         let frameReactive<'native when 'native :> Dom.HTMLTableElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "frame" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``frame`` <- value) read
 
-#if FABLE_COMPILER
         let ``rows`` (node: #Dom.HTMLTableElement) : Dom.HTMLCollection =
-            Native.expando (box node) "rows"
-#endif
+            node.``rows``
 
-#if FABLE_COMPILER
         let ``rules`` (node: #Dom.HTMLTableElement) : string =
-            Native.expando (box node) "rules"
+            node.``rules``
 
         let rulesStatic<'native when 'native :> Dom.HTMLTableElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "rules" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``rules`` <- value) value
 
         let rulesReactive<'native when 'native :> Dom.HTMLTableElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "rules" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``rules`` <- value) read
 
-#if FABLE_COMPILER
         let ``summary`` (node: #Dom.HTMLTableElement) : string =
-            Native.expando (box node) "summary"
+            node.``summary``
 
         let summaryStatic<'native when 'native :> Dom.HTMLTableElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "summary" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``summary`` <- value) value
 
         let summaryReactive<'native when 'native :> Dom.HTMLTableElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "summary" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``summary`` <- value) read
 
-#if FABLE_COMPILER
         let ``tBodies`` (node: #Dom.HTMLTableElement) : Dom.HTMLCollection =
-            Native.expando (box node) "tBodies"
-#endif
+            node.``tBodies``
 
-#if FABLE_COMPILER
         let ``tFoot`` (node: #Dom.HTMLTableElement) : Dom.HTMLTableSectionElement =
-            Native.expando (box node) "tFoot"
-#endif
+            node.``tFoot``
 
-#if FABLE_COMPILER
         let ``tHead`` (node: #Dom.HTMLTableElement) : Dom.HTMLTableSectionElement =
-            Native.expando (box node) "tHead"
-#endif
+            node.``tHead``
 
-#if FABLE_COMPILER
         let ``width`` (node: #Dom.HTMLTableElement) : string =
-            Native.expando (box node) "width"
+            node.``width``
 
         let widthStatic<'native when 'native :> Dom.HTMLTableElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "width" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``width`` <- value) value
 
         let widthReactive<'native when 'native :> Dom.HTMLTableElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "width" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``width`` <- value) read
 
-#endif
-#if FABLE_COMPILER
     module HTMLTableRowElement =
-#if FABLE_COMPILER
         let ``align`` (node: #Dom.HTMLTableRowElement) : string =
-            Native.expando (box node) "align"
+            node.``align``
 
         let alignStatic<'native when 'native :> Dom.HTMLTableRowElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``align`` <- value) value
 
         let alignReactive<'native when 'native :> Dom.HTMLTableRowElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
         let ``bgColor`` (node: #Dom.HTMLTableRowElement) : string =
-            Native.expando (box node) "bgColor"
+            node.``bgColor``
 
         let bgColorStatic<'native when 'native :> Dom.HTMLTableRowElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "bgColor" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``bgColor`` <- value) value
 
         let bgColorReactive<'native when 'native :> Dom.HTMLTableRowElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "bgColor" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``bgColor`` <- value) read
 
-#if FABLE_COMPILER
         let ``cells`` (node: #Dom.HTMLTableRowElement) : Dom.HTMLCollection =
-            Native.expando (box node) "cells"
-#endif
+            node.``cells``
 
-#if FABLE_COMPILER
         let ``ch`` (node: #Dom.HTMLTableRowElement) : string =
-            Native.expando (box node) "ch"
+            node.``ch``
 
         let chStatic<'native when 'native :> Dom.HTMLTableRowElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "ch" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``ch`` <- value) value
 
         let chReactive<'native when 'native :> Dom.HTMLTableRowElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "ch" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``ch`` <- value) read
 
-#if FABLE_COMPILER
         let ``chOff`` (node: #Dom.HTMLTableRowElement) : string =
-            Native.expando (box node) "chOff"
+            node.``chOff``
 
         let chOffStatic<'native when 'native :> Dom.HTMLTableRowElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "chOff" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``chOff`` <- value) value
 
         let chOffReactive<'native when 'native :> Dom.HTMLTableRowElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "chOff" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``chOff`` <- value) read
 
-#if FABLE_COMPILER
-        let ``rowIndex`` (node: #Dom.HTMLTableRowElement) : float =
-            Native.expando (box node) "rowIndex"
-#endif
+        let ``rowIndex`` (node: #Dom.HTMLTableRowElement) : int =
+            node.``rowIndex``
 
-#if FABLE_COMPILER
-        let ``sectionRowIndex`` (node: #Dom.HTMLTableRowElement) : float =
-            Native.expando (box node) "sectionRowIndex"
-#endif
+        let ``sectionRowIndex`` (node: #Dom.HTMLTableRowElement) : int =
+            node.``sectionRowIndex``
 
-#if FABLE_COMPILER
         let ``vAlign`` (node: #Dom.HTMLTableRowElement) : string =
-            Native.expando (box node) "vAlign"
+            node.``vAlign``
 
         let vAlignStatic<'native when 'native :> Dom.HTMLTableRowElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "vAlign" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``vAlign`` <- value) value
 
         let vAlignReactive<'native when 'native :> Dom.HTMLTableRowElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "vAlign" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``vAlign`` <- value) read
 
-#endif
-#if FABLE_COMPILER
     module HTMLTableSectionElement =
-#if FABLE_COMPILER
         let ``align`` (node: #Dom.HTMLTableSectionElement) : string =
-            Native.expando (box node) "align"
+            node.``align``
 
         let alignStatic<'native when 'native :> Dom.HTMLTableSectionElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``align`` <- value) value
 
         let alignReactive<'native when 'native :> Dom.HTMLTableSectionElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "align" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
         let ``ch`` (node: #Dom.HTMLTableSectionElement) : string =
-            Native.expando (box node) "ch"
+            node.``ch``
 
         let chStatic<'native when 'native :> Dom.HTMLTableSectionElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "ch" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``ch`` <- value) value
 
         let chReactive<'native when 'native :> Dom.HTMLTableSectionElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "ch" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``ch`` <- value) read
 
-#if FABLE_COMPILER
         let ``chOff`` (node: #Dom.HTMLTableSectionElement) : string =
-            Native.expando (box node) "chOff"
+            node.``chOff``
 
         let chOffStatic<'native when 'native :> Dom.HTMLTableSectionElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "chOff" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``chOff`` <- value) value
 
         let chOffReactive<'native when 'native :> Dom.HTMLTableSectionElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "chOff" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``chOff`` <- value) read
 
-#if FABLE_COMPILER
         let ``rows`` (node: #Dom.HTMLTableSectionElement) : Dom.HTMLCollection =
-            Native.expando (box node) "rows"
-#endif
+            node.``rows``
 
-#if FABLE_COMPILER
         let ``vAlign`` (node: #Dom.HTMLTableSectionElement) : string =
-            Native.expando (box node) "vAlign"
+            node.``vAlign``
 
         let vAlignStatic<'native when 'native :> Dom.HTMLTableSectionElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "vAlign" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``vAlign`` <- value) value
 
         let vAlignReactive<'native when 'native :> Dom.HTMLTableSectionElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "vAlign" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``vAlign`` <- value) read
 
-#endif
     module HTMLTemplateElement =
         let ``content`` (node: #Dom.HTMLTemplateElement) : Dom.DocumentFragment =
             node.``content``
@@ -4568,34 +4320,26 @@ module Properties =
         let wrapReactive<'native when 'native :> Dom.HTMLTextAreaElement> (read: unit -> string) : Typed.Modifier<'native> =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``wrap`` <- value) read
 
-#if FABLE_COMPILER
     module HTMLTimeElement =
-#if FABLE_COMPILER
         let ``dateTime`` (node: #Dom.HTMLTimeElement) : string =
-            Native.expando (box node) "dateTime"
+            node.``dateTime``
 
         let dateTimeStatic<'native when 'native :> Dom.HTMLTimeElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "dateTime" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``dateTime`` <- value) value
 
         let dateTimeReactive<'native when 'native :> Dom.HTMLTimeElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "dateTime" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``dateTime`` <- value) read
 
-#endif
-#if FABLE_COMPILER
     module HTMLTitleElement =
-#if FABLE_COMPILER
         let ``text`` (node: #Dom.HTMLTitleElement) : string =
-            Native.expando (box node) "text"
+            node.``text``
 
         let textStatic<'native when 'native :> Dom.HTMLTitleElement> (value: string) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "text" value) value
+            Typed.staticProperty (fun (node: 'native) value -> node.``text`` <- value) value
 
         let textReactive<'native when 'native :> Dom.HTMLTitleElement> (read: unit -> string) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "text" value) read
-#endif
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``text`` <- value) read
 
-#endif
 #if FABLE_COMPILER
     module HTMLTrackElement =
 #if FABLE_COMPILER
@@ -4771,14 +4515,10 @@ module Properties =
 #endif
 
 #endif
-#if FABLE_COMPILER
     module LinkStyle =
-#if FABLE_COMPILER
         let ``sheet`` (node: #Dom.LinkStyle) : Dom.CSSStyleSheet =
-            Native.expando (box node) "sheet"
-#endif
+            node.``sheet``
 
-#endif
     module Node =
 #if FABLE_COMPILER
         let ``ATTRIBUTE_NODE`` (node: #Dom.Node) : float =
@@ -5546,49 +5286,41 @@ let ``area`` ops (modifiers: Typed.Modifier<Dom.HTMLAreaElement> array) =
     Typed.element ops (HtmlTag "area") modifiers [||]
 
 module Area =
-#if FABLE_COMPILER
     let ``alt`` (node: Dom.HTMLAreaElement) : string =
-        Native.expando (box node) "alt"
+        node.``alt``
 
     let altStatic (value: string) : Typed.Modifier<Dom.HTMLAreaElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "alt" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLAreaElement) value -> node.``alt`` <- value) value
 
     let altReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLAreaElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "alt" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> node.``alt`` <- value) read
 
-#if FABLE_COMPILER
     let ``coords`` (node: Dom.HTMLAreaElement) : string =
-        Native.expando (box node) "coords"
+        node.``coords``
 
     let coordsStatic (value: string) : Typed.Modifier<Dom.HTMLAreaElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "coords" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLAreaElement) value -> node.``coords`` <- value) value
 
     let coordsReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLAreaElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "coords" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> node.``coords`` <- value) read
 
-#if FABLE_COMPILER
     let ``download`` (node: Dom.HTMLAreaElement) : string =
-        Native.expando (box node) "download"
+        node.``download``
 
     let downloadStatic (value: string) : Typed.Modifier<Dom.HTMLAreaElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "download" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLAreaElement) value -> node.``download`` <- value) value
 
     let downloadReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLAreaElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "download" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> node.``download`` <- value) read
 
-#if FABLE_COMPILER
     let ``noHref`` (node: Dom.HTMLAreaElement) : bool =
-        Native.expando (box node) "noHref"
+        node.``noHref``
 
     let noHrefStatic (value: bool) : Typed.Modifier<Dom.HTMLAreaElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "noHref" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLAreaElement) value -> node.``noHref`` <- value) value
 
     let noHrefReactive (read: unit -> bool) : Typed.Modifier<Dom.HTMLAreaElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "noHref" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> node.``noHref`` <- value) read
 
 #if FABLE_COMPILER
     let ``ping`` (node: Dom.HTMLAreaElement) : string =
@@ -5601,43 +5333,35 @@ module Area =
         Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "ping" value) read
 #endif
 
-#if FABLE_COMPILER
     let ``referrerPolicy`` (node: Dom.HTMLAreaElement) : string =
-        Native.expando (box node) "referrerPolicy"
+        node.``referrerPolicy``
 
     let referrerPolicyStatic (value: string) : Typed.Modifier<Dom.HTMLAreaElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "referrerPolicy" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLAreaElement) value -> node.``referrerPolicy`` <- value) value
 
     let referrerPolicyReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLAreaElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "referrerPolicy" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> node.``referrerPolicy`` <- value) read
 
-#if FABLE_COMPILER
     let ``rel`` (node: Dom.HTMLAreaElement) : string =
-        Native.expando (box node) "rel"
+        node.``rel``
 
     let relStatic (value: string) : Typed.Modifier<Dom.HTMLAreaElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "rel" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLAreaElement) value -> node.``rel`` <- value) value
 
     let relReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLAreaElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "rel" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> node.``rel`` <- value) read
 
-#if FABLE_COMPILER
     let ``relList`` (node: Dom.HTMLAreaElement) : Dom.DOMTokenList =
-        Native.expando (box node) "relList"
-#endif
+        node.``relList``
 
-#if FABLE_COMPILER
     let ``shape`` (node: Dom.HTMLAreaElement) : string =
-        Native.expando (box node) "shape"
+        node.``shape``
 
     let shapeStatic (value: string) : Typed.Modifier<Dom.HTMLAreaElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "shape" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLAreaElement) value -> node.``shape`` <- value) value
 
     let shapeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLAreaElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> Native.setExpando (box node) "shape" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLAreaElement) value -> node.``shape`` <- value) read
 
     let ``target`` (node: Dom.HTMLAreaElement) : string =
         node.``target``
@@ -5716,27 +5440,23 @@ let ``base`` ops (modifiers: Typed.Modifier<Dom.HTMLBaseElement> array) =
     Typed.element ops (HtmlTag "base") modifiers [||]
 
 module Base =
-#if FABLE_COMPILER
     let ``href`` (node: Dom.HTMLBaseElement) : string =
-        Native.expando (box node) "href"
+        node.``href``
 
     let hrefStatic (value: string) : Typed.Modifier<Dom.HTMLBaseElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLBaseElement) value -> Native.setExpando (box node) "href" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLBaseElement) value -> node.``href`` <- value) value
 
     let hrefReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLBaseElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLBaseElement) value -> Native.setExpando (box node) "href" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLBaseElement) value -> node.``href`` <- value) read
 
-#if FABLE_COMPILER
     let ``target`` (node: Dom.HTMLBaseElement) : string =
-        Native.expando (box node) "target"
+        node.``target``
 
     let targetStatic (value: string) : Typed.Modifier<Dom.HTMLBaseElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLBaseElement) value -> Native.setExpando (box node) "target" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLBaseElement) value -> node.``target`` <- value) value
 
     let targetReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLBaseElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLBaseElement) value -> Native.setExpando (box node) "target" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLBaseElement) value -> node.``target`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLBaseElement> =
@@ -5774,16 +5494,14 @@ let ``blockquote`` ops (modifiers: Typed.Modifier<Dom.HTMLQuoteElement> array) c
     Typed.element ops (HtmlTag "blockquote") modifiers children
 
 module Blockquote =
-#if FABLE_COMPILER
     let ``cite`` (node: Dom.HTMLQuoteElement) : string =
-        Native.expando (box node) "cite"
+        node.``cite``
 
     let citeStatic (value: string) : Typed.Modifier<Dom.HTMLQuoteElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLQuoteElement) value -> Native.setExpando (box node) "cite" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLQuoteElement) value -> node.``cite`` <- value) value
 
     let citeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLQuoteElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLQuoteElement) value -> Native.setExpando (box node) "cite" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLQuoteElement) value -> node.``cite`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLQuoteElement> =
@@ -5935,16 +5653,14 @@ let ``br`` ops (modifiers: Typed.Modifier<Dom.HTMLBRElement> array) =
     Typed.element ops (HtmlTag "br") modifiers [||]
 
 module Br =
-#if FABLE_COMPILER
     let ``clear`` (node: Dom.HTMLBRElement) : string =
-        Native.expando (box node) "clear"
+        node.``clear``
 
     let clearStatic (value: string) : Typed.Modifier<Dom.HTMLBRElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLBRElement) value -> Native.setExpando (box node) "clear" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLBRElement) value -> node.``clear`` <- value) value
 
     let clearReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLBRElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLBRElement) value -> Native.setExpando (box node) "clear" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLBRElement) value -> node.``clear`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLBRElement> =
@@ -6112,16 +5828,14 @@ let ``caption`` ops (modifiers: Typed.Modifier<Dom.HTMLTableCaptionElement> arra
     Typed.element ops (HtmlTag "caption") modifiers children
 
 module Caption =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLTableCaptionElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLTableCaptionElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCaptionElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCaptionElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCaptionElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCaptionElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCaptionElement) value -> node.``align`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLTableCaptionElement> =
@@ -6159,71 +5873,59 @@ let ``col`` ops (modifiers: Typed.Modifier<Dom.HTMLTableColElement> array) =
     Typed.element ops (HtmlTag "col") modifiers [||]
 
 module Col =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLTableColElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
     let ``ch`` (node: Dom.HTMLTableColElement) : string =
-        Native.expando (box node) "ch"
+        node.``ch``
 
     let chStatic (value: string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "ch" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> node.``ch`` <- value) value
 
     let chReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "ch" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> node.``ch`` <- value) read
 
-#if FABLE_COMPILER
     let ``chOff`` (node: Dom.HTMLTableColElement) : string =
-        Native.expando (box node) "chOff"
+        node.``chOff``
 
     let chOffStatic (value: string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "chOff" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> node.``chOff`` <- value) value
 
     let chOffReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "chOff" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> node.``chOff`` <- value) read
 
-#if FABLE_COMPILER
-    let ``span`` (node: Dom.HTMLTableColElement) : float =
-        Native.expando (box node) "span"
+    let ``span`` (node: Dom.HTMLTableColElement) : uint32 =
+        node.``span``
 
-    let spanStatic (value: float) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "span" value) value
+    let spanStatic (value: uint32) : Typed.Modifier<Dom.HTMLTableColElement> =
+        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> node.``span`` <- value) value
 
-    let spanReactive (read: unit -> float) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "span" value) read
-#endif
+    let spanReactive (read: unit -> uint32) : Typed.Modifier<Dom.HTMLTableColElement> =
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> node.``span`` <- value) read
 
-#if FABLE_COMPILER
     let ``vAlign`` (node: Dom.HTMLTableColElement) : string =
-        Native.expando (box node) "vAlign"
+        node.``vAlign``
 
     let vAlignStatic (value: string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "vAlign" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> node.``vAlign`` <- value) value
 
     let vAlignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "vAlign" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> node.``vAlign`` <- value) read
 
-#if FABLE_COMPILER
     let ``width`` (node: Dom.HTMLTableColElement) : string =
-        Native.expando (box node) "width"
+        node.``width``
 
     let widthStatic (value: string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "width" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> node.``width`` <- value) value
 
     let widthReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "width" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> node.``width`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLTableColElement> =
@@ -6237,71 +5939,59 @@ let ``colgroup`` ops (modifiers: Typed.Modifier<Dom.HTMLTableColElement> array) 
     Typed.element ops (HtmlTag "colgroup") modifiers children
 
 module Colgroup =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLTableColElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
     let ``ch`` (node: Dom.HTMLTableColElement) : string =
-        Native.expando (box node) "ch"
+        node.``ch``
 
     let chStatic (value: string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "ch" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> node.``ch`` <- value) value
 
     let chReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "ch" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> node.``ch`` <- value) read
 
-#if FABLE_COMPILER
     let ``chOff`` (node: Dom.HTMLTableColElement) : string =
-        Native.expando (box node) "chOff"
+        node.``chOff``
 
     let chOffStatic (value: string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "chOff" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> node.``chOff`` <- value) value
 
     let chOffReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "chOff" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> node.``chOff`` <- value) read
 
-#if FABLE_COMPILER
-    let ``span`` (node: Dom.HTMLTableColElement) : float =
-        Native.expando (box node) "span"
+    let ``span`` (node: Dom.HTMLTableColElement) : uint32 =
+        node.``span``
 
-    let spanStatic (value: float) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "span" value) value
+    let spanStatic (value: uint32) : Typed.Modifier<Dom.HTMLTableColElement> =
+        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> node.``span`` <- value) value
 
-    let spanReactive (read: unit -> float) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "span" value) read
-#endif
+    let spanReactive (read: unit -> uint32) : Typed.Modifier<Dom.HTMLTableColElement> =
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> node.``span`` <- value) read
 
-#if FABLE_COMPILER
     let ``vAlign`` (node: Dom.HTMLTableColElement) : string =
-        Native.expando (box node) "vAlign"
+        node.``vAlign``
 
     let vAlignStatic (value: string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "vAlign" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> node.``vAlign`` <- value) value
 
     let vAlignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "vAlign" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> node.``vAlign`` <- value) read
 
-#if FABLE_COMPILER
     let ``width`` (node: Dom.HTMLTableColElement) : string =
-        Native.expando (box node) "width"
+        node.``width``
 
     let widthStatic (value: string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "width" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableColElement) value -> node.``width`` <- value) value
 
     let widthReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableColElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> Native.setExpando (box node) "width" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableColElement) value -> node.``width`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLTableColElement> =
@@ -6315,16 +6005,14 @@ let ``data`` ops (modifiers: Typed.Modifier<Dom.HTMLDataElement> array) children
     Typed.element ops (HtmlTag "data") modifiers children
 
 module Data =
-#if FABLE_COMPILER
     let ``value`` (node: Dom.HTMLDataElement) : string =
-        Native.expando (box node) "value"
+        node.``value``
 
     let valueStatic (value: string) : Typed.Modifier<Dom.HTMLDataElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLDataElement) value -> Native.setExpando (box node) "value" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLDataElement) value -> node.``value`` <- value) value
 
     let valueReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLDataElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLDataElement) value -> Native.setExpando (box node) "value" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLDataElement) value -> node.``value`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLDataElement> =
@@ -6338,10 +6026,8 @@ let ``datalist`` ops (modifiers: Typed.Modifier<Dom.HTMLDataListElement> array) 
     Typed.element ops (HtmlTag "datalist") modifiers children
 
 module Datalist =
-#if FABLE_COMPILER
     let ``options`` (node: Dom.HTMLDataListElement) : Dom.HTMLCollection =
-        Native.expando (box node) "options"
-#endif
+        node.``options``
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLDataListElement> =
@@ -6367,27 +6053,23 @@ let ``del`` ops (modifiers: Typed.Modifier<Dom.HTMLModElement> array) children =
     Typed.element ops (HtmlTag "del") modifiers children
 
 module Del =
-#if FABLE_COMPILER
     let ``cite`` (node: Dom.HTMLModElement) : string =
-        Native.expando (box node) "cite"
+        node.``cite``
 
     let citeStatic (value: string) : Typed.Modifier<Dom.HTMLModElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLModElement) value -> Native.setExpando (box node) "cite" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLModElement) value -> node.``cite`` <- value) value
 
     let citeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLModElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLModElement) value -> Native.setExpando (box node) "cite" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLModElement) value -> node.``cite`` <- value) read
 
-#if FABLE_COMPILER
     let ``dateTime`` (node: Dom.HTMLModElement) : string =
-        Native.expando (box node) "dateTime"
+        node.``dateTime``
 
     let dateTimeStatic (value: string) : Typed.Modifier<Dom.HTMLModElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLModElement) value -> Native.setExpando (box node) "dateTime" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLModElement) value -> node.``dateTime`` <- value) value
 
     let dateTimeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLModElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLModElement) value -> Native.setExpando (box node) "dateTime" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLModElement) value -> node.``dateTime`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLModElement> =
@@ -6512,16 +6194,14 @@ let ``dl`` ops (modifiers: Typed.Modifier<Dom.HTMLDListElement> array) children 
     Typed.element ops (HtmlTag "dl") modifiers children
 
 module Dl =
-#if FABLE_COMPILER
     let ``compact`` (node: Dom.HTMLDListElement) : bool =
-        Native.expando (box node) "compact"
+        node.``compact``
 
     let compactStatic (value: bool) : Typed.Modifier<Dom.HTMLDListElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLDListElement) value -> Native.setExpando (box node) "compact" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLDListElement) value -> node.``compact`` <- value) value
 
     let compactReactive (read: unit -> bool) : Typed.Modifier<Dom.HTMLDListElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLDListElement) value -> Native.setExpando (box node) "compact" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLDListElement) value -> node.``compact`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLDListElement> =
@@ -6832,16 +6512,14 @@ let ``h1`` ops (modifiers: Typed.Modifier<Dom.HTMLHeadingElement> array) childre
     Typed.element ops (HtmlTag "h1") modifiers children
 
 module H1 =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLHeadingElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLHeadingElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLHeadingElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLHeadingElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLHeadingElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLHeadingElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLHeadingElement) value -> node.``align`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
@@ -6855,16 +6533,14 @@ let ``h2`` ops (modifiers: Typed.Modifier<Dom.HTMLHeadingElement> array) childre
     Typed.element ops (HtmlTag "h2") modifiers children
 
 module H2 =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLHeadingElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLHeadingElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLHeadingElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLHeadingElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLHeadingElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLHeadingElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLHeadingElement) value -> node.``align`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
@@ -6878,16 +6554,14 @@ let ``h3`` ops (modifiers: Typed.Modifier<Dom.HTMLHeadingElement> array) childre
     Typed.element ops (HtmlTag "h3") modifiers children
 
 module H3 =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLHeadingElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLHeadingElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLHeadingElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLHeadingElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLHeadingElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLHeadingElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLHeadingElement) value -> node.``align`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
@@ -6901,16 +6575,14 @@ let ``h4`` ops (modifiers: Typed.Modifier<Dom.HTMLHeadingElement> array) childre
     Typed.element ops (HtmlTag "h4") modifiers children
 
 module H4 =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLHeadingElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLHeadingElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLHeadingElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLHeadingElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLHeadingElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLHeadingElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLHeadingElement) value -> node.``align`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
@@ -6924,16 +6596,14 @@ let ``h5`` ops (modifiers: Typed.Modifier<Dom.HTMLHeadingElement> array) childre
     Typed.element ops (HtmlTag "h5") modifiers children
 
 module H5 =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLHeadingElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLHeadingElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLHeadingElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLHeadingElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLHeadingElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLHeadingElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLHeadingElement) value -> node.``align`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
@@ -6947,16 +6617,14 @@ let ``h6`` ops (modifiers: Typed.Modifier<Dom.HTMLHeadingElement> array) childre
     Typed.element ops (HtmlTag "h6") modifiers children
 
 module H6 =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLHeadingElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLHeadingElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLHeadingElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLHeadingElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLHeadingElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLHeadingElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLHeadingElement) value -> node.``align`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
@@ -7006,60 +6674,50 @@ let ``hr`` ops (modifiers: Typed.Modifier<Dom.HTMLHRElement> array) =
     Typed.element ops (HtmlTag "hr") modifiers [||]
 
 module Hr =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLHRElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLHRElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLHRElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLHRElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLHRElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLHRElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLHRElement) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
     let ``color`` (node: Dom.HTMLHRElement) : string =
-        Native.expando (box node) "color"
+        node.``color``
 
     let colorStatic (value: string) : Typed.Modifier<Dom.HTMLHRElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLHRElement) value -> Native.setExpando (box node) "color" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLHRElement) value -> node.``color`` <- value) value
 
     let colorReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLHRElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLHRElement) value -> Native.setExpando (box node) "color" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLHRElement) value -> node.``color`` <- value) read
 
-#if FABLE_COMPILER
     let ``noShade`` (node: Dom.HTMLHRElement) : bool =
-        Native.expando (box node) "noShade"
+        node.``noShade``
 
     let noShadeStatic (value: bool) : Typed.Modifier<Dom.HTMLHRElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLHRElement) value -> Native.setExpando (box node) "noShade" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLHRElement) value -> node.``noShade`` <- value) value
 
     let noShadeReactive (read: unit -> bool) : Typed.Modifier<Dom.HTMLHRElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLHRElement) value -> Native.setExpando (box node) "noShade" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLHRElement) value -> node.``noShade`` <- value) read
 
-#if FABLE_COMPILER
     let ``size`` (node: Dom.HTMLHRElement) : string =
-        Native.expando (box node) "size"
+        node.``size``
 
     let sizeStatic (value: string) : Typed.Modifier<Dom.HTMLHRElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLHRElement) value -> Native.setExpando (box node) "size" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLHRElement) value -> node.``size`` <- value) value
 
     let sizeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLHRElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLHRElement) value -> Native.setExpando (box node) "size" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLHRElement) value -> node.``size`` <- value) read
 
-#if FABLE_COMPILER
     let ``width`` (node: Dom.HTMLHRElement) : string =
-        Native.expando (box node) "width"
+        node.``width``
 
     let widthStatic (value: string) : Typed.Modifier<Dom.HTMLHRElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLHRElement) value -> Native.setExpando (box node) "width" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLHRElement) value -> node.``width`` <- value) value
 
     let widthReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLHRElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLHRElement) value -> Native.setExpando (box node) "width" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLHRElement) value -> node.``width`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLHRElement> =
@@ -7073,16 +6731,14 @@ let ``html`` ops (modifiers: Typed.Modifier<Dom.HTMLHtmlElement> array) children
     Typed.element ops (HtmlTag "html") modifiers children
 
 module Html =
-#if FABLE_COMPILER
     let ``version`` (node: Dom.HTMLHtmlElement) : string =
-        Native.expando (box node) "version"
+        node.``version``
 
     let versionStatic (value: string) : Typed.Modifier<Dom.HTMLHtmlElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLHtmlElement) value -> Native.setExpando (box node) "version" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLHtmlElement) value -> node.``version`` <- value) value
 
     let versionReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLHtmlElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLHtmlElement) value -> Native.setExpando (box node) "version" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLHtmlElement) value -> node.``version`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLHtmlElement> =
@@ -7857,27 +7513,23 @@ let ``ins`` ops (modifiers: Typed.Modifier<Dom.HTMLModElement> array) children =
     Typed.element ops (HtmlTag "ins") modifiers children
 
 module Ins =
-#if FABLE_COMPILER
     let ``cite`` (node: Dom.HTMLModElement) : string =
-        Native.expando (box node) "cite"
+        node.``cite``
 
     let citeStatic (value: string) : Typed.Modifier<Dom.HTMLModElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLModElement) value -> Native.setExpando (box node) "cite" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLModElement) value -> node.``cite`` <- value) value
 
     let citeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLModElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLModElement) value -> Native.setExpando (box node) "cite" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLModElement) value -> node.``cite`` <- value) read
 
-#if FABLE_COMPILER
     let ``dateTime`` (node: Dom.HTMLModElement) : string =
-        Native.expando (box node) "dateTime"
+        node.``dateTime``
 
     let dateTimeStatic (value: string) : Typed.Modifier<Dom.HTMLModElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLModElement) value -> Native.setExpando (box node) "dateTime" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLModElement) value -> node.``dateTime`` <- value) value
 
     let dateTimeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLModElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLModElement) value -> Native.setExpando (box node) "dateTime" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLModElement) value -> node.``dateTime`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLModElement> =
@@ -7984,185 +7636,149 @@ let ``link`` ops (modifiers: Typed.Modifier<Dom.HTMLLinkElement> array) =
     Typed.element ops (HtmlTag "link") modifiers [||]
 
 module Link =
-#if FABLE_COMPILER
     let ``as`` (node: Dom.HTMLLinkElement) : string =
-        Native.expando (box node) "as"
+        node.``as``
 
     let asStatic (value: string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "as" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``as`` <- value) value
 
     let asReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "as" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``as`` <- value) read
 
-#if FABLE_COMPILER
     let ``blocking`` (node: Dom.HTMLLinkElement) : Dom.DOMTokenList =
-        Native.expando (box node) "blocking"
-#endif
+        node.``blocking``
 
-#if FABLE_COMPILER
     let ``charset`` (node: Dom.HTMLLinkElement) : string =
-        Native.expando (box node) "charset"
+        node.``charset``
 
     let charsetStatic (value: string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "charset" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``charset`` <- value) value
 
     let charsetReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "charset" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``charset`` <- value) read
 
-#if FABLE_COMPILER
     let ``crossOrigin`` (node: Dom.HTMLLinkElement) : string =
-        Native.expando (box node) "crossOrigin"
+        node.``crossOrigin``
 
     let crossOriginStatic (value: string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "crossOrigin" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``crossOrigin`` <- value) value
 
     let crossOriginReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "crossOrigin" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``crossOrigin`` <- value) read
 
-#if FABLE_COMPILER
     let ``disabled`` (node: Dom.HTMLLinkElement) : bool =
-        Native.expando (box node) "disabled"
+        node.``disabled``
 
     let disabledStatic (value: bool) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "disabled" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``disabled`` <- value) value
 
     let disabledReactive (read: unit -> bool) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "disabled" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``disabled`` <- value) read
 
-#if FABLE_COMPILER
     let ``href`` (node: Dom.HTMLLinkElement) : string =
-        Native.expando (box node) "href"
+        node.``href``
 
     let hrefStatic (value: string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "href" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``href`` <- value) value
 
     let hrefReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "href" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``href`` <- value) read
 
-#if FABLE_COMPILER
     let ``hreflang`` (node: Dom.HTMLLinkElement) : string =
-        Native.expando (box node) "hreflang"
+        node.``hreflang``
 
     let hreflangStatic (value: string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "hreflang" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``hreflang`` <- value) value
 
     let hreflangReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "hreflang" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``hreflang`` <- value) read
 
-#if FABLE_COMPILER
     let ``imageSizes`` (node: Dom.HTMLLinkElement) : string =
-        Native.expando (box node) "imageSizes"
+        node.``imageSizes``
 
     let imageSizesStatic (value: string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "imageSizes" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``imageSizes`` <- value) value
 
     let imageSizesReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "imageSizes" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``imageSizes`` <- value) read
 
-#if FABLE_COMPILER
     let ``imageSrcset`` (node: Dom.HTMLLinkElement) : string =
-        Native.expando (box node) "imageSrcset"
+        node.``imageSrcset``
 
     let imageSrcsetStatic (value: string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "imageSrcset" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``imageSrcset`` <- value) value
 
     let imageSrcsetReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "imageSrcset" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``imageSrcset`` <- value) read
 
-#if FABLE_COMPILER
     let ``integrity`` (node: Dom.HTMLLinkElement) : string =
-        Native.expando (box node) "integrity"
+        node.``integrity``
 
     let integrityStatic (value: string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "integrity" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``integrity`` <- value) value
 
     let integrityReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "integrity" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``integrity`` <- value) read
 
-#if FABLE_COMPILER
     let ``media`` (node: Dom.HTMLLinkElement) : string =
-        Native.expando (box node) "media"
+        node.``media``
 
     let mediaStatic (value: string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "media" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``media`` <- value) value
 
     let mediaReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "media" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``media`` <- value) read
 
-#if FABLE_COMPILER
     let ``referrerPolicy`` (node: Dom.HTMLLinkElement) : string =
-        Native.expando (box node) "referrerPolicy"
+        node.``referrerPolicy``
 
     let referrerPolicyStatic (value: string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "referrerPolicy" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``referrerPolicy`` <- value) value
 
     let referrerPolicyReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "referrerPolicy" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``referrerPolicy`` <- value) read
 
-#if FABLE_COMPILER
     let ``rel`` (node: Dom.HTMLLinkElement) : string =
-        Native.expando (box node) "rel"
+        node.``rel``
 
     let relStatic (value: string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "rel" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``rel`` <- value) value
 
     let relReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "rel" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``rel`` <- value) read
 
-#if FABLE_COMPILER
     let ``relList`` (node: Dom.HTMLLinkElement) : Dom.DOMTokenList =
-        Native.expando (box node) "relList"
-#endif
+        node.``relList``
 
-#if FABLE_COMPILER
     let ``rev`` (node: Dom.HTMLLinkElement) : string =
-        Native.expando (box node) "rev"
+        node.``rev``
 
     let revStatic (value: string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "rev" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``rev`` <- value) value
 
     let revReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "rev" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``rev`` <- value) read
 
-#if FABLE_COMPILER
     let ``sizes`` (node: Dom.HTMLLinkElement) : Dom.DOMTokenList =
-        Native.expando (box node) "sizes"
-#endif
+        node.``sizes``
 
-#if FABLE_COMPILER
     let ``target`` (node: Dom.HTMLLinkElement) : string =
-        Native.expando (box node) "target"
+        node.``target``
 
     let targetStatic (value: string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "target" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``target`` <- value) value
 
     let targetReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "target" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``target`` <- value) read
 
-#if FABLE_COMPILER
     let ``type`` (node: Dom.HTMLLinkElement) : string =
-        Native.expando (box node) "type"
+        node.``type``
 
     let typeStatic (value: string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "type" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLLinkElement) value -> node.``type`` <- value) value
 
     let typeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLLinkElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> Native.setExpando (box node) "type" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLLinkElement) value -> node.``type`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLLinkElement> =
@@ -8188,21 +7804,17 @@ let ``map`` ops (modifiers: Typed.Modifier<Dom.HTMLMapElement> array) children =
     Typed.element ops (HtmlTag "map") modifiers children
 
 module Map =
-#if FABLE_COMPILER
     let ``areas`` (node: Dom.HTMLMapElement) : Dom.HTMLCollection =
-        Native.expando (box node) "areas"
-#endif
+        node.``areas``
 
-#if FABLE_COMPILER
     let ``name`` (node: Dom.HTMLMapElement) : string =
-        Native.expando (box node) "name"
+        node.``name``
 
     let nameStatic (value: string) : Typed.Modifier<Dom.HTMLMapElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLMapElement) value -> Native.setExpando (box node) "name" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLMapElement) value -> node.``name`` <- value) value
 
     let nameReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLMapElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLMapElement) value -> Native.setExpando (box node) "name" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLMapElement) value -> node.``name`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLMapElement> =
@@ -8228,16 +7840,14 @@ let ``menu`` ops (modifiers: Typed.Modifier<Dom.HTMLMenuElement> array) children
     Typed.element ops (HtmlTag "menu") modifiers children
 
 module Menu =
-#if FABLE_COMPILER
     let ``compact`` (node: Dom.HTMLMenuElement) : bool =
-        Native.expando (box node) "compact"
+        node.``compact``
 
     let compactStatic (value: bool) : Typed.Modifier<Dom.HTMLMenuElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLMenuElement) value -> Native.setExpando (box node) "compact" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLMenuElement) value -> node.``compact`` <- value) value
 
     let compactReactive (read: unit -> bool) : Typed.Modifier<Dom.HTMLMenuElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLMenuElement) value -> Native.setExpando (box node) "compact" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLMenuElement) value -> node.``compact`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLMenuElement> =
@@ -8251,60 +7861,50 @@ let ``meta`` ops (modifiers: Typed.Modifier<Dom.HTMLMetaElement> array) =
     Typed.element ops (HtmlTag "meta") modifiers [||]
 
 module Meta =
-#if FABLE_COMPILER
     let ``content`` (node: Dom.HTMLMetaElement) : string =
-        Native.expando (box node) "content"
+        node.``content``
 
     let contentStatic (value: string) : Typed.Modifier<Dom.HTMLMetaElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLMetaElement) value -> Native.setExpando (box node) "content" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLMetaElement) value -> node.``content`` <- value) value
 
     let contentReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLMetaElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLMetaElement) value -> Native.setExpando (box node) "content" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLMetaElement) value -> node.``content`` <- value) read
 
-#if FABLE_COMPILER
     let ``httpEquiv`` (node: Dom.HTMLMetaElement) : string =
-        Native.expando (box node) "httpEquiv"
+        node.``httpEquiv``
 
     let httpEquivStatic (value: string) : Typed.Modifier<Dom.HTMLMetaElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLMetaElement) value -> Native.setExpando (box node) "httpEquiv" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLMetaElement) value -> node.``httpEquiv`` <- value) value
 
     let httpEquivReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLMetaElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLMetaElement) value -> Native.setExpando (box node) "httpEquiv" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLMetaElement) value -> node.``httpEquiv`` <- value) read
 
-#if FABLE_COMPILER
     let ``media`` (node: Dom.HTMLMetaElement) : string =
-        Native.expando (box node) "media"
+        node.``media``
 
     let mediaStatic (value: string) : Typed.Modifier<Dom.HTMLMetaElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLMetaElement) value -> Native.setExpando (box node) "media" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLMetaElement) value -> node.``media`` <- value) value
 
     let mediaReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLMetaElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLMetaElement) value -> Native.setExpando (box node) "media" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLMetaElement) value -> node.``media`` <- value) read
 
-#if FABLE_COMPILER
     let ``name`` (node: Dom.HTMLMetaElement) : string =
-        Native.expando (box node) "name"
+        node.``name``
 
     let nameStatic (value: string) : Typed.Modifier<Dom.HTMLMetaElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLMetaElement) value -> Native.setExpando (box node) "name" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLMetaElement) value -> node.``name`` <- value) value
 
     let nameReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLMetaElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLMetaElement) value -> Native.setExpando (box node) "name" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLMetaElement) value -> node.``name`` <- value) read
 
-#if FABLE_COMPILER
     let ``scheme`` (node: Dom.HTMLMetaElement) : string =
-        Native.expando (box node) "scheme"
+        node.``scheme``
 
     let schemeStatic (value: string) : Typed.Modifier<Dom.HTMLMetaElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLMetaElement) value -> Native.setExpando (box node) "scheme" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLMetaElement) value -> node.``scheme`` <- value) value
 
     let schemeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLMetaElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLMetaElement) value -> Native.setExpando (box node) "scheme" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLMetaElement) value -> node.``scheme`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLMetaElement> =
@@ -8881,16 +8481,14 @@ let ``pre`` ops (modifiers: Typed.Modifier<Dom.HTMLPreElement> array) children =
     Typed.element ops (HtmlTag "pre") modifiers children
 
 module Pre =
-#if FABLE_COMPILER
-    let ``width`` (node: Dom.HTMLPreElement) : float =
-        Native.expando (box node) "width"
+    let ``width`` (node: Dom.HTMLPreElement) : int =
+        node.``width``
 
-    let widthStatic (value: float) : Typed.Modifier<Dom.HTMLPreElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLPreElement) value -> Native.setExpando (box node) "width" value) value
+    let widthStatic (value: int) : Typed.Modifier<Dom.HTMLPreElement> =
+        Typed.staticProperty (fun (node: Dom.HTMLPreElement) value -> node.``width`` <- value) value
 
-    let widthReactive (read: unit -> float) : Typed.Modifier<Dom.HTMLPreElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLPreElement) value -> Native.setExpando (box node) "width" value) read
-#endif
+    let widthReactive (read: unit -> int) : Typed.Modifier<Dom.HTMLPreElement> =
+        Typed.reactiveProperty (fun (node: Dom.HTMLPreElement) value -> node.``width`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLPreElement> =
@@ -8940,16 +8538,14 @@ let ``q`` ops (modifiers: Typed.Modifier<Dom.HTMLQuoteElement> array) children =
     Typed.element ops (HtmlTag "q") modifiers children
 
 module Q =
-#if FABLE_COMPILER
     let ``cite`` (node: Dom.HTMLQuoteElement) : string =
-        Native.expando (box node) "cite"
+        node.``cite``
 
     let citeStatic (value: string) : Typed.Modifier<Dom.HTMLQuoteElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLQuoteElement) value -> Native.setExpando (box node) "cite" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLQuoteElement) value -> node.``cite`` <- value) value
 
     let citeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLQuoteElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLQuoteElement) value -> Native.setExpando (box node) "cite" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLQuoteElement) value -> node.``cite`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLQuoteElement> =
@@ -9352,82 +8948,68 @@ let ``source`` ops (modifiers: Typed.Modifier<Dom.HTMLSourceElement> array) =
     Typed.element ops (HtmlTag "source") modifiers [||]
 
 module Source =
-#if FABLE_COMPILER
-    let ``height`` (node: Dom.HTMLSourceElement) : float =
-        Native.expando (box node) "height"
+    let ``height`` (node: Dom.HTMLSourceElement) : uint32 =
+        node.``height``
 
-    let heightStatic (value: float) : Typed.Modifier<Dom.HTMLSourceElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLSourceElement) value -> Native.setExpando (box node) "height" value) value
+    let heightStatic (value: uint32) : Typed.Modifier<Dom.HTMLSourceElement> =
+        Typed.staticProperty (fun (node: Dom.HTMLSourceElement) value -> node.``height`` <- value) value
 
-    let heightReactive (read: unit -> float) : Typed.Modifier<Dom.HTMLSourceElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLSourceElement) value -> Native.setExpando (box node) "height" value) read
-#endif
+    let heightReactive (read: unit -> uint32) : Typed.Modifier<Dom.HTMLSourceElement> =
+        Typed.reactiveProperty (fun (node: Dom.HTMLSourceElement) value -> node.``height`` <- value) read
 
-#if FABLE_COMPILER
     let ``media`` (node: Dom.HTMLSourceElement) : string =
-        Native.expando (box node) "media"
+        node.``media``
 
     let mediaStatic (value: string) : Typed.Modifier<Dom.HTMLSourceElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLSourceElement) value -> Native.setExpando (box node) "media" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLSourceElement) value -> node.``media`` <- value) value
 
     let mediaReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLSourceElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLSourceElement) value -> Native.setExpando (box node) "media" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLSourceElement) value -> node.``media`` <- value) read
 
-#if FABLE_COMPILER
     let ``sizes`` (node: Dom.HTMLSourceElement) : string =
-        Native.expando (box node) "sizes"
+        node.``sizes``
 
     let sizesStatic (value: string) : Typed.Modifier<Dom.HTMLSourceElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLSourceElement) value -> Native.setExpando (box node) "sizes" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLSourceElement) value -> node.``sizes`` <- value) value
 
     let sizesReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLSourceElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLSourceElement) value -> Native.setExpando (box node) "sizes" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLSourceElement) value -> node.``sizes`` <- value) read
 
-#if FABLE_COMPILER
     let ``src`` (node: Dom.HTMLSourceElement) : string =
-        Native.expando (box node) "src"
+        node.``src``
 
     let srcStatic (value: string) : Typed.Modifier<Dom.HTMLSourceElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLSourceElement) value -> Native.setExpando (box node) "src" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLSourceElement) value -> node.``src`` <- value) value
 
     let srcReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLSourceElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLSourceElement) value -> Native.setExpando (box node) "src" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLSourceElement) value -> node.``src`` <- value) read
 
-#if FABLE_COMPILER
     let ``srcset`` (node: Dom.HTMLSourceElement) : string =
-        Native.expando (box node) "srcset"
+        node.``srcset``
 
     let srcsetStatic (value: string) : Typed.Modifier<Dom.HTMLSourceElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLSourceElement) value -> Native.setExpando (box node) "srcset" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLSourceElement) value -> node.``srcset`` <- value) value
 
     let srcsetReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLSourceElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLSourceElement) value -> Native.setExpando (box node) "srcset" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLSourceElement) value -> node.``srcset`` <- value) read
 
-#if FABLE_COMPILER
     let ``type`` (node: Dom.HTMLSourceElement) : string =
-        Native.expando (box node) "type"
+        node.``type``
 
     let typeStatic (value: string) : Typed.Modifier<Dom.HTMLSourceElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLSourceElement) value -> Native.setExpando (box node) "type" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLSourceElement) value -> node.``type`` <- value) value
 
     let typeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLSourceElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLSourceElement) value -> Native.setExpando (box node) "type" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLSourceElement) value -> node.``type`` <- value) read
 
-#if FABLE_COMPILER
-    let ``width`` (node: Dom.HTMLSourceElement) : float =
-        Native.expando (box node) "width"
+    let ``width`` (node: Dom.HTMLSourceElement) : uint32 =
+        node.``width``
 
-    let widthStatic (value: float) : Typed.Modifier<Dom.HTMLSourceElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLSourceElement) value -> Native.setExpando (box node) "width" value) value
+    let widthStatic (value: uint32) : Typed.Modifier<Dom.HTMLSourceElement> =
+        Typed.staticProperty (fun (node: Dom.HTMLSourceElement) value -> node.``width`` <- value) value
 
-    let widthReactive (read: unit -> float) : Typed.Modifier<Dom.HTMLSourceElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLSourceElement) value -> Native.setExpando (box node) "width" value) read
-#endif
+    let widthReactive (read: unit -> uint32) : Typed.Modifier<Dom.HTMLSourceElement> =
+        Typed.reactiveProperty (fun (node: Dom.HTMLSourceElement) value -> node.``width`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLSourceElement> =
@@ -9465,43 +9047,35 @@ let ``style`` ops (modifiers: Typed.Modifier<Dom.HTMLStyleElement> array) childr
     Typed.element ops (HtmlTag "style") modifiers children
 
 module Style =
-#if FABLE_COMPILER
     let ``blocking`` (node: Dom.HTMLStyleElement) : Dom.DOMTokenList =
-        Native.expando (box node) "blocking"
-#endif
+        node.``blocking``
 
-#if FABLE_COMPILER
     let ``disabled`` (node: Dom.HTMLStyleElement) : bool =
-        Native.expando (box node) "disabled"
+        node.``disabled``
 
     let disabledStatic (value: bool) : Typed.Modifier<Dom.HTMLStyleElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLStyleElement) value -> Native.setExpando (box node) "disabled" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLStyleElement) value -> node.``disabled`` <- value) value
 
     let disabledReactive (read: unit -> bool) : Typed.Modifier<Dom.HTMLStyleElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLStyleElement) value -> Native.setExpando (box node) "disabled" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLStyleElement) value -> node.``disabled`` <- value) read
 
-#if FABLE_COMPILER
     let ``media`` (node: Dom.HTMLStyleElement) : string =
-        Native.expando (box node) "media"
+        node.``media``
 
     let mediaStatic (value: string) : Typed.Modifier<Dom.HTMLStyleElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLStyleElement) value -> Native.setExpando (box node) "media" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLStyleElement) value -> node.``media`` <- value) value
 
     let mediaReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLStyleElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLStyleElement) value -> Native.setExpando (box node) "media" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLStyleElement) value -> node.``media`` <- value) read
 
-#if FABLE_COMPILER
     let ``type`` (node: Dom.HTMLStyleElement) : string =
-        Native.expando (box node) "type"
+        node.``type``
 
     let typeStatic (value: string) : Typed.Modifier<Dom.HTMLStyleElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLStyleElement) value -> Native.setExpando (box node) "type" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLStyleElement) value -> node.``type`` <- value) value
 
     let typeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLStyleElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLStyleElement) value -> Native.setExpando (box node) "type" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLStyleElement) value -> node.``type`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLStyleElement> =
@@ -9551,129 +9125,101 @@ let ``table`` ops (modifiers: Typed.Modifier<Dom.HTMLTableElement> array) childr
     Typed.element ops (HtmlTag "table") modifiers children
 
 module Table =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLTableElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
     let ``bgColor`` (node: Dom.HTMLTableElement) : string =
-        Native.expando (box node) "bgColor"
+        node.``bgColor``
 
     let bgColorStatic (value: string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "bgColor" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> node.``bgColor`` <- value) value
 
     let bgColorReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "bgColor" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> node.``bgColor`` <- value) read
 
-#if FABLE_COMPILER
     let ``border`` (node: Dom.HTMLTableElement) : string =
-        Native.expando (box node) "border"
+        node.``border``
 
     let borderStatic (value: string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "border" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> node.``border`` <- value) value
 
     let borderReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "border" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> node.``border`` <- value) read
 
-#if FABLE_COMPILER
     let ``caption`` (node: Dom.HTMLTableElement) : Dom.HTMLTableCaptionElement =
-        Native.expando (box node) "caption"
-#endif
+        node.``caption``
 
-#if FABLE_COMPILER
     let ``cellPadding`` (node: Dom.HTMLTableElement) : string =
-        Native.expando (box node) "cellPadding"
+        node.``cellPadding``
 
     let cellPaddingStatic (value: string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "cellPadding" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> node.``cellPadding`` <- value) value
 
     let cellPaddingReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "cellPadding" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> node.``cellPadding`` <- value) read
 
-#if FABLE_COMPILER
     let ``cellSpacing`` (node: Dom.HTMLTableElement) : string =
-        Native.expando (box node) "cellSpacing"
+        node.``cellSpacing``
 
     let cellSpacingStatic (value: string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "cellSpacing" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> node.``cellSpacing`` <- value) value
 
     let cellSpacingReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "cellSpacing" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> node.``cellSpacing`` <- value) read
 
-#if FABLE_COMPILER
     let ``frame`` (node: Dom.HTMLTableElement) : string =
-        Native.expando (box node) "frame"
+        node.``frame``
 
     let frameStatic (value: string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "frame" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> node.``frame`` <- value) value
 
     let frameReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "frame" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> node.``frame`` <- value) read
 
-#if FABLE_COMPILER
     let ``rows`` (node: Dom.HTMLTableElement) : Dom.HTMLCollection =
-        Native.expando (box node) "rows"
-#endif
+        node.``rows``
 
-#if FABLE_COMPILER
     let ``rules`` (node: Dom.HTMLTableElement) : string =
-        Native.expando (box node) "rules"
+        node.``rules``
 
     let rulesStatic (value: string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "rules" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> node.``rules`` <- value) value
 
     let rulesReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "rules" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> node.``rules`` <- value) read
 
-#if FABLE_COMPILER
     let ``summary`` (node: Dom.HTMLTableElement) : string =
-        Native.expando (box node) "summary"
+        node.``summary``
 
     let summaryStatic (value: string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "summary" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> node.``summary`` <- value) value
 
     let summaryReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "summary" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> node.``summary`` <- value) read
 
-#if FABLE_COMPILER
     let ``tBodies`` (node: Dom.HTMLTableElement) : Dom.HTMLCollection =
-        Native.expando (box node) "tBodies"
-#endif
+        node.``tBodies``
 
-#if FABLE_COMPILER
     let ``tFoot`` (node: Dom.HTMLTableElement) : Dom.HTMLTableSectionElement =
-        Native.expando (box node) "tFoot"
-#endif
+        node.``tFoot``
 
-#if FABLE_COMPILER
     let ``tHead`` (node: Dom.HTMLTableElement) : Dom.HTMLTableSectionElement =
-        Native.expando (box node) "tHead"
-#endif
+        node.``tHead``
 
-#if FABLE_COMPILER
     let ``width`` (node: Dom.HTMLTableElement) : string =
-        Native.expando (box node) "width"
+        node.``width``
 
     let widthStatic (value: string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "width" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableElement) value -> node.``width`` <- value) value
 
     let widthReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> Native.setExpando (box node) "width" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableElement) value -> node.``width`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLTableElement> =
@@ -9687,54 +9233,44 @@ let ``tbody`` ops (modifiers: Typed.Modifier<Dom.HTMLTableSectionElement> array)
     Typed.element ops (HtmlTag "tbody") modifiers children
 
 module Tbody =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLTableSectionElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
     let ``ch`` (node: Dom.HTMLTableSectionElement) : string =
-        Native.expando (box node) "ch"
+        node.``ch``
 
     let chStatic (value: string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "ch" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``ch`` <- value) value
 
     let chReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "ch" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``ch`` <- value) read
 
-#if FABLE_COMPILER
     let ``chOff`` (node: Dom.HTMLTableSectionElement) : string =
-        Native.expando (box node) "chOff"
+        node.``chOff``
 
     let chOffStatic (value: string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "chOff" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``chOff`` <- value) value
 
     let chOffReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "chOff" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``chOff`` <- value) read
 
-#if FABLE_COMPILER
     let ``rows`` (node: Dom.HTMLTableSectionElement) : Dom.HTMLCollection =
-        Native.expando (box node) "rows"
-#endif
+        node.``rows``
 
-#if FABLE_COMPILER
     let ``vAlign`` (node: Dom.HTMLTableSectionElement) : string =
-        Native.expando (box node) "vAlign"
+        node.``vAlign``
 
     let vAlignStatic (value: string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "vAlign" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``vAlign`` <- value) value
 
     let vAlignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "vAlign" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``vAlign`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLTableSectionElement> =
@@ -9748,164 +9284,134 @@ let ``td`` ops (modifiers: Typed.Modifier<Dom.HTMLTableCellElement> array) child
     Typed.element ops (HtmlTag "td") modifiers children
 
 module Td =
-#if FABLE_COMPILER
     let ``abbr`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "abbr"
+        node.``abbr``
 
     let abbrStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "abbr" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``abbr`` <- value) value
 
     let abbrReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "abbr" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``abbr`` <- value) read
 
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
     let ``axis`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "axis"
+        node.``axis``
 
     let axisStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "axis" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``axis`` <- value) value
 
     let axisReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "axis" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``axis`` <- value) read
 
-#if FABLE_COMPILER
     let ``bgColor`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "bgColor"
+        node.``bgColor``
 
     let bgColorStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "bgColor" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``bgColor`` <- value) value
 
     let bgColorReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "bgColor" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``bgColor`` <- value) read
 
-#if FABLE_COMPILER
-    let ``cellIndex`` (node: Dom.HTMLTableCellElement) : float =
-        Native.expando (box node) "cellIndex"
-#endif
+    let ``cellIndex`` (node: Dom.HTMLTableCellElement) : int =
+        node.``cellIndex``
 
-#if FABLE_COMPILER
     let ``ch`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "ch"
+        node.``ch``
 
     let chStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "ch" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``ch`` <- value) value
 
     let chReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "ch" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``ch`` <- value) read
 
-#if FABLE_COMPILER
     let ``chOff`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "chOff"
+        node.``chOff``
 
     let chOffStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "chOff" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``chOff`` <- value) value
 
     let chOffReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "chOff" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``chOff`` <- value) read
 
-#if FABLE_COMPILER
-    let ``colSpan`` (node: Dom.HTMLTableCellElement) : float =
-        Native.expando (box node) "colSpan"
+    let ``colSpan`` (node: Dom.HTMLTableCellElement) : uint32 =
+        node.``colSpan``
 
-    let colSpanStatic (value: float) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "colSpan" value) value
+    let colSpanStatic (value: uint32) : Typed.Modifier<Dom.HTMLTableCellElement> =
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``colSpan`` <- value) value
 
-    let colSpanReactive (read: unit -> float) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "colSpan" value) read
-#endif
+    let colSpanReactive (read: unit -> uint32) : Typed.Modifier<Dom.HTMLTableCellElement> =
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``colSpan`` <- value) read
 
-#if FABLE_COMPILER
     let ``headers`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "headers"
+        node.``headers``
 
     let headersStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "headers" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``headers`` <- value) value
 
     let headersReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "headers" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``headers`` <- value) read
 
-#if FABLE_COMPILER
     let ``height`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "height"
+        node.``height``
 
     let heightStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "height" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``height`` <- value) value
 
     let heightReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "height" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``height`` <- value) read
 
-#if FABLE_COMPILER
     let ``noWrap`` (node: Dom.HTMLTableCellElement) : bool =
-        Native.expando (box node) "noWrap"
+        node.``noWrap``
 
     let noWrapStatic (value: bool) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "noWrap" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``noWrap`` <- value) value
 
     let noWrapReactive (read: unit -> bool) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "noWrap" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``noWrap`` <- value) read
 
-#if FABLE_COMPILER
-    let ``rowSpan`` (node: Dom.HTMLTableCellElement) : float =
-        Native.expando (box node) "rowSpan"
+    let ``rowSpan`` (node: Dom.HTMLTableCellElement) : uint32 =
+        node.``rowSpan``
 
-    let rowSpanStatic (value: float) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "rowSpan" value) value
+    let rowSpanStatic (value: uint32) : Typed.Modifier<Dom.HTMLTableCellElement> =
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``rowSpan`` <- value) value
 
-    let rowSpanReactive (read: unit -> float) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "rowSpan" value) read
-#endif
+    let rowSpanReactive (read: unit -> uint32) : Typed.Modifier<Dom.HTMLTableCellElement> =
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``rowSpan`` <- value) read
 
-#if FABLE_COMPILER
     let ``scope`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "scope"
+        node.``scope``
 
     let scopeStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "scope" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``scope`` <- value) value
 
     let scopeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "scope" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``scope`` <- value) read
 
-#if FABLE_COMPILER
     let ``vAlign`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "vAlign"
+        node.``vAlign``
 
     let vAlignStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "vAlign" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``vAlign`` <- value) value
 
     let vAlignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "vAlign" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``vAlign`` <- value) read
 
-#if FABLE_COMPILER
     let ``width`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "width"
+        node.``width``
 
     let widthStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "width" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``width`` <- value) value
 
     let widthReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "width" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``width`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLTableCellElement> =
@@ -10165,54 +9671,44 @@ let ``tfoot`` ops (modifiers: Typed.Modifier<Dom.HTMLTableSectionElement> array)
     Typed.element ops (HtmlTag "tfoot") modifiers children
 
 module Tfoot =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLTableSectionElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
     let ``ch`` (node: Dom.HTMLTableSectionElement) : string =
-        Native.expando (box node) "ch"
+        node.``ch``
 
     let chStatic (value: string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "ch" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``ch`` <- value) value
 
     let chReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "ch" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``ch`` <- value) read
 
-#if FABLE_COMPILER
     let ``chOff`` (node: Dom.HTMLTableSectionElement) : string =
-        Native.expando (box node) "chOff"
+        node.``chOff``
 
     let chOffStatic (value: string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "chOff" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``chOff`` <- value) value
 
     let chOffReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "chOff" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``chOff`` <- value) read
 
-#if FABLE_COMPILER
     let ``rows`` (node: Dom.HTMLTableSectionElement) : Dom.HTMLCollection =
-        Native.expando (box node) "rows"
-#endif
+        node.``rows``
 
-#if FABLE_COMPILER
     let ``vAlign`` (node: Dom.HTMLTableSectionElement) : string =
-        Native.expando (box node) "vAlign"
+        node.``vAlign``
 
     let vAlignStatic (value: string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "vAlign" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``vAlign`` <- value) value
 
     let vAlignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "vAlign" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``vAlign`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLTableSectionElement> =
@@ -10226,164 +9722,134 @@ let ``th`` ops (modifiers: Typed.Modifier<Dom.HTMLTableCellElement> array) child
     Typed.element ops (HtmlTag "th") modifiers children
 
 module Th =
-#if FABLE_COMPILER
     let ``abbr`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "abbr"
+        node.``abbr``
 
     let abbrStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "abbr" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``abbr`` <- value) value
 
     let abbrReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "abbr" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``abbr`` <- value) read
 
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
     let ``axis`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "axis"
+        node.``axis``
 
     let axisStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "axis" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``axis`` <- value) value
 
     let axisReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "axis" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``axis`` <- value) read
 
-#if FABLE_COMPILER
     let ``bgColor`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "bgColor"
+        node.``bgColor``
 
     let bgColorStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "bgColor" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``bgColor`` <- value) value
 
     let bgColorReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "bgColor" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``bgColor`` <- value) read
 
-#if FABLE_COMPILER
-    let ``cellIndex`` (node: Dom.HTMLTableCellElement) : float =
-        Native.expando (box node) "cellIndex"
-#endif
+    let ``cellIndex`` (node: Dom.HTMLTableCellElement) : int =
+        node.``cellIndex``
 
-#if FABLE_COMPILER
     let ``ch`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "ch"
+        node.``ch``
 
     let chStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "ch" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``ch`` <- value) value
 
     let chReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "ch" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``ch`` <- value) read
 
-#if FABLE_COMPILER
     let ``chOff`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "chOff"
+        node.``chOff``
 
     let chOffStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "chOff" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``chOff`` <- value) value
 
     let chOffReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "chOff" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``chOff`` <- value) read
 
-#if FABLE_COMPILER
-    let ``colSpan`` (node: Dom.HTMLTableCellElement) : float =
-        Native.expando (box node) "colSpan"
+    let ``colSpan`` (node: Dom.HTMLTableCellElement) : uint32 =
+        node.``colSpan``
 
-    let colSpanStatic (value: float) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "colSpan" value) value
+    let colSpanStatic (value: uint32) : Typed.Modifier<Dom.HTMLTableCellElement> =
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``colSpan`` <- value) value
 
-    let colSpanReactive (read: unit -> float) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "colSpan" value) read
-#endif
+    let colSpanReactive (read: unit -> uint32) : Typed.Modifier<Dom.HTMLTableCellElement> =
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``colSpan`` <- value) read
 
-#if FABLE_COMPILER
     let ``headers`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "headers"
+        node.``headers``
 
     let headersStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "headers" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``headers`` <- value) value
 
     let headersReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "headers" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``headers`` <- value) read
 
-#if FABLE_COMPILER
     let ``height`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "height"
+        node.``height``
 
     let heightStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "height" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``height`` <- value) value
 
     let heightReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "height" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``height`` <- value) read
 
-#if FABLE_COMPILER
     let ``noWrap`` (node: Dom.HTMLTableCellElement) : bool =
-        Native.expando (box node) "noWrap"
+        node.``noWrap``
 
     let noWrapStatic (value: bool) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "noWrap" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``noWrap`` <- value) value
 
     let noWrapReactive (read: unit -> bool) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "noWrap" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``noWrap`` <- value) read
 
-#if FABLE_COMPILER
-    let ``rowSpan`` (node: Dom.HTMLTableCellElement) : float =
-        Native.expando (box node) "rowSpan"
+    let ``rowSpan`` (node: Dom.HTMLTableCellElement) : uint32 =
+        node.``rowSpan``
 
-    let rowSpanStatic (value: float) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "rowSpan" value) value
+    let rowSpanStatic (value: uint32) : Typed.Modifier<Dom.HTMLTableCellElement> =
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``rowSpan`` <- value) value
 
-    let rowSpanReactive (read: unit -> float) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "rowSpan" value) read
-#endif
+    let rowSpanReactive (read: unit -> uint32) : Typed.Modifier<Dom.HTMLTableCellElement> =
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``rowSpan`` <- value) read
 
-#if FABLE_COMPILER
     let ``scope`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "scope"
+        node.``scope``
 
     let scopeStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "scope" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``scope`` <- value) value
 
     let scopeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "scope" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``scope`` <- value) read
 
-#if FABLE_COMPILER
     let ``vAlign`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "vAlign"
+        node.``vAlign``
 
     let vAlignStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "vAlign" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``vAlign`` <- value) value
 
     let vAlignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "vAlign" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``vAlign`` <- value) read
 
-#if FABLE_COMPILER
     let ``width`` (node: Dom.HTMLTableCellElement) : string =
-        Native.expando (box node) "width"
+        node.``width``
 
     let widthStatic (value: string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "width" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``width`` <- value) value
 
     let widthReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableCellElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> Native.setExpando (box node) "width" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableCellElement) value -> node.``width`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLTableCellElement> =
@@ -10397,54 +9863,44 @@ let ``thead`` ops (modifiers: Typed.Modifier<Dom.HTMLTableSectionElement> array)
     Typed.element ops (HtmlTag "thead") modifiers children
 
 module Thead =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLTableSectionElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
     let ``ch`` (node: Dom.HTMLTableSectionElement) : string =
-        Native.expando (box node) "ch"
+        node.``ch``
 
     let chStatic (value: string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "ch" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``ch`` <- value) value
 
     let chReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "ch" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``ch`` <- value) read
 
-#if FABLE_COMPILER
     let ``chOff`` (node: Dom.HTMLTableSectionElement) : string =
-        Native.expando (box node) "chOff"
+        node.``chOff``
 
     let chOffStatic (value: string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "chOff" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``chOff`` <- value) value
 
     let chOffReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "chOff" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``chOff`` <- value) read
 
-#if FABLE_COMPILER
     let ``rows`` (node: Dom.HTMLTableSectionElement) : Dom.HTMLCollection =
-        Native.expando (box node) "rows"
-#endif
+        node.``rows``
 
-#if FABLE_COMPILER
     let ``vAlign`` (node: Dom.HTMLTableSectionElement) : string =
-        Native.expando (box node) "vAlign"
+        node.``vAlign``
 
     let vAlignStatic (value: string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "vAlign" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``vAlign`` <- value) value
 
     let vAlignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableSectionElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> Native.setExpando (box node) "vAlign" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableSectionElement) value -> node.``vAlign`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLTableSectionElement> =
@@ -10458,16 +9914,14 @@ let ``time`` ops (modifiers: Typed.Modifier<Dom.HTMLTimeElement> array) children
     Typed.element ops (HtmlTag "time") modifiers children
 
 module Time =
-#if FABLE_COMPILER
     let ``dateTime`` (node: Dom.HTMLTimeElement) : string =
-        Native.expando (box node) "dateTime"
+        node.``dateTime``
 
     let dateTimeStatic (value: string) : Typed.Modifier<Dom.HTMLTimeElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTimeElement) value -> Native.setExpando (box node) "dateTime" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTimeElement) value -> node.``dateTime`` <- value) value
 
     let dateTimeReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTimeElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTimeElement) value -> Native.setExpando (box node) "dateTime" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTimeElement) value -> node.``dateTime`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLTimeElement> =
@@ -10481,16 +9935,14 @@ let ``title`` ops (modifiers: Typed.Modifier<Dom.HTMLTitleElement> array) childr
     Typed.element ops (HtmlTag "title") modifiers children
 
 module Title =
-#if FABLE_COMPILER
     let ``text`` (node: Dom.HTMLTitleElement) : string =
-        Native.expando (box node) "text"
+        node.``text``
 
     let textStatic (value: string) : Typed.Modifier<Dom.HTMLTitleElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTitleElement) value -> Native.setExpando (box node) "text" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTitleElement) value -> node.``text`` <- value) value
 
     let textReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTitleElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTitleElement) value -> Native.setExpando (box node) "text" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTitleElement) value -> node.``text`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLTitleElement> =
@@ -10504,75 +9956,59 @@ let ``tr`` ops (modifiers: Typed.Modifier<Dom.HTMLTableRowElement> array) childr
     Typed.element ops (HtmlTag "tr") modifiers children
 
 module Tr =
-#if FABLE_COMPILER
     let ``align`` (node: Dom.HTMLTableRowElement) : string =
-        Native.expando (box node) "align"
+        node.``align``
 
     let alignStatic (value: string) : Typed.Modifier<Dom.HTMLTableRowElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableRowElement) value -> Native.setExpando (box node) "align" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableRowElement) value -> node.``align`` <- value) value
 
     let alignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableRowElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableRowElement) value -> Native.setExpando (box node) "align" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableRowElement) value -> node.``align`` <- value) read
 
-#if FABLE_COMPILER
     let ``bgColor`` (node: Dom.HTMLTableRowElement) : string =
-        Native.expando (box node) "bgColor"
+        node.``bgColor``
 
     let bgColorStatic (value: string) : Typed.Modifier<Dom.HTMLTableRowElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableRowElement) value -> Native.setExpando (box node) "bgColor" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableRowElement) value -> node.``bgColor`` <- value) value
 
     let bgColorReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableRowElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableRowElement) value -> Native.setExpando (box node) "bgColor" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableRowElement) value -> node.``bgColor`` <- value) read
 
-#if FABLE_COMPILER
     let ``cells`` (node: Dom.HTMLTableRowElement) : Dom.HTMLCollection =
-        Native.expando (box node) "cells"
-#endif
+        node.``cells``
 
-#if FABLE_COMPILER
     let ``ch`` (node: Dom.HTMLTableRowElement) : string =
-        Native.expando (box node) "ch"
+        node.``ch``
 
     let chStatic (value: string) : Typed.Modifier<Dom.HTMLTableRowElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableRowElement) value -> Native.setExpando (box node) "ch" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableRowElement) value -> node.``ch`` <- value) value
 
     let chReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableRowElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableRowElement) value -> Native.setExpando (box node) "ch" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableRowElement) value -> node.``ch`` <- value) read
 
-#if FABLE_COMPILER
     let ``chOff`` (node: Dom.HTMLTableRowElement) : string =
-        Native.expando (box node) "chOff"
+        node.``chOff``
 
     let chOffStatic (value: string) : Typed.Modifier<Dom.HTMLTableRowElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableRowElement) value -> Native.setExpando (box node) "chOff" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableRowElement) value -> node.``chOff`` <- value) value
 
     let chOffReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableRowElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableRowElement) value -> Native.setExpando (box node) "chOff" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableRowElement) value -> node.``chOff`` <- value) read
 
-#if FABLE_COMPILER
-    let ``rowIndex`` (node: Dom.HTMLTableRowElement) : float =
-        Native.expando (box node) "rowIndex"
-#endif
+    let ``rowIndex`` (node: Dom.HTMLTableRowElement) : int =
+        node.``rowIndex``
 
-#if FABLE_COMPILER
-    let ``sectionRowIndex`` (node: Dom.HTMLTableRowElement) : float =
-        Native.expando (box node) "sectionRowIndex"
-#endif
+    let ``sectionRowIndex`` (node: Dom.HTMLTableRowElement) : int =
+        node.``sectionRowIndex``
 
-#if FABLE_COMPILER
     let ``vAlign`` (node: Dom.HTMLTableRowElement) : string =
-        Native.expando (box node) "vAlign"
+        node.``vAlign``
 
     let vAlignStatic (value: string) : Typed.Modifier<Dom.HTMLTableRowElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLTableRowElement) value -> Native.setExpando (box node) "vAlign" value) value
+        Typed.staticProperty (fun (node: Dom.HTMLTableRowElement) value -> node.``vAlign`` <- value) value
 
     let vAlignReactive (read: unit -> string) : Typed.Modifier<Dom.HTMLTableRowElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLTableRowElement) value -> Native.setExpando (box node) "vAlign" value) read
-#endif
+        Typed.reactiveProperty (fun (node: Dom.HTMLTableRowElement) value -> node.``vAlign`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLTableRowElement> =
