@@ -1,0 +1,59 @@
+name: Published shared API packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'Exact released cohort and matching fixture revision'
+        required: true
+        default: '0.1.2'
+        type: choice
+        options: ['0.1.2']
+
+permissions:
+  contents: read
+
+jobs:
+  shared-api:
+    name: Published shared (${{ matrix.trace }}, ${{ matrix.target }})
+    runs-on: windows-2025
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        trace: [normal, traced]
+        target: [native, browser]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - uses: actions/setup-node@v6
+        if: matrix.target == 'browser'
+        with:
+          node-version: '22'
+      - name: Test source, provenance and assertion guards
+        run: python -I tests/native-packages/test_published_shared_api.py
+      - name: Execute the released package-only shared fixture
+        run: >-
+          python tools/check-published-shared-api.py
+          --profile tests/native-packages/shared-api-${{ inputs.profile }}.json
+          --output "${{ runner.temp }}/published-shared-${{ matrix.trace }}-${{ matrix.target }}"
+          --variant ${{ matrix.trace }} --target ${{ matrix.target }}
+      - name: Preserve profile, source hashes, restore graph and execution evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: published-shared-${{ matrix.trace }}-${{ matrix.target }}
+          path: |
+            ${{ runner.temp }}/published-shared-${{ matrix.trace }}-${{ matrix.target }}/*.log
+            ${{ runner.temp }}/published-shared-${{ matrix.trace }}-${{ matrix.target }}/evidence.json
+            ${{ runner.temp }}/published-shared-${{ matrix.trace }}-${{ matrix.target }}/Consumer.fsproj
+            ${{ runner.temp }}/published-shared-${{ matrix.trace }}-${{ matrix.target }}/obj/project.assets.json
+          if-no-files-found: ignore
