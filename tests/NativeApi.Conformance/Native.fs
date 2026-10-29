@@ -32,6 +32,12 @@ let main _ =
     try
         let viewTables = ViewTables.run host.Document
         System.Console.WriteLine $"NATIVE_API D10_VIEW PASS assertions={viewTables}"
+        let viewHyperlinks = ViewHyperlinks.run host.Document
+
+        if viewHyperlinks <> 50 then
+            failwith "View hyperlink authoring assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API D11_VIEW_HYPERLINKS PASS assertions={viewHyperlinks}"
         let cssEscaping = CssEscaping.run host.Document
         System.Console.WriteLine $"NATIVE_API C05 PASS assertions={cssEscaping}"
         let cssQueries = CssQueries.forHost host
