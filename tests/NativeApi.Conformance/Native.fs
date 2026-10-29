@@ -129,6 +129,12 @@ let main _ =
         System.Console.WriteLine $"NATIVE_API D11 PASS assertions={reflection}"
         let namespaces = Namespaces.run host.Document (fun () -> host.Frame ())
         System.Console.WriteLine $"NATIVE_API D09 PASS assertions={namespaces}"
+        let viewportOperations = ElementOperations.viewport host.Document
+
+        if viewportOperations <> 30 then
+            failwith "Selected SVG viewport assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API D09_VIEWPORT PASS assertions={viewportOperations}"
         let svgStylesheets = Stylesheets.runSvg host.Document
         System.Console.WriteLine $"NATIVE_API SVG_CSSOM PASS assertions={svgStylesheets}"
         let stylesheets = Stylesheets.run host.Document
@@ -188,6 +194,26 @@ let main _ =
 
                     System.Console.WriteLine
                         $"NATIVE_API C10 CAPABILITY scopeRules={scopeRules} nestedDeclarations={nestedDeclarations} importContentsReadable={importContentsReadable}"
+
+                    let! semanticOperations, attachmentIdentifier =
+                        ElementOperations.semantic
+                            host.Document
+                            (fun () -> Async.Sleep 20)
+                            (fun () -> host.Frame ())
+                            (function
+                            | WebCoreDomException (name, _) -> name
+                            | error -> error.GetType().Name)
+                            (fun value -> if isNull value then "null" else "string")
+                            (if System.OperatingSystem.IsWindows () then
+                                 [ "string:" ]
+                             else
+                                 [ "string:"; "error:NotSupportedException" ])
+
+                    if semanticOperations <> 26 then
+                        failwith "Selected HTML operation assertions did not run"
+
+                    System.Console.WriteLine $"NATIVE_API D11_OPERATIONS PASS assertions={semanticOperations}"
+                    System.Console.WriteLine $"NATIVE_API D11 CAPABILITY attachmentIdentifier={attachmentIdentifier}"
 
                     let! checks =
                         SheetConstruction.run host.Document (fun () -> StyleSheets.forHost host) checkpoint computed
