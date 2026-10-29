@@ -12,7 +12,15 @@ browser runner and tool versions from that commit. Each restored View package mu
 same repository commit. A later release needs a new profile with its own fixture revision,
 versions and assertion totals; current development fixtures are never substituted.
 
-Each normal/traced native job executes all 685 shared assertions in JIT and NativeAOT,
+The independent `0.1.3` profile pins Views 0.1.3, backend alpha.3, Core DOM alpha.12,
+native preview.11 and the same CSS versions to release commit
+`e1c4cb6098c83a525d783a7e3b629a74570830c3`. It expects 1,086 native and 1,099 browser shared
+assertions, 25 native lifetime checks and four browser context checks. Its per-module map also
+rejects duplicate or compensating counts: C09 remains 44 on both targets, C10 is 91 native/93
+browser, and the hyperlink helper fixture remains 50. Its publication and official consumer
+results are recorded separately from the previously verified 0.1.2 cohort.
+
+For the 0.1.2 profile, each normal/traced native job executes all 685 shared assertions in JIT and NativeAOT,
 including 50 common hyperlink authoring checks, plus 17 lifetime checks, teardown and Tab
 traversal. Each browser job compiles the official package sources with Fickl and executes the
 same 685 shared assertions in Chromium, plus four provider context checks, Tab traversal and
@@ -50,6 +58,11 @@ and define `RANVIER_TRACE` in the project and Fickl invocation. `Fable.Core` kee
 The gate confirms that the native DOM compile asset is suppressed and exactly one browser
 `Ranvier.Dom.dll` is selected. Without this qualification, Fickl can choose the native DOM source
 graph, causing missing browser providers and CSS adapter type errors.
+
+For the 0.1.3 profile, select Views 0.1.3 and DOM alpha.12 in the same recipe; the CSS package
+versions remain unchanged. Both DOM references must use the same exact version and trace suffix.
+Neither profile claims the separate C06 Fable named-lookup collision cases discovered after the
+release fixtures were frozen. Those behavioral repairs remain in the acceptance project.
 
 ```powershell
 rtk dotnet fickl Consumer.fsproj --configuration Release --define RANVIER_TRACE --outDir generated --noPackageCache
