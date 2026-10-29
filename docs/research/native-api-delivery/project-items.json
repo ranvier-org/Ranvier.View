@@ -167,7 +167,7 @@
       "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/34",
       "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhiIE",
       "status": "In Progress",
-      "phase": "Implementation"
+      "phase": "Verification"
     },
     {
       "id": "C10",
@@ -988,7 +988,7 @@
       "url": "https://github.com/ranvier-org/Ranvier.View/pull/7",
       "projectItemId": "PVTI_lADOFMjhrc4BpT_wzhEhqvg",
       "groups": "D09, D10, D11, D12, C01, C02, C03, C04, C05, C06, C07, C08, C09, C10, C11, C18, C19, C21, C22, G06",
-      "status": "In Progress"
+      "status": "Done"
     },
     {
       "url": "https://github.com/ranvier-org/Ranvier.WebCore/pull/7",
