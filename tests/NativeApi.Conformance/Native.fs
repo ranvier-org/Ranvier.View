@@ -54,6 +54,7 @@ let private runAll () =
         failwith "SVG lifetime assertions did not run"
 
     System.Console.WriteLine $"NATIVE_API SVG LIFETIME PASS assertions={svgLifecycle}"
+    UserTimingNative.run ()
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
