@@ -752,7 +752,21 @@
         ]
       }
     ],
-    "harnessCorrection": "Initial evidence driver had incorrect marker spellings after actual native exit0. Actual logs and per-module guards validated without rerunning source."
+    "harnessCorrection": "Initial evidence driver had incorrect marker spellings after actual native exit0. Actual logs and per-module guards validated without rerunning source.",
+    "publish": {
+      "log": "C:\\wk\\rv-svg-values\\artifacts\\svg-aot-publish.log",
+      "sha256": "193afb3155b2b51f48ba64ce366683c7ca18dabc58d7b91e6fe980005eacf171",
+      "nativeCompilerMarker": "Generating native code",
+      "nativeCompilerMarkerPresent": true,
+      "nativeExecutable": "C:\\wk\\rv-svg-values\\artifacts\\svg-aot\\Native.exe",
+      "nativeExecutableBytes": 13510144,
+      "nativeExecutableSha256": "d119b6f638782a50af70d36f06d1241797b2c9efeda7eed9f0ff6e0df794d74d",
+      "peMachine": "AMD64",
+      "peOptionalHeader": "PE32+",
+      "clrHeaderRva": 0,
+      "clrHeaderSize": 0,
+      "managedNativeDllPresent": false
+    }
   },
   "qualifications": [
     "S04 SVGAnimatedBoolean is declared but has no selected returner in Native18. Its real preserveAlpha provider belongs to next Native19; full S04 stays open. Twenty-five added handle roots do not mean twenty-five reachable instances.",
