@@ -7,6 +7,7 @@ import { createRequire } from 'node:module';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), 'generated');
 const customPropertiesOnly = process.argv.includes('--custom-properties-only');
 const styleValuesOnly = process.argv.includes('--style-values-only');
+const styleMapsOnly = process.argv.includes('--style-maps-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
 const server = createServer(async (request, response) => {
@@ -39,7 +40,7 @@ try {
   const checks = await page.evaluate(async focused => {
     try {
       const fixture = await import('/Browser.js');
-      return await (focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : fixture.run());
+      return await (focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : fixture.run());
     } catch (error) {
       throw new Error(JSON.stringify({
         type: error?.constructor?.name,
@@ -50,8 +51,12 @@ try {
         fields: Object.fromEntries(Object.getOwnPropertyNames(error).filter(key => key !== 'stack').map(key => [key, error[key]])),
       }));
     }
-  }, styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
-  if (styleValuesOnly) {
+  }, styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
+  if (styleMapsOnly) {
+    if (checks.styleMaps !== 127 || checks.styleMapContext !== 3) throw new Error(`Typed-map shared/context assertions did not run: ${JSON.stringify(checks)}`);
+    console.log(`BROWSER_API C13 PASS assertions=${checks.styleMaps} engine=chromium`);
+    console.log(`BROWSER_API C13 CONTEXT PASS assertions=${checks.styleMapContext} engine=chromium`);
+  } else if (styleValuesOnly) {
     if (checks.styleValues !== 99 || checks.styleValueContext !== 3) throw new Error(`Typed-style shared/context assertions did not run: ${JSON.stringify(checks)}`);
     console.log(`BROWSER_API C14 PASS assertions=${checks.styleValues} engine=chromium`);
     console.log(`BROWSER_API C14 CONTEXT PASS assertions=${checks.styleValueContext} engine=chromium`);
@@ -62,6 +67,9 @@ try {
   console.log(`BROWSER_API C12 PASS assertions=${checks.customProperties} engine=chromium`);
   console.log(`BROWSER_API C12 CONTEXT PASS assertions=${checks.customPropertyContext} engine=chromium`);
   if (!customPropertiesOnly) {
+  if (checks.styleMaps !== 127 || checks.styleMapContext !== 3) throw new Error(`Typed-map shared/context assertions did not run: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API C13 PASS assertions=${checks.styleMaps} engine=chromium`);
+  console.log(`BROWSER_API C13 CONTEXT PASS assertions=${checks.styleMapContext} engine=chromium`);
   if (checks.styleValues !== 99 || checks.styleValueContext !== 3) throw new Error(`Typed-style shared/context assertions did not run: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API C14 PASS assertions=${checks.styleValues} engine=chromium`);
   console.log(`BROWSER_API C14 CONTEXT PASS assertions=${checks.styleValueContext} engine=chromium`);

@@ -59,6 +59,7 @@
         <Compile Include="CssQueries.fs" />
         <Compile Include="CustomProperties.fs" />
         <Compile Include="StyleValues.fs" />
+        <Compile Include="StyleMaps.fs" />
         <Compile Include="ComputedStyles.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />

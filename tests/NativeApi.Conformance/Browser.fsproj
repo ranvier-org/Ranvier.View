@@ -19,6 +19,7 @@
     <Compile Include="ComputedStyles.fs" />
     <Compile Include="CustomProperties.fs" />
     <Compile Include="StyleValues.fs" />
+    <Compile Include="StyleMaps.fs" />
     <Compile Include="TypedStyles.fs" />
     <Compile Include="FragmentRectangles.fs" />
     <Compile Include="FontTransitionRules.fs" />

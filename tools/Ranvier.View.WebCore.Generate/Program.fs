@@ -71,6 +71,7 @@ let private kinds =
             "MediaList", "Kind.MediaList"
             "CSSStyleValue", "Kind.StyleValue"
             "CSSVariableReferenceValue", "Kind.VariableReferenceValue"
+            "StylePropertyMapReadOnly", "Kind.StyleMap"
         ]
 
 [<EntryPoint>]

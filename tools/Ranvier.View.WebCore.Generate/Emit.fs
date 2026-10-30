@@ -260,7 +260,7 @@ let private runtimeQueries (model: JsonElement) =
     else
         [||]
 
-let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) (value: string) =
+let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) (value: string) (owner: string) =
     match classFor ctx managed with
     | None -> Error $"returns {name managed}, which has no class"
     | Some cls ->
@@ -293,12 +293,18 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                 else
                     $"({cls}(session, handle) :> NativeObject)"
 
+            let create =
+                if root = "StylePropertyMapReadOnly" then
+                    $"(let document = Interop.contextDocument this in let target = {create} in target.BindDocumentContext(document); target)"
+                else
+                    create
+
             Ok
-                $"(unbox<{name managed}> (this.Session.Object({value}, {kind}, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> {create}))))"
+                $"(unbox<{name managed}> (this.Session.Object({value}, {kind}, {owner}, System.Func<Session, nativeint, NativeObject>(fun session handle -> {create}))))"
         else
             Ok $"(this.Session.Track ({cls}(this.Session, {value})) :> {name managed})"
 
-let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (value: string) : Result<string, string> =
+let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (value: string) (owner: string) : Result<string, string> =
     let kind = Metadata.text "kind" mapping
     let plain = optionOf managed |> Option.defaultValue managed
 
@@ -309,6 +315,7 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
             expression
 
     match kind with
+    | "void" when plain = typeof<unit> -> Ok "()"
     | "bool" -> Ok $"({value} <> 0)"
     | "number" -> Ok $"{name plain} ({value})"
     | "string" ->
@@ -341,9 +348,23 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
         Ok $"(let handle = {value} in Native.{retain} handle |> ignore; unbox<{name plain}> (this.Session.{session} handle))"
     | "object" ->
         let root = Metadata.text "root" mapping |> snake
+        let stableOwner = if owner = "this" then "this" else "valueOwner"
 
-        wrappedObject ctx mapping plain "handle"
-        |> Result.map (fun wrapped -> $"(let handle = {value} in NativeDom.rv_dom_{root}_retain handle |> ignore; {wrapped})")
+        wrappedObject ctx mapping plain "handle" stableOwner
+        |> Result.map (fun wrapped ->
+            let capture =
+                if owner = "this" then
+                    ""
+                else
+                    $"let valueOwner = {owner} in "
+
+            let expression =
+                $"({capture}let handle = {value} in NativeDom.rv_dom_{root}_retain handle |> ignore; {wrapped})"
+
+            if mapping.GetProperty("nullable").GetBoolean() then
+                $"(if {value} = 0n then Unchecked.defaultof<{name plain}> else {expression})"
+            else
+                expression)
     | "sequence" when plain.IsArray ->
         let element = plain.GetElementType ()
         let mapping = (Metadata.items "subtypes" mapping)[0]
@@ -369,7 +390,7 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
             | "enum" -> "int"
             | _ -> name element
 
-        decoded ctx mapping element "item"
+        decoded ctx mapping element "item" owner
         |> Result.map (fun expression ->
             $"(Array.init {value}.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<{nativeType}>({value}.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<{nativeType}>())) in {expression}))")
     | "union" when FSharpType.IsUnion plain ->
@@ -387,7 +408,7 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
                     if fields.Length <> 1 then
                         Error $"Union arm {case.Name} lacks a single payload"
                     else
-                        decoded ctx arm fields[0].PropertyType $"{value}.arm{index}"
+                        decoded ctx arm fields[0].PropertyType $"{value}.arm{index}" owner
                         |> Result.map (fun expression -> $"| {index + 1} -> {name plain}.{ident case.Name} ({expression})"))
 
             match
@@ -458,7 +479,17 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
 
         let args =
             "Interop.handle (box this)"
-            :: (prepared |> List.collect snd)
+            :: ((if Metadata.hasText "contextReceiver" "Document" fn.Descriptor then
+                     [ "Interop.contextHandle this" ]
+                 else
+                     [])
+                @ (prepared |> List.collect snd))
+
+        let valueOwner =
+            if List.contains fn.Interface [ "StylePropertyMap"; "StylePropertyMapReadOnly" ] then
+                "Interop.contextDocument this"
+            else
+                "this"
 
         let call (outs: string list) =
             sprintf "NativeDom.%s (%s)" fn.Name (String.concat ", " (args @ outs))
@@ -516,7 +547,7 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
 
                 match result.FSharp with
                 | _ when resultKind = "union" || resultKind = "sequence" ->
-                    decoded ctx resultMapping returns "result"
+                    decoded ctx resultMapping returns "result" valueOwner
                     |> Result.map (fun expression ->
                         declare
                         @ [
@@ -527,7 +558,7 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
                             $"    NativeDom.{releaseContainer ctx resultMapping}(&result)"
                         ])
                 | "int&" when resultKind = "enum" ->
-                    decoded ctx resultMapping inner "result"
+                    decoded ctx resultMapping inner "result" valueOwner
                     |> Result.bind scalar
                 | "nativeint&" when result.C = "RvNode**" || result.C = "RvEvent**" ->
                     if not (isInterface ctx inner) then
@@ -544,7 +575,7 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
                         else
                             finish $"unbox<{name inner}> ({wrapped})"
                 | "nativeint&" ->
-                    wrappedObject ctx resultMapping inner "result"
+                    wrappedObject ctx resultMapping inner "result" "this"
                     |> Result.bind (fun created ->
                         if nullable then
                             finish $"(if result = 0n then None else Some {created})"

@@ -1,4 +1,4 @@
-125 classes; 1736 members: 1723 mapped to 1705 of 1725 rv_dom_* functions, 13 hand-written, 0 unmapped
+127 classes; 1749 members: 1736 mapped to 1718 of 1739 rv_dom_* functions, 13 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_css_register_property: DOMCSSNamespace.registerProperty (op)
@@ -20,6 +20,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_keyboard_event_get_key: KeyboardEvent.key (get)
   rv_dom_shadow_root_get_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (get)
   rv_dom_shadow_root_set_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (set)
+  rv_dom_style_property_map_read_only_entries: StylePropertyMapReadOnly.entries (op)
   rv_dom_window_get_computed_style: DOMWindow.getComputedStyle (op)
 
 Unmapped members by reason:
@@ -52,7 +53,7 @@ Members by class (mapped / hand-written / unmapped):
   CSSScopeRuleObject: 2 / 0 / 0
   CSSStyleDeclarationObject: 10 / 0 / 0
   CSSStylePropertiesObject: 2 / 0 / 0
-  CSSStyleRuleObject: 6 / 0 / 0
+  CSSStyleRuleObject: 7 / 0 / 0
   CSSStyleSheetObject: 8 / 0 / 0
   CSSStyleValueObject: 1 / 0 / 0
   CSSUnitValueObject: 3 / 0 / 0
@@ -69,7 +70,7 @@ Members by class (mapped / hand-written / unmapped):
   DOMTokenListObject: 10 / 0 / 0
   DocumentFragmentObject: 11 / 0 / 0
   DocumentObject: 70 / 0 / 0
-  ElementObject: 180 / 0 / 0
+  ElementObject: 181 / 0 / 0
   EventObject: 17 / 1 / 0
   EventTargetObject: 0 / 9 / 0
   FocusEventObject: 1 / 0 / 0
@@ -87,7 +88,7 @@ Members by class (mapped / hand-written / unmapped):
   HTMLDialogElementObject: 10 / 0 / 0
   HTMLDirectoryElementObject: 2 / 0 / 0
   HTMLDivElementObject: 2 / 0 / 0
-  HTMLElementObject: 67 / 0 / 0
+  HTMLElementObject: 68 / 0 / 0
   HTMLFieldSetElementObject: 13 / 0 / 0
   HTMLFontElementObject: 6 / 0 / 0
   HTMLFormElementObject: 28 / 0 / 0
@@ -132,7 +133,7 @@ Members by class (mapped / hand-written / unmapped):
   HTMLUListElementObject: 4 / 0 / 0
   InputEventObject: 2 / 2 / 0
   KeyboardEventObject: 12 / 1 / 0
-  MathMLElementObject: 10 / 0 / 0
+  MathMLElementObject: 11 / 0 / 0
   MediaListObject: 6 / 0 / 0
   MouseEventObject: 20 / 0 / 0
   NamedNodeMapObject: 8 / 0 / 0
@@ -141,9 +142,11 @@ Members by class (mapped / hand-written / unmapped):
   PointerEventObject: 14 / 0 / 0
   RadioNodeListObject: 2 / 0 / 0
   RangeObject: 26 / 0 / 0
-  SVGElementObject: 11 / 0 / 0
+  SVGElementObject: 12 / 0 / 0
   SVGStyleElementObject: 9 / 0 / 0
   ShadowRootObject: 18 / 0 / 0
+  StylePropertyMapObject: 4 / 0 / 0
+  StylePropertyMapReadOnlyObject: 4 / 0 / 0
   StyleSheetListObject: 3 / 0 / 0
   StyleSheetObject: 8 / 0 / 0
   TextObject: 3 / 0 / 0
