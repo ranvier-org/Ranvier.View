@@ -1,5 +1,5 @@
 ---
-last_commit_released: 09686e71a96976e6cd58f2e6d00410b763786775
+last_commit_released: f70985ccf8a33d8b435739e0d5cb71ed715d8abb
 updaters:
   - xml:
       file: Fable.Ranvier.Anime.fsproj
@@ -9,6 +9,14 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.2.0 - 2026-10-30
+
+### 🚀 Features
+
+* *(webcore)* Provide shared typed style maps (#16) ([f70985c](https://github.com/ranvier-org/Ranvier.View/commit/f70985ccf8a33d8b435739e0d5cb71ed715d8abb))
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/09686e71a96976e6cd58f2e6d00410b763786775..f70985ccf8a33d8b435739e0d5cb71ed715d8abb)</small></strong>
 
 ## 0.1.1 - 2026-10-28
 
