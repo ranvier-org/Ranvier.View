@@ -143,7 +143,8 @@ let private transformCall document =
                 "inactive"
 
         try
-            outcome + ":" + string(retained.toMatrix ()).e
+            let retainedX = (retained.toMatrix ()).e
+            outcome + ":" + string retainedX
         finally
             service.Dispose ())
 

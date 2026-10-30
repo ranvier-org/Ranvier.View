@@ -1,0 +1,252 @@
+{
+  "schemaVersion": 1,
+  "group": "C16",
+  "status": "private-cohort17-runtime-verification",
+  "canonicalNativeSource": "4091b07c5bff99d7acbe91c717165e7f94f40f81",
+  "nativePullRequest": "https://github.com/ranvier-org/Ranvier.WebCore/pull/127",
+  "abi": 25,
+  "cohort": {
+    "native": "0.1.0-preview.17",
+    "dom": "0.1.0-alpha.17",
+    "views": "0.1.7",
+    "backendSdl": "0.1.0-alpha.7"
+  },
+  "coreSourceCheckpoint": "386131572f2e43acb002692596cd2aead704de66",
+  "coreAllocationCheckpoint": "39243bdb620ec574a70ddeccc5f6c548852960f5",
+  "corePinnedCheckpoint": "06162703f92d2a7e80c8f429a91e70915b5fe764",
+  "viewsSourceCheckpoint": "5d52418e15a7fec9e5fa0fe07bd3fbe70e556949",
+  "viewsAllocationCheckpoint": "624c14f5bdb9861305e3d854feacc410613ef4e7",
+  "browserEngine": "Chromium156.0.8078.4",
+  "fableCompiler": "Fickl0.6.9/Fable5.24.0",
+  "canonicalSharedSourceSha256": "07a00eac135210b9c80cfe947612e9f7d3c9e697de8afda8ca517c4a6dd0b04b",
+  "compiledPackage": {
+    "file": "C:\\wk\\rv-transform-values\\artifacts\\c17-packages\\Fable.Ranvier.Dom.0.1.0-alpha.17.nupkg",
+    "sha256": "97fa04bc2a244adcfc86abc3dc0de217b81e3c2e87a38c73beadd50779133659",
+    "generatedSourceSha256": "07a00eac135210b9c80cfe947612e9f7d3c9e697de8afda8ca517c4a6dd0b04b",
+    "note": "Private DOM packages were built after allocation39243 before pin-only JSON commit061627; compiled source is identical to the final pinned canonical07a0."
+  },
+  "runs": [
+    {
+      "name": "jit-focused",
+      "log": "C:\\wk\\rv-transform-values\\artifacts\\c17-jit-focused.log",
+      "sha256": "7863097581e4b4921aebc28e999404e5230a8df496bf8e80a06d9f1df665afcb",
+      "exitCode": 0,
+      "shared": 471,
+      "nativeLifetime": 47,
+      "browserContext": 0,
+      "oracle": null,
+      "tabTraversal": false
+    },
+    {
+      "name": "aot-focused",
+      "log": "C:\\wk\\rv-transform-values\\artifacts\\c17-aot-focused.log",
+      "sha256": "2805621a62d7adae5f91033c4a2672a8af17be2da41dc3e7ad13b9842e0d5201",
+      "exitCode": 0,
+      "shared": 471,
+      "nativeLifetime": 47,
+      "browserContext": 0,
+      "oracle": null,
+      "tabTraversal": false
+    },
+    {
+      "name": "browser-focused-green",
+      "log": "C:\\wk\\rv-transform-values\\artifacts\\c17-browser-focused-green.log",
+      "sha256": "4079f71e9a8cd9238e4f54c6d4f5f4047e346258f9ffe2d8eb24e510167d003e",
+      "exitCode": 0,
+      "shared": 471,
+      "nativeLifetime": 0,
+      "browserContext": 3,
+      "oracle": null,
+      "tabTraversal": false
+    },
+    {
+      "name": "jit-combined",
+      "log": "C:\\wk\\rv-transform-values\\artifacts\\c17-jit-combined.log",
+      "sha256": "f54d706f5c3201b0d706759951d930e47e991a2895a29fc3ef26e26bdedf4555",
+      "exitCode": 0,
+      "shared": 3113,
+      "nativeLifetime": 183,
+      "browserContext": 0,
+      "oracle": null,
+      "tabTraversal": true
+    },
+    {
+      "name": "aot-combined",
+      "log": "C:\\wk\\rv-transform-values\\artifacts\\c17-aot-combined.log",
+      "sha256": "dd851f033844698c18473538e4540141fa1b1f5313bda6161a725f375ed7a852",
+      "exitCode": 0,
+      "shared": 3113,
+      "nativeLifetime": 183,
+      "browserContext": 0,
+      "oracle": null,
+      "tabTraversal": true
+    },
+    {
+      "name": "browser-combined",
+      "log": "C:\\wk\\rv-transform-values\\artifacts\\c17-browser-combined.log",
+      "sha256": "a208b522c05007dc8c10ccf55f45d7d10155df016ca3506e8efa6957eeac6884",
+      "exitCode": 0,
+      "shared": 3126,
+      "nativeLifetime": 0,
+      "browserContext": 22,
+      "oracle": 196609,
+      "tabTraversal": true
+    }
+  ],
+  "executedRuntimeChecks": [
+    {
+      "name": "jit",
+      "file": "C:\\wk\\rv-transform-values\\artifacts\\c17-jit-executed-runtime-hashes.json",
+      "sha256": "379401a5222cc3d53d6e8fae450971e07642406782518a66b31efd60a138054e",
+      "verifiedFileCount": 24,
+      "runtimeDlls": [
+        {
+          "path": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\JavaScriptCore.dll",
+          "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42"
+        },
+        {
+          "path": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\RanvierWebCoreHost.dll",
+          "sha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c"
+        },
+        {
+          "path": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\WebCore.dll",
+          "sha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f"
+        }
+      ]
+    },
+    {
+      "name": "aot",
+      "file": "C:\\wk\\rv-transform-values\\artifacts\\c17-aot-executed-runtime-hashes.json",
+      "sha256": "5b32dc6504138c5f6031615cf17a5474bf0514896fcfd642a8e87f75fad04db8",
+      "verifiedFileCount": 24,
+      "runtimeDlls": [
+        {
+          "path": "C:\\wk\\rv-transform-values\\artifacts\\c17-aot\\JavaScriptCore.dll",
+          "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42"
+        },
+        {
+          "path": "C:\\wk\\rv-transform-values\\artifacts\\c17-aot\\RanvierWebCoreHost.dll",
+          "sha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c"
+        },
+        {
+          "path": "C:\\wk\\rv-transform-values\\artifacts\\c17-aot\\WebCore.dll",
+          "sha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f"
+        }
+      ]
+    },
+    {
+      "name": "jit-combined",
+      "file": "C:\\wk\\rv-transform-values\\artifacts\\c17-jit-combined-executed-runtime-hashes.json",
+      "sha256": "379401a5222cc3d53d6e8fae450971e07642406782518a66b31efd60a138054e",
+      "verifiedFileCount": 24,
+      "runtimeDlls": [
+        {
+          "path": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\JavaScriptCore.dll",
+          "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42"
+        },
+        {
+          "path": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\RanvierWebCoreHost.dll",
+          "sha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c"
+        },
+        {
+          "path": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\WebCore.dll",
+          "sha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f"
+        }
+      ]
+    },
+    {
+      "name": "aot-combined",
+      "file": "C:\\wk\\rv-transform-values\\artifacts\\c17-aot-combined-executed-runtime-hashes.json",
+      "sha256": "5b32dc6504138c5f6031615cf17a5474bf0514896fcfd642a8e87f75fad04db8",
+      "verifiedFileCount": 24,
+      "runtimeDlls": [
+        {
+          "path": "C:\\wk\\rv-transform-values\\artifacts\\c17-aot\\JavaScriptCore.dll",
+          "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42"
+        },
+        {
+          "path": "C:\\wk\\rv-transform-values\\artifacts\\c17-aot\\RanvierWebCoreHost.dll",
+          "sha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c"
+        },
+        {
+          "path": "C:\\wk\\rv-transform-values\\artifacts\\c17-aot\\WebCore.dll",
+          "sha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f"
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "file": "C:\\wk\\rv-transform-values\\src\\Ranvier.View.WebCore\\TransformValues.fs",
+      "sha256": "de74dabd4e57b0399debf2309e03936b501a1780d05ab210d8cd1f322ecd15d6"
+    },
+    {
+      "file": "C:\\wk\\rv-transform-values\\tools\\Ranvier.View.WebCore.Generate\\Emit.fs",
+      "sha256": "6388c4c97e688dd449c1aecaf62ec49928bfffb8e14511839d9dd9c5eae354a6"
+    },
+    {
+      "file": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\TransformValues.fs",
+      "sha256": "67c5d1dd6b3a958f4785062042fa40ecc84b4de93e43d6cc5368844a80e7c447"
+    },
+    {
+      "file": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\TransformLifecycle.fs",
+      "sha256": "8c6555f13802d01a6cb71611c02c8f74704711519fd4a0883d5febb02fd3cff5"
+    },
+    {
+      "file": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\Browser.fs",
+      "sha256": "556c5fc4d0db9b73d98327ae41db7e715ecc75bb392fb62f23f08d20d067f123"
+    },
+    {
+      "file": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\Native.fs",
+      "sha256": "5bd962bec649ad4988a74cb2105103ab0b1250412b6d9e7a9e9bb40b0916db14"
+    },
+    {
+      "file": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\browser.mjs",
+      "sha256": "10c26d7bc18a986fbb9713d9e2c4e0f47aaa45f2dea0835ee4c1fe2d3ca8408c"
+    }
+  ],
+  "compiledArtifacts": [
+    {
+      "file": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\generated\\Browser.js",
+      "sha256": "28517502bf858b6f66ddd939ca393b75f0c733098785960d8f7006f707ccbf73"
+    },
+    {
+      "file": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\generated\\TransformValues.js",
+      "sha256": "318c6798c784748afd025c2b76fc93872def11eb9b16a383b22b002619580ef7"
+    },
+    {
+      "file": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\generated\\fable_modules\\Fable.Ranvier.Dom.0.1.0-alpha.17\\Generated\\Dom.fs.js",
+      "sha256": "d0a4ae2d754b67dabaa9cd3a4374f9cdbc901f7e31f2059076eb303f2d04188f"
+    },
+    {
+      "file": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\generated\\fable_modules\\Fable.Ranvier.Dom.0.1.0-alpha.17\\BrowserTransformValues.fs.js",
+      "sha256": "5bf80efd09443cd217f1311d6898fda8c3e9f3fab7799502562ad689d9b1a2ed"
+    },
+    {
+      "file": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Ranvier.Dom.dll",
+      "sha256": "640ee3c97264a90d2dba01ebc444829b3e580cfeb774779a57c1c86125ef1e8f"
+    },
+    {
+      "file": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Ranvier.WebCore.dll",
+      "sha256": "9309ee1927a9725428a78455de1c31c10ac60a81f32c92b81b8769aae1502e44"
+    },
+    {
+      "file": "C:\\wk\\rv-transform-values\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Ranvier.View.WebCore.dll",
+      "sha256": "5b49029352b6e64b1cbf29c129ed279363e612f854c5bf93e5068616a693d716"
+    },
+    {
+      "file": "C:\\wk\\rv-transform-values\\artifacts\\c17-aot\\Native.exe",
+      "sha256": "1b4be13ad8cf967c713a4252171dc43a0352ab089837197164e548c927f0d61c"
+    }
+  ],
+  "qualifications": [
+    "This is private Windows JIT/NativeAOT and Chromium execution, not official package or non-Windows/platform/profile acceptance.",
+    "Both false-owner matrix adapter paths are asserted: component perspective-none and 3D transform list; all sixteen output coefficients and independent-copy identities are preserved. Direct Chromium engine RED evidence remains in artifacts/c16-matrix-flag-probe.json.",
+    "Explicit two/three-argument overloads preserve present-null rejection after the original Fable option-erasure RED. No global strict-options flag was used.",
+    "All251 pre-existing generated class blocks remain unchanged; ten new classes and append-only component cache kind25 were added. Regeneration with cohort17 interop is byte-identical to both committed generated outputs.",
+    "Exact first-document cache binding is statically verified. Same-object getter identity across two live documents and post-provider-disposal context operations are directly tested; no reflection/test-only API was added.",
+    "NativeAOT publish retains existing FSharp.Core IL3053/IL2104 and SameValueZero IL2075 warnings.",
+    "Initial missing Playwright dependency path and analyzer bootstrap cache failures are preserved as diagnostics; browser used only the existing dependency path through a child environment. No build tools were installed.",
+    "No additional full conformance run is required for documentation/pin-only updates unless source code changes or a new concern appears."
+  ]
+}

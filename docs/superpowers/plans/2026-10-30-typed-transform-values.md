@@ -60,8 +60,16 @@ The final reserved cohort is Nativepreview17/ABI25, Core DOMalpha17, Views0.1.7/
 - [x] Prove service overloads, optional union shapes and validation helpers in Sage; persist documented Core contract and browser provider.
 - [x] Probe generated Fable reference arms; coordinate canonical null/brand/maximum-index guards with root.
 - [x] Implement native factories, append component ownership kind, regenerate wrappers and compare old bodies after independent review.
-- [ ] Wait for root's passing pushed producer source/runtime, then select a separate private package/runtime cache without changing release16 trees.
-- [ ] Shared component constructors/setters/serialization/is2D defaults, invalid-preservation, list ordering/indexing, toMatrix independence and typed-map/render effects.
-- [ ] Native thread/session/document/host/provider lifecycle and browser navigation; exact JIT/AOT/Chromium guards and executed binary/log hashes.
+- [x] Wait for root's passing pushed producer source/runtime, then select a separate private package/runtime cache without changing release16 trees.
+- [x] Shared component constructors/setters/serialization/is2D defaults, invalid-preservation, list ordering/indexing, toMatrix independence and typed-map/render effects.
+- [x] Native thread/session/document/host/provider lifecycle and browser navigation; exact JIT/AOT/Chromium guards and executed binary/log hashes.
 - [ ] Independent source/evidence review, required combined repository gates and bounded source checkpoints.
 - [ ] Official producer/consumer/platform/profile acceptance; C15/C17 and Anime remain outside this scope.
+
+## Final private ABI25 runtime checkpoint
+
+The pushed producer is4091b07c5bff99d7acbe91c717165e7f94f40f81 ([Native PR127](https://github.com/ranvier-org/Ranvier.WebCore/pull/127)). Canonical generated source07a00eac135210b9c80cfe947612e9f7d3c9e697de8afda8ca517c4a6dd0b04b passes Core formatting and matches the packaged/compiled browser source exactly. The final scoped adapter tests include perspective-none and an appended 3D transform list, asserting false matrix flags, all sixteen ordered coefficients and independent copies. Empty lists reject with the exact TypeError.
+
+Focused Windows JIT and NativeAOT pass471 shared assertions (450 component/matrix cases plus21 typed-map/render effects),47 native lifetime assertions and clean teardown. Packaged Fable Chromium156.0.8078.4 passes471 shared plus3 actual document-replacement checks. The single combined batch passes3113 shared/183 lifetime on both native modes and3126 shared/22 context in Chromium, alongside the existing196609 CSS oracle and Tab traversal. Every one of24 executed runtime files was SHA256-verified before each native run; no runtime source or binary changed between the focused and combined gates.
+
+The six exact logs, four executed-runtime manifests, actual source/package/compiled artifact digests, historical RED qualifications and private/public boundaries are in docs/research/native-api-delivery/typed-transform-values-runtime-evidence.json. Cohort17 regeneration with its own managed interop produces both committed outputs byte-for-byte. Core tests also pass1568 normal,95 C#,290 wire and1833 traced with13 existing skips. Required analyzer/build gates are recorded separately after completion. Official Native17/DOM17/Views0.1.7 and non-Windows/platform/profile acceptance remain open; no group is marked complete from these private checks.
