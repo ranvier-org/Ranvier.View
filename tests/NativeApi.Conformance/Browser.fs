@@ -121,6 +121,73 @@ let runMatrix () =
     }
     |> Async.StartAsPromise
 
+[<Emit("$0 instanceof CSSTransformValue")>]
+let private transformType (value: CSSStyleValue) : bool = jsNative
+
+[<Emit("$0 instanceof CSSTranslate")>]
+let private translateType (value: CSSTransformComponent) : bool = jsNative
+
+let private transformCall document =
+    let service = Ranvier.Dom.TransformValues.forDocument document
+    use values = Ranvier.Dom.StyleValues.forDocument document
+
+    let retained =
+        service.CreateTranslate (values.CreateUnit (7., "px"), values.CreateUnit (0., "px"))
+
+    System.Func<string>(fun () ->
+        let outcome =
+            try
+                service.CreateList [| retained |] |> ignore
+                "active"
+            with _ ->
+                "inactive"
+
+        try
+            outcome + ":" + string(retained.toMatrix ()).e
+        finally
+            service.Dispose ())
+
+/// <summary>Runs typed transform matrices, actual rendered effects and document-replacement ownership checks.</summary>
+let runTransforms () =
+    async {
+        let document = document ()
+
+        let count =
+            TransformValues.run
+                (fun () -> Ranvier.Dom.TransformValues.forDocument document)
+                (fun () -> Ranvier.Dom.StyleValues.forDocument document)
+                (fun () -> Geometry.forDocument document)
+                errorName
+
+        use transforms = Ranvier.Dom.TransformValues.forDocument document
+        use values = Ranvier.Dom.StyleValues.forDocument document
+        use maps = Ranvier.Dom.StyleMaps.forDocument document
+
+        let effects =
+            TransformValues.runEffects
+                document
+                transforms
+                values
+                maps
+                (fun () -> document.body.getBoundingClientRect () |> ignore)
+                transformType
+                translateType
+
+        let! context =
+            geometryDocumentLifetime transformCall
+            |> Async.AwaitPromise
+
+        if count <> 450 || effects <> 21 || context <> 3 then
+            failwith "Typed transform shared/effect/context assertions did not run"
+
+        return
+            {|
+                transformValues = count + effects
+                transformContext = context
+            |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("[$0 instanceof CSSImageValue, $0 instanceof CSSNumericValue]")>]
 let private styleValueSubtypes (value: CSSStyleValue) : bool * bool = jsNative
 
@@ -338,6 +405,7 @@ let run () =
         let document = document ()
         let! geometryProof = runGeometry () |> Async.AwaitPromise
         let! matrixProof = runMatrix () |> Async.AwaitPromise
+        let! transformProof = runTransforms () |> Async.AwaitPromise
         let cssEscaping = CssEscaping.run document
         let cssSupport = CssSupport.run (CssQueries.forDocument document)
 
@@ -495,6 +563,8 @@ let run () =
                 geometryContext = geometryProof.geometryContext
                 matrices = matrixProof.matrices
                 matrixContext = matrixProof.matrixContext
+                transformValues = transformProof.transformValues
+                transformContext = transformProof.transformContext
                 cascadeRules = cascadeRules
                 scopeRules = scopeRules
                 nestedDeclarations = nestedDeclarations

@@ -23,6 +23,8 @@
     <Compile Include="StyleMaps.fs" />
     <Compile Include="GeometryValues.fs" />
     <Compile Include="MatrixValues.fs" />
+    <Compile Include="TransformValues.fs" />
+    <Compile Include="TransformLifecycle.fs" />
     <Compile Include="MatrixLifecycle.fs" />
     <Compile Include="GeometryLifecycle.fs" />
     <Compile Include="StyleMapLifecycle.fs" />

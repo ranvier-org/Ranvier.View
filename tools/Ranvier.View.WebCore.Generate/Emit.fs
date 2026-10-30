@@ -206,9 +206,41 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
     | "float" -> scalar (numeric "float")
     | "float32" -> scalar (numeric "float32")
     | "nativeint" when p.C.StartsWith "Rv" && isInterface ctx inner ->
+        let transformInput =
+            List.contains
+                fn.Interface
+                [
+                    "CSSTransformValue"
+                    "CSSTransformComponent"
+                    "CSSTranslate"
+                    "CSSRotate"
+                    "CSSScale"
+                    "CSSSkew"
+                    "CSSSkewX"
+                    "CSSSkewY"
+                    "CSSPerspective"
+                    "CSSMatrixComponent"
+                ]
+
+        let reference value =
+            if transformInput then
+                match Metadata.text "root" mapping with
+                | "CSSStyleValue" -> $"Interop.valueHandle this.Session (box ({value}))"
+                | "CSSTransformComponent" -> $"Interop.transformHandle this.Session Kind.TransformComponent (box ({value}))"
+                | "DOMMatrixReadOnly" -> $"Interop.transformHandle this.Session Kind.Matrix (box ({value}))"
+                | _ -> $"Interop.handle (box ({value}))"
+            else
+                $"Interop.handle (box ({value}))"
+
         Ok (
             if nullable then
-                $"Interop.handleOr {v}"
+                if transformInput then
+                    let expression = reference "value"
+                    $"(match {v} with None -> 0n | Some value -> {expression})"
+                else
+                    $"Interop.handleOr {v}"
+            else if transformInput then
+                reference v
             else
                 $"Interop.handle (box {v})"
         )
@@ -595,7 +627,32 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
             | _ -> Error "unrecognised results"
 
         result
-        |> Result.map (fun lines -> preparation @ lines)
+        |> Result.map (fun lines ->
+            let lines = preparation @ lines
+
+            if
+                List.contains
+                    fn.Interface
+                    [
+                        "CSSTransformValue"
+                        "CSSTransformComponent"
+                        "CSSTranslate"
+                        "CSSRotate"
+                        "CSSScale"
+                        "CSSSkew"
+                        "CSSSkewX"
+                        "CSSSkewY"
+                        "CSSPerspective"
+                        "CSSMatrixComponent"
+                    ]
+            then
+                [ "try" ]
+                @ (lines |> List.map (fun line -> "    " + line))
+                @ [ "finally"; "    System.GC.KeepAlive this" ]
+                @ (parameters
+                   |> List.map (fun (value, _) -> $"    System.GC.KeepAlive (box {value})"))
+            else
+                lines)
 
 /// <summary>The ABI functions of a member, searched in the declaring interface, then the class and its bases.</summary>
 let private candidates (ctx: Context) (chain: Type list) (iface: Type) (memberName: string) (kind: string) =

@@ -59,6 +59,7 @@ let private kinds =
             "DOMRectReadOnly", "Kind.Rect"
             "DOMPointReadOnly", "Kind.Point"
             "DOMMatrixReadOnly", "Kind.Matrix"
+            "CSSTransformComponent", "Kind.TransformComponent"
             "DOMQuad", "Kind.Quad"
             "DOMRectList", "Kind.RectList"
             "NodeList", "Kind.NodeList"

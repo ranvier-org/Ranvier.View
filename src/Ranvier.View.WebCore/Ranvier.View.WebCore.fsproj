@@ -61,6 +61,7 @@
         <Compile Include="StyleValues.fs" />
         <Compile Include="StyleMaps.fs" />
         <Compile Include="Geometry.fs" />
+        <Compile Include="TransformValues.fs" />
         <Compile Include="ComputedStyles.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />

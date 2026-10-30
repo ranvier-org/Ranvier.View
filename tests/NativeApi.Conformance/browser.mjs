@@ -10,6 +10,7 @@ const styleValuesOnly = process.argv.includes('--style-values-only');
 const styleMapsOnly = process.argv.includes('--style-maps-only');
 const geometryOnly = process.argv.includes('--geometry-only');
 const matrixOnly = process.argv.includes('--matrix-only');
+const transformsOnly = process.argv.includes('--transforms-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
 const server = createServer(async (request, response) => {
@@ -42,7 +43,7 @@ try {
   const checks = await page.evaluate(async focused => {
     try {
       const fixture = await import('/Browser.js');
-      return await (focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : fixture.run());
+      return await (focused === 'transforms' ? fixture.runTransforms() : focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : fixture.run());
     } catch (error) {
       throw new Error(JSON.stringify({
         type: error?.constructor?.name,
@@ -53,8 +54,12 @@ try {
         fields: Object.fromEntries(Object.getOwnPropertyNames(error).filter(key => key !== 'stack').map(key => [key, error[key]])),
       }));
     }
-  }, matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
-  if (matrixOnly) {
+  }, transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
+  if (transformsOnly) {
+    if(checks.transformValues!==471 || checks.transformContext!==3) throw new Error(`Typed transform shared/context assertions did not run: ${JSON.stringify(checks)}`);
+    console.log(`BROWSER_API C16 PASS assertions=${checks.transformValues} engine=chromium`);
+    console.log(`BROWSER_API C16 CONTEXT PASS assertions=${checks.transformContext} engine=chromium`);
+  } else if (matrixOnly) {
     if(checks.matrices!==710 || checks.matrixContext!==3) throw new Error(`Matrix shared/context assertions did not run: ${JSON.stringify(checks)}`);
     console.log(`BROWSER_API G08 PASS assertions=${checks.matrices} engine=chromium`);
     console.log(`BROWSER_API G08 CONTEXT PASS assertions=${checks.matrixContext} engine=chromium`);
@@ -77,6 +82,9 @@ try {
   console.log(`BROWSER_API C12 PASS assertions=${checks.customProperties} engine=chromium`);
   console.log(`BROWSER_API C12 CONTEXT PASS assertions=${checks.customPropertyContext} engine=chromium`);
   if (!customPropertiesOnly) {
+  if(checks.transformValues!==471 || checks.transformContext!==3) throw new Error(`Typed transform shared/context assertions did not run: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API C16 PASS assertions=${checks.transformValues} engine=chromium`);
+  console.log(`BROWSER_API C16 CONTEXT PASS assertions=${checks.transformContext} engine=chromium`);
   if(checks.matrices!==710 || checks.matrixContext!==3) throw new Error(`Matrix shared/context assertions did not run: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API G08 PASS assertions=${checks.matrices} engine=chromium`);
   console.log(`BROWSER_API G08 CONTEXT PASS assertions=${checks.matrixContext} engine=chromium`);

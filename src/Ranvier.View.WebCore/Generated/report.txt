@@ -1,12 +1,22 @@
-133 classes; 1922 members: 1909 mapped to 1839 of 1875 rv_dom_* functions, 13 hand-written, 0 unmapped
+143 classes; 1963 members: 1950 mapped to 1880 of 1926 rv_dom_* functions, 13 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
+  rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
+  rv_dom_css_perspective_create: CSSPerspective.constructor (op)
   rv_dom_css_register_property: DOMCSSNamespace.registerProperty (op)
+  rv_dom_css_rotate_create_1: CSSRotate.constructor (op)
+  rv_dom_css_rotate_create_4: CSSRotate.constructor (op)
+  rv_dom_css_scale_create: CSSScale.constructor (op)
+  rv_dom_css_skew_create: CSSSkew.constructor (op)
+  rv_dom_css_skew_x_create: CSSSkewX.constructor (op)
+  rv_dom_css_skew_y_create: CSSSkewY.constructor (op)
   rv_dom_css_style_sheet_create: CSSStyleSheet.constructor (op)
   rv_dom_css_style_value_parse: CSSStyleValue.parse (op)
   rv_dom_css_style_value_parse_all: CSSStyleValue.parseAll (op)
   rv_dom_css_supports_1: DOMCSSNamespace.supports (op)
   rv_dom_css_supports_2: DOMCSSNamespace.supports (op)
+  rv_dom_css_transform_value_create: CSSTransformValue.constructor (op)
+  rv_dom_css_translate_create: CSSTranslate.constructor (op)
   rv_dom_css_unit_value_create: CSSUnitValue.constructor (op)
   rv_dom_css_unparsed_value_create: CSSUnparsedValue.constructor (op)
   rv_dom_cssom_keyword_value_create: CSSOMKeywordValue.constructor (op)
@@ -57,20 +67,30 @@ Members by class (mapped / hand-written / unmapped):
   CSSKeywordValueObject: 2 / 0 / 0
   CSSLayerBlockRuleObject: 1 / 0 / 0
   CSSLayerStatementRuleObject: 1 / 0 / 0
+  CSSMatrixComponentObject: 2 / 0 / 0
   CSSMediaRuleObject: 1 / 0 / 0
   CSSNamespaceRuleObject: 2 / 0 / 0
   CSSNestedDeclarationsObject: 1 / 0 / 0
+  CSSPerspectiveObject: 2 / 0 / 0
   CSSPositionTryDescriptorsObject: 140 / 0 / 0
   CSSPositionTryRuleObject: 2 / 0 / 0
   CSSPropertyRuleObject: 4 / 0 / 0
+  CSSRotateObject: 8 / 0 / 0
   CSSRuleListObject: 2 / 0 / 0
   CSSRuleObject: 5 / 0 / 0
+  CSSScaleObject: 6 / 0 / 0
   CSSScopeRuleObject: 2 / 0 / 0
+  CSSSkewObject: 4 / 0 / 0
+  CSSSkewXObject: 2 / 0 / 0
+  CSSSkewYObject: 2 / 0 / 0
   CSSStyleDeclarationObject: 10 / 0 / 0
   CSSStylePropertiesObject: 2 / 0 / 0
   CSSStyleRuleObject: 7 / 0 / 0
   CSSStyleSheetObject: 8 / 0 / 0
   CSSStyleValueObject: 1 / 0 / 0
+  CSSTransformComponentObject: 4 / 0 / 0
+  CSSTransformValueObject: 5 / 0 / 0
+  CSSTranslateObject: 6 / 0 / 0
   CSSUnitValueObject: 3 / 0 / 0
   CSSUnparsedValueObject: 4 / 0 / 0
   CSSVariableReferenceValueObject: 3 / 0 / 0
