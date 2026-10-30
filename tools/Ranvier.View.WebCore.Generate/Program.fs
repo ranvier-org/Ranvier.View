@@ -58,6 +58,7 @@ let private kinds =
             "DOMSelection", "Kind.Selection"
             "DOMRectReadOnly", "Kind.Rect"
             "DOMPointReadOnly", "Kind.Point"
+            "DOMMatrixReadOnly", "Kind.Matrix"
             "DOMQuad", "Kind.Quad"
             "DOMRectList", "Kind.RectList"
             "NodeList", "Kind.NodeList"

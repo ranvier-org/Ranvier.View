@@ -65,28 +65,18 @@ let run (create: unit -> GeometryService) (mutableKinds: obj -> bool * bool) (er
     explicitPoint.w <- Double.NaN
     point "all point setters" (fractional, Double.NegativeInfinity, -0., Double.NaN) explicitPoint
 
-    let partial =
-        { DOMPointInit.Empty with
-            X = Some 6.
-            W = Some 0.
-        }
+    let partial = DOMPointInit (x = 6., w = 0.)
 
     point "partial point dictionary" (6., 0., 0., 0.) (service.PointFrom partial)
     point "readonly point dictionary" (6., 0., 0., 0.) (service.ReadOnlyPointFrom partial)
-    point "empty point dictionary" (0., 0., 0., 1.) (service.PointFrom DOMPointInit.Empty)
+    point "empty point dictionary" (0., 0., 0., 1.) (service.PointFrom (DOMPointInit ()))
     point "null point dictionary" (0., 0., 0., 1.) (service.PointFrom Unchecked.defaultof<_>)
     point "readonly null point dictionary" (0., 0., 0., 1.) (service.ReadOnlyPointFrom Unchecked.defaultof<_>)
 
     point
         "unrestricted point dictionary"
         (Double.NaN, -0., Double.PositiveInfinity, Double.NegativeInfinity)
-        (service.PointFrom
-            {
-                X = Some Double.NaN
-                Y = Some -0.
-                Z = Some Double.PositiveInfinity
-                W = Some Double.NegativeInfinity
-            })
+        (service.PointFrom (DOMPointInit (x = Double.NaN, y = -0., z = Double.PositiveInfinity, w = Double.NegativeInfinity)))
 
     let emptyRect = service.CreateRect ()
     rect "rectangle defaults" (0., 0., 0., 0.) emptyRect
@@ -187,7 +177,7 @@ let run (create: unit -> GeometryService) (mutableKinds: obj -> bool * bool) (er
     number "quad dictionary construction copies" 6. copy.p2.x
 
     let constructorQuad =
-        service.CreateQuad (p1 = partial, p3 = { DOMPointInit.Empty with Z = Some 8. }, p4 = Unchecked.defaultof<_>)
+        service.CreateQuad (p1 = partial, p3 = DOMPointInit (z = 8.), p4 = Unchecked.defaultof<_>)
 
     point "quad constructor partial" (6., 0., 0., 0.) constructorQuad.p1
     point "quad constructor omitted" (0., 0., 0., 1.) constructorQuad.p2

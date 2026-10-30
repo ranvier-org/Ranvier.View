@@ -38,7 +38,7 @@ let run () =
     try
         let point = service.CreatePoint (x = 7.)
         let rect = service.CreateRect (width = 8.)
-        let quad = service.CreateQuad (p1 = { DOMPointInit.Empty with X = Some 9. })
+        let quad = service.CreateQuad (p1 = DOMPointInit (x = 9.))
         let corner = quad.p1
 
         let mutable createError, readError, writeError, disposeError =

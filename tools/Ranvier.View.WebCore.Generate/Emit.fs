@@ -215,6 +215,7 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
     | "int[]" when nullable && inner = typeof<bool> -> Ok $"(match {v} with Some x -> [| (if x then 1 else 0) |] | None -> null)"
     | "int[]" when nullable && numericType inner -> Ok $"(match {v} with Some x -> [| int x |] | None -> null)"
     | "uint32[]" when nullable && numericType inner -> Ok $"(match {v} with Some x -> [| uint32 x |] | None -> null)"
+    | "float[]" when nullable && numericType inner -> Ok $"(match {v} with Some x -> [| float x |] | None -> null)"
     | container when
         container.EndsWith "[]"
         && container.StartsWith "RvDom"
@@ -295,7 +296,10 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                     $"({cls}(session, handle) :> NativeObject)"
 
             let create =
-                if root = "StylePropertyMapReadOnly" then
+                if
+                    root = "StylePropertyMapReadOnly"
+                    || root = "DOMMatrixReadOnly"
+                then
                     $"(let document = Interop.contextDocument this in let target = {create} in target.BindDocumentContext(document); target)"
                 else
                     create

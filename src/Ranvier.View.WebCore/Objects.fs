@@ -81,6 +81,9 @@ module internal Kind =
     [<Literal>]
     let Quad = 23
 
+    [<Literal>]
+    let Matrix = 24
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -218,6 +221,7 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.StyleMap -> NativeDom.rv_dom_style_property_map_read_only_release handle
         | Kind.Point -> NativeDom.rv_dom_dom_point_read_only_release handle
         | Kind.Quad -> NativeDom.rv_dom_dom_quad_release handle
+        | Kind.Matrix -> NativeDom.rv_dom_dom_matrix_read_only_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =

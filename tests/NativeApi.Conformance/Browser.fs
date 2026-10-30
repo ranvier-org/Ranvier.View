@@ -25,6 +25,9 @@ let private disposalError (error: exn) : string = jsNative
 [<Emit("[$0 instanceof DOMRect, $0 instanceof DOMPoint]")>]
 let private geometryKinds (value: obj) : bool * bool = jsNative
 
+[<Emit("$0 instanceof DOMMatrix")>]
+let private mutableMatrix (value: DOMMatrixReadOnly) : bool = jsNative
+
 [<Emit("""(async () => {
     const frame=document.createElement('iframe');
     try {
@@ -76,6 +79,44 @@ let runGeometry () =
             {|
                 geometry = count
                 geometryContext = context
+            |}
+    }
+    |> Async.StartAsPromise
+
+let private matrixCall document =
+    let service = Geometry.forDocument document
+    let retained = service.CreateMatrix ("translate(7px)")
+
+    System.Func<string>(fun () ->
+        let outcome =
+            try
+                service.CreateMatrix () |> ignore
+                "active"
+            with _ ->
+                "inactive"
+
+        try
+            outcome + ":" + string retained.e
+        finally
+            service.Dispose ())
+
+/// <summary>Runs actual browser matrix operations and document-replacement context checks.</summary>
+let runMatrix () =
+    async {
+        let count =
+            MatrixValues.run (fun () -> Geometry.forDocument (document ())) mutableMatrix errorName "Error"
+
+        let! context =
+            geometryDocumentLifetime matrixCall
+            |> Async.AwaitPromise
+
+        if count <> 710 || context <> 3 then
+            failwith "Matrix shared/context assertions did not run"
+
+        return
+            {|
+                matrices = count
+                matrixContext = context
             |}
     }
     |> Async.StartAsPromise
@@ -296,6 +337,7 @@ let run () =
     async {
         let document = document ()
         let! geometryProof = runGeometry () |> Async.AwaitPromise
+        let! matrixProof = runMatrix () |> Async.AwaitPromise
         let cssEscaping = CssEscaping.run document
         let cssSupport = CssSupport.run (CssQueries.forDocument document)
 
@@ -451,6 +493,8 @@ let run () =
             {|
                 geometry = geometryProof.geometry
                 geometryContext = geometryProof.geometryContext
+                matrices = matrixProof.matrices
+                matrixContext = matrixProof.matrixContext
                 cascadeRules = cascadeRules
                 scopeRules = scopeRules
                 nestedDeclarations = nestedDeclarations

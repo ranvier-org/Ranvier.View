@@ -21,6 +21,7 @@
     <Compile Include="StyleValues.fs" />
     <Compile Include="StyleMaps.fs" />
     <Compile Include="GeometryValues.fs" />
+    <Compile Include="MatrixValues.fs" />
     <Compile Include="TypedStyles.fs" />
     <Compile Include="FragmentRectangles.fs" />
     <Compile Include="FontTransitionRules.fs" />

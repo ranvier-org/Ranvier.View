@@ -1,4 +1,4 @@
-131 classes; 1786 members: 1773 mapped to 1743 of 1775 rv_dom_* functions, 13 hand-written, 0 unmapped
+133 classes; 1922 members: 1909 mapped to 1839 of 1875 rv_dom_* functions, 13 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_css_register_property: DOMCSSNamespace.registerProperty (op)
@@ -13,6 +13,10 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_cssom_variable_reference_value_create: CSSOMVariableReferenceValue.constructor (op)
   rv_dom_document_get_adopted_style_sheets: Document.adoptedStyleSheets (get)
   rv_dom_document_set_adopted_style_sheets: Document.adoptedStyleSheets (set)
+  rv_dom_dom_matrix_create: DOMMatrix.constructor (op)
+  rv_dom_dom_matrix_from_matrix: DOMMatrix.fromMatrix (op)
+  rv_dom_dom_matrix_read_only_create: DOMMatrixReadOnly.constructor (op)
+  rv_dom_dom_matrix_read_only_from_matrix: DOMMatrixReadOnly.fromMatrix (op)
   rv_dom_dom_point_create: DOMPoint.constructor (op)
   rv_dom_dom_point_from_point: DOMPoint.fromPoint (op)
   rv_dom_dom_point_read_only_create: DOMPointReadOnly.constructor (op)
@@ -74,8 +78,10 @@ Members by class (mapped / hand-written / unmapped):
   CharacterDataObject: 14 / 0 / 0
   CompositionEventObject: 1 / 0 / 0
   DOMImplementationObject: 2 / 0 / 0
-  DOMPointObject: 12 / 0 / 0
-  DOMPointReadOnlyObject: 4 / 0 / 0
+  DOMMatrixObject: 95 / 0 / 0
+  DOMMatrixReadOnlyObject: 39 / 0 / 0
+  DOMPointObject: 13 / 0 / 0
+  DOMPointReadOnlyObject: 5 / 0 / 0
   DOMQuadObject: 5 / 0 / 0
   DOMRectListObject: 2 / 0 / 0
   DOMRectObject: 16 / 0 / 0
