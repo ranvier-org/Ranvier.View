@@ -55,6 +55,7 @@
         <Compile Include="Marshalling.fs" />
         <Compile Include="Generated/Objects.fs" />
         <Compile Include="Host.fs" />
+        <Compile Include="SvgViews.fs" />
         <Compile Include="StyleSheets.fs" />
         <Compile Include="CssQueries.fs" />
         <Compile Include="CustomProperties.fs" />
