@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import struct
 import sys
 import xml.etree.ElementTree as ET
 
@@ -22,6 +23,16 @@ def configure_console():
 def expected_shared(profile, target):
     counts = profile['shared_assertions']
     return counts[target] if isinstance(counts, dict) else counts
+
+
+def instrument_native_runner(source):
+    if 'OfficialTraceProbe.verify ()' in source:
+        raise ValueError('Native runner already contains the trace precheck.')
+    entries = ['let main _ =\n', 'let main args =\n']
+    if sum(source.count(entry) for entry in entries) != 1:
+        raise ValueError('Expected one known native runner entry point for the trace precheck.')
+    entry = next(entry for entry in entries if entry in source)
+    return source.replace(entry, entry + '    OfficialTraceProbe.verify ()\n')
 
 
 def validate_profile(profile):
@@ -133,6 +144,45 @@ def package_references(profile, target, suffix):
     return '\n'.join(references)
 
 
+def execute_native(run, verify_payload, project, output, variant, profile):
+    run('build', 'dotnet', 'build', project, '-c', 'Release', '--no-restore')
+    verify_payload(output / 'bin/Release/net10.0/win-x64')
+    result = run('jit', 'dotnet', 'run', '--project', project, '-c', 'Release', '--no-build', '--no-restore')
+    verify_assertions(result, 'native', variant, profile)
+    published = output / 'published-aot'
+    publication = run('publish', 'dotnet', 'publish', project, '-c', 'Release', '--no-restore', '-o', published)
+    verify_payload(published)
+    executable = published / 'OfficialViewConsumer.exe'
+    receipt = verify_aot_publish(publication, executable)
+    result = run('aot', executable)
+    verify_assertions(result, 'native', variant, profile)
+    return receipt
+
+
+def verify_aot_publish(publication, executable):
+    if not re.search(r'^\s*Generating native code\s*$', publication, re.MULTILINE):
+        raise ValueError('The fresh NativeAOT publish has no native code generation receipt.')
+    image = executable.read_bytes()
+    if len(image) < 64 or image[:2] != b'MZ':
+        raise ValueError('The NativeAOT executable must be a Windows PE image.')
+    offset = struct.unpack_from('<I', image, 60)[0]
+    if offset > len(image) - 264 or image[offset:offset + 4] != b'PE\0\0':
+        raise ValueError('The NativeAOT executable has an invalid PE header.')
+    optional = offset + 24
+    if (struct.unpack_from('<H', image, offset + 4)[0] != 0x8664
+            or struct.unpack_from('<H', image, offset + 20)[0] < 232
+            or struct.unpack_from('<H', image, optional)[0] != 0x20b
+            or struct.unpack_from('<I', image, optional + 108)[0] < 15):
+        raise ValueError('The NativeAOT executable must have an x64 PE32+ header.')
+    clr = list(struct.unpack_from('<II', image, optional + 112 + 14 * 8))
+    if clr != [0, 0]:
+        raise ValueError('The claimed NativeAOT executable contains a managed CLR directory.')
+    return {'sha256': hashlib.sha256(image).hexdigest(), 'bytes': len(image),
+            'machine': 'x64', 'clr_directory': clr, 'code_generation': 'Generating native code',
+            'publish_log_lf_sha256': hashlib.sha256(publication.replace('\r\n', '\n').encode('utf-8')).hexdigest(),
+            'publish_log_normalization': 'UTF-8 text with CRLF normalized to LF'}
+
+
 def main():
     configure_console()
     parser = argparse.ArgumentParser(description=__doc__)
@@ -187,10 +237,7 @@ def main():
             (output / trace.name).write_bytes(trace.read_bytes())
             runner = output / 'Native.fs'
             text = runner.read_text(encoding='utf-8')
-            entry = 'let main _ =\n'
-            if text.count(entry) != 1:
-                raise ValueError('Expected one known native runner entry point for the trace precheck.')
-            runner.write_text(text.replace(entry, entry + '    OfficialTraceProbe.verify ()\n'), encoding='utf-8')
+            runner.write_text(instrument_native_runner(text), encoding='utf-8')
             evidence['native_runner_precheck'] = 'OfficialTraceProbe.verify () before original entry point'
             names.insert(0, trace.name)
         items = '\n'.join(f'    <Compile Include="{filename}" />' for filename in names)
@@ -221,14 +268,7 @@ def main():
                     '--assets', assets_path, '--output', directory, '--native-version', profile['native_version'],
                     '--view-package', 'Ranvier.View.WebCore' + suffix, '--view-version', profile['backend_version'],
                     '--flavor', 'slim', '--abi', str(profile['native_abi']))
-            result = run('jit', 'dotnet', 'run', '--project', project, '-c', 'Release', '--no-restore')
-            verify_assertions(result, args.target, args.variant, profile)
-            verify_payload(output / 'bin/Release/net10.0/win-x64')
-            published = output / 'published-aot'
-            run('publish', 'dotnet', 'publish', project, '-c', 'Release', '--no-restore', '-o', published)
-            result = run('aot', published / 'OfficialViewConsumer.exe')
-            verify_assertions(result, args.target, args.variant, profile)
-            verify_payload(published)
+            evidence['native_aot'] = execute_native(run, verify_payload, project, output, args.variant, profile)
         else:
             verify_browser_assets(assets['targets'], suffix)
             tools = json.loads(source('.config/dotnet-tools.json'))
