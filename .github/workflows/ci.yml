@@ -164,7 +164,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet publish examples/Ranvier.NativeCounter -c Release -r ${{ matrix.rid }} -o artifacts/native-aot/counter
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet publish tests/NativeApi.Conformance/Native.fsproj -c Release -r ${{ matrix.rid }} -p:PublishAot=true -o artifacts/native-aot/api
+          dotnet publish tests/NativeApi.Conformance/Native.fsproj -f net10.0 -c Release -r ${{ matrix.rid }} -p:PublishAot=true -o artifacts/native-aot/api
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Run the published NativeAOT smoke app
         run: ./artifacts/native-aot/smoke/Ranvier.View.WebCore.AotSmoke.exe
@@ -267,7 +267,7 @@ jobs:
         run: |
           dotnet publish tests/Ranvier.View.WebCore.AotSmoke -c Release -r osx-arm64 -o artifacts/native-aot/smoke
           dotnet publish examples/Ranvier.NativeCounter -c Release -r osx-arm64 -o artifacts/native-aot/counter
-          dotnet publish tests/NativeApi.Conformance/Native.fsproj -c Release -r osx-arm64 -p:PublishAot=true -o artifacts/native-aot/api
+          dotnet publish tests/NativeApi.Conformance/Native.fsproj -f net10.0 -c Release -r osx-arm64 -p:PublishAot=true -o artifacts/native-aot/api
       - name: Run the published NativeAOT smoke app
         run: ./artifacts/native-aot/smoke/Ranvier.View.WebCore.AotSmoke
       - name: Shared NativeAOT API conformance
@@ -319,7 +319,7 @@ jobs:
         run: |
           dotnet publish tests/Ranvier.View.WebCore.AotSmoke -c Release -r linux-x64 -o artifacts/native-aot/smoke
           dotnet publish examples/Ranvier.NativeCounter -c Release -r linux-x64 -o artifacts/native-aot/counter
-          dotnet publish tests/NativeApi.Conformance/Native.fsproj -c Release -r linux-x64 -p:PublishAot=true -o artifacts/native-aot/api
+          dotnet publish tests/NativeApi.Conformance/Native.fsproj -f net10.0 -c Release -r linux-x64 -p:PublishAot=true -o artifacts/native-aot/api
       - name: Run the published NativeAOT smoke app
         run: ./artifacts/native-aot/smoke/Ranvier.View.WebCore.AotSmoke
       - name: Shared NativeAOT API conformance

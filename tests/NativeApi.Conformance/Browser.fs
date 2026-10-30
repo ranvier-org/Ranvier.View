@@ -43,6 +43,12 @@ let private cssEscapeOracle (escape: string -> string) : int = jsNative
 let run () =
     async {
         let document = document ()
+        let timing = UserTiming.run (fun () -> Ranvier.Dom.Timing.forDocument document)
+        let timingDeterministic = UserTiming.deterministic ()
+
+        if timing <> 178 || timingDeterministic <> 179 then
+            failwith "User timing assertions did not run"
+
         let cssEscaping = CssEscaping.run document
         let cssSupport = CssSupport.run (CssQueries.forDocument document)
 
@@ -127,6 +133,8 @@ let run () =
         return
             {|
                 cascadeRules = cascadeRules
+                timing = timing
+                timingDeterministic = timingDeterministic
                 scopeRules = scopeRules
                 nestedDeclarations = nestedDeclarations
                 importContentsReadable = importContentsReadable

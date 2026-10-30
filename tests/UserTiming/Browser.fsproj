@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(NativeApiContractRoot)/src/Ranvier.Dom/Generated/Dom.fs" Link="Generated/Dom.fs" />
+    <Compile Include="$(NativeApiContractRoot)/src/Ranvier.Dom/Timing.fs" Link="Timing.fs" />
+    <Compile Include="$(NativeApiContractRoot)/src/Fable.Ranvier.Dom/BrowserTiming.fs" Link="BrowserTiming.fs" />
+    <Compile Include="../NativeApi.Conformance/UserTiming.fs" Link="UserTiming.fs" />
+    <Compile Include="Browser.fs" />
+    <PackageReference Include="Fable.Core" Version="5.3.0" />
+  </ItemGroup>
+  <Target Name="RequireTimingContracts" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(NativeApiContractRoot)' == ''" Text="NativeApiContractRoot must point to the H02 Core checkout." />
+  </Target>
+</Project>

@@ -4,6 +4,7 @@ open Ranvier.View.WebCore
 
 [<EntryPoint>]
 let main _ =
+    UserTimingNative.run ()
     let mutable nullQueryHostRejected = false
 
     try
