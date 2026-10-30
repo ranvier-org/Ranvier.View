@@ -142,6 +142,75 @@ let runCustomProperties () =
     }
     |> Async.StartAsPromise
 
+[<Emit("""(async () => {
+    const frame = document.createElement('iframe');
+    try {
+        frame.srcdoc = '<body>first</body>';
+        let loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        document.body.append(frame); await loaded;
+        const original = frame.contentDocument;
+        const oldCall = $0(original);
+        loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        frame.srcdoc = '<body>replacement</body>'; await loaded;
+        if (original === frame.contentDocument) throw new Error('Map context document identity did not change');
+        if (oldCall() !== 'inactive:17px') throw new Error('Old map provider stayed active or retained inline value changed');
+        if ($0(frame.contentDocument)() !== 'active:17px') throw new Error('Replacement map context failed');
+        return 3;
+    } finally { frame.remove(); }
+})()""")>]
+let private styleMapDocumentLifetime (createCall: Document -> System.Func<string>) : JS.Promise<int> = jsNative
+
+let private styleMapCall (document: Document) =
+    let service = Ranvier.Dom.StyleMaps.forDocument document
+    let element = document.createElement "div" :?> HTMLElement
+    let map = service.Attribute (element :> ElementCSSInlineStyle)
+    map.set ("width", CSSStyleValueOrUSVString.USVString "17px")
+    let value = service.Get (map, "width") |> Option.get
+
+    System.Func<string>(fun () ->
+        let outcome =
+            try
+                service.Entries map |> ignore
+                "active"
+            with _ ->
+                "inactive"
+
+        try
+            outcome + ":" + value.toString ()
+        finally
+            service.Dispose ())
+
+/// <summary>Runs focused typed map assertions and document-navigation ownership proof.</summary>
+let runStyleMaps () =
+    async {
+        let document = document ()
+        use values = Ranvier.Dom.StyleValues.forDocument document
+        let computed = Ranvier.Dom.ComputedStyles.forDocument document
+
+        let count =
+            StyleMaps.run
+                document
+                (fun () -> Ranvier.Dom.StyleMaps.forDocument document)
+                values
+                computed
+                (fun () -> document.body.getBoundingClientRect () |> ignore)
+                styleValueError
+                "Exception:StyleMapService"
+                (fun map -> (unbox<StylePropertyMap> map).set("width", CSSStyleValueOrUSVString.USVString "999px"))
+                "TypeError"
+
+        let! context =
+            styleMapDocumentLifetime styleMapCall
+            |> Async.AwaitPromise
+
+        return
+            {|
+                styleMaps = count
+                styleMapContext = context
+            |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs focused typed CSS value assertions against the browser document.</summary>
 let runStyleValues () =
     async {
@@ -188,6 +257,24 @@ let run () =
 
         let! styleValueContext =
             styleValueDocumentLifetime styleValueCall
+            |> Async.AwaitPromise
+
+        use styleValueService = Ranvier.Dom.StyleValues.forDocument document
+
+        let styleMaps =
+            StyleMaps.run
+                document
+                (fun () -> Ranvier.Dom.StyleMaps.forDocument document)
+                styleValueService
+                (Ranvier.Dom.ComputedStyles.forDocument document)
+                (fun () -> document.body.getBoundingClientRect () |> ignore)
+                styleValueError
+                "Exception:StyleMapService"
+                (fun map -> (unbox<StylePropertyMap> map).set("width", CSSStyleValueOrUSVString.USVString "999px"))
+                "TypeError"
+
+        let! styleMapContext =
+            styleMapDocumentLifetime styleMapCall
             |> Async.AwaitPromise
 
         let computedStyles =
@@ -314,6 +401,8 @@ let run () =
                 customPropertyContext = customPropertyContext
                 styleValues = styleValues
                 styleValueContext = styleValueContext
+                styleMaps = styleMaps
+                styleMapContext = styleMapContext
                 computedStyles = computedStyles
                 typedStyles = typedStyles
                 fragmentRectangles = fragmentRectangles

@@ -3,6 +3,12 @@ module internal NativeApiConformance.Native
 open Ranvier.View.WebCore
 
 let private runAll () =
+    let styleMapLifecycle = StyleMapLifecycle.run ()
+
+    if styleMapLifecycle <> 33 then
+        failwith "Typed-map lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API C13 LIFETIME PASS assertions={styleMapLifecycle}"
     let styleValueLifecycle = StyleValueLifecycle.run ()
 
     if styleValueLifecycle <> 19 then
@@ -89,6 +95,26 @@ let private runAll () =
             failwith "Typed-style shared assertions did not run"
 
         System.Console.WriteLine $"NATIVE_API C14 PASS assertions={styleValues}"
+        use styleValueService = Ranvier.View.WebCore.StyleValues.forHost host
+
+        let styleMaps =
+            StyleMaps.run
+                host.Document
+                (fun () -> Ranvier.View.WebCore.StyleMaps.forHost host)
+                styleValueService
+                computedService
+                (fun () -> host.Frame ())
+                (function
+                | WebCoreDomException (name, _) -> name
+                | error -> error.GetType().Name)
+                "ObjectDisposedException"
+                (fun map -> (map :?> Ranvier.Dom.StylePropertyMap).set("width", Ranvier.Dom.CSSStyleValueOrUSVString.USVString "999px"))
+                "InvalidCastException"
+
+        if styleMaps <> 127 then
+            failwith "Typed-map shared assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API C13 PASS assertions={styleMaps}"
 
         let ruleMutations =
             RuleMutations.run host.Document computedService (function
@@ -540,7 +566,42 @@ let private runAll () =
 
 [<EntryPoint>]
 let main args =
-    if Array.contains "--style-values-only" args then
+    if Array.contains "--style-maps-only" args then
+        let lifecycle = StyleMapLifecycle.run ()
+        let host = WebCoreHost.Create (320, 240)
+        let session = host.Session
+
+        try
+            use values = Ranvier.View.WebCore.StyleValues.forHost host
+            let computed = Ranvier.View.WebCore.ComputedStyles.forHost host
+
+            let count =
+                StyleMaps.run
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.StyleMaps.forHost host)
+                    values
+                    computed
+                    (fun () -> host.Frame ())
+                    (function
+                    | WebCoreDomException (name, _) -> name
+                    | error -> error.GetType().Name)
+                    "ObjectDisposedException"
+                    (fun map -> (map :?> Ranvier.Dom.StylePropertyMap).set("width", Ranvier.Dom.CSSStyleValueOrUSVString.USVString "999px"))
+                    "InvalidCastException"
+
+            if count <> 127 || lifecycle <> 33 then
+                failwith "Typed-map focused shared/lifetime assertions did not run"
+
+            System.Console.WriteLine $"NATIVE_API C13 PASS assertions={count}"
+            System.Console.WriteLine $"NATIVE_API C13 LIFETIME PASS assertions={lifecycle}"
+        finally
+            (host :> System.IDisposable).Dispose()
+
+        if session.LiveObjects <> 0 then
+            failwith "Style-map fixture leaked native wrappers"
+
+        0
+    elif Array.contains "--style-values-only" args then
         let lifecycle = StyleValueLifecycle.run ()
         let host = WebCoreHost.Create (320, 240)
         let session = host.Session

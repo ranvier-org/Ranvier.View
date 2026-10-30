@@ -20,6 +20,8 @@
     <Compile Include="ComputedStyles.fs" />
     <Compile Include="CustomProperties.fs" />
     <Compile Include="StyleValues.fs" />
+    <Compile Include="StyleMaps.fs" />
+    <Compile Include="StyleMapLifecycle.fs" />
     <Compile Include="StyleValueLifecycle.fs" />
     <Compile Include="CustomPropertyLifecycle.fs" />
     <Compile Include="TypedStyles.fs" />
