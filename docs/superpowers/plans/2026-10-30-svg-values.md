@@ -19,13 +19,13 @@
 
 ## Tasks and verification
 
-- [ ] Import hash-verified canonical `gen/Ranvier.Dom.fs` into Core `src/Ranvier.Dom/Generated/Dom.fs`; capture public API additions and fresh FCS verdict. Coordinate formatting back to producer before freezing.
-- [ ] Compile private canonical Core/interop inputs and run the existing wrapper generator. Record actual unmapped/root-kind diagnostics before extending `Program.fs`, `Emit.fs`, `Objects.fs` and `Host.fs` narrowly.
-- [ ] Append SVG release/cache kinds. Preserve same-object getters/list identities, argument lifetimes and same-session validation through generated native wrappers. Regenerate outputs and audit unchanged old class bodies.
-- [ ] Add `tests/NativeApi.Conformance/SvgGeometry.fs` and `SvgValues.fs` shared cases; wire both runners. Cover local/nested bounds, CTM/screenCTM/viewBox/aspect, line/curve length and points, fill/stroke coordinate space, factory defaults, matrix/point operations and units.
-- [ ] Cover number/length/point/transform/string list insert/replace/remove/clear/initialize, clone versus identity behavior, read-only animated values, rejected-edit preservation and detached owners. Add native lifecycle/thread/session/disposal/collection and browser context checks.
-- [ ] Run focused JIT/NativeAOT/packaged Fable Chromium checks against coherent hash-matched private runtime. Preserve initial failures and compare actual browser differences before choosing a facade.
-- [ ] Batch combined runtime and required repository analyzer/build/test gates once after source stabilizes. Record source, package, executed binaries and logs in durable evidence JSON; independent review before PR/release.
+- [x] Import hash-verified canonical `gen/Ranvier.Dom.fs` into Core `src/Ranvier.Dom/Generated/Dom.fs`; capture public API additions and fresh FCS verdict. Coordinate formatting back to producer before freezing.
+- [x] Compile private canonical Core/interop inputs and run the existing wrapper generator. Record actual unmapped/root-kind diagnostics before extending `Program.fs`, `Emit.fs`, `Objects.fs` and `Host.fs` narrowly.
+- [x] Append SVG release/cache kinds. Preserve SameObject properties, argument lifetimes and same-session validation. Record measured backend list wrapper identity and strong shared mutation aliasing. Regenerate outputs and audit unchanged old class bodies.
+- [x] Add `tests/NativeApi.Conformance/SvgGeometry.fs` and `SvgValues.fs` shared cases; wire both runners. Cover local/nested bounds, CTM/screenCTM/viewBox/aspect, line/curve length and points, fill/stroke coordinate space, factory defaults, matrix/point operations and units.
+- [x] Cover number/length/point/transform/string list insert/replace/remove/clear/initialize, clone versus identity behavior, read-only animated values, rejected-edit preservation and detached owners. Add native lifecycle/thread/session/disposal/collection and browser context checks.
+- [x] Run focused JIT/NativeAOT/packaged Fable Chromium checks against coherent hash-matched private runtime. Preserve initial failures and compare actual browser differences before choosing a facade.
+- [x] Batch combined runtime and required repository analyzer/build/test gates once after source stabilizes. Record source, package, executed binaries and logs in durable evidence JSON; independent review before PR/release.
 - [ ] Open ordered producer/Core/Views stacks after version reservation. Final official packages, platform/profile acceptance and stable issue evidence remain required.
 
 ## Review focus

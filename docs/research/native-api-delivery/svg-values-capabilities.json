@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "groups": ["S01", "S02", "S04"],
-  "status": "private-jit-and-packaged-chromium-focus",
+  "status": "private-jit-nativeaot-and-packaged-chromium",
   "producer": {
     "pullRequest": "https://github.com/ranvier-org/Ranvier.WebCore/pull/128",
     "source": "9b6ad4445dcce0124008d1033eb7469355be4cf2",
@@ -16,8 +16,9 @@
     "windowsJit": {"geometry": 126, "reachableValues": 361, "nativeLifetime": 37},
     "packagedFableChromium": {"geometry": 126, "reachableValues": 361, "twoRealmChecks": 54},
     "verifiedNativeRuntimeFiles": 24,
-    "nativeAot": "pending",
-    "combinedAndRepositoryGates": "pending"
+    "nativeAot": {"geometry": 126, "reachableValues": 361, "nativeLifetime": 37, "runtimeFilesBeforeAndAfter": 24},
+    "combined": {"nativeSharedIncludingH02": 3780, "nativeSeparateLifetime": 220, "h02AdditionalLifetime": 25, "h02Deterministic": 181, "h02Concurrent": 500, "chromiumSharedIncludingH02": 3793, "chromiumContext": 76},
+    "repositoryGates": "passed: four Core test variants, Core normal/traced analyzers, Views library/view/examples analyzers, SDL build, exact regeneration and configured clean FCS checks"
   },
   "observedContract": {
     "precision": {"svgPointAndRectFields": "float32", "svgMatrixCoefficients": "float64"},
@@ -35,12 +36,13 @@
       "realms": "All three compiled facade routes preserve target-realm SVGTransform/SVGMatrix prototypes, six coefficients and independent matrices in the main window and an iframe.",
       "presence": "Omitted and null dictionaries produce identity matrices; inconsistent aliases reject TypeError atomically."
     },
-    "lifetime": "Native member inputs enforce session/kind/null/thread boundaries. Retained lists keep secondary documents and owners alive through managed and engine collection; host disposal invalidates wrappers, then event draining and final collection expire watched document/owner nodes."
+    "lifetime": "Native member inputs enforce session/kind/null/thread boundaries. Retained lists keep secondary documents and owners alive through managed and engine collection; host disposal invalidates wrappers, then event draining and final collection expire watched document/owner nodes.",
+    "acquisitionAnchor": "A cached native wrapper retains its first acquisition receiver. Later cache hits preserve that wrapper and original anchor. A factory-created item subsequently attached to another owner's list does not promise to retain that later owner/list by itself. When that owner dies, the engine detaches the retained item; the detached value remains usable under engine rules while the host lives. The fixture proves retained-list ownership and detached-item mutation/reattachment, not item-only retention of every later owner."
   },
   "remainingScope": [
     "S04 SVGAnimatedBoolean is generated but currently has no selected returner. The real SVGFEConvolveMatrixElement.preserveAlpha provider belongs to the next required SVG producer; full S04 stays open.",
     "Incidental view, animation and filter members do not close S03/S05/S06/S07/S09. Legacy SVGPathSeg APIs are outside the current selected scope.",
-    "NativeAOT, final combined/repository gates, ordered parent integration, platform/profile CI and official package-only consumption remain required. S01/S02 can be accepted independently when their own complete scope and gates are proven."
+    "Ordered releases, platform/profile CI and official package-only consumption remain required. S01/S02 can be accepted independently when their own complete scope and gates are proven."
   ],
   "historicalEvidence": {
     "nativeNullDictionaryRed": "artifacts/svg-values-initial.log",

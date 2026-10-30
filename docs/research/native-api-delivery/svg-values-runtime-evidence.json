@@ -1,0 +1,767 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    "S01",
+    "S02",
+    "S04"
+  ],
+  "status": "private-windows-jit-nativeaot-and-packaged-chromium",
+  "sourceHeads": {
+    "core": "cb6dd807c57af94f8d72c676b41b39e156231f7e",
+    "views": "cf25ac18095d93b5a9d49bca7aa013cf44b8ac76"
+  },
+  "parents": {
+    "coreH02": "898388205c3821b30b5cea3093559f56426e0c53",
+    "viewsH02": "9af5c13a8dadf7825eceef54a81795b0655d0621"
+  },
+  "producer": {
+    "pr": "https://github.com/ranvier-org/Ranvier.WebCore/pull/128",
+    "head": "9b6ad4445dcce0124008d1033eb7469355be4cf2",
+    "version": "0.1.0-preview.18",
+    "abi": 26,
+    "canonicalSha256": "efe7714ae584b4bfb8246e66f6b496cb3431e31584acb07bca1f28ad316a5cc6",
+    "modelSha256": "9d1e8033542b743baa0b2748cddb8425606a9f2e3ab379085f4747c6ba7b14e5",
+    "proofSha256": "5ec19d3940c7bdb5c80155c852037c7aa8e4659e72f12029b3f765f32199fd23"
+  },
+  "runs": [
+    {
+      "label": "jit-combined",
+      "log": "C:\\wk\\rv-svg-values\\artifacts\\svg-jit-combined.log",
+      "sha256": "dfde0b91427aa9291cd573f6b454ee72cbea53580fdaf567b9b02f1ee525a03e",
+      "markers": [
+        {
+          "module": "SVG LIFETIME",
+          "assertions": 37
+        },
+        {
+          "module": "H02",
+          "assertions": 180
+        },
+        {
+          "module": "C16 LIFETIME",
+          "assertions": 47
+        },
+        {
+          "module": "G08 LIFETIME",
+          "assertions": 23
+        },
+        {
+          "module": "G07 LIFETIME",
+          "assertions": 26
+        },
+        {
+          "module": "C13 LIFETIME",
+          "assertions": 33
+        },
+        {
+          "module": "C14 LIFETIME",
+          "assertions": 19
+        },
+        {
+          "module": "C12 LIFETIME",
+          "assertions": 10
+        },
+        {
+          "module": "S01_S02",
+          "assertions": 126
+        },
+        {
+          "module": "S04_REACHABLE",
+          "assertions": 361
+        },
+        {
+          "module": "C16",
+          "assertions": 471
+        },
+        {
+          "module": "G08",
+          "assertions": 710
+        },
+        {
+          "module": "G07",
+          "assertions": 177
+        },
+        {
+          "module": "D10_VIEW",
+          "assertions": 29
+        },
+        {
+          "module": "D11_VIEW_HYPERLINKS",
+          "assertions": 50
+        },
+        {
+          "module": "C05",
+          "assertions": 45
+        },
+        {
+          "module": "C03",
+          "assertions": 32
+        },
+        {
+          "module": "C01_C02",
+          "assertions": 42
+        },
+        {
+          "module": "C12",
+          "assertions": 50
+        },
+        {
+          "module": "C14",
+          "assertions": 99
+        },
+        {
+          "module": "C13",
+          "assertions": 127
+        },
+        {
+          "module": "C08",
+          "assertions": 131
+        },
+        {
+          "module": "C04",
+          "assertions": 39
+        },
+        {
+          "module": "G06",
+          "assertions": 61
+        },
+        {
+          "module": "C18",
+          "assertions": 51
+        },
+        {
+          "module": "C22",
+          "assertions": 23
+        },
+        {
+          "module": "C21",
+          "assertions": 44
+        },
+        {
+          "module": "C19",
+          "assertions": 64
+        },
+        {
+          "module": "C11",
+          "assertions": 82
+        },
+        {
+          "module": "D10",
+          "assertions": 30
+        },
+        {
+          "module": "HYPERLINKS",
+          "assertions": 60
+        },
+        {
+          "module": "D11",
+          "assertions": 205
+        },
+        {
+          "module": "D09",
+          "assertions": 24
+        },
+        {
+          "module": "D09_VIEWPORT",
+          "assertions": 30
+        },
+        {
+          "module": "SVG_CSSOM",
+          "assertions": 31
+        },
+        {
+          "module": "CSSOM",
+          "assertions": 58
+        },
+        {
+          "module": "C09",
+          "assertions": 44
+        },
+        {
+          "module": "C10",
+          "assertions": 91
+        },
+        {
+          "module": "D11_OPERATIONS",
+          "assertions": 26
+        },
+        {
+          "module": "D12",
+          "assertions": 109
+        },
+        {
+          "module": "C07",
+          "assertions": 78
+        },
+        {
+          "module": "G06 LIFETIME",
+          "assertions": 8
+        },
+        {
+          "module": "C03 LIFETIME",
+          "assertions": 4
+        },
+        {
+          "module": "C01_C02 LIFETIME",
+          "assertions": 7
+        },
+        {
+          "module": "C04 LIFETIME",
+          "assertions": 2
+        },
+        {
+          "module": "C07 LIFETIME",
+          "assertions": 4
+        }
+      ],
+      "sharedAssertionsIncludingH02": 3780,
+      "separatelyMarkedNativeLifecycleAssertions": 220,
+      "browserContextAssertions": 0,
+      "h02SeparateCounters": {
+        "shared": 180,
+        "deterministic": 181,
+        "nativeLifecycle": 25,
+        "concurrent": 500,
+        "teardown": 0
+      }
+    },
+    {
+      "label": "aot-focused",
+      "log": "C:\\wk\\rv-svg-values\\artifacts\\svg-aot-focus.log",
+      "sha256": "8cdf448963319e15b5d0494e465997b2feb42921b8cf5dd5a924bb1ee12813fb",
+      "markers": [
+        {
+          "module": "S01_S02",
+          "assertions": 126
+        },
+        {
+          "module": "S04_REACHABLE",
+          "assertions": 361
+        },
+        {
+          "module": "SVG LIFETIME",
+          "assertions": 37
+        }
+      ],
+      "sharedAssertionsIncludingH02": 487,
+      "separatelyMarkedNativeLifecycleAssertions": 37,
+      "browserContextAssertions": 0,
+      "h02SeparateCounters": null
+    },
+    {
+      "label": "aot-combined",
+      "log": "C:\\wk\\rv-svg-values\\artifacts\\svg-aot-combined.log",
+      "sha256": "dfde0b91427aa9291cd573f6b454ee72cbea53580fdaf567b9b02f1ee525a03e",
+      "markers": [
+        {
+          "module": "SVG LIFETIME",
+          "assertions": 37
+        },
+        {
+          "module": "H02",
+          "assertions": 180
+        },
+        {
+          "module": "C16 LIFETIME",
+          "assertions": 47
+        },
+        {
+          "module": "G08 LIFETIME",
+          "assertions": 23
+        },
+        {
+          "module": "G07 LIFETIME",
+          "assertions": 26
+        },
+        {
+          "module": "C13 LIFETIME",
+          "assertions": 33
+        },
+        {
+          "module": "C14 LIFETIME",
+          "assertions": 19
+        },
+        {
+          "module": "C12 LIFETIME",
+          "assertions": 10
+        },
+        {
+          "module": "S01_S02",
+          "assertions": 126
+        },
+        {
+          "module": "S04_REACHABLE",
+          "assertions": 361
+        },
+        {
+          "module": "C16",
+          "assertions": 471
+        },
+        {
+          "module": "G08",
+          "assertions": 710
+        },
+        {
+          "module": "G07",
+          "assertions": 177
+        },
+        {
+          "module": "D10_VIEW",
+          "assertions": 29
+        },
+        {
+          "module": "D11_VIEW_HYPERLINKS",
+          "assertions": 50
+        },
+        {
+          "module": "C05",
+          "assertions": 45
+        },
+        {
+          "module": "C03",
+          "assertions": 32
+        },
+        {
+          "module": "C01_C02",
+          "assertions": 42
+        },
+        {
+          "module": "C12",
+          "assertions": 50
+        },
+        {
+          "module": "C14",
+          "assertions": 99
+        },
+        {
+          "module": "C13",
+          "assertions": 127
+        },
+        {
+          "module": "C08",
+          "assertions": 131
+        },
+        {
+          "module": "C04",
+          "assertions": 39
+        },
+        {
+          "module": "G06",
+          "assertions": 61
+        },
+        {
+          "module": "C18",
+          "assertions": 51
+        },
+        {
+          "module": "C22",
+          "assertions": 23
+        },
+        {
+          "module": "C21",
+          "assertions": 44
+        },
+        {
+          "module": "C19",
+          "assertions": 64
+        },
+        {
+          "module": "C11",
+          "assertions": 82
+        },
+        {
+          "module": "D10",
+          "assertions": 30
+        },
+        {
+          "module": "HYPERLINKS",
+          "assertions": 60
+        },
+        {
+          "module": "D11",
+          "assertions": 205
+        },
+        {
+          "module": "D09",
+          "assertions": 24
+        },
+        {
+          "module": "D09_VIEWPORT",
+          "assertions": 30
+        },
+        {
+          "module": "SVG_CSSOM",
+          "assertions": 31
+        },
+        {
+          "module": "CSSOM",
+          "assertions": 58
+        },
+        {
+          "module": "C09",
+          "assertions": 44
+        },
+        {
+          "module": "C10",
+          "assertions": 91
+        },
+        {
+          "module": "D11_OPERATIONS",
+          "assertions": 26
+        },
+        {
+          "module": "D12",
+          "assertions": 109
+        },
+        {
+          "module": "C07",
+          "assertions": 78
+        },
+        {
+          "module": "G06 LIFETIME",
+          "assertions": 8
+        },
+        {
+          "module": "C03 LIFETIME",
+          "assertions": 4
+        },
+        {
+          "module": "C01_C02 LIFETIME",
+          "assertions": 7
+        },
+        {
+          "module": "C04 LIFETIME",
+          "assertions": 2
+        },
+        {
+          "module": "C07 LIFETIME",
+          "assertions": 4
+        }
+      ],
+      "sharedAssertionsIncludingH02": 3780,
+      "separatelyMarkedNativeLifecycleAssertions": 220,
+      "browserContextAssertions": 0,
+      "h02SeparateCounters": {
+        "shared": 180,
+        "deterministic": 181,
+        "nativeLifecycle": 25,
+        "concurrent": 500,
+        "teardown": 0
+      }
+    },
+    {
+      "label": "chromium-combined",
+      "log": "C:\\wk\\rv-svg-values\\artifacts\\svg-browser-combined.log",
+      "sha256": "bce8ed96097e6a3985a11fca094c7914dac78addc420be1ffb70934b2b954f43",
+      "markers": [
+        {
+          "module": "C12",
+          "assertions": 50
+        },
+        {
+          "module": "C12 CONTEXT",
+          "assertions": 3
+        },
+        {
+          "module": "S01_S02",
+          "assertions": 126
+        },
+        {
+          "module": "S04_REACHABLE",
+          "assertions": 361
+        },
+        {
+          "module": "SVG CONTEXT",
+          "assertions": 54
+        },
+        {
+          "module": "C16",
+          "assertions": 471
+        },
+        {
+          "module": "C16 CONTEXT",
+          "assertions": 3
+        },
+        {
+          "module": "G08",
+          "assertions": 710
+        },
+        {
+          "module": "G08 CONTEXT",
+          "assertions": 3
+        },
+        {
+          "module": "G07",
+          "assertions": 177
+        },
+        {
+          "module": "G07 CONTEXT",
+          "assertions": 3
+        },
+        {
+          "module": "C13",
+          "assertions": 127
+        },
+        {
+          "module": "C13 CONTEXT",
+          "assertions": 3
+        },
+        {
+          "module": "C14",
+          "assertions": 99
+        },
+        {
+          "module": "C14 CONTEXT",
+          "assertions": 3
+        },
+        {
+          "module": "D10",
+          "assertions": 30
+        },
+        {
+          "module": "H02",
+          "assertions": 180
+        },
+        {
+          "module": "D10_VIEW",
+          "assertions": 29
+        },
+        {
+          "module": "D11_VIEW_HYPERLINKS",
+          "assertions": 50
+        },
+        {
+          "module": "C05",
+          "assertions": 45
+        },
+        {
+          "module": "C03",
+          "assertions": 32
+        },
+        {
+          "module": "C03 CONTEXT",
+          "assertions": 2
+        },
+        {
+          "module": "C01_C02",
+          "assertions": 42
+        },
+        {
+          "module": "G06",
+          "assertions": 74
+        },
+        {
+          "module": "C18",
+          "assertions": 49
+        },
+        {
+          "module": "C22",
+          "assertions": 23
+        },
+        {
+          "module": "C21",
+          "assertions": 44
+        },
+        {
+          "module": "C19",
+          "assertions": 64
+        },
+        {
+          "module": "C11",
+          "assertions": 82
+        },
+        {
+          "module": "C09",
+          "assertions": 44
+        },
+        {
+          "module": "C10",
+          "assertions": 93
+        },
+        {
+          "module": "C04",
+          "assertions": 39
+        },
+        {
+          "module": "C01_C02 CONTEXT",
+          "assertions": 2
+        },
+        {
+          "module": "D11",
+          "assertions": 205
+        },
+        {
+          "module": "D09",
+          "assertions": 24
+        },
+        {
+          "module": "D09_VIEWPORT",
+          "assertions": 30
+        },
+        {
+          "module": "D11_OPERATIONS",
+          "assertions": 26
+        },
+        {
+          "module": "CSSOM",
+          "assertions": 58
+        },
+        {
+          "module": "C08",
+          "assertions": 131
+        },
+        {
+          "module": "SVG_CSSOM",
+          "assertions": 31
+        },
+        {
+          "module": "HYPERLINKS",
+          "assertions": 60
+        },
+        {
+          "module": "C07",
+          "assertions": 78
+        },
+        {
+          "module": "D12",
+          "assertions": 109
+        }
+      ],
+      "sharedAssertionsIncludingH02": 3793,
+      "separatelyMarkedNativeLifecycleAssertions": 0,
+      "browserContextAssertions": 76,
+      "h02SeparateCounters": {
+        "shared": 180,
+        "deterministic": 181
+      }
+    }
+  ],
+  "executedRuntimeManifests": [
+    {
+      "label": "jit-combined",
+      "manifest": "C:\\wk\\rv-svg-values\\artifacts\\svg-final-jit-combined-runtime.json",
+      "sha256": "3b9b474a38be587cffa10140c755d7c6d687c62440fe3ac088f23e26c9b6dcf1",
+      "files": 24
+    },
+    {
+      "label": "aot-focused-and-combined",
+      "manifest": "C:\\wk\\rv-svg-values\\artifacts\\svg-final-aot-focused-and-combined-runtime.json",
+      "sha256": "d407adba0fcfc29dc9ac8f27c5ac3bda7093458246bab6a69cdcd704e54ed92a",
+      "files": 24
+    }
+  ],
+  "executedJavascript": {
+    "manifest": "C:\\wk\\rv-svg-values\\artifacts\\svg-final-chromium-javascript.json",
+    "sha256": "cdfa6a45b8770657bf03209868632caa0d6895de04b957b8a8dc2cd19053c032",
+    "files": 170
+  },
+  "sourceManifest": {
+    "path": "C:\\wk\\rv-svg-values\\artifacts\\svg-final-source-manifest.json",
+    "sha256": "ed6142c33114cef3fef9c5cbbc05314c92f6c0ea14922690e3c9999ba3a50a4f",
+    "files": 28
+  },
+  "nativeAot": {
+    "executions": [
+      {
+        "command": [
+          "rtk",
+          "proxy",
+          "C:\\wk\\rv-svg-values\\artifacts\\svg-aot\\Native.exe",
+          "--svg-only"
+        ],
+        "pid": 69652,
+        "exitCode": 0,
+        "terminal": true,
+        "runtimeBefore": 24,
+        "runtimeAfter": 24,
+        "log": "C:\\wk\\rv-svg-values\\artifacts\\svg-aot-focus.log",
+        "sha256": "8cdf448963319e15b5d0494e465997b2feb42921b8cf5dd5a924bb1ee12813fb",
+        "nativeExecutableSha256": "d119b6f638782a50af70d36f06d1241797b2c9efeda7eed9f0ff6e0df794d74d",
+        "peMachine": "AMD64",
+        "moduleMarkers": [
+          "S01_S02 PASS assertions=126\r",
+          "S04_REACHABLE PASS assertions=361\r",
+          "SVG LIFETIME PASS assertions=37\r",
+          "SVG TEARDOWN PASS\r"
+        ]
+      },
+      {
+        "command": [
+          "rtk",
+          "proxy",
+          "C:\\wk\\rv-svg-values\\artifacts\\svg-aot\\Native.exe"
+        ],
+        "pid": 144656,
+        "exitCode": 0,
+        "terminal": true,
+        "runtimeBefore": 24,
+        "runtimeAfter": 24,
+        "log": "C:\\wk\\rv-svg-values\\artifacts\\svg-aot-combined.log",
+        "sha256": "dfde0b91427aa9291cd573f6b454ee72cbea53580fdaf567b9b02f1ee525a03e",
+        "nativeExecutableSha256": "d119b6f638782a50af70d36f06d1241797b2c9efeda7eed9f0ff6e0df794d74d",
+        "peMachine": "AMD64",
+        "moduleMarkers": [
+          "SVG LIFETIME PASS assertions=37\r",
+          "H02 PASS assertions=180 deterministic=181 lifecycle=25 concurrent=500 teardown=0\r",
+          "C16 LIFETIME PASS assertions=47\r",
+          "G08 LIFETIME PASS assertions=23\r",
+          "G07 LIFETIME PASS assertions=26\r",
+          "C13 LIFETIME PASS assertions=33\r",
+          "C14 LIFETIME PASS assertions=19\r",
+          "C12 LIFETIME PASS assertions=10\r",
+          "S01_S02 PASS assertions=126\r",
+          "S04_REACHABLE PASS assertions=361\r",
+          "C16 PASS assertions=471\r",
+          "G08 PASS assertions=710\r",
+          "G07 PASS assertions=177\r",
+          "D10_VIEW PASS assertions=29\r",
+          "D11_VIEW_HYPERLINKS PASS assertions=50\r",
+          "C05 PASS assertions=45\r",
+          "C03 PASS assertions=32\r",
+          "C01_C02 PASS assertions=42\r",
+          "C12 PASS assertions=50\r",
+          "C14 PASS assertions=99\r",
+          "C13 PASS assertions=127\r",
+          "C08 PASS assertions=131\r",
+          "C04 PASS assertions=39\r",
+          "G06 PASS assertions=61\r",
+          "C18 PASS assertions=51\r",
+          "C22 PASS assertions=23\r",
+          "C21 PASS assertions=44\r",
+          "C19 PASS assertions=64\r",
+          "C11 PASS assertions=82\r",
+          "D10 PASS assertions=30\r",
+          "HYPERLINKS PASS assertions=60\r",
+          "D11 PASS assertions=205\r",
+          "D09 PASS assertions=24\r",
+          "D09_VIEWPORT PASS assertions=30\r",
+          "SVG_CSSOM PASS assertions=31\r",
+          "CSSOM PASS assertions=58\r",
+          "C09 PASS assertions=44\r",
+          "C10 PASS assertions=91\r",
+          "D11_OPERATIONS PASS assertions=26\r",
+          "D12 PASS assertions=109\r",
+          "C07 PASS assertions=78\r",
+          "D09 TAB PASS\r",
+          "G06 LIFETIME PASS assertions=8\r",
+          "C03 LIFETIME PASS assertions=4\r",
+          "C01_C02 LIFETIME PASS assertions=7\r",
+          "C04 LIFETIME PASS assertions=2\r",
+          "C07 LIFETIME PASS assertions=4\r",
+          "TEARDOWN PASS groups=D09,D10,D11,CSSOM\r"
+        ]
+      }
+    ],
+    "harnessCorrection": "Initial evidence driver had incorrect marker spellings after actual native exit0. Actual logs and per-module guards validated without rerunning source."
+  },
+  "qualifications": [
+    "S04 SVGAnimatedBoolean is declared but has no selected returner in Native18. Its real preserveAlpha provider belongs to next Native19; full S04 stays open. Twenty-five added handle roots do not mean twenty-five reachable instances.",
+    "Native list method results retain stable managed wrapper identity; Chromium returns fresh wrappers aliasing the same live underlying values. Both enforce strong bidirectional mutations, detach and cross-list cloning. SameObject property checks remain exact.",
+    "Unrestricted DOMMatrix2DInit coefficients remain unrestricted natively; the browser adapter requires genuine SVGMatrix and finite coefficient copies. This measured browser qualification is explicit; scalar SVG float/double inputs reject nonfinite values.",
+    "NativeAOT child OS=Windows_NT restores the actual Windows host value only for publish; no unsupported-error suppression or global setting. Original netstandard and cross-OS publish failures are preserved.",
+    "Initial orchestration marker spellings were wrong after successful child exits. Per-module counts and teardown were validated from preserved logs without rerunning unchanged AOT.",
+    "Operational lease deviation remains separately recorded in artifacts/svg-operational-deviation.json. Subsequent operations carry inspected owner/kind/workdir lease receipts and terminal release records.",
+    "All evidence is private coherent Windows ABI26 and packaged Chromium. Official package-only consumption, ordered release/pin replacement, remaining platforms/profiles and public acceptance remain open.",
+    "Native cached wrappers retain their first acquisition receiver. Cache hits do not replace that anchor with every later list owner. Retained-list ownership is proven; item-only retention of a later owner is not promised. Engine owner destruction detaches a retained item, which remains usable under engine rules while its host lives."
+  ]
+}
