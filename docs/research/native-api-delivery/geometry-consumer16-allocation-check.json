@@ -1,0 +1,114 @@
+[
+  {
+    "package": "Ranvier.Dom",
+    "version": "0.1.0-alpha.16",
+    "published": false,
+    "latest": "0.1.0-alpha.13",
+    "source": "https://api.nuget.org/v3-flatcontainer/ranvier.dom/index.json"
+  },
+  {
+    "package": "Ranvier.Dom.Traced",
+    "version": "0.1.0-alpha.16",
+    "published": false,
+    "latest": "0.1.0-alpha.13",
+    "source": "https://api.nuget.org/v3-flatcontainer/ranvier.dom.traced/index.json"
+  },
+  {
+    "package": "Fable.Ranvier.Dom",
+    "version": "0.1.0-alpha.16",
+    "published": false,
+    "latest": "0.1.0-alpha.13",
+    "source": "https://api.nuget.org/v3-flatcontainer/fable.ranvier.dom/index.json"
+  },
+  {
+    "package": "Fable.Ranvier.Dom.Traced",
+    "version": "0.1.0-alpha.16",
+    "published": false,
+    "latest": "0.1.0-alpha.13",
+    "source": "https://api.nuget.org/v3-flatcontainer/fable.ranvier.dom.traced/index.json"
+  },
+  {
+    "package": "Ranvier.View",
+    "version": "0.1.6",
+    "published": false,
+    "latest": "0.1.3",
+    "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view/index.json"
+  },
+  {
+    "package": "Ranvier.View.Traced",
+    "version": "0.1.6",
+    "published": false,
+    "latest": "0.1.3",
+    "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.traced/index.json"
+  },
+  {
+    "package": "Ranvier.View.Dom",
+    "version": "0.1.6",
+    "published": false,
+    "latest": "0.1.3",
+    "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.dom/index.json"
+  },
+  {
+    "package": "Ranvier.View.Dom.Traced",
+    "version": "0.1.6",
+    "published": false,
+    "latest": "0.1.3",
+    "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.dom.traced/index.json"
+  },
+  {
+    "package": "Ranvier.View.Anime",
+    "version": "0.1.6",
+    "published": false,
+    "latest": "0.1.3",
+    "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.anime/index.json"
+  },
+  {
+    "package": "Ranvier.View.Anime.Traced",
+    "version": "0.1.6",
+    "published": false,
+    "latest": "0.1.3",
+    "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.anime.traced/index.json"
+  },
+  {
+    "package": "Fable.Ranvier.Anime",
+    "version": "0.1.6",
+    "published": false,
+    "latest": "0.1.3",
+    "source": "https://api.nuget.org/v3-flatcontainer/fable.ranvier.anime/index.json"
+  },
+  {
+    "package": "Fable.Ranvier.Anime.Traced",
+    "version": "0.1.6",
+    "published": false,
+    "latest": "0.1.3",
+    "source": "https://api.nuget.org/v3-flatcontainer/fable.ranvier.anime.traced/index.json"
+  },
+  {
+    "package": "Ranvier.View.WebCore",
+    "version": "0.1.0-alpha.6",
+    "published": false,
+    "latest": "0.1.0-alpha.3",
+    "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.webcore/index.json"
+  },
+  {
+    "package": "Ranvier.View.WebCore.Traced",
+    "version": "0.1.0-alpha.6",
+    "published": false,
+    "latest": "0.1.0-alpha.3",
+    "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.webcore.traced/index.json"
+  },
+  {
+    "package": "Ranvier.View.WebCore.Sdl",
+    "version": "0.1.0-alpha.6",
+    "published": false,
+    "latest": "0.1.0-alpha.3",
+    "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.webcore.sdl/index.json"
+  },
+  {
+    "package": "Ranvier.View.WebCore.Sdl.Traced",
+    "version": "0.1.0-alpha.6",
+    "published": false,
+    "latest": "0.1.0-alpha.3",
+    "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.webcore.sdl.traced/index.json"
+  }
+]

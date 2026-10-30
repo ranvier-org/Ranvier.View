@@ -20,6 +20,17 @@
     <Compile Include="ComputedStyles.fs" />
     <Compile Include="CustomProperties.fs" />
     <Compile Include="StyleValues.fs" />
+    <Compile Include="StyleMaps.fs" />
+    <Compile Include="GeometryValues.fs" />
+    <Compile Include="MatrixValues.fs" />
+    <Compile Include="TransformValues.fs" />
+    <Compile Include="SvgGeometry.fs" />
+    <Compile Include="SvgValues.fs" />
+    <Compile Include="SvgLifecycle.fs" />
+    <Compile Include="TransformLifecycle.fs" />
+    <Compile Include="MatrixLifecycle.fs" />
+    <Compile Include="GeometryLifecycle.fs" />
+    <Compile Include="StyleMapLifecycle.fs" />
     <Compile Include="StyleValueLifecycle.fs" />
     <Compile Include="CustomPropertyLifecycle.fs" />
     <Compile Include="TypedStyles.fs" />
@@ -34,6 +45,8 @@
     <Compile Include="SheetElements.fs" />
     <Compile Include="LocalePreferences.fs" />
     <Compile Include="LocaleLifecycle.fs" />
+    <Compile Include="UserTiming.fs" />
+    <Compile Include="../UserTiming/Native.fs" Link="UserTimingNative.fs" />
     <Compile Include="Native.fs" />
     <ProjectReference Include="../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />
     <PackageReference Include="Ranvier.Css.Dom$(RanvierPackageSuffix)" Version="0.1.0-alpha.1" />

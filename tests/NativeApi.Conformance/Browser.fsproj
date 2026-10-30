@@ -19,6 +19,12 @@
     <Compile Include="ComputedStyles.fs" />
     <Compile Include="CustomProperties.fs" />
     <Compile Include="StyleValues.fs" />
+    <Compile Include="StyleMaps.fs" />
+    <Compile Include="GeometryValues.fs" />
+    <Compile Include="MatrixValues.fs" />
+    <Compile Include="TransformValues.fs" />
+    <Compile Include="SvgGeometry.fs" />
+    <Compile Include="SvgValues.fs" />
     <Compile Include="TypedStyles.fs" />
     <Compile Include="FragmentRectangles.fs" />
     <Compile Include="FontTransitionRules.fs" />
@@ -30,6 +36,7 @@
     <Compile Include="SheetConstruction.fs" />
     <Compile Include="SheetElements.fs" />
     <Compile Include="LocalePreferences.fs" />
+    <Compile Include="UserTiming.fs" />
     <Compile Include="Browser.fs" />
     <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" Condition="'$(NativeApiContractRoot)' == ''" />
     <ProjectReference Include="$(NativeApiContractRoot)/src/Fable.Ranvier.Dom/Fable.Ranvier.Dom.fsproj" Condition="'$(NativeApiContractRoot)' != ''" />

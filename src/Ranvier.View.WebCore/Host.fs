@@ -80,6 +80,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let timers = SortedDictionary<struct (float * int), unit -> unit>()
     let timerKeys = Dictionary<int, struct (float * int)>()
     let frames = Dictionary<int, float -> unit>()
+    let timeOrigin = float (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds ())
     let clock = Stopwatch.StartNew ()
     let mutable advanced = 0.0
     let mutable manual = false
@@ -172,13 +173,18 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             original args
 
     /// <summary>Creates a page of <c>width</c> by <c>height</c> CSS pixels and installs it on the current thread.</summary>
-    /// <exception cref="T:System.InvalidOperationException">The native library predates the shared DOM transport functions (ABI 21).</exception>
+    /// <exception cref="T:System.InvalidOperationException">
+    /// The native library lacks generated DOM support or the SVG transport required by ABI 26.
+    /// </exception>
     static member Create(width: int, height: int) : WebCoreHost =
         if
-            Native.rv_abi_version () < 21
+            Native.rv_abi_version () < 26
             || Native.rv_abi_has "dom-generated" <> 1
         then
-            raise (InvalidOperationException $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks the shared DOM transport functions (ABI 21)")
+            raise (
+                InvalidOperationException
+                    $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks this backend's SVG geometry and value transport (ABI 26)"
+            )
 
         let handle = Native.rv_host_create (width, height)
 
@@ -228,6 +234,18 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
         if disposed then
             raise (ObjectDisposedException (nameof WebCoreHost))
+
+    /// <summary>The clock shared by frame callbacks, timers and user timing, with its fixed Unix-millisecond origin.</summary>
+    member internal this.TimingClock: TimingClock =
+        this.EnsureActive ()
+
+        { new TimingClock with
+            member _.TimeOrigin = timeOrigin
+
+            member _.Now() =
+                this.EnsureActive ()
+                now ()
+        }
 
     /// <summary>Posts a callback to the host's thread-safe work queue.</summary>
     member internal _.PostToOwner(action: unit -> unit) =

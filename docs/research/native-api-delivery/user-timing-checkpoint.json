@@ -1,0 +1,200 @@
+{
+  "state": "checkpoint-incomplete",
+  "group": "H02",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/109",
+  "coreHead": "b248f0d2fd985c56a4440ce744f9f4bbca52c3be",
+  "viewsHead": "e1c4cb6098c83a525d783a7e3b629a74570830c3",
+  "branch": "codex/native-api-timing",
+  "sourceCommitted": false,
+  "currentNativeJit": {
+    "shared": 176,
+    "deterministic": 177,
+    "lifecycle": 22,
+    "concurrentMarks": 500,
+    "teardown": 0,
+    "exitCode": 0
+  },
+  "historicalBrowser": {
+    "shared": 160,
+    "deterministic": 161,
+    "contexts": 11,
+    "engine": "156.0.8078.4",
+    "exitCode": 0,
+    "qualification": "earlier source only; strengthened 176/177 not executed"
+  },
+  "nativeAot": {
+    "verified": false,
+    "qualification": "publish exit0 produced managed output only, Native.exe absent; ILCompiler early imports need diagnosis, explicit -f net10.0 not yet tried"
+  },
+  "sources": [
+    {
+      "path": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-timing\\Ranvier\\src\\Ranvier.Dom\\Timing.fs",
+      "bytes": 12068,
+      "sha256": "790032fb98506d982363cd277446548290589f6be897bc3f371a2c9621e0c446"
+    },
+    {
+      "path": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-timing\\Ranvier\\src\\Fable.Ranvier.Dom\\BrowserTiming.fs",
+      "bytes": 7654,
+      "sha256": "2dfcec5224875f61d784133a0b2b60fdebe5ca62a3edf753456ea02af72007b7"
+    },
+    {
+      "path": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-timing\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "bytes": 1240,
+      "sha256": "fff7427f71c3c876014a2e1aaf0cf4ed3a3d5aab53066268166ef24d27f8e4e5"
+    },
+    {
+      "path": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-timing\\Ranvier\\src\\Fable.Ranvier.Dom\\Fable.Ranvier.Dom.fsproj",
+      "bytes": 3243,
+      "sha256": "3eeea5b7c2282c8d6fe42a1cd2907574128bf726eea6bc46abdd181bc2538bfe"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\src\\Ranvier.View.WebCore\\Timing.fs",
+      "bytes": 2089,
+      "sha256": "c7f72876c4e7b738eb78b23c982df06ad0e43f40153bc2de1772b9772ce77615"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\src\\Ranvier.View.WebCore\\Ranvier.View.WebCore.fsproj",
+      "bytes": 4444,
+      "sha256": "38cd792702313bfb14b176fdb76b57c017bcccc4972e31562ba6f5d45f5a7a5f"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\UserTiming.fs",
+      "bytes": 11058,
+      "sha256": "fbf1d99d187cd2256ea994a40fd0053fc1bf179a4ccea4f7a3d56b0db7d39345"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\Native.fs",
+      "bytes": 3144,
+      "sha256": "046b84f7e64743772fe8aa94a96f77c914750fc599336d3ab5ef97079978cc64"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\Native.fsproj",
+      "bytes": 520,
+      "sha256": "6cbfa821a82de494a8693865dbabbbc678b94ef0833c09a086511f95d1066a06"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\Browser.fs",
+      "bytes": 1074,
+      "sha256": "da1cc012fe75919e2f38dd93db4804b45cdb079ed6b0fac1c610da9a30f00d42"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\Browser.fsproj",
+      "bytes": 987,
+      "sha256": "dbcff95e1ccac0f4ae858a58bcc3298e0bdd819a3826e0d23e1abd8873ae5869"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\browser.mjs",
+      "bytes": 4932,
+      "sha256": "83757db39cbc7f267570a639cccf64c8e5432e1d58b1a1c69d57bd22a144134d"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\Directory.Build.props",
+      "bytes": 203,
+      "sha256": "49ded6f05856676a51acd7dff8afe728a04b1bd9d5f45ae61e57ac0e05ec3d09"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\.gitignore",
+      "bytes": 12,
+      "sha256": "826950aee7a8c78d5e68c3257b1720874216e10ca0b4d1d6212f15c346d97135"
+    }
+  ],
+  "logs": [
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-browser-compile.log",
+      "bytes": 507,
+      "sha256": "5aaf4d7bd383e623cb36069f84e0c90fb3d734a26d9a2ab847f8bf655d2d354e"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-browser.log",
+      "bytes": 181,
+      "sha256": "0cb72cf689444278f8aef19cd4bd08e803299920b356cdbc3c32177af0e842cc"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-native-aot-previous1.log",
+      "bytes": 383,
+      "sha256": "9a04dcb5078281bdcfc7913485a5059a119c3b8fa9edcbb29c9f9f1a5946215e"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-native-aot-publish-previous1.log",
+      "bytes": 816,
+      "sha256": "c0332ca4f9791ffa46cbf30e292cb651d7b3645a91cb82075f5850025daaa0f3"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-native-aot-publish-previous2.log",
+      "bytes": 1424,
+      "sha256": "23afcad507f4fff49040ab7a7c29629c961d765b1685f4c641fc826830dba4ba"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-native-aot-publish.log",
+      "bytes": 973,
+      "sha256": "53cebddc51d87a94229335cc73bf53a74060e732f13e500e82d5fa422f6d1a92"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-native-aot.log",
+      "bytes": 449,
+      "sha256": "d9f599943fb3c39461a9183b70b9a1fec6ffa7556520ee76ded97afcbba75d2c"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-native-jit.log",
+      "bytes": 187,
+      "sha256": "1e9a603588cbfa6d1b1d320b33ff7c4063ca5e9182fd41ca8e9fdbc3ddd726b8"
+    }
+  ],
+  "executedJitBinaries": [
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Native.dll",
+      "bytes": 28160,
+      "sha256": "8fe3f4524ac3c843496c60ba124facdcccda72f3153287f147228530726e3e04"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Ranvier.Dom.dll",
+      "bytes": 279552,
+      "sha256": "084b5299aa2cab6adee3f5a99d4019b38f659aa700cbbe993c84a0cd94fd1fec"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Ranvier.View.WebCore.dll",
+      "bytes": 1324544,
+      "sha256": "04d2a5c8bea048362986f36fa397133c0d0d359c842ea21d1fb2c998ff965664"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\RanvierWebCoreHost.dll",
+      "bytes": 524288,
+      "sha256": "1b401d382add034921d822b650cd11e85f12d3911f121f5e17dd0ccd508dccc1"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\WebCore.dll",
+      "bytes": 46356480,
+      "sha256": "6e2ede0eef34e9e699cf6434a2dd4c8723d692254d141f594cdcf3ded91c720c"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\JavaScriptCore.dll",
+      "bytes": 15799808,
+      "sha256": "1525ac34215001634bb0e95eff785969a6e78dbc9b80b67ef8bd785edb7b65ff"
+    }
+  ],
+  "restoredNativeLibraries": [
+    "Ranvier.WebCore.Native.linux-arm64/0.1.0-preview.11",
+    "Ranvier.WebCore.Native.linux-x64/0.1.0-preview.11",
+    "Ranvier.WebCore.Native.osx-arm64/0.1.0-preview.11",
+    "Ranvier.WebCore.Native.win-arm64/0.1.0-preview.11",
+    "Ranvier.WebCore.Native.win-x64/0.1.0-preview.11",
+    "Ranvier.WebCore.Native/0.1.0-preview.11",
+    "Ranvier.WebCore/0.1.0-preview.11"
+  ],
+  "resources": {
+    "ownedSageSession": "2ed7078b stopped",
+    "ownedLeases": "all released",
+    "ownedProcesses": "none live",
+    "ownedSerena": "none started"
+  },
+  "remaining": [
+    "root independent review",
+    "final actual browser",
+    "actual NativeAOT",
+    "full runner/CI wiring",
+    "FCS/API/format/XML/comments/CRLF",
+    "full repository normal/traced gates",
+    "version/pins/source-pack consumption",
+    "platform/official public acceptance"
+  ]
+}

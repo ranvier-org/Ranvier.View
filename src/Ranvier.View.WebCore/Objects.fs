@@ -72,6 +72,96 @@ module internal Kind =
     [<Literal>]
     let VariableReferenceValue = 20
 
+    [<Literal>]
+    let StyleMap = 21
+
+    [<Literal>]
+    let Point = 22
+
+    [<Literal>]
+    let Quad = 23
+
+    [<Literal>]
+    let Matrix = 24
+
+    [<Literal>]
+    let TransformComponent = 25
+
+    [<Literal>]
+    let SVGRect = 26
+
+    [<Literal>]
+    let SVGMatrix = 27
+
+    [<Literal>]
+    let SVGPoint = 28
+
+    [<Literal>]
+    let SVGAnimatedRect = 29
+
+    [<Literal>]
+    let SVGPreserveAspectRatio = 30
+
+    [<Literal>]
+    let SVGAnimatedPreserveAspectRatio = 31
+
+    [<Literal>]
+    let SVGTransform = 32
+
+    [<Literal>]
+    let SVGTransformList = 33
+
+    [<Literal>]
+    let SVGAnimatedTransformList = 34
+
+    [<Literal>]
+    let SVGNumber = 35
+
+    [<Literal>]
+    let SVGLength = 36
+
+    [<Literal>]
+    let SVGAngle = 37
+
+    [<Literal>]
+    let SVGNumberList = 38
+
+    [<Literal>]
+    let SVGLengthList = 39
+
+    [<Literal>]
+    let SVGPointList = 40
+
+    [<Literal>]
+    let SVGAnimatedNumber = 41
+
+    [<Literal>]
+    let SVGAnimatedLength = 42
+
+    [<Literal>]
+    let SVGAnimatedLengthList = 43
+
+    [<Literal>]
+    let SVGAnimatedNumberList = 44
+
+    [<Literal>]
+    let SVGAnimatedEnumeration = 45
+
+    [<Literal>]
+    let SVGAnimatedString = 46
+
+    [<Literal>]
+    let SVGAnimatedBoolean = 47
+
+    [<Literal>]
+    let SVGStringList = 48
+
+    [<Literal>]
+    let SVGViewSpec = 49
+
+    [<Literal>]
+    let SVGAnimatedAngle = 50
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -99,6 +189,7 @@ type internal Registration(target: nativeint, eventType: string, capture: bool, 
 type NativeObject(session: Session, handle: nativeint, kind: int) =
     let mutable handle = handle
     let lifetimeAnchors = List<NativeObject>()
+    let mutable contextDocument: NativeObject = null
 
     /// <summary>The session of the host the object belongs to.</summary>
     member _.Session = session
@@ -107,6 +198,28 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
     member _.Handle = handle
 
     member internal _.Kind = kind
+
+    member internal _.ContextDocument = contextDocument
+
+    member internal _.LifetimeAnchors = lifetimeAnchors :> seq<NativeObject>
+
+    /// <summary>Binds the first checked document context without rebinding cached objects.</summary>
+    member internal this.BindDocumentContext(document: NativeObject) =
+        if isNull document then
+            nullArg (nameof document)
+
+        if
+            not (obj.ReferenceEquals (session, document.Session))
+            || not (box document :? Ranvier.Dom.Document)
+        then
+            invalidArg (nameof document) "The document must belong to this object's native session"
+
+        if document.Handle = 0n then
+            raise (ObjectDisposedException "Document context")
+
+        if isNull contextDocument then
+            contextDocument <- document
+            this.KeepAlive document
 
     /// <summary>Keeps an owner wrapper reachable until this object is detached or collected.</summary>
     member internal this.KeepAlive(anchor: NativeObject) =
@@ -132,6 +245,7 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
             Session.Release (kind, handle)
             handle <- 0n
             lifetimeAnchors.Clear ()
+            contextDocument <- null
             GC.SuppressFinalize this
 
     override _.Finalize() =
@@ -182,6 +296,36 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.RectList -> NativeDom.rv_dom_dom_rect_list_release handle
         | Kind.StyleValue -> NativeDom.rv_dom_css_style_value_release handle
         | Kind.VariableReferenceValue -> NativeDom.rv_dom_cssom_variable_reference_value_release handle
+        | Kind.StyleMap -> NativeDom.rv_dom_style_property_map_read_only_release handle
+        | Kind.Point -> NativeDom.rv_dom_dom_point_read_only_release handle
+        | Kind.Quad -> NativeDom.rv_dom_dom_quad_release handle
+        | Kind.Matrix -> NativeDom.rv_dom_dom_matrix_read_only_release handle
+        | Kind.TransformComponent -> NativeDom.rv_dom_css_transform_component_release handle
+        | Kind.SVGRect -> NativeDom.rv_dom_svg_rect_release handle
+        | Kind.SVGMatrix -> NativeDom.rv_dom_svg_matrix_release handle
+        | Kind.SVGPoint -> NativeDom.rv_dom_svg_point_release handle
+        | Kind.SVGAnimatedRect -> NativeDom.rv_dom_svg_animated_rect_release handle
+        | Kind.SVGPreserveAspectRatio -> NativeDom.rv_dom_svg_preserve_aspect_ratio_release handle
+        | Kind.SVGAnimatedPreserveAspectRatio -> NativeDom.rv_dom_svg_animated_preserve_aspect_ratio_release handle
+        | Kind.SVGTransform -> NativeDom.rv_dom_svg_transform_release handle
+        | Kind.SVGTransformList -> NativeDom.rv_dom_svg_transform_list_release handle
+        | Kind.SVGAnimatedTransformList -> NativeDom.rv_dom_svg_animated_transform_list_release handle
+        | Kind.SVGNumber -> NativeDom.rv_dom_svg_number_release handle
+        | Kind.SVGLength -> NativeDom.rv_dom_svg_length_release handle
+        | Kind.SVGAngle -> NativeDom.rv_dom_svg_angle_release handle
+        | Kind.SVGNumberList -> NativeDom.rv_dom_svg_number_list_release handle
+        | Kind.SVGLengthList -> NativeDom.rv_dom_svg_length_list_release handle
+        | Kind.SVGPointList -> NativeDom.rv_dom_svg_point_list_release handle
+        | Kind.SVGAnimatedNumber -> NativeDom.rv_dom_svg_animated_number_release handle
+        | Kind.SVGAnimatedLength -> NativeDom.rv_dom_svg_animated_length_release handle
+        | Kind.SVGAnimatedLengthList -> NativeDom.rv_dom_svg_animated_length_list_release handle
+        | Kind.SVGAnimatedNumberList -> NativeDom.rv_dom_svg_animated_number_list_release handle
+        | Kind.SVGAnimatedEnumeration -> NativeDom.rv_dom_svg_animated_enumeration_release handle
+        | Kind.SVGAnimatedString -> NativeDom.rv_dom_svg_animated_string_release handle
+        | Kind.SVGAnimatedBoolean -> NativeDom.rv_dom_svg_animated_boolean_release handle
+        | Kind.SVGStringList -> NativeDom.rv_dom_svg_string_list_release handle
+        | Kind.SVGViewSpec -> NativeDom.rv_dom_svg_view_spec_release handle
+        | Kind.SVGAnimatedAngle -> NativeDom.rv_dom_svg_animated_angle_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =
@@ -524,6 +668,83 @@ module internal Interop =
             ->
             handle value
         | _ -> invalidArg (nameof value) "The typed value must belong to the same native host"
+
+    /// <summary>Validates a transform component or matrix argument against its receiver's native session.</summary>
+    let transformHandle (session: Session) (kind: int) (value: obj) =
+        if isNull value then
+            nullArg (nameof value)
+
+        match value with
+        | :? NativeObject as target when
+            obj.ReferenceEquals (session, target.Session)
+            && target.Kind = kind
+            ->
+            handle value
+        | _ -> invalidArg (nameof value) "The transform input must have the expected type in the same native host"
+
+    /// <summary>Validates an SVG member input's release kind, native session and permitted null value.</summary>
+    let svgHandle (session: Session) (kind: int) (allowNull: bool) (value: obj) =
+        match value with
+        | null when allowNull -> 0n
+        | null -> nullArg (nameof value)
+        | :? NativeObject as target when
+            obj.ReferenceEquals (session, target.Session)
+            && target.Kind = kind
+            ->
+            handle value
+        | _ -> invalidArg (nameof value) "The SVG input must have the expected type in the same native host"
+
+    /// <summary>Finds a retained acquisition document without substituting the host's current document.</summary>
+    let contextDocument (target: NativeObject) =
+        handle (box target) |> ignore
+        let visited = HashSet<NativeObject>(HashIdentity.Reference)
+
+        let rec find (value: NativeObject) =
+            if not (visited.Add value) then
+                None
+            elif not (isNull value.ContextDocument) then
+                Some value.ContextDocument
+            else
+                let direct =
+                    match box value with
+                    | :? Ranvier.Dom.Document -> Some value
+                    | :? Ranvier.Dom.Node as node ->
+                        let owner = node.ownerDocument
+
+                        if isNull owner then
+                            None
+                        else
+                            Some (box owner :?> NativeObject)
+                    | :? Ranvier.Dom.StyleSheet as sheet ->
+                        let ownerNode = sheet.ownerNode
+
+                        if isNull ownerNode then
+                            None
+                        elif box ownerNode :? Ranvier.Dom.Document then
+                            Some (box ownerNode :?> NativeObject)
+                        else
+                            let owner = ownerNode.ownerDocument
+
+                            if isNull owner then
+                                None
+                            else
+                                Some (box owner :?> NativeObject)
+                    | _ -> None
+
+                match direct with
+                | Some document -> Some document
+                | None -> value.LifetimeAnchors |> Seq.tryPick find
+
+        match find target with
+        | Some document when obj.ReferenceEquals (target.Session, document.Session) ->
+            handle (box document) |> ignore
+            document
+        | Some _ -> invalidOp "The acquisition document belongs to another native session"
+        | None -> invalidOp "The native object has no retained acquisition document context"
+
+    /// <summary>The live document handle bound to a context-requiring object.</summary>
+    let contextHandle target =
+        handle (box (contextDocument target))
 
     /// <summary>Copies a length-delimited owned result before its container is released.</summary>
     let spanText (span: NativeDom.RvDomUtf8StringSpan) =

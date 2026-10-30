@@ -8,6 +8,11 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), 'generated');
 const customPropertiesOnly = process.argv.includes('--custom-properties-only');
 const styleValuesOnly = process.argv.includes('--style-values-only');
 const localesOnly = process.argv.includes('--locales-only');
+const styleMapsOnly = process.argv.includes('--style-maps-only');
+const geometryOnly = process.argv.includes('--geometry-only');
+const matrixOnly = process.argv.includes('--matrix-only');
+const transformsOnly = process.argv.includes('--transforms-only');
+const svgOnly = process.argv.includes('--svg-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
 const server = createServer(async (request, response) => {
@@ -40,7 +45,7 @@ try {
   const checks = await page.evaluate(async focused => {
     try {
       const fixture = await import('/Browser.js');
-      return await (focused === 'locales' ? fixture.runLocales() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : fixture.run());
+      return await (focused === 'locales' ? fixture.runLocales() : focused === 'svg' ? fixture.runSvg() : focused === 'transforms' ? fixture.runTransforms() : focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : fixture.run());
     } catch (error) {
       throw new Error(JSON.stringify({
         type: error?.constructor?.name,
@@ -51,13 +56,34 @@ try {
         fields: Object.fromEntries(Object.getOwnPropertyNames(error).filter(key => key !== 'stack').map(key => [key, error[key]])),
       }));
     }
-  }, localesOnly ? 'locales' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
+  }, localesOnly ? 'locales' : svgOnly ? 'svg' : transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
   if (localesOnly) {
     if (checks.locales !== 35 || checks.localeDeterministic !== 14 || checks.localeContext !== 6) throw new Error(`Locale preference assertions did not run: ${JSON.stringify(checks)}`);
     console.log(`BROWSER_API H06 PASS assertions=${checks.locales} deterministic=${checks.localeDeterministic} engine=chromium`);
     console.log(`BROWSER_API H06_DETERMINISTIC PASS assertions=${checks.localeDeterministic} engine=chromium`);
     console.log(`BROWSER_API H06 CONTEXT PASS assertions=${checks.localeContext} engine=chromium`);
     console.log(`BROWSER_API H06 PROVIDER ${JSON.stringify(checks)}`);
+  } else if (svgOnly) {
+    if(checks.svgGeometry!==126 || checks.svgValues!==361 || checks.svgContext!==54) throw new Error(`SVG shared/realm assertions did not run: ${JSON.stringify(checks)}`);
+    console.log(`BROWSER_API S01_S02 PASS assertions=${checks.svgGeometry} engine=chromium`);
+    console.log(`BROWSER_API S04_REACHABLE PASS assertions=${checks.svgValues} engine=chromium`);
+    console.log(`BROWSER_API SVG CONTEXT PASS assertions=${checks.svgContext} engine=chromium`);
+  } else if (transformsOnly) {
+    if(checks.transformValues!==471 || checks.transformContext!==3) throw new Error(`Typed transform shared/context assertions did not run: ${JSON.stringify(checks)}`);
+    console.log(`BROWSER_API C16 PASS assertions=${checks.transformValues} engine=chromium`);
+    console.log(`BROWSER_API C16 CONTEXT PASS assertions=${checks.transformContext} engine=chromium`);
+  } else if (matrixOnly) {
+    if(checks.matrices!==710 || checks.matrixContext!==3) throw new Error(`Matrix shared/context assertions did not run: ${JSON.stringify(checks)}`);
+    console.log(`BROWSER_API G08 PASS assertions=${checks.matrices} engine=chromium`);
+    console.log(`BROWSER_API G08 CONTEXT PASS assertions=${checks.matrixContext} engine=chromium`);
+  } else if (geometryOnly) {
+    if(checks.geometry!==177 || checks.geometryContext!==3) throw new Error(`Geometry shared/context assertions did not run: ${JSON.stringify(checks)}`);
+    console.log(`BROWSER_API G07 PASS assertions=${checks.geometry} engine=chromium`);
+    console.log(`BROWSER_API G07 CONTEXT PASS assertions=${checks.geometryContext} engine=chromium`);
+  } else if (styleMapsOnly) {
+    if (checks.styleMaps !== 127 || checks.styleMapContext !== 3) throw new Error(`Typed-map shared/context assertions did not run: ${JSON.stringify(checks)}`);
+    console.log(`BROWSER_API C13 PASS assertions=${checks.styleMaps} engine=chromium`);
+    console.log(`BROWSER_API C13 CONTEXT PASS assertions=${checks.styleMapContext} engine=chromium`);
   } else if (styleValuesOnly) {
     if (checks.styleValues !== 99 || checks.styleValueContext !== 3) throw new Error(`Typed-style shared/context assertions did not run: ${JSON.stringify(checks)}`);
     console.log(`BROWSER_API C14 PASS assertions=${checks.styleValues} engine=chromium`);
@@ -73,11 +99,29 @@ try {
   console.log(`BROWSER_API H06 PASS assertions=${checks.locales} deterministic=${checks.localeDeterministic} context=${checks.localeContext} engine=chromium`);
   console.log(`BROWSER_API H06_DETERMINISTIC PASS assertions=${checks.localeDeterministic} engine=chromium`);
   console.log(`BROWSER_API H06 CONTEXT PASS assertions=${checks.localeContext} engine=chromium`);
+  if(checks.svgGeometry!==126 || checks.svgValues!==361 || checks.svgContext!==54) throw new Error(`SVG shared/realm assertions did not run: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API S01_S02 PASS assertions=${checks.svgGeometry} engine=chromium`);
+  console.log(`BROWSER_API S04_REACHABLE PASS assertions=${checks.svgValues} engine=chromium`);
+  console.log(`BROWSER_API SVG CONTEXT PASS assertions=${checks.svgContext} engine=chromium`);
+  if(checks.transformValues!==471 || checks.transformContext!==3) throw new Error(`Typed transform shared/context assertions did not run: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API C16 PASS assertions=${checks.transformValues} engine=chromium`);
+  console.log(`BROWSER_API C16 CONTEXT PASS assertions=${checks.transformContext} engine=chromium`);
+  if(checks.matrices!==710 || checks.matrixContext!==3) throw new Error(`Matrix shared/context assertions did not run: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API G08 PASS assertions=${checks.matrices} engine=chromium`);
+  console.log(`BROWSER_API G08 CONTEXT PASS assertions=${checks.matrixContext} engine=chromium`);
+  if(checks.geometry!==177 || checks.geometryContext!==3) throw new Error(`Geometry shared/context assertions did not run: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API G07 PASS assertions=${checks.geometry} engine=chromium`);
+  console.log(`BROWSER_API G07 CONTEXT PASS assertions=${checks.geometryContext} engine=chromium`);
+  if (checks.styleMaps !== 127 || checks.styleMapContext !== 3) throw new Error(`Typed-map shared/context assertions did not run: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API C13 PASS assertions=${checks.styleMaps} engine=chromium`);
+  console.log(`BROWSER_API C13 CONTEXT PASS assertions=${checks.styleMapContext} engine=chromium`);
   if (checks.styleValues !== 99 || checks.styleValueContext !== 3) throw new Error(`Typed-style shared/context assertions did not run: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API C14 PASS assertions=${checks.styleValues} engine=chromium`);
   console.log(`BROWSER_API C14 CONTEXT PASS assertions=${checks.styleValueContext} engine=chromium`);
   if (checks.cssSupport !== 32 || checks.cssEscaping !== 45 || checks.cssOracle !== 196609 || checks.tables !== 30 || checks.viewTables < 29 || checks.reflection < 200 || checks.namespaces < 24 || checks.hyperlinks < 60 || checks.cssom < 58 || checks.svgCssom < 31 || checks.construction < 40) throw new Error(`Insufficient API assertions: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API D10 PASS assertions=${checks.tables} engine=chromium`);
+  if (checks.timing !== 180 || checks.timingDeterministic !== 181) throw new Error('User timing assertions did not run');
+  console.log(`BROWSER_API H02 PASS assertions=${checks.timing} deterministic=${checks.timingDeterministic} engine=chromium`);
   console.log(`BROWSER_API D10_VIEW PASS assertions=${checks.viewTables} engine=chromium`);
   if (checks.viewHyperlinks !== 50) throw new Error('View hyperlink authoring assertions did not run');
   console.log(`BROWSER_API D11_VIEW_HYPERLINKS PASS assertions=${checks.viewHyperlinks} engine=chromium`);

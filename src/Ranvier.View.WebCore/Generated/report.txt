@@ -1,18 +1,43 @@
-125 classes; 1736 members: 1723 mapped to 1705 of 1725 rv_dom_* functions, 13 hand-written, 0 unmapped
+179 classes; 2219 members: 2206 mapped to 2136 of 2182 rv_dom_* functions, 13 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
+  rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
+  rv_dom_css_perspective_create: CSSPerspective.constructor (op)
   rv_dom_css_register_property: DOMCSSNamespace.registerProperty (op)
+  rv_dom_css_rotate_create_1: CSSRotate.constructor (op)
+  rv_dom_css_rotate_create_4: CSSRotate.constructor (op)
+  rv_dom_css_scale_create: CSSScale.constructor (op)
+  rv_dom_css_skew_create: CSSSkew.constructor (op)
+  rv_dom_css_skew_x_create: CSSSkewX.constructor (op)
+  rv_dom_css_skew_y_create: CSSSkewY.constructor (op)
   rv_dom_css_style_sheet_create: CSSStyleSheet.constructor (op)
   rv_dom_css_style_value_parse: CSSStyleValue.parse (op)
   rv_dom_css_style_value_parse_all: CSSStyleValue.parseAll (op)
   rv_dom_css_supports_1: DOMCSSNamespace.supports (op)
   rv_dom_css_supports_2: DOMCSSNamespace.supports (op)
+  rv_dom_css_transform_value_create: CSSTransformValue.constructor (op)
+  rv_dom_css_translate_create: CSSTranslate.constructor (op)
   rv_dom_css_unit_value_create: CSSUnitValue.constructor (op)
   rv_dom_css_unparsed_value_create: CSSUnparsedValue.constructor (op)
   rv_dom_cssom_keyword_value_create: CSSOMKeywordValue.constructor (op)
   rv_dom_cssom_variable_reference_value_create: CSSOMVariableReferenceValue.constructor (op)
   rv_dom_document_get_adopted_style_sheets: Document.adoptedStyleSheets (get)
   rv_dom_document_set_adopted_style_sheets: Document.adoptedStyleSheets (set)
+  rv_dom_dom_matrix_create: DOMMatrix.constructor (op)
+  rv_dom_dom_matrix_from_matrix: DOMMatrix.fromMatrix (op)
+  rv_dom_dom_matrix_read_only_create: DOMMatrixReadOnly.constructor (op)
+  rv_dom_dom_matrix_read_only_from_matrix: DOMMatrixReadOnly.fromMatrix (op)
+  rv_dom_dom_point_create: DOMPoint.constructor (op)
+  rv_dom_dom_point_from_point: DOMPoint.fromPoint (op)
+  rv_dom_dom_point_read_only_create: DOMPointReadOnly.constructor (op)
+  rv_dom_dom_point_read_only_from_point: DOMPointReadOnly.fromPoint (op)
+  rv_dom_dom_quad_create: DOMQuad.constructor (op)
+  rv_dom_dom_quad_from_quad: DOMQuad.fromQuad (op)
+  rv_dom_dom_quad_from_rect: DOMQuad.fromRect (op)
+  rv_dom_dom_rect_create: DOMRect.constructor (op)
+  rv_dom_dom_rect_from_rect: DOMRect.fromRect (op)
+  rv_dom_dom_rect_read_only_create: DOMRectReadOnly.constructor (op)
+  rv_dom_dom_rect_read_only_from_rect: DOMRectReadOnly.fromRect (op)
   rv_dom_event_get_current_target: Event.currentTarget (get)
   rv_dom_html_select_element_remove_0: HTMLSelectElement.remove (op)
   rv_dom_input_event_get_data: InputEvent.data (get)
@@ -20,6 +45,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_keyboard_event_get_key: KeyboardEvent.key (get)
   rv_dom_shadow_root_get_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (get)
   rv_dom_shadow_root_set_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (set)
+  rv_dom_style_property_map_read_only_entries: StylePropertyMapReadOnly.entries (op)
   rv_dom_window_get_computed_style: DOMWindow.getComputedStyle (op)
 
 Unmapped members by reason:
@@ -41,20 +67,30 @@ Members by class (mapped / hand-written / unmapped):
   CSSKeywordValueObject: 2 / 0 / 0
   CSSLayerBlockRuleObject: 1 / 0 / 0
   CSSLayerStatementRuleObject: 1 / 0 / 0
+  CSSMatrixComponentObject: 2 / 0 / 0
   CSSMediaRuleObject: 1 / 0 / 0
   CSSNamespaceRuleObject: 2 / 0 / 0
   CSSNestedDeclarationsObject: 1 / 0 / 0
+  CSSPerspectiveObject: 2 / 0 / 0
   CSSPositionTryDescriptorsObject: 140 / 0 / 0
   CSSPositionTryRuleObject: 2 / 0 / 0
   CSSPropertyRuleObject: 4 / 0 / 0
+  CSSRotateObject: 8 / 0 / 0
   CSSRuleListObject: 2 / 0 / 0
   CSSRuleObject: 5 / 0 / 0
+  CSSScaleObject: 6 / 0 / 0
   CSSScopeRuleObject: 2 / 0 / 0
+  CSSSkewObject: 4 / 0 / 0
+  CSSSkewXObject: 2 / 0 / 0
+  CSSSkewYObject: 2 / 0 / 0
   CSSStyleDeclarationObject: 10 / 0 / 0
   CSSStylePropertiesObject: 2 / 0 / 0
-  CSSStyleRuleObject: 6 / 0 / 0
+  CSSStyleRuleObject: 7 / 0 / 0
   CSSStyleSheetObject: 8 / 0 / 0
   CSSStyleValueObject: 1 / 0 / 0
+  CSSTransformComponentObject: 4 / 0 / 0
+  CSSTransformValueObject: 5 / 0 / 0
+  CSSTranslateObject: 6 / 0 / 0
   CSSUnitValueObject: 3 / 0 / 0
   CSSUnparsedValueObject: 4 / 0 / 0
   CSSVariableReferenceValueObject: 3 / 0 / 0
@@ -62,14 +98,20 @@ Members by class (mapped / hand-written / unmapped):
   CharacterDataObject: 14 / 0 / 0
   CompositionEventObject: 1 / 0 / 0
   DOMImplementationObject: 2 / 0 / 0
+  DOMMatrixObject: 95 / 0 / 0
+  DOMMatrixReadOnlyObject: 39 / 0 / 0
+  DOMPointObject: 13 / 0 / 0
+  DOMPointReadOnlyObject: 5 / 0 / 0
+  DOMQuadObject: 5 / 0 / 0
   DOMRectListObject: 2 / 0 / 0
+  DOMRectObject: 16 / 0 / 0
   DOMRectReadOnlyObject: 8 / 0 / 0
   DOMSelectionObject: 31 / 0 / 0
   DOMStringMapObject: 3 / 0 / 0
   DOMTokenListObject: 10 / 0 / 0
   DocumentFragmentObject: 11 / 0 / 0
-  DocumentObject: 70 / 0 / 0
-  ElementObject: 180 / 0 / 0
+  DocumentObject: 71 / 0 / 0
+  ElementObject: 181 / 0 / 0
   EventObject: 17 / 1 / 0
   EventTargetObject: 0 / 9 / 0
   FocusEventObject: 1 / 0 / 0
@@ -87,7 +129,7 @@ Members by class (mapped / hand-written / unmapped):
   HTMLDialogElementObject: 10 / 0 / 0
   HTMLDirectoryElementObject: 2 / 0 / 0
   HTMLDivElementObject: 2 / 0 / 0
-  HTMLElementObject: 67 / 0 / 0
+  HTMLElementObject: 68 / 0 / 0
   HTMLFieldSetElementObject: 13 / 0 / 0
   HTMLFontElementObject: 6 / 0 / 0
   HTMLFormElementObject: 28 / 0 / 0
@@ -132,7 +174,7 @@ Members by class (mapped / hand-written / unmapped):
   HTMLUListElementObject: 4 / 0 / 0
   InputEventObject: 2 / 2 / 0
   KeyboardEventObject: 12 / 1 / 0
-  MathMLElementObject: 10 / 0 / 0
+  MathMLElementObject: 11 / 0 / 0
   MediaListObject: 6 / 0 / 0
   MouseEventObject: 20 / 0 / 0
   NamedNodeMapObject: 8 / 0 / 0
@@ -141,9 +183,47 @@ Members by class (mapped / hand-written / unmapped):
   PointerEventObject: 14 / 0 / 0
   RadioNodeListObject: 2 / 0 / 0
   RangeObject: 26 / 0 / 0
-  SVGElementObject: 11 / 0 / 0
+  SVGAngleObject: 9 / 0 / 0
+  SVGAnimatedAngleObject: 2 / 0 / 0
+  SVGAnimatedBooleanObject: 3 / 0 / 0
+  SVGAnimatedEnumerationObject: 3 / 0 / 0
+  SVGAnimatedLengthListObject: 2 / 0 / 0
+  SVGAnimatedLengthObject: 2 / 0 / 0
+  SVGAnimatedNumberListObject: 2 / 0 / 0
+  SVGAnimatedNumberObject: 3 / 0 / 0
+  SVGAnimatedPreserveAspectRatioObject: 2 / 0 / 0
+  SVGAnimatedRectObject: 2 / 0 / 0
+  SVGAnimatedStringObject: 3 / 0 / 0
+  SVGAnimatedTransformListObject: 2 / 0 / 0
+  SVGElementObject: 14 / 0 / 0
+  SVGGeometryElementObject: 5 / 0 / 0
+  SVGGraphicsElementObject: 6 / 0 / 0
+  SVGLengthListObject: 10 / 0 / 0
+  SVGLengthObject: 9 / 0 / 0
+  SVGMarkerElementObject: 13 / 0 / 0
+  SVGMatrixObject: 23 / 0 / 0
+  SVGNumberListObject: 10 / 0 / 0
+  SVGNumberObject: 2 / 0 / 0
+  SVGPatternElementObject: 12 / 0 / 0
+  SVGPointListObject: 10 / 0 / 0
+  SVGPointObject: 5 / 0 / 0
+  SVGPolygonElementObject: 2 / 0 / 0
+  SVGPolylineElementObject: 2 / 0 / 0
+  SVGPreserveAspectRatioObject: 4 / 0 / 0
+  SVGRectObject: 8 / 0 / 0
+  SVGSVGElementObject: 36 / 0 / 0
+  SVGStringListObject: 10 / 0 / 0
   SVGStyleElementObject: 9 / 0 / 0
+  SVGSymbolElementObject: 2 / 0 / 0
+  SVGTextContentElementObject: 11 / 0 / 0
+  SVGTextPositioningElementObject: 5 / 0 / 0
+  SVGTransformListObject: 12 / 0 / 0
+  SVGTransformObject: 9 / 0 / 0
+  SVGViewElementObject: 4 / 0 / 0
+  SVGViewSpecObject: 8 / 0 / 0
   ShadowRootObject: 18 / 0 / 0
+  StylePropertyMapObject: 4 / 0 / 0
+  StylePropertyMapReadOnlyObject: 4 / 0 / 0
   StyleSheetListObject: 3 / 0 / 0
   StyleSheetObject: 8 / 0 / 0
   TextObject: 3 / 0 / 0

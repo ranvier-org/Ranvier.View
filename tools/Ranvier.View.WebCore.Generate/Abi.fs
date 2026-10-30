@@ -40,6 +40,12 @@ type Function =
             && this.Descriptor.TryGetProperty ("stringInputs", &transport)
             && transport.GetString () = "utf8-lengths"
 
+        let contextParameter =
+            if Metadata.hasText "contextReceiver" "Document" this.Descriptor then
+                Some (Metadata.text "contextParameter" this.Descriptor)
+            else
+                None
+
         this.Parameters
         |> List.tail
         |> List.filter (fun p ->
@@ -49,6 +55,7 @@ type Function =
             | "buffer"
             | "capacity"
             | "length" -> false
+            | name when contextParameter = Some name -> false
             | _ ->
                 not (
                     lengthDelimited
@@ -184,9 +191,11 @@ let private validateUnionTags (nativeDom: Type) (model: JsonElement) =
             for index, arm in Metadata.items "subtypes" mapping |> Array.indexed do
                 let suffix =
                     match Metadata.text "kind" arm with
+                    | "void" -> "VOID"
                     | "bool" -> "BOOL"
                     | "number" -> "NUMBER"
                     | "string" -> "STRING"
+                    | "sequence" -> constantName ((Metadata.text "ctype" arm).Substring("RvDom".Length))
                     | _ -> Metadata.text "interface" arm |> constantName
 
                 let fieldName = prefix + "_" + suffix

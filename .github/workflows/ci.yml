@@ -55,12 +55,12 @@ jobs:
           key: nuget-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('**/*.fsproj', '**/Directory.Build.*', 'nuget.config', '.config/dotnet-tools.json') }}
           restore-keys: nuget-${{ runner.os }}-${{ matrix.group }}-
       # The counters suites compile core with RanvierCounters=true, which the published Ranvier package omits.
-      - name: Check out the Core revision matching DOM alpha.14
+      - name: Check out the Core revision matching DOM alpha.20
         if: matrix.group == 'view' || matrix.group == 'arms'
         uses: actions/checkout@v7
         with:
           repository: ranvier-org/Ranvier
-          ref: 955b141df2d963228eef07084c860286f92808cb
+          ref: a2562e814b028a94a6390235e777d3bbea987b4d
           path: .ci/ranvier
           persist-credentials: false
       - name: Reference the core source for the counters suites
@@ -164,7 +164,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet publish examples/Ranvier.NativeCounter -c Release -r ${{ matrix.rid }} -o artifacts/native-aot/counter
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet publish tests/NativeApi.Conformance/Native.fsproj -c Release -r ${{ matrix.rid }} -p:PublishAot=true -o artifacts/native-aot/api
+          dotnet publish tests/NativeApi.Conformance/Native.fsproj -f net10.0 -c Release -r ${{ matrix.rid }} -p:PublishAot=true -o artifacts/native-aot/api
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Run the published NativeAOT smoke app
         run: ./artifacts/native-aot/smoke/Ranvier.View.WebCore.AotSmoke.exe
@@ -267,7 +267,7 @@ jobs:
         run: |
           dotnet publish tests/Ranvier.View.WebCore.AotSmoke -c Release -r osx-arm64 -o artifacts/native-aot/smoke
           dotnet publish examples/Ranvier.NativeCounter -c Release -r osx-arm64 -o artifacts/native-aot/counter
-          dotnet publish tests/NativeApi.Conformance/Native.fsproj -c Release -r osx-arm64 -p:PublishAot=true -o artifacts/native-aot/api
+          dotnet publish tests/NativeApi.Conformance/Native.fsproj -f net10.0 -c Release -r osx-arm64 -p:PublishAot=true -o artifacts/native-aot/api
       - name: Run the published NativeAOT smoke app
         run: ./artifacts/native-aot/smoke/Ranvier.View.WebCore.AotSmoke
       - name: Shared NativeAOT API conformance
@@ -319,7 +319,7 @@ jobs:
         run: |
           dotnet publish tests/Ranvier.View.WebCore.AotSmoke -c Release -r linux-x64 -o artifacts/native-aot/smoke
           dotnet publish examples/Ranvier.NativeCounter -c Release -r linux-x64 -o artifacts/native-aot/counter
-          dotnet publish tests/NativeApi.Conformance/Native.fsproj -c Release -r linux-x64 -p:PublishAot=true -o artifacts/native-aot/api
+          dotnet publish tests/NativeApi.Conformance/Native.fsproj -f net10.0 -c Release -r linux-x64 -p:PublishAot=true -o artifacts/native-aot/api
       - name: Run the published NativeAOT smoke app
         run: ./artifacts/native-aot/smoke/Ranvier.View.WebCore.AotSmoke
       - name: Shared NativeAOT API conformance
@@ -346,6 +346,10 @@ jobs:
           node-version: '26'
       - run: dotnet fsi build.fsx -- tools
       - run: dotnet fsi build.fsx -- native-api-browser
+      - name: Shared timing document lifetime and browser interoperability
+        run: |
+          dotnet fickl tests/UserTiming/Browser.fsproj --outDir tests/UserTiming/generated --extension .js --configuration Release
+          node tests/UserTiming/browser.mjs
 
   packages:
     name: Packages

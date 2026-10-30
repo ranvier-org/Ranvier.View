@@ -17,8 +17,84 @@ let private runLocales () =
     System.Console.WriteLine $"NATIVE_API H06 ALIAS iw-IL={localeAlias} US/Eastern={zoneAlias}"
     0
 
+let private runSvg (host: WebCoreHost) =
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let geometry = SvgGeometry.run host.Document errorName
+    let values = SvgValues.run host.Document errorName false true
+
+    if geometry <> 126 || values <> 361 then
+        failwith "SVG shared assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API S01_S02 PASS assertions={geometry}"
+    System.Console.WriteLine $"NATIVE_API S04_REACHABLE PASS assertions={values}"
+    geometry + values
+
+let private runTransforms (host: WebCoreHost) =
+    let shared =
+        TransformValues.run
+            (fun () -> Ranvier.View.WebCore.TransformValues.forHost host)
+            (fun () -> Ranvier.View.WebCore.StyleValues.forHost host)
+            (fun () -> Geometry.forHost host)
+            (function
+             | WebCoreDomException (name, _) -> name
+             | error -> error.GetType().Name)
+
+    use transforms = Ranvier.View.WebCore.TransformValues.forHost host
+    use values = Ranvier.View.WebCore.StyleValues.forHost host
+    use maps = Ranvier.View.WebCore.StyleMaps.forHost host
+
+    let effects =
+        TransformValues.runEffects
+            host.Document
+            transforms
+            values
+            maps
+            (fun () -> host.Frame () |> ignore)
+            (fun value -> value :? Ranvier.Dom.CSSTransformValue)
+            (fun value -> value :? Ranvier.Dom.CSSTranslate)
+
+    if shared <> 450 || effects <> 21 then
+        failwith "Typed transform shared/effect assertions did not run"
+
+    shared + effects
+
 let private runAll () =
     runLocales () |> ignore
+    let svgLifecycle = SvgLifecycle.run ()
+
+    if svgLifecycle <> 37 then
+        failwith "SVG lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API SVG LIFETIME PASS assertions={svgLifecycle}"
+    UserTimingNative.run ()
+    let transformLifecycle = TransformLifecycle.run ()
+
+    if transformLifecycle <> 47 then
+        failwith "Typed transform lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API C16 LIFETIME PASS assertions={transformLifecycle}"
+    let matrixLifecycle = MatrixLifecycle.run ()
+
+    if matrixLifecycle <> 23 then
+        failwith "Matrix lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API G08 LIFETIME PASS assertions={matrixLifecycle}"
+    let geometryLifecycle = GeometryLifecycle.run ()
+
+    if geometryLifecycle <> 26 then
+        failwith "Geometry lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API G07 LIFETIME PASS assertions={geometryLifecycle}"
+    let styleMapLifecycle = StyleMapLifecycle.run ()
+
+    if styleMapLifecycle <> 33 then
+        failwith "Typed-map lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API C13 LIFETIME PASS assertions={styleMapLifecycle}"
     let styleValueLifecycle = StyleValueLifecycle.run ()
 
     if styleValueLifecycle <> 19 then
@@ -57,6 +133,35 @@ let private runAll () =
     let session = host.Session
 
     try
+        runSvg host |> ignore
+        let transforms = runTransforms host
+        System.Console.WriteLine $"NATIVE_API C16 PASS assertions={transforms}"
+
+        let matrices =
+            MatrixValues.run
+                (fun () -> Geometry.forHost host)
+                (fun value -> value :? Ranvier.Dom.DOMMatrix)
+                (function
+                | WebCoreDomException (name, _) -> name
+                | error -> error.GetType().Name)
+                "ArgumentNullException"
+
+        if matrices <> 710 then
+            failwith "Matrix shared assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API G08 PASS assertions={matrices}"
+
+        let geometry =
+            GeometryValues.run
+                (fun () -> Geometry.forHost host)
+                (fun value -> value :? Ranvier.Dom.DOMRect, value :? Ranvier.Dom.DOMPoint)
+                (fun error -> error.GetType().Name)
+                "ObjectDisposedException"
+
+        if geometry <> 177 then
+            failwith "Geometry shared assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API G07 PASS assertions={geometry}"
         let viewTables = ViewTables.run host.Document
         System.Console.WriteLine $"NATIVE_API D10_VIEW PASS assertions={viewTables}"
         let viewHyperlinks = ViewHyperlinks.run host.Document
@@ -105,6 +210,26 @@ let private runAll () =
             failwith "Typed-style shared assertions did not run"
 
         System.Console.WriteLine $"NATIVE_API C14 PASS assertions={styleValues}"
+        use styleValueService = Ranvier.View.WebCore.StyleValues.forHost host
+
+        let styleMaps =
+            StyleMaps.run
+                host.Document
+                (fun () -> Ranvier.View.WebCore.StyleMaps.forHost host)
+                styleValueService
+                computedService
+                (fun () -> host.Frame ())
+                (function
+                | WebCoreDomException (name, _) -> name
+                | error -> error.GetType().Name)
+                "ObjectDisposedException"
+                (fun map -> (map :?> Ranvier.Dom.StylePropertyMap).set("width", Ranvier.Dom.CSSStyleValueOrUSVString.USVString "999px"))
+                "InvalidCastException"
+
+        if styleMaps <> 127 then
+            failwith "Typed-map shared assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API C13 PASS assertions={styleMaps}"
 
         let ruleMutations =
             RuleMutations.run host.Document computedService (function
@@ -558,6 +683,130 @@ let private runAll () =
 let main args =
     if Array.contains "--locales-only" args then
         runLocales ()
+    elif Array.contains "--svg-only" args then
+        let lifecycle = SvgLifecycle.run ()
+
+        if lifecycle <> 37 then
+            failwith "SVG lifetime assertions did not run"
+
+        let host = WebCoreHost.Create (640, 480)
+        let session = host.Session
+
+        try
+            runSvg host |> ignore
+            System.Console.WriteLine $"NATIVE_API SVG LIFETIME PASS assertions={lifecycle}"
+        finally
+            (host :> System.IDisposable).Dispose()
+
+        if session.LiveObjects <> 0 then
+            failwith "SVG fixture leaked native wrappers"
+
+        System.Console.WriteLine "NATIVE_API SVG TEARDOWN PASS"
+        0
+    elif Array.contains "--transforms-only" args then
+        let lifecycle = TransformLifecycle.run ()
+        let host = WebCoreHost.Create (64, 64)
+        let session = host.Session
+
+        try
+            let count = runTransforms host
+
+            if count <> 471 || lifecycle <> 47 then
+                failwith "Typed transform focused shared/lifetime assertions did not run"
+
+            System.Console.WriteLine $"NATIVE_API C16 PASS assertions={count}"
+            System.Console.WriteLine $"NATIVE_API C16 LIFETIME PASS assertions={lifecycle}"
+        finally
+            (host :> System.IDisposable).Dispose()
+
+        if session.LiveObjects <> 0 then
+            failwith "Typed transform fixture leaked native wrappers"
+
+        System.Console.WriteLine "NATIVE_API C16 TEARDOWN PASS"
+        0
+    elif Array.contains "--matrix-only" args then
+        let lifecycle = MatrixLifecycle.run ()
+        use host = WebCoreHost.Create (64, 64)
+
+        let count =
+            MatrixValues.run
+                (fun () -> Geometry.forHost host)
+                (fun value -> value :? Ranvier.Dom.DOMMatrix)
+                (function
+                | WebCoreDomException (name, _) -> name
+                | error -> error.GetType().Name)
+                "ArgumentNullException"
+
+        if count <> 710 || lifecycle <> 23 then
+            failwith "Matrix shared/lifetime assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API G08 PASS assertions={count}"
+        System.Console.WriteLine $"NATIVE_API G08 LIFETIME PASS assertions={lifecycle}"
+        (host :> System.IDisposable).Dispose()
+
+        if host.Session.LiveObjects <> 0 then
+            failwith "Matrix wrappers leaked"
+
+        System.Console.WriteLine "NATIVE_API G08 TEARDOWN PASS"
+        0
+    elif Array.contains "--geometry-only" args then
+        let lifecycle = GeometryLifecycle.run ()
+        use host = WebCoreHost.Create (64, 64)
+
+        let count =
+            GeometryValues.run
+                (fun () -> Geometry.forHost host)
+                (fun value -> value :? Ranvier.Dom.DOMRect, value :? Ranvier.Dom.DOMPoint)
+                (fun error -> error.GetType().Name)
+                "ObjectDisposedException"
+
+        if count <> 177 || lifecycle <> 26 then
+            failwith "Geometry shared/lifetime assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API G07 PASS assertions={count}"
+        System.Console.WriteLine $"NATIVE_API G07 LIFETIME PASS assertions={lifecycle}"
+        (host :> System.IDisposable).Dispose()
+
+        if host.Session.LiveObjects <> 0 then
+            failwith "Geometry wrappers leaked"
+
+        System.Console.WriteLine "NATIVE_API G07 TEARDOWN PASS"
+        0
+    elif Array.contains "--style-maps-only" args then
+        let lifecycle = StyleMapLifecycle.run ()
+        let host = WebCoreHost.Create (320, 240)
+        let session = host.Session
+
+        try
+            use values = Ranvier.View.WebCore.StyleValues.forHost host
+            let computed = Ranvier.View.WebCore.ComputedStyles.forHost host
+
+            let count =
+                StyleMaps.run
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.StyleMaps.forHost host)
+                    values
+                    computed
+                    (fun () -> host.Frame ())
+                    (function
+                    | WebCoreDomException (name, _) -> name
+                    | error -> error.GetType().Name)
+                    "ObjectDisposedException"
+                    (fun map -> (map :?> Ranvier.Dom.StylePropertyMap).set("width", Ranvier.Dom.CSSStyleValueOrUSVString.USVString "999px"))
+                    "InvalidCastException"
+
+            if count <> 127 || lifecycle <> 33 then
+                failwith "Typed-map focused shared/lifetime assertions did not run"
+
+            System.Console.WriteLine $"NATIVE_API C13 PASS assertions={count}"
+            System.Console.WriteLine $"NATIVE_API C13 LIFETIME PASS assertions={lifecycle}"
+        finally
+            (host :> System.IDisposable).Dispose()
+
+        if session.LiveObjects <> 0 then
+            failwith "Style-map fixture leaked native wrappers"
+
+        0
     elif Array.contains "--style-values-only" args then
         let lifecycle = StyleValueLifecycle.run ()
         let host = WebCoreHost.Create (320, 240)

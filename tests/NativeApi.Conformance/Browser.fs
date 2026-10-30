@@ -19,8 +19,238 @@ let private windowlessDocument () : Document = jsNative
 [<Emit("$0.name || 'Error'")>]
 let private errorName (error: exn) : string = jsNative
 
+let private svgRealmTargets (target: Document) =
+    let root =
+        target.createElementNS ("http://www.w3.org/2000/svg", "svg") :?> SVGSVGElement
+
+    root.id <- "native-api-svg-realm"
+    target.body.appendChild root |> ignore
+
+    let dictionary =
+        DOMMatrix2DInit (m11 = Some 2., m12 = Some 3., m21 = Some 4., m22 = Some 5., m41 = Some 6., m42 = Some 7.)
+
+    let setter = root.createSVGTransform ()
+    setter.setMatrix dictionary
+
+    [|
+        root.createSVGTransformFromMatrix dictionary
+        root.transform.baseVal.createSVGTransformFromMatrix dictionary
+        setter
+    |]
+
+[<Emit("""(async () => {
+    const frame=document.createElement('iframe');
+    let checks=0;
+    const check=(value,label)=>{checks++;if(!value)throw new Error(label);};
+    try {
+        const loaded=new Promise(resolve=>frame.addEventListener('load',resolve,{once:true}));
+        frame.srcdoc='<!doctype html><body></body>';document.body.append(frame);await loaded;
+        for(const target of [document,frame.contentDocument]) {
+            const values=$0(target),realm=target.defaultView,fields=['a','b','c','d','e','f'],expected=[2,3,4,5,6,7];
+            for(const value of values) {
+                check(Object.getPrototypeOf(value)===realm.SVGTransform.prototype,'SVG transform realm');
+                check(Object.getPrototypeOf(value.matrix)===realm.SVGMatrix.prototype,'SVG matrix realm');
+                for(let i=0;i<fields.length;i++)check(value.matrix[fields[i]]===expected[i],'SVG alias coefficient');
+            }
+            for(let i=0;i<values.length;i++)for(let j=i+1;j<values.length;j++)check(values[i].matrix!==values[j].matrix,'SVG independent matrix results');
+        }
+        return checks;
+    } finally {document.getElementById('native-api-svg-realm')?.remove();frame.remove();}
+})()""")>]
+let private svgRealmProof (create: Document -> SVGTransform array) : JS.Promise<int> = jsNative
+
+/// <summary>Runs shared SVG geometry/values and compiled matrix-dictionary adapters in two browser realms.</summary>
+let runSvg () =
+    async {
+        let target = document ()
+        let geometry = SvgGeometry.run target errorName
+        let values = SvgValues.run target errorName true false
+
+        let! context =
+            svgRealmProof svgRealmTargets
+            |> Async.AwaitPromise
+
+        if geometry <> 126 || values <> 361 || context <> 54 then
+            failwith "SVG shared/realm assertions did not run"
+
+        return
+            {|
+                svgGeometry = geometry
+                svgValues = values
+                svgContext = context
+            |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("$0.constructor.name + ':' + $0.message")>]
 let private disposalError (error: exn) : string = jsNative
+
+[<Emit("[$0 instanceof DOMRect, $0 instanceof DOMPoint]")>]
+let private geometryKinds (value: obj) : bool * bool = jsNative
+
+[<Emit("$0 instanceof DOMMatrix")>]
+let private mutableMatrix (value: DOMMatrixReadOnly) : bool = jsNative
+
+[<Emit("""(async () => {
+    const frame=document.createElement('iframe');
+    try {
+        frame.srcdoc='<body>first</body>';
+        let loaded=new Promise(resolve=>frame.addEventListener('load',resolve,{once:true}));
+        document.body.append(frame); await loaded;
+        const oldDocument=frame.contentDocument, oldCall=$0(oldDocument);
+        loaded=new Promise(resolve=>frame.addEventListener('load',resolve,{once:true}));
+        frame.srcdoc='<body>replacement</body>'; await loaded;
+        if(oldDocument===frame.contentDocument) throw new Error('Geometry document identity unchanged');
+        if(oldCall()!=='inactive:7') throw new Error('Old geometry context remained active or changed retained value');
+        if($0(frame.contentDocument)()!=='active:7') throw new Error('Replacement geometry context failed');
+        return 3;
+    } finally { frame.remove(); }
+})()""")>]
+let private geometryDocumentLifetime (createCall: Document -> System.Func<string>) : JS.Promise<int> = jsNative
+
+let private geometryCall document =
+    let service = Geometry.forDocument document
+    let retained = service.CreatePoint (x = 7.)
+
+    System.Func<string>(fun () ->
+        let outcome =
+            try
+                service.CreateRect () |> ignore
+                "active"
+            with _ ->
+                "inactive"
+
+        try
+            outcome + ":" + string retained.x
+        finally
+            service.Dispose ())
+
+/// <summary>Runs the shared geometry fixture and actual document-replacement ownership proof.</summary>
+let runGeometry () =
+    async {
+        let count =
+            GeometryValues.run (fun () -> Geometry.forDocument (document ())) geometryKinds disposalError "Exception:GeometryService"
+
+        let! context =
+            geometryDocumentLifetime geometryCall
+            |> Async.AwaitPromise
+
+        if count <> 177 || context <> 3 then
+            failwith "Geometry shared/context assertions did not run"
+
+        return
+            {|
+                geometry = count
+                geometryContext = context
+            |}
+    }
+    |> Async.StartAsPromise
+
+let private matrixCall document =
+    let service = Geometry.forDocument document
+    let retained = service.CreateMatrix ("translate(7px)")
+
+    System.Func<string>(fun () ->
+        let outcome =
+            try
+                service.CreateMatrix () |> ignore
+                "active"
+            with _ ->
+                "inactive"
+
+        try
+            outcome + ":" + string retained.e
+        finally
+            service.Dispose ())
+
+/// <summary>Runs actual browser matrix operations and document-replacement context checks.</summary>
+let runMatrix () =
+    async {
+        let count =
+            MatrixValues.run (fun () -> Geometry.forDocument (document ())) mutableMatrix errorName "Error"
+
+        let! context =
+            geometryDocumentLifetime matrixCall
+            |> Async.AwaitPromise
+
+        if count <> 710 || context <> 3 then
+            failwith "Matrix shared/context assertions did not run"
+
+        return
+            {|
+                matrices = count
+                matrixContext = context
+            |}
+    }
+    |> Async.StartAsPromise
+
+[<Emit("$0 instanceof CSSTransformValue")>]
+let private transformType (value: CSSStyleValue) : bool = jsNative
+
+[<Emit("$0 instanceof CSSTranslate")>]
+let private translateType (value: CSSTransformComponent) : bool = jsNative
+
+let private transformCall document =
+    let service = Ranvier.Dom.TransformValues.forDocument document
+    use values = Ranvier.Dom.StyleValues.forDocument document
+
+    let retained =
+        service.CreateTranslate (values.CreateUnit (7., "px"), values.CreateUnit (0., "px"))
+
+    System.Func<string>(fun () ->
+        let outcome =
+            try
+                service.CreateList [| retained |] |> ignore
+                "active"
+            with _ ->
+                "inactive"
+
+        try
+            let retainedX = (retained.toMatrix ()).e
+            outcome + ":" + string retainedX
+        finally
+            service.Dispose ())
+
+/// <summary>Runs typed transform matrices, actual rendered effects and document-replacement ownership checks.</summary>
+let runTransforms () =
+    async {
+        let document = document ()
+
+        let count =
+            TransformValues.run
+                (fun () -> Ranvier.Dom.TransformValues.forDocument document)
+                (fun () -> Ranvier.Dom.StyleValues.forDocument document)
+                (fun () -> Geometry.forDocument document)
+                errorName
+
+        use transforms = Ranvier.Dom.TransformValues.forDocument document
+        use values = Ranvier.Dom.StyleValues.forDocument document
+        use maps = Ranvier.Dom.StyleMaps.forDocument document
+
+        let effects =
+            TransformValues.runEffects
+                document
+                transforms
+                values
+                maps
+                (fun () -> document.body.getBoundingClientRect () |> ignore)
+                transformType
+                translateType
+
+        let! context =
+            geometryDocumentLifetime transformCall
+            |> Async.AwaitPromise
+
+        if count <> 450 || effects <> 21 || context <> 3 then
+            failwith "Typed transform shared/effect/context assertions did not run"
+
+        return
+            {|
+                transformValues = count + effects
+                transformContext = context
+            |}
+    }
+    |> Async.StartAsPromise
 
 [<Emit("[$0 instanceof CSSImageValue, $0 instanceof CSSNumericValue]")>]
 let private styleValueSubtypes (value: CSSStyleValue) : bool * bool = jsNative
@@ -217,6 +447,75 @@ let runCustomProperties () =
     }
     |> Async.StartAsPromise
 
+[<Emit("""(async () => {
+    const frame = document.createElement('iframe');
+    try {
+        frame.srcdoc = '<body>first</body>';
+        let loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        document.body.append(frame); await loaded;
+        const original = frame.contentDocument;
+        const oldCall = $0(original);
+        loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        frame.srcdoc = '<body>replacement</body>'; await loaded;
+        if (original === frame.contentDocument) throw new Error('Map context document identity did not change');
+        if (oldCall() !== 'inactive:17px') throw new Error('Old map provider stayed active or retained inline value changed');
+        if ($0(frame.contentDocument)() !== 'active:17px') throw new Error('Replacement map context failed');
+        return 3;
+    } finally { frame.remove(); }
+})()""")>]
+let private styleMapDocumentLifetime (createCall: Document -> System.Func<string>) : JS.Promise<int> = jsNative
+
+let private styleMapCall (document: Document) =
+    let service = Ranvier.Dom.StyleMaps.forDocument document
+    let element = document.createElement "div" :?> HTMLElement
+    let map = service.Attribute (element :> ElementCSSInlineStyle)
+    map.set ("width", CSSStyleValueOrUSVString.USVString "17px")
+    let value = service.Get (map, "width") |> Option.get
+
+    System.Func<string>(fun () ->
+        let outcome =
+            try
+                service.Entries map |> ignore
+                "active"
+            with _ ->
+                "inactive"
+
+        try
+            outcome + ":" + value.toString ()
+        finally
+            service.Dispose ())
+
+/// <summary>Runs focused typed map assertions and document-navigation ownership proof.</summary>
+let runStyleMaps () =
+    async {
+        let document = document ()
+        use values = Ranvier.Dom.StyleValues.forDocument document
+        let computed = Ranvier.Dom.ComputedStyles.forDocument document
+
+        let count =
+            StyleMaps.run
+                document
+                (fun () -> Ranvier.Dom.StyleMaps.forDocument document)
+                values
+                computed
+                (fun () -> document.body.getBoundingClientRect () |> ignore)
+                styleValueError
+                "Exception:StyleMapService"
+                (fun map -> (unbox<StylePropertyMap> map).set("width", CSSStyleValueOrUSVString.USVString "999px"))
+                "TypeError"
+
+        let! context =
+            styleMapDocumentLifetime styleMapCall
+            |> Async.AwaitPromise
+
+        return
+            {|
+                styleMaps = count
+                styleMapContext = context
+            |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs focused typed CSS value assertions against the browser document.</summary>
 let runStyleValues () =
     async {
@@ -244,6 +543,16 @@ let run () =
     async {
         let! localeResult = runLocales () |> Async.AwaitPromise
         let document = document ()
+        let! svgProof = runSvg () |> Async.AwaitPromise
+        let timing = UserTiming.run (fun () -> Ranvier.Dom.Timing.forDocument document)
+        let timingDeterministic = UserTiming.deterministic ()
+
+        if timing <> 180 || timingDeterministic <> 181 then
+            failwith "User timing assertions did not run"
+
+        let! geometryProof = runGeometry () |> Async.AwaitPromise
+        let! matrixProof = runMatrix () |> Async.AwaitPromise
+        let! transformProof = runTransforms () |> Async.AwaitPromise
         let cssEscaping = CssEscaping.run document
         let cssSupport = CssSupport.run (CssQueries.forDocument document)
 
@@ -264,6 +573,24 @@ let run () =
 
         let! styleValueContext =
             styleValueDocumentLifetime styleValueCall
+            |> Async.AwaitPromise
+
+        use styleValueService = Ranvier.Dom.StyleValues.forDocument document
+
+        let styleMaps =
+            StyleMaps.run
+                document
+                (fun () -> Ranvier.Dom.StyleMaps.forDocument document)
+                styleValueService
+                (Ranvier.Dom.ComputedStyles.forDocument document)
+                (fun () -> document.body.getBoundingClientRect () |> ignore)
+                styleValueError
+                "Exception:StyleMapService"
+                (fun map -> (unbox<StylePropertyMap> map).set("width", CSSStyleValueOrUSVString.USVString "999px"))
+                "TypeError"
+
+        let! styleMapContext =
+            styleMapDocumentLifetime styleMapCall
             |> Async.AwaitPromise
 
         let computedStyles =
@@ -379,10 +706,21 @@ let run () =
 
         return
             {|
+                svgGeometry = svgProof.svgGeometry
+                svgValues = svgProof.svgValues
+                svgContext = svgProof.svgContext
+                geometry = geometryProof.geometry
+                geometryContext = geometryProof.geometryContext
+                matrices = matrixProof.matrices
+                matrixContext = matrixProof.matrixContext
+                transformValues = transformProof.transformValues
+                transformContext = transformProof.transformContext
                 cascadeRules = cascadeRules
                 locales = localeResult.locales
                 localeDeterministic = localeResult.localeDeterministic
                 localeContext = localeResult.localeContext
+                timing = timing
+                timingDeterministic = timingDeterministic
                 scopeRules = scopeRules
                 nestedDeclarations = nestedDeclarations
                 importContentsReadable = importContentsReadable
@@ -393,6 +731,8 @@ let run () =
                 customPropertyContext = customPropertyContext
                 styleValues = styleValues
                 styleValueContext = styleValueContext
+                styleMaps = styleMaps
+                styleMapContext = styleMapContext
                 computedStyles = computedStyles
                 typedStyles = typedStyles
                 fragmentRectangles = fragmentRectangles
