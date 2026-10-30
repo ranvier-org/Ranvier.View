@@ -24,6 +24,9 @@
     <Compile Include="GeometryValues.fs" />
     <Compile Include="MatrixValues.fs" />
     <Compile Include="TransformValues.fs" />
+    <Compile Include="SvgGeometry.fs" />
+    <Compile Include="SvgValues.fs" />
+    <Compile Include="SvgLifecycle.fs" />
     <Compile Include="TransformLifecycle.fs" />
     <Compile Include="MatrixLifecycle.fs" />
     <Compile Include="GeometryLifecycle.fs" />

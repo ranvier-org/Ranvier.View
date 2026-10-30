@@ -23,6 +23,8 @@
     <Compile Include="GeometryValues.fs" />
     <Compile Include="MatrixValues.fs" />
     <Compile Include="TransformValues.fs" />
+    <Compile Include="SvgGeometry.fs" />
+    <Compile Include="SvgValues.fs" />
     <Compile Include="TypedStyles.fs" />
     <Compile Include="FragmentRectangles.fs" />
     <Compile Include="FontTransitionRules.fs" />

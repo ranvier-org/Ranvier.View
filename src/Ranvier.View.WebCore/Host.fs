@@ -174,16 +174,16 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     /// <summary>Creates a page of <c>width</c> by <c>height</c> CSS pixels and installs it on the current thread.</summary>
     /// <exception cref="T:System.InvalidOperationException">
-    /// The native library predates this backend's geometry and matrix transport (ABI 24).
+    /// The native library lacks generated DOM support or the SVG transport required by ABI 26.
     /// </exception>
     static member Create(width: int, height: int) : WebCoreHost =
         if
-            Native.rv_abi_version () < 25
+            Native.rv_abi_version () < 26
             || Native.rv_abi_has "dom-generated" <> 1
         then
             raise (
                 InvalidOperationException
-                    $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks this backend's geometry and typed transform transport (ABI 25)"
+                    $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks this backend's SVG geometry and value transport (ABI 26)"
             )
 
         let handle = Native.rv_host_create (width, height)
