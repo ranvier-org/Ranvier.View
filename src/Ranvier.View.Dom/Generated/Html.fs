@@ -741,10 +741,8 @@ module Properties =
             node.``isContentEditable``
 
     module ElementCSSInlineStyle =
-#if FABLE_COMPILER
         let ``attributeStyleMap`` (node: #Dom.ElementCSSInlineStyle) : Dom.StylePropertyMap =
-            Native.expando (box node) "attributeStyleMap"
-#endif
+            node.``attributeStyleMap``
 
         let ``style`` (node: #Dom.ElementCSSInlineStyle) : Dom.CSSStyleProperties =
             node.``style``
