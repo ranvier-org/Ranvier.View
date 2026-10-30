@@ -1,0 +1,111 @@
+{
+  "group": "C12",
+  "capturedAt": "2026-10-29 22:32:36 UTC",
+  "status": "private implementation proof; public acceptance pending",
+  "source": {
+    "views": "eecd618919df88c14f1459c835a5b22608ec862d",
+    "boundedViewsProof": "31f7997d46e1b30a4974b7b97bc87a383b474954",
+    "parentViewsIntegration": "3303e1dc242bfde2e260f9f4239de34f606a9b44",
+    "core": "4564097fa8c4333411b1678753b260005bd9dc3e",
+    "native": "f18d943cebfad3f348bc818c4f02433f68e21aed",
+    "webkit": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04"
+  },
+  "cohort": {
+    "views": "0.1.4",
+    "backend": "0.1.0-alpha.4",
+    "dom": "0.1.0-alpha.14",
+    "native": "0.1.0-preview.14",
+    "abi": 22,
+    "published": false
+  },
+  "provenance": "Local packages/DLLs were built from the reviewed working tree before its final source commits; their content is identified by the hashes below. These are private candidates, not release source-label or public-feed verification.",
+  "sha256": {
+    "Ranvier.Dom.0.1.0-alpha.14.nupkg": "2bc4f67d0da9fa0b7572ea78166877a58546dafa240ec08220be0c1bd2436b4f",
+    "Fable.Ranvier.Dom.0.1.0-alpha.14.nupkg": "623617b6efae4197927696f81598e727611b275477e55ec66f7b19d85001c53a",
+    "RanvierWebCoreHost.dll": "56bd79e3ca8bfbdb5edfb628d729aa13a5c3695b73e2b754f6779cb906c13f83",
+    "WebCore.dll": "1e1e43a23c5d6c8ee58850659abc958ba2b74649cb5eb2e46db0813a686760dc"
+  },
+  "focused": {
+    "windowsJit": {
+      "shared": 50,
+      "lifetime": 10,
+      "teardown": true
+    },
+    "windowsAot": {
+      "shared": 50,
+      "lifetime": 10,
+      "teardown": true
+    },
+    "chromium": {
+      "shared": 50,
+      "context": 3,
+      "version": "156.0.8078.4"
+    }
+  },
+  "combinedDefault": {
+    "windowsJit": {
+      "groupAssertions": 1529,
+      "lifetimeAssertions": 35,
+      "tab": true,
+      "teardown": true
+    },
+    "windowsAot": {
+      "groupAssertions": 1529,
+      "lifetimeAssertions": 35,
+      "tab": true,
+      "teardown": true
+    },
+    "chromium": {
+      "groupAssertions": 1542,
+      "contextAssertions": 7,
+      "escapeOracle": 196609,
+      "tab": true,
+      "version": "156.0.8078.4",
+      "compiler": "Fickl 0.6.9 / Fable 5.24.0"
+    }
+  },
+  "nativeRaw": {
+    "customPropertyAndPriority": 231,
+    "cssSupports": 72,
+    "computedStyle": 93,
+    "handlesReleased": true,
+    "patchesApplied": 19,
+    "generatorTests": 35,
+    "existingFunctionRecordsUnchanged": 1702,
+    "existingStructuresUnchanged": 15,
+    "newExports": 5
+  },
+  "qualifications": [
+    "AOT reports existing FSharp.Core IL3053/IL2104 and SameValueZero IL2075 warnings.",
+    "Global Fable5.13 passed focused C12 but failed an existing default-suite BCL exception catch. The full browser gate passes with installed repo-local Fickl0.6.9/Fable5.24; no assertion was weakened.",
+    "Actual browser navigation fails through the old Document with TypeError and does not register into its replacement.",
+    "Original C19 detached-rule Chromium crash remains separately reproducible; combined C19 proof follows the parent's reviewed selected attached scope.",
+    "Frozen 0.1.2/0.1.3 profiles were not changed."
+  ],
+  "unverified": [
+    "Official Native14/Core14 package indexing, immutable release manifests and public consumption",
+    "All applicable non-Windows runtime profiles and five-RID producer CI",
+    "Combined C14 cohort source/generation and final broader backend/analyzer CI"
+  ],
+  "commands": {
+    "jit": "rtk proxy dotnet tests/NativeApi.Conformance/bin/Release/net10.0/Native.dll",
+    "aotPublish": "rtk proxy dotnet publish tests/NativeApi.Conformance/Native.fsproj -c Release -r win-x64 -p:PublishAot=true -p:OS=Windows_NT -o artifacts/c12-combined-aot",
+    "aot": "rtk proxy artifacts/c12-combined-aot/Native.exe",
+    "browserBuild": "rtk proxy dotnet tool run fickl -- tests/NativeApi.Conformance/Browser.fsproj --outDir tests/NativeApi.Conformance/generated --noCache",
+    "browser": "rtk node tests/NativeApi.Conformance/browser.mjs; dependencies from C:/wk/ranvier-views/tests/NativeApi.Conformance/package.json"
+  },
+  "outputs": {
+    "jit": {
+      "exitCode": 0,
+      "output": "[rtk] /!\\ No hook installed â€” run `rtk init -g` for automatic token savings\nNATIVE_API C12 LIFETIME PASS assertions=10\r\nNATIVE_API D10_VIEW PASS assertions=29\r\nNATIVE_API D11_VIEW_HYPERLINKS PASS assertions=50\r\nNATIVE_API C05 PASS assertions=45\r\nNATIVE_API C03 PASS assertions=32\r\nNATIVE_API C01_C02 PASS assertions=42\r\nNATIVE_API C12 PASS assertions=50\r\nNATIVE_API C08 PASS assertions=131\r\nNATIVE_API C04 PASS assertions=39\r\nNATIVE_API G06 PASS assertions=61\r\nNATIVE_API C18 PASS assertions=51\r\nNATIVE_API C18 CAPABILITY fontWidthAlias=True\r\nNATIVE_API C22 PASS assertions=23\r\nNATIVE_API C21 PASS assertions=44\r\nNATIVE_API C21 CAPABILITY positionTry=True\r\nNATIVE_API C19 PASS assertions=64\r\nNATIVE_API C19 CAPABILITY speakAs=\r\nNATIVE_API C11 PASS assertions=82\r\nNATIVE_API C11 CAPABILITY length=True invalidKeyTextError=\r\nNATIVE_API D10 PASS assertions=30\r\nNATIVE_API HYPERLINKS PASS assertions=60\r\nNATIVE_API D11 PASS assertions=205\r\nNATIVE_API D09 PASS assertions=24\r\nNATIVE_API D09_VIEWPORT PASS assertions=30\r\nNATIVE_API SVG_CSSOM PASS assertions=31\r\nNATIVE_API CSSOM PASS assertions=58\r\nNATIVE_API C09 PASS assertions=44\r\nNATIVE_API C10 PASS assertions=91\r\nNATIVE_API C10 CAPABILITY scopeRules=True nestedDeclarations=True importContentsReadable=False\r\nNATIVE_API D11_OPERATIONS PASS assertions=26\r\nNATIVE_API D11 CAPABILITY attachmentIdentifier=string:\r\nNATIVE_API D12 PASS assertions=109\r\nNATIVE_API D12 CAPABILITY failedLinkSheet=replacement\r\nNATIVE_API C07 PASS assertions=78\r\nNATIVE_API D09 TAB PASS\r\nNATIVE_API G06 LIFETIME PASS assertions=8\r\nNATIVE_API C03 LIFETIME PASS assertions=4\r\nNATIVE_API C01_C02 LIFETIME PASS assertions=7\r\nNATIVE_API C04 LIFETIME PASS assertions=2\r\nNATIVE_API C07 LIFETIME PASS assertions=4\r\nNATIVE_API TEARDOWN PASS groups=D09,D10,D11,CSSOM\r\n"
+    },
+    "aot": {
+      "exitCode": 0,
+      "output": "[rtk] /!\\ No hook installed â€” run `rtk init -g` for automatic token savings\nNATIVE_API C12 LIFETIME PASS assertions=10\r\nNATIVE_API D10_VIEW PASS assertions=29\r\nNATIVE_API D11_VIEW_HYPERLINKS PASS assertions=50\r\nNATIVE_API C05 PASS assertions=45\r\nNATIVE_API C03 PASS assertions=32\r\nNATIVE_API C01_C02 PASS assertions=42\r\nNATIVE_API C12 PASS assertions=50\r\nNATIVE_API C08 PASS assertions=131\r\nNATIVE_API C04 PASS assertions=39\r\nNATIVE_API G06 PASS assertions=61\r\nNATIVE_API C18 PASS assertions=51\r\nNATIVE_API C18 CAPABILITY fontWidthAlias=True\r\nNATIVE_API C22 PASS assertions=23\r\nNATIVE_API C21 PASS assertions=44\r\nNATIVE_API C21 CAPABILITY positionTry=True\r\nNATIVE_API C19 PASS assertions=64\r\nNATIVE_API C19 CAPABILITY speakAs=\r\nNATIVE_API C11 PASS assertions=82\r\nNATIVE_API C11 CAPABILITY length=True invalidKeyTextError=\r\nNATIVE_API D10 PASS assertions=30\r\nNATIVE_API HYPERLINKS PASS assertions=60\r\nNATIVE_API D11 PASS assertions=205\r\nNATIVE_API D09 PASS assertions=24\r\nNATIVE_API D09_VIEWPORT PASS assertions=30\r\nNATIVE_API SVG_CSSOM PASS assertions=31\r\nNATIVE_API CSSOM PASS assertions=58\r\nNATIVE_API C09 PASS assertions=44\r\nNATIVE_API C10 PASS assertions=91\r\nNATIVE_API C10 CAPABILITY scopeRules=True nestedDeclarations=True importContentsReadable=False\r\nNATIVE_API D11_OPERATIONS PASS assertions=26\r\nNATIVE_API D11 CAPABILITY attachmentIdentifier=string:\r\nNATIVE_API D12 PASS assertions=109\r\nNATIVE_API D12 CAPABILITY failedLinkSheet=replacement\r\nNATIVE_API C07 PASS assertions=78\r\nNATIVE_API D09 TAB PASS\r\nNATIVE_API G06 LIFETIME PASS assertions=8\r\nNATIVE_API C03 LIFETIME PASS assertions=4\r\nNATIVE_API C01_C02 LIFETIME PASS assertions=7\r\nNATIVE_API C04 LIFETIME PASS assertions=2\r\nNATIVE_API C07 LIFETIME PASS assertions=4\r\nNATIVE_API TEARDOWN PASS groups=D09,D10,D11,CSSOM\r\n"
+    },
+    "browser": {
+      "exitCode": 0,
+      "output": "[rtk] /!\\ No hook installed â€” run `rtk init -g` for automatic token savings\nBROWSER_API C12 PASS assertions=50 engine=chromium\nBROWSER_API C12 CONTEXT PASS assertions=3 engine=chromium\nBROWSER_API D10 PASS assertions=30 engine=chromium\nBROWSER_API D10_VIEW PASS assertions=29 engine=chromium\nBROWSER_API D11_VIEW_HYPERLINKS PASS assertions=50 engine=chromium\nBROWSER_API C05 PASS assertions=45 oracle=196609 engine=chromium\nBROWSER_API C03 PASS assertions=32 engine=chromium\nBROWSER_API C03 CONTEXT PASS assertions=2 engine=chromium\nBROWSER_API C01_C02 PASS assertions=42 engine=chromium\nBROWSER_API G06 PASS assertions=74 engine=chromium\nBROWSER_API C18 PASS assertions=49 engine=chromium\nBROWSER_API C18 CAPABILITY fontWidthAlias=false engine=chromium\nBROWSER_API C22 PASS assertions=23 engine=chromium\nBROWSER_API C21 PASS assertions=44 engine=chromium\nBROWSER_API C21 CAPABILITY positionTry=true engine=chromium\nBROWSER_API C19 PASS assertions=64 engine=chromium\nBROWSER_API C19 CAPABILITY speakAs=numbers engine=chromium\nBROWSER_API C11 PASS assertions=82 engine=chromium\nBROWSER_API C11 CAPABILITY length=true invalidKeyTextError=SyntaxError engine=chromium\nBROWSER_API C09 PASS assertions=44 engine=chromium\nBROWSER_API C10 PASS assertions=93 engine=chromium\nBROWSER_API C10 CAPABILITY scopeRules=true nestedDeclarations=true importContentsReadable=true engine=chromium\nBROWSER_API C04 PASS assertions=39 engine=chromium\nBROWSER_API C01_C02 CONTEXT PASS assertions=2 engine=chromium\nBROWSER_API D11 PASS assertions=205 engine=chromium\nBROWSER_API D09 PASS assertions=24 engine=chromium\nBROWSER_API D09_VIEWPORT PASS assertions=30 engine=chromium\nBROWSER_API D11_OPERATIONS PASS assertions=26 engine=chromium\nBROWSER_API D11 CAPABILITY attachmentIdentifier=undefined engine=chromium\nBROWSER_API CSSOM PASS assertions=58 engine=chromium\nBROWSER_API C08 PASS assertions=131 engine=chromium\nBROWSER_API SVG_CSSOM PASS assertions=31 engine=chromium\nBROWSER_API HYPERLINKS PASS assertions=60 engine=chromium\nBROWSER_API C07 PASS assertions=78 engine=chromium\nBROWSER_API D12 PASS assertions=109 engine=chromium\nBROWSER_API D12 CAPABILITY failedLinkSheet=replacement engine=chromium\nBROWSER_API D09 TAB PASS engine=chromium\n"
+    }
+  }
+}

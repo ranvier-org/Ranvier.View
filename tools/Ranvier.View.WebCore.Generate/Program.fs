@@ -57,6 +57,10 @@ let private kinds =
             "Selection", "Kind.Selection"
             "DOMSelection", "Kind.Selection"
             "DOMRectReadOnly", "Kind.Rect"
+            "DOMPointReadOnly", "Kind.Point"
+            "DOMMatrixReadOnly", "Kind.Matrix"
+            "CSSTransformComponent", "Kind.TransformComponent"
+            "DOMQuad", "Kind.Quad"
             "DOMRectList", "Kind.RectList"
             "NodeList", "Kind.NodeList"
             "HTMLCollection", "Kind.Collection"
@@ -69,6 +73,9 @@ let private kinds =
             "StyleSheet", "Kind.StyleSheet"
             "StyleSheetList", "Kind.StyleSheetList"
             "MediaList", "Kind.MediaList"
+            "CSSStyleValue", "Kind.StyleValue"
+            "CSSVariableReferenceValue", "Kind.VariableReferenceValue"
+            "StylePropertyMapReadOnly", "Kind.StyleMap"
         ]
 
 [<EntryPoint>]
@@ -96,7 +103,10 @@ let main argv =
         let nativeTypes =
             Metadata.items "interfaces" model
             |> Array.choose (fun row ->
-                contracts.GetType ("Ranvier.Dom." + Metadata.text "name" row)
+                contracts.GetType (
+                    "Ranvier.Dom."
+                    + Metadata.publicInterfaceName model (Metadata.text "name" row)
+                )
                 |> Option.ofObj)
 
         [

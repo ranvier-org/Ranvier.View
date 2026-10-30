@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "group": "C11",
+  "capturedAtUtc": "2026-10-29 18:52:21 UTC",
+  "project": "C:/Users/shaya/.codex/worktrees/native-api-contracts/Ranvier/src/Ranvier.Dom/Ranvier.Dom.fsproj",
+  "sourceProfile": {
+    "webCoreRevision": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
+    "sharedDomPackageVersion": "0.1.0-alpha.12",
+    "nativeBaselinePackageVersion": "0.1.0-preview.11",
+    "nativeFixTargetPackageVersion": "0.1.0-preview.12",
+    "nativeFixPatch": "0015-keyframe-offset-invalidation.patch"
+  },
+  "contractNotes": {
+    "inheritance": {
+      "CSSKeyframesRule": "CSSRule",
+      "CSSKeyframeRule": "CSSRule"
+    },
+    "readOnly": [
+      "CSSKeyframesRule.cssRules",
+      "CSSKeyframesRule.length",
+      "CSSKeyframeRule.style"
+    ],
+    "readWrite": [
+      "CSSKeyframesRule.name",
+      "CSSKeyframeRule.keyText"
+    ],
+    "nullableIdlReturns": [
+      "CSSKeyframesRule.findRule"
+    ],
+    "runtimeNullishOutsideRangeDespiteNonNullableIdl": [
+      "CSSKeyframesRule.item"
+    ],
+    "indexedGetterBrowserEmit": "$0[$1]",
+    "sameObject": [
+      "CSSKeyframeRule.style"
+    ],
+    "putForwards": {
+      "CSSKeyframeRule.style": "cssText"
+    },
+    "inheritedCssTextSetter": "Pinned CSSRule.cssText setter is a no-op; keyText and style.cssText are effective mutators.",
+    "upstreamCommentedNotSelected": []
+  },
+  "runtimeQualifications": {
+    "windowsPrivatePatchedJitAssertions": 82,
+    "windowsPrivatePatchedNativeAotAssertions": 82,
+    "chromiumAssertions": 82,
+    "nativeRawPatchedAssertions": 93,
+    "nativeOfficialPreview11": "Fails offset-edit computed width: expected 40px, got 60px.",
+    "lengthPropertyAvailable": {
+      "native": true,
+      "chromium": true
+    },
+    "invalidKeyText": {
+      "native": "No-op in pinned WebCore; preserves complete rule and animation output.",
+      "chromium": "SyntaxError; preserves complete rule and animation output."
+    },
+    "controlledProgress": "CSS animation duration 100s, delay -25s, linear, paused; actual computed width and opacity observed after edits.",
+    "acceptance": "Public native preview.12 validation and broader traced/platform/published Views acceptance remain open."
+  },
+  "cleanChecks": {
+    "core": {
+      "status": "succeeded",
+      "verdict": "clean",
+      "analyzed": true,
+      "scope": "project",
+      "speed": "trusted",
+      "errorCount": 0,
+      "warningCount": 0,
+      "diagnosticsFileCount": 0,
+      "files": [],
+      "diagnostics": [],
+      "diagnosticsTruncated": false,
+      "escalated": "fcs-reanalyze",
+      "via": "fcs",
+      "fresh": true,
+      "groundTruth": true,
+      "totalDiagnostics": 0,
+      "infoCount": 0,
+      "belowSeverityFloorCount": 0,
+      "diagnosticsNote": null,
+      "reason": null,
+      "projectFileName": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "projectsSwept": 1
+    },
+    "nativeConformance": {
+      "status": "succeeded",
+      "verdict": "clean",
+      "analyzed": true,
+      "scope": "project",
+      "speed": "trusted",
+      "errorCount": 0,
+      "warningCount": 0,
+      "diagnosticsFileCount": 0,
+      "files": [],
+      "diagnostics": [],
+      "diagnosticsTruncated": false,
+      "escalated": "fcs-reanalyze",
+      "via": "fcs",
+      "fresh": true,
+      "groundTruth": true,
+      "totalDiagnostics": 0,
+      "infoCount": 0,
+      "belowSeverityFloorCount": 0,
+      "diagnosticsNote": null,
+      "reason": null,
+      "projectFileName": "C:\\wk\\rv-c10-cascade\\tests\\NativeApi.Conformance\\Native.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "projectsSwept": 1
+    }
+  },
+  "publicApiResults": [
+    {
+      "status": "ok",
+      "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "includeInternal": false,
+      "namespaceFilter": "Ranvier.Dom.CSSKeyframesRule",
+      "entityCount": 1,
+      "memberCount": 7,
+      "entities": [
+        {
+          "fullName": "Ranvier.Dom.CSSKeyframesRule",
+          "kind": "interface",
+          "accessibility": "public",
+          "members": [
+            {
+              "name": "appendRule",
+              "kind": "method",
+              "signature": "appendRule(rule: string) -> unit",
+              "accessibility": "public"
+            },
+            {
+              "name": "cssRules",
+              "kind": "property",
+              "signature": "cssRules() -> Ranvier.Dom.CSSRuleList",
+              "accessibility": "public"
+            },
+            {
+              "name": "deleteRule",
+              "kind": "method",
+              "signature": "deleteRule(key: string) -> unit",
+              "accessibility": "public"
+            },
+            {
+              "name": "findRule",
+              "kind": "method",
+              "signature": "findRule(key: string) -> Ranvier.Dom.CSSKeyframeRule",
+              "accessibility": "public"
+            },
+            {
+              "name": "item",
+              "kind": "method",
+              "signature": "item(index: uint32) -> Ranvier.Dom.CSSKeyframeRule",
+              "accessibility": "public"
+            },
+            {
+              "name": "length",
+              "kind": "property",
+              "signature": "length() -> uint32",
+              "accessibility": "public"
+            },
+            {
+              "name": "name",
+              "kind": "property",
+              "signature": "name() -> string",
+              "accessibility": "public"
+            }
+          ]
+        }
+      ],
+      "truncated": false,
+      "nextCursor": null,
+      "totalEstimate": {
+        "entities": 1
+      },
+      "pageOffset": 0,
+      "pageSize": 20
+    },
+    {
+      "status": "ok",
+      "project": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-contracts\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "includeInternal": false,
+      "namespaceFilter": "Ranvier.Dom.CSSKeyframeRule",
+      "entityCount": 1,
+      "memberCount": 2,
+      "entities": [
+        {
+          "fullName": "Ranvier.Dom.CSSKeyframeRule",
+          "kind": "interface",
+          "accessibility": "public",
+          "members": [
+            {
+              "name": "keyText",
+              "kind": "property",
+              "signature": "keyText() -> string",
+              "accessibility": "public"
+            },
+            {
+              "name": "style",
+              "kind": "property",
+              "signature": "style() -> Ranvier.Dom.CSSStyleProperties",
+              "accessibility": "public"
+            }
+          ]
+        }
+      ],
+      "truncated": false,
+      "nextCursor": null,
+      "totalEstimate": {
+        "entities": 1
+      },
+      "pageOffset": 0,
+      "pageSize": 20
+    }
+  ]
+}

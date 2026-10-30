@@ -33,6 +33,19 @@ type Function =
 
     /// <summary>The parameters after <c>target</c> that carry IDL arguments.</summary>
     member this.Inputs =
+        let mutable transport = Unchecked.defaultof<JsonElement>
+
+        let lengthDelimited =
+            this.Descriptor.ValueKind = JsonValueKind.Object
+            && this.Descriptor.TryGetProperty ("stringInputs", &transport)
+            && transport.GetString () = "utf8-lengths"
+
+        let contextParameter =
+            if Metadata.hasText "contextReceiver" "Document" this.Descriptor then
+                Some (Metadata.text "contextParameter" this.Descriptor)
+            else
+                None
+
         this.Parameters
         |> List.tail
         |> List.filter (fun p ->
@@ -42,7 +55,16 @@ type Function =
             | "buffer"
             | "capacity"
             | "length" -> false
-            | _ -> true)
+            | name when contextParameter = Some name -> false
+            | _ ->
+                not (
+                    lengthDelimited
+                    && p.Name.EndsWith "_length"
+                    && (this.Parameters
+                        |> List.exists (fun candidate ->
+                            candidate.Name + "_length" = p.Name
+                            && candidate.FSharp = "byte[]"))
+                ))
 
     /// <summary>The result parameters: <c>result</c>, <c>present</c>, or the string triple.</summary>
     member this.Outputs =
@@ -169,9 +191,11 @@ let private validateUnionTags (nativeDom: Type) (model: JsonElement) =
             for index, arm in Metadata.items "subtypes" mapping |> Array.indexed do
                 let suffix =
                     match Metadata.text "kind" arm with
+                    | "void" -> "VOID"
                     | "bool" -> "BOOL"
                     | "number" -> "NUMBER"
                     | "string" -> "STRING"
+                    | "sequence" -> constantName ((Metadata.text "ctype" arm).Substring("RvDom".Length))
                     | _ -> Metadata.text "interface" arm |> constantName
 
                 let fieldName = prefix + "_" + suffix

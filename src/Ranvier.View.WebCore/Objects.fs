@@ -66,6 +66,27 @@ module internal Kind =
     [<Literal>]
     let RectList = 18
 
+    [<Literal>]
+    let StyleValue = 19
+
+    [<Literal>]
+    let VariableReferenceValue = 20
+
+    [<Literal>]
+    let StyleMap = 21
+
+    [<Literal>]
+    let Point = 22
+
+    [<Literal>]
+    let Quad = 23
+
+    [<Literal>]
+    let Matrix = 24
+
+    [<Literal>]
+    let TransformComponent = 25
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -93,6 +114,7 @@ type internal Registration(target: nativeint, eventType: string, capture: bool, 
 type NativeObject(session: Session, handle: nativeint, kind: int) =
     let mutable handle = handle
     let lifetimeAnchors = List<NativeObject>()
+    let mutable contextDocument: NativeObject = null
 
     /// <summary>The session of the host the object belongs to.</summary>
     member _.Session = session
@@ -101,6 +123,28 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
     member _.Handle = handle
 
     member internal _.Kind = kind
+
+    member internal _.ContextDocument = contextDocument
+
+    member internal _.LifetimeAnchors = lifetimeAnchors :> seq<NativeObject>
+
+    /// <summary>Binds the first checked document context without rebinding cached objects.</summary>
+    member internal this.BindDocumentContext(document: NativeObject) =
+        if isNull document then
+            nullArg (nameof document)
+
+        if
+            not (obj.ReferenceEquals (session, document.Session))
+            || not (box document :? Ranvier.Dom.Document)
+        then
+            invalidArg (nameof document) "The document must belong to this object's native session"
+
+        if document.Handle = 0n then
+            raise (ObjectDisposedException "Document context")
+
+        if isNull contextDocument then
+            contextDocument <- document
+            this.KeepAlive document
 
     /// <summary>Keeps an owner wrapper reachable until this object is detached or collected.</summary>
     member internal this.KeepAlive(anchor: NativeObject) =
@@ -126,6 +170,7 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
             Session.Release (kind, handle)
             handle <- 0n
             lifetimeAnchors.Clear ()
+            contextDocument <- null
             GC.SuppressFinalize this
 
     override _.Finalize() =
@@ -174,6 +219,13 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.StyleSheetList -> NativeDom.rv_dom_style_sheet_list_release handle
         | Kind.MediaList -> NativeDom.rv_dom_media_list_release handle
         | Kind.RectList -> NativeDom.rv_dom_dom_rect_list_release handle
+        | Kind.StyleValue -> NativeDom.rv_dom_css_style_value_release handle
+        | Kind.VariableReferenceValue -> NativeDom.rv_dom_cssom_variable_reference_value_release handle
+        | Kind.StyleMap -> NativeDom.rv_dom_style_property_map_read_only_release handle
+        | Kind.Point -> NativeDom.rv_dom_dom_point_read_only_release handle
+        | Kind.Quad -> NativeDom.rv_dom_dom_quad_release handle
+        | Kind.Matrix -> NativeDom.rv_dom_dom_matrix_read_only_release handle
+        | Kind.TransformComponent -> NativeDom.rv_dom_css_transform_component_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =
@@ -504,6 +556,92 @@ module internal Interop =
 
             target.Handle
         | other -> raise (ArgumentException $"A {other.GetType().Name} is not an object of the native backend")
+
+    /// <summary>Validates a non-null typed value from the same host session.</summary>
+    let valueHandle (session: Session) (value: obj) =
+        match value with
+        | null -> nullArg (nameof value)
+        | :? NativeObject as target when
+            obj.ReferenceEquals (session, target.Session)
+            && (target.Kind = Kind.StyleValue
+                || target.Kind = Kind.VariableReferenceValue)
+            ->
+            handle value
+        | _ -> invalidArg (nameof value) "The typed value must belong to the same native host"
+
+    /// <summary>Validates a transform component or matrix argument against its receiver's native session.</summary>
+    let transformHandle (session: Session) (kind: int) (value: obj) =
+        if isNull value then
+            nullArg (nameof value)
+
+        match value with
+        | :? NativeObject as target when
+            obj.ReferenceEquals (session, target.Session)
+            && target.Kind = kind
+            ->
+            handle value
+        | _ -> invalidArg (nameof value) "The transform input must have the expected type in the same native host"
+
+    /// <summary>Finds a retained acquisition document without substituting the host's current document.</summary>
+    let contextDocument (target: NativeObject) =
+        handle (box target) |> ignore
+        let visited = HashSet<NativeObject>(HashIdentity.Reference)
+
+        let rec find (value: NativeObject) =
+            if not (visited.Add value) then
+                None
+            elif not (isNull value.ContextDocument) then
+                Some value.ContextDocument
+            else
+                let direct =
+                    match box value with
+                    | :? Ranvier.Dom.Document -> Some value
+                    | :? Ranvier.Dom.Node as node ->
+                        let owner = node.ownerDocument
+
+                        if isNull owner then
+                            None
+                        else
+                            Some (box owner :?> NativeObject)
+                    | :? Ranvier.Dom.StyleSheet as sheet ->
+                        let ownerNode = sheet.ownerNode
+
+                        if isNull ownerNode then
+                            None
+                        elif box ownerNode :? Ranvier.Dom.Document then
+                            Some (box ownerNode :?> NativeObject)
+                        else
+                            let owner = ownerNode.ownerDocument
+
+                            if isNull owner then
+                                None
+                            else
+                                Some (box owner :?> NativeObject)
+                    | _ -> None
+
+                match direct with
+                | Some document -> Some document
+                | None -> value.LifetimeAnchors |> Seq.tryPick find
+
+        match find target with
+        | Some document when obj.ReferenceEquals (target.Session, document.Session) ->
+            handle (box document) |> ignore
+            document
+        | Some _ -> invalidOp "The acquisition document belongs to another native session"
+        | None -> invalidOp "The native object has no retained acquisition document context"
+
+    /// <summary>The live document handle bound to a context-requiring object.</summary>
+    let contextHandle target =
+        handle (box (contextDocument target))
+
+    /// <summary>Copies a length-delimited owned result before its container is released.</summary>
+    let spanText (span: NativeDom.RvDomUtf8StringSpan) =
+        if span.length < 0 then
+            null
+        elif span.data = 0n then
+            invalidOp "WebCore returned a null UTF-8 span with a non-null length"
+        else
+            Runtime.InteropServices.Marshal.PtrToStringUTF8 (span.data, span.length)
 
     /// <summary>
     /// Runs <c>original</c> through the interceptions of <c>name</c> on <c>target</c>, the latest outermost, each given

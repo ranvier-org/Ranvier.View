@@ -151,6 +151,11 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
     let mappingKind = Metadata.text "kind" mapping
 
     match p.FSharp with
+    | "byte[]" when
+        inner = typeof<string>
+        && Metadata.hasText "stringInputs" "utf8-lengths" fn.Descriptor
+        ->
+        Ok $"scope.Bytes({v})"
     | "int" when mappingKind = "enum" ->
         Input.encode ctx.Input.Model mapping inner (if nullable then "item" else v)
         |> Result.bind (fun expression ->
@@ -201,15 +206,48 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
     | "float" -> scalar (numeric "float")
     | "float32" -> scalar (numeric "float32")
     | "nativeint" when p.C.StartsWith "Rv" && isInterface ctx inner ->
+        let transformInput =
+            List.contains
+                fn.Interface
+                [
+                    "CSSTransformValue"
+                    "CSSTransformComponent"
+                    "CSSTranslate"
+                    "CSSRotate"
+                    "CSSScale"
+                    "CSSSkew"
+                    "CSSSkewX"
+                    "CSSSkewY"
+                    "CSSPerspective"
+                    "CSSMatrixComponent"
+                ]
+
+        let reference value =
+            if transformInput then
+                match Metadata.text "root" mapping with
+                | "CSSStyleValue" -> $"Interop.valueHandle this.Session (box ({value}))"
+                | "CSSTransformComponent" -> $"Interop.transformHandle this.Session Kind.TransformComponent (box ({value}))"
+                | "DOMMatrixReadOnly" -> $"Interop.transformHandle this.Session Kind.Matrix (box ({value}))"
+                | _ -> $"Interop.handle (box ({value}))"
+            else
+                $"Interop.handle (box ({value}))"
+
         Ok (
             if nullable then
-                $"Interop.handleOr {v}"
+                if transformInput then
+                    let expression = reference "value"
+                    $"(match {v} with None -> 0n | Some value -> {expression})"
+                else
+                    $"Interop.handleOr {v}"
+            else if transformInput then
+                reference v
             else
                 $"Interop.handle (box {v})"
         )
     | "int[]" when nullable && inner = typeof<bool> -> Ok $"(match {v} with Some x -> [| (if x then 1 else 0) |] | None -> null)"
     | "int[]" when nullable && numericType inner -> Ok $"(match {v} with Some x -> [| int x |] | None -> null)"
     | "uint32[]" when nullable && numericType inner -> Ok $"(match {v} with Some x -> [| uint32 x |] | None -> null)"
+    | "float[]" when nullable && numericType inner -> Ok $"(match {v} with Some x -> [| float x |] | None -> null)"
     | container when
         container.EndsWith "[]"
         && container.StartsWith "RvDom"
@@ -255,11 +293,12 @@ let private runtimeQueries (model: JsonElement) =
     else
         [||]
 
-let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) (value: string) =
+let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) (value: string) (owner: string) =
     match classFor ctx managed with
     | None -> Error $"returns {name managed}, which has no class"
     | Some cls ->
         let root = Metadata.text "root" mapping
+        let publicRoot = Metadata.publicInterfaceName ctx.Input.Model root
 
         let query =
             runtimeQueries ctx.Input.Model
@@ -276,9 +315,11 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                     "DOMTokenList"
                     "DOMRectList"
                     "DOMRectReadOnly"
+                    "DOMQuad"
+                    "CSSOMVariableReferenceValue"
                 ]
         then
-            let kind = ctx.Input.Kinds[root]
+            let kind = ctx.Input.Kinds[publicRoot]
 
             let create =
                 if query.IsSome then
@@ -286,12 +327,21 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                 else
                     $"({cls}(session, handle) :> NativeObject)"
 
+            let create =
+                if
+                    root = "StylePropertyMapReadOnly"
+                    || root = "DOMMatrixReadOnly"
+                then
+                    $"(let document = Interop.contextDocument this in let target = {create} in target.BindDocumentContext(document); target)"
+                else
+                    create
+
             Ok
-                $"(unbox<{name managed}> (this.Session.Object({value}, {kind}, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> {create}))))"
+                $"(unbox<{name managed}> (this.Session.Object({value}, {kind}, {owner}, System.Func<Session, nativeint, NativeObject>(fun session handle -> {create}))))"
         else
             Ok $"(this.Session.Track ({cls}(this.Session, {value})) :> {name managed})"
 
-let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (value: string) : Result<string, string> =
+let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (value: string) (owner: string) : Result<string, string> =
     let kind = Metadata.text "kind" mapping
     let plain = optionOf managed |> Option.defaultValue managed
 
@@ -302,9 +352,19 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
             expression
 
     match kind with
+    | "void" when plain = typeof<unit> -> Ok "()"
     | "bool" -> Ok $"({value} <> 0)"
     | "number" -> Ok $"{name plain} ({value})"
-    | "string" -> Ok $"System.Runtime.InteropServices.Marshal.PtrToStringUTF8({value})"
+    | "string" ->
+        let mutable transport = Unchecked.defaultof<JsonElement>
+
+        if
+            mapping.TryGetProperty ("stringTransport", &transport)
+            && transport.GetString () = "utf8-lengths"
+        then
+            Ok $"Interop.spanText ({value})"
+        else
+            Ok $"System.Runtime.InteropServices.Marshal.PtrToStringUTF8({value})"
     | "enum" when FSharpType.IsUnion plain ->
         let cases = FSharpType.GetUnionCases plain
 
@@ -325,9 +385,23 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
         Ok $"(let handle = {value} in Native.{retain} handle |> ignore; unbox<{name plain}> (this.Session.{session} handle))"
     | "object" ->
         let root = Metadata.text "root" mapping |> snake
+        let stableOwner = if owner = "this" then "this" else "valueOwner"
 
-        wrappedObject ctx mapping plain "handle"
-        |> Result.map (fun wrapped -> $"(let handle = {value} in NativeDom.rv_dom_{root}_retain handle |> ignore; {wrapped})")
+        wrappedObject ctx mapping plain "handle" stableOwner
+        |> Result.map (fun wrapped ->
+            let capture =
+                if owner = "this" then
+                    ""
+                else
+                    $"let valueOwner = {owner} in "
+
+            let expression =
+                $"({capture}let handle = {value} in NativeDom.rv_dom_{root}_retain handle |> ignore; {wrapped})"
+
+            if mapping.GetProperty("nullable").GetBoolean() then
+                $"(if {value} = 0n then Unchecked.defaultof<{name plain}> else {expression})"
+            else
+                expression)
     | "sequence" when plain.IsArray ->
         let element = plain.GetElementType ()
         let mapping = (Metadata.items "subtypes" mapping)[0]
@@ -336,15 +410,24 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
             match Metadata.text "kind" mapping with
             | "node"
             | "event"
-            | "object"
-            | "string" -> "nativeint"
+            | "object" -> "nativeint"
+            | "string" ->
+                let mutable transport = Unchecked.defaultof<JsonElement>
+
+                if
+                    mapping.TryGetProperty ("stringTransport", &transport)
+                    && transport.GetString () = "utf8-lengths"
+                then
+                    "NativeDom.RvDomUtf8StringSpan"
+                else
+                    "nativeint"
             | "union"
             | "sequence" -> "NativeDom." + Metadata.text "ctype" mapping
             | "bool"
             | "enum" -> "int"
             | _ -> name element
 
-        decoded ctx mapping element "item"
+        decoded ctx mapping element "item" owner
         |> Result.map (fun expression ->
             $"(Array.init {value}.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<{nativeType}>({value}.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<{nativeType}>())) in {expression}))")
     | "union" when FSharpType.IsUnion plain ->
@@ -362,7 +445,7 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
                     if fields.Length <> 1 then
                         Error $"Union arm {case.Name} lacks a single payload"
                     else
-                        decoded ctx arm fields[0].PropertyType $"{value}.arm{index}"
+                        decoded ctx arm fields[0].PropertyType $"{value}.arm{index}" owner
                         |> Result.map (fun expression -> $"| {index + 1} -> {name plain}.{ident case.Name} ({expression})"))
 
             match
@@ -412,12 +495,38 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
     with
     | Some reason -> Error reason
     | None ->
+        let prepared =
+            List.zip fn.Inputs inputs
+            |> List.mapi (fun index (parameter, expression) ->
+                let expression =
+                    match expression with
+                    | Ok value -> value
+                    | Error _ -> ""
+
+                if
+                    parameter.FSharp = "byte[]"
+                    && Metadata.hasText "stringInputs" "utf8-lengths" fn.Descriptor
+                then
+                    let local = $"nativeString{index}"
+                    [ $"let {local} = {expression}" ], [ local; local + ".Length" ]
+                else
+                    [], [ expression ])
+
+        let preparation = prepared |> List.collect fst
+
         let args =
             "Interop.handle (box this)"
-            :: (inputs
-                |> List.map (function
-                    | Ok e -> e
-                    | Error _ -> ""))
+            :: ((if Metadata.hasText "contextReceiver" "Document" fn.Descriptor then
+                     [ "Interop.contextHandle this" ]
+                 else
+                     [])
+                @ (prepared |> List.collect snd))
+
+        let valueOwner =
+            if List.contains fn.Interface [ "StylePropertyMap"; "StylePropertyMapReadOnly" ] then
+                "Interop.contextDocument this"
+            else
+                "this"
 
         let call (outs: string list) =
             sprintf "NativeDom.%s (%s)" fn.Name (String.concat ", " (args @ outs))
@@ -430,91 +539,120 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
             | Some inner -> inner, true
             | None -> returns, false
 
-        match fn.Outputs with
-        | [] when returns = typeof<Void> || returns = typeof<unit> -> Ok [ checkCall [] ]
-        | [] -> Error $"returns {name returns} with no result"
-        | [ buffer ] when buffer.Name = "buffer" && inner = typeof<string> ->
-            let text =
-                sprintf "Interop.text \"%s\" (fun buffer capacity length -> %s)" qualified (call [ "buffer"; "capacity"; "length" ])
+        let result =
+            match fn.Outputs with
+            | [] when returns = typeof<Void> || returns = typeof<unit> -> Ok [ checkCall [] ]
+            | [] -> Error $"returns {name returns} with no result"
+            | [ buffer ] when buffer.Name = "buffer" && inner = typeof<string> ->
+                let text =
+                    sprintf "Interop.text \"%s\" (fun buffer capacity length -> %s)" qualified (call [ "buffer"; "capacity"; "length" ])
 
-            Ok
-                [
-                    (if nullable then
-                         $"Option.ofObj ({text})"
-                     elif fn.Descriptor.GetProperty("returns").GetProperty("nullable").GetBoolean() then
-                         text
-                     else
-                         $"Interop.nonNull ({text})")
-                ]
-        | result :: rest when result.Name = "result" ->
-            let present = rest |> List.exists (fun p -> p.Name = "present")
-            let declare = [ sprintf "let mutable result = %s" (zero result.FSharp) ]
+                Ok
+                    [
+                        (if nullable then
+                             $"Option.ofObj ({text})"
+                         elif fn.Descriptor.GetProperty("returns").GetProperty("nullable").GetBoolean() then
+                             text
+                         else
+                             $"Interop.nonNull ({text})")
+                    ]
+            | result :: rest when result.Name = "result" ->
+                let present = rest |> List.exists (fun p -> p.Name = "present")
+                let declare = [ sprintf "let mutable result = %s" (zero result.FSharp) ]
 
-            let declare =
-                if present then
-                    declare @ [ "let mutable present = 0" ]
-                else
-                    declare
+                let declare =
+                    if present then
+                        declare @ [ "let mutable present = 0" ]
+                    else
+                        declare
 
-            let outs = if present then [ "&result"; "&present" ] else [ "&result" ]
+                let outs = if present then [ "&result"; "&present" ] else [ "&result" ]
 
-            let finish (value: string) =
-                Ok (declare @ [ checkCall outs; value ])
+                let finish (value: string) =
+                    Ok (declare @ [ checkCall outs; value ])
 
-            let scalar (value: string) =
-                if present && nullable then
-                    finish $"(if present = 0 then None else Some ({value}))"
-                elif present || nullable then
-                    Error $"returns {name returns} for a nullable {result.C}"
-                else
-                    finish value
+                let scalar (value: string) =
+                    if present && nullable then
+                        finish $"(if present = 0 then None else Some ({value}))"
+                    elif present || nullable then
+                        Error $"returns {name returns} for a nullable {result.C}"
+                    else
+                        finish value
 
-            let resultMapping = fn.Descriptor.GetProperty "returns"
-            let resultKind = Metadata.text "kind" resultMapping
+                let resultMapping = fn.Descriptor.GetProperty "returns"
+                let resultKind = Metadata.text "kind" resultMapping
 
-            match result.FSharp with
-            | _ when resultKind = "union" || resultKind = "sequence" ->
-                decoded ctx resultMapping returns "result"
-                |> Result.map (fun expression ->
-                    declare
-                    @ [
-                        "try"
-                        "    " + checkCall outs
-                        "    " + expression
-                        "finally"
-                        $"    NativeDom.{releaseContainer ctx resultMapping}(&result)"
-                    ])
-            | "int&" when resultKind = "enum" ->
-                decoded ctx resultMapping inner "result"
-                |> Result.bind scalar
-            | "nativeint&" when result.C = "RvNode**" || result.C = "RvEvent**" ->
-                if not (isInterface ctx inner) then
-                    Error $"returns {name returns} for {result.C}"
-                else
-                    let wrapped =
-                        if result.C = "RvNode**" then
-                            "this.Session.Node result"
+                match result.FSharp with
+                | _ when resultKind = "union" || resultKind = "sequence" ->
+                    decoded ctx resultMapping returns "result" valueOwner
+                    |> Result.map (fun expression ->
+                        declare
+                        @ [
+                            "try"
+                            "    " + checkCall outs
+                            "    " + expression
+                            "finally"
+                            $"    NativeDom.{releaseContainer ctx resultMapping}(&result)"
+                        ])
+                | "int&" when resultKind = "enum" ->
+                    decoded ctx resultMapping inner "result" valueOwner
+                    |> Result.bind scalar
+                | "nativeint&" when result.C = "RvNode**" || result.C = "RvEvent**" ->
+                    if not (isInterface ctx inner) then
+                        Error $"returns {name returns} for {result.C}"
+                    else
+                        let wrapped =
+                            if result.C = "RvNode**" then
+                                "this.Session.Node result"
+                            else
+                                "this.Session.Event result"
+
+                        if nullable then
+                            finish $"Interop.optionOf<{name inner}> ({wrapped})"
                         else
-                            "this.Session.Event result"
+                            finish $"unbox<{name inner}> ({wrapped})"
+                | "nativeint&" ->
+                    wrappedObject ctx resultMapping inner "result" "this"
+                    |> Result.bind (fun created ->
+                        if nullable then
+                            finish $"(if result = 0n then None else Some {created})"
+                        elif resultMapping.GetProperty("nullable").GetBoolean() then
+                            finish $"(if result = 0n then Unchecked.defaultof<{name inner}> else {created})"
+                        else
+                            finish created)
+                | "int&" when inner = typeof<bool> -> scalar "result <> 0"
+                | ("int&" | "uint32&" | "float&" | "int16&" | "uint16&" | "float32&" | "int64&" | "uint64&") when numericType inner ->
+                    scalar $"{name inner} result"
+                | _ -> Error $"returns {name returns} for {result.C}"
+            | _ -> Error "unrecognised results"
 
-                    if nullable then
-                        finish $"Interop.optionOf<{name inner}> ({wrapped})"
-                    else
-                        finish $"unbox<{name inner}> ({wrapped})"
-            | "nativeint&" ->
-                wrappedObject ctx resultMapping inner "result"
-                |> Result.bind (fun created ->
-                    if nullable then
-                        finish $"(if result = 0n then None else Some {created})"
-                    elif resultMapping.GetProperty("nullable").GetBoolean() then
-                        finish $"(if result = 0n then Unchecked.defaultof<{name inner}> else {created})"
-                    else
-                        finish created)
-            | "int&" when inner = typeof<bool> -> scalar "result <> 0"
-            | ("int&" | "uint32&" | "float&" | "int16&" | "uint16&" | "float32&" | "int64&" | "uint64&") when numericType inner ->
-                scalar $"{name inner} result"
-            | _ -> Error $"returns {name returns} for {result.C}"
-        | _ -> Error "unrecognised results"
+        result
+        |> Result.map (fun lines ->
+            let lines = preparation @ lines
+
+            if
+                List.contains
+                    fn.Interface
+                    [
+                        "CSSTransformValue"
+                        "CSSTransformComponent"
+                        "CSSTranslate"
+                        "CSSRotate"
+                        "CSSScale"
+                        "CSSSkew"
+                        "CSSSkewX"
+                        "CSSSkewY"
+                        "CSSPerspective"
+                        "CSSMatrixComponent"
+                    ]
+            then
+                [ "try" ]
+                @ (lines |> List.map (fun line -> "    " + line))
+                @ [ "finally"; "    System.GC.KeepAlive this" ]
+                @ (parameters
+                   |> List.map (fun (value, _) -> $"    System.GC.KeepAlive (box {value})"))
+            else
+                lines)
 
 /// <summary>The ABI functions of a member, searched in the declaring interface, then the class and its bases.</summary>
 let private candidates (ctx: Context) (chain: Type list) (iface: Type) (memberName: string) (kind: string) =
@@ -525,7 +663,11 @@ let private candidates (ctx: Context) (chain: Type list) (iface: Type) (memberNa
         fn.ContractOwner = iface.Name
         && fn.Member = memberName
         && fn.Kind = kind
-        && (let target = ctx.Input.Dom.Assembly.GetType ("Ranvier.Dom." + fn.Interface)
+        && (let target =
+                ctx.Input.Dom.Assembly.GetType (
+                    "Ranvier.Dom."
+                    + Metadata.publicInterfaceName ctx.Input.Model fn.Interface
+                )
 
             not (isNull target)
             && target.IsAssignableFrom concrete))
@@ -800,7 +942,10 @@ type private Emitter(ctx: Context, out: StringBuilder, entries: ResizeArray<Entr
 /// <summary>The class set: in-scope interfaces, their extras, and the class each one inherits.</summary>
 let private classSet (input: Input) =
     let lookup (n: string) =
-        input.Dom.Assembly.GetType ("Ranvier.Dom." + n)
+        input.Dom.Assembly.GetType (
+            "Ranvier.Dom."
+            + Metadata.publicInterfaceName input.Model n
+        )
         |> Option.ofObj
 
     let names =
@@ -879,7 +1024,23 @@ let run (input: Input) (tagMap: (string * string * string) list) : string * Entr
             t
             :: [
                 for i in t.GetInterfaces () do
-                    if not (covered.Contains i.Name) then
+                    let redeclaredProperty =
+                        t.GetProperties flags
+                        |> Array.exists (fun property ->
+                            i.GetProperties flags
+                            |> Array.exists (fun inherited ->
+                                property.Name = inherited.Name
+                                && property.PropertyType = inherited.PropertyType
+                                && (property.GetIndexParameters ()
+                                    |> Array.map (fun p -> p.ParameterType))
+                                    =
+                                    (inherited.GetIndexParameters ()
+                                     |> Array.map (fun p -> p.ParameterType))))
+
+                    if
+                        not (covered.Contains i.Name)
+                        || redeclaredProperty
+                    then
                         i
             ]
 
@@ -944,11 +1105,12 @@ let run (input: Input) (tagMap: (string * string * string) list) : string * Entr
 
         for interfaceName in query.GetProperty("interfaces").EnumerateArray() do
             let interfaceName = interfaceName.GetString ()
+            let publicName = Metadata.publicInterfaceName input.Model interfaceName
 
-            if not (classes.ContainsKey interfaceName) then
+            if not (classes.ContainsKey publicName) then
                 invalidOp $"Native runtime interface {interfaceName} has no managed wrapper"
 
-            emitter.Line (3, $"| \"{interfaceName}\" -> {interfaceName}Object(session, handle)")
+            emitter.Line (3, $"| \"{interfaceName}\" -> {publicName}Object(session, handle)")
 
         emitter.Line (3, $"| name -> invalidOp (\"Unknown {root} runtime interface: \" + name)")
 

@@ -13,7 +13,7 @@
         <PackageTags>reactive;signals;view;dom;webcore;native;fsharp</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>Experimental. The API may change.</PackageReleaseNotes>
-        <Version>0.1.0-alpha.3</Version>
+        <Version>0.1.0-alpha.7</Version>
         <IsAotCompatible>true</IsAotCompatible>
         <IsPackable>true</IsPackable>
         <!-- Generated wrapper implementation members inherit their contracts' documentation. -->
@@ -22,7 +22,7 @@
 
     <!-- RanvierWebCoreNativeDir holds runtimes/<rid>/native for local native runtime checks. -->
     <PropertyGroup>
-        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.0-preview.11</RanvierWebCoreNativeVersion>
+        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.0-preview.17</RanvierWebCoreNativeVersion>
         <UseLocalRanvierWebCore Condition="'$(UseLocalRanvierWebCore)' == ''">false</UseLocalRanvierWebCore>
         <RanvierWebCoreRoot Condition="'$(RanvierWebCoreRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../Ranvier.WebCore'))</RanvierWebCoreRoot>
         <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</RanvierWebCoreNativeRid>
@@ -57,6 +57,11 @@
         <Compile Include="Host.fs" />
         <Compile Include="StyleSheets.fs" />
         <Compile Include="CssQueries.fs" />
+        <Compile Include="CustomProperties.fs" />
+        <Compile Include="StyleValues.fs" />
+        <Compile Include="StyleMaps.fs" />
+        <Compile Include="Geometry.fs" />
+        <Compile Include="TransformValues.fs" />
         <Compile Include="ComputedStyles.fs" />
         <Compile Include="Timing.fs" />
         <None Include="Generated/report.txt" />

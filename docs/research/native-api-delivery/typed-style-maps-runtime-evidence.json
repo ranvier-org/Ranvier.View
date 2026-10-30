@@ -1,0 +1,105 @@
+{
+  "group": "C13",
+  "status": "Private runtime proof; public/platform acceptance pending",
+  "sourceProfile": {
+    "viewsBase": "d782e5ea1ac15210c6ad7476fff64664a9e8e353",
+    "nativeAllocation": "5a55ba3c7f743e49ce6510582aaaa7b7889001ba",
+    "canonicalGeneratedContract": "40ea8fd65ff02ccfb661f03f25a2d8323f15be47",
+    "cohort": "Views0.1.5/backendalpha5/Corealpha15/Nativepreview15/ABI23",
+    "nativeModel": {
+      "exports": 1739,
+      "interfaces": 138,
+      "handleRoots": 20
+    },
+    "dependencies": "Fresh private managed packages and coherent private native candidate; no released15 claim"
+  },
+  "focused": {
+    "windowsJit": {
+      "shared": 127,
+      "lifecycle": 33,
+      "exitCode": 0
+    },
+    "windowsNativeAot": {
+      "shared": 127,
+      "lifecycle": 33,
+      "exitCode": 0
+    },
+    "chromium": {
+      "version": "156.0.8078.4",
+      "shared": 127,
+      "documentNavigation": 3,
+      "exitCode": 0
+    }
+  },
+  "combined": {
+    "windowsJit": {
+      "shared": 1755,
+      "lifecycle": 87,
+      "tab": true,
+      "teardown": true,
+      "exitCode": 0
+    },
+    "windowsNativeAot": {
+      "shared": 1755,
+      "lifecycle": 87,
+      "tab": true,
+      "teardown": true,
+      "exitCode": 0
+    },
+    "chromium": {
+      "shared": 1768,
+      "context": 13,
+      "cssEscapeOracle": 196609,
+      "tab": true,
+      "exitCode": 0
+    }
+  },
+  "runtimeDllSha256": {
+    "RanvierWebCoreHost": "e11c62d9385c72f6dcba8cea452568cada84dc73bed0a315b379fffb6c779355",
+    "WebCore": "5515ba359ac2a4a2da1a3b3bced079b4e0e3e2c048c444e300373adf9fdafc90",
+    "JavaScriptCore": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42"
+  },
+  "logs": [
+    {
+      "path": "C:/wk/rv-custom-properties/artifacts/c13-focus-jit.log",
+      "sha256": "eba6c2c9b296dbb6d1f2ecdb29920659e9b55a317015807281468cfa04428571"
+    },
+    {
+      "path": "C:/wk/rv-custom-properties/artifacts/c13-focus-aot.log",
+      "sha256": "eba6c2c9b296dbb6d1f2ecdb29920659e9b55a317015807281468cfa04428571"
+    },
+    {
+      "path": "C:/wk/rv-custom-properties/artifacts/c13-focus-browser.log",
+      "sha256": "ff9544e6dd580eca20ebeea5598a6e753ac0da5b7a5481173660fd357a140ad1"
+    },
+    {
+      "path": "C:/wk/rv-custom-properties/artifacts/c13-full-jit.log",
+      "sha256": "d6ce8f5191c39dbf1a6b62154166d13bc087b8ababebb9801134b45691fae038"
+    },
+    {
+      "path": "C:/wk/rv-custom-properties/artifacts/c13-full-aot.log",
+      "sha256": "d6ce8f5191c39dbf1a6b62154166d13bc087b8ababebb9801134b45691fae038"
+    },
+    {
+      "path": "C:/wk/rv-custom-properties/artifacts/c13-full-browser.log",
+      "sha256": "ed64c03522ba57459b8abd3a140111f3e361d4e78a68f0e2cef719eb4c247ec5"
+    }
+  ],
+  "verifiedScope": [
+    "Generated map get/getAll/has/size and set/append/delete/clear, live computed effects, readonly rejection, independent values and snapshots",
+    "Missing/undefined, invalid property/grammar/type, empty variadics, null/forged values/containers, null string conversion, NUL/USV inputs",
+    "Insertion-order entries, list cardinality/order, Unicode names, computed snapshots and retained typed values after array/native container release",
+    "All six declared-map mutators preserve identical cached-sheet survivor CSSOM/layout and update owning rule/layout",
+    "Ownerless/detached/replaced-owner maps, first-cache identity across services, same-session secondary documents, foreign-session/thread rejection",
+    "Provider disposal preserves maps/values; host/session disposal invalidates handles; Chromium old-document provider rejects navigation"
+  ],
+  "qualifications": [
+    "Partial conversion exception cleanup is independently source-reviewed; malformed native snapshot injection is not runtime-proved.",
+    "Nullable entry slots are preserved by the decoder and canonical transport; natural nonnull fixture outputs do not prove a synthesized null slot.",
+    "Private PreserveNewest staging initially left mismatched JavaScriptCore bytes in executable output and caused a computed-entries crash. Exact raw repro passed; replacement of only the output JSC made unchanged managed tests pass. Final actual JIT/AOT three-DLL hashes were verified before execution. No engine defect is claimed.",
+    "Initial draft alphabetical inline-entry expectation was corrected only after native source and actual native/Chromium both established width/opacity/height insertion order.",
+    "Chromium actual null typed reference RED was repaired in canonical Native generator40ea; required shared test retained.",
+    "NativeAOT reports existing FSharp.Core IL3053/IL2104 and SameValueZero IL2075 warnings; publish succeeds.",
+    "No five-RID/platform/released-package/traced acceptance is claimed by these private Windows and Chromium results."
+  ]
+}
