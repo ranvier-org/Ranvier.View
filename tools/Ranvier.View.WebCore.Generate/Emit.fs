@@ -282,6 +282,7 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                     "DOMTokenList"
                     "DOMRectList"
                     "DOMRectReadOnly"
+                    "DOMQuad"
                     "CSSOMVariableReferenceValue"
                 ]
         then
@@ -962,7 +963,23 @@ let run (input: Input) (tagMap: (string * string * string) list) : string * Entr
             t
             :: [
                 for i in t.GetInterfaces () do
-                    if not (covered.Contains i.Name) then
+                    let redeclaredProperty =
+                        t.GetProperties flags
+                        |> Array.exists (fun property ->
+                            i.GetProperties flags
+                            |> Array.exists (fun inherited ->
+                                property.Name = inherited.Name
+                                && property.PropertyType = inherited.PropertyType
+                                && (property.GetIndexParameters ()
+                                    |> Array.map (fun p -> p.ParameterType))
+                                    =
+                                    (inherited.GetIndexParameters ()
+                                     |> Array.map (fun p -> p.ParameterType))))
+
+                    if
+                        not (covered.Contains i.Name)
+                        || redeclaredProperty
+                    then
                         i
             ]
 

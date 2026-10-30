@@ -75,6 +75,12 @@ module internal Kind =
     [<Literal>]
     let StyleMap = 21
 
+    [<Literal>]
+    let Point = 22
+
+    [<Literal>]
+    let Quad = 23
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -210,6 +216,8 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.StyleValue -> NativeDom.rv_dom_css_style_value_release handle
         | Kind.VariableReferenceValue -> NativeDom.rv_dom_cssom_variable_reference_value_release handle
         | Kind.StyleMap -> NativeDom.rv_dom_style_property_map_read_only_release handle
+        | Kind.Point -> NativeDom.rv_dom_dom_point_read_only_release handle
+        | Kind.Quad -> NativeDom.rv_dom_dom_quad_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =

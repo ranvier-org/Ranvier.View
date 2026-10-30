@@ -1,0 +1,122 @@
+{
+  "schemaVersion": 1,
+  "group": "G07",
+  "status": "private-focused-checkpoint",
+  "nativeSource": "829078076a616dc3f757773b505448c3e2f05a4e",
+  "nativeAbi": 23,
+  "nativeRuntime": "C:/wk/native-geometry-values/artifacts/geometry-candidate/runtime",
+  "privateDependencies": true,
+  "coreBase": "ab822c530d65a86066d095b6a8f21bfad3459bf3",
+  "viewsBase": "d2f2bf28e250b02df56c0fb9d7ae63d20d9482ba",
+  "commands": {
+    "jit": "rtk proxy dotnet tests/NativeApi.Conformance/bin/Release/net10.0/win-x64/Native.dll --geometry-only",
+    "aotPublish": "rtk proxy dotnet publish tests/NativeApi.Conformance/Native.fsproj -c Release -r win-x64 -p:PublishAot=true -p:OS=Windows_NT -o artifacts/g07-aot",
+    "aotRun": "rtk proxy artifacts/g07-aot/Native.exe --geometry-only",
+    "browser": "rtk proxy node tests/NativeApi.Conformance/browser.mjs --geometry-only",
+    "browserDependencyPackage": "C:/wk/ranvier-views/tests/NativeApi.Conformance/package.json"
+  },
+  "browser": {
+    "engine": "Chromium",
+    "version": "156.0.8078.4",
+    "compiler": "Fickl0.6.9/Fable5.24.0"
+  },
+  "logs": {
+    "jit": {
+      "path": "C:\\wk\\rv-custom-properties\\artifacts\\g07-focus-jit.log",
+      "sha256": "a718dd3f1bce0e2f0d1615831986b8995e0d1747568130e826ed3c43ac6ec0e1",
+      "exitCode": 0,
+      "assertions": 177,
+      "contextAssertions": null,
+      "lifetimeAssertions": 26,
+      "output": "[rtk] /!\\ No hook installed \u2014 run `rtk init -g` for automatic token savings\nNATIVE_API G07 PASS assertions=177\nNATIVE_API G07 LIFETIME PASS assertions=26\nNATIVE_API G07 TEARDOWN PASS\n"
+    },
+    "aot": {
+      "path": "C:\\wk\\rv-custom-properties\\artifacts\\g07-focus-aot.log",
+      "sha256": "a718dd3f1bce0e2f0d1615831986b8995e0d1747568130e826ed3c43ac6ec0e1",
+      "exitCode": 0,
+      "assertions": 177,
+      "contextAssertions": null,
+      "lifetimeAssertions": 26,
+      "output": "[rtk] /!\\ No hook installed \u2014 run `rtk init -g` for automatic token savings\nNATIVE_API G07 PASS assertions=177\nNATIVE_API G07 LIFETIME PASS assertions=26\nNATIVE_API G07 TEARDOWN PASS\n"
+    },
+    "browser": {
+      "path": "C:\\wk\\rv-custom-properties\\artifacts\\g07-focus-browser.log",
+      "sha256": "3c68e81bf5a09e0715736ae452f5e62f81b9c33bc7161f7c637b5285f8977bed",
+      "exitCode": 0,
+      "assertions": 177,
+      "contextAssertions": 3,
+      "lifetimeAssertions": null,
+      "output": "[rtk] /!\\ No hook installed \u2014 run `rtk init -g` for automatic token savings\n[rtk] /!\\ No hook installed \u2014 run `rtk init -g` for automatic token savings\nBROWSER_API G07 PASS assertions=177 engine=chromium\nBROWSER_API G07 CONTEXT PASS assertions=3 engine=chromium\n"
+    }
+  },
+  "executedDlls": [
+    {
+      "directory": "tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\win-x64",
+      "file": "RanvierWebCoreHost.dll",
+      "sha256": "007d505e0fa20fb34f3edc8a2a7e1bde46fa23c02fc71cdb3de44c8594be98e3",
+      "matches": true
+    },
+    {
+      "directory": "tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\win-x64",
+      "file": "JavaScriptCore.dll",
+      "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+      "matches": true
+    },
+    {
+      "directory": "tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\win-x64",
+      "file": "WebCore.dll",
+      "sha256": "87ec6abc7611b550c4b13114145487ea4b93081b68751d8294057e99bc85e418",
+      "matches": true
+    },
+    {
+      "directory": "artifacts\\g07-aot",
+      "file": "RanvierWebCoreHost.dll",
+      "sha256": "007d505e0fa20fb34f3edc8a2a7e1bde46fa23c02fc71cdb3de44c8594be98e3",
+      "matches": true
+    },
+    {
+      "directory": "artifacts\\g07-aot",
+      "file": "JavaScriptCore.dll",
+      "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+      "matches": true
+    },
+    {
+      "directory": "artifacts\\g07-aot",
+      "file": "WebCore.dll",
+      "sha256": "87ec6abc7611b550c4b13114145487ea4b93081b68751d8294057e99bc85e418",
+      "matches": true
+    }
+  ],
+  "generator": {
+    "classes": 131,
+    "members": 1786,
+    "mapped": 1773,
+    "handWritten": 13,
+    "unmapped": 0,
+    "oldClasses": 246,
+    "unchangedOldClasses": 242,
+    "changedOldClasses": [
+      "DOMRectListObject",
+      "DOMRectObject",
+      "ElementObject",
+      "RangeObject"
+    ],
+    "newClasses": [
+      "DOMPointObject",
+      "DOMPointReadOnlyObject",
+      "DOMQuadObject"
+    ],
+    "red": "DOMPointReadOnly is a root class without a release kind; then FS0361 for inherited read-only/derived mutable getter slots",
+    "sageRed": "G07InheritedBad extending G07BaseImpl and implementing G07Mutable.x failed FS0361; explicit G07Base reimplementation compiled and both interface reads agreed",
+    "changedBodyQualification": "DOMRectObject gains mutable slots and explicit base implementation; other three classes only switch rectangle-result wrapper factories to canonical trusted runtime queries."
+  },
+  "qualification": [
+    "Private Windows JIT/AOT and actual Chromium focused proof only.",
+    "No public Native16 package, non-Windows, final producer pin or frozen release profile acceptance.",
+    "Combined conformance and required repository gates batch with G08; no full-suite pass claimed.",
+    "Existing FSharp.Core IL3053/IL2104 and SameValueZero IL2075 AOT warnings remain.",
+    "Native scalar dictionary structs receive exact WebIDL defaults for absent fields; nested null dictionaries use empty defaults.",
+    "Browser disposal observable Exception:GeometryService differs from native ObjectDisposedException; no typed exception identity parity claimed.",
+    "Native retained corners anchor quad wrappers; no forced native owner destruction claim."
+  ]
+}

@@ -1,4 +1,4 @@
-127 classes; 1749 members: 1736 mapped to 1718 of 1739 rv_dom_* functions, 13 hand-written, 0 unmapped
+131 classes; 1786 members: 1773 mapped to 1743 of 1775 rv_dom_* functions, 13 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_css_register_property: DOMCSSNamespace.registerProperty (op)
@@ -13,6 +13,17 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_cssom_variable_reference_value_create: CSSOMVariableReferenceValue.constructor (op)
   rv_dom_document_get_adopted_style_sheets: Document.adoptedStyleSheets (get)
   rv_dom_document_set_adopted_style_sheets: Document.adoptedStyleSheets (set)
+  rv_dom_dom_point_create: DOMPoint.constructor (op)
+  rv_dom_dom_point_from_point: DOMPoint.fromPoint (op)
+  rv_dom_dom_point_read_only_create: DOMPointReadOnly.constructor (op)
+  rv_dom_dom_point_read_only_from_point: DOMPointReadOnly.fromPoint (op)
+  rv_dom_dom_quad_create: DOMQuad.constructor (op)
+  rv_dom_dom_quad_from_quad: DOMQuad.fromQuad (op)
+  rv_dom_dom_quad_from_rect: DOMQuad.fromRect (op)
+  rv_dom_dom_rect_create: DOMRect.constructor (op)
+  rv_dom_dom_rect_from_rect: DOMRect.fromRect (op)
+  rv_dom_dom_rect_read_only_create: DOMRectReadOnly.constructor (op)
+  rv_dom_dom_rect_read_only_from_rect: DOMRectReadOnly.fromRect (op)
   rv_dom_event_get_current_target: Event.currentTarget (get)
   rv_dom_html_select_element_remove_0: HTMLSelectElement.remove (op)
   rv_dom_input_event_get_data: InputEvent.data (get)
@@ -63,7 +74,11 @@ Members by class (mapped / hand-written / unmapped):
   CharacterDataObject: 14 / 0 / 0
   CompositionEventObject: 1 / 0 / 0
   DOMImplementationObject: 2 / 0 / 0
+  DOMPointObject: 12 / 0 / 0
+  DOMPointReadOnlyObject: 4 / 0 / 0
+  DOMQuadObject: 5 / 0 / 0
   DOMRectListObject: 2 / 0 / 0
+  DOMRectObject: 16 / 0 / 0
   DOMRectReadOnlyObject: 8 / 0 / 0
   DOMSelectionObject: 31 / 0 / 0
   DOMStringMapObject: 3 / 0 / 0

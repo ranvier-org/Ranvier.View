@@ -3,6 +3,12 @@ module internal NativeApiConformance.Native
 open Ranvier.View.WebCore
 
 let private runAll () =
+    let geometryLifecycle = GeometryLifecycle.run ()
+
+    if geometryLifecycle <> 26 then
+        failwith "Geometry lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API G07 LIFETIME PASS assertions={geometryLifecycle}"
     let styleMapLifecycle = StyleMapLifecycle.run ()
 
     if styleMapLifecycle <> 33 then
@@ -47,6 +53,17 @@ let private runAll () =
     let session = host.Session
 
     try
+        let geometry =
+            GeometryValues.run
+                (fun () -> Geometry.forHost host)
+                (fun value -> value :? Ranvier.Dom.DOMRect, value :? Ranvier.Dom.DOMPoint)
+                (fun error -> error.GetType().Name)
+                "ObjectDisposedException"
+
+        if geometry <> 177 then
+            failwith "Geometry shared assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API G07 PASS assertions={geometry}"
         let viewTables = ViewTables.run host.Document
         System.Console.WriteLine $"NATIVE_API D10_VIEW PASS assertions={viewTables}"
         let viewHyperlinks = ViewHyperlinks.run host.Document
@@ -566,7 +583,30 @@ let private runAll () =
 
 [<EntryPoint>]
 let main args =
-    if Array.contains "--style-maps-only" args then
+    if Array.contains "--geometry-only" args then
+        let lifecycle = GeometryLifecycle.run ()
+        use host = WebCoreHost.Create (64, 64)
+
+        let count =
+            GeometryValues.run
+                (fun () -> Geometry.forHost host)
+                (fun value -> value :? Ranvier.Dom.DOMRect, value :? Ranvier.Dom.DOMPoint)
+                (fun error -> error.GetType().Name)
+                "ObjectDisposedException"
+
+        if count <> 177 || lifecycle <> 26 then
+            failwith "Geometry shared/lifetime assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API G07 PASS assertions={count}"
+        System.Console.WriteLine $"NATIVE_API G07 LIFETIME PASS assertions={lifecycle}"
+        (host :> System.IDisposable).Dispose()
+
+        if host.Session.LiveObjects <> 0 then
+            failwith "Geometry wrappers leaked"
+
+        System.Console.WriteLine "NATIVE_API G07 TEARDOWN PASS"
+        0
+    elif Array.contains "--style-maps-only" args then
         let lifecycle = StyleMapLifecycle.run ()
         let host = WebCoreHost.Create (320, 240)
         let session = host.Session
