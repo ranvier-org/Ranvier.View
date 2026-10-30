@@ -17,9 +17,14 @@
     <Compile Include="CssEscaping.fs" />
     <Compile Include="CssSupport.fs" />
     <Compile Include="ComputedStyles.fs" />
+    <Compile Include="CustomProperties.fs" />
+    <Compile Include="StyleValues.fs" />
     <Compile Include="TypedStyles.fs" />
     <Compile Include="FragmentRectangles.fs" />
     <Compile Include="FontTransitionRules.fs" />
+    <Compile Include="PositionTry.fs" />
+    <Compile Include="CounterStyleRules.fs" />
+    <Compile Include="KeyframeRules.fs" />
     <Compile Include="ConditionalRules.fs" />
     <Compile Include="CascadeRules.fs" />
     <Compile Include="SheetConstruction.fs" />

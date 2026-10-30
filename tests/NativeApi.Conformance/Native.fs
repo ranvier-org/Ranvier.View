@@ -2,8 +2,19 @@ module internal NativeApiConformance.Native
 
 open Ranvier.View.WebCore
 
-[<EntryPoint>]
-let main _ =
+let private runAll () =
+    let styleValueLifecycle = StyleValueLifecycle.run ()
+
+    if styleValueLifecycle <> 19 then
+        failwith "Typed-style lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API C14 LIFETIME PASS assertions={styleValueLifecycle}"
+    let registrationLifecycle = CustomPropertyLifecycle.run ()
+
+    if registrationLifecycle <> 10 then
+        failwith "Custom-property lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API C12 LIFETIME PASS assertions={registrationLifecycle}"
     let mutable nullQueryHostRejected = false
 
     try
@@ -52,6 +63,33 @@ let main _ =
         System.Console.WriteLine $"NATIVE_API C01_C02 PASS assertions={computedStyles}"
         let computedService = Ranvier.View.WebCore.ComputedStyles.forHost host
 
+        let customProperties =
+            CustomProperties.run
+                host.Document
+                (fun () -> Ranvier.View.WebCore.CustomProperties.forHost host)
+                computedService
+                (fun error -> error.GetType().Name)
+                "ObjectDisposedException"
+
+        if customProperties <> 50 then
+            failwith "Custom-property shared assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API C12 PASS assertions={customProperties}"
+
+        let styleValues =
+            StyleValues.run
+                (fun () -> Ranvier.View.WebCore.StyleValues.forHost host)
+                (function
+                | WebCoreDomException (name, _) -> name
+                | error -> error.GetType().Name)
+                "ObjectDisposedException"
+                (fun value -> value :? Ranvier.Dom.CSSImageValue, value :? Ranvier.Dom.CSSNumericValue)
+
+        if styleValues <> 99 then
+            failwith "Typed-style shared assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API C14 PASS assertions={styleValues}"
+
         let ruleMutations =
             RuleMutations.run host.Document computedService (function
                 | WebCoreDomException (name, _) -> name
@@ -72,6 +110,39 @@ let main _ =
         System.Console.WriteLine $"NATIVE_API C18 CAPABILITY fontWidthAlias={fontWidthAlias}"
         let transitionRules = FontTransitionRules.transitions host.Document
         System.Console.WriteLine $"NATIVE_API C22 PASS assertions={transitionRules}"
+
+        let positionTry, positionTryAvailable =
+            PositionTry.run host.Document (fun () -> host.Frame ())
+
+        if positionTry <> 44 || not positionTryAvailable then
+            failwith $"Position fallback proof incomplete: assertions={positionTry}, available={positionTryAvailable}"
+
+        System.Console.WriteLine $"NATIVE_API C21 PASS assertions={positionTry}"
+        System.Console.WriteLine $"NATIVE_API C21 CAPABILITY positionTry={positionTryAvailable}"
+
+        let counterStyles, counterSpeakAs =
+            CounterStyleRules.run host.Document (fun () -> host.Frame ())
+
+        if counterStyles <> 64 then
+            failwith $"Counter style proof incomplete: assertions={counterStyles}"
+
+        System.Console.WriteLine $"NATIVE_API C19 PASS assertions={counterStyles}"
+        System.Console.WriteLine $"NATIVE_API C19 CAPABILITY speakAs={counterSpeakAs}"
+
+        let keyframeRules, keyframeLength, invalidKeyTextError =
+            KeyframeRules.run host.Document computedService (fun () -> host.Frame ()) (function
+                | WebCoreDomException (name, _) -> name
+                | error -> error.GetType().Name)
+
+        if
+            keyframeRules <> 82
+            || not keyframeLength
+            || invalidKeyTextError <> ""
+        then
+            failwith $"Keyframe rule proof incomplete: assertions={keyframeRules}, length={keyframeLength}, error={invalidKeyTextError}"
+
+        System.Console.WriteLine $"NATIVE_API C11 PASS assertions={keyframeRules}"
+        System.Console.WriteLine $"NATIVE_API C11 CAPABILITY length={keyframeLength} invalidKeyTextError={invalidKeyTextError}"
         let lifetimeRectangles = host.Document.body.getClientRects ()
         let lifetimeRectangle = lifetimeRectangles.item 0u
 
@@ -466,3 +537,64 @@ let main _ =
 
     System.Console.WriteLine "NATIVE_API TEARDOWN PASS groups=D09,D10,D11,CSSOM"
     0
+
+[<EntryPoint>]
+let main args =
+    if Array.contains "--style-values-only" args then
+        let lifecycle = StyleValueLifecycle.run ()
+        let host = WebCoreHost.Create (320, 240)
+        let session = host.Session
+
+        try
+            let count =
+                StyleValues.run
+                    (fun () -> Ranvier.View.WebCore.StyleValues.forHost host)
+                    (function
+                    | WebCoreDomException (name, _) -> name
+                    | error -> error.GetType().Name)
+                    "ObjectDisposedException"
+                    (fun value -> value :? Ranvier.Dom.CSSImageValue, value :? Ranvier.Dom.CSSNumericValue)
+
+            if count <> 99 || lifecycle <> 19 then
+                failwith "Typed-style focused shared/lifetime assertions did not run"
+
+            System.Console.WriteLine $"NATIVE_API C14 PASS assertions={count}"
+            System.Console.WriteLine $"NATIVE_API C14 LIFETIME PASS assertions={lifecycle}"
+        finally
+            (host :> System.IDisposable).Dispose()
+
+        if session.LiveObjects <> 0 then
+            failwith "Typed-style fixture leaked native wrappers"
+
+        System.Console.WriteLine "NATIVE_API C14 TEARDOWN PASS"
+
+        0
+    elif Array.contains "--custom-properties-only" args then
+        let lifecycle = CustomPropertyLifecycle.run ()
+        let host = WebCoreHost.Create (320, 240)
+        let session = host.Session
+
+        try
+            let count =
+                CustomProperties.run
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.CustomProperties.forHost host)
+                    (Ranvier.View.WebCore.ComputedStyles.forHost host)
+                    (fun error -> error.GetType().Name)
+                    "ObjectDisposedException"
+
+            if count <> 50 || lifecycle <> 10 then
+                failwith "Custom-property focused shared/lifetime assertions did not run"
+
+            System.Console.WriteLine $"NATIVE_API C12 PASS assertions={count}"
+            System.Console.WriteLine $"NATIVE_API C12 LIFETIME PASS assertions={lifecycle}"
+        finally
+            (host :> System.IDisposable).Dispose()
+
+        if session.LiveObjects <> 0 then
+            failwith $"Custom-property fixture leaked {session.LiveObjects} managed native objects"
+
+        System.Console.WriteLine "NATIVE_API C12 TEARDOWN PASS"
+        0
+    else
+        runAll ()

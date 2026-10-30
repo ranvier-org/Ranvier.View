@@ -69,6 +69,8 @@ let private kinds =
             "StyleSheet", "Kind.StyleSheet"
             "StyleSheetList", "Kind.StyleSheetList"
             "MediaList", "Kind.MediaList"
+            "CSSStyleValue", "Kind.StyleValue"
+            "CSSVariableReferenceValue", "Kind.VariableReferenceValue"
         ]
 
 [<EntryPoint>]
@@ -96,7 +98,10 @@ let main argv =
         let nativeTypes =
             Metadata.items "interfaces" model
             |> Array.choose (fun row ->
-                contracts.GetType ("Ranvier.Dom." + Metadata.text "name" row)
+                contracts.GetType (
+                    "Ranvier.Dom."
+                    + Metadata.publicInterfaceName model (Metadata.text "name" row)
+                )
                 |> Option.ofObj)
 
         [

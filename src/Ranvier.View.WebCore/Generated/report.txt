@@ -1,9 +1,16 @@
-119 classes; 1719 members: 1706 mapped to 1689 of 1702 rv_dom_* functions, 13 hand-written, 0 unmapped
+125 classes; 1736 members: 1723 mapped to 1705 of 1725 rv_dom_* functions, 13 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
+  rv_dom_css_register_property: DOMCSSNamespace.registerProperty (op)
   rv_dom_css_style_sheet_create: CSSStyleSheet.constructor (op)
+  rv_dom_css_style_value_parse: CSSStyleValue.parse (op)
+  rv_dom_css_style_value_parse_all: CSSStyleValue.parseAll (op)
   rv_dom_css_supports_1: DOMCSSNamespace.supports (op)
   rv_dom_css_supports_2: DOMCSSNamespace.supports (op)
+  rv_dom_css_unit_value_create: CSSUnitValue.constructor (op)
+  rv_dom_css_unparsed_value_create: CSSUnparsedValue.constructor (op)
+  rv_dom_cssom_keyword_value_create: CSSOMKeywordValue.constructor (op)
+  rv_dom_cssom_variable_reference_value_create: CSSOMVariableReferenceValue.constructor (op)
   rv_dom_document_get_adopted_style_sheets: Document.adoptedStyleSheets (get)
   rv_dom_document_set_adopted_style_sheets: Document.adoptedStyleSheets (set)
   rv_dom_event_get_current_target: Event.currentTarget (get)
@@ -31,6 +38,7 @@ Members by class (mapped / hand-written / unmapped):
   CSSImportRuleObject: 5 / 0 / 0
   CSSKeyframeRuleObject: 3 / 0 / 0
   CSSKeyframesRuleObject: 8 / 0 / 0
+  CSSKeywordValueObject: 2 / 0 / 0
   CSSLayerBlockRuleObject: 1 / 0 / 0
   CSSLayerStatementRuleObject: 1 / 0 / 0
   CSSMediaRuleObject: 1 / 0 / 0
@@ -38,6 +46,7 @@ Members by class (mapped / hand-written / unmapped):
   CSSNestedDeclarationsObject: 1 / 0 / 0
   CSSPositionTryDescriptorsObject: 140 / 0 / 0
   CSSPositionTryRuleObject: 2 / 0 / 0
+  CSSPropertyRuleObject: 4 / 0 / 0
   CSSRuleListObject: 2 / 0 / 0
   CSSRuleObject: 5 / 0 / 0
   CSSScopeRuleObject: 2 / 0 / 0
@@ -45,6 +54,10 @@ Members by class (mapped / hand-written / unmapped):
   CSSStylePropertiesObject: 2 / 0 / 0
   CSSStyleRuleObject: 6 / 0 / 0
   CSSStyleSheetObject: 8 / 0 / 0
+  CSSStyleValueObject: 1 / 0 / 0
+  CSSUnitValueObject: 3 / 0 / 0
+  CSSUnparsedValueObject: 4 / 0 / 0
+  CSSVariableReferenceValueObject: 3 / 0 / 0
   CSSViewTransitionRuleObject: 2 / 0 / 0
   CharacterDataObject: 14 / 0 / 0
   CompositionEventObject: 1 / 0 / 0

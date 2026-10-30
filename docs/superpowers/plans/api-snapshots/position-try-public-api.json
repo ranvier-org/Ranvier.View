@@ -1,0 +1,622 @@
+{
+  "packageVersion": "0.1.0-alpha.12",
+  "project": "C:/wk/rv-position-try/tests/NativeApi.Conformance/Native.fsproj",
+  "types": [
+    {
+      "status": "ok",
+      "packageId": "Ranvier.Dom",
+      "typeName": "Ranvier.Dom.CSSPositionTryRule",
+      "matchedTypes": [
+        "Ranvier.Dom.CSSPositionTryRule"
+      ],
+      "projectFileName": "C:\\wk\\rv-position-try\\tests\\NativeApi.Conformance\\Native.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "includeNonPublic": false,
+      "results": [
+        {
+          "name": "name",
+          "kind": "property",
+          "signature": "name() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "style",
+          "kind": "property",
+          "signature": "style() -> Ranvier.Dom.CSSPositionTryDescriptors",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        }
+      ],
+      "truncated": false,
+      "nextCursor": null,
+      "totalEstimate": {
+        "members": 2
+      },
+      "pageOffset": 0,
+      "pageSize": 100
+    },
+    {
+      "status": "ok",
+      "packageId": "Ranvier.Dom",
+      "typeName": "Ranvier.Dom.CSSPositionTryDescriptors",
+      "matchedTypes": [
+        "Ranvier.Dom.CSSPositionTryDescriptors"
+      ],
+      "projectFileName": "C:\\wk\\rv-position-try\\tests\\NativeApi.Conformance\\Native.fsproj",
+      "optionsSource": "ionide-proj-info",
+      "includeNonPublic": false,
+      "results": [
+        {
+          "name": "margin-block-end",
+          "kind": "property",
+          "signature": "margin-block-end() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "minBlockSize",
+          "kind": "property",
+          "signature": "minBlockSize() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "block-size",
+          "kind": "property",
+          "signature": "block-size() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "max-block-size",
+          "kind": "property",
+          "signature": "max-block-size() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "placeSelf",
+          "kind": "property",
+          "signature": "placeSelf() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "min-block-size",
+          "kind": "property",
+          "signature": "min-block-size() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "margin-block",
+          "kind": "property",
+          "signature": "margin-block() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "max-inline-size",
+          "kind": "property",
+          "signature": "max-inline-size() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "maxWidth",
+          "kind": "property",
+          "signature": "maxWidth() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "max-width",
+          "kind": "property",
+          "signature": "max-width() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "marginRight",
+          "kind": "property",
+          "signature": "marginRight() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "min-height",
+          "kind": "property",
+          "signature": "min-height() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "margin-bottom",
+          "kind": "property",
+          "signature": "margin-bottom() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "insetBlockStart",
+          "kind": "property",
+          "signature": "insetBlockStart() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "inset-block",
+          "kind": "property",
+          "signature": "inset-block() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "marginLeft",
+          "kind": "property",
+          "signature": "marginLeft() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "position-anchor",
+          "kind": "property",
+          "signature": "position-anchor() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "inset-inline-end",
+          "kind": "property",
+          "signature": "inset-inline-end() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "margin",
+          "kind": "property",
+          "signature": "margin() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "justifySelf",
+          "kind": "property",
+          "signature": "justifySelf() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "inlineSize",
+          "kind": "property",
+          "signature": "inlineSize() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "top",
+          "kind": "property",
+          "signature": "top() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "margin-top",
+          "kind": "property",
+          "signature": "margin-top() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "maxBlockSize",
+          "kind": "property",
+          "signature": "maxBlockSize() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "bottom",
+          "kind": "property",
+          "signature": "bottom() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "inline-size",
+          "kind": "property",
+          "signature": "inline-size() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "maxInlineSize",
+          "kind": "property",
+          "signature": "maxInlineSize() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "alignSelf",
+          "kind": "property",
+          "signature": "alignSelf() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "maxHeight",
+          "kind": "property",
+          "signature": "maxHeight() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "min-inline-size",
+          "kind": "property",
+          "signature": "min-inline-size() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "inset-inline-start",
+          "kind": "property",
+          "signature": "inset-inline-start() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "min-width",
+          "kind": "property",
+          "signature": "min-width() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "positionArea",
+          "kind": "property",
+          "signature": "positionArea() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "width",
+          "kind": "property",
+          "signature": "width() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "place-self",
+          "kind": "property",
+          "signature": "place-self() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "marginBottom",
+          "kind": "property",
+          "signature": "marginBottom() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "marginInlineStart",
+          "kind": "property",
+          "signature": "marginInlineStart() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "right",
+          "kind": "property",
+          "signature": "right() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "margin-inline-end",
+          "kind": "property",
+          "signature": "margin-inline-end() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "minWidth",
+          "kind": "property",
+          "signature": "minWidth() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "justify-self",
+          "kind": "property",
+          "signature": "justify-self() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "inset-block-start",
+          "kind": "property",
+          "signature": "inset-block-start() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "minHeight",
+          "kind": "property",
+          "signature": "minHeight() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "inset-block-end",
+          "kind": "property",
+          "signature": "inset-block-end() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "inset-inline",
+          "kind": "property",
+          "signature": "inset-inline() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "marginBlockEnd",
+          "kind": "property",
+          "signature": "marginBlockEnd() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "position-area",
+          "kind": "property",
+          "signature": "position-area() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "left",
+          "kind": "property",
+          "signature": "left() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "height",
+          "kind": "property",
+          "signature": "height() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "align-self",
+          "kind": "property",
+          "signature": "align-self() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "margin-inline-start",
+          "kind": "property",
+          "signature": "margin-inline-start() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "insetBlockEnd",
+          "kind": "property",
+          "signature": "insetBlockEnd() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "margin-left",
+          "kind": "property",
+          "signature": "margin-left() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "marginInline",
+          "kind": "property",
+          "signature": "marginInline() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "margin-block-start",
+          "kind": "property",
+          "signature": "margin-block-start() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "positionAnchor",
+          "kind": "property",
+          "signature": "positionAnchor() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "insetInlineStart",
+          "kind": "property",
+          "signature": "insetInlineStart() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "marginTop",
+          "kind": "property",
+          "signature": "marginTop() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "insetBlock",
+          "kind": "property",
+          "signature": "insetBlock() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "marginBlockStart",
+          "kind": "property",
+          "signature": "marginBlockStart() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "margin-right",
+          "kind": "property",
+          "signature": "margin-right() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "max-height",
+          "kind": "property",
+          "signature": "max-height() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "insetInlineEnd",
+          "kind": "property",
+          "signature": "insetInlineEnd() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "insetInline",
+          "kind": "property",
+          "signature": "insetInline() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "blockSize",
+          "kind": "property",
+          "signature": "blockSize() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "marginBlock",
+          "kind": "property",
+          "signature": "marginBlock() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "inset",
+          "kind": "property",
+          "signature": "inset() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "margin-inline",
+          "kind": "property",
+          "signature": "margin-inline() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "minInlineSize",
+          "kind": "property",
+          "signature": "minInlineSize() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        },
+        {
+          "name": "marginInlineEnd",
+          "kind": "property",
+          "signature": "marginInlineEnd() -> Microsoft.FSharp.Core.string",
+          "accessibility": "public",
+          "isObsolete": false,
+          "xmlDocSummary": null
+        }
+      ],
+      "truncated": false,
+      "nextCursor": null,
+      "totalEstimate": {
+        "members": 70
+      },
+      "pageOffset": 0,
+      "pageSize": 100
+    }
+  ]
+}

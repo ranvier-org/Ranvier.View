@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), 'generated');
+const customPropertiesOnly = process.argv.includes('--custom-properties-only');
+const styleValuesOnly = process.argv.includes('--style-values-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
 const server = createServer(async (request, response) => {
@@ -34,9 +36,10 @@ try {
     await page.setViewportSize({ width, height });
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
-  const checks = await page.evaluate(async () => {
+  const checks = await page.evaluate(async focused => {
     try {
-      return await (await import('/Browser.js')).run();
+      const fixture = await import('/Browser.js');
+      return await (focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : fixture.run());
     } catch (error) {
       throw new Error(JSON.stringify({
         type: error?.constructor?.name,
@@ -47,7 +50,21 @@ try {
         fields: Object.fromEntries(Object.getOwnPropertyNames(error).filter(key => key !== 'stack').map(key => [key, error[key]])),
       }));
     }
-  });
+  }, styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
+  if (styleValuesOnly) {
+    if (checks.styleValues !== 99 || checks.styleValueContext !== 3) throw new Error(`Typed-style shared/context assertions did not run: ${JSON.stringify(checks)}`);
+    console.log(`BROWSER_API C14 PASS assertions=${checks.styleValues} engine=chromium`);
+    console.log(`BROWSER_API C14 CONTEXT PASS assertions=${checks.styleValueContext} engine=chromium`);
+  } else {
+  if (checks.customProperties !== 50 || checks.customPropertyContext !== 3) {
+    throw new Error(`Custom-property shared/context assertions did not run: ${JSON.stringify(checks)}`);
+  }
+  console.log(`BROWSER_API C12 PASS assertions=${checks.customProperties} engine=chromium`);
+  console.log(`BROWSER_API C12 CONTEXT PASS assertions=${checks.customPropertyContext} engine=chromium`);
+  if (!customPropertiesOnly) {
+  if (checks.styleValues !== 99 || checks.styleValueContext !== 3) throw new Error(`Typed-style shared/context assertions did not run: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API C14 PASS assertions=${checks.styleValues} engine=chromium`);
+  console.log(`BROWSER_API C14 CONTEXT PASS assertions=${checks.styleValueContext} engine=chromium`);
   if (checks.cssSupport !== 32 || checks.cssEscaping !== 45 || checks.cssOracle !== 196609 || checks.tables !== 30 || checks.viewTables < 29 || checks.reflection < 200 || checks.namespaces < 24 || checks.hyperlinks < 60 || checks.cssom < 58 || checks.svgCssom < 31 || checks.construction < 40) throw new Error(`Insufficient API assertions: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API D10 PASS assertions=${checks.tables} engine=chromium`);
   console.log(`BROWSER_API D10_VIEW PASS assertions=${checks.viewTables} engine=chromium`);
@@ -66,6 +83,15 @@ try {
   console.log(`BROWSER_API C18 PASS assertions=${checks.fontRules} engine=chromium`);
   console.log(`BROWSER_API C18 CAPABILITY fontWidthAlias=${checks.fontWidthAlias} engine=chromium`);
   console.log(`BROWSER_API C22 PASS assertions=${checks.transitionRules} engine=chromium`);
+  if (checks.positionTry !== 44 || !checks.positionTryAvailable) throw new Error(`Position fallback proof incomplete: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API C21 PASS assertions=${checks.positionTry} engine=chromium`);
+  console.log(`BROWSER_API C21 CAPABILITY positionTry=${checks.positionTryAvailable} engine=chromium`);
+  if (checks.counterStyles !== 64) throw new Error(`Counter style proof incomplete: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API C19 PASS assertions=${checks.counterStyles} engine=chromium`);
+  console.log(`BROWSER_API C19 CAPABILITY speakAs=${checks.counterSpeakAs} engine=chromium`);
+  if (checks.keyframeRules !== 82 || !checks.keyframeLength || checks.invalidKeyTextError !== 'SyntaxError') throw new Error(`Keyframe rule proof incomplete: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API C11 PASS assertions=${checks.keyframeRules} engine=chromium`);
+  console.log(`BROWSER_API C11 CAPABILITY length=${checks.keyframeLength} invalidKeyTextError=${checks.invalidKeyTextError} engine=chromium`);
   if (checks.conditionalRules !== 44) throw new Error('Conditional rule assertions did not run');
   console.log(`BROWSER_API C09 PASS assertions=${checks.conditionalRules} engine=chromium`);
   if (checks.cascadeRules !== 93) throw new Error('Cascade rule assertions did not run for the pinned Chromium profile');
@@ -102,6 +128,8 @@ try {
     throw new Error('Tab did not move from SVG to MathML in document order');
   }
   console.log('BROWSER_API D09 TAB PASS engine=chromium');
+  }
+  }
 } finally {
   if (browser) await browser.close();
   await new Promise(resolve => server.close(resolve));

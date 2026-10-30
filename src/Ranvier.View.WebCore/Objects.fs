@@ -66,6 +66,12 @@ module internal Kind =
     [<Literal>]
     let RectList = 18
 
+    [<Literal>]
+    let StyleValue = 19
+
+    [<Literal>]
+    let VariableReferenceValue = 20
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -174,6 +180,8 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.StyleSheetList -> NativeDom.rv_dom_style_sheet_list_release handle
         | Kind.MediaList -> NativeDom.rv_dom_media_list_release handle
         | Kind.RectList -> NativeDom.rv_dom_dom_rect_list_release handle
+        | Kind.StyleValue -> NativeDom.rv_dom_css_style_value_release handle
+        | Kind.VariableReferenceValue -> NativeDom.rv_dom_cssom_variable_reference_value_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =
@@ -504,6 +512,27 @@ module internal Interop =
 
             target.Handle
         | other -> raise (ArgumentException $"A {other.GetType().Name} is not an object of the native backend")
+
+    /// <summary>Validates a non-null typed value from the same host session.</summary>
+    let valueHandle (session: Session) (value: obj) =
+        match value with
+        | null -> nullArg (nameof value)
+        | :? NativeObject as target when
+            obj.ReferenceEquals (session, target.Session)
+            && (target.Kind = Kind.StyleValue
+                || target.Kind = Kind.VariableReferenceValue)
+            ->
+            handle value
+        | _ -> invalidArg (nameof value) "The typed value must belong to the same native host"
+
+    /// <summary>Copies a length-delimited owned result before its container is released.</summary>
+    let spanText (span: NativeDom.RvDomUtf8StringSpan) =
+        if span.length < 0 then
+            null
+        elif span.data = 0n then
+            invalidOp "WebCore returned a null UTF-8 span with a non-null length"
+        else
+            Runtime.InteropServices.Marshal.PtrToStringUTF8 (span.data, span.length)
 
     /// <summary>
     /// Runs <c>original</c> through the interceptions of <c>name</c> on <c>target</c>, the latest outermost, each given
