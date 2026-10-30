@@ -13,7 +13,7 @@
         <PackageTags>reactive;signals;view;dom;webcore;native;fsharp</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>Experimental. The API may change.</PackageReleaseNotes>
-        <Version>0.1.0-alpha.9</Version>
+        <Version>0.1.0-alpha.10</Version>
         <IsAotCompatible>true</IsAotCompatible>
         <IsPackable>true</IsPackable>
         <!-- Generated wrapper implementation members inherit their contracts' documentation. -->
@@ -63,6 +63,7 @@
         <Compile Include="Geometry.fs" />
         <Compile Include="TransformValues.fs" />
         <Compile Include="ComputedStyles.fs" />
+        <Compile Include="Locales.fs" />
         <Compile Include="Timing.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />

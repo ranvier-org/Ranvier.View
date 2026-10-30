@@ -7,6 +7,7 @@ import { createRequire } from 'node:module';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), 'generated');
 const customPropertiesOnly = process.argv.includes('--custom-properties-only');
 const styleValuesOnly = process.argv.includes('--style-values-only');
+const localesOnly = process.argv.includes('--locales-only');
 const styleMapsOnly = process.argv.includes('--style-maps-only');
 const geometryOnly = process.argv.includes('--geometry-only');
 const matrixOnly = process.argv.includes('--matrix-only');
@@ -44,7 +45,7 @@ try {
   const checks = await page.evaluate(async focused => {
     try {
       const fixture = await import('/Browser.js');
-      return await (focused === 'svg' ? fixture.runSvg() : focused === 'transforms' ? fixture.runTransforms() : focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : fixture.run());
+      return await (focused === 'locales' ? fixture.runLocales() : focused === 'svg' ? fixture.runSvg() : focused === 'transforms' ? fixture.runTransforms() : focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : fixture.run());
     } catch (error) {
       throw new Error(JSON.stringify({
         type: error?.constructor?.name,
@@ -55,8 +56,14 @@ try {
         fields: Object.fromEntries(Object.getOwnPropertyNames(error).filter(key => key !== 'stack').map(key => [key, error[key]])),
       }));
     }
-  }, svgOnly ? 'svg' : transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
-  if (svgOnly) {
+  }, localesOnly ? 'locales' : svgOnly ? 'svg' : transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
+  if (localesOnly) {
+    if (checks.locales !== 35 || checks.localeDeterministic !== 14 || checks.localeContext !== 6) throw new Error(`Locale preference assertions did not run: ${JSON.stringify(checks)}`);
+    console.log(`BROWSER_API H06 PASS assertions=${checks.locales} deterministic=${checks.localeDeterministic} engine=chromium`);
+    console.log(`BROWSER_API H06_DETERMINISTIC PASS assertions=${checks.localeDeterministic} engine=chromium`);
+    console.log(`BROWSER_API H06 CONTEXT PASS assertions=${checks.localeContext} engine=chromium`);
+    console.log(`BROWSER_API H06 PROVIDER ${JSON.stringify(checks)}`);
+  } else if (svgOnly) {
     if(checks.svgGeometry!==126 || checks.svgValues!==361 || checks.svgContext!==54) throw new Error(`SVG shared/realm assertions did not run: ${JSON.stringify(checks)}`);
     console.log(`BROWSER_API S01_S02 PASS assertions=${checks.svgGeometry} engine=chromium`);
     console.log(`BROWSER_API S04_REACHABLE PASS assertions=${checks.svgValues} engine=chromium`);
@@ -88,6 +95,10 @@ try {
   console.log(`BROWSER_API C12 PASS assertions=${checks.customProperties} engine=chromium`);
   console.log(`BROWSER_API C12 CONTEXT PASS assertions=${checks.customPropertyContext} engine=chromium`);
   if (!customPropertiesOnly) {
+  if (checks.locales !== 35 || checks.localeDeterministic !== 14 || checks.localeContext !== 6) throw new Error(`Locale preference assertions did not run: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API H06 PASS assertions=${checks.locales} deterministic=${checks.localeDeterministic} context=${checks.localeContext} engine=chromium`);
+  console.log(`BROWSER_API H06_DETERMINISTIC PASS assertions=${checks.localeDeterministic} engine=chromium`);
+  console.log(`BROWSER_API H06 CONTEXT PASS assertions=${checks.localeContext} engine=chromium`);
   if(checks.svgGeometry!==126 || checks.svgValues!==361 || checks.svgContext!==54) throw new Error(`SVG shared/realm assertions did not run: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API S01_S02 PASS assertions=${checks.svgGeometry} engine=chromium`);
   console.log(`BROWSER_API S04_REACHABLE PASS assertions=${checks.svgValues} engine=chromium`);

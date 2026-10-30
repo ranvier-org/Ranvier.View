@@ -43,6 +43,8 @@
     <Compile Include="CascadeRules.fs" />
     <Compile Include="SheetConstruction.fs" />
     <Compile Include="SheetElements.fs" />
+    <Compile Include="LocalePreferences.fs" />
+    <Compile Include="LocaleLifecycle.fs" />
     <Compile Include="UserTiming.fs" />
     <Compile Include="../UserTiming/Native.fs" Link="UserTimingNative.fs" />
     <Compile Include="Native.fs" />

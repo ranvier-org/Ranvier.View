@@ -2,6 +2,21 @@ module internal NativeApiConformance.Native
 
 open Ranvier.View.WebCore
 
+let private runLocales () =
+    let lifecycle = LocaleLifecycle.run ()
+    let deterministic = LocalePreferences.deterministic ()
+    use host = WebCoreHost.Create (16, 16)
+    let count = LocalePreferences.run (fun () -> Locales.forHost host)
+    let service = Locales.forHost host
+    System.Console.WriteLine $"NATIVE_API H06 PASS assertions={count}"
+    System.Console.WriteLine $"NATIVE_API H06_DETERMINISTIC PASS assertions={deterministic}"
+    System.Console.WriteLine $"NATIVE_API H06 LIFETIME PASS assertions={lifecycle}"
+    System.Console.WriteLine $"NATIVE_API H06 PROVIDER {service.ProviderName}; {service.LocaleCanonicalization}; {service.TimeZoneCanonicalization}"
+    let localeAlias = service.CanonicalizeLocale "iw-IL"
+    let zoneAlias = service.CanonicalizeTimeZone "US/Eastern"
+    System.Console.WriteLine $"NATIVE_API H06 ALIAS iw-IL={localeAlias} US/Eastern={zoneAlias}"
+    0
+
 let private runSvg (host: WebCoreHost) =
     let errorName =
         function
@@ -48,6 +63,7 @@ let private runTransforms (host: WebCoreHost) =
     shared + effects
 
 let private runAll () =
+    runLocales () |> ignore
     let svgLifecycle = SvgLifecycle.run ()
 
     if svgLifecycle <> 37 then
@@ -665,7 +681,9 @@ let private runAll () =
 
 [<EntryPoint>]
 let main args =
-    if Array.contains "--svg-only" args then
+    if Array.contains "--locales-only" args then
+        runLocales ()
+    elif Array.contains "--svg-only" args then
         let lifecycle = SvgLifecycle.run ()
 
         if lifecycle <> 37 then

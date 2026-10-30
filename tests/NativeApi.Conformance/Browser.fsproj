@@ -35,6 +35,7 @@
     <Compile Include="CascadeRules.fs" />
     <Compile Include="SheetConstruction.fs" />
     <Compile Include="SheetElements.fs" />
+    <Compile Include="LocalePreferences.fs" />
     <Compile Include="UserTiming.fs" />
     <Compile Include="Browser.fs" />
     <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" Condition="'$(NativeApiContractRoot)' == ''" />
