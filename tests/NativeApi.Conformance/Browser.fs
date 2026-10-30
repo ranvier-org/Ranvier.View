@@ -117,6 +117,81 @@ let private resizeViewport (width: int) (height: int) : JS.Promise<unit> = jsNat
 })()""")>]
 let private cssEscapeOracle (escape: string -> string) : int = jsNative
 
+[<Emit("""(async () => {
+    const frame = document.createElement('iframe');
+    try {
+        frame.srcdoc = '<body>locale first</body>';
+        let loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        document.body.append(frame); await loaded;
+        const oldDocument = frame.contentDocument;
+        const call = $0(oldDocument);
+        if (!call()) throw new Error('Live locale context rejected');
+        loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        frame.srcdoc = '<body>locale replacement</body>'; await loaded;
+        if (oldDocument === frame.contentDocument) throw new Error('Locale document identity did not change');
+        if (call()) throw new Error('Old locale context stayed active');
+        if (!$0(frame.contentDocument)()) throw new Error('Replacement locale context rejected');
+        return 4;
+    } finally { frame.remove(); }
+})()""")>]
+let private localeDocumentLifetime (createCall: Document -> System.Func<bool>) : JS.Promise<int> = jsNative
+
+let private localeCall document =
+    let service = Ranvier.Dom.Locales.forDocument document
+
+    System.Func<bool>(fun () ->
+        try
+            service.Current |> ignore
+            true
+        with _ ->
+            false)
+
+let runLocales () =
+    async {
+        let create () =
+            Ranvier.Dom.Locales.forDocument (document ())
+
+        let service = create ()
+        let mutable nullRejected = false
+
+        try
+            Ranvier.Dom.Locales.forDocument Unchecked.defaultof<Document>
+            |> ignore
+        with :? System.ArgumentNullException ->
+            nullRejected <- true
+
+        if not nullRejected then
+            failwith "Locale provider accepted a null document"
+
+        let mutable windowlessRejected = false
+
+        try
+            Ranvier.Dom.Locales.forDocument (windowlessDocument ())
+            |> ignore
+        with :? System.NotSupportedException ->
+            windowlessRejected <- true
+
+        if not windowlessRejected then
+            failwith "Locale provider fabricated windowless preferences"
+
+        let! context =
+            localeDocumentLifetime localeCall
+            |> Async.AwaitPromise
+
+        return
+            {|
+                locales = LocalePreferences.run create
+                localeDeterministic = LocalePreferences.deterministic ()
+                localeContext = context + 2
+                localeProvider = service.ProviderName
+                localePolicy = service.LocaleCanonicalization
+                timeZonePolicy = service.TimeZoneCanonicalization
+                localeAlias = service.CanonicalizeLocale "iw-IL"
+                timeZoneAlias = service.CanonicalizeTimeZone "US/Eastern"
+            |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the focused registration fixture and document-navigation ownership proof.</summary>
 let runCustomProperties () =
     async {
@@ -167,6 +242,7 @@ let runStyleValues () =
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {
+        let! localeResult = runLocales () |> Async.AwaitPromise
         let document = document ()
         let cssEscaping = CssEscaping.run document
         let cssSupport = CssSupport.run (CssQueries.forDocument document)
@@ -304,6 +380,9 @@ let run () =
         return
             {|
                 cascadeRules = cascadeRules
+                locales = localeResult.locales
+                localeDeterministic = localeResult.localeDeterministic
+                localeContext = localeResult.localeContext
                 scopeRules = scopeRules
                 nestedDeclarations = nestedDeclarations
                 importContentsReadable = importContentsReadable
