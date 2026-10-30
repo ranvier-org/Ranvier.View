@@ -19,6 +19,69 @@ let private windowlessDocument () : Document = jsNative
 [<Emit("$0.name || 'Error'")>]
 let private errorName (error: exn) : string = jsNative
 
+let private svgRealmTargets (target: Document) =
+    let root =
+        target.createElementNS ("http://www.w3.org/2000/svg", "svg") :?> SVGSVGElement
+
+    root.id <- "native-api-svg-realm"
+    target.body.appendChild root |> ignore
+
+    let dictionary =
+        DOMMatrix2DInit (m11 = Some 2., m12 = Some 3., m21 = Some 4., m22 = Some 5., m41 = Some 6., m42 = Some 7.)
+
+    let setter = root.createSVGTransform ()
+    setter.setMatrix dictionary
+
+    [|
+        root.createSVGTransformFromMatrix dictionary
+        root.transform.baseVal.createSVGTransformFromMatrix dictionary
+        setter
+    |]
+
+[<Emit("""(async () => {
+    const frame=document.createElement('iframe');
+    let checks=0;
+    const check=(value,label)=>{checks++;if(!value)throw new Error(label);};
+    try {
+        const loaded=new Promise(resolve=>frame.addEventListener('load',resolve,{once:true}));
+        frame.srcdoc='<!doctype html><body></body>';document.body.append(frame);await loaded;
+        for(const target of [document,frame.contentDocument]) {
+            const values=$0(target),realm=target.defaultView,fields=['a','b','c','d','e','f'],expected=[2,3,4,5,6,7];
+            for(const value of values) {
+                check(Object.getPrototypeOf(value)===realm.SVGTransform.prototype,'SVG transform realm');
+                check(Object.getPrototypeOf(value.matrix)===realm.SVGMatrix.prototype,'SVG matrix realm');
+                for(let i=0;i<fields.length;i++)check(value.matrix[fields[i]]===expected[i],'SVG alias coefficient');
+            }
+            for(let i=0;i<values.length;i++)for(let j=i+1;j<values.length;j++)check(values[i].matrix!==values[j].matrix,'SVG independent matrix results');
+        }
+        return checks;
+    } finally {document.getElementById('native-api-svg-realm')?.remove();frame.remove();}
+})()""")>]
+let private svgRealmProof (create: Document -> SVGTransform array) : JS.Promise<int> = jsNative
+
+/// <summary>Runs shared SVG geometry/values and compiled matrix-dictionary adapters in two browser realms.</summary>
+let runSvg () =
+    async {
+        let target = document ()
+        let geometry = SvgGeometry.run target errorName
+        let values = SvgValues.run target errorName true false
+
+        let! context =
+            svgRealmProof svgRealmTargets
+            |> Async.AwaitPromise
+
+        if geometry <> 126 || values <> 361 || context <> 54 then
+            failwith "SVG shared/realm assertions did not run"
+
+        return
+            {|
+                svgGeometry = geometry
+                svgValues = values
+                svgContext = context
+            |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("$0.constructor.name + ':' + $0.message")>]
 let private disposalError (error: exn) : string = jsNative
 
@@ -404,6 +467,7 @@ let runStyleValues () =
 let run () =
     async {
         let document = document ()
+        let! svgProof = runSvg () |> Async.AwaitPromise
         let! geometryProof = runGeometry () |> Async.AwaitPromise
         let! matrixProof = runMatrix () |> Async.AwaitPromise
         let! transformProof = runTransforms () |> Async.AwaitPromise
@@ -560,6 +624,9 @@ let run () =
 
         return
             {|
+                svgGeometry = svgProof.svgGeometry
+                svgValues = svgProof.svgValues
+                svgContext = svgProof.svgContext
                 geometry = geometryProof.geometry
                 geometryContext = geometryProof.geometryContext
                 matrices = matrixProof.matrices

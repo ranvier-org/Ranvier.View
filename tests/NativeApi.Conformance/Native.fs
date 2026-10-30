@@ -2,6 +2,22 @@ module internal NativeApiConformance.Native
 
 open Ranvier.View.WebCore
 
+let private runSvg (host: WebCoreHost) =
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let geometry = SvgGeometry.run host.Document errorName
+    let values = SvgValues.run host.Document errorName false true
+
+    if geometry <> 126 || values <> 361 then
+        failwith "SVG shared assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API S01_S02 PASS assertions={geometry}"
+    System.Console.WriteLine $"NATIVE_API S04_REACHABLE PASS assertions={values}"
+    geometry + values
+
 let private runTransforms (host: WebCoreHost) =
     let shared =
         TransformValues.run
@@ -32,6 +48,12 @@ let private runTransforms (host: WebCoreHost) =
     shared + effects
 
 let private runAll () =
+    let svgLifecycle = SvgLifecycle.run ()
+
+    if svgLifecycle <> 37 then
+        failwith "SVG lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API SVG LIFETIME PASS assertions={svgLifecycle}"
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
@@ -94,6 +116,7 @@ let private runAll () =
     let session = host.Session
 
     try
+        runSvg host |> ignore
         let transforms = runTransforms host
         System.Console.WriteLine $"NATIVE_API C16 PASS assertions={transforms}"
 
@@ -641,7 +664,27 @@ let private runAll () =
 
 [<EntryPoint>]
 let main args =
-    if Array.contains "--transforms-only" args then
+    if Array.contains "--svg-only" args then
+        let lifecycle = SvgLifecycle.run ()
+
+        if lifecycle <> 37 then
+            failwith "SVG lifetime assertions did not run"
+
+        let host = WebCoreHost.Create (640, 480)
+        let session = host.Session
+
+        try
+            runSvg host |> ignore
+            System.Console.WriteLine $"NATIVE_API SVG LIFETIME PASS assertions={lifecycle}"
+        finally
+            (host :> System.IDisposable).Dispose()
+
+        if session.LiveObjects <> 0 then
+            failwith "SVG fixture leaked native wrappers"
+
+        System.Console.WriteLine "NATIVE_API SVG TEARDOWN PASS"
+        0
+    elif Array.contains "--transforms-only" args then
         let lifecycle = TransformLifecycle.run ()
         let host = WebCoreHost.Create (64, 64)
         let session = host.Session
