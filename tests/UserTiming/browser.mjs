@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), 'generated');
-const { chromium } = createRequire(process.env.NATIVE_API_BROWSER_PACKAGE || 'C:/wk/ranvier-views/tests/NativeApi.Conformance/package.json')('@playwright/test');
+const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), '../NativeApi.Conformance/package.json');
+const { chromium } = createRequire(dependencies)('@playwright/test');
 const server = createServer(async (request,response) => {
   try {
     const name = decodeURIComponent(new URL(request.url,'http://localhost').pathname);
@@ -82,7 +83,7 @@ try {
     performance.clearMarks();performance.clearMeasures();
     return {...result,contexts};
   });
-  if (result.shared!==178 || result.deterministic!==179 || result.contexts!==11) throw new Error(`Timing guards failed: ${JSON.stringify(result)}`);
+  if (result.shared!==180 || result.deterministic!==181 || result.contexts!==11) throw new Error(`Timing guards failed: ${JSON.stringify(result)}`);
   console.log(`BROWSER_API H02 PASS assertions=${result.shared} deterministic=${result.deterministic} contexts=${result.contexts} engine=${browser.version()}`);
 } finally {
   if (browser) await browser.close();

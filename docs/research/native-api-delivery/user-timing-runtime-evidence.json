@@ -1,0 +1,2177 @@
+{
+  "schemaVersion": 1,
+  "group": "H02",
+  "status": "private-integrated-verification-awaiting-release-platform-acceptance",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/109",
+  "coreSourceCommit": "898388205c3821b30b5cea3093559f56426e0c53",
+  "viewsParentBeforeEvidenceCommit": "d1a393eeeaf3cad2f1cf2051607629b155548371",
+  "integratedParents": {
+    "core17": "1cfb3e06c8d63ad05258274cbf71a28e38c88fc6",
+    "views17": "fdc56dc28a7783245b1388e512b845326b87d4bf",
+    "native17": "4091b07c5bff99d7acbe91c717165e7f94f40f81"
+  },
+  "versions": {
+    "coreDom": "0.1.0-alpha.18",
+    "views": "0.1.8",
+    "backend": "0.1.0-alpha.8",
+    "native": "0.1.0-preview.17"
+  },
+  "clockDomains": {
+    "native": "Existing managed host frame/timer clock, fixed Unix-millisecond origin captured at host construction",
+    "browser": "Active document realm Performance.now/timeOrigin and real Performance user-entry buffer",
+    "domEventTimestampCorrespondence": "Unverified and not claimed by this facade"
+  },
+  "sharedContract": {
+    "namedMarkResolution": "Latest timestamp, then insertion order on ties, independently reproduced by actual Chromium marks90then2 resolving90",
+    "validationOrder": "name, options, copied portable detail, endpoint resolution",
+    "portableDetails": "Null, Boolean, Number, Text, Array and unique-key Object; cycles, null fields and malformed values reject DataCloneError; copied on insertion and return"
+  },
+  "proof": {
+    "shared": 180,
+    "deterministic": 181,
+    "nativeLifecycle": 25,
+    "concurrentMarks": 500,
+    "nativeTeardown": 0,
+    "browserContextInteroperability": 11,
+    "browserEngine": "156.0.8078.4",
+    "combinedNativeShared": 3293,
+    "combinedBrowserShared": 3306,
+    "packageConsumers": [
+      "normal net8.0",
+      "normal net10.0",
+      "traced net8.0",
+      "traced net10.0"
+    ]
+  },
+  "logs": [
+    {
+      "name": "integrated-jit-build",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-integrated-jit-build.log",
+      "bytes": 1461,
+      "sha256": "ce5e7a932fbbd3d072f88105ec83787f3e5faadd00959f4d7f95d2367bc282f3",
+      "exitCode": 0
+    },
+    {
+      "name": "integrated-jit",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-integrated-jit.log",
+      "bytes": 184,
+      "sha256": "dc4140900640e285de267ccb642c839444f28585a1c3aad01818a83bc38fecdd",
+      "exitCode": 0
+    },
+    {
+      "name": "integrated-aot-publish",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-integrated-aot-publish.log",
+      "bytes": 2017,
+      "sha256": "3019493787cb7198a03fceee717621d4090e92b0c5b05ca04b94996c0e812bf2",
+      "exitCode": 0
+    },
+    {
+      "name": "integrated-aot",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-integrated-aot.log",
+      "bytes": 184,
+      "sha256": "dc4140900640e285de267ccb642c839444f28585a1c3aad01818a83bc38fecdd",
+      "exitCode": 0
+    },
+    {
+      "name": "integrated-shared-jit",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-integrated-shared-jit.log",
+      "bytes": 2289,
+      "sha256": "0a3f0cacf1632b317ee3ef7351da127c1dd7175931faf97e7e784456bae0ebb1",
+      "exitCode": 0
+    },
+    {
+      "name": "integrated-shared-aot-publish",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-integrated-shared-aot-publish.log",
+      "bytes": 3766,
+      "sha256": "82fb9f2aff91fb2ad57d3072760ed0e09326a2a27552839b6574a3337228baa3",
+      "exitCode": 0
+    },
+    {
+      "name": "integrated-shared-aot",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-integrated-shared-aot.log",
+      "bytes": 2289,
+      "sha256": "0a3f0cacf1632b317ee3ef7351da127c1dd7175931faf97e7e784456bae0ebb1",
+      "exitCode": 0
+    },
+    {
+      "name": "packed-browser-compile",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-packed-browser-compile.log",
+      "bytes": 608,
+      "sha256": "8a661021c8936f1ed669224373e3b6353c5e1f67bd80fa8123bfcb0e12d0d54a",
+      "exitCode": 0
+    },
+    {
+      "name": "packed-browser",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-packed-browser.log",
+      "bytes": 2858,
+      "sha256": "802d06650b4352eef4ad2037998ec78a10264d25f283f560beceb14030695e0b",
+      "exitCode": 0
+    },
+    {
+      "name": "focused-package-browser-compile",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-focused-package-browser-compile.log",
+      "bytes": 591,
+      "sha256": "34426c9b52f259cb4e393008fa941e2ebd707e49a97bc9f6b06600c5a1b80a3f",
+      "exitCode": 0
+    },
+    {
+      "name": "focused-package-browser",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-focused-package-browser.log",
+      "bytes": 177,
+      "sha256": "fb73b4a36893e4d955286caa668290c8ec725ca7b819c44fbf57b9a02af1743f",
+      "exitCode": 0
+    },
+    {
+      "name": "package-false-net8.0",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-package-false-net8.0.log",
+      "bytes": 170,
+      "sha256": "e66958c52027eb91602c42d7a8d22e30de13637298ccdf6daa2c209636b45314",
+      "exitCode": 0
+    },
+    {
+      "name": "package-false-net10.0",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-package-false-net10.0.log",
+      "bytes": 171,
+      "sha256": "7b8f3ac9cc8828103031bfa2565c6a4663275f9d05c90eea44e99fae9bba3f1a",
+      "exitCode": 0
+    },
+    {
+      "name": "package-true-net8.0",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-package-true-net8.0.log",
+      "bytes": 169,
+      "sha256": "e05418a920e43eecf19a0f7011438383a0d52ac9ed87c0fad45af51bb57b649f",
+      "exitCode": 0
+    },
+    {
+      "name": "package-true-net10.0",
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-final-package-true-net10.0.log",
+      "bytes": 170,
+      "sha256": "7b559cd24a5f4a7d0f6fd58915c96a62e4b363be1294455d96c8902d570514a8",
+      "exitCode": 0
+    }
+  ],
+  "nativeAotExecutables": [
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\Native.exe",
+      "bytes": 4927488,
+      "sha256": "7fa5a74fb91aa344008f83cadb849c500efc783ff00c894b545a3dc9e4132460",
+      "machine": "x64",
+      "clrDirectory": [
+        0,
+        0
+      ],
+      "nativeExecutable": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\Native.exe",
+      "bytes": 13110272,
+      "sha256": "db42584c1987287724379b2b7c99adc8a38b3495bc1067d6b67540f293644896",
+      "machine": "x64",
+      "clrDirectory": [
+        0,
+        0
+      ],
+      "nativeExecutable": true
+    }
+  ],
+  "executedRuntimePayloads": [
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\brotlicommon.dll",
+      "bytes": 137728,
+      "sha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+      "stageSha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\brotlidec.dll",
+      "bytes": 52224,
+      "sha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+      "stageSha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\harfbuzz-icu.dll",
+      "bytes": 13824,
+      "sha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+      "stageSha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\harfbuzz.dll",
+      "bytes": 1185280,
+      "sha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+      "stageSha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\icudt77.dll",
+      "bytes": 7195136,
+      "sha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+      "stageSha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\icuin77.dll",
+      "bytes": 2997760,
+      "sha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+      "stageSha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\icuuc77.dll",
+      "bytes": 1834496,
+      "sha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+      "stageSha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\JavaScriptCore.dll",
+      "bytes": 15795712,
+      "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+      "stageSha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\jpeg62.dll",
+      "bytes": 718336,
+      "sha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+      "stageSha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\libpng16.dll",
+      "bytes": 196096,
+      "sha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+      "stageSha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\libsharpyuv.dll",
+      "bytes": 24576,
+      "sha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+      "stageSha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\libwebp.dll",
+      "bytes": 381440,
+      "sha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+      "stageSha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\libwebpdemux.dll",
+      "bytes": 19968,
+      "sha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+      "stageSha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\libwebpmux.dll",
+      "bytes": 41472,
+      "sha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+      "stageSha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\libxml2.dll",
+      "bytes": 1216000,
+      "sha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+      "stageSha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\RanvierWebCoreHost.dll",
+      "bytes": 552448,
+      "sha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c",
+      "stageSha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\WebCore.dll",
+      "bytes": 46466560,
+      "sha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f",
+      "stageSha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\zlib1.dll",
+      "bytes": 333312,
+      "sha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+      "stageSha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\brotlicommon.dll",
+      "bytes": 137728,
+      "sha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+      "stageSha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\brotlidec.dll",
+      "bytes": 52224,
+      "sha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+      "stageSha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\harfbuzz-icu.dll",
+      "bytes": 13824,
+      "sha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+      "stageSha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\harfbuzz.dll",
+      "bytes": 1185280,
+      "sha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+      "stageSha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\icudt77.dll",
+      "bytes": 7195136,
+      "sha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+      "stageSha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\icuin77.dll",
+      "bytes": 2997760,
+      "sha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+      "stageSha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\icuuc77.dll",
+      "bytes": 1834496,
+      "sha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+      "stageSha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\JavaScriptCore.dll",
+      "bytes": 15795712,
+      "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+      "stageSha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\jpeg62.dll",
+      "bytes": 718336,
+      "sha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+      "stageSha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\libpng16.dll",
+      "bytes": 196096,
+      "sha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+      "stageSha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\libsharpyuv.dll",
+      "bytes": 24576,
+      "sha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+      "stageSha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\libwebp.dll",
+      "bytes": 381440,
+      "sha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+      "stageSha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\libwebpdemux.dll",
+      "bytes": 19968,
+      "sha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+      "stageSha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\libwebpmux.dll",
+      "bytes": 41472,
+      "sha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+      "stageSha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\libxml2.dll",
+      "bytes": 1216000,
+      "sha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+      "stageSha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\RanvierWebCoreHost.dll",
+      "bytes": 552448,
+      "sha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c",
+      "stageSha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\WebCore.dll",
+      "bytes": 46466560,
+      "sha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f",
+      "stageSha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\zlib1.dll",
+      "bytes": 333312,
+      "sha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+      "stageSha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\brotlicommon.dll",
+      "bytes": 137728,
+      "sha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+      "stageSha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\brotlidec.dll",
+      "bytes": 52224,
+      "sha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+      "stageSha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\harfbuzz-icu.dll",
+      "bytes": 13824,
+      "sha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+      "stageSha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\harfbuzz.dll",
+      "bytes": 1185280,
+      "sha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+      "stageSha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\icudt77.dll",
+      "bytes": 7195136,
+      "sha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+      "stageSha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\icuin77.dll",
+      "bytes": 2997760,
+      "sha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+      "stageSha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\icuuc77.dll",
+      "bytes": 1834496,
+      "sha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+      "stageSha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\JavaScriptCore.dll",
+      "bytes": 15795712,
+      "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+      "stageSha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\jpeg62.dll",
+      "bytes": 718336,
+      "sha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+      "stageSha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\libpng16.dll",
+      "bytes": 196096,
+      "sha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+      "stageSha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\libsharpyuv.dll",
+      "bytes": 24576,
+      "sha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+      "stageSha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\libwebp.dll",
+      "bytes": 381440,
+      "sha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+      "stageSha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\libwebpdemux.dll",
+      "bytes": 19968,
+      "sha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+      "stageSha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\libwebpmux.dll",
+      "bytes": 41472,
+      "sha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+      "stageSha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\libxml2.dll",
+      "bytes": 1216000,
+      "sha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+      "stageSha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\RanvierWebCoreHost.dll",
+      "bytes": 552448,
+      "sha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c",
+      "stageSha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\WebCore.dll",
+      "bytes": 46466560,
+      "sha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f",
+      "stageSha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\zlib1.dll",
+      "bytes": 333312,
+      "sha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+      "stageSha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\brotlicommon.dll",
+      "bytes": 137728,
+      "sha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+      "stageSha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\brotlidec.dll",
+      "bytes": 52224,
+      "sha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+      "stageSha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\harfbuzz-icu.dll",
+      "bytes": 13824,
+      "sha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+      "stageSha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\harfbuzz.dll",
+      "bytes": 1185280,
+      "sha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+      "stageSha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\icudt77.dll",
+      "bytes": 7195136,
+      "sha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+      "stageSha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\icuin77.dll",
+      "bytes": 2997760,
+      "sha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+      "stageSha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\icuuc77.dll",
+      "bytes": 1834496,
+      "sha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+      "stageSha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\JavaScriptCore.dll",
+      "bytes": 15795712,
+      "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+      "stageSha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\jpeg62.dll",
+      "bytes": 718336,
+      "sha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+      "stageSha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\libpng16.dll",
+      "bytes": 196096,
+      "sha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+      "stageSha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\libsharpyuv.dll",
+      "bytes": 24576,
+      "sha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+      "stageSha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\libwebp.dll",
+      "bytes": 381440,
+      "sha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+      "stageSha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\libwebpdemux.dll",
+      "bytes": 19968,
+      "sha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+      "stageSha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\libwebpmux.dll",
+      "bytes": 41472,
+      "sha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+      "stageSha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\libxml2.dll",
+      "bytes": 1216000,
+      "sha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+      "stageSha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\RanvierWebCoreHost.dll",
+      "bytes": 552448,
+      "sha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c",
+      "stageSha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\WebCore.dll",
+      "bytes": 46466560,
+      "sha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f",
+      "stageSha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\zlib1.dll",
+      "bytes": 333312,
+      "sha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+      "stageSha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\brotlicommon.dll",
+      "bytes": 137728,
+      "sha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+      "stageSha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\brotlidec.dll",
+      "bytes": 52224,
+      "sha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+      "stageSha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\harfbuzz-icu.dll",
+      "bytes": 13824,
+      "sha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+      "stageSha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\harfbuzz.dll",
+      "bytes": 1185280,
+      "sha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+      "stageSha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\icudt77.dll",
+      "bytes": 7195136,
+      "sha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+      "stageSha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\icuin77.dll",
+      "bytes": 2997760,
+      "sha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+      "stageSha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\icuuc77.dll",
+      "bytes": 1834496,
+      "sha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+      "stageSha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\JavaScriptCore.dll",
+      "bytes": 15795712,
+      "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+      "stageSha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\jpeg62.dll",
+      "bytes": 718336,
+      "sha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+      "stageSha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\libpng16.dll",
+      "bytes": 196096,
+      "sha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+      "stageSha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\libsharpyuv.dll",
+      "bytes": 24576,
+      "sha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+      "stageSha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\libwebp.dll",
+      "bytes": 381440,
+      "sha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+      "stageSha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\libwebpdemux.dll",
+      "bytes": 19968,
+      "sha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+      "stageSha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\libwebpmux.dll",
+      "bytes": 41472,
+      "sha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+      "stageSha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\libxml2.dll",
+      "bytes": 1216000,
+      "sha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+      "stageSha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\RanvierWebCoreHost.dll",
+      "bytes": 552448,
+      "sha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c",
+      "stageSha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\WebCore.dll",
+      "bytes": 46466560,
+      "sha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f",
+      "stageSha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f",
+      "matches": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\Ranvier.View.WebCore.Tests\\bin\\Release\\net10.0\\zlib1.dll",
+      "bytes": 333312,
+      "sha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+      "stageSha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+      "matches": true
+    }
+  ],
+  "perRunRuntimeHashes": [
+    {
+      "run": "integrated-jit",
+      "command": [
+        "rtk",
+        "proxy",
+        "dotnet",
+        "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Native.dll"
+      ],
+      "nativeDlls": [
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\brotlicommon.dll",
+          "sha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+          "expectedStageSha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\brotlidec.dll",
+          "sha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+          "expectedStageSha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\harfbuzz-icu.dll",
+          "sha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+          "expectedStageSha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\harfbuzz.dll",
+          "sha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+          "expectedStageSha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\icudt77.dll",
+          "sha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+          "expectedStageSha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\icuin77.dll",
+          "sha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+          "expectedStageSha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\icuuc77.dll",
+          "sha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+          "expectedStageSha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\JavaScriptCore.dll",
+          "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+          "expectedStageSha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\jpeg62.dll",
+          "sha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+          "expectedStageSha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\libpng16.dll",
+          "sha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+          "expectedStageSha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\libsharpyuv.dll",
+          "sha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+          "expectedStageSha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\libwebp.dll",
+          "sha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+          "expectedStageSha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\libwebpdemux.dll",
+          "sha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+          "expectedStageSha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\libwebpmux.dll",
+          "sha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+          "expectedStageSha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\libxml2.dll",
+          "sha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+          "expectedStageSha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\RanvierWebCoreHost.dll",
+          "sha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c",
+          "expectedStageSha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\WebCore.dll",
+          "sha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f",
+          "expectedStageSha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\zlib1.dll",
+          "sha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+          "expectedStageSha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+        }
+      ],
+      "managedRuntimeAssets": [
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Native.dll",
+          "sha256": "32c910438e7e0c7ac11ada68a5bd7f747d7ade755278c631588ad20fd0ab1b6f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Microsoft.CSharp.dll",
+          "sha256": "d8ea1fbbaafdc9734420131c5d1f4624826e411bad3e51d3eb4fb95ab154f66f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Microsoft.VisualBasic.Core.dll",
+          "sha256": "578203d4915aa43283a3d6fa1083f4b80f333ef544e39ff0fcfdada1b7499a7d"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Microsoft.VisualBasic.dll",
+          "sha256": "95aa41f885965447a62b59f1b3ce1677300c51c009048c8c677b961e98e99a72"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Microsoft.Win32.Primitives.dll",
+          "sha256": "637adb956e9e80549239f1707db3885683504efbfc2ed8ea93a3d187ef53789c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Microsoft.Win32.Registry.dll",
+          "sha256": "143a613fc7c87e09c02cac0cc1469f850120bed98c5a1602ad84fc42b6c1ae63"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.AppContext.dll",
+          "sha256": "b03e016fa01d7cc9723044c7020940779e4af59e29bdf47f72bc6ed9d9b1d257"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Buffers.dll",
+          "sha256": "9bd4590fa18b9a6509efb5147158a6abbe4799e82e0efa9fa240102b6084872a"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Collections.Concurrent.dll",
+          "sha256": "7f2ac0ec3bb9425017006cc750dc94a3c37ed175ba2f4eaa3f8f8e5cf35472e0"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Collections.Immutable.dll",
+          "sha256": "ce2385891f525991c59d99a86cfaf8d5a81c56f24b01a433f42eb85071832121"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Collections.NonGeneric.dll",
+          "sha256": "82ab716ab740669598d8cda36a92690bcc4b01ebba8b21c0c4f0a7a8ee1d9248"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Collections.Specialized.dll",
+          "sha256": "d9ed158ef29df6146151d13260ddbb2310da7150eb98c2637ce91d057f7786cb"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Collections.dll",
+          "sha256": "78d429a901a73a09cda6037befaa56b79bfa557000b2a69ba1c1210253c0b21d"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.ComponentModel.Annotations.dll",
+          "sha256": "f2c3fda351505065effbb42e175e50b4c9bcb4c4f560ebacc868d50d29252eab"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.ComponentModel.DataAnnotations.dll",
+          "sha256": "f7675a194e2f444670b94d3d3866dd3dd16b48b332cc5811268ff903e6c17a65"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.ComponentModel.EventBasedAsync.dll",
+          "sha256": "d060e7f58feb609db4f47e2a6da25c4a9b406b97589004d4022d31d673aacc52"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.ComponentModel.Primitives.dll",
+          "sha256": "953db884b5edfc396ed4036413240e538cdbb858c06354d976d7b2e6ccce7167"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.ComponentModel.TypeConverter.dll",
+          "sha256": "8faabcf0ea88a11425d247b19d9cc8a64a78a7c07ff977854cf4a9166e0415b7"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.ComponentModel.dll",
+          "sha256": "72b3608363e47f2cf3cf3fc9fe2fcefb760e5292ebb9d650fa4ced3896dab5f9"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Configuration.dll",
+          "sha256": "c53f9278c6889d8562d616106413bf50198f452316b4c5002100c568d541428c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Console.dll",
+          "sha256": "8be68e4cb2f0b64b5f37f7a7aa82db2ae1648115a9b7b9381a3cfac7cdb4aeb5"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Core.dll",
+          "sha256": "f1dcf1577c6a675f1c85ee9f13d103495ce123ed232001646f4132d76c1480cb"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Data.Common.dll",
+          "sha256": "e6be5f74d117b7300523041ec239d2c7b64fc495ef954f48f81ca71507e510c6"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Data.DataSetExtensions.dll",
+          "sha256": "65bd4ccac3f6f062a68d2ff797bb3908b7f21f908c95a1e85729b8c5bbcb3b87"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Data.dll",
+          "sha256": "dc01c232769d86816af9d67e492902487bfc87f787f811ca098f42f4988ad789"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Diagnostics.Contracts.dll",
+          "sha256": "baeabf6461eb78165280fe2a0fca951146de0d8f672ec20a159aa1f431bb409a"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Diagnostics.Debug.dll",
+          "sha256": "ba04477089ee6fc9ae8c2a8e711905fe1d7a113c785cb168d28eccaed435400b"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Diagnostics.DiagnosticSource.dll",
+          "sha256": "c84547ea80b944c4683901e03c2e0c00e462a7b12a3657f5f3e1474a5d52edaf"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Diagnostics.FileVersionInfo.dll",
+          "sha256": "b86967674838e9e7465e171d334f6b970720ebcf005326e45c1c08e5720a0054"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Diagnostics.Process.dll",
+          "sha256": "1acaee1d612a45f2f287675b5b84defed1b34a90cc659641f97043f45076fbe7"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Diagnostics.StackTrace.dll",
+          "sha256": "c464ff65bb7a1ef7e70b0c610aea951e8f71045cfde50602832969aa02253b6e"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Diagnostics.TextWriterTraceListener.dll",
+          "sha256": "a1656873dae8b3f2a56714f5a9bcf179e8064a992943cd0b275e83310fd4edff"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Diagnostics.Tools.dll",
+          "sha256": "dade40a11c2594fc03c84d119050f8b4281077bbc28298e3c2f6d96673cb0667"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Diagnostics.TraceSource.dll",
+          "sha256": "248c392f7df6bd5de9be9411dfbbd61fd6ae9ea6f896eb8a9dd6445cb54af2f2"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Diagnostics.Tracing.dll",
+          "sha256": "b8274d672ee21b7ab2b579aec0c55795cb9fb3e1f15e9b3c2ee07d90260a3fa2"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Drawing.Primitives.dll",
+          "sha256": "5f04571de46d5defec5e946b618b7b1b10b9c613492a8089ba926d3dad0c6916"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Drawing.dll",
+          "sha256": "86fe6479c86f0f99358adcb89ecba5d3fb91a30d333545a17c00ef67d86a29f1"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Dynamic.Runtime.dll",
+          "sha256": "3d645a280ed6d073664f229842847d8af2dc2a7126ccf27c5eeba2c55c08286d"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Formats.Asn1.dll",
+          "sha256": "614c4e1729c2011b1e40424d7b00b3dd2b76ca7abb438c62d93048c97d9ad44a"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Formats.Tar.dll",
+          "sha256": "d8552ece59785ee1790ed8d2bdad03c0059c26a461f19c76d215c24aff8af190"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Globalization.Calendars.dll",
+          "sha256": "cb2a60039ed7a7a797d133ecee1755185305632b8c78d62dcaf0d2ccb4e15ed6"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Globalization.Extensions.dll",
+          "sha256": "7d27ac98541e7e6e72dab31aed4055fc9435b777bfce0f50722440601efd77bc"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Globalization.dll",
+          "sha256": "e374eb513cb207833143ac4967155589087e4fb71a8ae9108ee1d64596b67484"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.Compression.Brotli.dll",
+          "sha256": "b3525059b5751482765b660d86d90de7e9728707c65d9cc5a63f1152ec43a952"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.Compression.FileSystem.dll",
+          "sha256": "3fab44511b3e88c31430c987223f46c71dda6f890a2d6ecb7b29031ccc4b6b5e"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.Compression.ZipFile.dll",
+          "sha256": "02096ce99b1fef365d4ba9c03edf0e18f7981dac6943ab56676ad66d0bb2c9ff"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.Compression.dll",
+          "sha256": "5f7c0695725d3485c86d0bf445c99be1fd320f17b11048a905041ff187dd4cbc"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.FileSystem.AccessControl.dll",
+          "sha256": "b14b8ee22bd83e07c6a004179b70aa7b2958791aef5e834c5de72c49308419fd"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.FileSystem.DriveInfo.dll",
+          "sha256": "1dc8cf48e1bf26700064f54e510fab4ad0f5482ad113261a71807f9c194180dd"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.FileSystem.Primitives.dll",
+          "sha256": "a72218414270188a3d11fd291ff63c407f65f0a4ff8ebaa8351990649fdaa9c5"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.FileSystem.Watcher.dll",
+          "sha256": "c60472fbd6ff9bb4a909605ab9fd08462eeb1cb058cec3deb49a21f84e4ab602"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.FileSystem.dll",
+          "sha256": "1fdccf62b58857da2d75f26f0fa31ce342e035e08b61f08a439088834c25a650"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.IsolatedStorage.dll",
+          "sha256": "be0350b4aa7e08c5a88a0d887aeee22e11144dc73f10805e36b2bb21440a6298"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.MemoryMappedFiles.dll",
+          "sha256": "1c60d7b873037f161663cc1f98ccadad1493195952b3f8dd318468ac451ac4ae"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.Pipelines.dll",
+          "sha256": "0306263c46f0fe7ebe87f4427d3365a23e92faed787b81c54337349688662629"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.Pipes.AccessControl.dll",
+          "sha256": "e7af8e95bc18598a4cf42daae14d61518bc9944ed68c11a0742765419f04f2c8"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.Pipes.dll",
+          "sha256": "e631dad2c1c1657f40b512d15ed4a636d20341e8a0c6df34f2cd7d9b20848836"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.UnmanagedMemoryStream.dll",
+          "sha256": "ee80874913ba2b3dc55f05ed18043ef40a42cec0c2095a68a2825ec66e069c25"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.IO.dll",
+          "sha256": "7696915987cd96348e15e6b230394a9042e278baf26d07d2414b99e8a66ce969"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Linq.AsyncEnumerable.dll",
+          "sha256": "2d74c61b46462f83d17c46fbda7087977d293bd0f6808742910d0f6a29d5f5e8"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Linq.Expressions.dll",
+          "sha256": "eb9139d158b544c11b65cd32c6bfbbc2a11bfe5e9ec61ecc94999843afd5cd2c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Linq.Parallel.dll",
+          "sha256": "162297aa003a7a0951b3333418584f2de68d9a31146e0c4ebbf3a275ef250ee4"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Linq.Queryable.dll",
+          "sha256": "03fd086266f5ed63a077df4fdb5c69ce08799484aed94485965604148fc44461"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Linq.dll",
+          "sha256": "1c6886fb239a6af59da0dc1561d9f010e2e983a1e826d6e8f8a61f7ea42a3af1"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Memory.dll",
+          "sha256": "5bbec55d9b01c664055180840b651b1b1f01c15f7f45ee84192b95a09f2c355b"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.Http.Json.dll",
+          "sha256": "651a91c2658632929ba7f50d415b2db6151fd96969be0b47e4f9672d648ec86f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.Http.dll",
+          "sha256": "fc7ad004bdaca8763dcb23ab3a5fb01c9aed9735f678563f4f03254c9c956f8f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.HttpListener.dll",
+          "sha256": "5e514d43d23325ceaeeabc00906f6f782424e8b2b01fc050ede60559a8202851"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.Mail.dll",
+          "sha256": "b65a90cdfdc51ee4a5c2cd4e0764ec42b46c8e098aaa6d4f57e8e8c3fb3560aa"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.NameResolution.dll",
+          "sha256": "cc5b82c8101e3af2ab05dea804d333109f954f32ec49a9e4e71e3679ef4d7d58"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.NetworkInformation.dll",
+          "sha256": "3b97a77bab7f4a5215b12b7d0f16d47d6a617bcafa59d6e4b9efd3b695bbe0f7"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.Ping.dll",
+          "sha256": "2b91becc5ea71a9b91f544df76ad0c5a29a87798484b37b9c2f05a8a598f1ae3"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.Primitives.dll",
+          "sha256": "01d8bef670ac4265708686d37076d8d21daf3152cd0e7b2aa264302c369f70be"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.Quic.dll",
+          "sha256": "ae641f56bcad5c06551f90b855d7a61c9bd401d0c0a9985ccd662da860c3d5bb"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.Requests.dll",
+          "sha256": "5e462536c5b743dbef0522174a576ecb7be0dd52c5074e64b7ca73bc7dc570d0"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.Security.dll",
+          "sha256": "c03a6cba2d1e841f78293188b8356e0890a03ad9860eb5f602e69ac8ddd253c4"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.ServerSentEvents.dll",
+          "sha256": "d39e3896fa6e4b42dcb6aabace1e9d2f8c15c6ecfe10868668dd9de119aa675b"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.ServicePoint.dll",
+          "sha256": "dc7433871738ffb8ce7f7963cee7fadc2103ab4b61e461a70e60d848625ae297"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.Sockets.dll",
+          "sha256": "7e8787c401641f3d749847c552ad8c8c600896e1aaead24c93440039801dc98f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.WebClient.dll",
+          "sha256": "8cd16344c501ab69ee11eb1108efb37d4c789de9bf421bb3e8703800ca1a8b1d"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.WebHeaderCollection.dll",
+          "sha256": "f5973c353b9204e5c1cceec843707c7be368293428d52f62bc746400346103b3"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.WebProxy.dll",
+          "sha256": "9bb235262aa0f2530fe8cadf095432438746dc3bf5d1090caa7d0eb4ee2dca7f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.WebSockets.Client.dll",
+          "sha256": "9ae53fe2d695d041d834fe741c52a60d77031667dde8078281cf56904aa65fb3"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.WebSockets.dll",
+          "sha256": "dc3632ff6a2f4118904eb64edc433c0d79c497b3ad2c01e1287cc86da14de612"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Net.dll",
+          "sha256": "1bb00c4e169c0a20ad8763f4105204c221b97e037464b5bacb6ec4b9d40e0ad7"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Numerics.Vectors.dll",
+          "sha256": "2025fbc96c75d61d82cee26ccacb100d773a4e393630e2697a5c7bc6c4ee5a8e"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Numerics.dll",
+          "sha256": "c39d8710b4aba77631159b90e04abd81b58ff3cc9fc8433621b76683cd6aec9a"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.ObjectModel.dll",
+          "sha256": "16f21d6da2db3ce7a1c0b904bc2f3658685156a2155e5aaba8a3d45f4bc06c74"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Private.CoreLib.dll",
+          "sha256": "69d56e12535d3a8f2f8f89ac8f97577e6dc788d26f2e7b69be8fb5f6ff17ff28"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Private.DataContractSerialization.dll",
+          "sha256": "4e329edac8f17617d2d46d2d472e21c48614276a9879f3f7b4be2cb2841ed3f6"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Private.Uri.dll",
+          "sha256": "eb07de9b8f80dbc1c2cad80598e184a8369f6cbd9d105d50bcc6cd3428e61ce8"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Private.Xml.Linq.dll",
+          "sha256": "3c2edaf8c5fafb005e25631b8ed48a64050bd126a8a5cba2f84b6869d6a6df47"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Private.Xml.dll",
+          "sha256": "3467185933c682c10a67eb6b4eb78df5a1debc63d4def7708d23db9fb79780fc"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Reflection.DispatchProxy.dll",
+          "sha256": "93b0f758fac7aef8eb3256174fe621ac9de7db98e044e22d4b6cdbf7b462c5a7"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Reflection.Emit.ILGeneration.dll",
+          "sha256": "3f8d14d45f250218d9c66f158b7a218ac73d1f2df75dbcf71a09f12f1711bf5f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Reflection.Emit.Lightweight.dll",
+          "sha256": "f43856d942af20cd256a7358afad7fdb50df4e9e307e29beb34dff8dbd094b6c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Reflection.Emit.dll",
+          "sha256": "f0c3777ec9c76eeb3198de980054247fda2d184e8dd3d3693bc433613a6df364"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Reflection.Extensions.dll",
+          "sha256": "8ccbd7bd124cbfaa1cfd9315d922dd693ad7ade5d0436d246b188e02b40919df"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Reflection.Metadata.dll",
+          "sha256": "5af6e802d91f1e404a95c55e23310185e7de09adac62ffd6fd56b98a6b31b15d"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Reflection.Primitives.dll",
+          "sha256": "9cc0088b3e2d6a0771063dafd2c924538dff5087c20610f7826a088a38c27ae0"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Reflection.TypeExtensions.dll",
+          "sha256": "479a0a76d0360120f262ca9d501637916382a5d162f10c29d37b01888f5fd00d"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Reflection.dll",
+          "sha256": "d3d7fa31b89606d7a5c10a26ced05a29d32ab2fb87a54f10c82cd74e8e19725d"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Resources.Reader.dll",
+          "sha256": "181cf4b3b528f7e2a3316fb792339320a1c40c96c7b45b726ff16257097276e3"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Resources.ResourceManager.dll",
+          "sha256": "06fbffe507abc62101f0466d1570cecb074ec6a432a1ba058d4b9360ea13764f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Resources.Writer.dll",
+          "sha256": "1dd70e4933c113a2a9963f79068a1e0fe52bcbb5dfaf54255dd41af5b4e05d35"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.CompilerServices.Unsafe.dll",
+          "sha256": "bb342e1fbacfe7589b71936fb000c36b54ddc96d578bc0888623e19549c1e6f3"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.CompilerServices.VisualC.dll",
+          "sha256": "657abf22f77265e6e111fa0c6f55fa176373dd447fcc0f0c4145da91fcdda047"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.Extensions.dll",
+          "sha256": "f7e44a3f016421af7130ccdd913c57419d3cd2a0f48e34bdd1295797f2535cf8"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.Handles.dll",
+          "sha256": "b21415740db52c068dddeb4dc61e95a41ec23b1a4c1b1623ff6b65399c7c0fdd"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.InteropServices.JavaScript.dll",
+          "sha256": "1c91d7b7dd6da38c6426a4be35b3458ef3d127ea84533941528694e9db1a145c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.InteropServices.RuntimeInformation.dll",
+          "sha256": "f0b683af8a5db0f4cbaa2119f66ba93a01ee0db8ba1079acd01f01d247c111a6"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.InteropServices.dll",
+          "sha256": "bde2bb33524a73e2964cd47ddf753150d685b31ebb1c4779e66ca426b2b419bf"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.Intrinsics.dll",
+          "sha256": "61cedf60e24e672bbde2869ceaee84342d22823315aae7fb7b768e9a6e6893a2"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.Loader.dll",
+          "sha256": "b55e68bf26539914d8eb80718dc5b183f36d53c7fa20103f52c06796d33aa0c6"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.Numerics.dll",
+          "sha256": "46b0e0c9b0198446a5d4ae8579433a038d7f1199e0378ee6213a0390bdd9a99c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.Serialization.Formatters.dll",
+          "sha256": "18e20e41f0d87206ff1fbede425b7737be7c554c1704af3c684e83bbdec63157"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.Serialization.Json.dll",
+          "sha256": "87249d372d73fc7fcdc057be0efba1c36fe7318af832463dcfbf55fd067bfa97"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.Serialization.Primitives.dll",
+          "sha256": "5981ef301f6a849ae73bfa0eeb4956992fc15b00f705c35f208eaf6793a37ab3"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.Serialization.Xml.dll",
+          "sha256": "ab0c54734d37e5aac3f726fe7806ff8de5c5bce757f7993135540154a72ade79"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.Serialization.dll",
+          "sha256": "39da6e91e025583c2d51a5180614cf278bdf7f6d850c4c011422869efca625ce"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Runtime.dll",
+          "sha256": "d6b4189c8e9afce3629b27c902c198a54ad3a355ec8409d3880b3b68fb1cf445"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Security.AccessControl.dll",
+          "sha256": "c83dce7b6b0737d14771c9ad38a8726787a91472be503d8f911bfe91668efadb"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Security.Claims.dll",
+          "sha256": "77c7616c8f073677f8a057ef032b21d8f6dfeb19179b936bd54bab268e71cbf5"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Security.Cryptography.Algorithms.dll",
+          "sha256": "0e5de3978293221c0e36bf52786abea8f7b74ebf06de58c9717db4507e59ac10"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Security.Cryptography.Cng.dll",
+          "sha256": "9198b7e57489278215a2489d66d9d52c7a9d65ae7abe399cc9d27d1b23debbf6"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Security.Cryptography.Csp.dll",
+          "sha256": "2774b21002a29479de3523f8781d1411e4990575b50f1316d6a9cd490980c2db"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Security.Cryptography.Encoding.dll",
+          "sha256": "070abb893bb963b2a846ad8b8c1354563c7b362d1c492eec53538fc28a871001"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Security.Cryptography.OpenSsl.dll",
+          "sha256": "e2a8cba098ec00d19d043750e8a19374cc65d1a498b9eb15dbffe0eecc579b32"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Security.Cryptography.Primitives.dll",
+          "sha256": "89e9947ee1e7839eeac2c9c0b37a2b0c0433ff338dadec6380fac1eae375ffd3"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Security.Cryptography.X509Certificates.dll",
+          "sha256": "398e55927b3cfd070bc8d204740e50d012cb78f7a2dcb968a33869b4aa54e067"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Security.Cryptography.dll",
+          "sha256": "b043b1ed136164fd69606a9e7f26f1fc05d0c7cb888c0c00e3b58544623cc7e5"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Security.Principal.Windows.dll",
+          "sha256": "25f1d31f27d8e9a97fa203160dbf9a8a7be8188328ac74516002d0ac071961d9"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Security.Principal.dll",
+          "sha256": "d1cdbae10415e4f384ecdf34cd6e427f7c1d67bb6549b7e15193006428734bb4"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Security.SecureString.dll",
+          "sha256": "3347281129d6cfc4a5c912dbb9f803878c99cc60d125ca5f2adbc4718ccf348a"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Security.dll",
+          "sha256": "e81926edd150a900fa0d6832aa813b2c3dfb156e7116a7cca2d96640ff24e438"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.ServiceModel.Web.dll",
+          "sha256": "9537a9d13c43511fb95b6d30dda7817851b23e864503fa336626522499b51d24"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.ServiceProcess.dll",
+          "sha256": "13fb65e12deec9ac60a8342dec6caeff8d35b56dc142cdabfab2745620d46fd0"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Text.Encoding.CodePages.dll",
+          "sha256": "e3f7a38a01cd863716d83ae322a007a2d052044cd8bfc2b5b1c268ac05c9d931"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Text.Encoding.Extensions.dll",
+          "sha256": "fbbc0dde38272605b8b95271cca7202ca04d5fa115acbcee936e1bed611fd23c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Text.Encoding.dll",
+          "sha256": "f1531dcab1fe59529829a1a241953a5e55ef8340c8cf1a21c053eeb7c48e2a84"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Text.Encodings.Web.dll",
+          "sha256": "319eb068c30ae985653a31911086141f5ba26b99e0ce7ff083f455ad42d4c584"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Text.Json.dll",
+          "sha256": "ff440fd7d4ae3d5a6d080c1ebaaae7d5f4145ea162ab12bf8931e92b4311f469"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Text.RegularExpressions.dll",
+          "sha256": "244be34f8333ff60b1fa87f54feea7e8338e2ff96fdb148a4d4bf12b7c981c86"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Threading.AccessControl.dll",
+          "sha256": "6f4b852763d9bdf83013893f294cd021a0efd84243374e52e148d8b665ebc8ec"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Threading.Channels.dll",
+          "sha256": "26f3f523ae3a685b462c1b192ac752cfa8da5db5ba4e2714b2e64635e717a4d6"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Threading.Overlapped.dll",
+          "sha256": "9442e2b745620403121ff4868fd430a2178029c22ae6a8dcac77d957ada4be42"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Threading.Tasks.Dataflow.dll",
+          "sha256": "bbf7de8812c20b8e61f9833d72814dd858c4781fa35500b2374c7e5f19d3a246"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Threading.Tasks.Extensions.dll",
+          "sha256": "b35a1faeecc0fb706b06f470a13fb3b1d2addfef1cd5a81fb1bdbd75ad6c8fdd"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Threading.Tasks.Parallel.dll",
+          "sha256": "2853f090ef0c1bd47f91800ef71b0b44084b1f703b3b699919466e065ba2fee2"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Threading.Tasks.dll",
+          "sha256": "a908649b99249e9533d674ed8838f2cace1f6a4071d848bf9edf7b96dc4ebc5f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Threading.Thread.dll",
+          "sha256": "5e1c4834abd41d88f79872557c69d20502e2d220bde333870e31d1a1eb4eacd2"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Threading.ThreadPool.dll",
+          "sha256": "2135197f9cbc09004ca02055bf54b5e3d0e2d7a9d61c477e4ef129321eb0b4c2"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Threading.Timer.dll",
+          "sha256": "a7763eba808803faab8e904fd5b467d9c7dd5c18ddd9a584d7c686f08d27e10e"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Threading.dll",
+          "sha256": "6c2137fb877e647a6c0f8909db8ca7af1e6fe95f19c6e531f6a74539fabcc6ad"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Transactions.Local.dll",
+          "sha256": "213df40904a1b088fce848eb34bbc91785cee298632e06670518d306536af23b"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Transactions.dll",
+          "sha256": "bfffd1196acf43fc9c88ebb561bb3a964ede3d8269bba09cf3258ead1ab4fcc4"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.ValueTuple.dll",
+          "sha256": "03a5049c71a54d9e8c2f2b9180529804d3e956ad6432a0668946115b29d3a830"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Web.HttpUtility.dll",
+          "sha256": "1097a135ce82145a8f7dbacc0b8a4d8951e067652814ff6d9fff0927b21706ce"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Web.dll",
+          "sha256": "5fc03752ad1c79c05bdf71cfc841f7c16cfcc4366365d8f7f31e22cff3cadd7f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Windows.dll",
+          "sha256": "b2a12218c022eba72d8acbc36c012211f965bb49c2fe92c0aaf0964ee785c800"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Xml.Linq.dll",
+          "sha256": "f66daa73628bd932749377aa5094ebad056a63748223ed0dedb4b7dcd49e22b9"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Xml.ReaderWriter.dll",
+          "sha256": "496dc55783342234033fe7162f618938691f25dd818633cdd386dba6e4e1c271"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Xml.Serialization.dll",
+          "sha256": "4a38c5a78410d11d32df42565312306eefc1bee5c73a6c5c8c661b0cf1ac0717"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Xml.XDocument.dll",
+          "sha256": "fd3c02115f7ad89770a70f18f83c8e4cdf8c78bb4f88046923f3285fa853c7f4"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Xml.XPath.XDocument.dll",
+          "sha256": "d68c378b07f099610b2eda021a232499cac2d6b96fce72b20a4f0b07efc85513"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Xml.XPath.dll",
+          "sha256": "03c3c78e671c3abf1d10c830eb67b8761bec7b6dcc0ae74462736df3616434dd"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Xml.XmlDocument.dll",
+          "sha256": "fc671e921ca4cae98c3b1cd0ad0fdf1e75f115917c9fa0826f194efbd149c1ba"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Xml.XmlSerializer.dll",
+          "sha256": "8e9bd064b432d8617038f2100b8268b8f46e4c22a6c09395ad0519e657c8801b"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.Xml.dll",
+          "sha256": "8b35480d266706f1c8db8e70216a72ba26d3fb25725f8a1131731e4d380410ef"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\System.dll",
+          "sha256": "ea77299c8ae8751e2868343efc838167b2612c58863690b83692de4d66a34578"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\WindowsBase.dll",
+          "sha256": "a88115b54a4782631612f995f857624994143e783aca58dfe2fe0800417a49e6"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\mscorlib.dll",
+          "sha256": "5ff7b9c14324371cab67e190165015103701045ebc36edcb8a829e5505c2c765"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\netstandard.dll",
+          "sha256": "2844417955d5b11f8434fcc969f52bc09104f438ae2f4d5595c36c355d06e270"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Fable.Core.dll",
+          "sha256": "e4d5675c5a7ff80718fb95e1a8b01cc2f62e5ad90d5dfed61cf9efe90b971f7f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\FSharp.Core.dll",
+          "sha256": "1af305b7625c30a54d141caf805c5b0b5a8f6166fb5cef22e3570f55d33152bd"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Ranvier.WebCore.dll",
+          "sha256": "9309ee1927a9725428a78455de1c31c10ac60a81f32c92b81b8769aae1502e44"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Ranvier.dll",
+          "sha256": "1e3f2d57df728f3f1c4395f523f1bff92e5054f2c2222447cd2daf7d5aecae6f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Ranvier.Dom.dll",
+          "sha256": "05e33dcf7a0c511feeabbb5603999be72273a97ef6398d868f683646bd0602a5"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Ranvier.View.dll",
+          "sha256": "dcab60be9bd1940615a4f7cfa55d498130bca312c03346e902c6408692fd47d0"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Ranvier.View.Dom.dll",
+          "sha256": "bbd9ae3cf574513571d10c62c0e4ea41a4612524d9f45783b62e9b95607b7a02"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\bin\\Release\\net10.0\\win-x64\\Ranvier.View.WebCore.dll",
+          "sha256": "de5aceed202ab7195760615d0c2b737c5b1293044d7558669cd7b93eb5ece078"
+        }
+      ],
+      "verifiedBeforeExecution": true,
+      "unchangedAfterExecution": true,
+      "logSha256": "dc4140900640e285de267ccb642c839444f28585a1c3aad01818a83bc38fecdd"
+    },
+    {
+      "run": "integrated-aot",
+      "command": [
+        "rtk",
+        "proxy",
+        "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\Native.exe"
+      ],
+      "nativeDlls": [
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\brotlicommon.dll",
+          "sha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+          "expectedStageSha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\brotlidec.dll",
+          "sha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+          "expectedStageSha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\harfbuzz-icu.dll",
+          "sha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+          "expectedStageSha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\harfbuzz.dll",
+          "sha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+          "expectedStageSha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\icudt77.dll",
+          "sha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+          "expectedStageSha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\icuin77.dll",
+          "sha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+          "expectedStageSha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\icuuc77.dll",
+          "sha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+          "expectedStageSha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\JavaScriptCore.dll",
+          "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+          "expectedStageSha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\jpeg62.dll",
+          "sha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+          "expectedStageSha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\libpng16.dll",
+          "sha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+          "expectedStageSha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\libsharpyuv.dll",
+          "sha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+          "expectedStageSha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\libwebp.dll",
+          "sha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+          "expectedStageSha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\libwebpdemux.dll",
+          "sha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+          "expectedStageSha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\libwebpmux.dll",
+          "sha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+          "expectedStageSha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\libxml2.dll",
+          "sha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+          "expectedStageSha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\RanvierWebCoreHost.dll",
+          "sha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c",
+          "expectedStageSha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\WebCore.dll",
+          "sha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f",
+          "expectedStageSha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-aot\\zlib1.dll",
+          "sha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+          "expectedStageSha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+        }
+      ],
+      "managedRuntimeAssets": [],
+      "verifiedBeforeExecution": true,
+      "unchangedAfterExecution": true,
+      "logSha256": "dc4140900640e285de267ccb642c839444f28585a1c3aad01818a83bc38fecdd"
+    },
+    {
+      "run": "integrated-shared-jit",
+      "command": [
+        "rtk",
+        "proxy",
+        "dotnet",
+        "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Native.dll"
+      ],
+      "nativeDlls": [
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\brotlicommon.dll",
+          "sha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+          "expectedStageSha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\brotlidec.dll",
+          "sha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+          "expectedStageSha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\harfbuzz-icu.dll",
+          "sha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+          "expectedStageSha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\harfbuzz.dll",
+          "sha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+          "expectedStageSha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\icudt77.dll",
+          "sha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+          "expectedStageSha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\icuin77.dll",
+          "sha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+          "expectedStageSha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\icuuc77.dll",
+          "sha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+          "expectedStageSha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\JavaScriptCore.dll",
+          "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+          "expectedStageSha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\jpeg62.dll",
+          "sha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+          "expectedStageSha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\libpng16.dll",
+          "sha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+          "expectedStageSha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\libsharpyuv.dll",
+          "sha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+          "expectedStageSha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\libwebp.dll",
+          "sha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+          "expectedStageSha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\libwebpdemux.dll",
+          "sha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+          "expectedStageSha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\libwebpmux.dll",
+          "sha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+          "expectedStageSha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\libxml2.dll",
+          "sha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+          "expectedStageSha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\RanvierWebCoreHost.dll",
+          "sha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c",
+          "expectedStageSha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\WebCore.dll",
+          "sha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f",
+          "expectedStageSha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\zlib1.dll",
+          "sha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+          "expectedStageSha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+        }
+      ],
+      "managedRuntimeAssets": [
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Native.dll",
+          "sha256": "39d2ca27aedc0f3be04f7a4cea22e0d0981636be30a98dba0786e108c6cd0532"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Fable.Core.dll",
+          "sha256": "e4d5675c5a7ff80718fb95e1a8b01cc2f62e5ad90d5dfed61cf9efe90b971f7f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\FSharp.Core.dll",
+          "sha256": "1af305b7625c30a54d141caf805c5b0b5a8f6166fb5cef22e3570f55d33152bd"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Ranvier.Css.dll",
+          "sha256": "b7bcffd38267634a3aa1130f1d16a8cea2b82424141e48127fd7d3771469e7af"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Ranvier.Css.Bindings.dll",
+          "sha256": "b4b7c2c1b6a0e08f56d0f76318856bb5cbce3939f458e1eff6b4c08e785a06c5"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Ranvier.Css.Dom.dll",
+          "sha256": "2068e902f6ce7362d71198b5d3879b4081a60e8ab70da009a5107d39721acf4f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Ranvier.WebCore.dll",
+          "sha256": "9309ee1927a9725428a78455de1c31c10ac60a81f32c92b81b8769aae1502e44"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Ranvier.dll",
+          "sha256": "1e3f2d57df728f3f1c4395f523f1bff92e5054f2c2222447cd2daf7d5aecae6f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Ranvier.Dom.dll",
+          "sha256": "05e33dcf7a0c511feeabbb5603999be72273a97ef6398d868f683646bd0602a5"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Ranvier.View.dll",
+          "sha256": "dcab60be9bd1940615a4f7cfa55d498130bca312c03346e902c6408692fd47d0"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Ranvier.View.Dom.dll",
+          "sha256": "bbd9ae3cf574513571d10c62c0e4ea41a4612524d9f45783b62e9b95607b7a02"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Ranvier.View.WebCore.dll",
+          "sha256": "cacef703d3811466336e650a9a1a6dcebde6fb208ba595e55ea75f49deb38db4"
+        }
+      ],
+      "verifiedBeforeExecution": true,
+      "unchangedAfterExecution": true,
+      "logSha256": "0a3f0cacf1632b317ee3ef7351da127c1dd7175931faf97e7e784456bae0ebb1"
+    },
+    {
+      "run": "integrated-shared-aot",
+      "command": [
+        "rtk",
+        "proxy",
+        "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\Native.exe"
+      ],
+      "nativeDlls": [
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\brotlicommon.dll",
+          "sha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+          "expectedStageSha256": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\brotlidec.dll",
+          "sha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+          "expectedStageSha256": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\harfbuzz-icu.dll",
+          "sha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+          "expectedStageSha256": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\harfbuzz.dll",
+          "sha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+          "expectedStageSha256": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\icudt77.dll",
+          "sha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+          "expectedStageSha256": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\icuin77.dll",
+          "sha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+          "expectedStageSha256": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\icuuc77.dll",
+          "sha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+          "expectedStageSha256": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\JavaScriptCore.dll",
+          "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+          "expectedStageSha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\jpeg62.dll",
+          "sha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+          "expectedStageSha256": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\libpng16.dll",
+          "sha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+          "expectedStageSha256": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\libsharpyuv.dll",
+          "sha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+          "expectedStageSha256": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\libwebp.dll",
+          "sha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+          "expectedStageSha256": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\libwebpdemux.dll",
+          "sha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+          "expectedStageSha256": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\libwebpmux.dll",
+          "sha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+          "expectedStageSha256": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\libxml2.dll",
+          "sha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+          "expectedStageSha256": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\RanvierWebCoreHost.dll",
+          "sha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c",
+          "expectedStageSha256": "967722df6072f00263d13e3898d8f11e584cc4d27fa6c7ec5580a6fe7e06578c"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\WebCore.dll",
+          "sha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f",
+          "expectedStageSha256": "3b7d9a87f50940dcfeb7743970bbd503ef53f81d66166a9498fc944e2572741f"
+        },
+        {
+          "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-integrated-shared-aot\\zlib1.dll",
+          "sha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+          "expectedStageSha256": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+        }
+      ],
+      "managedRuntimeAssets": [],
+      "verifiedBeforeExecution": true,
+      "unchangedAfterExecution": true,
+      "logSha256": "0a3f0cacf1632b317ee3ef7351da127c1dd7175931faf97e7e784456bae0ebb1"
+    }
+  ],
+  "runtimeCopyCorrections": {
+    "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-runtime-copy-corrections.json",
+    "bytes": 303,
+    "sha256": "1f0f26e52b25776ceaa5a45fd5f642fb1fc08a4754a68ccc4e062130784eafef"
+  },
+  "privatePackages": [
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-packages\\Fable.Ranvier.Dom.0.1.0-alpha.18.nupkg",
+      "bytes": 577903,
+      "sha256": "ad1480fc429a7d7ef9adc3695022ac5cfff032407ccbcca3fb719a6624a763dc",
+      "timingSourcesByteExact": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-packages\\Fable.Ranvier.Dom.Traced.0.1.0-alpha.18.nupkg",
+      "bytes": 577965,
+      "sha256": "8871d5db31d28f6954fe1d8641b4519f9d56af07efb09fdc0d1444f6eb7345d0",
+      "timingSourcesByteExact": true
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-packages\\Ranvier.Dom.0.1.0-alpha.18.nupkg",
+      "bytes": 495794,
+      "sha256": "b47ebc3dcf4707cf6ebca917a7710455ece06fd66e279d55e0ae8698b07fa043"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\artifacts\\h02-packages\\Ranvier.Dom.Traced.0.1.0-alpha.18.nupkg",
+      "bytes": 495989,
+      "sha256": "cfe2216579f3a84312c776fd11bb24f393b4b76187ba7e51d658420c15b53ca5"
+    }
+  ],
+  "sources": [
+    {
+      "path": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-timing\\Ranvier\\src\\Ranvier.Dom\\Timing.fs",
+      "bytes": 14330,
+      "sha256": "b525b6b5a1386a6e8bda093b536880cd56ec851da66dba6a91c8902b75555228"
+    },
+    {
+      "path": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-timing\\Ranvier\\src\\Fable.Ranvier.Dom\\BrowserTiming.fs",
+      "bytes": 8765,
+      "sha256": "e83fc82bbb570d2f8c4f87b4fbad06a4ff78430b17847f08ac61bcbd1ca9e5ff"
+    },
+    {
+      "path": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-timing\\Ranvier\\src\\Ranvier.Dom\\Generated\\Dom.fs",
+      "bytes": 221323,
+      "sha256": "07a00eac135210b9c80cfe947612e9f7d3c9e697de8afda8ca517c4a6dd0b04b"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\src\\Ranvier.View.WebCore\\Host.fs",
+      "bytes": 28898,
+      "sha256": "c55a7ab5d4ea31ef459b7d31c7a8f13b7eafb0902aab22ed317483b3a6334ea0"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\src\\Ranvier.View.WebCore\\Timing.fs",
+      "bytes": 2021,
+      "sha256": "87705a8cf17a3519006495b6d69a09f70d2ac2c184877818f2133f40df151515"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\src\\Ranvier.View.WebCore\\Generated\\Objects.fs",
+      "bytes": 1375387,
+      "sha256": "388ef8d66892ebaf020991bdf6e89ee7c7b665ba99624d93621dc5b70a677ea0"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\UserTiming.fs",
+      "bytes": 14936,
+      "sha256": "6c626ef87a4def2501553ead0f80d567b3a6bb082cf1f1edb3750e52956f1979"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\Native.fs",
+      "bytes": 33617,
+      "sha256": "83fa0937b7c35131fea5c2f5c6f2ee1067cf5ad75dfd743f82f5f4debe6c6633"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\Browser.fs",
+      "bytes": 24774,
+      "sha256": "6f299f11dd5746f5f6832f54fa7f20e17be7b7be6828ba727fdc149d3a37b9c7"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\Native.fs",
+      "bytes": 4588,
+      "sha256": "1cc1e6a41655838f768e0e6790010d44f672ae411d3ec9f1ce88e33a5ccd82d4"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\Browser.fs",
+      "bytes": 1286,
+      "sha256": "a914f95196fb697107ddae67290bbb01aa416e01ae85da8833142ffa3debb084"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\Program.fs",
+      "bytes": 94,
+      "sha256": "402d7ffcba7d22ed748c20eba805fe5723991d1cf042c7394a6034a5fff2be26"
+    },
+    {
+      "path": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-timing\\Ranvier\\src\\Ranvier.Dom\\Ranvier.Dom.fsproj",
+      "bytes": 1454,
+      "sha256": "29c895006e4626bec50fc32d8f9d4d60c4ad47ead63ebba9a9999a897cb7e7dd"
+    },
+    {
+      "path": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-timing\\Ranvier\\src\\Fable.Ranvier.Dom\\Fable.Ranvier.Dom.fsproj",
+      "bytes": 4508,
+      "sha256": "2c45097a7dcf4e57dde8b446b34be9096996dcd77a4d8a701871c773fe46a7f9"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\Directory.Build.props",
+      "bytes": 4287,
+      "sha256": "2c76cae5a845b53e3624d3581caa00a07fd020ed965e423b1b0d3baeb093cb1b"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\src\\Ranvier.View.WebCore\\Ranvier.View.WebCore.fsproj",
+      "bytes": 4678,
+      "sha256": "2d34a4a08ff2dddc8a56ea23f54cce512ea95135482974eac7ce3cb9e8996e0c"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\Native.fsproj",
+      "bytes": 2278,
+      "sha256": "8e502b17f1c483b58c4765021ae62b7bcec8c4d80bf80f5072324b67ae784371"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\Browser.fsproj",
+      "bytes": 2170,
+      "sha256": "5cde52e8e65f451816575e852d1e0cec097b7c690d5574bc5aa3f8a447e1ea28"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\NativeApi.Conformance\\browser.mjs",
+      "bytes": 13981,
+      "sha256": "95dadbead863a3a5522f89c3647bb69885a270d731fa514a9aedd864065c9281"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\Native.fsproj",
+      "bytes": 558,
+      "sha256": "a21589997a089006f4ce8e8e5255beb965ae3f6baa5abd21fbe62696a4521898"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\Browser.fsproj",
+      "bytes": 1039,
+      "sha256": "88127112abd2574d29a6384e17d336b1da2d1104cd8a38f9b64e6001b7139d21"
+    },
+    {
+      "path": "C:\\wk\\rv-timing-views\\tests\\UserTiming\\browser.mjs",
+      "bytes": 5129,
+      "sha256": "62bd3131756d2d5cbd9edf277b0dc5ebe6f6baca89c513f0b9d0200857d6e0c0"
+    }
+  ],
+  "repositoryGates": {
+    "path": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-timing\\Ranvier\\docs\\research\\native-api-delivery\\user-timing-repository-gates.json",
+    "bytes": 6583,
+    "sha256": "1323f2f6e8bdfa5d4eb21373f2d3b4bd41825a1ed94c27eb244a118628383d2c"
+  },
+  "publicApi": {
+    "path": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-timing\\Ranvier\\docs\\research\\native-api-delivery\\user-timing-public-api.json",
+    "bytes": 10526,
+    "sha256": "e1a82ea05d2c70b3023b20d618ca78d0d67bf35a8b3a66b969a30dace44a3fe3"
+  },
+  "independentBodyReview": "Clear from the acceptance lane, including host-clock domain, malformed-field and validation-precedence fixes; evidence acceptance is separate",
+  "runtimeCorrectionQualification": "One stale JavaScriptCore.dll output copy was replaced with the immutable Native17 stage payload. Earlier integrated native logs are historical; all four final native runs have explicit pre-run hashes, unchanged post-run hashes and fresh exit-zero executions. The backend test output also matches all18 native stage DLLs.",
+  "qualifications": [
+    "This is private Windows x64 and Chromium proof, not official package or other-platform acceptance. Issue109 remains open.",
+    "Builds ran on the tested working tree before its final evidence commits; source hashes above identify the actual compiled code.",
+    "Earlier160/161,176/177 and178/179 runs and failed managed-only AOT/conditional-import/browser-source attempts remain historical, with logs preserved.",
+    "Explicit -f net10.0 activated ILCompiler; OS=Windows_NT was restored only in the Windows child environment. Native PE CLR directories are zero.",
+    "Native/analyzer children use UseLocalRanvier=true; browser children use false and consume the privately packed Fable contracts to avoid duplicate type identities.",
+    "The four Core18 private packages were produced locally in an isolated feed/cache; no public version was pushed or overwritten.",
+    "Existing dependency AOT warnings,13 traced Core skips and12 backend skips remain visible; no new suppressions were added."
+  ],
+  "remaining": [
+    "PR CI and ordered predecessor integration",
+    "Final released Native17 pin replacement as coordinated",
+    "Trusted official Core18/Views8 publication",
+    "Fresh normal/traced official package and applicable supported-platform consumption"
+  ],
+  "resources": {
+    "ownedSageSessions": "573b0358, e4e71705 and d0ed9443 stopped",
+    "ownedProcesses": "All final batch processes terminal",
+    "sharedDaemonAndSerena": "Untouched",
+    "leases": "Final batch lease expired before terminal cleanup; release returned already_gone_or_not_owned; package-consumer lease released after terminal completion"
+  }
+}

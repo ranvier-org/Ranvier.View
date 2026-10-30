@@ -9,13 +9,13 @@ open Ranvier.View.WebCore
 let run () =
     let deterministic = NativeApiConformance.UserTiming.deterministic ()
 
-    if deterministic <> 179 then
+    if deterministic <> 181 then
         failwith $"Deterministic timing fixture count changed: {deterministic}"
 
     use host = WebCoreHost.Create (320, 240)
     let shared = NativeApiConformance.UserTiming.run (fun () -> Timing.forHost host)
 
-    if shared <> 178 then
+    if shared <> 180 then
         failwith $"Shared timing fixture count changed: {shared}"
 
     let mutable life = 0

@@ -13,7 +13,7 @@ let run () =
     let shared =
         NativeApiConformance.UserTiming.run (fun () -> Timing.forDocument (document ()))
 
-    if deterministic <> 179 || shared <> 178 then
+    if deterministic <> 181 || shared <> 180 then
         failwith $"Timing fixture counts changed: {deterministic}/{shared}"
 
     {|

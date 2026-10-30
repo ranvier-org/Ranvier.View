@@ -321,6 +321,23 @@ let run (create: unit -> TimingService) =
     let malformedObject =
         TimingDetail.Object [| Unchecked.defaultof<string * TimingDetail> |]
 
+    rejected "TypeError" (fun () ->
+        measure
+            null
+            { TimingMeasureOptions.Default with
+                Start = TimingEndpoint.Mark "h02-missing"
+            }
+        |> ignore)
+
+    rejected "DataCloneError" (fun () ->
+        measure
+            "h02-invalid-order"
+            { TimingMeasureOptions.Default with
+                Start = TimingEndpoint.Mark "h02-missing"
+                Detail = malformedObject
+            }
+        |> ignore)
+
     rejected "DataCloneError" (fun () ->
         service.Mark (
             "h02-null-field",

@@ -60,7 +60,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: ranvier-org/Ranvier
-          ref: 25a2e78edf56c04289914555cbdfc54bc4f6a3da
+          ref: 898388205c3821b30b5cea3093559f56426e0c53
           path: .ci/ranvier
           persist-credentials: false
       - name: Reference the core source for the counters suites
@@ -346,6 +346,10 @@ jobs:
           node-version: '26'
       - run: dotnet fsi build.fsx -- tools
       - run: dotnet fsi build.fsx -- native-api-browser
+      - name: Shared timing document lifetime and browser interoperability
+        run: |
+          dotnet fickl tests/UserTiming/Browser.fsproj --outDir tests/UserTiming/generated --extension .js --configuration Release
+          node tests/UserTiming/browser.mjs
 
   packages:
     name: Packages

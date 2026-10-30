@@ -152,11 +152,6 @@ let private transformCall document =
 let runTransforms () =
     async {
         let document = document ()
-        let timing = UserTiming.run (fun () -> Ranvier.Dom.Timing.forDocument document)
-        let timingDeterministic = UserTiming.deterministic ()
-
-        if timing <> 178 || timingDeterministic <> 179 then
-            failwith "User timing assertions did not run"
 
         let count =
             TransformValues.run
@@ -409,6 +404,12 @@ let runStyleValues () =
 let run () =
     async {
         let document = document ()
+        let timing = UserTiming.run (fun () -> Ranvier.Dom.Timing.forDocument document)
+        let timingDeterministic = UserTiming.deterministic ()
+
+        if timing <> 180 || timingDeterministic <> 181 then
+            failwith "User timing assertions did not run"
+
         let! geometryProof = runGeometry () |> Async.AwaitPromise
         let! matrixProof = runMatrix () |> Async.AwaitPromise
         let! transformProof = runTransforms () |> Async.AwaitPromise

@@ -3,7 +3,12 @@
 This restart checkpoint is historical. The resumed implementation uses the existing host frame
 clock with an origin captured at construction. A raw Chromium oracle demonstrated that named
 endpoints select the latest timestamp, with insertion order on ties; the shared native timeline
-and strengthened fixture now follow that behavior. Final current evidence is recorded separately.
+and strengthened fixture now follow that behavior. The native domain shares managed frame/timer
+timestamps; correspondence with DOM Event.timeStamp remains unverified and is not claimed.
+Null object fields now reject explicitly. Both providers validate measure name, options and copied
+detail before resolving endpoints, strengthening the shared fixture to 180 checks and its
+deterministic run to 181. Final current evidence is recorded separately in
+`docs/research/native-api-delivery/user-timing-runtime-evidence.json`.
 
 Stop requested by the user at this checkpoint. No H02 source is committed or published.
 
