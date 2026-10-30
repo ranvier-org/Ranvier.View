@@ -180,7 +180,9 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             Native.rv_abi_version () < 23
             || Native.rv_abi_has "dom-generated" <> 1
         then
-            raise (InvalidOperationException $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks this backend's typed style map transport (ABI 23)")
+            raise (
+                InvalidOperationException $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks this backend's typed style map transport (ABI 23)"
+            )
 
         let handle = Native.rv_host_create (width, height)
 
