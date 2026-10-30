@@ -203,7 +203,6 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     member private this.Install() =
         document <- unbox<Document>(session.Node (Native.rv_host_document handle))
-        session.Pin (box document :?> NativeObject)
 
         session.AfterListener <-
             Action (fun () ->
