@@ -1342,6 +1342,19 @@ let runCoordinates () =
 
     {| coordinates = count |}
 
+/// <summary>Runs the shared cascade assertions: computed values, and provenance as Unsupported.</summary>
+let runCascade () =
+    let document = document ()
+
+    let count =
+        CascadeChecks.run
+            (fun () -> BrowserDiagnostics.forDocument document)
+            (Ranvier.Dom.ComputedStyles.forDocument document)
+            document
+            CascadeChecks.Chromium
+
+    {| cascade = count |}
+
 /// <summary>Runs the shared crypto assertions in a secure context.</summary>
 let runCrypto () =
     async {

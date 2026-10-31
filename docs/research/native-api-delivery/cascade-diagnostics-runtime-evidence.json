@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "group": "C25 matched-rule and cascade diagnostics",
+  "status": "green (private integration; not accepted)",
+  "route": "Engine rule collector MatchResult and PropertyCascade selection (Native46 / ABI54), opt-in per host; browsers Unsupported",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/45",
+  "coreSourceCommit": "e2cd14b863a6bd02778b8755172c3275d6fc8084",
+  "viewsSourceCommit": "c9465e8a349089dac394fcafb2d088cecf51224d",
+  "stackedOn": {
+    "core": "Core e2cd14b8 on G14 237c4c9c",
+    "views": "Views on G14 827b00d"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-cascade-diagnostics",
+    "head": "f13cdbbec17b9a1eb1494d7f603e308829722b6e",
+    "abi": 54,
+    "runtime": "native-cascade artifacts/native46-candidate-5-frozen",
+    "evidence": "Ranvier.WebCore docs/cascade-evidence/final-evidence.json"
+  },
+  "versions": {
+    "native": "0.1.0-preview.46",
+    "dom": "0.1.0-alpha.49",
+    "views": "0.1.39",
+    "webcoreBackend": "0.1.0-alpha.39"
+  },
+  "allocationReceipt": "Ranvier docs/research/native-api-delivery/casc1-managed49-allocation.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.49.nupkg": "66c325cb5b975e7b996c3079202fc0953228ad84e6d075f485f8ec81438c0eb2",
+    "Ranvier.Dom.0.1.0-alpha.49.nupkg": "f9cce3b6393094501ab5ab0d9bfc1b8d086bb294e6fe2643772ce48c600a7fdd",
+    "Ranvier.WebCore.0.1.0-preview.46.nupkg": "1713e8101007cccf9d850aeba236b5a71fb046c68a35adf1cd6593ea7f65f6fa"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "407ab00f921d43a8035a69d405108c0f98d9ca9eba1322a5b768c43667460479",
+    "WebCore.dll": "096e0181da8b77bef1fe1f95f0b3df2459c758bc5760714fc9162e09ec9ee136",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\cascade-artifacts\\managed-c25\\final-1\\aot\\Native.exe",
+    "sha256": "5e6d71c18a7d0d27797dc87d5d322c52ef182dc0dac934c3d469da691f5b44cd"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "ab830305cba00f083bd975d4891d2bc6cee961c3f8a35c5e5ed4242cfd7801c1",
+      "passLines": 119,
+      "failLines": [],
+      "c25": [
+        "NATIVE_API C25 LIFETIME PASS assertions=7",
+        "NATIVE_API C25 PASS assertions=609"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "bdc36ad847d1233efd2d34fa9668782e7b3a19750d55c3260ce3bc47126117a8",
+      "passLines": 119,
+      "failLines": [],
+      "c25": [
+        "NATIVE_API C25 LIFETIME PASS assertions=7",
+        "NATIVE_API C25 PASS assertions=609"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "e072545c8ea1c088ce3ebb401b5e501edf0dfa54ea0f598c5591ce5dec9df312",
+      "passLines": 86,
+      "failLines": [],
+      "c25": [
+        "BROWSER_API C25 PASS assertions=51 engine=chromium"
+      ]
+    },
+    "baselinePassLines": {
+      "jitAot": 117,
+      "chromium": 85,
+      "source": "G14 final managed run C:/wk/coords-artifacts/managed/final-1 (117/117/85); full PASS lines are a superset, adding only C25",
+      "added": {
+        "jitAot": 2,
+        "chromium": 1
+      }
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "repeats": {
+    "aotCascadeOnly": "30 NATIVE_API C25 LIFETIME PASS assertions=7\n     30 NATIVE_API C25 PASS assertions=609",
+    "chromiumCascadeOnly": "30 BROWSER_API C25 PASS assertions=51 engine=chromium"
+  },
+  "wrapperRegeneration": {
+    "objectsFs": "1d2db922e892a0949139e3e337b7e11a359e3fb762e8fdddaf4d85a03e21aa2c",
+    "reportTxt": "c0562a7f72e30ae4fa5ed04ff27530935a27fe0eb8547eedc23b3e6a23b14d32",
+    "result": "identical: preview.46 adds no generated DOM members"
+  },
+  "fixture": {
+    "shared": "tests/NativeApi.Conformance/CascadeChecks.fs",
+    "cases": 22,
+    "nativeChecks": 609,
+    "chromiumChecks": 51,
+    "nativeLifetimeChecks": 7
+  },
+  "qualifications": [
+    "Chromium exposes no cascade provenance to pages: the browser provider reads the cascade as Unsupported and derives none from getComputedStyle; its computed values are compared with the fixture only.",
+    "Declared values, selectors and condition texts are engine-serialised: the fixture compares them with its own expectations on the native engine, never across engines.",
+    "Declared limits: a winning revert or revert-layer is reported as that keyword; :visited, @starting-style and animations are absent; var() resolution is the computed value."
+  ]
+}

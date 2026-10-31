@@ -2131,6 +2131,82 @@ let private runCoordinates () =
     System.Console.WriteLine $"NATIVE_API G14 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared cascade fixture with native thread, snapshot release and teardown checks.</summary>
+[<Literal>]
+let private CascadeChecksCount = 609
+
+let private runCascade () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let snapshots = RanvierWebCoreAbi.Native.rv_diagnostic_live_count ()
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                CascadeChecks.run
+                    (fun () -> Ranvier.View.WebCore.Diagnostics.forHost host)
+                    (Ranvier.View.WebCore.ComputedStyles.forHost host)
+                    host.Document
+                    CascadeChecks.Native
+
+            expect (RanvierWebCoreAbi.Native.rv_diagnostic_live_count () = snapshots) "Every native cascade snapshot is released"
+            let service = Ranvier.View.WebCore.Diagnostics.forHost host
+            service.Enable ()
+            let body = host.Document.body
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.Cascade (body, "order") |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "A cascade read rejects another thread"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            expect (service.Cascade (body, "order") = Error Ranvier.Dom.DiagnosticsUnavailable.NotRendered) "An element of a replaced document is not read"
+            held <- Some service
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Cascade fixture leaves no live native objects"
+    let service = held.Value
+
+    let rejected =
+        try
+            service.Cascade (Unchecked.defaultof<Ranvier.Dom.Element>, "order")
+            |> ignore
+
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.ArgumentNullException -> true
+
+    expect rejected "A held diagnostics service rejects cascade reads after host disposal"
+    service.Dispose ()
+    expect (not service.Enabled) "Disposing after host disposal disables the service"
+    expect (RanvierWebCoreAbi.Native.rv_diagnostic_live_count () = snapshots) "No cascade snapshot outlives the fixture"
+
+    if shared <> CascadeChecksCount then
+        failwith $"Cascade shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API C25 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API C25 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared crypto fixture with native thread and teardown checks.</summary>
 [<Literal>]
 let private CryptoChecksCount = 155
@@ -2765,6 +2841,7 @@ let private runAll () =
     runStrings () |> ignore
     runHostStrings () |> ignore
     runDiagnostics () |> ignore
+    runCascade () |> ignore
     runCoordinates () |> ignore
     runBlobUrls () |> ignore
     runDomModel () |> ignore
@@ -3778,6 +3855,9 @@ let main args =
         0
     elif Array.contains "--diagnostics-only" args then
         runDiagnostics () |> ignore
+        0
+    elif Array.contains "--cascade-only" args then
+        runCascade () |> ignore
         0
     elif Array.contains "--coordinates-only" args then
         runCoordinates () |> ignore
