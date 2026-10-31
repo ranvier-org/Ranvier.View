@@ -1,4 +1,4 @@
-188 classes; 2271 members: 2258 mapped to 2188 of 2234 rv_dom_* functions, 13 hand-written, 0 unmapped
+221 classes; 2492 members: 2479 mapped to 2409 of 2455 rv_dom_* functions, 13 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
@@ -183,6 +183,7 @@ Members by class (mapped / hand-written / unmapped):
   PointerEventObject: 14 / 0 / 0
   RadioNodeListObject: 2 / 0 / 0
   RangeObject: 26 / 0 / 0
+  SVGAElementObject: 9 / 0 / 0
   SVGAngleObject: 9 / 0 / 0
   SVGAnimatedAngleObject: 2 / 0 / 0
   SVGAnimatedBooleanObject: 3 / 0 / 0
@@ -198,16 +199,44 @@ Members by class (mapped / hand-written / unmapped):
   SVGAnimatedTransformListObject: 2 / 0 / 0
   SVGAnimationElementObject: 10 / 0 / 0
   SVGCircleElementObject: 3 / 0 / 0
+  SVGClipPathElementObject: 2 / 0 / 0
+  SVGComponentTransferFunctionElementObject: 7 / 0 / 0
   SVGElementObject: 14 / 0 / 0
   SVGEllipseElementObject: 4 / 0 / 0
+  SVGFEBlendElementObject: 8 / 0 / 0
+  SVGFEColorMatrixElementObject: 8 / 0 / 0
+  SVGFEComponentTransferElementObject: 6 / 0 / 0
+  SVGFECompositeElementObject: 12 / 0 / 0
   SVGFEConvolveMatrixElementObject: 17 / 0 / 0
+  SVGFEDiffuseLightingElementObject: 10 / 0 / 0
+  SVGFEDisplacementMapElementObject: 10 / 0 / 0
+  SVGFEDistantLightElementObject: 2 / 0 / 0
+  SVGFEDropShadowElementObject: 11 / 0 / 0
+  SVGFEFloodElementObject: 5 / 0 / 0
+  SVGFEGaussianBlurElementObject: 10 / 0 / 0
+  SVGFEImageElementObject: 7 / 0 / 0
+  SVGFEMergeElementObject: 5 / 0 / 0
+  SVGFEMergeNodeElementObject: 1 / 0 / 0
+  SVGFEMorphologyElementObject: 9 / 0 / 0
+  SVGFEOffsetElementObject: 8 / 0 / 0
+  SVGFEPointLightElementObject: 3 / 0 / 0
+  SVGFESpecularLightingElementObject: 11 / 0 / 0
+  SVGFESpotLightElementObject: 8 / 0 / 0
+  SVGFETileElementObject: 6 / 0 / 0
+  SVGFETurbulenceElementObject: 11 / 0 / 0
+  SVGFilterElementObject: 7 / 0 / 0
+  SVGForeignObjectElementObject: 4 / 0 / 0
   SVGGeometryElementObject: 5 / 0 / 0
+  SVGGradientElementObject: 4 / 0 / 0
   SVGGraphicsElementObject: 6 / 0 / 0
+  SVGImageElementObject: 8 / 0 / 0
   SVGLengthListObject: 10 / 0 / 0
   SVGLengthObject: 9 / 0 / 0
   SVGLineElementObject: 4 / 0 / 0
+  SVGLinearGradientElementObject: 4 / 0 / 0
   SVGMPathElementObject: 1 / 0 / 0
   SVGMarkerElementObject: 13 / 0 / 0
+  SVGMaskElementObject: 8 / 0 / 0
   SVGMatrixObject: 23 / 0 / 0
   SVGNumberListObject: 10 / 0 / 0
   SVGNumberObject: 2 / 0 / 0
@@ -217,9 +246,12 @@ Members by class (mapped / hand-written / unmapped):
   SVGPolygonElementObject: 2 / 0 / 0
   SVGPolylineElementObject: 2 / 0 / 0
   SVGPreserveAspectRatioObject: 4 / 0 / 0
+  SVGRadialGradientElementObject: 6 / 0 / 0
   SVGRectElementObject: 6 / 0 / 0
   SVGRectObject: 8 / 0 / 0
   SVGSVGElementObject: 36 / 0 / 0
+  SVGScriptElementObject: 5 / 0 / 0
+  SVGStopElementObject: 1 / 0 / 0
   SVGStringListObject: 10 / 0 / 0
   SVGStyleElementObject: 9 / 0 / 0
   SVGSymbolElementObject: 2 / 0 / 0
@@ -228,6 +260,7 @@ Members by class (mapped / hand-written / unmapped):
   SVGTextPositioningElementObject: 5 / 0 / 0
   SVGTransformListObject: 12 / 0 / 0
   SVGTransformObject: 9 / 0 / 0
+  SVGUseElementObject: 5 / 0 / 0
   SVGViewElementObject: 4 / 0 / 0
   SVGViewSpecObject: 8 / 0 / 0
   ShadowRootObject: 18 / 0 / 0

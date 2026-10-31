@@ -32,6 +32,11 @@
     <Compile Include="SvgViewSelection.fs" />
     <Compile Include="SvgAnimations.fs" />
     <Compile Include="SvgDocumentLifecycle.fs" />
+    <Compile Include="SvgChecks.fs" />
+    <Compile Include="SvgPaintServers.fs" />
+    <Compile Include="SvgFilters.fs" />
+    <Compile Include="SvgClipping.fs" />
+    <Compile Include="SvgResources.fs" />
     <Compile Include="TransformLifecycle.fs" />
     <Compile Include="MatrixLifecycle.fs" />
     <Compile Include="GeometryLifecycle.fs" />
