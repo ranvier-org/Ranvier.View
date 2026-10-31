@@ -1,0 +1,58 @@
+{
+ "group": "B06",
+ "issue": "ranvier-org/Ranvier.WebCore#116",
+ "viewsHead": "4f7ae26fcd46ec87ae49a207c2ddfc125948c6bd",
+ "nativeHead": "ae432ba",
+ "coreHead": "80ee58eb",
+ "packages": {
+  "Ranvier.Dom": "0.1.0-alpha.49 (private local pack)",
+  "Fable.Ranvier.Dom": "0.1.0-alpha.49 (private local pack)",
+  "Ranvier.WebCore": "0.1.0-preview.46 (private local pack)",
+  "native": "staged frozen candidate runtime"
+ },
+ "exits": {
+  "jit": 0,
+  "aot": 0,
+  "chromium": 0
+ },
+ "passLines": {
+  "jit": 121,
+  "aot": 121,
+  "chromium": 87
+ },
+ "groupLines": {
+  "jit": [
+   "NATIVE_API B06 PASS assertions=107",
+   "NATIVE_API B06 LIFETIME PASS assertions=3"
+  ],
+  "aot": [
+   "NATIVE_API B06 PASS assertions=107",
+   "NATIVE_API B06 LIFETIME PASS assertions=3"
+  ],
+  "chromium": [
+   "BROWSER_API B06 PASS assertions=107 engine=chromium"
+  ]
+ },
+ "repeat30": {
+  "aot": {
+   "runs": 30,
+   "distinct": [
+    "NATIVE_API B06 PASS assertions=107"
+   ]
+  },
+  "chromium": {
+   "runs": 30,
+   "distinct": [
+    "BROWSER_API B06 PASS assertions=107 engine=chromium"
+   ]
+  }
+ },
+ "logs": {
+  "aot.log": "ccd95c6b2fb7b062d68220a800e7fc0bb65e00e075f4a2b2405f598ff706d819",
+  "build-aot.log": "a0afd5fa23365689e747c23dc3c9f5140c74e2f83b6b2d50816612c2fb8642a6",
+  "build-fable.log": "3c8ccbcdb2ad3510dad7988ea5bcfbe5acde67f46e4a24a9f4494cb47b757d5e",
+  "build-jit.log": "cfce03605162ee73796cd71cc280267aea1b150ccf086d964c26b1c23e3deba9",
+  "chromium.log": "472115a54f044e2e5a27afc3dfa5e74a6d9e0b1ea65a5bc601f6dbceeb00b52e",
+  "jit.log": "59f612d068fb5f91b1f19ec76feee5dde48be517de318db564be73aa252d8cca"
+ }
+}
