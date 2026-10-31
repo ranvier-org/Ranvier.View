@@ -3,6 +3,18 @@ module internal NativeApiConformance.Native
 open Ranvier.View.WebCore
 
 let private runAll () =
+    let matrixLifecycle = MatrixLifecycle.run ()
+
+    if matrixLifecycle <> 23 then
+        failwith "Matrix lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API G08 LIFETIME PASS assertions={matrixLifecycle}"
+    let geometryLifecycle = GeometryLifecycle.run ()
+
+    if geometryLifecycle <> 26 then
+        failwith "Geometry lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API G07 LIFETIME PASS assertions={geometryLifecycle}"
     let styleMapLifecycle = StyleMapLifecycle.run ()
 
     if styleMapLifecycle <> 33 then
@@ -47,6 +59,31 @@ let private runAll () =
     let session = host.Session
 
     try
+        let matrices =
+            MatrixValues.run
+                (fun () -> Geometry.forHost host)
+                (fun value -> value :? Ranvier.Dom.DOMMatrix)
+                (function
+                | WebCoreDomException (name, _) -> name
+                | error -> error.GetType().Name)
+                "ArgumentNullException"
+
+        if matrices <> 710 then
+            failwith "Matrix shared assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API G08 PASS assertions={matrices}"
+
+        let geometry =
+            GeometryValues.run
+                (fun () -> Geometry.forHost host)
+                (fun value -> value :? Ranvier.Dom.DOMRect, value :? Ranvier.Dom.DOMPoint)
+                (fun error -> error.GetType().Name)
+                "ObjectDisposedException"
+
+        if geometry <> 177 then
+            failwith "Geometry shared assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API G07 PASS assertions={geometry}"
         let viewTables = ViewTables.run host.Document
         System.Console.WriteLine $"NATIVE_API D10_VIEW PASS assertions={viewTables}"
         let viewHyperlinks = ViewHyperlinks.run host.Document
@@ -566,7 +603,55 @@ let private runAll () =
 
 [<EntryPoint>]
 let main args =
-    if Array.contains "--style-maps-only" args then
+    if Array.contains "--matrix-only" args then
+        let lifecycle = MatrixLifecycle.run ()
+        use host = WebCoreHost.Create (64, 64)
+
+        let count =
+            MatrixValues.run
+                (fun () -> Geometry.forHost host)
+                (fun value -> value :? Ranvier.Dom.DOMMatrix)
+                (function
+                | WebCoreDomException (name, _) -> name
+                | error -> error.GetType().Name)
+                "ArgumentNullException"
+
+        if count <> 710 || lifecycle <> 23 then
+            failwith "Matrix shared/lifetime assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API G08 PASS assertions={count}"
+        System.Console.WriteLine $"NATIVE_API G08 LIFETIME PASS assertions={lifecycle}"
+        (host :> System.IDisposable).Dispose()
+
+        if host.Session.LiveObjects <> 0 then
+            failwith "Matrix wrappers leaked"
+
+        System.Console.WriteLine "NATIVE_API G08 TEARDOWN PASS"
+        0
+    elif Array.contains "--geometry-only" args then
+        let lifecycle = GeometryLifecycle.run ()
+        use host = WebCoreHost.Create (64, 64)
+
+        let count =
+            GeometryValues.run
+                (fun () -> Geometry.forHost host)
+                (fun value -> value :? Ranvier.Dom.DOMRect, value :? Ranvier.Dom.DOMPoint)
+                (fun error -> error.GetType().Name)
+                "ObjectDisposedException"
+
+        if count <> 177 || lifecycle <> 26 then
+            failwith "Geometry shared/lifetime assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API G07 PASS assertions={count}"
+        System.Console.WriteLine $"NATIVE_API G07 LIFETIME PASS assertions={lifecycle}"
+        (host :> System.IDisposable).Dispose()
+
+        if host.Session.LiveObjects <> 0 then
+            failwith "Geometry wrappers leaked"
+
+        System.Console.WriteLine "NATIVE_API G07 TEARDOWN PASS"
+        0
+    elif Array.contains "--style-maps-only" args then
         let lifecycle = StyleMapLifecycle.run ()
         let host = WebCoreHost.Create (320, 240)
         let session = host.Session

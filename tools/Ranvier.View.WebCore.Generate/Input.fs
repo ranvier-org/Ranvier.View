@@ -80,6 +80,11 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
             "NativeDom.RvDom"
             + Metadata.text "interface" mapping
 
+        let geometryDictionary =
+            List.contains (Metadata.text "interface" mapping) [ "DOMPointInit"; "DOMMatrixInit" ]
+
+        let sourceValue = if geometryDictionary then "dictionary" else value
+
         let assignments =
             model.GetProperty("dictionaries").GetProperty(Metadata.text "interface" mapping).EnumerateArray()
             |> Seq.map (fun field ->
@@ -90,7 +95,7 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
                     raise (NotSupportedException $"Dictionary field {t.Name}.{fieldName}")
 
                 let fieldType = property.PropertyType
-                let source = $"({value}).{ident property.Name}"
+                let source = $"({sourceValue}).{ident property.Name}"
                 let fieldMapping = field.GetProperty "mapping"
                 let ctype = Metadata.text "ctype" field
 
@@ -115,7 +120,14 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
             |> String.concat "; "
 
         let assignments = if assignments = "" then "" else assignments + "; "
-        $"(let mutable result = Unchecked.defaultof<{native}> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<{native}>()); {assignments}result)"
+
+        let defaults =
+            if geometryDictionary then
+                $"let dictionary = if isNull (box ({value})) then {name t}() else {value} in "
+            else
+                ""
+
+        $"({defaults}let mutable result = Unchecked.defaultof<{native}> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<{native}>()); {assignments}result)"
     | "sequence" when t.IsArray ->
         let native = "NativeDom." + Metadata.text "ctype" mapping
         let element = (Metadata.items "subtypes" mapping)[0]

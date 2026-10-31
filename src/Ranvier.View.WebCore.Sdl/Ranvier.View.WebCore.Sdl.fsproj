@@ -12,7 +12,7 @@
         <PackageTags>reactive;signals;view;dom;webcore;native;sdl;fsharp</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>Experimental. The API may change.</PackageReleaseNotes>
-        <Version>0.1.0-alpha.5</Version>
+        <Version>0.1.0-alpha.6</Version>
         <IsAotCompatible>true</IsAotCompatible>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <IsPackable>true</IsPackable>

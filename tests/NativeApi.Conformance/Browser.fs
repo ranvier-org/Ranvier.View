@@ -22,6 +22,105 @@ let private errorName (error: exn) : string = jsNative
 [<Emit("$0.constructor.name + ':' + $0.message")>]
 let private disposalError (error: exn) : string = jsNative
 
+[<Emit("[$0 instanceof DOMRect, $0 instanceof DOMPoint]")>]
+let private geometryKinds (value: obj) : bool * bool = jsNative
+
+[<Emit("$0 instanceof DOMMatrix")>]
+let private mutableMatrix (value: DOMMatrixReadOnly) : bool = jsNative
+
+[<Emit("""(async () => {
+    const frame=document.createElement('iframe');
+    try {
+        frame.srcdoc='<body>first</body>';
+        let loaded=new Promise(resolve=>frame.addEventListener('load',resolve,{once:true}));
+        document.body.append(frame); await loaded;
+        const oldDocument=frame.contentDocument, oldCall=$0(oldDocument);
+        loaded=new Promise(resolve=>frame.addEventListener('load',resolve,{once:true}));
+        frame.srcdoc='<body>replacement</body>'; await loaded;
+        if(oldDocument===frame.contentDocument) throw new Error('Geometry document identity unchanged');
+        if(oldCall()!=='inactive:7') throw new Error('Old geometry context remained active or changed retained value');
+        if($0(frame.contentDocument)()!=='active:7') throw new Error('Replacement geometry context failed');
+        return 3;
+    } finally { frame.remove(); }
+})()""")>]
+let private geometryDocumentLifetime (createCall: Document -> System.Func<string>) : JS.Promise<int> = jsNative
+
+let private geometryCall document =
+    let service = Geometry.forDocument document
+    let retained = service.CreatePoint (x = 7.)
+
+    System.Func<string>(fun () ->
+        let outcome =
+            try
+                service.CreateRect () |> ignore
+                "active"
+            with _ ->
+                "inactive"
+
+        try
+            outcome + ":" + string retained.x
+        finally
+            service.Dispose ())
+
+/// <summary>Runs the shared geometry fixture and actual document-replacement ownership proof.</summary>
+let runGeometry () =
+    async {
+        let count =
+            GeometryValues.run (fun () -> Geometry.forDocument (document ())) geometryKinds disposalError "Exception:GeometryService"
+
+        let! context =
+            geometryDocumentLifetime geometryCall
+            |> Async.AwaitPromise
+
+        if count <> 177 || context <> 3 then
+            failwith "Geometry shared/context assertions did not run"
+
+        return
+            {|
+                geometry = count
+                geometryContext = context
+            |}
+    }
+    |> Async.StartAsPromise
+
+let private matrixCall document =
+    let service = Geometry.forDocument document
+    let retained = service.CreateMatrix ("translate(7px)")
+
+    System.Func<string>(fun () ->
+        let outcome =
+            try
+                service.CreateMatrix () |> ignore
+                "active"
+            with _ ->
+                "inactive"
+
+        try
+            outcome + ":" + string retained.e
+        finally
+            service.Dispose ())
+
+/// <summary>Runs actual browser matrix operations and document-replacement context checks.</summary>
+let runMatrix () =
+    async {
+        let count =
+            MatrixValues.run (fun () -> Geometry.forDocument (document ())) mutableMatrix errorName "Error"
+
+        let! context =
+            geometryDocumentLifetime matrixCall
+            |> Async.AwaitPromise
+
+        if count <> 710 || context <> 3 then
+            failwith "Matrix shared/context assertions did not run"
+
+        return
+            {|
+                matrices = count
+                matrixContext = context
+            |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("[$0 instanceof CSSImageValue, $0 instanceof CSSNumericValue]")>]
 let private styleValueSubtypes (value: CSSStyleValue) : bool * bool = jsNative
 
@@ -237,6 +336,8 @@ let runStyleValues () =
 let run () =
     async {
         let document = document ()
+        let! geometryProof = runGeometry () |> Async.AwaitPromise
+        let! matrixProof = runMatrix () |> Async.AwaitPromise
         let cssEscaping = CssEscaping.run document
         let cssSupport = CssSupport.run (CssQueries.forDocument document)
 
@@ -390,6 +491,10 @@ let run () =
 
         return
             {|
+                geometry = geometryProof.geometry
+                geometryContext = geometryProof.geometryContext
+                matrices = matrixProof.matrices
+                matrixContext = matrixProof.matrixContext
                 cascadeRules = cascadeRules
                 scopeRules = scopeRules
                 nestedDeclarations = nestedDeclarations

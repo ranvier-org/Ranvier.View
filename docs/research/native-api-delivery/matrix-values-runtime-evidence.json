@@ -1,0 +1,219 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    "G07",
+    "G08"
+  ],
+  "status": "private-cohort16-runtime-checkpoint",
+  "source": {
+    "native": "fe51afb53d7c372788cdcebf9d41a9c9d2dd1e0e",
+    "nativePr": "https://github.com/ranvier-org/Ranvier.WebCore/pull/126",
+    "coreG07": "a3fffc5a4438533d79d6754dfe437a9ffdc4b01b",
+    "viewsG07": "824002b2f8144d16c85764fe509085903c331862",
+    "coreAllocation": "ee8092d9f18ebf99ce6dfe30b875bd19c1f9ccf2",
+    "viewsAllocation": "35978f8f915f7dfdd42e035c3297a95f04227108"
+  },
+  "cohort": {
+    "native": "0.1.0-preview.16",
+    "abi": 24,
+    "core": "0.1.0-alpha.16",
+    "views": "0.1.6",
+    "backendSdl": "0.1.0-alpha.6",
+    "privatePackages": true
+  },
+  "runtime": "C:/wk/native-geometry-values/artifacts/cohort16/runtime",
+  "executedDlls": [
+    {
+      "directory": "tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\win-x64",
+      "file": "RanvierWebCoreHost.dll",
+      "sha256": "6ed41145b9e47883ea672295fc14f1434d9f532a12817ddb9fa0c1742beb019b",
+      "matches": true
+    },
+    {
+      "directory": "tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\win-x64",
+      "file": "JavaScriptCore.dll",
+      "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+      "matches": true
+    },
+    {
+      "directory": "tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\win-x64",
+      "file": "WebCore.dll",
+      "sha256": "e3e6a80e6f21ca785b37fbbc11cb9a16c28d27a32ba19099a7cc2ea5aeb99870",
+      "matches": true
+    },
+    {
+      "directory": "artifacts\\g08-aot",
+      "file": "RanvierWebCoreHost.dll",
+      "sha256": "6ed41145b9e47883ea672295fc14f1434d9f532a12817ddb9fa0c1742beb019b",
+      "matches": true
+    },
+    {
+      "directory": "artifacts\\g08-aot",
+      "file": "JavaScriptCore.dll",
+      "sha256": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+      "matches": true
+    },
+    {
+      "directory": "artifacts\\g08-aot",
+      "file": "WebCore.dll",
+      "sha256": "e3e6a80e6f21ca785b37fbbc11cb9a16c28d27a32ba19099a7cc2ea5aeb99870",
+      "matches": true
+    }
+  ],
+  "logs": {
+    "focus-jit": {
+      "path": "C:\\wk\\rv-custom-properties\\artifacts\\g08-focus-jit.log",
+      "sha256": "0c9ffe91a912000b5d716a6aa088e1a4960458dea59a3958a0eb7ca49db5211c",
+      "exitCode": 0,
+      "counts": {
+        "shared": 710,
+        "lifetime": 23,
+        "context": 0
+      },
+      "output": "[rtk] /!\\ No hook installed \u2014 run `rtk init -g` for automatic token savings\nNATIVE_API G08 PASS assertions=710\nNATIVE_API G08 LIFETIME PASS assertions=23\nNATIVE_API G08 TEARDOWN PASS\n"
+    },
+    "focus-aot": {
+      "path": "C:\\wk\\rv-custom-properties\\artifacts\\g08-focus-aot.log",
+      "sha256": "0c9ffe91a912000b5d716a6aa088e1a4960458dea59a3958a0eb7ca49db5211c",
+      "exitCode": 0,
+      "counts": {
+        "shared": 710,
+        "lifetime": 23,
+        "context": 0
+      },
+      "output": "[rtk] /!\\ No hook installed \u2014 run `rtk init -g` for automatic token savings\nNATIVE_API G08 PASS assertions=710\nNATIVE_API G08 LIFETIME PASS assertions=23\nNATIVE_API G08 TEARDOWN PASS\n"
+    },
+    "focus-browser": {
+      "path": "C:\\wk\\rv-custom-properties\\artifacts\\g08-focus-browser.log",
+      "sha256": "4a8ad5d23e49a03dbf1f548e0e5193f57fe62574a8265b95c1e60eb8db77f505",
+      "exitCode": 0,
+      "counts": {
+        "shared": 710,
+        "lifetime": 0,
+        "context": 3
+      },
+      "output": "[rtk] /!\\ No hook installed \u2014 run `rtk init -g` for automatic token savings\n[rtk] /!\\ No hook installed \u2014 run `rtk init -g` for automatic token savings\nBROWSER_API G08 PASS assertions=710 engine=chromium\nBROWSER_API G08 CONTEXT PASS assertions=3 engine=chromium\n"
+    },
+    "full-jit": {
+      "path": "C:\\wk\\rv-custom-properties\\artifacts\\g08-full-jit.log",
+      "sha256": "00a84ce857e0d50d456a0035d382b0b1ccb3725f48db042d9226d9c630a13e20",
+      "exitCode": 0,
+      "counts": {
+        "shared": 2642,
+        "lifetime": 136,
+        "context": 0
+      },
+      "output": "[rtk] /!\\ No hook installed \u2014 run `rtk init -g` for automatic token savings\nNATIVE_API G08 LIFETIME PASS assertions=23\nNATIVE_API G07 LIFETIME PASS assertions=26\nNATIVE_API C13 LIFETIME PASS assertions=33\nNATIVE_API C14 LIFETIME PASS assertions=19\nNATIVE_API C12 LIFETIME PASS assertions=10\nNATIVE_API G08 PASS assertions=710\nNATIVE_API G07 PASS assertions=177\nNATIVE_API D10_VIEW PASS assertions=29\nNATIVE_API D11_VIEW_HYPERLINKS PASS assertions=50\nNATIVE_API C05 PASS assertions=45\nNATIVE_API C03 PASS assertions=32\nNATIVE_API C01_C02 PASS assertions=42\nNATIVE_API C12 PASS assertions=50\nNATIVE_API C14 PASS assertions=99\nNATIVE_API C13 PASS assertions=127\nNATIVE_API C08 PASS assertions=131\nNATIVE_API C04 PASS assertions=39\nNATIVE_API G06 PASS assertions=61\nNATIVE_API C18 PASS assertions=51\nNATIVE_API C18 CAPABILITY fontWidthAlias=True\nNATIVE_API C22 PASS assertions=23\nNATIVE_API C21 PASS assertions=44\nNATIVE_API C21 CAPABILITY positionTry=True\nNATIVE_API C19 PASS assertions=64\nNATIVE_API C19 CAPABILITY speakAs=\nNATIVE_API C11 PASS assertions=82\nNATIVE_API C11 CAPABILITY length=True invalidKeyTextError=\nNATIVE_API D10 PASS assertions=30\nNATIVE_API HYPERLINKS PASS assertions=60\nNATIVE_API D11 PASS assertions=205\nNATIVE_API D09 PASS assertions=24\nNATIVE_API D09_VIEWPORT PASS assertions=30\nNATIVE_API SVG_CSSOM PASS assertions=31\nNATIVE_API CSSOM PASS assertions=58\nNATIVE_API C09 PASS assertions=44\nNATIVE_API C10 PASS assertions=91\nNATIVE_API C10 CAPABILITY scopeRules=True nestedDeclarations=True importContentsReadable=False\nNATIVE_API D11_OPERATIONS PASS assertions=26\nNATIVE_API D11 CAPABILITY attachmentIdentifier=string:\nNATIVE_API D12 PASS assertions=109\nNATIVE_API D12 CAPABILITY failedLinkSheet=replacement\nNATIVE_API C07 PASS assertions=78\nNATIVE_API D09 TAB PASS\nNATIVE_API G06 LIFETIME PASS assertions=8\nNATIVE_API C03 LIFETIME PASS assertions=4\nNATIVE_API C01_C02 LIFETIME PASS assertions=7\nNATIVE_API C04 LIFETIME PASS assertions=2\nNATIVE_API C07 LIFETIME PASS assertions=4\nNATIVE_API TEARDOWN PASS groups=D09,D10,D11,CSSOM\n"
+    },
+    "full-aot": {
+      "path": "C:\\wk\\rv-custom-properties\\artifacts\\g08-full-aot.log",
+      "sha256": "00a84ce857e0d50d456a0035d382b0b1ccb3725f48db042d9226d9c630a13e20",
+      "exitCode": 0,
+      "counts": {
+        "shared": 2642,
+        "lifetime": 136,
+        "context": 0
+      },
+      "output": "[rtk] /!\\ No hook installed \u2014 run `rtk init -g` for automatic token savings\nNATIVE_API G08 LIFETIME PASS assertions=23\nNATIVE_API G07 LIFETIME PASS assertions=26\nNATIVE_API C13 LIFETIME PASS assertions=33\nNATIVE_API C14 LIFETIME PASS assertions=19\nNATIVE_API C12 LIFETIME PASS assertions=10\nNATIVE_API G08 PASS assertions=710\nNATIVE_API G07 PASS assertions=177\nNATIVE_API D10_VIEW PASS assertions=29\nNATIVE_API D11_VIEW_HYPERLINKS PASS assertions=50\nNATIVE_API C05 PASS assertions=45\nNATIVE_API C03 PASS assertions=32\nNATIVE_API C01_C02 PASS assertions=42\nNATIVE_API C12 PASS assertions=50\nNATIVE_API C14 PASS assertions=99\nNATIVE_API C13 PASS assertions=127\nNATIVE_API C08 PASS assertions=131\nNATIVE_API C04 PASS assertions=39\nNATIVE_API G06 PASS assertions=61\nNATIVE_API C18 PASS assertions=51\nNATIVE_API C18 CAPABILITY fontWidthAlias=True\nNATIVE_API C22 PASS assertions=23\nNATIVE_API C21 PASS assertions=44\nNATIVE_API C21 CAPABILITY positionTry=True\nNATIVE_API C19 PASS assertions=64\nNATIVE_API C19 CAPABILITY speakAs=\nNATIVE_API C11 PASS assertions=82\nNATIVE_API C11 CAPABILITY length=True invalidKeyTextError=\nNATIVE_API D10 PASS assertions=30\nNATIVE_API HYPERLINKS PASS assertions=60\nNATIVE_API D11 PASS assertions=205\nNATIVE_API D09 PASS assertions=24\nNATIVE_API D09_VIEWPORT PASS assertions=30\nNATIVE_API SVG_CSSOM PASS assertions=31\nNATIVE_API CSSOM PASS assertions=58\nNATIVE_API C09 PASS assertions=44\nNATIVE_API C10 PASS assertions=91\nNATIVE_API C10 CAPABILITY scopeRules=True nestedDeclarations=True importContentsReadable=False\nNATIVE_API D11_OPERATIONS PASS assertions=26\nNATIVE_API D11 CAPABILITY attachmentIdentifier=string:\nNATIVE_API D12 PASS assertions=109\nNATIVE_API D12 CAPABILITY failedLinkSheet=replacement\nNATIVE_API C07 PASS assertions=78\nNATIVE_API D09 TAB PASS\nNATIVE_API G06 LIFETIME PASS assertions=8\nNATIVE_API C03 LIFETIME PASS assertions=4\nNATIVE_API C01_C02 LIFETIME PASS assertions=7\nNATIVE_API C04 LIFETIME PASS assertions=2\nNATIVE_API C07 LIFETIME PASS assertions=4\nNATIVE_API TEARDOWN PASS groups=D09,D10,D11,CSSOM\n"
+    },
+    "full-browser": {
+      "path": "C:\\wk\\rv-custom-properties\\artifacts\\g08-full-browser.log",
+      "sha256": "4b28986142e368f2df75a34c4d6692ca59d4d8bb91b2cb5924b61f6bb5a34f6b",
+      "exitCode": 0,
+      "counts": {
+        "shared": 2655,
+        "lifetime": 0,
+        "context": 19
+      },
+      "output": "[rtk] /!\\ No hook installed \u2014 run `rtk init -g` for automatic token savings\n[rtk] /!\\ No hook installed \u2014 run `rtk init -g` for automatic token savings\nBROWSER_API C12 PASS assertions=50 engine=chromium\nBROWSER_API C12 CONTEXT PASS assertions=3 engine=chromium\nBROWSER_API G08 PASS assertions=710 engine=chromium\nBROWSER_API G08 CONTEXT PASS assertions=3 engine=chromium\nBROWSER_API G07 PASS assertions=177 engine=chromium\nBROWSER_API G07 CONTEXT PASS assertions=3 engine=chromium\nBROWSER_API C13 PASS assertions=127 engine=chromium\nBROWSER_API C13 CONTEXT PASS assertions=3 engine=chromium\nBROWSER_API C14 PASS assertions=99 engine=chromium\nBROWSER_API C14 CONTEXT PASS assertions=3 engine=chromium\nBROWSER_API D10 PASS assertions=30 engine=chromium\nBROWSER_API D10_VIEW PASS assertions=29 engine=chromium\nBROWSER_API D11_VIEW_HYPERLINKS PASS assertions=50 engine=chromium\nBROWSER_API C05 PASS assertions=45 oracle=196609 engine=chromium\nBROWSER_API C03 PASS assertions=32 engine=chromium\nBROWSER_API C03 CONTEXT PASS assertions=2 engine=chromium\nBROWSER_API C01_C02 PASS assertions=42 engine=chromium\nBROWSER_API G06 PASS assertions=74 engine=chromium\nBROWSER_API C18 PASS assertions=49 engine=chromium\nBROWSER_API C18 CAPABILITY fontWidthAlias=false engine=chromium\nBROWSER_API C22 PASS assertions=23 engine=chromium\nBROWSER_API C21 PASS assertions=44 engine=chromium\nBROWSER_API C21 CAPABILITY positionTry=true engine=chromium\nBROWSER_API C19 PASS assertions=64 engine=chromium\nBROWSER_API C19 CAPABILITY speakAs=numbers engine=chromium\nBROWSER_API C11 PASS assertions=82 engine=chromium\nBROWSER_API C11 CAPABILITY length=true invalidKeyTextError=SyntaxError engine=chromium\nBROWSER_API C09 PASS assertions=44 engine=chromium\nBROWSER_API C10 PASS assertions=93 engine=chromium\nBROWSER_API C10 CAPABILITY scopeRules=true nestedDeclarations=true importContentsReadable=true engine=chromium\nBROWSER_API C04 PASS assertions=39 engine=chromium\nBROWSER_API C01_C02 CONTEXT PASS assertions=2 engine=chromium\nBROWSER_API D11 PASS assertions=205 engine=chromium\nBROWSER_API D09 PASS assertions=24 engine=chromium\nBROWSER_API D09_VIEWPORT PASS assertions=30 engine=chromium\nBROWSER_API D11_OPERATIONS PASS assertions=26 engine=chromium\nBROWSER_API D11 CAPABILITY attachmentIdentifier=undefined engine=chromium\nBROWSER_API CSSOM PASS assertions=58 engine=chromium\nBROWSER_API C08 PASS assertions=131 engine=chromium\nBROWSER_API SVG_CSSOM PASS assertions=31 engine=chromium\nBROWSER_API HYPERLINKS PASS assertions=60 engine=chromium\nBROWSER_API C07 PASS assertions=78 engine=chromium\nBROWSER_API D12 PASS assertions=109 engine=chromium\nBROWSER_API D12 CAPABILITY failedLinkSheet=replacement engine=chromium\nBROWSER_API D09 TAB PASS engine=chromium\n"
+    }
+  },
+  "generator": {
+    "classes": 133,
+    "members": 1922,
+    "mapped": 1909,
+    "handWritten": 13,
+    "unmapped": 0,
+    "exports": 1875,
+    "interfaces": 143,
+    "roots": 23,
+    "wrapperComparison": {
+      "base": "824002b2f8144d16c85764fe509085903c331862",
+      "oldClasses": 249,
+      "unchanged": 247,
+      "changed": [
+        "DOMPointObject",
+        "DOMPointReadOnlyObject"
+      ],
+      "newClasses": [
+        "DOMMatrixObject",
+        "DOMMatrixReadOnlyObject"
+      ]
+    },
+    "regressions": [
+      "Canonical G08 import produced FS0249 duplicate DOMPointInit; approved canonical generated class replaced unpublished manual record.",
+      "Union tag validation initially dereferenced a sequence arm null interface; C-type suffix now matches exact canonical native constant and value.",
+      "Optional-double pointer encoding preserves None versus Some0/NaN/-0.",
+      "New-only matrix/point dictionary null inputs use canonical defaults; required generated omitted/null paths are exercised."
+    ]
+  },
+  "browser": {
+    "engine": "Chromium",
+    "version": "156.0.8078.4",
+    "compiler": "Fickl0.6.9/Fable5.24.0",
+    "directJsInverseProbe": {
+      "version": "156.0.8078.4",
+      "result": {
+        "matrix": [
+          2,
+          0,
+          0,
+          3,
+          10,
+          20
+        ],
+        "inverse": [
+          0.5,
+          0,
+          0,
+          0.3333333432674408,
+          -5,
+          -6.6666669845581055
+        ],
+        "point": [
+          1,
+          0.9999999105930328,
+          0,
+          1
+        ],
+        "precise": 16777217.125
+      }
+    },
+    "probePath": "C:\\wk\\rv-custom-properties\\artifacts\\g08-browser-precision.json",
+    "probeSha256": "f4519daeb63bfc9c46b780e3acddd7b383ae1e0678012fc55a92c915c819575f",
+    "inverseRoundtripTolerance": 1e-06,
+    "otherMathTolerance": 1e-12,
+    "storagePrecision": "Exact constructor/setter equality; no rounding or numeric normalization by either facade."
+  },
+  "unpublishedApiChange": "Canonical generated DOMPointInit class/lowercase fields/defaults replaces the G07 manual option record. DOMMatrixInit preserves optional aliases/is2D. G07 old source/API/evidence snapshots remain unchanged.",
+  "verificationNotes": [
+    "Initial675 shared checkpoint omitted a successful literal matrix3d parse; independent review required full16-element/flag/serialization roundtrip coverage. Final710 adds34 actual3D assertions plus explicit present-false is2D. Six prior675 logs remain in artifacts/g08-checkpoint675-*.log.",
+    "One final combined batch was rerun for this actual shared fixture gap; provider/native source did not change.",
+    "Provider null numeric arrays are rejected on both targets: native ArgumentNullException versus browser observable Error; no cross-runtime non-DOM typed exception identity claim.",
+    "Sage persisted eight overloads/defaults/optional pointer representation; compiler diagnostics, actual CLI and Fable execution provide final proof.",
+    "Fable did not support Double.IsFinite in the test tolerance predicate; the replacement exact/NaN/absolute-error predicate was checked in Sage without weakening nonfinite rejection.",
+    "Existing FSharp.Core IL3053/IL2104 and SameValueZero IL2075 AOT warnings remain."
+  ],
+  "commands": {
+    "jit": "rtk proxy dotnet tests/NativeApi.Conformance/bin/Release/net10.0/win-x64/Native.dll [--matrix-only]",
+    "aotPublish": "rtk proxy dotnet publish tests/NativeApi.Conformance/Native.fsproj -c Release -r win-x64 -p:PublishAot=true -p:OS=Windows_NT -o artifacts/g08-aot",
+    "aotRun": "rtk proxy artifacts/g08-aot/Native.exe [--matrix-only]",
+    "browser": "rtk proxy node tests/NativeApi.Conformance/browser.mjs [--matrix-only]",
+    "browserDependencyPackage": "C:/wk/ranvier-views/tests/NativeApi.Conformance/package.json"
+  },
+  "acceptancePending": [
+    "Final released Native16 source SHA and official Native/Core/Views packages.",
+    "Other platforms and immutable profile verification.",
+    "Required repository/analyzer gate evidence recorded separately; this file claims runtime checks only."
+  ]
+}
