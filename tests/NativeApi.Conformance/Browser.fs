@@ -776,6 +776,41 @@ let runResources () =
     }
     |> Async.StartAsPromise
 
+[<Emit("fetch('/fixtures/requested/' + $0).then(r => r.text()).then(t => t === '1')")>]
+let private fontRequested (name: string) : JS.Promise<bool> = jsNative
+
+[<Emit("fetch('/fixtures/answer/' + $0 + '/' + $1).then(() => undefined)")>]
+let private fontAnswer (name: string) (mode: string) : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared T01 font set assertions over document.fonts with held fixture-server fonts.</summary>
+let runFonts () =
+    async {
+        let document = document ()
+
+        let server: Fonts.FontServer =
+            {
+                Url = fun name -> "/fixtures/held/" + name
+                Requested = fun name -> fontRequested name |> Async.AwaitPromise
+                Respond =
+                    fun name response ->
+                        let mode =
+                            match response with
+                            | Fonts.FontResponse.Font -> "font"
+                            | Fonts.FontResponse.Broken -> "broken"
+                            | Fonts.FontResponse.Missing -> "missing"
+
+                        fontAnswer name mode |> Async.AwaitPromise
+            }
+
+        use signals = BrowserCancellation.forDocument document
+
+        let! count =
+            Fonts.run document server (fun () -> BrowserFonts.forDocument document) signals wait
+
+        return {| fonts = count |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("globalThis.__nativeApiSetActive($0)")>]
 let private setActive (active: bool) : JS.Promise<unit> = jsNative
 

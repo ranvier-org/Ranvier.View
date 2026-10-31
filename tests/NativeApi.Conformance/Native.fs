@@ -3401,6 +3401,100 @@ let private runResources () =
     System.Console.WriteLine "NATIVE_API H05 TEARDOWN PASS"
     count
 
+/// <summary>Runs the shared T01 font set fixture over a held CSS @font-face served through the resource handler.</summary>
+let private runFonts () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let previous = System.Threading.SynchronizationContext.Current
+    let loop = OwnerLoop ()
+    System.Threading.SynchronizationContext.SetSynchronizationContext loop
+    let font = (resourceFixture ()).Font
+
+    let requests =
+        System.Collections.Generic.Dictionary<string, Result<Ranvier.Dom.ResourceResponse, string> -> unit>()
+
+    let provider: Ranvier.Dom.ResourceProvider =
+        fun request complete ->
+            let name = request.Url.Substring (request.Url.LastIndexOf '/' + 1)
+            requests[name] <- complete
+
+            { new System.IDisposable with
+                member _.Dispose() = ()
+            }
+
+    let server: Fonts.FontServer =
+        {
+            Url = fun name -> "https://t01.test/" + name
+            Requested = fun name -> async { return requests.ContainsKey name }
+            Respond =
+                fun name response ->
+                    async {
+                        let complete = requests[name]
+
+                        match response with
+                        | Fonts.FontResponse.Font ->
+                            complete (
+                                Ok
+                                    {
+                                        ContentType = "font/ttf"
+                                        Bytes = font
+                                    }
+                            )
+                        | Fonts.FontResponse.Broken ->
+                            complete (
+                                Ok
+                                    {
+                                        ContentType = "font/ttf"
+                                        Bytes = "not a font"B
+                                    }
+                            )
+                        | Fonts.FontResponse.Missing -> complete (Error "404")
+                    }
+        }
+
+    let count =
+        try
+            use resources = Ranvier.View.WebCore.Resources.forHost host provider
+            use signals = Ranvier.View.WebCore.Cancellation.forHost host
+
+            let pending =
+                Fonts.run host.Document server (fun () -> Ranvier.View.WebCore.Fonts.forHost host) signals (fun milliseconds ->
+                    async {
+                        let clock = System.Diagnostics.Stopwatch.StartNew ()
+
+                        while clock.ElapsedMilliseconds < int64 milliseconds do
+                            loop.Drain ()
+                            host.Cycle 5
+                    })
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not pending.IsCompleted
+                  && timeout.ElapsedMilliseconds < 30000L do
+                loop.Drain ()
+                host.Cycle ()
+                System.Threading.Thread.Sleep 1
+
+            if not pending.IsCompleted then
+                failwith "Font fixture did not complete on the owner loop"
+
+            pending.GetAwaiter().GetResult()
+        finally
+            System.Threading.SynchronizationContext.SetSynchronizationContext previous
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith (
+            "Font fixture leaked "
+            + string session.LiveObjects
+            + " managed native objects"
+        )
+
+    System.Console.WriteLine ("NATIVE_API T01 PASS assertions=" + string count)
+    System.Console.WriteLine "NATIVE_API T01 TEARDOWN PASS"
+    count
+
 /// <summary>Runs the shared tree traversal and MathML fixtures with native traversal lifetime checks.</summary>
 let private runDomModel () =
     let lifetime = TraversalLifecycle.run ()
@@ -3460,6 +3554,7 @@ let private runAll () =
     runCapabilities () |> ignore
     runCancellation () |> ignore
     runResources () |> ignore
+    runFonts () |> ignore
     runCustomEvents () |> ignore
     runInputState () |> ignore
     runViewport () |> ignore
@@ -4553,6 +4648,9 @@ let main args =
         0
     elif Array.contains "--resources-only" args then
         runResources () |> ignore
+        0
+    elif Array.contains "--fonts-only" args then
+        runFonts () |> ignore
         0
     elif Array.contains "--custom-properties-only" args then
         let lifecycle = CustomPropertyLifecycle.run ()

@@ -17,6 +17,9 @@ const transformsOnly = process.argv.includes('--transforms-only');
 const svgOnly = process.argv.includes('--svg-only');
 const svgSurfacesOnly = process.argv.includes('--svg-surfaces-only');
 const resourcesOnly = process.argv.includes('--resources-only');
+const fontsOnly = process.argv.includes('--fonts-only');
+// T01: held font requests, answered by the fixture through /fixtures/answer/<name>/<font|broken|missing>.
+const heldFonts = new Map();
 const svgPaintOnly = process.argv.includes('--svg-paint-only');
 const inputStateOnly = process.argv.includes('--input-state-only');
 const framesOnly = process.argv.includes('--frames-only');
@@ -48,6 +51,28 @@ const server = createServer(async (request, response) => {
     if (name === '/fixtures/Ahem.ttf') {
       response.setHeader('Content-Type', 'font/ttf');
       response.end(await readFile(resolve(process.env.RANVIER_WEBKIT_SOURCE || 'C:/wk/src', 'Tools/TestWebKitAPI/Resources/cocoa/Ahem.ttf')));
+      return;
+    }
+    const held = /^\/fixtures\/held\/([a-z]+)$/.exec(name);
+    if (held) {
+      heldFonts.set(held[1], response);
+      return;
+    }
+    const requested = /^\/fixtures\/requested\/([a-z]+)$/.exec(name);
+    if (requested) {
+      response.end(heldFonts.has(requested[1]) ? '1' : '0');
+      return;
+    }
+    const answer = /^\/fixtures\/answer\/([a-z]+)\/(font|broken|missing)$/.exec(name);
+    if (answer) {
+      const target = heldFonts.get(answer[1]);
+      heldFonts.set(answer[1], null);
+      if (target && answer[2] === 'missing') { target.statusCode = 404; target.end(); }
+      else if (target) {
+        target.setHeader('Content-Type', 'font/ttf');
+        target.end(answer[2] === 'font' ? await readFile(resolve(process.env.RANVIER_WEBKIT_SOURCE || 'C:/wk/src', 'Tools/TestWebKitAPI/Resources/cocoa/Ahem.ttf')) : 'not a font');
+      }
+      response.end();
       return;
     }
     if (name === '/') {
@@ -591,7 +616,7 @@ try {
   const checks = await page.evaluate(async focused => {
     try {
       const fixture = await import('/Browser.js');
-      return await (focused === 'dom-model' ? fixture.runDomModel() : focused === 'resources' ? fixture.runResources() : focused === 'locales' ? fixture.runLocales() : focused === 'svg' ? fixture.runSvg() : focused === 'svg-surfaces' ? fixture.runSvgSurfaces() : focused === 'svg-paint' ? fixture.runSvgPaint() : focused === 'transforms' ? fixture.runTransforms() : focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : { ...await fixture.runSvgSurfaces(), ...await fixture.runSvgPaint(), ...await fixture.runResources(), ...await fixture.run() });
+      return await (focused === 'dom-model' ? fixture.runDomModel() : focused === 'resources' ? fixture.runResources() : focused === 'fonts' ? fixture.runFonts() : focused === 'locales' ? fixture.runLocales() : focused === 'svg' ? fixture.runSvg() : focused === 'svg-surfaces' ? fixture.runSvgSurfaces() : focused === 'svg-paint' ? fixture.runSvgPaint() : focused === 'transforms' ? fixture.runTransforms() : focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : { ...await fixture.runSvgSurfaces(), ...await fixture.runSvgPaint(), ...await fixture.runResources(), ...await fixture.runFonts(), ...await fixture.run() });
     } catch (error) {
       throw new Error(JSON.stringify({
         type: error?.constructor?.name,
@@ -602,7 +627,7 @@ try {
         fields: Object.fromEntries(Object.getOwnPropertyNames(error).filter(key => key !== 'stack').map(key => [key, error[key]])),
       }));
     }
-  }, domModelOnly ? 'dom-model' : resourcesOnly ? 'resources' : localesOnly ? 'locales' : svgOnly ? 'svg' : svgSurfacesOnly ? 'svg-surfaces' : svgPaintOnly ? 'svg-paint' : transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
+  }, domModelOnly ? 'dom-model' : resourcesOnly ? 'resources' : fontsOnly ? 'fonts' : localesOnly ? 'locales' : svgOnly ? 'svg' : svgSurfacesOnly ? 'svg-surfaces' : svgPaintOnly ? 'svg-paint' : transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
   const checkDomModel = () => {
     if (checks.traversal !== 62 || checks.mathml !== 116) throw new Error(`DOM model assertions did not run: ${JSON.stringify(checks)}`);
     if (checks.traversalReentry !== 'InvalidStateError/InvalidStateError/unread') throw new Error(`Unexpected traversal re-entry: ${checks.traversalReentry}`);
@@ -611,6 +636,9 @@ try {
   };
   if (domModelOnly) {
     checkDomModel();
+  } else if (fontsOnly) {
+    if (checks.fonts !== 25) throw new Error(`Font set shared assertions did not run: ${JSON.stringify(checks)}`);
+    console.log(`BROWSER_API T01 PASS assertions=${checks.fonts} engine=chromium`);
   } else if (resourcesOnly) {
     if (checks.resources !== 29) throw new Error(`Resource shared assertions did not run: ${JSON.stringify(checks)}`);
     console.log(`BROWSER_API H05 PASS assertions=${checks.resources} engine=chromium`);
@@ -684,6 +712,8 @@ try {
   console.log(`BROWSER_API S07 PASS assertions=${checks.svgAnimations} engine=chromium`);
   if (checks.resources !== 29) throw new Error(`Resource shared assertions did not run: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API H05 PASS assertions=${checks.resources} engine=chromium`);
+  if (checks.fonts !== 25) throw new Error(`Font set shared assertions did not run: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API T01 PASS assertions=${checks.fonts} engine=chromium`);
   if(checks.transformValues!==471 || checks.transformContext!==3) throw new Error(`Typed transform shared/context assertions did not run: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API C16 PASS assertions=${checks.transformValues} engine=chromium`);
   console.log(`BROWSER_API C16 CONTEXT PASS assertions=${checks.transformContext} engine=chromium`);
@@ -773,6 +803,7 @@ try {
   console.log('BROWSER_API D09 TAB PASS engine=chromium');
   }
   }
+  if (!fontsOnly) {
   await runInputState();
   await runViewport();
   await runForms();
@@ -800,6 +831,7 @@ try {
   await runFrames();
   await runIdle();
   await runCaret();
+  }
   }
 } finally {
   if (browser) await browser.close();
