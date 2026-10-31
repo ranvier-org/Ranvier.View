@@ -1297,6 +1297,15 @@ let runCanvas () =
     let count = CanvasChecks.run (fun () -> BrowserCanvas.forDocument document) document
     {| canvas = count |}
 
+/// <summary>Runs the shared canvas pixel assertions.</summary>
+let runCanvasPixels () =
+    let document = document ()
+
+    let count =
+        CanvasPixelChecks.run (fun () -> BrowserCanvas.forDocument document) (fun () -> BrowserCanvasPixels.forDocument document) document errorName
+
+    {| canvasPixels = count |}
+
 /// <summary>Runs the shared U+0000 round-trip assertions (WebCore #142).</summary>
 let runStrings () =
     let document = document ()

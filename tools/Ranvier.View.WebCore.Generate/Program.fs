@@ -129,6 +129,8 @@ let private kinds =
             "CanvasRenderingContext2D", "Kind.CanvasRenderingContext2D"
             "CanvasGradient", "Kind.CanvasGradient"
             "CanvasPattern", "Kind.CanvasPattern"
+            "ImageData", "Kind.ImageData"
+            "ImageBitmap", "Kind.ImageBitmap"
         ]
 
 [<EntryPoint>]
