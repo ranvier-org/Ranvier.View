@@ -71,6 +71,7 @@
     <Compile Include="AriaChecks.fs" />
     <Compile Include="SubmissionChecks.fs" />
     <Compile Include="TextSegmentationChecks.fs" />
+    <Compile Include="EventDetailChecks.fs" />
     <Compile Include="DialogChecks.fs" />
     <Compile Include="BinaryChecks.fs" />
     <Compile Include="CryptoChecks.fs" />

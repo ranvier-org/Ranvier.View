@@ -31,6 +31,7 @@ const binaryOnly = process.argv.includes('--binary-only');
 const cryptoOnly = process.argv.includes('--crypto-only');
 const screenOnly = process.argv.includes('--screen-only');
 const submissionsOnly = process.argv.includes('--submissions-only');
+const eventDetailsOnly = process.argv.includes('--event-details-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
@@ -275,6 +276,20 @@ const runSubmissions = async () => {
   }
 };
 const SUBMISSION_ASSERTIONS = 26;
+// I08 runs the event detail fixture in its own page.
+const runEventDetails = async () => {
+  const detailsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await detailsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runEventDetails(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.eventDetails !== EVENT_DETAIL_ASSERTIONS) throw new Error(`Event detail assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API I08 PASS assertions=${result.eventDetails} engine=chromium`);
+  } finally {
+    await detailsBrowser.close();
+  }
+};
+const EVENT_DETAIL_ASSERTIONS = 91;
 // A12 runs the frame fixture on the manual scheduler and on the Window's frames, timers and microtasks.
 const runFrames = async () => {
   const framesBrowser = await chromium.launch({ headless: true });
@@ -335,6 +350,7 @@ try {
   else if (cryptoOnly) { await runCrypto(); process.exitCode = 0; }
   else if (screenOnly) { await runScreen(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
+  else if (eventDetailsOnly) { await runEventDetails(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
   else if (idleOnly) { await runIdle(); process.exitCode = 0; }
   else if (caretOnly) { await runCaret(); process.exitCode = 0; }
@@ -571,6 +587,7 @@ try {
   await runSubmissions();
   await runCrypto();
   await runScreen();
+  await runEventDetails();
   await runFrames();
   await runIdle();
   await runCaret();

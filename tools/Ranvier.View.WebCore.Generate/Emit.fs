@@ -1165,14 +1165,36 @@ let run (input: Input) (tagMap: (string * string * string) list) : string * Entr
         emitter.Line (2, "let wrapped: NativeObject =")
         emitter.Line (3, "match interfaceName with")
 
-        for interfaceName in query.GetProperty("interfaces").EnumerateArray() do
-            let interfaceName = interfaceName.GetString ()
-            let publicName = Metadata.publicInterfaceName input.Model interfaceName
+        let interfaces =
+            [
+                for item in query.GetProperty("interfaces").EnumerateArray() -> item.GetString ()
+            ]
+
+        // A query with "names" reports exposed names, such as AnimationEvent for CSSAnimationEvent.
+        let reported =
+            match query.TryGetProperty "names" with
+            | true, names -> [ for item in names.EnumerateArray () -> item.GetString () ]
+            | _ -> interfaces
+
+        // Extras are unscoped interfaces the query names; they take the root's wrapper.
+        let extras =
+            match query.TryGetProperty "extras" with
+            | true, items -> set [ for item in items.EnumerateArray () -> item.GetString () ]
+            | _ -> Set.empty
+
+        let rootName = Metadata.publicInterfaceName input.Model root
+
+        for interfaceName, reportedName in List.zip interfaces reported do
+            let publicName =
+                if extras.Contains interfaceName then
+                    rootName
+                else
+                    Metadata.publicInterfaceName input.Model interfaceName
 
             if not (classes.ContainsKey publicName) then
                 invalidOp $"Native runtime interface {interfaceName} has no managed wrapper"
 
-            emitter.Line (3, $"| \"{interfaceName}\" -> {publicName}Object(session, handle)")
+            emitter.Line (3, $"| \"{reportedName}\" -> {publicName}Object(session, handle)")
 
         emitter.Line (3, $"| name -> invalidOp (\"Unknown {root} runtime interface: \" + name)")
 
