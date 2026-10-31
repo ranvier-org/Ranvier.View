@@ -2162,6 +2162,9 @@ let private runAnimations () =
 [<Literal>]
 let private TimelineChecksCount = 24
 
+[<Literal>]
+let private ScrollTimelineChecksCount = 38
+
 let private runTimelines () =
     let host = WebCoreHost.Create (320, 240)
     let mutable lifetime = 0
@@ -2172,12 +2175,31 @@ let private runTimelines () =
         if not condition then
             failwith message
 
-    let shared =
+    let settle () =
+        async {
+            host.Frame ()
+            host.Frame ()
+        }
+
+    let shared, scroll =
         try
-            TimelineChecks.runDocumentTimelines host.Document (fun () -> Ranvier.View.WebCore.Animations.forHost host)
+            let shared = TimelineChecks.runDocumentTimelines host.Document (fun () -> Ranvier.View.WebCore.Animations.forHost host)
+
+            let scroll =
+                TimelineChecks.runScrollTimelines
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.Timelines.forHost host)
+                    (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost host)
+                    settle
+                |> fun work -> (Async.StartImmediateAsTask work).GetAwaiter().GetResult()
+
+            shared, scroll
         with error ->
             (host :> System.IDisposable).Dispose ()
             raise error
+
+    let timelines = Ranvier.View.WebCore.Timelines.forHost host
+    let heldScroll = timelines.CreateScrollTimeline host.Document.body
 
     let service = Ranvier.View.WebCore.Animations.forHost host
     let held = service.CreateDocumentTimeline 100.0
@@ -2193,14 +2215,29 @@ let private runTimelines () =
 
     expect (afterDisposal held) "A held DocumentTimeline reads no current time after host disposal"
     expect (afterDisposal document) "document.timeline reads no current time after host disposal"
+    expect (afterDisposal heldScroll) "A held ScrollTimeline reads no current time after host disposal"
+
+    let rejected =
+        try
+            timelines.CreateScrollTimeline () |> ignore
+            false
+        with _ ->
+            true
+
+    expect rejected "A held timeline service rejects construction after host disposal"
     service.Dispose ()
+    timelines.Dispose ()
 
     if TimelineChecksCount <> 0 && shared <> TimelineChecksCount then
         failwith $"Animation timeline shared assertions did not run: {shared}"
 
     System.Console.WriteLine $"NATIVE_API A06 PASS assertions={shared}"
+    if ScrollTimelineChecksCount <> 0 && scroll <> ScrollTimelineChecksCount then
+        failwith $"Scroll timeline shared assertions did not run: {scroll}"
+
     System.Console.WriteLine $"NATIVE_API A06 LIFETIME PASS assertions={lifetime}"
-    shared
+    System.Console.WriteLine $"NATIVE_API A07 PASS assertions={scroll}"
+    shared + scroll
 
 /// <summary>Runs the shared cascade fixture with native thread, snapshot release and teardown checks.</summary>
 [<Literal>]

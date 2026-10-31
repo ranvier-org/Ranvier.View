@@ -361,12 +361,15 @@ const runTimelines = async () => {
     const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runTimelines(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (typeof result.timelines !== 'number') throw new Error(`Animation timeline fixture failed: ${JSON.stringify(result)}`);
     if (TIMELINE_ASSERTIONS !== 0 && result.timelines !== TIMELINE_ASSERTIONS) throw new Error(`Animation timeline assertions did not run: ${JSON.stringify(result)}`);
+    if (SCROLL_TIMELINE_ASSERTIONS !== 0 && result.scrollTimelines !== SCROLL_TIMELINE_ASSERTIONS) throw new Error(`Scroll timeline assertions did not run: ${JSON.stringify(result)}`);
     console.log(`BROWSER_API A06 PASS assertions=${result.timelines} engine=chromium`);
+    console.log(`BROWSER_API A07 PASS assertions=${result.scrollTimelines} engine=chromium`);
   } finally {
     await timelinesBrowser.close();
   }
 };
 const TIMELINE_ASSERTIONS = 24;
+const SCROLL_TIMELINE_ASSERTIONS = 38;
 // G14 runs the coordinate fixture in its own page.
 const runCoordinates = async () => {
   const coordinatesBrowser = await chromium.launch({ headless: true });
