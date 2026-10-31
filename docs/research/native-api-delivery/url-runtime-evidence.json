@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "group": "H13 URL parsing and patterns",
+  "status": "green (private integration; not accepted)",
+  "route": "Engine (Native33 / ABI41)",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/115",
+  "coreSourceCommit": "d246756ed40ac83f06bf3371bb1010620cd861fa",
+  "viewsSourceCommit": "0f3a2a70ac1614b15da44a64259744c1f51e3a56",
+  "stackedOn": {
+    "core": "G09 dcaf0ad8 (DOM alpha.35; includes H11 b1048a5f, D16 106ee5b7, H01 60b0fa69)",
+    "views": "G09 5fe038b (Views 0.1.25; includes H11 6b48817 and a367441, D16 9d7710b, H01 bf1f59d)"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-url",
+    "head": "3c7e8d4252e92afed871b562a497e1de155fbd74",
+    "abi": 41,
+    "runtime": "native-url artifacts/native33-frozen-2",
+    "evidence": "Ranvier.WebCore docs/url-evidence/final-evidence.json"
+  },
+  "versions": {
+    "native": "0.1.0-preview.33",
+    "dom": "0.1.0-alpha.36",
+    "views": "0.1.26",
+    "webcoreBackend": "0.1.0-alpha.26"
+  },
+  "allocationReceipt": "Ranvier docs/research/native-api-delivery/h13-managed36-allocation.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.36.nupkg": "afff0c962e041651f49654ff69d0a5ebadd56f43dd41a94e8b645f15b10f0261",
+    "Ranvier.Dom.0.1.0-alpha.36.nupkg": "e9bb999ee7c69cf48c2d2c9ee574f5c9fd8f24239dbdbc905ec75ae6b97008a7",
+    "Ranvier.WebCore.0.1.0-preview.33.nupkg": "5cb30be29dcc18404f51adc7ec9dc10d53991a3487a7d070e1f311b27328946c"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "de84b58c538ed8b26e09f6d052739318015a77cf13012469f5ec23d934beca27",
+    "WebCore.dll": "95d2a0ee2e5944c55639bda96d9b9457bfd2603d57df6b8ffaf1a163f2953a24",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\h13-artifacts\\managed2\\aot\\Native.exe",
+    "sha256": "08ebe2745d11a44ceffb21468aa454ebdeff2ea802429d554961b0c610465258",
+    "clrDirectory": [
+      0,
+      0
+    ]
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "7819b607a297add05d85e42b0c9229ca72c3b9c9178004e27840fa3def62fe6c",
+      "passLines": 93,
+      "failLines": [],
+      "h13": [
+        "NATIVE_API H13 LIFETIME PASS assertions=9",
+        "NATIVE_API H13 PASS assertions=189"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "eb432734adad2160181acd55f055535c38f5c8ec1f346b18297741ac09befd6a",
+      "passLines": 93,
+      "failLines": [],
+      "h13": [
+        "NATIVE_API H13 LIFETIME PASS assertions=9",
+        "NATIVE_API H13 PASS assertions=189"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "0d220cb0f6042f6b1adedf6916d33d19208212f26b5a39d77ecfa42eab095fc9",
+      "passLines": 71,
+      "failLines": [],
+      "h13": [
+        "BROWSER_API H13 PASS assertions=189 engine=chromium"
+      ]
+    },
+    "g09BaselinePassLines": {
+      "jitAot": 91,
+      "chromium": 70
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "nativeProbeRepeats": {
+    "aotUrlsOnly": "30 NATIVE_API H13 PASS assertions=189",
+    "nativeUrlValues": "30/30 url_values 3538 on native33-frozen-2 (Ranvier.WebCore docs/url-evidence/url-values-repeat30.txt)"
+  },
+  "wrapperRegeneration": {
+    "objectsFs": "240911d085056cd014c15822004b6ba1d0cd0d4881c4bc22fe2ffb520d0b5249",
+    "reportTxt": "999dcf0678606685077736a715f3084c252c1645bc76ad30fee51cfbc4997ce1",
+    "inputs": "restored Ranvier.WebCore preview.33 model + interop and Ranvier.Dom alpha.36 from the private feed"
+  },
+  "fixture": {
+    "shared": "tests/NativeApi.Conformance/UrlChecks.fs",
+    "sharedChecks": 189,
+    "nativeLifetimeChecks": 9
+  },
+  "nulRed": {
+    "log": "C:\\wk\\h13-artifacts\\managed\\red-nul-urls.log",
+    "case": "getAll keeps U+0000 failed on the previous head (strings cut at U+0000)"
+  },
+  "qualifications": [
+    "Four URL parse cases and two setters follow the WHATWG URL standard on WebKit and differ on Chromium 156 (space in a host, \"|\" in a path, file:c: drive case, file://localhost, the mailto protocol setter, search = \"?\").",
+    "URLPattern groups come in engine (pattern) order on WebKit, and in JavaScript object order (integer-like keys first) on Chromium, for /:name/(\\d+).",
+    "Fable erases Some null to None, so a null base parses without a base in the browser and raises ArgumentNullException natively."
+  ]
+}
