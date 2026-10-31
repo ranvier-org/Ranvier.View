@@ -21,6 +21,7 @@ const svgPaintOnly = process.argv.includes('--svg-paint-only');
 const inputStateOnly = process.argv.includes('--input-state-only');
 const framesOnly = process.argv.includes('--frames-only');
 const idleOnly = process.argv.includes('--idle-only');
+const caretOnly = process.argv.includes('--caret-only');
 const viewportOnly = process.argv.includes('--viewport-only');
 const formsOnly = process.argv.includes('--forms-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
@@ -141,6 +142,26 @@ const runFrames = async () => {
     await framesBrowser.close();
   }
 };
+// G09 hit-tests the caret fixture under device-metrics emulation in new headless Chromium.
+const runCaret = async () => {
+  const caretBrowser = await chromium.launch({ headless: true, channel: 'chromium' });
+  try {
+    const context = await caretBrowser.newContext({ viewport: { width: 320, height: 240 } });
+    const page = await context.newPage();
+    const cdp = await context.newCDPSession(page);
+    await page.exposeFunction('__nativeApiViewport', async (width, height, deviceScaleFactor) => {
+      await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor, mobile: false });
+    });
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runCaret(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.caret !== CARET_ASSERTIONS) throw new Error(`Caret assertions did not run: ${JSON.stringify(result)}`);
+    if (!caretBrowser.version().startsWith(result.browser.split('.')[0] + '.')) throw new Error(`Oracle ${result.browser}, running ${caretBrowser.version()}`);
+    console.log(`BROWSER_API G09 PASS assertions=${result.caret} engine=chromium headless=new version=${caretBrowser.version()}`);
+  } finally {
+    await caretBrowser.close();
+  }
+};
+const CARET_ASSERTIONS = 0;
 // H01 runs the idle fixture on the manual scheduler and on the Window's idle callbacks and frames.
 const runIdle = async () => {
   const idleBrowser = await chromium.launch({ headless: true });
@@ -162,6 +183,7 @@ try {
   else if (formsOnly) { await runForms(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
   else if (idleOnly) { await runIdle(); process.exitCode = 0; }
+  else if (caretOnly) { await runCaret(); process.exitCode = 0; }
   else {
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
@@ -389,6 +411,7 @@ try {
   await runForms();
   await runFrames();
   await runIdle();
+  await runCaret();
   }
 } finally {
   if (browser) await browser.close();

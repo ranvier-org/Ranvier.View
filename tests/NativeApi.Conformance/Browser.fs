@@ -980,6 +980,40 @@ let runViewportScroll () =
     }
     |> Async.StartAsPromise
 
+/// <summary>Runs the shared caret hit-testing assertions under device-metrics emulation.</summary>
+let runCaret () =
+    async {
+        let document = document ()
+
+        let settle () =
+            async {
+                for _ in 1..3 do
+                    do! viewportFrames () |> Async.AwaitPromise
+            }
+
+        let! font = ahem () |> Async.AwaitPromise
+
+        let driver: CaretChecks.Driver =
+            {
+                SetScale =
+                    fun scale ->
+                        async {
+                            do!
+                                emulateViewport 320 240 scale
+                                |> Async.AwaitPromise
+
+                            do! settle ()
+                        }
+                Settle = settle
+                Font = font
+                Qualified = Map.empty
+            }
+
+        let! count = CaretChecks.run document (BrowserViewportScroll.forDocument document) errorName driver
+        return {| caret = count; browser = CaretOracle.browser |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared form collection, FormData and form event assertions.</summary>
 let runForms () =
     let document = document ()
