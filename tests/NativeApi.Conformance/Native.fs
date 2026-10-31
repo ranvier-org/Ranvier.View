@@ -691,6 +691,145 @@ let private runForms () =
     System.Console.WriteLine $"NATIVE_API D13 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared dialog, popover and command invoker fixture with native thread and teardown checks.</summary>
+[<Literal>]
+let private DialogChecksCount = 143
+
+let private runDialogs () =
+    let host = WebCoreHost.Create (800, 600)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let settle () =
+        async {
+            for _ in 1..3 do
+                host.Frame ()
+                host.Cycle 16 |> ignore
+
+            host.Frame ()
+        }
+
+    let driver: DialogChecks.Driver =
+        {
+            Settle = settle
+            Press =
+                fun key ->
+                    async {
+                        host.Key (0, key, key, null, 0, false) |> ignore
+                        host.Key (1, key, key, null, 0, false) |> ignore
+                    }
+            Click =
+                fun x y ->
+                    async {
+                        host.Frame ()
+                        host.Click (x, y) |> ignore
+                    }
+            Backend = DialogChecks.Native
+        }
+
+    let mutable held = None
+
+    let shared =
+        try
+            host.SetFocused true
+
+            let count =
+                DialogChecks.run host.Document (fun () -> Ranvier.View.WebCore.ToggleEvents.forHost host) driver errorName
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 60000L do
+                host.Cycle ()
+
+            let count = count.GetAwaiter().GetResult()
+            use service = Ranvier.View.WebCore.ToggleEvents.forHost host
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.CreateToggleEvent ("toggle", Ranvier.Dom.EventOptions.Default, Ranvier.Dom.ToggleFields.Default)
+                            |> ignore
+
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "ToggleEvent construction rejects another thread"
+            let document = host.Document
+            let dialog = unbox<Ranvier.Dom.HTMLDialogElement>(document.createElement "dialog")
+            let popover = unbox<Ranvier.Dom.HTMLElement>(document.createElement "div")
+            popover.popover <- "auto"
+            document.body.appendChild dialog |> ignore
+            document.body.appendChild popover |> ignore
+            dialog.showModal ()
+            popover.showPopover ()
+
+            expect
+                (dialog.matches ":modal"
+                 && popover.matches ":popover-open")
+                "An open modal dialog and popover"
+
+            let toggle =
+                service.CreateToggleEvent (
+                    "toggle",
+                    Ranvier.Dom.EventOptions.Default,
+                    {
+                        OldState = "closed"
+                        NewState = "open"
+                        Source = null
+                    }
+                )
+
+            System.GC.Collect ()
+            System.GC.WaitForPendingFinalizers ()
+            host.Cycle ()
+            RanvierWebCoreAbi.Native.rv_collect_garbage ()
+            expect (toggle.newState = "open") "A ToggleEvent survives collection"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            expect (popover.matches ":popover-open") "A popover of a replaced document stays open in it"
+            expect (toggle.oldState = "closed") "A ToggleEvent survives document replacement"
+            held <- Some (dialog, toggle)
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Dialog fixture leaves no live native objects"
+    let dialog, toggle = held.Value
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    expect (rejected (fun () -> dialog.close ())) "A held open modal dialog rejects use after host disposal"
+    expect (rejected (fun () -> toggle.newState |> ignore)) "A held ToggleEvent rejects use after host disposal"
+
+    if shared <> DialogChecksCount then
+        failwith $"Dialog shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API D16 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API D16 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared custom event fixture with native standalone-target lifetime checks.</summary>
 let private runCustomEvents () =
     let host = WebCoreHost.Create (320, 240)
@@ -1092,6 +1231,7 @@ let private runAll () =
     runViewport () |> ignore
     runViewportScroll () |> ignore
     runForms () |> ignore
+    runDialogs () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
@@ -2073,6 +2213,9 @@ let main args =
         0
     elif Array.contains "--forms-only" args then
         runForms () |> ignore
+        0
+    elif Array.contains "--dialogs-only" args then
+        runDialogs () |> ignore
         0
     elif Array.contains "--frames-only" args then
         runFrames () |> ignore
