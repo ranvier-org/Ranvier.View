@@ -1458,7 +1458,7 @@ let private runSubmissions () =
 
 /// <summary>Runs the shared text segmentation fixture with native thread and teardown checks.</summary>
 [<Literal>]
-let private SegmentChecksCount = 219
+let private SegmentChecksCount = 220
 
 let private runSegments () =
     let host = WebCoreHost.Create (320, 240)

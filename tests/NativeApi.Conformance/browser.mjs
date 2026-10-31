@@ -208,7 +208,7 @@ const runSegments = async () => {
     await segmentsBrowser.close();
   }
 };
-const SEGMENT_ASSERTIONS = 219;
+const SEGMENT_ASSERTIONS = 220;
 // H11 runs the binary value fixture in its own page.
 const runBinary = async () => {
   const binaryBrowser = await chromium.launch({ headless: true });
