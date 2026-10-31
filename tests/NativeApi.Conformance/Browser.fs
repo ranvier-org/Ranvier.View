@@ -1386,6 +1386,18 @@ let runDomModel () =
     async { return domModel (document ()) }
     |> Async.StartAsPromise
 
+/// <summary>Runs the shared notification fixture; the page holds the notifications permission.</summary>
+let private notifications (document: Document) =
+    async {
+        use service = BrowserNotifications.forDocument document
+        use badges = BrowserNotifications.badgeForDocument document
+        use cancellation = BrowserCancellation.forDocument document
+
+        return!
+            Notifications.run service badges cancellation
+            |> Async.AwaitTask
+    }
+
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {
@@ -1410,6 +1422,7 @@ let run () =
             |> Async.AwaitTask
 
         let! cancellationInterop = cancellationInterop document
+        let! notifications = notifications document
 
         let domModelResult = domModel document
 
@@ -1590,6 +1603,7 @@ let run () =
                 capabilities = capabilities
                 cancellation = cancellation
                 cancellationInterop = cancellationInterop
+                notifications = notifications
                 customEvents = customEvents
                 traversal = domModelResult.traversal
                 traversalReentry = domModelResult.traversalReentry

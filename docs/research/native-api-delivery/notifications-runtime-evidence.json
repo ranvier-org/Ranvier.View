@@ -1,0 +1,33 @@
+{
+  "group": "B09",
+  "issue": "ranvier-org/Ranvier.WebCore#117",
+  "native": "native-notifications 8117a11",
+  "core": "rv-notify-core 03f4121a",
+  "nativeCandidate": "notification-candidate-2",
+  "jit": {
+    "passLines": 133,
+    "group": [
+      "NATIVE_API B09 PASS assertions=16",
+      "NATIVE_API B09 LIFETIME PASS assertions=17"
+    ]
+  },
+  "aot": {
+    "passLines": 133,
+    "group": [
+      "NATIVE_API B09 PASS assertions=16",
+      "NATIVE_API B09 LIFETIME PASS assertions=17"
+    ]
+  },
+  "chromium": {
+    "passLines": 94,
+    "group": [
+      "BROWSER_API B09 PASS assertions=16 engine=chromium"
+    ]
+  },
+  "baseline": "Views batch-1 f9798630: 119 JIT / 119 AOT / 86 Chromium PASS lines",
+  "repeat30": {
+    "jitFocused": "30/30",
+    "aotFocused": "30/30"
+  },
+  "packages": "private feed: Core packed as 0.1.0-alpha.49, native Ranvier.WebCore as 0.1.0-preview.46 from the candidate (local only)"
+}
