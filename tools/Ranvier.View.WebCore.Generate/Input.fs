@@ -99,8 +99,17 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
                 let fieldMapping = field.GetProperty "mapping"
                 let ctype = Metadata.text "ctype" field
 
+                let nullableField = fieldMapping.GetProperty("nullable").GetBoolean ()
+
                 let expression =
-                    if List.contains (Metadata.text "kind" fieldMapping) [ "node"; "event"; "object" ] then
+                    if ctype.EndsWith "* const*" then
+                        // An optional nullable handle: NULL is absent, a pinned NULL handle is null.
+                        match optionOf fieldType with
+                        | Some inner ->
+                            let encoded = build model fieldMapping inner "item"
+                            $"(match {source} with None -> 0n | Some item -> scope.Pin([| (if isNull (box item) then 0n else {encoded}) |]))"
+                        | None -> raise (NotSupportedException $"Optional handle field {t.Name}.{fieldName}")
+                    elif List.contains (Metadata.text "kind" fieldMapping) [ "node"; "event"; "object" ] then
                         match optionOf fieldType with
                         | Some inner ->
                             let encoded = build model fieldMapping inner "item"
@@ -109,6 +118,8 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
                     elif ctype = "RvDomUtf8StringInput" then
                         match optionOf fieldType with
                         | Some _ -> $"scope.TextInput({source})"
+                        // A nullable string field: a null string is the IDL null, which is absent.
+                        | None when nullableField -> $"scope.TextInput(Option.ofObj ({source}))"
                         | None -> $"scope.TextInput(Some ({source}))"
                     elif ctype.EndsWith "*" && ctype <> "const char*" then
                         match optionOf fieldType with
@@ -136,6 +147,13 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
         let native = "NativeDom." + Metadata.text "ctype" mapping
         let element = (Metadata.items "subtypes" mapping)[0]
         let converted = build model element (t.GetElementType ()) "item"
+
+        // A sequence of dictionaries holds a pointer to each dictionary.
+        let converted =
+            if Metadata.text "kind" element = "dict" then
+                $"scope.Pin([| {converted} |])"
+            else
+                converted
 
         let present =
             $"(let values = ({value}) |> Array.map (fun item -> {converted}) in let mutable result = Unchecked.defaultof<{native}> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)"

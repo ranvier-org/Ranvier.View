@@ -807,12 +807,61 @@ let runFonts () =
         let! count =
             Fonts.run document server (fun () -> BrowserFonts.forDocument document) signals wait
 
-        return {| fonts = count |}
+        let! ahem =
+            fixtureBytes "/fixtures/Ahem.ttf"
+            |> Async.AwaitPromise
+
+        let! construction =
+            FontConstruction.run document server (fun () -> BrowserFonts.forDocument document) ahem wait
+
+        return
+            {|
+                fonts = count
+                fontConstruction = construction
+            |}
     }
     |> Async.StartAsPromise
 
 [<Emit("globalThis.__nativeApiSetActive($0)")>]
 let private setActive (active: bool) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiTouch($0)")>]
+let private touchFrame (contacts: PointerInputChecks.Contact array) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiPen($0)")>]
+let private penSample (pen: PointerInputChecks.Pen) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiClickAt($0, $1)")>]
+let private clickAt (x: int) (y: int) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiMoveBy($0, $1, $2, $3)")>]
+let private moveBy (x: int) (y: int) (dx: int) (dy: int) : JS.Promise<unit> = jsNative
+
+[<Emit("new Promise(resolve => setTimeout(resolve, 150))")>]
+let private settleTasks () : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared pointer-input assertions with CDP touch, pen and mouse input.</summary>
+/// <remarks>Headless Chromium grants a pointer-lock request without asking, so granting is a no-op.</remarks>
+let runPointerInput () =
+    async {
+        let document = document ()
+
+        let driver: PointerInputChecks.Driver =
+            {
+                Touch = fun contacts -> touchFrame contacts |> Async.AwaitPromise
+                Pen = fun pen -> penSample pen |> Async.AwaitPromise
+                Click = fun x y -> clickAt x y |> Async.AwaitPromise
+                MoveBy = fun x y dx dy -> moveBy x y dx dy |> Async.AwaitPromise
+                GrantLock = fun () -> settleTasks () |> Async.AwaitPromise
+                Settle = fun () -> settleTasks () |> Async.AwaitPromise
+            }
+
+        let! count =
+            PointerInputChecks.run document (BrowserPointerInput.provider document) (BrowserPointerInput.capabilities ()) CapabilityState.Yes driver
+
+        return {| pointerInput = count |}
+    }
+    |> Async.StartAsPromise
 
 [<Emit("globalThis.__nativeApiMouse($0, $1, $2)")>]
 let private mouse (action: string) (x: int) (y: int) : JS.Promise<unit> = jsNative
@@ -1225,6 +1274,48 @@ let runBlobUrls () =
     }
     |> Async.StartAsPromise
 
+/// <summary>Runs the shared media capability assertions against navigator.mediaCapabilities.</summary>
+let runMediaCapabilities () =
+    async {
+        let document = document ()
+
+        let driver: MediaCapabilityChecks.Driver =
+            {
+                Settle = fun () -> Async.Sleep 1
+                Rejected = MediaCapabilityChecks.chromiumRejected
+                Answer = None
+            }
+
+        let! count =
+            MediaCapabilityChecks.run (fun () -> BrowserMediaCapabilities.forDocument document) driver
+
+        return {| mediaCapabilities = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared snapshot assertions: an ordinary browser context has no DOM capture.</summary>
+let runSnapshots () =
+    async {
+        let document = document ()
+        let red = document.createElement "div"
+        red.setAttribute ("style", "position:absolute;left:5px;top:4px;width:20px;height:10px;background:rgb(255,0,0)")
+        document.body.appendChild red |> ignore
+
+        let driver: SnapshotChecks.Driver =
+            {
+                Settle = fun () -> Async.Sleep 1
+                Red = red
+                DeviceScale = 1.0
+            }
+
+        let! count =
+            SnapshotChecks.run (fun () -> BrowserSnapshots.forDocument document) driver
+
+        red.remove ()
+        return {| snapshots = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared form submission assertions.</summary>
 let runSubmissions () =
     async {
@@ -1465,6 +1556,24 @@ let runDiagnostics () =
 
 [<Emit("devicePixelRatio")>]
 let private devicePixelRatio () : float = jsNative
+
+/// <summary>Runs the shared Web Animations assertions on the browser's constructors.</summary>
+let runAnimations () =
+    let document = document ()
+
+    let name (error: exn) =
+        match error with
+        | AnimationException (name, _) -> name
+        | error -> errorName error
+
+    let count =
+        AnimationChecks.run
+            document
+            (fun () -> BrowserAnimations.forDocument document)
+            (fun () -> Ranvier.Dom.ComputedStyles.forDocument document)
+            name
+
+    {| animations = count |}
 
 /// <summary>Runs the shared coordinate assertions, with an iframe's element as the foreign one.</summary>
 let runCoordinates () =

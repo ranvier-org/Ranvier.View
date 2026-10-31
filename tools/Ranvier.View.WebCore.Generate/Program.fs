@@ -132,6 +132,13 @@ let private kinds =
             "DataTransfer", "Kind.DataTransfer"
             "DataTransferItemList", "Kind.DataTransferItemList"
             "DataTransferItem", "Kind.DataTransferItem"
+            "Touch", "Kind.Touch"
+            "TouchList", "Kind.TouchList"
+            "WebAnimation", "Kind.WebAnimation"
+            "AnimationEffect", "Kind.AnimationEffect"
+            "AnimationTimeline", "Kind.AnimationTimeline"
+            "FontFace", "Kind.FontFace"
+            "FontFaceSet", "Kind.FontFaceSet"
         ]
 
 [<EntryPoint>]

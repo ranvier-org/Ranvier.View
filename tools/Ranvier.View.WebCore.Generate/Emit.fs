@@ -364,6 +364,8 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                     "DataTransfer"
                     "DataTransferItemList"
                     "DataTransferItem"
+                    "Touch"
+                    "TouchList"
                 ]
         then
             let kind = ctx.Input.Kinds[publicRoot]
@@ -445,7 +447,9 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
                     $"let valueOwner = {owner} in "
 
             let expression =
-                $"({capture}let handle = {value} in NativeDom.rv_dom_{root}_retain handle |> ignore; {wrapped})"
+                // An event-target object (Animation, FileReader) retains through the hand-written event target ABI.
+                let retain = if root = "event_target" then "Native.rv_event_target_retain" else $"NativeDom.rv_dom_{root}_retain"
+                $"({capture}let handle = {value} in {retain} handle |> ignore; {wrapped})"
 
             if mapping.GetProperty("nullable").GetBoolean() then
                 $"(if {value} = 0n then Unchecked.defaultof<{name plain}> else {expression})"

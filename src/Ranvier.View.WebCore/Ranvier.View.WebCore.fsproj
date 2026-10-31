@@ -13,7 +13,7 @@
         <PackageTags>reactive;signals;view;dom;webcore;native;fsharp</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>Experimental. The API may change.</PackageReleaseNotes>
-        <Version>0.1.0-alpha.41</Version>
+        <Version>0.1.0-alpha.42</Version>
         <IsAotCompatible>true</IsAotCompatible>
         <IsPackable>true</IsPackable>
         <!-- Generated wrapper implementation members inherit their contracts' documentation. -->
@@ -22,7 +22,7 @@
 
     <!-- RanvierWebCoreNativeDir holds runtimes/<rid>/native for local native runtime checks. -->
     <PropertyGroup>
-        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.0-preview.48</RanvierWebCoreNativeVersion>
+        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.0-preview.49</RanvierWebCoreNativeVersion>
         <UseLocalRanvierWebCore Condition="'$(UseLocalRanvierWebCore)' == ''">false</UseLocalRanvierWebCore>
         <RanvierWebCoreRoot Condition="'$(RanvierWebCoreRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../Ranvier.WebCore'))</RanvierWebCoreRoot>
         <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</RanvierWebCoreNativeRid>
@@ -74,6 +74,7 @@
         <Compile Include="Fonts.fs" />
         <Compile Include="EventConstruction.fs" />
         <Compile Include="InputState.fs" />
+        <Compile Include="PointerInput.fs" />
         <Compile Include="FormData.fs" />
         <Compile Include="FormSubmissions.fs" />
         <Compile Include="ToggleEvents.fs" />
@@ -81,6 +82,8 @@
         <Compile Include="BinaryValues.fs" />
         <Compile Include="DataTransfers.fs" />
         <Compile Include="BlobUrls.fs" />
+        <Compile Include="MediaCapabilities.fs" />
+        <Compile Include="Snapshots.fs" />
         <Compile Include="Urls.fs" />
         <Compile Include="TextSegmentation.fs" />
         <Compile Include="Crypto.fs" />
@@ -99,6 +102,7 @@
         <Compile Include="ValueFactories.fs" />
         <Compile Include="WakeLocks.fs" />
         <Compile Include="Notifications.fs" />
+        <Compile Include="Animations.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />
