@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "group": "C13",
+  "status": "additive-authoring-accessor-repair-verified",
+  "trigger": "Hosted Views15 sugar gate found Html.fs differed from the existing pinned generator output after released Core DOM alpha.15 added the typed interface member.",
+  "change": "Regenerate only Html.fs: Properties.ElementCSSInlineStyle.attributeStyleMap becomes cross-target and reads the typed interface member instead of the FABLE-only expando.",
+  "releasedProducers": {
+    "core": "a412e67be249f671a9e7fdf2298da135fb58aad4",
+    "native": "93ab9a45e728f8948b4d2eac8f8bdc480b7379a3",
+    "nativeVersion": "0.1.0-preview.15",
+    "abi": 23
+  },
+  "publicApi": {
+    "nativeMembersBefore": 1,
+    "nativeMembersAfter": 2,
+    "added": "attributeStyleMap(node: #Ranvier.Dom.ElementCSSInlineStyle) -> Ranvier.Dom.StylePropertyMap",
+    "existingStyleMemberUnchanged": true,
+    "impactQualification": "Owning-module impact was requested on the clean configured project. Its zero-site result is not interpreted as no usages; the old function was FABLE-only and absent from the native API snapshot."
+  },
+  "checks": {
+    "freshConfiguredFcsBeforeAfter": "clean 0 warnings 0 errors",
+    "nativeAccessorAssertions": 6,
+    "nativePayloadsVerifiedBeforeExecution": 24,
+    "nativeEffects": "Read generated typed accessor, set width23px/41px, observe inline values and actual layout widths, dispose host with zero retained objects.",
+    "focusedSugarGroup": "PASS existing complete sugar group; generator parity restored.",
+    "otherFourGeneratedOutputsUnmodified": true
+  },
+  "preservedGeneratedFiles": [
+    {
+      "path": "src/Ranvier.View.Dom/Generated/Html.coverage.json",
+      "sha256": "441273bcec288897183ec801f145d9b8497a95af2bd754a9c00632359184aebc"
+    },
+    {
+      "path": "src/Ranvier.View/Generated/HtmlTemplate.fs",
+      "sha256": "6584e5d314d0e8c30f59ac98a28f093b4d029530579bd21fe69cc2a2ab946beb"
+    },
+    {
+      "path": "src/Ranvier.View/Generated/HtmlTemplateSugar.fs",
+      "sha256": "81071e49b003df9e3d8f4030c970a2a7cb8a9388bf7dc91386b05cad3b0edbe5"
+    },
+    {
+      "path": "experiments/Ranvier.View.Twin/Generated/TagTypes.fs",
+      "sha256": "be707cad3c0bbc804843c8e935e731142c6ea48f3bcec8a50e566fac95d9d363"
+    }
+  ],
+  "source": {
+    "path": "src/Ranvier.View.Dom/Generated/Html.fs",
+    "sha256": "d1821cdc932dbfbb5dd91f4e2fe002f8d6db1d922b8716503136145e846f3f1c"
+  },
+  "receipts": [
+    {
+      "path": "C:\\wk\\views15-before-configured-fcs_public_api-response.json",
+      "sha256": "4d4ff09cc38cd0516d5e849b3df7aabcbdc050bc772d3a01215516a0f61806cd"
+    },
+    {
+      "path": "C:\\wk\\views15-after-configured-fcs_public_api-response.json",
+      "sha256": "35f0ec75820b747f99af2b52f683a23f37981d0b6c527d54532281c8185cac7a"
+    },
+    {
+      "path": "C:\\wk\\views15-before-configured-check-response.json",
+      "sha256": "5c55f21ad54edf7350cd8ed12f8a20a8db129fe8c62274e4d63482ea3c56d2e8"
+    },
+    {
+      "path": "C:\\wk\\views15-after-configured-check-response.json",
+      "sha256": "5c55f21ad54edf7350cd8ed12f8a20a8db129fe8c62274e4d63482ea3c56d2e8"
+    },
+    {
+      "path": "C:\\wk\\views15-authoring-owning-module-impact.json",
+      "sha256": "b5b1d10098063240e2c49bbb9836693475ff96d858e1b897cfcd95727de8db41"
+    },
+    {
+      "path": "C:\\wk\\rv-views15-native-accessor\\Program.fs",
+      "sha256": "afca04a4b00ad5cffbc1128115c5d12a2cd6b2ab1bf7d088de93154af06615c7"
+    },
+    {
+      "path": "C:\\wk\\rv-views15-native-accessor\\build.log",
+      "sha256": "d938edfee0e4385a0c0deb82f174e4d31041fdcdd7fdb3af8f00bb4867373c28"
+    },
+    {
+      "path": "C:\\wk\\rv-views15-native-accessor\\pre-execution.json",
+      "sha256": "ad79a58ba52653d8ace823957797855de539edf50508fe1696c9f403173f67bd"
+    },
+    {
+      "path": "C:\\wk\\rv-views15-native-accessor\\execution.log",
+      "sha256": "4c7b0fc36b54f0552d8b9a5a8f68950f790c668122495618aa7e26db97252672"
+    },
+    {
+      "path": "C:\\wk\\rv-views15-generator-output.diff",
+      "sha256": "7bbc89730383bfde4fde006e685db4384a83a2a976dfbce6e284cf1fdae91651"
+    },
+    {
+      "path": "C:\\wk\\rv-views15-sugar-repair.log",
+      "sha256": "073d7bbc71bb74050c7e41c74d4653f7bfb3d54fdfe4a74f45c5f1ee4a2fe5fe"
+    }
+  ],
+  "qualifications": [
+    "This is a real additive native authoring API surface repair, not a whitespace-only change.",
+    "Original reviewed d2f2 behavior remains except the generated native accessor expansion and the prior ABI23 exception line wrapping.",
+    "The probe consumes fresh official-only Native15/runtime packages with an owned cache and the repaired local Views source. It is not an official Views15 package consumption claim.",
+    "The initial standalone probe build accidentally selected SDK11 outside the repo. It never ran; the copied pinned global.json forced SDK10 before the recorded successful build and execution.",
+    "Final exact-head hosted gates, trusted Views15 publication and official normal/traced consumer verification remain required; C13 stays open."
+  ]
+}
