@@ -174,16 +174,16 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     /// <summary>Creates a page of <c>width</c> by <c>height</c> CSS pixels and installs it on the current thread.</summary>
     /// <exception cref="T:System.InvalidOperationException">
-    /// The native library predates this backend's geometry and matrix transport (ABI 24).
+    /// The native library lacks generated DOM support or the SVG transport required by ABI 28.
     /// </exception>
     static member Create(width: int, height: int) : WebCoreHost =
         if
-            Native.rv_abi_version () < 25
+            Native.rv_abi_version () < 28
             || Native.rv_abi_has "dom-generated" <> 1
         then
             raise (
                 InvalidOperationException
-                    $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks this backend's geometry and typed transform transport (ABI 25)"
+                    $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks this backend's SVG view selection and transport (ABI 28)"
             )
 
         let handle = Native.rv_host_create (width, height)
@@ -203,7 +203,6 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     member private this.Install() =
         document <- unbox<Document>(session.Node (Native.rv_host_document handle))
-        session.Pin (box document :?> NativeObject)
 
         session.AfterListener <-
             Action (fun () ->
@@ -254,8 +253,59 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// <summary>Runs after owned DOM references have been detached at host disposal.</summary>
     member internal _.Disposed = disposedEvent.Publish
 
-    /// <summary>The page's document, an HTML document with an empty head and body at creation.</summary>
+    /// <summary>The current page document; creation starts with an empty HTML head and body.</summary>
     member _.Document = document
+
+    /// <summary>Replaces the page with a scripts-disabled SVG XML document and refreshes <c>Document</c>.</summary>
+    /// <param name="svg">Nonnull SVG XML text parsed as <c>image/svg+xml</c>.</param>
+    /// <remarks>
+    /// Malformed XML completes with the engine's parser-error document. Acquired objects retain their existing host/session lifetime.
+    /// </remarks>
+    /// <exception cref="T:System.ArgumentNullException">The SVG text is null.</exception>
+    /// <exception cref="T:System.InvalidOperationException">The call uses a thread other than the host's creating thread.</exception>
+    /// <exception cref="T:System.ObjectDisposedException">The host is disposed.</exception>
+    /// <exception cref="T:System.NotSupportedException">The native provider does not expose SVG document loading.</exception>
+    member this.LoadSvg(svg: string) : unit =
+        this.EnsureActive ()
+
+        if isNull svg then
+            nullArg (nameof svg)
+
+        if not (WebCoreHost.Has "svg-document") then
+            Interop.unsupported<unit> "svg-document"
+
+        Native.rv_host_load_svg (handle, svg)
+        |> Interop.check "rv_host_load_svg"
+
+        document <- unbox<Document>(session.Node (Native.rv_host_document handle))
+
+    /// <summary>Selects a view in the current main SVG document without changing its URL, history or <c>:target</c>.</summary>
+    /// <param name="fragment">SVG fragment text, not a full URL; an empty value resets the current view.</param>
+    /// <returns>The engine's actual selected-view flag. Reset, missing and malformed selections return false.</returns>
+    /// <remarks>A false result can reset a previous selection; it does not promise preservation of that selection.</remarks>
+    /// <exception cref="T:System.ArgumentNullException">The fragment is null.</exception>
+    /// <exception cref="T:System.InvalidOperationException">The call uses a thread other than the host's creating thread.</exception>
+    /// <exception cref="T:System.ObjectDisposedException">The host is disposed.</exception>
+    /// <exception cref="T:System.NotSupportedException">The native provider lacks SVG view selection, or the current document is not SVG.</exception>
+    member this.SelectSvgView(fragment: string) : bool =
+        this.EnsureActive ()
+
+        if isNull fragment then
+            nullArg (nameof fragment)
+
+        if not (WebCoreHost.Has "svg-view-selection") then
+            Interop.unsupported<unit> "svg-view-selection"
+
+        let mutable selected = 0
+
+        let status = Native.rv_host_select_svg_view (handle, fragment, &selected)
+
+        if status = -9 then
+            raise (NotSupportedException "SVG view selection requires an SVG main document.")
+
+        Interop.check "rv_host_select_svg_view" status
+
+        selected <> 0
 
     /// <summary>Exceptions raised by event listeners, microtasks, timers and animation frames, in raise order.</summary>
     member _.Errors = session.ListenerErrors
