@@ -1,4 +1,4 @@
-251 classes; 2680 members: 2642 mapped to 2562 of 2681 rv_dom_* functions, 38 hand-written, 0 unmapped
+253 classes; 2722 members: 2675 mapped to 2595 of 2716 rv_dom_* functions, 47 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_animation_playback_event_create: AnimationPlaybackEvent.constructor (op)
@@ -63,6 +63,8 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_file_create: File.constructor (op)
   rv_dom_file_reader_create: FileReader.constructor (op)
   rv_dom_focus_event_get_related_target: FocusEvent.relatedTarget (get)
+  rv_dom_font_face_create: FontFace.constructor (op)
+  rv_dom_font_face_set_values: FontFaceSet.entries (op)
   rv_dom_form_data_event_create: FormDataEvent.constructor (op)
   rv_dom_hash_change_event_create: HashChangeEvent.constructor (op)
   rv_dom_highlight_add: Highlight.add (op)
@@ -191,7 +193,7 @@ Members by class (mapped / hand-written / unmapped):
   DOMStringMapObject: 3 / 0 / 0
   DOMTokenListObject: 10 / 0 / 0
   DocumentFragmentObject: 11 / 0 / 0
-  DocumentObject: 72 / 2 / 0
+  DocumentObject: 73 / 2 / 0
   ElementObject: 195 / 0 / 0
   ErrorEventObject: 4 / 0 / 0
   EventObject: 16 / 2 / 0
@@ -200,6 +202,8 @@ Members by class (mapped / hand-written / unmapped):
   FileObject: 2 / 0 / 0
   FileReaderObject: 6 / 9 / 0
   FocusEventObject: 0 / 1 / 0
+  FontFaceObject: 25 / 0 / 0
+  FontFaceSetObject: 7 / 9 / 0
   FormDataEventObject: 1 / 0 / 0
   HTMLAnchorElementObject: 46 / 0 / 0
   HTMLAreaElementObject: 38 / 0 / 0

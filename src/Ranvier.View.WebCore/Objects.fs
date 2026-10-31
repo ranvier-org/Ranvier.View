@@ -207,6 +207,13 @@ module internal Kind =
     [<Literal>]
     let FileReader = 98
 
+    // Placeholder kinds for T02; the integration batch assigns the numbers.
+    [<Literal>]
+    let FontFace = 120
+
+    [<Literal>]
+    let FontFaceSet = 121
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -384,6 +391,8 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.UrlPattern -> NativeDom.rv_dom_url_pattern_release handle
         | Kind.VisualViewport -> Native.rv_event_target_release handle
         | Kind.FileReader -> Native.rv_event_target_release handle
+        | Kind.FontFace -> NativeDom.rv_dom_font_face_release handle
+        | Kind.FontFaceSet -> Native.rv_event_target_release handle
         | Kind.Highlight -> NativeDom.rv_dom_highlight_release handle
         | Kind.HighlightRegistry -> NativeDom.rv_dom_highlight_registry_release handle
         | _ -> ()

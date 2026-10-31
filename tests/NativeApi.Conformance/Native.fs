@@ -2781,15 +2781,25 @@ let private runFonts () =
             use resources = Ranvier.View.WebCore.Resources.forHost host provider
             use signals = Ranvier.View.WebCore.Cancellation.forHost host
 
-            let pending =
-                Fonts.run host.Document server (fun () -> Ranvier.View.WebCore.Fonts.forHost host) signals (fun milliseconds ->
-                    async {
-                        let clock = System.Diagnostics.Stopwatch.StartNew ()
+            let wait milliseconds =
+                async {
+                    let clock = System.Diagnostics.Stopwatch.StartNew ()
 
-                        while clock.ElapsedMilliseconds < int64 milliseconds do
-                            loop.Drain ()
-                            host.Cycle 5
-                    })
+                    while clock.ElapsedMilliseconds < int64 milliseconds do
+                        loop.Drain ()
+                        host.Cycle 5
+                }
+
+            let pending =
+                async {
+                    let! readiness =
+                        Fonts.run host.Document server (fun () -> Ranvier.View.WebCore.Fonts.forHost host) signals wait
+
+                    let! construction =
+                        FontConstruction.run host.Document server (fun () -> Ranvier.View.WebCore.Fonts.forHost host) font wait
+
+                    return readiness, construction
+                }
                 |> Async.StartImmediateAsTask
 
             let timeout = System.Diagnostics.Stopwatch.StartNew ()
@@ -2815,9 +2825,22 @@ let private runFonts () =
             + " managed native objects"
         )
 
-    System.Console.WriteLine ("NATIVE_API T01 PASS assertions=" + string count)
+    let readiness, construction = count
+
+    System.Console.WriteLine (
+        "NATIVE_API T01 PASS assertions="
+        + string readiness
+    )
+
     System.Console.WriteLine "NATIVE_API T01 TEARDOWN PASS"
-    count
+
+    System.Console.WriteLine (
+        "NATIVE_API T02 PASS assertions="
+        + string construction
+    )
+
+    System.Console.WriteLine "NATIVE_API T02 TEARDOWN PASS"
+    readiness + construction
 
 /// <summary>Runs the shared tree traversal and MathML fixtures with native traversal lifetime checks.</summary>
 let private runDomModel () =
