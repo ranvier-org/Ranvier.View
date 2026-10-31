@@ -983,6 +983,9 @@ let runViewportScroll () =
 [<Emit("globalThis.__nativeApiKey($0)")>]
 let private key (name: string) : JS.Promise<unit> = jsNative
 
+[<Emit("navigator.userAgent.includes('Windows')")>]
+let private crlfLineEndings () : bool = jsNative
+
 [<Emit("globalThis.__nativeApiClick($0, $1)")>]
 let private click (x: int) (y: int) : JS.Promise<unit> = jsNative
 
@@ -1003,6 +1006,28 @@ let runDialogs () =
             DialogChecks.run document (fun () -> BrowserToggleEvents.forDocument document) driver errorName
 
         return {| dialogs = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared Blob, File, FileList and FormData File assertions.</summary>
+let runBinary () =
+    async {
+        let document = document ()
+
+        let driver: BinaryChecks.Driver =
+            {
+                Settle = fun () -> Async.Sleep 1
+                CrlfLineEndings = crlfLineEndings ()
+            }
+
+        let! count =
+            BinaryChecks.run
+                document
+                (fun () -> BrowserBinaryValues.forDocument document)
+                (fun () -> BrowserForms.forDocument document)
+                driver
+
+        return {| binary = count |}
     }
     |> Async.StartAsPromise
 

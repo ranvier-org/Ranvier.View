@@ -1,6 +1,7 @@
-230 classes; 2546 members: 2526 mapped to 2448 of 2517 rv_dom_* functions, 20 hand-written, 0 unmapped
+233 classes; 2559 members: 2539 mapped to 2461 of 2530 rv_dom_* functions, 20 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
+  rv_dom_blob_create: Blob.constructor (op)
   rv_dom_command_event_create: CommandEvent.constructor (op)
   rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
   rv_dom_css_perspective_create: CSSPerspective.constructor (op)
@@ -28,8 +29,6 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_document_set_adopted_style_sheets: Document.adoptedStyleSheets (set)
   rv_dom_dom_form_data_create: DOMFormData.constructor (op)
   rv_dom_dom_form_data_entries: DOMFormData.entries (op)
-  rv_dom_dom_form_data_get: DOMFormData.get (op)
-  rv_dom_dom_form_data_get_all: DOMFormData.getAll (op)
   rv_dom_dom_matrix_create: DOMMatrix.constructor (op)
   rv_dom_dom_matrix_from_matrix: DOMMatrix.fromMatrix (op)
   rv_dom_dom_matrix_read_only_create: DOMMatrixReadOnly.constructor (op)
@@ -47,6 +46,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_dom_rect_read_only_from_rect: DOMRectReadOnly.fromRect (op)
   rv_dom_event_get_current_target: Event.currentTarget (get)
   rv_dom_event_get_target: Event.target (get)
+  rv_dom_file_create: File.constructor (op)
   rv_dom_focus_event_get_related_target: FocusEvent.relatedTarget (get)
   rv_dom_form_data_event_create: FormDataEvent.constructor (op)
   rv_dom_html_select_element_remove_0: HTMLSelectElement.remove (op)
@@ -76,6 +76,7 @@ Unmapped members by reason:
 Members by class (mapped / hand-written / unmapped):
   AbstractRangeObject: 5 / 0 / 0
   AttrObject: 9 / 0 / 0
+  BlobObject: 3 / 0 / 0
   CSSConditionRuleObject: 1 / 0 / 0
   CSSContainerRuleObject: 2 / 0 / 0
   CSSCounterStyleRuleObject: 22 / 0 / 0
@@ -121,7 +122,7 @@ Members by class (mapped / hand-written / unmapped):
   CharacterDataObject: 14 / 0 / 0
   CommandEventObject: 2 / 0 / 0
   CompositionEventObject: 1 / 0 / 0
-  DOMFormDataObject: 4 / 0 / 0
+  DOMFormDataObject: 8 / 0 / 0
   DOMImplementationObject: 2 / 0 / 0
   DOMMatrixObject: 95 / 0 / 0
   DOMMatrixReadOnlyObject: 39 / 0 / 0
@@ -139,6 +140,8 @@ Members by class (mapped / hand-written / unmapped):
   ElementObject: 181 / 0 / 0
   EventObject: 16 / 2 / 0
   EventTargetObject: 0 / 9 / 0
+  FileListObject: 2 / 0 / 0
+  FileObject: 2 / 0 / 0
   FocusEventObject: 0 / 1 / 0
   FormDataEventObject: 1 / 0 / 0
   HTMLAnchorElementObject: 46 / 0 / 0
@@ -164,7 +167,7 @@ Members by class (mapped / hand-written / unmapped):
   HTMLHeadingElementObject: 2 / 0 / 0
   HTMLHtmlElementObject: 2 / 0 / 0
   HTMLImageElementObject: 49 / 0 / 0
-  HTMLInputElementObject: 101 / 0 / 0
+  HTMLInputElementObject: 103 / 0 / 0
   HTMLLIElementObject: 4 / 0 / 0
   HTMLLabelElementObject: 4 / 0 / 0
   HTMLLegendElementObject: 3 / 0 / 0
