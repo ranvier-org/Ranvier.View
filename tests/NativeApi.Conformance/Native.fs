@@ -2184,6 +2184,147 @@ let private runResizeObservation () =
     System.Console.WriteLine $"NATIVE_API G10 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared intersection observation fixture with thread, root, document replacement and teardown
+/// checks.</summary>
+[<Literal>]
+let private IntersectionObservationChecksCount = 40
+
+let private runIntersectionObservation () =
+    let width, height = IntersectionObservationChecks.Viewport
+    let host = WebCoreHost.Create (width, height)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let mutable held = None
+    let mutable heldEntry = None
+
+    let shared =
+        try
+            let driver: IntersectionObservationChecks.Driver =
+                {
+                    Update = fun () -> async { host.Frame () }
+                    Errors = fun () -> host.Errors.Count
+                    Engine = IntersectionObservationChecks.Native
+                }
+
+            let count =
+                IntersectionObservationChecks.run
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.IntersectionObservation.forHost host)
+                    (fun () -> Ranvier.View.WebCore.Timing.forHost host)
+                    (fun () -> Ranvier.View.WebCore.Cancellation.forHost host)
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted && timeout.ElapsedMilliseconds < 20000L do
+                host.Cycle ()
+
+            let count = count.GetAwaiter().GetResult()
+            let service = Ranvier.View.WebCore.IntersectionObservation.forHost host
+            let body = host.Document.body
+            let delivered = System.Collections.Generic.List<string>()
+
+            let observer =
+                service.Create (
+                    (fun entries ->
+                        for entry in entries do
+                            delivered.Add (entry.Target.nodeName + " " + string entry.IsIntersecting)
+
+                        heldEntry <- Some entries[0]),
+                    Ranvier.Dom.IntersectionObserverInit.Default
+                )
+
+            observer.Observe body
+            host.Frame ()
+            expect (List.ofSeq delivered = [ "BODY True" ]) ("The body intersects the viewport: " + System.String.Join (",", delivered))
+
+            let wrongThread (action: unit -> unit) =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            action ()
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect (wrongThread (fun () -> observer.Observe body)) "Observe rejects another thread"
+            expect (wrongThread (fun () -> observer.TakeRecords () |> ignore)) "TakeRecords rejects another thread"
+            expect (wrongThread (fun () -> service.Now () |> ignore)) "Now rejects another thread"
+            expect (wrongThread (fun () -> Ranvier.View.WebCore.IntersectionObservation.forHost host |> ignore)) "forHost rejects another thread"
+            let other = WebCoreHost.Create (100, 80)
+
+            let rejected (action: unit -> unit) =
+                try
+                    action ()
+                    false
+                with :? System.ArgumentException ->
+                    true
+
+            let foreignTarget = rejected (fun () -> observer.Observe other.Document.body)
+
+            let foreignRoot =
+                rejected (fun () ->
+                    service.Create (
+                        ignore,
+                        { Ranvier.Dom.IntersectionObserverInit.Default with Root = Ranvier.Dom.IntersectionObserverRoot.Element other.Document.body }
+                    )
+                    |> ignore)
+
+            (other :> System.IDisposable).Dispose ()
+            expect foreignTarget "A target of another host is rejected"
+            expect foreignRoot "A root of another host is rejected"
+            let before = service.Now ()
+
+            // The replaced document's observer delivers nothing; a new observer observes the replacing document.
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"30\" height=\"20\"/>"
+            host.Frame ()
+            expect (delivered.Count = 1) "The replaced document's observer delivers nothing"
+            expect (observer.TakeRecords().Length = 0) "The replaced document's observer has no records"
+            expect (service.Now () >= before) "The replacing document keeps the time origin"
+            let replacing = service.Create ((fun entries -> delivered.Add (string entries.Length)), Ranvier.Dom.IntersectionObserverInit.Default)
+            replacing.Observe host.Document.documentElement
+            host.Frame ()
+            expect (List.ofSeq delivered = [ "BODY True"; "1" ]) ("The replacing document is observed: " + System.String.Join (",", delivered))
+            held <- Some (service, observer)
+            count
+        finally
+            (host :> System.IDisposable).Dispose ()
+
+    expect (session.LiveObjects = 0) "Intersection observation leaves no live native objects"
+    let service, observer = held.Value
+
+    let disposed (action: unit -> unit) =
+        try
+            action ()
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect (disposed (fun () -> observer.Observe Unchecked.defaultof<Ranvier.Dom.Element>)) "A held observer rejects Observe after host disposal"
+    expect (observer.TakeRecords().Length = 0) "A held observer has no records after host disposal"
+    expect (disposed (fun () -> service.Create (ignore, Ranvier.Dom.IntersectionObserverInit.Default) |> ignore)) "A held service rejects Create after host disposal"
+    observer.Dispose ()
+    service.Dispose ()
+    let entry = heldEntry.Value
+    expect (entry.IsIntersecting && entry.RootBounds.IsSome) "An entry held past host disposal keeps its copied values"
+
+    if shared <> IntersectionObservationChecksCount then
+        failwith ("Intersection observation shared assertions did not run: " + string shared)
+
+    System.Console.WriteLine ("NATIVE_API G11 PASS assertions=" + string shared)
+    System.Console.WriteLine ("NATIVE_API G11 LIFETIME PASS assertions=" + string lifetime)
+    shared
+
 /// <summary>Runs the shared crypto fixture with native thread and teardown checks.</summary>
 [<Literal>]
 let private CryptoChecksCount = 155
@@ -2819,6 +2960,7 @@ let private runAll () =
     runDiagnostics () |> ignore
     runCoordinates () |> ignore
     runResizeObservation () |> ignore
+    runIntersectionObservation () |> ignore
     runBlobUrls () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
@@ -3834,6 +3976,9 @@ let main args =
         0
     elif Array.contains "--resize-only" args then
         runResizeObservation () |> ignore
+        0
+    elif Array.contains "--intersection-only" args then
+        runIntersectionObservation () |> ignore
         0
     elif Array.contains "--crypto-only" args then
         runCrypto () |> ignore
