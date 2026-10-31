@@ -1,4 +1,4 @@
-# A01 Web Animations creation (native provider)
+# A01, A02, A05 and A04 Web Animations (native provider)
 
 ## Core and view state
 
@@ -46,8 +46,41 @@ after disposal. Native ABI and pixel evidence is in Ranvier.WebCore `docs/web-an
 
 ## Qualifications
 
-- Animation identity: each `Element.animate` result and each `getAnimations` item is a new wrapper of the same engine
-  handle. A05 adds identity, with CSSAnimation and CSSTransition.
 - An omitted timeline and `Some null` are both the document timeline (the user's option rule).
   `CreateAnimationWithoutTimeline` is the explicit no-timeline constructor.
 - Keyframes use the keyframe-sequence form.
+
+## A02 effect inspection and mutation
+
+- The generated contract carries getTiming, getComputedTiming, updateTiming and getKeyframes. Hand-written
+  `AnimationResults` decodes the owned native results: EffectTiming, ComputedEffectTiming, and ComputedKeyframe with
+  its properties. The Fable adapters wrap the browser's union fields and build ComputedKeyframe objects.
+- Animation wrappers are session objects, keyed by handle and anchored to the object that returned them. So an
+  animation and its effect keep their identity across calls. updateTiming and setKeyframes find the effect's document
+  through those anchors.
+- `AnimationEffectChecks.fs`: 54 shared assertions. Numbers compare within 1e-3.
+
+## A05 discovery and identity
+
+- CSSAnimation and CSSTransition wrappers come from the Animation runtime type query (`Classes.WebAnimation`).
+- The A05 part of `AnimationDiscoveryChecks.fs` has 33 assertions:
+  - document, element and subtree getAnimations;
+  - composite order;
+  - animationName and transitionProperty;
+  - targets and the document timeline;
+  - object identity across the lists;
+  - cancellation.
+
+## A04 commitStyles
+
+- The A04 part of `AnimationDiscoveryChecks.fs` has 9 assertions. Values are committed at the midpoint, and
+  unrelated inline values and priorities stay after cancel. A detached element fails.
+- Two engine differences are recorded in Ranvier.WebCore `tests/fixtures/web-animation-commit-qualified.json` and
+  left out of the shared fixture: the order of the style attribute, and the value committed over an important inline
+  declaration.
+
+## Core and view state (A02, A05, A04)
+
+- **Core primitives used:** none beyond A01's.
+- **View-owned state:** the session's native objects for the animation, effect and timeline handles. These were
+  already listed for A01. No cache is kept.

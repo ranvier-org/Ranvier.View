@@ -1,4 +1,4 @@
-255 classes; 2735 members: 2685 mapped to 2603 of 2729 rv_dom_* functions, 50 hand-written, 0 unmapped
+257 classes; 2737 members: 2687 mapped to 2605 of 2731 rv_dom_* functions, 50 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_animation_effect_get_computed_timing: AnimationEffect.getComputedTiming (op)
@@ -139,6 +139,7 @@ Members by class (mapped / hand-written / unmapped):
   AttrObject: 9 / 0 / 0
   BeforeUnloadEventObject: 2 / 0 / 0
   BlobObject: 3 / 0 / 0
+  CSSAnimationObject: 1 / 0 / 0
   CSSConditionRuleObject: 1 / 0 / 0
   CSSContainerRuleObject: 2 / 0 / 0
   CSSCounterStyleRuleObject: 22 / 0 / 0
@@ -176,6 +177,7 @@ Members by class (mapped / hand-written / unmapped):
   CSSStyleValueObject: 1 / 0 / 0
   CSSTransformComponentObject: 4 / 0 / 0
   CSSTransformValueObject: 5 / 0 / 0
+  CSSTransitionObject: 1 / 0 / 0
   CSSTranslateObject: 6 / 0 / 0
   CSSUnitValueObject: 3 / 0 / 0
   CSSUnparsedValueObject: 4 / 0 / 0
