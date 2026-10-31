@@ -53,6 +53,8 @@
     <Compile Include="InputStateChecks.fs" />
     <Compile Include="ViewportChecks.fs" />
     <Compile Include="FormChecks.fs" />
+    <Compile Include="TreeTraversal.fs" />
+    <Compile Include="MathMLElements.fs" />
     <Compile Include="Browser.fs" />
     <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" Condition="'$(NativeApiContractRoot)' == ''" />
     <ProjectReference Include="$(NativeApiContractRoot)/src/Fable.Ranvier.Dom/Fable.Ranvier.Dom.fsproj" Condition="'$(NativeApiContractRoot)' != ''" />

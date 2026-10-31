@@ -21,6 +21,7 @@ const svgPaintOnly = process.argv.includes('--svg-paint-only');
 const inputStateOnly = process.argv.includes('--input-state-only');
 const viewportOnly = process.argv.includes('--viewport-only');
 const formsOnly = process.argv.includes('--forms-only');
+const domModelOnly = process.argv.includes('--dom-model-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
 const server = createServer(async (request, response) => {
@@ -166,7 +167,7 @@ try {
   const checks = await page.evaluate(async focused => {
     try {
       const fixture = await import('/Browser.js');
-      return await (focused === 'resources' ? fixture.runResources() : focused === 'locales' ? fixture.runLocales() : focused === 'svg' ? fixture.runSvg() : focused === 'svg-surfaces' ? fixture.runSvgSurfaces() : focused === 'svg-paint' ? fixture.runSvgPaint() : focused === 'transforms' ? fixture.runTransforms() : focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : { ...await fixture.runSvgSurfaces(), ...await fixture.runSvgPaint(), ...await fixture.runResources(), ...await fixture.run() });
+      return await (focused === 'dom-model' ? fixture.runDomModel() : focused === 'resources' ? fixture.runResources() : focused === 'locales' ? fixture.runLocales() : focused === 'svg' ? fixture.runSvg() : focused === 'svg-surfaces' ? fixture.runSvgSurfaces() : focused === 'svg-paint' ? fixture.runSvgPaint() : focused === 'transforms' ? fixture.runTransforms() : focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : { ...await fixture.runSvgSurfaces(), ...await fixture.runSvgPaint(), ...await fixture.runResources(), ...await fixture.run() });
     } catch (error) {
       throw new Error(JSON.stringify({
         type: error?.constructor?.name,
@@ -177,8 +178,16 @@ try {
         fields: Object.fromEntries(Object.getOwnPropertyNames(error).filter(key => key !== 'stack').map(key => [key, error[key]])),
       }));
     }
-  }, resourcesOnly ? 'resources' : localesOnly ? 'locales' : svgOnly ? 'svg' : svgSurfacesOnly ? 'svg-surfaces' : svgPaintOnly ? 'svg-paint' : transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
-  if (resourcesOnly) {
+  }, domModelOnly ? 'dom-model' : resourcesOnly ? 'resources' : localesOnly ? 'locales' : svgOnly ? 'svg' : svgSurfacesOnly ? 'svg-surfaces' : svgPaintOnly ? 'svg-paint' : transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
+  const checkDomModel = () => {
+    if (checks.traversal !== 62 || checks.mathml !== 116) throw new Error(`DOM model assertions did not run: ${JSON.stringify(checks)}`);
+    if (checks.traversalReentry !== 'InvalidStateError/InvalidStateError/unread') throw new Error(`Unexpected traversal re-entry: ${checks.traversalReentry}`);
+    console.log(`BROWSER_API D01 PASS assertions=${checks.traversal} reentry=${checks.traversalReentry} engine=chromium`);
+    console.log(`BROWSER_API S13 PASS assertions=${checks.mathml} math=MathMLElement engine=chromium`);
+  };
+  if (domModelOnly) {
+    checkDomModel();
+  } else if (resourcesOnly) {
     if (checks.resources !== 29) throw new Error(`Resource shared assertions did not run: ${JSON.stringify(checks)}`);
     console.log(`BROWSER_API H05 PASS assertions=${checks.resources} engine=chromium`);
   } else if (localesOnly) {
@@ -276,6 +285,7 @@ try {
   console.log(`BROWSER_API I01 PASS assertions=${checks.cancellation} interop=${checks.cancellationInterop} engine=chromium`);
   if (checks.customEvents !== 45) throw new Error(`Custom event assertions did not run: ${checks.customEvents}`);
   console.log(`BROWSER_API I02 PASS assertions=${checks.customEvents} engine=chromium`);
+  checkDomModel();
   console.log(`BROWSER_API D10_VIEW PASS assertions=${checks.viewTables} engine=chromium`);
   if (checks.viewHyperlinks !== 50) throw new Error('View hyperlink authoring assertions did not run');
   console.log(`BROWSER_API D11_VIEW_HYPERLINKS PASS assertions=${checks.viewHyperlinks} engine=chromium`);
