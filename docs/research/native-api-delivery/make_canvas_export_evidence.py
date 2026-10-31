@@ -35,7 +35,12 @@ result['qualifications'] = ['The shared fixture checks export bytes, data URLs, 
                             'bitmaprenderer transfer; <img>, SVG <image>, WEBP and tainting are asserted by the native '
                             'canvas_export probe.',
                             'An unsupported encoding raises NotSupportedException on both providers; Chromium itself substitutes PNG.',
-                            'Kind 121 (ImageBitmapRenderingContext) is a placeholder; root assigns kinds at integration.']
+                            'Kind 121 (ImageBitmapRenderingContext) is a placeholder; root assigns kinds at integration.',
+                            'The first NativeAOT full run stopped in the D16 dialog fixture ("second showModal: expected [()], got []", '
+                            'aot-first-run-dialog-flake.log), which runs before R07; --dialogs-only then failed 1 of 5 and 0 of 10 on this '
+                            'runtime and 0 of 10 on the R06 runtime, and the full rerun (aot.log) passed: a timing-dependent dialog check.',
+                            'Views is deliberately not merged with R12 (rv-snapshot 40fe831): its snapshot provider needs native R12 '
+                            'exports this native branch lacks; it reaches R07 at batch-5 integration.']
 out = here / 'canvas-export-runtime-evidence.json'
 out.write_text(json.dumps(result, indent=2) + '\n', encoding='utf-8')
 print(json.dumps({k: result[k] for k in ['jit', 'aot', 'chromium']}, indent=1))
