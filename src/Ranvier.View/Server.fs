@@ -470,7 +470,6 @@ let private attributes (ids: ResizeArray<string>) (reserved: string list) (pairs
 let private shell (document: DocumentShell) : string * string * string =
     validateId document.HostId
 
-    // Some null reads as None on .NET, as it does under Fable's erased options.
     let nonce =
         match document.Nonce with
         | Some nonce when not (isNull nonce) ->

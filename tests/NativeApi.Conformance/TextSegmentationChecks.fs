@@ -178,6 +178,7 @@ let run (create: unit -> TextSegmenter) (errorName: exn -> string) (parser: Pars
 
     equal "an unknown locale still segments" [| "a"; "b" |] (words (Some "xx-YY") "a b")
     equal "an empty text" 0 (segment SegmentGranularity.Word (Some "en") "").Length
+    equal "a Some null locale segments as None does" (words None "a b") (words (Some null) "a b")
 
     segmenter.Dispose ()
     checks

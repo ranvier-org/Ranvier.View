@@ -1128,7 +1128,7 @@ let private runBinary () =
 
 /// <summary>Runs the shared URL fixture with native thread and teardown checks.</summary>
 [<Literal>]
-let private UrlChecksCount = 189
+let private UrlChecksCount = 190
 
 let private runUrls () =
     let host = WebCoreHost.Create (320, 240)
@@ -1458,7 +1458,7 @@ let private runSubmissions () =
 
 /// <summary>Runs the shared text segmentation fixture with native thread and teardown checks.</summary>
 [<Literal>]
-let private SegmentChecksCount = 219
+let private SegmentChecksCount = 220
 
 let private runSegments () =
     let host = WebCoreHost.Create (320, 240)
@@ -3652,7 +3652,7 @@ let private runAll () =
 
         match construction with
         | Some (Ok checks) ->
-            if checks <> 78 then
+            if checks <> 79 then
                 failwith "Constructed stylesheet preservation assertions did not run"
 
             System.Console.WriteLine $"NATIVE_API C07 PASS assertions={checks}"
@@ -4009,7 +4009,7 @@ let private runSurfaces () =
 
     try
         let shapes =
-            SvgShapes.run host.Document surfaceErrorName "ArgumentNullException" true
+            SvgShapes.run host.Document surfaceErrorName "ArgumentNullException"
 
         let fontData =
             System.Convert.ToBase64String (

@@ -188,6 +188,19 @@ let optionOf (t: Type) =
     else
         None
 
+/// <summary>
+/// An F# match on the option <c>source</c> that evaluates <c>present</c> for <c>Some item</c> and <c>absent</c> for
+/// <c>None</c>. <c>Some null</c> of a nullable inner type evaluates <c>absent</c>.
+/// </summary>
+let matchOption (inner: Type) (source: string) (present: string) (absent: string) =
+    if
+        inner.IsValueType
+        || Microsoft.FSharp.Reflection.FSharpType.IsUnion inner
+    then
+        $"(match {source} with None -> {absent} | Some item -> {present})"
+    else
+        $"(match {source} with Some item when not (isNull (box item)) -> {present} | _ -> {absent})"
+
 /// <summary>The generic parameters of a type or method with their type constraints, as F# source.</summary>
 let generics (parameters: Type array) : string =
     if parameters.Length = 0 then

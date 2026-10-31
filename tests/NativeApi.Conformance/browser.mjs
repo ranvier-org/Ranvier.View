@@ -180,7 +180,7 @@ const runUrls = async () => {
     await urlsBrowser.close();
   }
 };
-const URL_ASSERTIONS = 189;
+const URL_ASSERTIONS = 190;
 // I11 runs the ARIA element reflection fixture in its own page.
 const runAria = async () => {
   const ariaBrowser = await chromium.launch({ headless: true });
@@ -208,7 +208,7 @@ const runSegments = async () => {
     await segmentsBrowser.close();
   }
 };
-const SEGMENT_ASSERTIONS = 219;
+const SEGMENT_ASSERTIONS = 220;
 // H11 runs the binary value fixture in its own page.
 const runBinary = async () => {
   const binaryBrowser = await chromium.launch({ headless: true });
@@ -732,7 +732,7 @@ try {
   console.log(`BROWSER_API D12 PASS assertions=${checks.sheetElements} engine=chromium`);
   if (checks.sheetElements !== 109 || checks.failedLinkSheet !== 'replacement') throw new Error('Stylesheet/link element assertions did not run');
   console.log(`BROWSER_API D12 CAPABILITY failedLinkSheet=${checks.failedLinkSheet} engine=chromium`);
-  if (checks.construction !== 78) throw new Error('Constructed stylesheet preservation assertions did not run');
+  if (checks.construction !== 79) throw new Error('Constructed stylesheet preservation assertions did not run');
   await page.locator('#native-api-svg').focus();
   await page.keyboard.press('Tab');
   if (!await page.locator('#native-api-math').evaluate(element => element === element.ownerDocument.activeElement)) {
