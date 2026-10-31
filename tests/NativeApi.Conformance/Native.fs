@@ -5702,6 +5702,7 @@ let main args =
         0
     elif Array.contains "--media-only" args then
         runMediaQueries () |> ignore
+        0
     elif Array.contains "--animations-only" args then
         runAnimations () |> ignore
         0
