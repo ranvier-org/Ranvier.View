@@ -305,7 +305,7 @@ let private runResources () =
                 Resources.run
                     {
                         CorruptImageDecodes = false
-                        TransportReleaseReachesProvider = true
+                        TransportReleaseRequests = [| 0; 1 |]
                     }
                     (resourceFixture ())
                     (fun provider -> Ranvier.View.WebCore.Resources.forHost host provider)
