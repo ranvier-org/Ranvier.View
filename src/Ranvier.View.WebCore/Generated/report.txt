@@ -1,6 +1,8 @@
-273 classes; 2972 members: 2916 mapped to 2814 of 2957 rv_dom_* functions, 56 hand-written, 0 unmapped
+279 classes; 2990 members: 2926 mapped to 2824 of 2976 rv_dom_* functions, 61 hand-written, 3 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
+  rv_dom_animation_effect_get_computed_timing: AnimationEffect.getComputedTiming (op)
+  rv_dom_animation_effect_get_timing: AnimationEffect.getTiming (op)
   rv_dom_animation_playback_event_create: AnimationPlaybackEvent.constructor (op)
   rv_dom_blob_create: Blob.constructor (op)
   rv_dom_command_event_create: CommandEvent.constructor (op)
@@ -32,6 +34,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_css_unparsed_value_create: CSSUnparsedValue.constructor (op)
   rv_dom_cssom_keyword_value_create: CSSOMKeywordValue.constructor (op)
   rv_dom_cssom_variable_reference_value_create: CSSOMVariableReferenceValue.constructor (op)
+  rv_dom_custom_effect_create: CustomEffect.constructor (op)
   rv_dom_data_transfer_create: DataTransfer.constructor (op)
   rv_dom_document_create: Document.constructor (op)
   rv_dom_document_create_node_iterator: Document.createNodeIterator (op)
@@ -40,6 +43,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_document_get_adopted_style_sheets: Document.adoptedStyleSheets (get)
   rv_dom_document_parse_html_unsafe: Document.parseHTMLUnsafe (op)
   rv_dom_document_set_adopted_style_sheets: Document.adoptedStyleSheets (set)
+  rv_dom_document_timeline_animate: DocumentTimeline.animate (op)
   rv_dom_document_timeline_create: DocumentTimeline.constructor (op)
   rv_dom_dom_form_data_create: DOMFormData.constructor (op)
   rv_dom_dom_form_data_entries: DOMFormData.entries (op)
@@ -98,6 +102,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_keyboard_event_get_key: KeyboardEvent.key (get)
   rv_dom_keyframe_effect_create_1: KeyframeEffect.constructor (op)
   rv_dom_keyframe_effect_create_3: KeyframeEffect.constructor (op)
+  rv_dom_keyframe_effect_get_keyframes: KeyframeEffect.getKeyframes (op)
   rv_dom_media_query_list_event_create: MediaQueryListEvent.constructor (op)
   rv_dom_mouse_event_get_related_target: MouseEvent.relatedTarget (get)
   rv_dom_node_iterator_get_filter: NodeIterator.filter (get)
@@ -119,6 +124,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_screen_get_width: Screen.width (op)
   rv_dom_screen_orientation_get_angle: ScreenOrientation.angle (op)
   rv_dom_screen_orientation_get_type: ScreenOrientation.type (op)
+  rv_dom_scroll_timeline_create: ScrollTimeline.constructor (op)
   rv_dom_shadow_root_get_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (get)
   rv_dom_shadow_root_set_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (set)
   rv_dom_static_range_create: StaticRange.constructor (op)
@@ -132,7 +138,10 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_url_pattern_exec: URLPattern.exec (op)
   rv_dom_url_search_params_create: URLSearchParams.constructor (op)
   rv_dom_url_search_params_entries: URLSearchParams.entries (op)
+  rv_dom_view_timeline_create: ViewTimeline.constructor (op)
   rv_dom_web_animation_create: WebAnimation.constructor (op)
+  rv_dom_web_animation_get_range_end: WebAnimation.rangeEnd (get)
+  rv_dom_web_animation_get_range_start: WebAnimation.rangeStart (get)
   rv_dom_wheel_event_create: WheelEvent.constructor (op)
   rv_dom_window_get_computed_style: DOMWindow.getComputedStyle (op)
   rv_dom_window_get_scroll_x: DOMWindow.scrollX (op)
@@ -146,15 +155,18 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_window_scroll_to_2: DOMWindow.scrollTo (op)
 
 Unmapped members by reason:
+      3  argument: (float -> unit) as RvCustomEffectCallback*
 
 Members by class (mapped / hand-written / unmapped):
   AbstractRangeObject: 5 / 0 / 0
+  AnimationEffectObject: 1 / 2 / 0
   AnimationEventObject: 3 / 0 / 0
   AnimationPlaybackEventObject: 2 / 0 / 0
   AnimationTimelineObject: 2 / 0 / 0
   AttrObject: 9 / 0 / 0
   BeforeUnloadEventObject: 2 / 0 / 0
   BlobObject: 3 / 0 / 0
+  CSSAnimationObject: 1 / 0 / 0
   CSSConditionRuleObject: 1 / 0 / 0
   CSSContainerRuleObject: 2 / 0 / 0
   CSSCounterStyleRuleObject: 22 / 0 / 0
@@ -192,6 +204,7 @@ Members by class (mapped / hand-written / unmapped):
   CSSStyleValueObject: 1 / 0 / 0
   CSSTransformComponentObject: 4 / 0 / 0
   CSSTransformValueObject: 5 / 0 / 0
+  CSSTransitionObject: 1 / 0 / 0
   CSSTranslateObject: 6 / 0 / 0
   CSSUnitValueObject: 3 / 0 / 0
   CSSUnparsedValueObject: 4 / 0 / 0
@@ -224,6 +237,7 @@ Members by class (mapped / hand-written / unmapped):
   DataTransferObject: 11 / 0 / 0
   DocumentFragmentObject: 11 / 0 / 0
   DocumentObject: 77 / 2 / 0
+  DocumentTimelineObject: 0 / 0 / 3
   DragEventObject: 1 / 0 / 0
   ElementObject: 199 / 0 / 0
   ErrorEventObject: 4 / 0 / 0
@@ -303,7 +317,7 @@ Members by class (mapped / hand-written / unmapped):
   ImageDataObject: 2 / 0 / 0
   InputEventObject: 3 / 2 / 0
   KeyboardEventObject: 12 / 1 / 0
-  KeyframeEffectObject: 9 / 0 / 0
+  KeyframeEffectObject: 9 / 1 / 0
   MathMLElementObject: 11 / 0 / 0
   MediaListObject: 6 / 0 / 0
   MediaQueryListEventObject: 2 / 0 / 0
@@ -399,6 +413,7 @@ Members by class (mapped / hand-written / unmapped):
   SVGUseElementObject: 5 / 0 / 0
   SVGViewElementObject: 4 / 0 / 0
   SVGViewSpecObject: 8 / 0 / 0
+  ScrollTimelineObject: 2 / 0 / 0
   ShadowRootObject: 19 / 0 / 0
   StylePropertyMapObject: 4 / 0 / 0
   StylePropertyMapReadOnlyObject: 4 / 0 / 0
@@ -418,8 +433,12 @@ Members by class (mapped / hand-written / unmapped):
   URLPatternObject: 12 / 0 / 0
   URLSearchParamsObject: 9 / 0 / 0
   ValidityStateObject: 11 / 0 / 0
+  ViewTimelineObject: 3 / 0 / 0
   VisualViewportObject: 7 / 9 / 0
-  WebAnimationObject: 24 / 9 / 0
+  WebAnimationObject: 26 / 11 / 0
   WheelEventObject: 7 / 0 / 0
 
 Unmapped members:
+  DocumentTimelineObject DocumentTimeline.animate: argument callback: (float -> unit) as RvCustomEffectCallback*
+  DocumentTimelineObject DocumentTimeline.animate: argument callback: (float -> unit) as RvCustomEffectCallback*
+  DocumentTimelineObject DocumentTimeline.animate: argument callback: (float -> unit) as RvCustomEffectCallback*
