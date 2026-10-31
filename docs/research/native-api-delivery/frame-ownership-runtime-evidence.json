@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "group": "A12",
+  "status": "green (private integration; not accepted)",
+  "route": "Managed only, no ABI",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/71",
+  "coreSourceCommit": "8077b67e7761a4968456865cf7819aecac41371d",
+  "viewsSourceCommit": "a99b112d1c9228c4e9beeee44187c3d95439c5de",
+  "stackedOn": {
+    "core": "D13 b968acd4 + dommodel ab268cf2",
+    "views": "D13 57bfbd1 + dommodel eea2b1b",
+    "generatedDom": "native cd90d0d gen/Ranvier.Dom.fs (whole)"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-forms",
+    "head": "cd90d0d4805d3943daa68c111c053537b6331f7a",
+    "abi": 36,
+    "runtime": "native28-frozen (D13), unchanged"
+  },
+  "versions": {
+    "native": "0.1.0-preview.28",
+    "dom": "0.1.0-alpha.30",
+    "views": "0.1.20",
+    "webcoreBackend": "0.1.0-alpha.20"
+  },
+  "allocationReceipt": "Ranvier: docs/research/native-api-delivery/a12-managed30-allocation.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.30.nupkg": "9528e64cb518ef96220c282b57aa8339a007d6ba048d845dea6941ea5fd77eb5",
+    "Ranvier.Dom.0.1.0-alpha.30.nupkg": "796bc81f5df58506bc49e73cd72ec8ee8d3c416f6da9f671b86113e257388fcc",
+    "Ranvier.WebCore.0.1.0-preview.28.nupkg": "2454b5710524d5dd9bfae1372f9fdf0e88e149aafef155deabe911285ba08bb7"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "029b88fc4de18dca718a1caf8b1e091c6f2d94be5080be5f2ab30f6e0b7401b5",
+    "WebCore.dll": "07e3c413fc28a9be11a845755ee866a6c52b359194663ab0959bb84650a9ee83",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "stageMatchesAot": true,
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\a12b-private\\aot-api\\Native.exe",
+    "sha256": "86ae4f2e3f11963a3babbd59b6dd83e35113e85b3ca351a02f9db3e460d9ba4e"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "d211f3a55fe745cb83cb9416b7b21ae0a9841b0c23c2678d8244d6b877b88a33",
+      "passLines": 81,
+      "d13BaselinePassLines": 80,
+      "d13PassLinesMissing": [],
+      "failLines": [],
+      "a12": [
+        "NATIVE_API A12 PASS assertions=18 manual=18"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "d211f3a55fe745cb83cb9416b7b21ae0a9841b0c23c2678d8244d6b877b88a33",
+      "passLines": 81,
+      "d13BaselinePassLines": 80,
+      "d13PassLinesMissing": [],
+      "failLines": [],
+      "a12": [
+        "NATIVE_API A12 PASS assertions=18 manual=18"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "94646fc4dced306c4d1a8228e14f2ec01df4e442624ca6324519ae3f1110f0e1",
+      "passLines": 65,
+      "d13BaselinePassLines": 64,
+      "d13PassLinesMissing": [],
+      "failLines": [],
+      "a12": [
+        "BROWSER_API A12 PASS assertions=18 manual=18 engine=chromium"
+      ]
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "wrapperRegeneration": {
+    "objectsFs": "c01fee108f150eefe394a40cefb6adcc4e5151bb16fabf4feab128fcfcb85a33",
+    "reportTxt": "8329e24e6fb58db310e9514e129f297de752638b657a93fac863a985f91abca6",
+    "identicalToCommitted": true,
+    "inputs": "restored ranvier.webcore preview.28 model/dom-api.json + lib, ranvier.dom alpha.30 lib"
+  },
+  "fcs": {
+    "Ranvier.Dom": {
+      "verdict": "clean",
+      "errors": 0,
+      "warnings": 0,
+      "diagnostics": []
+    },
+    "Fable.Ranvier.Dom": {
+      "verdict": "clean",
+      "errors": 0,
+      "warnings": 0,
+      "diagnostics": []
+    },
+    "Ranvier.View.WebCore": {
+      "verdict": "clean",
+      "errors": 0,
+      "warnings": 1,
+      "diagnostics": []
+    },
+    "Ranvier.View.Dom": {
+      "verdict": "errors",
+      "errors": 2,
+      "warnings": 0,
+      "diagnostics": [
+        "Debug.fs:985 FS0039 The value, constructor, namespace or type 'snapshot' is not defined.",
+        "Debug.fs:985 FS0072 The type of this expression could not be inferred before accessing its members. Add a type annotation, e.g. (expr: SomeType), to constrain the type before this point."
+      ]
+    }
+  },
+  "contract": {
+    "service": "Ranvier.Dom.FrameScheduler (Now, Frame, Timeout, Microtask)",
+    "manual": "Ranvier.Dom manual scheduler",
+    "browserProvider": "Ranvier.Dom.BrowserFrames",
+    "viewOwners": "Ranvier.View.Dom.Frames, Ranvier.View.WebCore.Frames"
+  },
+  "fixture": "tests/NativeApi.Conformance/FrameChecks.fs (18 shared assertions on the manual scheduler and on the host scheduler)",
+  "qualifications": [
+    "The first full Chromium run failed the old frame-time lower bound (frame time >= a clock read before the request); Chromium passes the frame start time. Views a99b112 checks frame time <= the clock read in the callback and nondecreasing. First-attempt logs: C:/wk/a12b-artifacts/runs/first-attempt.",
+    "tools/check-webcore-generated.py rejects RanvierWebCoreNativeDir and preview.28 is unpublished, so the generator ran directly on the same restored inputs the check uses; the output is identical to the committed wrappers.",
+    "FCS on Ranvier.View.Dom reports FS0039/FS0072 at Debug.fs:985 (Trace.snapshot under RANVIER_TRACE): ionide evaluates the Debug (traced) configuration against Release-restored untraced packages. Debug.fs is unchanged by A12 and D13; the Release build compiles it cleanly.",
+    "Win-x64 only; Linux and macOS not run locally."
+  ]
+}

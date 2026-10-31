@@ -35,3 +35,7 @@ Native28; stacked on the G02/G12 heads (Core 780b9f0f, Views bd4ce10).
 native JIT, NativeAOT and Chromium: microtask checkpoint, timer delay and cancellation, one-shot and rescheduled
 frames with frame times on the scheduler clock, owner-bound callbacks in a disposed child scope, owner and handle
 cancellation, the timed clock (re-arm, disarm, dispose) and scheduler disposal.
+
+Frame times are positive, at most the scheduler clock read inside the callback, and nondecreasing across frames.
+The full default runs carry 81 native JIT, 81 NativeAOT and 65 Chromium PASS lines on DOM alpha.30, Views 0.1.20,
+backend alpha.20 and Native preview.28 (`docs/research/native-api-delivery/frame-ownership-runtime-evidence.json`).

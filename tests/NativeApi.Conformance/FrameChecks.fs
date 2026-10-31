@@ -66,11 +66,12 @@ let run (create: unit -> FrameScheduler) (driver: Driver) =
         check "clock advances" (scheduler.Now () >= start + 10.0)
 
         // Frames, one-shot and rescheduled.
-        let before = scheduler.Now ()
         let times = List<float>()
+        let nows = List<float>()
 
         let rec repeat remaining (time: float) =
             times.Add time
+            nows.Add (scheduler.Now ())
             log.Add $"frame {remaining}"
 
             if remaining > 1 then
@@ -84,7 +85,7 @@ let run (create: unit -> FrameScheduler) (driver: Driver) =
         equal "first frame" [ "frame 2" ] (drain ())
         do! driver.NextFrame ()
         equal "rescheduled frame runs at the next frame" [ "frame 1" ] (drain ())
-        check "frame time on the scheduler clock" (times[0] >= before && times[1] >= times[0])
+        check "frame time on the scheduler clock" (times[0] > 0.0 && times[0] <= nows[0] && times[0] <= times[1] && times[1] <= nows[1])
 
         // Owner-bound scheduling.
         let root, inner =
