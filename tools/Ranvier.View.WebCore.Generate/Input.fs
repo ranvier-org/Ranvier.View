@@ -106,6 +106,10 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
                             let encoded = build model fieldMapping inner "item"
                             $"(match {source} with None -> 0n | Some item -> {encoded})"
                         | None -> build model fieldMapping fieldType source
+                    elif ctype = "RvDomUtf8StringInput" then
+                        match optionOf fieldType with
+                        | Some _ -> $"scope.TextInput({source})"
+                        | None -> $"scope.TextInput(Some ({source}))"
                     elif ctype.EndsWith "*" && ctype <> "const char*" then
                         match optionOf fieldType with
                         | Some inner ->

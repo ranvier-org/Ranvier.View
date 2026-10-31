@@ -56,6 +56,7 @@
     <Compile Include="CaretOracle.fs" />
     <Compile Include="CaretChecks.fs" />
     <Compile Include="FormChecks.fs" />
+    <Compile Include="UrlChecks.fs" />
     <Compile Include="DialogChecks.fs" />
     <Compile Include="BinaryChecks.fs" />
     <Compile Include="TreeTraversal.fs" />

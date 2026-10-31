@@ -838,7 +838,9 @@ let private runBinary () =
                 System.Threading.Tasks.Task
                     .Run(fun () ->
                         try
-                            service.CreateBlob ([||], Ranvier.Dom.BlobOptions.Default) |> ignore
+                            service.CreateBlob ([||], Ranvier.Dom.BlobOptions.Default)
+                            |> ignore
+
                             false
                         with :? System.InvalidOperationException ->
                             true)
@@ -851,7 +853,9 @@ let private runBinary () =
                 service.CreateFile (
                     [| Ranvier.Dom.BlobPart.Text "kept" |],
                     "kept.txt",
-                    { Ranvier.Dom.FileOptions.Default with LastModified = Some 7L }
+                    { Ranvier.Dom.FileOptions.Default with
+                        LastModified = Some 7L
+                    }
                 )
 
             let slice = file.slice (1L, 3L)
@@ -868,11 +872,13 @@ let private runBinary () =
             while result.Value.IsNone do
                 host.Cycle () |> ignore
 
-            expect
-                (result.Value = Some (Ranvier.Dom.ResourceOutcome.Succeeded "ep"B))
-                "A slice reads after document replacement"
+            expect (result.Value = Some (Ranvier.Dom.ResourceOutcome.Succeeded "ep"B)) "A slice reads after document replacement"
 
-            expect (list.length = 1u && obj.ReferenceEquals (list.item 0u, file)) "A FileList survives document replacement"
+            expect
+                (list.length = 1u
+                 && obj.ReferenceEquals (list.item 0u, file))
+                "A FileList survives document replacement"
+
             let pending = service.ReadBytes (file, ignore)
             held <- Some (file, list, pending)
             count
@@ -899,6 +905,106 @@ let private runBinary () =
 
     System.Console.WriteLine $"NATIVE_API H11 PASS assertions={shared}"
     System.Console.WriteLine $"NATIVE_API H11 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared URL fixture with native thread and teardown checks.</summary>
+[<Literal>]
+let private UrlChecksCount = 185
+
+let private runUrls () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                UrlChecks.run (fun () -> Ranvier.View.WebCore.Urls.forHost host) errorName UrlChecks.WebKit
+
+            use service = Ranvier.View.WebCore.Urls.forHost host
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.CanParse ("http://a.test/", None)
+                            |> ignore
+
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "URL rejects another thread"
+            let url = service.Create ("https://held.test/a?b=c", None)
+            let parameters = url.searchParams
+
+            let pattern =
+                service.CreatePattern (Ranvier.Dom.USVStringOrURLPatternInit.USVString "https://held.test/:p", None, false)
+
+            System.GC.Collect ()
+            System.GC.WaitForPendingFinalizers ()
+            host.Cycle ()
+            RanvierWebCoreAbi.Native.rv_collect_garbage ()
+
+            expect
+                (url.href = "https://held.test/a?b=c"
+                 && parameters.get "b" = "c")
+                "URL and searchParams survive collection"
+
+            expect (pattern.test "https://held.test/x") "URLPattern survives collection"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            expect (url.href = "https://held.test/a?b=c") "URL survives document replacement"
+
+            let replaced =
+                service.Exec (pattern, Some (Ranvier.Dom.USVStringOrURLPatternInit.USVString "https://held.test/y"), None)
+
+            expect
+                (replaced
+                 |> Option.map (fun m -> m.Pathname.Groups)
+                    =
+                    Some [| "p", Some "y" |])
+                "URLPattern matches after document replacement"
+
+            held <- Some (url, parameters, pattern)
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "URL fixture leaves no live native objects"
+    let url, parameters, pattern = held.Value
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    expect (rejected (fun () -> url.href |> ignore)) "A held URL rejects use after host disposal"
+    expect (rejected (fun () -> parameters.size |> ignore)) "A held URLSearchParams rejects use after host disposal"
+    expect (rejected (fun () -> pattern.test "https://held.test/z" |> ignore)) "A held URLPattern rejects use after host disposal"
+
+    if shared <> UrlChecksCount then
+        failwith $"URL shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API H13 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API H13 LIFETIME PASS assertions={lifetime}"
     shared
 
 /// <summary>Runs the shared dialog, popover and command invoker fixture with native thread and teardown checks.</summary>
@@ -1444,6 +1550,7 @@ let private runAll () =
     runForms () |> ignore
     runDialogs () |> ignore
     runBinary () |> ignore
+    runUrls () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
@@ -2428,6 +2535,9 @@ let main args =
         0
     elif Array.contains "--forms-only" args then
         runForms () |> ignore
+        0
+    elif Array.contains "--urls-only" args then
+        runUrls () |> ignore
         0
     elif Array.contains "--dialogs-only" args then
         runDialogs () |> ignore
