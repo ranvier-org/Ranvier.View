@@ -62,6 +62,7 @@
     <Compile Include="TextSegmentationChecks.fs" />
     <Compile Include="DialogChecks.fs" />
     <Compile Include="BinaryChecks.fs" />
+    <Compile Include="CryptoChecks.fs" />
     <Compile Include="TreeTraversal.fs" />
     <Compile Include="MathMLElements.fs" />
     <Compile Include="FrameChecks.fs" />

@@ -3,6 +3,8 @@
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_blob_create: Blob.constructor (op)
   rv_dom_command_event_create: CommandEvent.constructor (op)
+  rv_dom_crypto_get_random_values: Crypto.getRandomValues (op)
+  rv_dom_crypto_random_uuid: Crypto.randomUUID (op)
   rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
   rv_dom_css_perspective_create: CSSPerspective.constructor (op)
   rv_dom_css_register_property: DOMCSSNamespace.registerProperty (op)
