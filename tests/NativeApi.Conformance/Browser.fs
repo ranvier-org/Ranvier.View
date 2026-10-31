@@ -119,7 +119,7 @@ let private wait (milliseconds: int) =
 let runSvgSurfaces () =
     async {
         let target = document ()
-        let shapes = SvgShapes.run target errorName "Error" false
+        let shapes = SvgShapes.run target errorName "Error"
         let! fontData = ahem () |> Async.AwaitPromise
 
         let! text =

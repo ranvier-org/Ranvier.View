@@ -3527,7 +3527,7 @@ let private runSurfaces () =
 
     try
         let shapes =
-            SvgShapes.run host.Document surfaceErrorName "ArgumentNullException" true
+            SvgShapes.run host.Document surfaceErrorName "ArgumentNullException"
 
         let fontData =
             System.Convert.ToBase64String (
