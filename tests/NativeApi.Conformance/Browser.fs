@@ -173,6 +173,34 @@ let runSvgSurfaces () =
     }
     |> Async.StartAsPromise
 
+[<Emit("globalThis.__nativeApiPixelAt($0, $1)")>]
+let private pixelAt (x: float) (y: float) : JS.Promise<int array> = jsNative
+
+let private pixel (x: float, y: float) =
+    async {
+        let! value = pixelAt x y |> Async.AwaitPromise
+        return value[0], value[1], value[2]
+    }
+
+/// <summary>Runs shared SVG paint servers, filters, clipping and resources in Chromium.</summary>
+let runSvgPaint () =
+    async {
+        let target = document ()
+        let! paint = SvgPaintServers.run target pixel errorName
+        let! filters = SvgFilters.run target pixel errorName
+        let! clipping = SvgClipping.run target pixel errorName
+        let! resources = SvgResources.run target pixel wait errorName true
+
+        return
+            {|
+                svgPaint = paint
+                svgFilters = filters
+                svgClipping = clipping
+                svgResources = resources
+            |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("$0.constructor.name + ':' + $0.message")>]
 let private disposalError (error: exn) : string = jsNative
 

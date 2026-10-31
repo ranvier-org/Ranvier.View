@@ -986,6 +986,59 @@ let private nativePaint (host: WebCoreHost) (x: float, y: float) =
             && rgba[offset + 3] > 200uy
     }
 
+let private nativePixel (host: WebCoreHost) (x: float, y: float) =
+    async {
+        let struct (width, height) = host.PaintSize
+        let rgba = Array.zeroCreate<byte>(width * height * 4)
+        host.Paint rgba
+        let offset = ((int y * width) + int x) * 4
+        return int rgba[offset], int rgba[offset + 1], int rgba[offset + 2]
+    }
+
+let private runPaint () =
+    let host = WebCoreHost.Create (640, 480)
+    let session = host.Session
+
+    try
+        let pixel = nativePixel host
+
+        let paint =
+            SvgPaintServers.run host.Document pixel surfaceErrorName
+            |> runOnHostThread
+
+        let filters =
+            SvgFilters.run host.Document pixel surfaceErrorName
+            |> runOnHostThread
+
+        let clipping =
+            SvgClipping.run host.Document pixel surfaceErrorName
+            |> runOnHostThread
+
+        let resources =
+            SvgResources.run host.Document pixel (nativeWait host) surfaceErrorName false
+            |> runOnHostThread
+
+        if
+            paint <> 49
+            || filters <> 118
+            || clipping <> 38
+            || resources <> 45
+        then
+            failwith "SVG paint assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API S08 PASS assertions={paint}"
+        System.Console.WriteLine $"NATIVE_API S09 PASS assertions={filters}"
+        System.Console.WriteLine $"NATIVE_API S10 PASS assertions={clipping}"
+        System.Console.WriteLine $"NATIVE_API S11 PASS assertions={resources}"
+    finally
+        (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith "SVG paint fixture leaked native wrappers"
+
+    System.Console.WriteLine "NATIVE_API SVG_PAINT TEARDOWN PASS"
+    0
+
 let private viewSelectionArguments (host: WebCoreHost) =
     let outcome action =
         try
@@ -1054,7 +1107,7 @@ let private runSurfaces () =
             |> runOnHostThread
 
         let animations =
-            SvgAnimations.run host.Document (nativeWait host) surfaceErrorName false
+            SvgAnimations.run host.Document (nativeWait host) surfaceErrorName true
             |> runOnHostThread
 
         let arguments = viewSelectionArguments host
@@ -1100,6 +1153,8 @@ let main args =
         runLocales ()
     elif Array.contains "--svg-surfaces-only" args then
         runSurfaces ()
+    elif Array.contains "--svg-paint-only" args then
+        runPaint ()
     elif Array.contains "--svg-only" args then
         let lifecycle = SvgLifecycle.run ()
 
@@ -1291,4 +1346,5 @@ let main args =
         0
     else
         runSurfaces () |> ignore
+        runPaint () |> ignore
         runAll ()

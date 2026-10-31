@@ -17,6 +17,7 @@ const transformsOnly = process.argv.includes('--transforms-only');
 const svgOnly = process.argv.includes('--svg-only');
 const svgSurfacesOnly = process.argv.includes('--svg-surfaces-only');
 const resourcesOnly = process.argv.includes('--resources-only');
+const svgPaintOnly = process.argv.includes('--svg-paint-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
 const server = createServer(async (request, response) => {
@@ -50,6 +51,21 @@ try {
   await page.exposeFunction('__nativeApiResizeViewport', async (width, height) => {
     await page.setViewportSize({ width, height });
   });
+  const pixelAt = async (x, y) => {
+    const png = await page.screenshot({ clip: { x: Math.floor(x), y: Math.floor(y), width: 1, height: 1 }, scale: 'css' });
+    const chunks = [];
+    let colorType = 0;
+    for (let offset = 8; offset < png.length;) {
+      const length = png.readUInt32BE(offset), kind = png.toString('latin1', offset + 4, offset + 8);
+      if (kind === 'IHDR') colorType = png[offset + 17];
+      if (kind === 'IDAT') chunks.push(png.subarray(offset + 8, offset + 8 + length));
+      offset += 12 + length;
+    }
+    const pixel = inflateSync(Buffer.concat(chunks));
+    if (colorType !== 2 && colorType !== 6) throw new Error(`Unexpected PNG color type ${colorType}`);
+    return [pixel[1], pixel[2], pixel[3]];
+  };
+  await page.exposeFunction('__nativeApiPixelAt', pixelAt);
   await page.exposeFunction('__nativeApiPaintAt', async (x, y) => {
     const png = await page.screenshot({ clip: { x: Math.floor(x), y: Math.floor(y), width: 1, height: 1 }, scale: 'css' });
     const chunks = [];
@@ -68,7 +84,7 @@ try {
   const checks = await page.evaluate(async focused => {
     try {
       const fixture = await import('/Browser.js');
-      return await (focused === 'resources' ? fixture.runResources() : focused === 'locales' ? fixture.runLocales() : focused === 'svg' ? fixture.runSvg() : focused === 'svg-surfaces' ? fixture.runSvgSurfaces() : focused === 'transforms' ? fixture.runTransforms() : focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : { ...await fixture.runSvgSurfaces(), ...await fixture.run() });
+      return await (focused === 'resources' ? fixture.runResources() : focused === 'locales' ? fixture.runLocales() : focused === 'svg' ? fixture.runSvg() : focused === 'svg-surfaces' ? fixture.runSvgSurfaces() : focused === 'svg-paint' ? fixture.runSvgPaint() : focused === 'transforms' ? fixture.runTransforms() : focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : { ...await fixture.runSvgSurfaces(), ...await fixture.runSvgPaint(), ...await fixture.run() });
     } catch (error) {
       throw new Error(JSON.stringify({
         type: error?.constructor?.name,
@@ -79,7 +95,7 @@ try {
         fields: Object.fromEntries(Object.getOwnPropertyNames(error).filter(key => key !== 'stack').map(key => [key, error[key]])),
       }));
     }
-  }, resourcesOnly ? 'resources' : localesOnly ? 'locales' : svgOnly ? 'svg' : svgSurfacesOnly ? 'svg-surfaces' : transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
+  }, resourcesOnly ? 'resources' : localesOnly ? 'locales' : svgOnly ? 'svg' : svgSurfacesOnly ? 'svg-surfaces' : svgPaintOnly ? 'svg-paint' : transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
   if (resourcesOnly) {
     if (checks.resources !== 28) throw new Error(`Resource shared assertions did not run: ${JSON.stringify(checks)}`);
     console.log(`BROWSER_API H05 PASS assertions=${checks.resources} engine=chromium`);
@@ -89,6 +105,12 @@ try {
     console.log(`BROWSER_API H06_DETERMINISTIC PASS assertions=${checks.localeDeterministic} engine=chromium`);
     console.log(`BROWSER_API H06 CONTEXT PASS assertions=${checks.localeContext} engine=chromium`);
     console.log(`BROWSER_API H06 PROVIDER ${JSON.stringify(checks)}`);
+  } else if (svgPaintOnly) {
+    if (checks.svgPaint !== 49 || checks.svgFilters !== 118 || checks.svgClipping !== 38 || checks.svgResources !== 45) throw new Error(`SVG paint assertions did not run: ${JSON.stringify(checks)}`);
+    console.log(`BROWSER_API S08 PASS assertions=${checks.svgPaint} engine=chromium`);
+    console.log(`BROWSER_API S09 PASS assertions=${checks.svgFilters} engine=chromium`);
+    console.log(`BROWSER_API S10 PASS assertions=${checks.svgClipping} engine=chromium`);
+    console.log(`BROWSER_API S11 PASS assertions=${checks.svgResources} engine=chromium`);
   } else if (svgSurfacesOnly) {
     if (checks.svgShapes !== 194 || checks.svgText !== 210 || checks.svgViews !== 115 || checks.svgViewArguments !== 3 || checks.svgAnimations !== 31) throw new Error(`SVG surfaces assertions did not run: ${JSON.stringify(checks)}`);
     console.log(`BROWSER_API S03 PASS assertions=${checks.svgShapes} engine=chromium`);
@@ -135,6 +157,11 @@ try {
   console.log(`BROWSER_API S01_S02 PASS assertions=${checks.svgGeometry} engine=chromium`);
   console.log(`BROWSER_API S04_REACHABLE PASS assertions=${checks.svgValues} engine=chromium`);
   console.log(`BROWSER_API SVG CONTEXT PASS assertions=${checks.svgContext} engine=chromium`);
+  if (checks.svgPaint !== 49 || checks.svgFilters !== 118 || checks.svgClipping !== 38 || checks.svgResources !== 45) throw new Error(`SVG paint assertions did not run: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API S08 PASS assertions=${checks.svgPaint} engine=chromium`);
+  console.log(`BROWSER_API S09 PASS assertions=${checks.svgFilters} engine=chromium`);
+  console.log(`BROWSER_API S10 PASS assertions=${checks.svgClipping} engine=chromium`);
+  console.log(`BROWSER_API S11 PASS assertions=${checks.svgResources} engine=chromium`);
   if (checks.svgShapes !== 194 || checks.svgText !== 210 || checks.svgViews !== 115 || checks.svgViewArguments !== 3 || checks.svgAnimations !== 31) throw new Error(`SVG surfaces assertions did not run: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API S03 PASS assertions=${checks.svgShapes} engine=chromium`);
   console.log(`BROWSER_API S05 PASS assertions=${checks.svgText} engine=chromium`);
