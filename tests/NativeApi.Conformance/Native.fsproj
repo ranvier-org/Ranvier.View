@@ -74,6 +74,7 @@
     <Compile Include="BinaryChecks.fs" />
     <Compile Include="CryptoChecks.fs" />
     <Compile Include="HighlightChecks.fs" />
+    <Compile Include="ScreenChecks.fs" />
     <Compile Include="TreeTraversal.fs" />
     <Compile Include="MathMLElements.fs" />
     <Compile Include="TraversalLifecycle.fs" />

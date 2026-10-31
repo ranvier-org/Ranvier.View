@@ -1,4 +1,4 @@
-239 classes; 2627 members: 2598 mapped to 2518 of 2613 rv_dom_* functions, 29 hand-written, 0 unmapped
+239 classes; 2627 members: 2598 mapped to 2518 of 2623 rv_dom_* functions, 29 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_blob_create: Blob.constructor (op)
@@ -75,6 +75,16 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_keyboard_event_get_key: KeyboardEvent.key (get)
   rv_dom_mouse_event_get_related_target: MouseEvent.relatedTarget (get)
   rv_dom_node_iterator_get_filter: NodeIterator.filter (get)
+  rv_dom_screen_get_avail_height: Screen.availHeight (op)
+  rv_dom_screen_get_avail_left: Screen.availLeft (op)
+  rv_dom_screen_get_avail_top: Screen.availTop (op)
+  rv_dom_screen_get_avail_width: Screen.availWidth (op)
+  rv_dom_screen_get_color_depth: Screen.colorDepth (op)
+  rv_dom_screen_get_height: Screen.height (op)
+  rv_dom_screen_get_pixel_depth: Screen.pixelDepth (op)
+  rv_dom_screen_get_width: Screen.width (op)
+  rv_dom_screen_orientation_get_angle: ScreenOrientation.angle (op)
+  rv_dom_screen_orientation_get_type: ScreenOrientation.type (op)
   rv_dom_shadow_root_get_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (get)
   rv_dom_shadow_root_set_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (set)
   rv_dom_style_property_map_read_only_entries: StylePropertyMapReadOnly.entries (op)

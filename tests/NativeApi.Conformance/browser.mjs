@@ -30,6 +30,7 @@ const segmentsOnly = process.argv.includes('--segments-only');
 const binaryOnly = process.argv.includes('--binary-only');
 const cryptoOnly = process.argv.includes('--crypto-only');
 const highlightsOnly = process.argv.includes('--highlights-only');
+const screenOnly = process.argv.includes('--screen-only');
 const submissionsOnly = process.argv.includes('--submissions-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
@@ -225,6 +226,27 @@ const runCrypto = async () => {
   }
 };
 const CRYPTO_ASSERTIONS = 155;
+// G04 drives the screen through CDP Emulation.setDeviceMetricsOverride from the page's __rvSetScreen.
+const runScreen = async () => {
+  const screenBrowser = await chromium.launch({ headless: true });
+  try {
+    const context = await screenBrowser.newContext({ viewport: { width: 320, height: 200 } });
+    const page = await context.newPage();
+    const cdp = await context.newCDPSession(page);
+    const types = ['portraitPrimary', 'portraitSecondary', 'landscapePrimary', 'landscapeSecondary'];
+    const angles = [90, 270, 0, 180];
+    await page.exposeFunction('__rvSetScreen', (width, height, orientation) => cdp.send('Emulation.setDeviceMetricsOverride', {
+      width: 320, height: 200, deviceScaleFactor: 1, mobile: false, screenWidth: width, screenHeight: height,
+      screenOrientation: { type: types[orientation], angle: angles[orientation] } }).then(() => undefined));
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runScreen(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.screen !== SCREEN_ASSERTIONS) throw new Error(`Screen assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API G04 PASS assertions=${result.screen} engine=chromium`);
+  } finally {
+    await screenBrowser.close();
+  }
+};
+const SCREEN_ASSERTIONS = 30;
 const CRYPTO_INSECURE_ASSERTIONS = 4;
 // T03 runs the custom highlight fixture in its own page.
 const runHighlights = async () => {
@@ -312,6 +334,7 @@ try {
   else if (binaryOnly) { await runBinary(); process.exitCode = 0; }
   else if (cryptoOnly) { await runCrypto(); process.exitCode = 0; }
   else if (highlightsOnly) { await runHighlights(); process.exitCode = 0; }
+  else if (screenOnly) { await runScreen(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
   else if (idleOnly) { await runIdle(); process.exitCode = 0; }
@@ -548,6 +571,7 @@ try {
   await runSubmissions();
   await runCrypto();
   await runHighlights();
+  await runScreen();
   await runFrames();
   await runIdle();
   await runCaret();

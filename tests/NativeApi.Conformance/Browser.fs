@@ -1212,6 +1212,31 @@ let runSegments () =
 
     {| segments = count |}
 
+[<Emit("window.__rvSetScreen($0, $1, $2)")>]
+let private setScreen (width: int) (height: int) (orientation: int) : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared screen assertions; browser.mjs drives the screen through CDP.</summary>
+let runScreen () =
+    async {
+        let document = document ()
+
+        let driver: ScreenChecks.Driver =
+            {
+                Set = fun (width, height, orientation) -> setScreen width height (int orientation) |> Async.AwaitPromise
+                Settle =
+                    fun () ->
+                        async {
+                            for _ in 1..2 do
+                                do! viewportFrames () |> Async.AwaitPromise
+                        }
+                LockResolves = true
+            }
+
+        let! count = ScreenChecks.run (fun () -> BrowserScreen.forDocument document) driver
+        return {| screen = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared custom highlight assertions.</summary>
 let runHighlights () =
     let document = document ()
