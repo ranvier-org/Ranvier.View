@@ -1212,6 +1212,12 @@ let runSegments () =
 
     {| segments = count |}
 
+/// <summary>Runs the shared custom highlight assertions.</summary>
+let runHighlights () =
+    let document = document ()
+    let count = HighlightChecks.run (fun () -> BrowserHighlights.forDocument document) document HighlightChecks.Chromium
+    {| highlights = count |}
+
 /// <summary>Runs the shared crypto assertions in a secure context.</summary>
 let runCrypto () =
     async {
