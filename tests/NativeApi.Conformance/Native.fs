@@ -85,6 +85,69 @@ type private OwnerLoop() =
 let mutable private survivor: (Ranvier.Dom.EventTarget * Ranvier.Dom.Event) option =
     None
 
+/// <summary>Runs the shared frame fixture on the manual scheduler and on the native host scheduler.</summary>
+let private runFrames () =
+    let complete (pending: System.Threading.Tasks.Task<int>) (pump: unit -> unit) =
+        let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+        while not pending.IsCompleted
+              && timeout.ElapsedMilliseconds < 20000L do
+            pump ()
+
+        pending.GetAwaiter().GetResult()
+
+    let manual = Ranvier.Dom.ManualFrameScheduler ()
+
+    let manualDriver: FrameChecks.Driver =
+        {
+            Checkpoint = fun () -> async { manual.RunMicrotasks () }
+            Elapse = fun milliseconds -> async { manual.Advance milliseconds }
+            NextFrame = fun () -> async { manual.RunFrame () }
+        }
+
+    let manualCount =
+        complete
+            (FrameChecks.run (fun () -> manual :> Ranvier.Dom.FrameScheduler) manualDriver
+             |> Async.StartImmediateAsTask)
+            ignore
+
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+
+    let hostCount =
+        try
+            let driver: FrameChecks.Driver =
+                {
+                    Checkpoint = fun () -> async { host.RunMicrotasks () }
+                    Elapse =
+                        fun milliseconds ->
+                            async {
+                                let clock = System.Diagnostics.Stopwatch.StartNew ()
+
+                                while clock.Elapsed.TotalMilliseconds < milliseconds do
+                                    host.Cycle 1
+
+                                host.Cycle ()
+                            }
+                    NextFrame = fun () -> async { host.Frame () |> ignore }
+                }
+
+            complete
+                (FrameChecks.run (fun () -> Ranvier.View.WebCore.Frames.forHost host) driver
+                 |> Async.StartImmediateAsTask)
+                (fun () -> host.Cycle ())
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith "Frame fixture leaked native wrappers"
+
+    if manualCount <> 18 || hostCount <> 18 then
+        failwith $"Frame shared assertions did not run: manual {manualCount}, host {hostCount}"
+
+    System.Console.WriteLine $"NATIVE_API A12 PASS assertions={hostCount} manual={manualCount}"
+    hostCount
+
 /// <summary>Runs the shared input state fixture with native window identity and host-disposal checks.</summary>
 let private runInputState () =
     let host = WebCoreHost.Create (320, 240)
@@ -779,6 +842,7 @@ let private runAll () =
     runViewport () |> ignore
     runForms () |> ignore
     runDomModel () |> ignore
+    runFrames () |> ignore
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
@@ -1754,6 +1818,9 @@ let main args =
         0
     elif Array.contains "--forms-only" args then
         runForms () |> ignore
+        0
+    elif Array.contains "--frames-only" args then
+        runFrames () |> ignore
         0
     elif Array.contains "--cancellation-only" args then
         runCancellation () |> ignore

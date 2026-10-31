@@ -815,6 +815,48 @@ let private viewportFrames () : JS.Promise<unit> = jsNative
 
 /// <summary>Runs the shared viewport assertions with Chromium device-metrics emulation and page activation.</summary>
 /// <remarks>Headless Chromium keeps the page visible, so the visibility steps are native-only.</remarks>
+[<Emit("new Promise(resolve => setTimeout(resolve, $0))")>]
+let private sleep (milliseconds: float) : JS.Promise<unit> = jsNative
+
+[<Emit("new Promise(resolve => requestAnimationFrame(() => resolve()))")>]
+let private animationFrame () : JS.Promise<unit> = jsNative
+
+[<Emit("Promise.resolve()")>]
+let private resolved () : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared frame fixture on the manual scheduler and on the document Window.</summary>
+let runFrames () =
+    async {
+        let manual = ManualFrameScheduler ()
+
+        let! manualCount =
+            FrameChecks.run
+                (fun () -> manual :> FrameScheduler)
+                {
+                    Checkpoint = fun () -> async { manual.RunMicrotasks () }
+                    Elapse = fun milliseconds -> async { manual.Advance milliseconds }
+                    NextFrame = fun () -> async { manual.RunFrame () }
+                }
+
+        let document = document ()
+
+        let! count =
+            FrameChecks.run
+                (fun () -> BrowserFrames.forDocument document)
+                {
+                    Checkpoint = fun () -> resolved () |> Async.AwaitPromise
+                    Elapse = fun milliseconds -> sleep (milliseconds + 5.0) |> Async.AwaitPromise
+                    NextFrame = fun () -> animationFrame () |> Async.AwaitPromise
+                }
+
+        return
+            {|
+                frames = count
+                manualFrames = manualCount
+            |}
+    }
+    |> Async.StartAsPromise
+
 let runViewport () =
     async {
         let document = document ()

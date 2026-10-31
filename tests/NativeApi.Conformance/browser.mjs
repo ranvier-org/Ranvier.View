@@ -19,6 +19,7 @@ const svgSurfacesOnly = process.argv.includes('--svg-surfaces-only');
 const resourcesOnly = process.argv.includes('--resources-only');
 const svgPaintOnly = process.argv.includes('--svg-paint-only');
 const inputStateOnly = process.argv.includes('--input-state-only');
+const framesOnly = process.argv.includes('--frames-only');
 const viewportOnly = process.argv.includes('--viewport-only');
 const formsOnly = process.argv.includes('--forms-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
@@ -122,11 +123,25 @@ const runForms = async () => {
   }
 };
 const FORMS_ASSERTIONS = 67;
+// A12 runs the frame fixture on the manual scheduler and on the Window's frames, timers and microtasks.
+const runFrames = async () => {
+  const framesBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await framesBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runFrames(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.frames !== 18 || result.manualFrames !== 18) throw new Error(`Frame assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API A12 PASS assertions=${result.frames} manual=${result.manualFrames} engine=chromium`);
+  } finally {
+    await framesBrowser.close();
+  }
+};
 let browser;
 try {
   if (inputStateOnly) { await runInputState(); process.exitCode = 0; }
   else if (viewportOnly) { await runViewport(); process.exitCode = 0; }
   else if (formsOnly) { await runForms(); process.exitCode = 0; }
+  else if (framesOnly) { await runFrames(); process.exitCode = 0; }
   else {
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
@@ -352,6 +367,7 @@ try {
   await runInputState();
   await runViewport();
   await runForms();
+  await runFrames();
   }
 } finally {
   if (browser) await browser.close();

@@ -66,6 +66,7 @@
     <Compile Include="TreeTraversal.fs" />
     <Compile Include="MathMLElements.fs" />
     <Compile Include="TraversalLifecycle.fs" />
+    <Compile Include="FrameChecks.fs" />
     <Compile Include="../UserTiming/Native.fs" Link="UserTimingNative.fs" />
     <Compile Include="Native.fs" />
     <ProjectReference Include="../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />
