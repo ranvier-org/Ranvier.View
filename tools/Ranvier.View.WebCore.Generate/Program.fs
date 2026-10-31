@@ -126,6 +126,9 @@ let private kinds =
             "Highlight", "Kind.Highlight"
             "HighlightRegistry", "Kind.HighlightRegistry"
             "FileReader", "Kind.FileReader"
+            "CanvasRenderingContext2D", "Kind.CanvasRenderingContext2D"
+            "CanvasGradient", "Kind.CanvasGradient"
+            "CanvasPattern", "Kind.CanvasPattern"
         ]
 
 [<EntryPoint>]

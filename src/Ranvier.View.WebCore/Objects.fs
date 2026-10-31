@@ -207,6 +207,16 @@ module internal Kind =
     [<Literal>]
     let FileReader = 98
 
+    // R01 placeholder kinds; root assigns the integrated numbers.
+    [<Literal>]
+    let CanvasRenderingContext2D = 99
+
+    [<Literal>]
+    let CanvasGradient = 100
+
+    [<Literal>]
+    let CanvasPattern = 101
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -386,6 +396,9 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.FileReader -> Native.rv_event_target_release handle
         | Kind.Highlight -> NativeDom.rv_dom_highlight_release handle
         | Kind.HighlightRegistry -> NativeDom.rv_dom_highlight_registry_release handle
+        | Kind.CanvasRenderingContext2D -> NativeDom.rv_dom_canvas_rendering_context2_d_release handle
+        | Kind.CanvasGradient -> NativeDom.rv_dom_canvas_gradient_release handle
+        | Kind.CanvasPattern -> NativeDom.rv_dom_canvas_pattern_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =
