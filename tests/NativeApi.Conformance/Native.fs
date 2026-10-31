@@ -1650,10 +1650,8 @@ let private runStrings () =
 
     let shared =
         try
-            StringChecks.run
-                host.Document
-                (fun () -> Ranvier.View.WebCore.EventDetails.forHost host)
-                (fun () -> Ranvier.View.WebCore.BinaryValues.forHost host)
+            StringChecks.run host.Document (fun () -> Ranvier.View.WebCore.EventDetails.forHost host) (fun () ->
+                Ranvier.View.WebCore.BinaryValues.forHost host)
         finally
             (host :> System.IDisposable).Dispose()
 
@@ -1836,7 +1834,8 @@ let private runBlobUrls () =
     let wait (result: 'T option ref) =
         let timeout = System.Diagnostics.Stopwatch.StartNew ()
 
-        while result.Value.IsNone && timeout.ElapsedMilliseconds < 60000L do
+        while result.Value.IsNone
+              && timeout.ElapsedMilliseconds < 60000L do
             host.Cycle () |> ignore
 
         result.Value.Value
@@ -1861,19 +1860,19 @@ let private runBlobUrls () =
 
             let timeout = System.Diagnostics.Stopwatch.StartNew ()
 
-            while not count.IsCompleted && timeout.ElapsedMilliseconds < 120000L do
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 120000L do
                 host.Cycle () |> ignore
 
             let count = count.GetAwaiter().GetResult()
             let service = Ranvier.View.WebCore.BlobUrls.forHost host
             use values = Ranvier.View.WebCore.BinaryValues.forHost host
-            let blob = values.CreateBlob ([| Ranvier.Dom.BlobPart.Text "kept" |], Ranvier.Dom.BlobOptions.Default)
+
+            let blob =
+                values.CreateBlob ([| Ranvier.Dom.BlobPart.Text "kept" |], Ranvier.Dom.BlobOptions.Default)
 
             let wrongThread =
-                System.Threading.Tasks.Task
-                    .Run(fun () -> rejected (fun () -> service.CreateObjectUrl blob |> ignore))
-                    .GetAwaiter()
-                    .GetResult()
+                System.Threading.Tasks.Task.Run(fun () -> rejected (fun () -> service.CreateObjectUrl blob |> ignore)).GetAwaiter().GetResult()
 
             expect wrongThread "URL.createObjectURL rejects another thread"
 
@@ -1882,7 +1881,13 @@ let private runBlobUrls () =
             let path = System.IO.Path.Combine (directory.FullName, "data.txt")
             System.IO.File.WriteAllText (path, "file-bytes")
             let file = Ranvier.View.WebCore.BlobUrls.createFile host path
-            expect (file.name = "data.txt" && file.size = 10UL && file.``type`` = "text/plain") "A file-backed File takes its name, size and type from the path"
+
+            expect
+                (file.name = "data.txt"
+                 && file.size = 10UL
+                 && file.``type`` = "text/plain")
+                "A file-backed File takes its name, size and type from the path"
+
             let text = ref None
             use _ = service.ReadText (file, fun outcome -> text.Value <- Some outcome)
             expect (wait text = Ranvier.Dom.ResourceOutcome.Succeeded "file-bytes") "A file-backed File reads its bytes"
@@ -1898,7 +1903,9 @@ let private runBlobUrls () =
 
             expect
                 (try
-                    Ranvier.View.WebCore.BlobUrls.createFile host "relative.txt" |> ignore
+                    Ranvier.View.WebCore.BlobUrls.createFile host "relative.txt"
+                    |> ignore
+
                     false
                  with :? System.ArgumentException ->
                      true)
@@ -1906,7 +1913,10 @@ let private runBlobUrls () =
 
             // Document replacement revokes the document's URLs and invalidates a read in flight.
             let url = service.CreateObjectUrl blob
-            let big = values.CreateBlob ([| Ranvier.Dom.BlobPart.Bytes (Array.zeroCreate (1 <<< 20)) |], Ranvier.Dom.BlobOptions.Default)
+
+            let big =
+                values.CreateBlob ([| Ranvier.Dom.BlobPart.Bytes (Array.zeroCreate (1 <<< 20)) |], Ranvier.Dom.BlobOptions.Default)
+
             let replaced = ref None
             use _ = service.ReadBytes (big, fun outcome -> replaced.Value <- Some outcome)
             host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
@@ -1939,7 +1949,12 @@ let private runBlobUrls () =
 
     expect (session.LiveObjects = 0) "Blob URL fixture leaves no live native objects"
     let service, _, pending = held.Value
-    expect (pending.Snapshot <> Ranvier.Dom.ResourceState.Pending) "Host disposal ends a read in flight"
+
+    expect
+        (pending.Snapshot
+         <> Ranvier.Dom.ResourceState.Pending)
+        "Host disposal ends a read in flight"
+
     expect (rejected (fun () -> service.CreateFileReader () |> ignore)) "A held blob URL service rejects calls after host disposal"
     pending.Dispose ()
     service.Dispose ()
@@ -1967,7 +1982,9 @@ let private runCoordinates () =
         if not condition then
             failwith message
 
-    let point x y : Ranvier.Dom.CoordinatePoint = { X = x; Y = y }
+    let point x y : Ranvier.Dom.CoordinatePoint =
+        { X = x; Y = y }
+
     let client = Ranvier.Dom.CoordinateSpace.Client
     let hostSpace = Ranvier.Dom.CoordinateSpace.Host
     let page = Ranvier.Dom.CoordinateSpace.Page
@@ -1994,7 +2011,9 @@ let private runCoordinates () =
 
             // While page-scaled, HOST is CLIENT times the page scale in both directions.
             RanvierWebCoreAbi.Native.rv_host_set_page_scale (host.Handle, 2.0, 40, 60)
-            |> fun status -> if status <> 0 then failwith $"rv_host_set_page_scale {status}"
+            |> fun status ->
+                if status <> 0 then
+                    failwith $"rv_host_set_page_scale {status}"
 
             expect (service.Convert (point 10.0 20.0, client, hostSpace) = Ok (point 20.0 40.0)) "Client to host doubles at page scale 2"
             expect (service.Convert (point 10.0 20.0, hostSpace, client) = Ok (point 5.0 10.0)) "Host to client halves at page scale 2"
@@ -2005,13 +2024,17 @@ let private runCoordinates () =
                 "Device is host times the device scale"
 
             RanvierWebCoreAbi.Native.rv_host_set_page_scale (host.Handle, 1.0, 0, 0)
-            |> fun status -> if status <> 0 then failwith $"rv_host_set_page_scale {status}"
+            |> fun status ->
+                if status <> 0 then
+                    failwith $"rv_host_set_page_scale {status}"
 
             let wrongThread =
                 System.Threading.Tasks.Task
                     .Run(fun () ->
                         try
-                            service.Convert (point 0.0 0.0, client, hostSpace) |> ignore
+                            service.Convert (point 0.0 0.0, client, hostSpace)
+                            |> ignore
+
                             false
                         with :? System.InvalidOperationException ->
                             true)
@@ -2021,10 +2044,11 @@ let private runCoordinates () =
             expect wrongThread "A conversion rejects another thread"
             let body = host.Document.body
             let stranger = other.Document.body
-            (other :> System.IDisposable).Dispose ()
+            (other :> System.IDisposable).Dispose()
 
             expect
-                (service.Convert (point 0.0 0.0, Ranvier.Dom.CoordinateSpace.Element stranger, client) = Error Ranvier.Dom.CoordinateUnavailable.Detached)
+                (service.Convert (point 0.0 0.0, Ranvier.Dom.CoordinateSpace.Element stranger, client) =
+                    Error Ranvier.Dom.CoordinateUnavailable.Detached)
                 "An element of a disposed host is detached"
 
             host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
@@ -2041,15 +2065,17 @@ let private runCoordinates () =
             held <- Some service
             count
         finally
-            (other :> System.IDisposable).Dispose ()
-            (host :> System.IDisposable).Dispose ()
+            (other :> System.IDisposable).Dispose()
+            (host :> System.IDisposable).Dispose()
 
     expect (session.LiveObjects = 0) "Coordinate fixture leaves no live native objects"
     let service = held.Value
 
     let rejected =
         try
-            service.Convert (point 0.0 0.0, page, client) |> ignore
+            service.Convert (point 0.0 0.0, page, client)
+            |> ignore
+
             false
         with :? System.ObjectDisposedException ->
             true
@@ -2109,7 +2135,11 @@ let private runCascade () =
 
             expect wrongThread "A cascade read rejects another thread"
             host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
-            expect (service.Cascade (body, "order") = Error Ranvier.Dom.DiagnosticsUnavailable.NotRendered) "An element of a replaced document is not read"
+
+            expect
+                (service.Cascade (body, "order") = Error Ranvier.Dom.DiagnosticsUnavailable.NotRendered)
+                "An element of a replaced document is not read"
+
             held <- Some service
             count
         finally
@@ -2525,6 +2555,164 @@ let private runCancellation () =
     System.Console.WriteLine $"NATIVE_API I01 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs a task on the host thread, cycling the host until it completes; a hang guard raises.</summary>
+let private drive (host: WebCoreHost) (pending: System.Threading.Tasks.Task<'T>) =
+    let mutable turns = 0
+
+    while not pending.IsCompleted do
+        turns <- turns + 1
+
+        if turns > 10000 then
+            failwith "Task did not complete on the host thread"
+
+        host.Cycle ()
+
+    pending.GetAwaiter().GetResult()
+
+/// <summary>Runs the shared wake lock fixture and native policy, visibility, display, thread and teardown checks.</summary>
+let private runWakeLocks () =
+    let host = WebCoreHost.Create (320, 240)
+    let deniedHost = WebCoreHost.Create (32, 32)
+    let session = host.Session
+    let mutable lifetime = 0
+    let kinds = ResizeArray<Ranvier.Dom.WakeLockType>()
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let rejects (pending: System.Threading.Tasks.Task<Ranvier.Dom.WakeLockSentinel>) (name: string) =
+        try
+            drive host pending |> ignore
+            false
+        with
+        | Ranvier.Dom.WakeLockException (actual, _) -> actual = name
+        | :? System.AggregateException as error ->
+            match error.InnerException with
+            | Ranvier.Dom.WakeLockException (actual, _) -> actual = name
+            | _ -> false
+
+    let shared =
+        try
+            let granted =
+                WakeLock.forHost
+                    host
+                    (Some (fun kind ->
+                        kinds.Add kind
+                        true))
+
+            let denied = WakeLock.forHost deniedHost None
+            let cancellation = Ranvier.View.WebCore.Cancellation.forHost host
+            let count = drive host (WakeLocks.run granted denied cancellation)
+
+            expect
+                (kinds.Count > 0
+                 && Seq.forall ((=) Ranvier.Dom.WakeLockType.Screen) kinds)
+                "Policy decides each screen request"
+
+            let pending = granted.Request (Ranvier.Dom.WakeLockType.Screen, None)
+            expect (not pending.IsCompleted) "A request completes after the call returns"
+            let held = drive host pending
+            expect (WakeLock.displayHeld () = System.OperatingSystem.IsWindows ()) "A held lock holds the display on Windows"
+            let mutable hiddenReleases = 0
+            use _hidden = held.OnRelease (fun () -> hiddenReleases <- hiddenReleases + 1)
+
+            RanvierWebCoreAbi.Native.rv_host_set_visible (host.Handle, 0)
+            |> ignore
+
+            host.Cycle ()
+            expect held.Released "Hiding the page releases its locks"
+            expect (hiddenReleases = 1) "A hidden page dispatches release"
+            expect (not (WakeLock.displayHeld ())) "Releasing the last lock frees the display"
+            expect (rejects (granted.Request (Ranvier.Dom.WakeLockType.Screen, None)) "NotAllowedError") "A hidden page rejects requests"
+
+            RanvierWebCoreAbi.Native.rv_host_set_visible (host.Handle, 1)
+            |> ignore
+
+            let visible = drive host (granted.Request (Ranvier.Dom.WakeLockType.Screen, None))
+            expect (not visible.Released) "A visible page grants again"
+            drive host (visible.Release ())
+
+            let errors = host.Errors.Count
+            let throwing = WakeLock.forHost host (Some (fun _ -> failwith "policy failure"))
+            expect (rejects (throwing.Request (Ranvier.Dom.WakeLockType.Screen, None)) "NotAllowedError") "A throwing policy denies"
+            expect (host.Errors.Count = errors + 1) "A throwing policy is reported to the host"
+            throwing.Dispose ()
+            expect (rejects (granted.Request (Ranvier.Dom.WakeLockType.Screen, None)) "NotAllowedError") "A disposed service clears the policy"
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            granted.Request (Ranvier.Dom.WakeLockType.Screen, None)
+                            |> ignore
+
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Wake locks reject another thread"
+
+            let disposedRequest =
+                try
+                    throwing.Request (Ranvier.Dom.WakeLockType.Screen, None)
+                    |> ignore
+
+                    false
+                with :? System.ObjectDisposedException ->
+                    true
+
+            expect disposedRequest "A disposed service rejects requests"
+
+            let survivor = WakeLock.forHost host (Some (fun _ -> true))
+            let kept = drive host (survivor.Request (Ranvier.Dom.WakeLockType.Screen, None))
+            expect (WakeLock.displayHeld () = System.OperatingSystem.IsWindows ()) "Survivor holds the display before host disposal"
+            use registry = Ranvier.Dom.Capabilities.create ()
+            use _provider = registry.Register WakeLock.capabilityProvider
+
+            let report =
+                drive
+                    host
+                    (registry.Observe (
+                        Ranvier.Dom.Capabilities.key Ranvier.Dom.CapabilityCategory.PlatformFacility "display-wake",
+                        System.Threading.CancellationToken.None
+                    ))
+
+            let expected =
+                if System.OperatingSystem.IsWindows () then
+                    Ranvier.Dom.CapabilityState.Yes
+                else
+                    Ranvier.Dom.CapabilityState.No
+
+            expect (report.Available.State = expected) "Display wake availability follows the operating system"
+            ignore kept
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+            (deniedHost :> System.IDisposable).Dispose()
+
+    expect (not (WakeLock.displayHeld ())) "Host disposal frees the display"
+    expect (session.LiveObjects = 0) "Wake lock fixture leaves no live native objects"
+
+    if shared <> 17 then
+        failwith (
+            "Wake lock shared assertions did not run: "
+            + string shared
+        )
+
+    System.Console.WriteLine ("NATIVE_API B10 PASS assertions=" + string shared)
+
+    System.Console.WriteLine (
+        "NATIVE_API B10 LIFETIME PASS assertions="
+        + string lifetime
+    )
+
+    shared
+
 let private runCapabilities () =
     let host = WebCoreHost.Create (320, 240)
     let session = host.Session
@@ -2779,6 +2967,7 @@ let private runAll () =
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
+    runWakeLocks () |> ignore
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
@@ -3817,6 +4006,9 @@ let main args =
         0
     elif Array.contains "--cancellation-only" args then
         runCancellation () |> ignore
+        0
+    elif Array.contains "--wake-locks-only" args then
+        runWakeLocks () |> ignore
         0
     elif Array.contains "--capabilities-only" args then
         runCapabilities () |> ignore

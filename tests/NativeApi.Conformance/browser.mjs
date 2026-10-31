@@ -486,6 +486,7 @@ try {
     return pixel[1] < 64 && pixel[2] < 64 && pixel[3] < 64;
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
+  await page.context().grantPermissions(['screen-wake-lock'], { origin: `http://127.0.0.1:${server.address().port}` });
   const checks = await page.evaluate(async focused => {
     try {
       const fixture = await import('/Browser.js');
@@ -608,6 +609,8 @@ try {
   if (checks.customEvents !== 45) throw new Error(`Custom event assertions did not run: ${checks.customEvents}`);
   console.log(`BROWSER_API I02 PASS assertions=${checks.customEvents} engine=chromium`);
   checkDomModel();
+  if (checks.wakeLocks !== 17) throw new Error(`Wake lock assertions did not run: ${checks.wakeLocks}`);
+  console.log(`BROWSER_API B10 PASS assertions=${checks.wakeLocks} engine=chromium`);
   console.log(`BROWSER_API D10_VIEW PASS assertions=${checks.viewTables} engine=chromium`);
   if (checks.viewHyperlinks !== 50) throw new Error('View hyperlink authoring assertions did not run');
   console.log(`BROWSER_API D11_VIEW_HYPERLINKS PASS assertions=${checks.viewHyperlinks} engine=chromium`);
