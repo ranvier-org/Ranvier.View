@@ -2,7 +2,7 @@
 
 Route: Facade (ranvier-org/Ranvier.WebCore#108). No native ABI change: the native host runs idle periods in its
 managed loop, as it runs frames, timers and microtasks (A12). Managed: DOM alpha.32 (Core) and Views 0.1.22 /
-backend alpha.22, stacked on the G05 managed heads (until they land, on the A12 heads Core 8077b67e, Views db4cb38).
+backend alpha.22, stacked on the G05 managed heads (Core 135897c2, Views 4b5085f) and pinning Native preview.29.
 
 ## Core and view state
 
@@ -36,32 +36,40 @@ Receipt: `docs/research/native-api-delivery/idle-red-measurements.json`.
 
 ## Contract
 
-- `Ranvier.Dom.IdleDeadline`: `TimeRemaining: unit -> float` (milliseconds, at least 0, at most 50) and
-  `DidTimeout: bool`.
-- `Ranvier.Dom.IdleScheduler`, inheriting `FrameScheduler`: `Idle: timeout: float option * callback:
-  (IdleDeadline -> unit) -> IDisposable`. A callback runs in a later idle period than the one it was requested in,
-  in request order. With a timeout, the callback runs no later than the timeout elapsing, with `DidTimeout = true` and
-  `TimeRemaining () = 0`. Disposing the scheduler cancels pending idle callbacks.
+- `Ranvier.Dom.IdleDeadline`: `TimeRemaining: unit -> float` (milliseconds, from 0 to 50) and `DidTimeout: bool`.
+- `Ranvier.Dom.IdleScheduler`, a separate `IDisposable` interface; `FrameScheduler` stays as A12 shipped it.
+  `Idle: timeout: float option * callback: (IdleDeadline -> unit) -> IDisposable`. Callbacks run in request order;
+  a callback requested inside an idle callback runs in a later idle period. With a timeout, the callback runs no
+  later than the timeout elapsing, with `DidTimeout = true` and `TimeRemaining () = 0`. Cancellation is idempotent.
+  Disposing the scheduler cancels pending idle callbacks and rejects later requests with `ObjectDisposedException`.
+  Providers implement `FrameScheduler` and `IdleScheduler` on one object where the host has both; code that needs
+  both asks for both.
+- Capability: `PlatformFacility` key `idle-callbacks`, observed by each provider.
 - Providers:
-  - `BrowserFrames.idleForDocument`: Window `requestIdleCallback`/`cancelIdleCallback`. Where the Window lacks
-    them (WebKit with the preference off), callbacks run on a 0 ms timer with a 50 ms deadline from the timer's start.
-  - `Ranvier.View.WebCore.Frames.idleForHost`: `WebCoreHost.Cycle` starts an idle period when it ran no posted work,
-    no frame is requested and no timer is due; the deadline is the earlier of 50 ms and the next timer's due time.
+  - `BrowserIdle.forDocument`: `Some` scheduler over Window `requestIdleCallback`/`cancelIdleCallback`, `None`
+    where the Window lacks them (WebKit with the preference off). `BrowserIdle.capabilities` reports `idle-callbacks`
+    with `Implemented` and `Available` set to `No` there. No timer emulation.
+  - `Ranvier.View.WebCore.Frames.forHost` returns a scheduler implementing both interfaces, over the host's run loop:
+    `WebCoreHost.Cycle` starts an idle period after it runs posted work, due timers and microtasks, when no frame is
+    requested. Deadline source: the host timing clock. Deadline = min(start + 50 ms, the earliest pending timer's due
+    time), the 50 ms cap matching Chromium's measured 49.9 ms maximum. A period runs the callbacks requested before
+    it started, in request order, until `TimeRemaining` reaches 0; the rest wait for the next period. Timeouts are host
+    timers that run the callback with `DidTimeout = true`.
   - `ManualFrameScheduler` implements `IdleScheduler`: `RunIdle budget` runs the callbacks requested before the call
-    with a deadline of the earlier of `budget`, 50 ms and the next timer; `Advance` runs expired idle timeouts in
+    with deadline min(now + budget, now + 50, the next timer's due time); `Advance` runs expired idle timeouts in
     deadline order with the timers.
-- `Ranvier.View.Dom.Frames.idle scheduler timeout callback`: owner-bound, as `frame`.
+- `Ranvier.View.Dom.Frames.idle (scheduler: IdleScheduler) timeout callback`: owner-bound, as `frame`.
 
 ## Verification
 
-`tests/NativeApi.Conformance/IdleChecks.fs` runs on the manual scheduler and on the host scheduler, on native JIT,
-NativeAOT and Chromium: request order, the 50 ms deadline bound, `TimeRemaining` reaching 0, a nested request running
-in a later period, timeout with `DidTimeout`, frame-before-idle order, idempotent cancellation, owner disposal and
-scheduler disposal. Native lifetime cases: host disposal with pending idle callbacks and timeouts.
+`tests/NativeApi.Conformance/IdleChecks.fs` asserts the Chromium-measured behaviour on the manual, native and browser
+schedulers, on native JIT, NativeAOT and Chromium: request order, a nested request running in a later period, a
+pending frame running first, a timeout giving `DidTimeout = true` with 0 remaining, idempotent cancellation, the
+50 ms deadline bound, owner disposal and scheduler disposal. Native timing differences from Chromium are recorded as
+qualifications in the evidence. Native lifetime cases: host disposal with pending idle callbacks and timeouts.
 
-## Open decisions for review
+## Decisions (root, 2026-10-31)
 
-- `IdleScheduler` inherits `FrameScheduler` rather than adding `Idle` to `FrameScheduler`, so third-party
-  `FrameScheduler` implementations stay source compatible.
-- The fallback where the Window lacks `requestIdleCallback`: the 0 ms timer emulation above, or a capability
-  observation that reports idle scheduling as unsupported.
+- `IdleScheduler` is separate from `FrameScheduler`.
+- A Window without `requestIdleCallback` reports an unsupported capability; a timer cannot honour idle periods or
+  deadlines.
