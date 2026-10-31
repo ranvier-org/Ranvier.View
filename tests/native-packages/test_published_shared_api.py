@@ -99,6 +99,22 @@ class PublishedSharedApiTests(unittest.TestCase):
             self.assertEqual(set(profile['module_assertions'][target]),
                              set(previous['module_assertions'][target]) | {'C13'})
 
+    def test_views16_profile_uses_immutable_release_and_complete_modules(self):
+        profile = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.6.json').read_text())
+        gate.validate_profile(profile)
+        self.assertEqual(profile['source_commit'], 'fdb46f000bc5d3ad8471e6734fca11efdf9d7e19')
+        self.assertEqual((profile['view_version'], profile['backend_version'], profile['dom_version'],
+                          profile['native_version'], profile['native_abi']),
+                         ('0.1.6', '0.1.0-alpha.6', '0.1.0-alpha.16', '0.1.0-preview.16', 24))
+        self.assertEqual(profile['shared_assertions'], {'native': 2642, 'browser': 2655})
+        self.assertEqual(profile['native_lifetime_assertions'], 136)
+        self.assertEqual(profile['browser_context_assertions'], 19)
+        previous = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.5.json').read_text())
+        for target in ['native', 'browser']:
+            self.assertEqual((profile['module_assertions'][target]['G07'], profile['module_assertions'][target]['G08']), (177, 710))
+            self.assertEqual(set(profile['module_assertions'][target]),
+                             set(previous['module_assertions'][target]) | {'G07', 'G08'})
+
     def test_trace_precheck_preserves_argument_aware_and_original_entries(self):
         self.assertTrue(hasattr(gate, 'instrument_native_runner'), 'Argument-aware released entry point needs a checked trace precheck.')
         for entry in ['let main _ =\n', 'let main args =\n']:
