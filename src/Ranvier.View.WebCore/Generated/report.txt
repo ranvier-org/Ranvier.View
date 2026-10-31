@@ -1,4 +1,4 @@
-234 classes; 2563 members: 2543 mapped to 2465 of 2534 rv_dom_* functions, 20 hand-written, 0 unmapped
+237 classes; 2607 members: 2587 mapped to 2507 of 2584 rv_dom_* functions, 20 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_blob_create: Blob.constructor (op)
@@ -44,6 +44,9 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_dom_rect_from_rect: DOMRect.fromRect (op)
   rv_dom_dom_rect_read_only_create: DOMRectReadOnly.constructor (op)
   rv_dom_dom_rect_read_only_from_rect: DOMRectReadOnly.fromRect (op)
+  rv_dom_domurl_can_parse: DOMURL.canParse (op)
+  rv_dom_domurl_create: DOMURL.constructor (op)
+  rv_dom_domurl_parse: DOMURL.parse (op)
   rv_dom_event_get_current_target: Event.currentTarget (get)
   rv_dom_event_get_target: Event.target (get)
   rv_dom_file_create: File.constructor (op)
@@ -61,6 +64,11 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_submit_event_create: SubmitEvent.constructor (op)
   rv_dom_toggle_event_create: ToggleEvent.constructor (op)
   rv_dom_tree_walker_get_filter: TreeWalker.filter (get)
+  rv_dom_url_pattern_create_2: URLPattern.constructor (op)
+  rv_dom_url_pattern_create_3: URLPattern.constructor (op)
+  rv_dom_url_pattern_exec: URLPattern.exec (op)
+  rv_dom_url_search_params_create: URLSearchParams.constructor (op)
+  rv_dom_url_search_params_entries: URLSearchParams.entries (op)
   rv_dom_window_get_computed_style: DOMWindow.getComputedStyle (op)
   rv_dom_window_get_scroll_x: DOMWindow.scrollX (op)
   rv_dom_window_get_scroll_y: DOMWindow.scrollY (op)
@@ -306,6 +314,9 @@ Members by class (mapped / hand-written / unmapped):
   ToggleEventObject: 3 / 0 / 0
   TreeWalkerObject: 11 / 1 / 0
   UIEventObject: 6 / 0 / 0
+  URLObject: 23 / 0 / 0
+  URLPatternObject: 12 / 0 / 0
+  URLSearchParamsObject: 9 / 0 / 0
   ValidityStateObject: 11 / 0 / 0
   WheelEventObject: 7 / 0 / 0
 

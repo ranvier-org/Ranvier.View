@@ -1021,11 +1021,7 @@ let runBinary () =
             }
 
         let! count =
-            BinaryChecks.run
-                document
-                (fun () -> BrowserBinaryValues.forDocument document)
-                (fun () -> BrowserForms.forDocument document)
-                driver
+            BinaryChecks.run document (fun () -> BrowserBinaryValues.forDocument document) (fun () -> BrowserForms.forDocument document) driver
 
         return {| binary = count |}
     }
@@ -1060,8 +1056,14 @@ let runCaret () =
                 Qualified = Map.empty
             }
 
-        let! count = CaretChecks.run document (BrowserViewportScroll.forDocument document) errorName driver
-        return {| caret = count; browser = CaretOracle.browser |}
+        let! count =
+            CaretChecks.run document (BrowserViewportScroll.forDocument document) errorName driver
+
+        return
+            {|
+                caret = count
+                browser = CaretOracle.browser
+            |}
     }
     |> Async.StartAsPromise
 
@@ -1073,6 +1075,15 @@ let runForms () =
         FormChecks.run document (fun () -> BrowserForms.forDocument document) errorName
 
     {| forms = count |}
+
+/// <summary>Runs the shared URL, URLSearchParams and URLPattern assertions.</summary>
+let runUrls () =
+    let document = document ()
+
+    let count =
+        UrlChecks.run (fun () -> BrowserUrls.forDocument document) errorName UrlChecks.Chromium
+
+    {| urls = count |}
 
 [<Emit("$0.constructor.name")>]
 let private constructorName (element: Element) : string = jsNative
