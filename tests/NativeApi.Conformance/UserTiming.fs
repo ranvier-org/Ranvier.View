@@ -27,9 +27,10 @@ let run (create: unit -> TimingService) =
     use peer = create ()
     service.ClearMarks ()
     service.ClearMeasures ()
-    let origin = service.TimeOrigin
-    equal "Unix millisecond origin" true (origin > 1_000_000_000_000.)
-    equal "providers share origin" origin peer.TimeOrigin
+    // A heap cell: on osx-arm64 NativeAOT, caught exceptions below corrupt a register-held double.
+    let origin = ref service.TimeOrigin
+    equal "Unix millisecond origin" true (origin.Value > 1_000_000_000_000.)
+    equal "providers share origin" origin.Value peer.TimeOrigin
     let mutable previous = service.Now ()
 
     for _ in 1..100 do
@@ -449,11 +450,11 @@ let run (create: unit -> TimingService) =
 
     service.ClearMeasures ()
     equal "reset empty buffer" 0 (service.GetEntries().Length)
-    equal "reset preserves origin" origin service.TimeOrigin
+    equal "reset preserves origin" origin.Value service.TimeOrigin
     equal "reset preserves clock" true (service.Now () >= previous)
     service.Dispose ()
     rejected "InvalidStateError" (fun () -> service.Now () |> ignore)
-    equal "peer survives provider disposal" origin peer.TimeOrigin
+    equal "peer survives provider disposal" origin.Value peer.TimeOrigin
     checks
 
 /// <summary>Checks deterministic equal-time ordering and independent provider reset.</summary>
