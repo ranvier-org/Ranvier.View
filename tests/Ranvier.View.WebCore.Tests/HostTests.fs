@@ -98,6 +98,26 @@ let tests =
     testList
         "IHost"
         [
+            // tests/abi/abi_layouts.py in Ranvier.WebCore checks the C layout of RvWindowMetrics: 32 bytes.
+            testCase "WindowMetrics mirrors RvWindowMetrics"
+            <| fun () ->
+                let offset name =
+                    int (Runtime.InteropServices.Marshal.OffsetOf<WindowMetrics> name)
+
+                Expect.equal (Runtime.InteropServices.Marshal.SizeOf<WindowMetrics>()) 32 "size"
+
+                Expect.equal
+                    ([
+                        "Size"
+                        "InnerWidth"
+                        "InnerHeight"
+                        "OuterWidth"
+                        "OuterHeight"
+                        "DevicePixelRatio"
+                     ]
+                     |> List.map offset)
+                    [ 0; 4; 8; 12; 16; 24 ]
+                    "field order and offsets"
             testCase "each member matches the DOM twin"
             <| fun () ->
                 onHostThread (fun () ->

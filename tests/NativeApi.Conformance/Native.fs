@@ -746,6 +746,67 @@ let private runVisualViewport () =
     System.Console.WriteLine $"NATIVE_API G03 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared ARIA element reflection fixture with native thread and host-disposal checks.</summary>
+[<Literal>]
+let private AriaChecksCount = 18
+
+let private runAria () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let mutable kept = null
+
+    let shared =
+        try
+            let count = AriaChecks.run host.Document AriaChecks.WebKit
+            let button = host.Document.createElement "button"
+            let label = host.Document.createElement "span"
+            host.Document.body.appendChild label |> ignore
+            host.Document.body.appendChild button |> ignore
+            button.ariaLabelledByElements <- [| label |]
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            button.ariaLabelledByElements |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "A reflection read on another thread raises"
+            expect (button.ariaLabelledByElements.Length = 1) "the reflection holds the label"
+            kept <- button
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    let raises (action: unit -> unit) =
+        try
+            action ()
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect (raises (fun () -> kept.ariaLabelledByElements |> ignore)) "A reflection read after host dispose raises"
+    expect (session.LiveObjects = 0) "The ARIA fixture leaves no live native objects"
+
+    if shared <> AriaChecksCount then
+        failwith $"ARIA shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API I11 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API I11 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared caret hit-testing fixture with native thread and host-disposal checks.</summary>
 [<Literal>]
 let private CaretChecksCount = 1537
@@ -1417,10 +1478,7 @@ let private runSegments () =
     let shared =
         try
             let count =
-                TextSegmentationChecks.run
-                    (fun () -> Ranvier.View.WebCore.TextSegmentation.forHost host)
-                    errorName
-                    TextSegmentationChecks.WebKit
+                TextSegmentationChecks.run (fun () -> Ranvier.View.WebCore.TextSegmentation.forHost host) errorName TextSegmentationChecks.WebKit
 
             use segmenter = Ranvier.View.WebCore.TextSegmentation.forHost host
 
@@ -1428,7 +1486,9 @@ let private runSegments () =
                 System.Threading.Tasks.Task
                     .Run(fun () ->
                         try
-                            segmenter.Segment ("a b", Ranvier.Dom.SegmentGranularity.Word, None) |> ignore
+                            segmenter.Segment ("a b", Ranvier.Dom.SegmentGranularity.Word, None)
+                            |> ignore
+
                             false
                         with :? System.InvalidOperationException ->
                             true)
@@ -1657,7 +1717,8 @@ let private runCrypto () =
 
             let timeout = System.Diagnostics.Stopwatch.StartNew ()
 
-            while not count.IsCompleted && timeout.ElapsedMilliseconds < 60000L do
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 60000L do
                 host.Cycle () |> ignore
 
             let count = count.GetAwaiter().GetResult()
@@ -2250,6 +2311,7 @@ let private runAll () =
     runViewport () |> ignore
     runViewportScroll () |> ignore
     runVisualViewport () |> ignore
+    runAria () |> ignore
     runCaret () |> ignore
     runForms () |> ignore
     runDialogs () |> ignore
@@ -3239,6 +3301,9 @@ let main args =
         0
     elif Array.contains "--scroll-only" args then
         runViewportScroll () |> ignore
+        0
+    elif Array.contains "--aria-only" args then
+        runAria () |> ignore
         0
     elif Array.contains "--visual-viewport-only" args then
         runVisualViewport () |> ignore
