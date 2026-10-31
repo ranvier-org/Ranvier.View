@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "status": "release-requested",
+  "cohort": "Views 0.1.8 / WebCore and SDL alpha.8",
+  "implementationCommit": "73c80cd07b6d23b0783ffd7e5004130a550014bf",
+  "implementationPullRequest": "https://github.com/ranvier-org/Ranvier.View/pull/19",
+  "implementationSourceHead": "0283a6909c965b27aa1124e92b39012d68ebecfa",
+  "implementationSourceAndSquashTreesEqual": false,
+  "implementationTreeNote": "#35 and #36 merged between the reviewed head and the squash, so the trees differ; main CI on the squash is the source proof.",
+  "sourceCi": 41200170038,
+  "sourceCiEvent": "push (main, 73c80cd0)",
+  "sourcePullRequestCi": 41198934972,
+  "sourceContribution": 41198934970,
+  "sourceCiStatus": "success",
+  "core": {
+    "version": "0.1.0-alpha.18",
+    "source": "b6cdd1266858083ebee281a4dece0a3eaaa751b2",
+    "verification": "Fresh official-only normal/traced restore, package-only graph, .NET 8/10 execution, Fable Node and Chromium named lookup (121 each)."
+  },
+  "native": {
+    "version": "0.1.0-preview.17",
+    "abi": 25,
+    "source": "44fe3b4885e60a228abedbfa2afa859fc1ade44a",
+    "verification": "Seven fresh official-only packages, five verified runtime payloads, 14 packaged probes and 5452 Windows packaged API assertions."
+  },
+  "qualifications": [
+    "osx-arm64 NativeAOT: the H02 fixture skips its two time-origin rechecks (the captured origin reads -Infinity after the invalid-value loop; deterministic, not yet reduced to a minimal repro), so that run reports two fewer H02 checks and prints a KNOWN line. Every other platform and runtime keeps both checks."
+  ],
+  "packageAbsence": {
+    "Ranvier.View": "0.1.8 absent on nuget.org",
+    "Ranvier.View.WebCore": "0.1.0-alpha.8 absent on nuget.org",
+    "Ranvier.View.WebCore.Sdl": "0.1.0-alpha.8 absent on nuget.org",
+    "matchingTags": 0
+  },
+  "sourceAndVersionChangesInThisDeclaration": false,
+  "publisherPolicy": "A successful trusted main push whose commit message starts with chore: release publishes its exact CI package artifact using NuGet OIDC.",
+  "remaining": [
+    "Trusted release-declaration main CI and publication.",
+    "Fresh normal/traced package-only JIT, real NativeAOT and Chromium execution of the published cohort, plus the H02 browser supplement.",
+    "Independent full-scope acceptance; the groups remain open."
+  ]
+}
