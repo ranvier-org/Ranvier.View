@@ -1,0 +1,65 @@
+BROWSER_API C12 PASS assertions=50 engine=chromium
+BROWSER_API C12 CONTEXT PASS assertions=3 engine=chromium
+BROWSER_API H06 PASS assertions=35 deterministic=14 context=6 engine=chromium
+BROWSER_API H06_DETERMINISTIC PASS assertions=14 engine=chromium
+BROWSER_API H06 CONTEXT PASS assertions=6 engine=chromium
+BROWSER_API S01_S02 PASS assertions=126 engine=chromium
+BROWSER_API S04_REACHABLE PASS assertions=361 engine=chromium
+BROWSER_API SVG CONTEXT PASS assertions=54 engine=chromium
+BROWSER_API S08 PASS assertions=49 engine=chromium
+BROWSER_API S09 PASS assertions=118 engine=chromium
+BROWSER_API S10 PASS assertions=38 engine=chromium
+BROWSER_API S11 PASS assertions=45 engine=chromium
+BROWSER_API S03 PASS assertions=194 engine=chromium
+BROWSER_API S05 PASS assertions=210 engine=chromium
+BROWSER_API S06 PASS assertions=115 arguments=3 engine=chromium
+BROWSER_API S07 PASS assertions=31 engine=chromium
+BROWSER_API H05 PASS assertions=29 engine=chromium
+BROWSER_API C16 PASS assertions=471 engine=chromium
+BROWSER_API C16 CONTEXT PASS assertions=3 engine=chromium
+BROWSER_API G08 PASS assertions=710 engine=chromium
+BROWSER_API G08 CONTEXT PASS assertions=3 engine=chromium
+BROWSER_API G07 PASS assertions=177 engine=chromium
+BROWSER_API G07 CONTEXT PASS assertions=3 engine=chromium
+BROWSER_API C13 PASS assertions=127 engine=chromium
+BROWSER_API C13 CONTEXT PASS assertions=3 engine=chromium
+BROWSER_API C14 PASS assertions=99 engine=chromium
+BROWSER_API C14 CONTEXT PASS assertions=3 engine=chromium
+BROWSER_API D10 PASS assertions=30 engine=chromium
+BROWSER_API H02 PASS assertions=180 deterministic=181 engine=chromium
+BROWSER_API H07 PASS assertions=42 engine=chromium
+BROWSER_API I01 PASS assertions=56 interop=12 engine=chromium
+BROWSER_API D10_VIEW PASS assertions=29 engine=chromium
+BROWSER_API D11_VIEW_HYPERLINKS PASS assertions=50 engine=chromium
+BROWSER_API C05 PASS assertions=45 oracle=196609 engine=chromium
+BROWSER_API C03 PASS assertions=32 engine=chromium
+BROWSER_API C03 CONTEXT PASS assertions=2 engine=chromium
+BROWSER_API C01_C02 PASS assertions=42 engine=chromium
+BROWSER_API G06 PASS assertions=74 engine=chromium
+BROWSER_API C18 PASS assertions=49 engine=chromium
+BROWSER_API C18 CAPABILITY fontWidthAlias=false engine=chromium
+BROWSER_API C22 PASS assertions=23 engine=chromium
+BROWSER_API C21 PASS assertions=44 engine=chromium
+BROWSER_API C21 CAPABILITY positionTry=true engine=chromium
+BROWSER_API C19 PASS assertions=64 engine=chromium
+BROWSER_API C19 CAPABILITY speakAs=numbers engine=chromium
+BROWSER_API C11 PASS assertions=82 engine=chromium
+BROWSER_API C11 CAPABILITY length=true invalidKeyTextError=SyntaxError engine=chromium
+BROWSER_API C09 PASS assertions=44 engine=chromium
+BROWSER_API C10 PASS assertions=93 engine=chromium
+BROWSER_API C10 CAPABILITY scopeRules=true nestedDeclarations=true importContentsReadable=true engine=chromium
+BROWSER_API C04 PASS assertions=39 engine=chromium
+BROWSER_API C01_C02 CONTEXT PASS assertions=2 engine=chromium
+BROWSER_API D11 PASS assertions=205 engine=chromium
+BROWSER_API D09 PASS assertions=24 engine=chromium
+BROWSER_API D09_VIEWPORT PASS assertions=30 engine=chromium
+BROWSER_API D11_OPERATIONS PASS assertions=26 engine=chromium
+BROWSER_API D11 CAPABILITY attachmentIdentifier=undefined engine=chromium
+BROWSER_API CSSOM PASS assertions=58 engine=chromium
+BROWSER_API C08 PASS assertions=131 engine=chromium
+BROWSER_API SVG_CSSOM PASS assertions=31 engine=chromium
+BROWSER_API HYPERLINKS PASS assertions=60 engine=chromium
+BROWSER_API C07 PASS assertions=78 engine=chromium
+BROWSER_API D12 PASS assertions=109 engine=chromium
+BROWSER_API D12 CAPABILITY failedLinkSheet=replacement engine=chromium
+BROWSER_API D09 TAB PASS engine=chromium

@@ -716,6 +716,63 @@ let private cancellationInterop (document: Document) =
         return checks
     }
 
+[<Emit("fetch($0).then(r => r.arrayBuffer()).then(b => new Uint8Array(b))")>]
+let private fixtureBytes (url: string) : JS.Promise<byte array> = jsNative
+
+[<Emit("Uint8Array.from(atob($0), c => c.charCodeAt(0))")>]
+let private base64 (text: string) : byte array = jsNative
+
+[<Literal>]
+let private ResourcePng =
+    "iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAYAAACddGYaAAAAEUlEQVR4nGP4z8DwH4YZkDkAm34L9XKwuTwAAAAASUVORK5CYII="
+
+/// <summary>Runs the shared resource-service assertions over Image.decode, FontFace and document.fonts.</summary>
+/// <remarks>Chromium resolves decode for a PNG with corrupt image data, and a revoked object URL reaches no provider.</remarks>
+let runResources () =
+    async {
+        let document = document ()
+
+        let! font =
+            fixtureBytes "/fixtures/Ahem.ttf"
+            |> Async.AwaitPromise
+
+        let fixture: Resources.Fixture =
+            {
+                Png = base64 ResourcePng
+                CorruptPng =
+                    base64
+                        "iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAYAAACddGYaAAAAKUlEQVR4nAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJ4rAmh4AAAAASUVORK5CYII="
+                Font = font
+            }
+
+        let image (url: string) =
+            let element = document.createElement "img"
+
+            let source =
+                if url.EndsWith "/element.png" then
+                    "data:image/png;base64,"
+                    + ResourcePng
+                    + "#/element.png"
+                else
+                    url
+
+            element.setAttribute ("src", source)
+            element
+
+        let engine: Resources.Engine =
+            {
+                CorruptImageDecodes = true
+                TransportReleaseRequests = 0
+                ReleaseEngineCaches = ignore
+            }
+
+        let! count =
+            Resources.run engine fixture (fun provider -> BrowserResources.forDocument document provider) image
+
+        return {| resources = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {
