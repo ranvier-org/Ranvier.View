@@ -90,6 +90,7 @@
         <Compile Include="ViewportScroll.fs" />
         <Compile Include="VisualViewport.fs" />
         <Compile Include="Frames.fs" />
+        <Compile Include="ValueFactories.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />

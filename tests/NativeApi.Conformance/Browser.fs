@@ -1183,6 +1183,18 @@ let runEventDetails () =
     }
     |> Async.StartAsPromise
 
+/// <summary>Runs the shared value factory assertions.</summary>
+let runValueFactories () =
+    async {
+        let document = document ()
+
+        let count =
+            ValueFactoryChecks.run document (fun () -> BrowserValueFactories.forDocument document)
+
+        return {| valueFactories = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared caret hit-testing assertions under device-metrics emulation.</summary>
 let runCaret () =
     async {
@@ -1299,6 +1311,7 @@ let runStrings () =
         StringChecks.run document (fun () -> BrowserEventDetails.forDocument document) (fun () -> BrowserBinaryValues.forDocument document)
 
     {| strings = count |}
+
 /// <summary>Runs the shared diagnostics assertions.</summary>
 let runDiagnostics () =
     let document = document ()

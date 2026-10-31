@@ -1352,6 +1352,153 @@ let private runEventDetails () =
     System.Console.WriteLine $"NATIVE_API I08 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared value factory fixture with native type, session, thread and teardown checks.</summary>
+[<Literal>]
+let private ValueFactoryChecksCount = 112
+
+let private runValueFactories () =
+    let host = WebCoreHost.Create (320, 240)
+    let other = WebCoreHost.Create (64, 64)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let raisesType (accept: exn -> bool) (action: unit -> unit) =
+        try
+            action ()
+            false
+        with error ->
+            accept error
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                ValueFactoryChecks.run host.Document (fun () -> Ranvier.View.WebCore.ValueFactories.forHost host)
+
+            let service = Ranvier.View.WebCore.ValueFactories.forHost host
+            let foreign = Ranvier.View.WebCore.ValueFactories.forHost other
+            let options = Ranvier.Dom.EventOptions.Default
+            let text = service.CreateText "kept"
+
+            let wheel =
+                service.CreateWheelEvent ("wheel", options, Ranvier.Dom.MouseFields.Default, Ranvier.Dom.WheelFields.Default)
+
+            expect (box text :? Ranvier.Dom.Text) "A constructed Text wraps as Text"
+            expect (box wheel :? Ranvier.Dom.WheelEvent) "A constructed WheelEvent wraps as WheelEvent"
+            expect (box (service.CreateRange ()) :? Ranvier.Dom.Range) "A constructed Range wraps as Range"
+            expect (box (service.CreateStaticRange (text, 0u, text, 1u)) :? Ranvier.Dom.StaticRange) "A constructed StaticRange wraps as StaticRange"
+
+            expect
+                (box (service.MatrixFromFloat64Array [| 1.0; 0.0; 0.0; 1.0; 0.0; 0.0 |]) :? Ranvier.Dom.DOMMatrix)
+                "fromFloat64Array wraps as DOMMatrix"
+
+            expect
+                (raisesType (fun error -> error :? System.ArgumentNullException) (fun () -> service.CreateText null |> ignore))
+                "A null Text data raises ArgumentNullException"
+
+            expect
+                (raisesType (fun error -> error :? System.ArgumentException) (fun () ->
+                    service.CreateWheelEvent (
+                        "wheel",
+                        options,
+                        Ranvier.Dom.MouseFields.Default,
+                        { Ranvier.Dom.WheelFields.Default with
+                            DeltaY = infinity
+                        }
+                    )
+                    |> ignore))
+                "An infinite delta raises ArgumentException"
+
+            let foreignText = foreign.CreateText "z"
+            expect (System.Object.ReferenceEquals (foreignText.ownerDocument, other.Document)) "Another host's service makes nodes of its document"
+
+            expect
+                (raisesType (fun error -> error :? System.ArgumentException) (fun () ->
+                    service.CreateStaticRange (foreignText, 0u, text, 0u)
+                    |> ignore))
+                "A StaticRange container of another host raises ArgumentException"
+
+            expect
+                (raisesType (fun error -> error :? System.ArgumentException) (fun () ->
+                    service.CreatePointerEvent (
+                        "pointermove",
+                        options,
+                        { Ranvier.Dom.MouseFields.Default with
+                            RelatedTarget = foreignText
+                        },
+                        Ranvier.Dom.PointerFields.Default
+                    )
+                    |> ignore))
+                "A related target of another host raises ArgumentException"
+
+            let foreignPointer =
+                foreign.CreatePointerEvent ("pointermove", options, Ranvier.Dom.MouseFields.Default, Ranvier.Dom.PointerFields.Default)
+
+            expect
+                (raisesType (fun error -> error :? System.ArgumentException) (fun () ->
+                    service.CreatePointerEvent (
+                        "pointermove",
+                        options,
+                        Ranvier.Dom.MouseFields.Default,
+                        { Ranvier.Dom.PointerFields.Default with
+                            CoalescedEvents = [| foreignPointer |]
+                        }
+                    )
+                    |> ignore))
+                "A coalesced event of another host raises ArgumentException"
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () -> raisesType (fun error -> error :? System.InvalidOperationException) (fun () -> service.CreateText "w" |> ignore))
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "A factory rejects another thread"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            expect (text.data = "kept") "A constructed node survives document replacement"
+            expect (wheel.deltaX = 0.0) "A constructed event survives document replacement"
+            foreign.Dispose ()
+            held <- Some (service, text)
+            count
+        finally
+            (other :> System.IDisposable).Dispose()
+            (host :> System.IDisposable).Dispose()
+
+    let service, text = held.Value
+
+    expect
+        (raisesType (fun error -> error :? System.ObjectDisposedException) (fun () -> text.data |> ignore))
+        "A constructed Text raises ObjectDisposedException after host disposal"
+
+    expect
+        (raisesType
+            (fun error ->
+                error :? System.ObjectDisposedException
+                || error :? System.InvalidOperationException)
+            (fun () -> service.CreateComment "c" |> ignore))
+        "A factory after host disposal raises"
+
+    expect (session.LiveObjects = 0) "Value factory fixture leaves no live native objects"
+    service.Dispose ()
+
+    expect
+        (raisesType (fun error -> error :? System.ObjectDisposedException) (fun () -> service.CreateRange () |> ignore))
+        "A factory after disposal raises ObjectDisposedException"
+
+    if shared <> ValueFactoryChecksCount then
+        failwith $"Value factory shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API D17 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API D17 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared form submission fixture with native exception, thread and teardown checks.</summary>
 [<Literal>]
 let private SubmissionChecksCount = 26
@@ -2770,6 +2917,7 @@ let private runAll () =
     runCrypto () |> ignore
     runScreen () |> ignore
     runEventDetails () |> ignore
+    runValueFactories () |> ignore
     runHighlights () |> ignore
     runStrings () |> ignore
     runDiagnostics () |> ignore
@@ -3802,6 +3950,9 @@ let main args =
         0
     elif Array.contains "--event-details-only" args then
         runEventDetails () |> ignore
+        0
+    elif Array.contains "--value-factories-only" args then
+        runValueFactories () |> ignore
         0
     elif Array.contains "--dialogs-only" args then
         runDialogs () |> ignore
