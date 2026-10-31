@@ -165,6 +165,9 @@ module internal Kind =
     [<Literal>]
     let SVGAnimatedInteger = 51
 
+    [<Literal>]
+    let EventTarget = 52
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -330,6 +333,7 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.SVGViewSpec -> NativeDom.rv_dom_svg_view_spec_release handle
         | Kind.SVGAnimatedAngle -> NativeDom.rv_dom_svg_animated_angle_release handle
         | Kind.SVGAnimatedInteger -> NativeDom.rv_dom_svg_animated_integer_release handle
+        | Kind.EventTarget -> Native.rv_event_target_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =
@@ -356,6 +360,7 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
 
     member val internal NodeFactory: Func<Session, nativeint, NativeObject> = null with get, set
     member val internal EventFactory: Func<Session, nativeint, NativeObject> = null with get, set
+    member val internal TargetFactory: Func<Session, nativeint, NativeObject> = null with get, set
 
     /// <summary>The exceptions raised by event listeners, in raise order; each dispatch continues past them.</summary>
     member _.ListenerErrors = errors
@@ -455,6 +460,10 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
     /// <summary>The object of an event handle the caller owns a reference to, or null for zero.</summary>
     member this.Event(handle: nativeint) : NativeObject =
         this.Wrap (handle, this.EventFactory, Kind.Event)
+
+    /// <summary>The object of a standalone EventTarget handle the caller owns a reference to, or null for zero.</summary>
+    member internal this.Target(handle: nativeint) : NativeObject =
+        this.Wrap (handle, this.TargetFactory, Kind.EventTarget)
 
     /// <summary>Enters an object created for an owned node or event handle in the table.</summary>
     member internal _.Register(created: NativeObject) =

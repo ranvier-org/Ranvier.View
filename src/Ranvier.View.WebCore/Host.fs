@@ -197,6 +197,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         let session = new Session (handle)
         session.NodeFactory <- Func<_, _, _>(Factories.node)
         session.EventFactory <- Func<_, _, _>(Factories.event)
+        session.TargetFactory <- Func<_, _, _>(fun session handle -> StandaloneEventTarget (session, handle) :> NativeObject)
         let host = new WebCoreHost (handle, session, width, height)
         host.Install ()
         host

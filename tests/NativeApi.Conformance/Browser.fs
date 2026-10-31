@@ -798,6 +798,9 @@ let run () =
 
         let! cancellationInterop = cancellationInterop document
 
+        let customEvents =
+            CustomEvents.run document (fun () -> BrowserEvents.forDocument document) (fun () -> BrowserCancellation.forDocument document)
+
         let! geometryProof = runGeometry () |> Async.AwaitPromise
         let! matrixProof = runMatrix () |> Async.AwaitPromise
         let! transformProof = runTransforms () |> Async.AwaitPromise
@@ -972,6 +975,7 @@ let run () =
                 capabilities = capabilities
                 cancellation = cancellation
                 cancellationInterop = cancellationInterop
+                customEvents = customEvents
                 scopeRules = scopeRules
                 nestedDeclarations = nestedDeclarations
                 importContentsReadable = importContentsReadable

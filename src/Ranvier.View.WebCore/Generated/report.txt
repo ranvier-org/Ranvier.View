@@ -1,4 +1,4 @@
-221 classes; 2492 members: 2479 mapped to 2409 of 2455 rv_dom_* functions, 13 hand-written, 0 unmapped
+221 classes; 2492 members: 2476 mapped to 2406 of 2455 rv_dom_* functions, 16 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
@@ -39,10 +39,13 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_dom_rect_read_only_create: DOMRectReadOnly.constructor (op)
   rv_dom_dom_rect_read_only_from_rect: DOMRectReadOnly.fromRect (op)
   rv_dom_event_get_current_target: Event.currentTarget (get)
+  rv_dom_event_get_target: Event.target (get)
+  rv_dom_focus_event_get_related_target: FocusEvent.relatedTarget (get)
   rv_dom_html_select_element_remove_0: HTMLSelectElement.remove (op)
   rv_dom_input_event_get_data: InputEvent.data (get)
   rv_dom_input_event_get_input_type: InputEvent.inputType (get)
   rv_dom_keyboard_event_get_key: KeyboardEvent.key (get)
+  rv_dom_mouse_event_get_related_target: MouseEvent.relatedTarget (get)
   rv_dom_shadow_root_get_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (get)
   rv_dom_shadow_root_set_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (set)
   rv_dom_style_property_map_read_only_entries: StylePropertyMapReadOnly.entries (op)
@@ -112,9 +115,9 @@ Members by class (mapped / hand-written / unmapped):
   DocumentFragmentObject: 11 / 0 / 0
   DocumentObject: 71 / 0 / 0
   ElementObject: 181 / 0 / 0
-  EventObject: 17 / 1 / 0
+  EventObject: 16 / 2 / 0
   EventTargetObject: 0 / 9 / 0
-  FocusEventObject: 1 / 0 / 0
+  FocusEventObject: 0 / 1 / 0
   HTMLAnchorElementObject: 46 / 0 / 0
   HTMLAreaElementObject: 38 / 0 / 0
   HTMLBRElementObject: 2 / 0 / 0
@@ -176,7 +179,7 @@ Members by class (mapped / hand-written / unmapped):
   KeyboardEventObject: 12 / 1 / 0
   MathMLElementObject: 11 / 0 / 0
   MediaListObject: 6 / 0 / 0
-  MouseEventObject: 20 / 0 / 0
+  MouseEventObject: 19 / 1 / 0
   NamedNodeMapObject: 8 / 0 / 0
   NodeListObject: 2 / 0 / 0
   NodeObject: 31 / 0 / 0
