@@ -164,8 +164,13 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
             || (argument.GetProperty("optional").GetBoolean ()
                 && argument.GetProperty("default").ValueKind = System.Text.Json.JsonValueKind.Null)
 
+        // [LegacyNullToEmptyString] converts null to the empty string; any other string argument converts it to "null".
+        let nullToEmpty = Metadata.hasBool "legacyNullToEmptyString" argument
+
         if not nullable && absentAllowed then
             Ok $"(if isNull {v} then null else scope.Bytes({v}))"
+        elif not nullable && nullToEmpty then
+            Ok $"scope.Bytes(if isNull {v} then \"\" else {v})"
         elif not nullable then
             Ok $"scope.Bytes({v})"
         else
