@@ -336,6 +336,9 @@ const runCanvas = async () => {
     console.log(`BROWSER_API R03 PASS assertions=${result.canvasState} engine=chromium`);
     if (result.canvasPaints !== CANVAS_PAINT_ASSERTIONS) throw new Error(`Canvas paint assertions did not run: ${JSON.stringify(result)}`);
     console.log(`BROWSER_API R04 PASS assertions=${result.canvasPaints} engine=chromium`);
+    const text = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runCanvasText(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (text.canvasText !== CANVAS_TEXT_ASSERTIONS) throw new Error(`Canvas text assertions did not run: ${JSON.stringify(text)}`);
+    console.log(`BROWSER_API R05 PASS assertions=${text.canvasText} engine=chromium`);
   } finally {
     await canvasBrowser.close();
   }
@@ -344,6 +347,7 @@ const CANVAS_ASSERTIONS = 41;
 const CANVAS_PATH_ASSERTIONS = 43;
 const CANVAS_STATE_ASSERTIONS = 26;
 const CANVAS_PAINT_ASSERTIONS = 35;
+const CANVAS_TEXT_ASSERTIONS = 80;
 // WebCore #142 runs the U+0000 round-trip fixture in its own page.
 const runStrings = async () => {
   const stringsBrowser = await chromium.launch({ headless: true });

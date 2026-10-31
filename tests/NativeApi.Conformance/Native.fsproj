@@ -82,6 +82,7 @@
     <Compile Include="CanvasPathChecks.fs" />
     <Compile Include="CanvasStateChecks.fs" />
     <Compile Include="CanvasPaintChecks.fs" />
+    <Compile Include="CanvasTextChecks.fs" />
     <Compile Include="StringChecks.fs" />
     <Compile Include="DiagnosticsChecks.fs" />
     <Compile Include="CascadeChecks.fs" />

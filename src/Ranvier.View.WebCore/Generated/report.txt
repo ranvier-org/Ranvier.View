@@ -1,4 +1,4 @@
-256 classes; 2783 members: 2745 mapped to 2657 of 2779 rv_dom_* functions, 38 hand-written, 0 unmapped
+257 classes; 2810 members: 2772 mapped to 2684 of 2806 rv_dom_* functions, 38 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_animation_playback_event_create: AnimationPlaybackEvent.constructor (op)
@@ -177,7 +177,7 @@ Members by class (mapped / hand-written / unmapped):
   CSSViewTransitionRuleObject: 2 / 0 / 0
   CanvasGradientObject: 1 / 0 / 0
   CanvasPatternObject: 1 / 0 / 0
-  CanvasRenderingContext2DObject: 83 / 0 / 0
+  CanvasRenderingContext2DObject: 98 / 0 / 0
   CaretPositionObject: 3 / 0 / 0
   CharacterDataObject: 14 / 0 / 0
   CommandEventObject: 2 / 0 / 0
@@ -372,6 +372,7 @@ Members by class (mapped / hand-written / unmapped):
   StyleSheetListObject: 3 / 0 / 0
   StyleSheetObject: 8 / 0 / 0
   SubmitEventObject: 1 / 0 / 0
+  TextMetricsObject: 12 / 0 / 0
   TextObject: 3 / 0 / 0
   ToggleEventObject: 3 / 0 / 0
   TransitionEventObject: 3 / 0 / 0

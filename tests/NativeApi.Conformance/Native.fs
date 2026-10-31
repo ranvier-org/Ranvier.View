@@ -2935,6 +2935,79 @@ let private runFonts () =
     System.Console.WriteLine "NATIVE_API T01 TEARDOWN PASS"
     count
 
+[<Literal>]
+let private CanvasTextChecksCount = 80
+
+/// <summary>Runs the shared R05 canvas text fixture over an Ahem face served through the host's resource provider.</summary>
+let private runCanvasText () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let previous = System.Threading.SynchronizationContext.Current
+    let loop = OwnerLoop ()
+    System.Threading.SynchronizationContext.SetSynchronizationContext loop
+    let font = (resourceFixture ()).Font
+
+    let provider: Ranvier.Dom.ResourceProvider =
+        fun _ complete ->
+            complete (
+                Ok
+                    {
+                        ContentType = "font/ttf"
+                        Bytes = font
+                    }
+            )
+
+            { new System.IDisposable with
+                member _.Dispose() = ()
+            }
+
+    let count =
+        try
+            use resources = Ranvier.View.WebCore.Resources.forHost host provider
+
+            let pending =
+                CanvasTextChecks.run
+                    (fun () -> Ranvier.View.WebCore.Canvas.forHost host)
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.Fonts.forHost host)
+                    "https://r05.test/ahem"
+                    CanvasTextChecks.TextEngine.WebKit
+                    (fun milliseconds ->
+                        async {
+                            let clock = System.Diagnostics.Stopwatch.StartNew ()
+
+                            while clock.ElapsedMilliseconds < int64 milliseconds do
+                                loop.Drain ()
+                                host.Cycle 5
+                        })
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not pending.IsCompleted
+                  && timeout.ElapsedMilliseconds < 30000L do
+                loop.Drain ()
+                host.Cycle ()
+                System.Threading.Thread.Sleep 1
+
+            if not pending.IsCompleted then
+                failwith "Canvas text fixture did not complete on the owner loop"
+
+            pending.GetAwaiter().GetResult()
+        finally
+            System.Threading.SynchronizationContext.SetSynchronizationContext previous
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith ("Canvas text fixture leaked " + string session.LiveObjects + " managed native objects")
+
+    if count <> CanvasTextChecksCount then
+        failwith ("Canvas text shared assertions did not run: " + string count)
+
+    System.Console.WriteLine ("NATIVE_API R05 PASS assertions=" + string count)
+    System.Console.WriteLine "NATIVE_API R05 TEARDOWN PASS"
+    count
+
 /// <summary>Runs the shared tree traversal and MathML fixtures with native traversal lifetime checks.</summary>
 let private runDomModel () =
     let lifetime = TraversalLifecycle.run ()
@@ -3013,6 +3086,7 @@ let private runAll () =
     runEventDetails () |> ignore
     runHighlights () |> ignore
     runCanvas () |> ignore
+    runCanvasText () |> ignore
     runStrings () |> ignore
     runDiagnostics () |> ignore
     runCascade () |> ignore
@@ -4023,6 +4097,7 @@ let main args =
         0
     elif Array.contains "--canvas-only" args then
         runCanvas () |> ignore
+        runCanvasText () |> ignore
         0
     elif Array.contains "--strings-only" args then
         runStrings () |> ignore

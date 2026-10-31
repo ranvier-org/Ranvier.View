@@ -131,6 +131,7 @@ let private kinds =
             "CanvasPattern", "Kind.CanvasPattern"
             "Path2D", "Kind.Path2D"
             "ImageBitmap", "Kind.ImageBitmap"
+            "TextMetrics", "Kind.TextMetrics"
         ]
 
 [<EntryPoint>]
