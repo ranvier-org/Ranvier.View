@@ -1504,6 +1504,24 @@ let runDiagnostics () =
 [<Emit("devicePixelRatio")>]
 let private devicePixelRatio () : float = jsNative
 
+/// <summary>Runs the shared Web Animations assertions on the browser's constructors.</summary>
+let runAnimations () =
+    let document = document ()
+
+    let name (error: exn) =
+        match error with
+        | AnimationException (name, _) -> name
+        | error -> errorName error
+
+    let count =
+        AnimationChecks.run
+            document
+            (fun () -> BrowserAnimations.forDocument document)
+            (fun () -> Ranvier.Dom.ComputedStyles.forDocument document)
+            name
+
+    {| animations = count |}
+
 /// <summary>Runs the shared coordinate assertions, with an iframe's element as the foreign one.</summary>
 let runCoordinates () =
     let document = document ()

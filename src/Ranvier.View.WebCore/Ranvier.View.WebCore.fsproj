@@ -100,6 +100,7 @@
         <Compile Include="ValueFactories.fs" />
         <Compile Include="WakeLocks.fs" />
         <Compile Include="Notifications.fs" />
+        <Compile Include="Animations.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />

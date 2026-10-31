@@ -98,6 +98,7 @@
     <Compile Include="FrameChecks.fs" />
     <Compile Include="IdleChecks.fs" />
     <Compile Include="WakeLocks.fs" />
+    <Compile Include="AnimationChecks.fs" />
     <Compile Include="../UserTiming/Native.fs" Link="UserTimingNative.fs" />
     <Compile Include="Native.fs" />
     <ProjectReference Include="../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />

@@ -2866,6 +2866,74 @@ let private runCoordinates () =
     System.Console.WriteLine $"NATIVE_API G14 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared Web Animations fixture with native thread, disposal and handle-lifetime checks.</summary>
+[<Literal>]
+let private AnimationChecksCount = 110
+
+let private runAnimations () =
+    let host = WebCoreHost.Create (320, 240)
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let errorName =
+        function
+        | Ranvier.Dom.AnimationException (name, _) -> name
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let shared =
+        try
+            AnimationChecks.run
+                host.Document
+                (fun () -> Ranvier.View.WebCore.Animations.forHost host)
+                (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost host)
+                errorName
+        with error ->
+            (host :> System.IDisposable).Dispose ()
+            raise error
+
+    let service = Ranvier.View.WebCore.Animations.forHost host
+    let body = host.Document.body
+
+    let wrongThread =
+        System.Threading.Tasks.Task
+            .Run(fun () ->
+                try
+                    service.CreateDocumentTimeline () |> ignore
+                    false
+                with :? System.InvalidOperationException ->
+                    true)
+            .GetAwaiter()
+            .GetResult()
+
+    expect wrongThread "An animation service rejects another thread"
+    let held = body.animate ([||], 1000.0)
+    let effect = service.CreateKeyframeEffectFor (body, [||], 1000.0)
+    expect (held.playState = Ranvier.Dom.AnimationPlayState.Running) "An animation held across host disposal runs"
+    (host :> System.IDisposable).Dispose ()
+
+    let rejected =
+        try
+            service.CreateAnimation effect |> ignore
+            false
+        with _ ->
+            true
+
+    expect rejected "A held animation service rejects construction after host disposal"
+    service.Dispose ()
+
+    if shared <> AnimationChecksCount then
+        failwith $"Web Animations shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API A01 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API A01 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared cascade fixture with native thread, snapshot release and teardown checks.</summary>
 [<Literal>]
 let private CascadeChecksCount = 609
@@ -4448,6 +4516,7 @@ let private runAll () =
     runCoordinates () |> ignore
     runResizeObservation () |> ignore
     runIntersectionObservation () |> ignore
+    runAnimations () |> ignore
     runBlobUrls () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
@@ -5473,6 +5542,8 @@ let main args =
         0
     elif Array.contains "--media-only" args then
         runMediaQueries () |> ignore
+    elif Array.contains "--animations-only" args then
+        runAnimations () |> ignore
         0
     elif Array.contains "--coordinates-only" args then
         runCoordinates () |> ignore

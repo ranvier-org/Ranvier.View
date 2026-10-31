@@ -40,6 +40,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_document_get_adopted_style_sheets: Document.adoptedStyleSheets (get)
   rv_dom_document_parse_html_unsafe: Document.parseHTMLUnsafe (op)
   rv_dom_document_set_adopted_style_sheets: Document.adoptedStyleSheets (set)
+  rv_dom_document_timeline_create: DocumentTimeline.constructor (op)
   rv_dom_dom_form_data_create: DOMFormData.constructor (op)
   rv_dom_dom_form_data_entries: DOMFormData.entries (op)
   rv_dom_dom_matrix_create: DOMMatrix.constructor (op)
@@ -93,6 +94,8 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_input_event_get_data: InputEvent.data (get)
   rv_dom_input_event_get_input_type: InputEvent.inputType (get)
   rv_dom_keyboard_event_get_key: KeyboardEvent.key (get)
+  rv_dom_keyframe_effect_create_1: KeyframeEffect.constructor (op)
+  rv_dom_keyframe_effect_create_3: KeyframeEffect.constructor (op)
   rv_dom_media_query_list_event_create: MediaQueryListEvent.constructor (op)
   rv_dom_mouse_event_get_related_target: MouseEvent.relatedTarget (get)
   rv_dom_node_iterator_get_filter: NodeIterator.filter (get)
@@ -142,6 +145,7 @@ Members by class (mapped / hand-written / unmapped):
   AbstractRangeObject: 5 / 0 / 0
   AnimationEventObject: 3 / 0 / 0
   AnimationPlaybackEventObject: 2 / 0 / 0
+  AnimationTimelineObject: 2 / 0 / 0
   AttrObject: 9 / 0 / 0
   BeforeUnloadEventObject: 2 / 0 / 0
   BlobObject: 3 / 0 / 0
@@ -286,6 +290,7 @@ Members by class (mapped / hand-written / unmapped):
   HighlightObject: 4 / 0 / 0
   InputEventObject: 3 / 2 / 0
   KeyboardEventObject: 12 / 1 / 0
+  KeyframeEffectObject: 9 / 0 / 0
   MathMLElementObject: 11 / 0 / 0
   MediaListObject: 6 / 0 / 0
   MediaQueryListEventObject: 2 / 0 / 0
@@ -380,7 +385,7 @@ Members by class (mapped / hand-written / unmapped):
   SVGUseElementObject: 5 / 0 / 0
   SVGViewElementObject: 4 / 0 / 0
   SVGViewSpecObject: 8 / 0 / 0
-  ShadowRootObject: 18 / 0 / 0
+  ShadowRootObject: 19 / 0 / 0
   StylePropertyMapObject: 4 / 0 / 0
   StylePropertyMapReadOnlyObject: 4 / 0 / 0
   StyleSheetListObject: 3 / 0 / 0
@@ -399,6 +404,7 @@ Members by class (mapped / hand-written / unmapped):
   URLSearchParamsObject: 9 / 0 / 0
   ValidityStateObject: 11 / 0 / 0
   VisualViewportObject: 7 / 9 / 0
+  WebAnimationObject: 24 / 9 / 0
   WheelEventObject: 7 / 0 / 0
 
 Unmapped members:

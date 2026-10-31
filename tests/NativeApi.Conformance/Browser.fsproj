@@ -87,6 +87,7 @@
     <Compile Include="FrameChecks.fs" />
     <Compile Include="IdleChecks.fs" />
     <Compile Include="WakeLocks.fs" />
+    <Compile Include="AnimationChecks.fs" />
     <Compile Include="Browser.fs" />
     <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" Condition="'$(NativeApiContractRoot)' == ''" />
     <ProjectReference Include="$(NativeApiContractRoot)/src/Fable.Ranvier.Dom/Fable.Ranvier.Dom.fsproj" Condition="'$(NativeApiContractRoot)' != ''" />
