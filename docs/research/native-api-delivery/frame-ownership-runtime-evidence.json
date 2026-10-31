@@ -5,7 +5,7 @@
   "route": "Managed only, no ABI",
   "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/71",
   "coreSourceCommit": "8077b67e7761a4968456865cf7819aecac41371d",
-  "viewsSourceCommit": "a99b112d1c9228c4e9beeee44187c3d95439c5de",
+  "viewsSourceCommit": "69d97dfebc0eaf1c8b02358a310c173bfdc8767d",
   "stackedOn": {
     "core": "D13 b968acd4 + dommodel ab268cf2",
     "views": "D13 57bfbd1 + dommodel eea2b1b",
@@ -132,8 +132,11 @@
     "viewOwners": "Ranvier.View.Dom.Frames, Ranvier.View.WebCore.Frames"
   },
   "fixture": "tests/NativeApi.Conformance/FrameChecks.fs (18 shared assertions on the manual scheduler and on the host scheduler)",
+  "specConformance": {
+    "frameTime": "A frame callback receives the frame start time (HTML requestAnimationFrame), which can precede a clock read taken before the request. FrameChecks checks frame time > 0, at most the scheduler clock read inside the callback, and nondecreasing across frames (Views a99b112).",
+    "firstAttemptLogs": "C:/wk/a12b-artifacts/runs/first-attempt (Chromium failed the earlier lower bound, frame time >= a pre-request clock read)"
+  },
   "qualifications": [
-    "The first full Chromium run failed the old frame-time lower bound (frame time >= a clock read before the request); Chromium passes the frame start time. Views a99b112 checks frame time <= the clock read in the callback and nondecreasing. First-attempt logs: C:/wk/a12b-artifacts/runs/first-attempt.",
     "tools/check-webcore-generated.py rejects RanvierWebCoreNativeDir and preview.28 is unpublished, so the generator ran directly on the same restored inputs the check uses; the output is identical to the committed wrappers.",
     "FCS on Ranvier.View.Dom reports FS0039/FS0072 at Debug.fs:985 (Trace.snapshot under RANVIER_TRACE): ionide evaluates the Debug (traced) configuration against Release-restored untraced packages. Debug.fs is unchanged by A12 and D13; the Release build compiles it cleanly.",
     "Win-x64 only; Linux and macOS not run locally."
