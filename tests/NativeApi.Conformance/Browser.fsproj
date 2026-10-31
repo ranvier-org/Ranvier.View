@@ -25,6 +25,10 @@
     <Compile Include="TransformValues.fs" />
     <Compile Include="SvgGeometry.fs" />
     <Compile Include="SvgValues.fs" />
+    <Compile Include="SvgShapes.fs" />
+    <Compile Include="SvgText.fs" />
+    <Compile Include="SvgViewSelection.fs" />
+    <Compile Include="SvgAnimations.fs" />
     <Compile Include="TypedStyles.fs" />
     <Compile Include="FragmentRectangles.fs" />
     <Compile Include="FontTransitionRules.fs" />

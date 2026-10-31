@@ -82,6 +82,97 @@ let runSvg () =
     }
     |> Async.StartAsPromise
 
+[<Emit("new Promise(resolve => setTimeout(resolve, $0))")>]
+let private delay (milliseconds: int) : JS.Promise<unit> = jsNative
+
+[<Emit("fetch('/Ahem.ttf').then(r => r.arrayBuffer()).then(b => { let s = ''; for (const v of new Uint8Array(b)) s += String.fromCharCode(v); return btoa(s); })")>]
+let private ahem () : JS.Promise<string> = jsNative
+
+[<Emit("globalThis.__nativeApiPaintAt($0, $1)")>]
+let private paintAt (x: float) (y: float) : JS.Promise<bool> = jsNative
+
+[<Emit("""(async () => {
+    const frame = document.createElement('iframe');
+    frame.id = 'native-api-svg-view';
+    frame.style.cssText = 'width:300px;height:300px;border:0';
+    const loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+    frame.src = URL.createObjectURL(new Blob([$0], {type:'image/svg+xml'}));
+    document.body.append(frame);
+    await loaded;
+    return frame.contentDocument;
+})()""")>]
+let private svgDocument (markup: string) : JS.Promise<Document> = jsNative
+
+[<Emit("new Promise(resolve => $0.defaultView.requestAnimationFrame(() => $0.defaultView.requestAnimationFrame(() => resolve())))")>]
+let private frames (target: Document) : JS.Promise<unit> = jsNative
+
+[<Emit("document.getElementById('native-api-svg-view')?.remove()")>]
+let private removeViewFrame () : unit = jsNative
+
+let private wait (milliseconds: int) =
+    delay milliseconds |> Async.AwaitPromise
+
+/// <summary>Runs shared SVG shapes, text, standalone views and SMIL controls in Chromium.</summary>
+let runSvgSurfaces () =
+    async {
+        let target = document ()
+        let shapes = SvgShapes.run target errorName "Error" false
+        let! fontData = ahem () |> Async.AwaitPromise
+
+        let! text =
+            SvgText.run target fontData wait (fun (x, y) -> paintAt x y |> Async.AwaitPromise) errorName false
+
+        let! animations = SvgAnimations.run target wait errorName true
+
+        let! standalone =
+            svgDocument SvgViewSelection.markup
+            |> Async.AwaitPromise
+
+        let mutable arguments = 0
+
+        let outcome action =
+            try
+                action ()
+                "accepted"
+            with error ->
+                error.Message
+
+        let expect label (expected: string) (actual: string) =
+            arguments <- arguments + 1
+
+            if not (actual.Contains expected) then
+                failwithf "%s: expected %s, got %s" label expected actual
+
+        expect "null fragment rejects" "fragment" (outcome (fun () -> SvgViews.requestView standalone null))
+        expect "HTML document rejects" "SVG XML document" (outcome (fun () -> SvgViews.requestView target "half"))
+
+        let! views =
+            SvgViewSelection.run
+                standalone
+                (fun fragment ->
+                    async {
+                        SvgViews.requestView standalone fragment
+                        return None
+                    })
+                (fun () -> frames standalone |> Async.AwaitPromise)
+                SvgViews.inspect
+                false
+                true
+
+        removeViewFrame ()
+        expect "inactive document rejects" "no longer active" (outcome (fun () -> SvgViews.requestView standalone "half"))
+
+        return
+            {|
+                svgShapes = shapes
+                svgText = text
+                svgViews = views
+                svgViewArguments = arguments
+                svgAnimations = animations
+            |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("$0.constructor.name + ':' + $0.message")>]
 let private disposalError (error: exn) : string = jsNative
 

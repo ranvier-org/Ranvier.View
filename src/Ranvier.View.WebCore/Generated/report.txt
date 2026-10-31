@@ -1,4 +1,4 @@
-179 classes; 2219 members: 2206 mapped to 2136 of 2182 rv_dom_* functions, 13 hand-written, 0 unmapped
+188 classes; 2271 members: 2258 mapped to 2188 of 2234 rv_dom_* functions, 13 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
@@ -187,6 +187,7 @@ Members by class (mapped / hand-written / unmapped):
   SVGAnimatedAngleObject: 2 / 0 / 0
   SVGAnimatedBooleanObject: 3 / 0 / 0
   SVGAnimatedEnumerationObject: 3 / 0 / 0
+  SVGAnimatedIntegerObject: 3 / 0 / 0
   SVGAnimatedLengthListObject: 2 / 0 / 0
   SVGAnimatedLengthObject: 2 / 0 / 0
   SVGAnimatedNumberListObject: 2 / 0 / 0
@@ -195,11 +196,17 @@ Members by class (mapped / hand-written / unmapped):
   SVGAnimatedRectObject: 2 / 0 / 0
   SVGAnimatedStringObject: 3 / 0 / 0
   SVGAnimatedTransformListObject: 2 / 0 / 0
+  SVGAnimationElementObject: 10 / 0 / 0
+  SVGCircleElementObject: 3 / 0 / 0
   SVGElementObject: 14 / 0 / 0
+  SVGEllipseElementObject: 4 / 0 / 0
+  SVGFEConvolveMatrixElementObject: 17 / 0 / 0
   SVGGeometryElementObject: 5 / 0 / 0
   SVGGraphicsElementObject: 6 / 0 / 0
   SVGLengthListObject: 10 / 0 / 0
   SVGLengthObject: 9 / 0 / 0
+  SVGLineElementObject: 4 / 0 / 0
+  SVGMPathElementObject: 1 / 0 / 0
   SVGMarkerElementObject: 13 / 0 / 0
   SVGMatrixObject: 23 / 0 / 0
   SVGNumberListObject: 10 / 0 / 0
@@ -210,12 +217,14 @@ Members by class (mapped / hand-written / unmapped):
   SVGPolygonElementObject: 2 / 0 / 0
   SVGPolylineElementObject: 2 / 0 / 0
   SVGPreserveAspectRatioObject: 4 / 0 / 0
+  SVGRectElementObject: 6 / 0 / 0
   SVGRectObject: 8 / 0 / 0
   SVGSVGElementObject: 36 / 0 / 0
   SVGStringListObject: 10 / 0 / 0
   SVGStyleElementObject: 9 / 0 / 0
   SVGSymbolElementObject: 2 / 0 / 0
   SVGTextContentElementObject: 11 / 0 / 0
+  SVGTextPathElementObject: 4 / 0 / 0
   SVGTextPositioningElementObject: 5 / 0 / 0
   SVGTransformListObject: 12 / 0 / 0
   SVGTransformObject: 9 / 0 / 0

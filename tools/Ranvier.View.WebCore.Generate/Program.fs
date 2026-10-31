@@ -82,6 +82,7 @@ let private kinds =
             "SVGAnimatedEnumeration", "Kind.SVGAnimatedEnumeration"
             "SVGAnimatedString", "Kind.SVGAnimatedString"
             "SVGAnimatedBoolean", "Kind.SVGAnimatedBoolean"
+            "SVGAnimatedInteger", "Kind.SVGAnimatedInteger"
             "SVGStringList", "Kind.SVGStringList"
             "SVGViewSpec", "Kind.SVGViewSpec"
             "SVGAnimatedAngle", "Kind.SVGAnimatedAngle"
