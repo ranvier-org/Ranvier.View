@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "group": "A03 Animation lifecycle/state and A10 Typed animation/transition events",
+  "heads": {
+    "native": "eb2700b631557eb1fa4b6a8325b5d6dde8228a3d",
+    "core": "2634078acf2da961ff1634c6d6c0d479d81ace4a",
+    "views": "b23cf83d5da5134bc71296998b6d20d292ec155f"
+  },
+  "privateFeed": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.49.nupkg": "b46688ddf6ca14931b796f9e810fe1ce833befaf3b6942a76521b0d631657c5b",
+    "Ranvier.Dom.0.1.0-alpha.49.nupkg": "2215cf828a13e19fbed37eadb31e663b59a8e073a70e3ea3dcfbba14a36412a9",
+    "Ranvier.WebCore.0.1.0-preview.46.nupkg": "0411fce153bbbacfd710ee06a20fb39d5beb2db51276a1b591dcb163fd4361c4"
+  },
+  "nativeRuntime": "C:/wk/native-waapi-life/artifacts/life-candidate-2/runtime (Ranvier.WebCore docs/animation-lifecycle-evidence/native-evidence.json)",
+  "jit": {
+    "exitCode": 0,
+    "logSha256": "dc8b1e2457763754500613ae3f41beabaa84c441e8b75b999de61a8fa5a3d077",
+    "passLines": 124,
+    "groups": [
+      "NATIVE_API A01 PASS assertions=110",
+      "NATIVE_API A01 LIFETIME PASS assertions=3",
+      "NATIVE_API A03 PASS assertions=29",
+      "NATIVE_API A03 LIFETIME PASS assertions=4",
+      "NATIVE_API A10 PASS assertions=9"
+    ]
+  },
+  "aot": {
+    "exitCode": 0,
+    "logSha256": "c5f15882cfa239ed3571f196f97b21bde666c621a7c2fb53738d92ed0a3fabe5",
+    "passLines": 124,
+    "groups": [
+      "NATIVE_API A01 PASS assertions=110",
+      "NATIVE_API A01 LIFETIME PASS assertions=3",
+      "NATIVE_API A03 PASS assertions=29",
+      "NATIVE_API A03 LIFETIME PASS assertions=4",
+      "NATIVE_API A10 PASS assertions=9"
+    ]
+  },
+  "chromium": {
+    "exitCode": 0,
+    "logSha256": "8aa970365504f99da445474a9b7161b170438238aba1672b6c9a586ae84c98c1",
+    "passLines": 89,
+    "groups": [
+      "BROWSER_API A01 PASS assertions=110 engine=chromium",
+      "BROWSER_API A03 PASS assertions=29 engine=chromium",
+      "BROWSER_API A10 PASS assertions=9 engine=chromium"
+    ]
+  },
+  "baselineA01": {
+    "jit": 121,
+    "aot": 121,
+    "chromium": 87
+  },
+  "repeat30": {
+    "aot-events-repeat30.txt": {
+      "sha256": "c8265c1cabba0628beb40118e1b962aa2a87a35b66d66324aed91a4ca9b70342",
+      "distinct": [
+        "NATIVE_API A10 PASS assertions=9"
+      ],
+      "runs": 30
+    },
+    "aot-lifecycle-repeat30.txt": {
+      "sha256": "1b6df07aead7152b61ed7b6b432f4a46087e90c28c139d3004ecb420123e329c",
+      "distinct": [
+        "NATIVE_API A03 LIFETIME PASS assertions=4",
+        "NATIVE_API A03 PASS assertions=29"
+      ],
+      "runs": 60
+    },
+    "chromium-events-repeat30.txt": {
+      "sha256": "001886d1b45ff46ef646d6d310e25d59e1bcba52dcfea584a12b1d84dd73450f",
+      "distinct": [
+        "BROWSER_API A10 PASS assertions=9 engine=chromium"
+      ],
+      "runs": 30
+    },
+    "chromium-lifecycle-repeat30.txt": {
+      "sha256": "d73108af1409fdf0061049bf98258e00e0988353c1d4eafb43b400af05097bc6",
+      "distinct": [
+        "BROWSER_API A03 PASS assertions=29 engine=chromium"
+      ],
+      "runs": 30
+    }
+  },
+  "notes": [
+    "Full runs used the pre-format source; Fantomas then reformatted the new fixture and provider code (whitespace only), and the focused JIT and Chromium A03/A10 runs passed again on the committed source.",
+    "No new kinds: the animation handles are A01 placeholders 900-902."
+  ]
+}
