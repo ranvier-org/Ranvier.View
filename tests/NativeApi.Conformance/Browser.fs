@@ -1330,6 +1330,11 @@ let runAnimations () =
 
     {| animations = count |}
 
+/// <summary>Runs the shared animation timeline assertions on the browser's timelines.</summary>
+let runTimelines () =
+    let document = document ()
+    {| timelines = TimelineChecks.runDocumentTimelines document (fun () -> BrowserAnimations.forDocument document) |}
+
 /// <summary>Runs the shared coordinate assertions, with an iframe's element as the foreign one.</summary>
 let runCoordinates () =
     let document = document ()

@@ -2158,6 +2158,50 @@ let private runAnimations () =
     System.Console.WriteLine $"NATIVE_API A01 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared animation timeline fixture, then reads a held timeline past host disposal.</summary>
+[<Literal>]
+let private TimelineChecksCount = 24
+
+let private runTimelines () =
+    let host = WebCoreHost.Create (320, 240)
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let shared =
+        try
+            TimelineChecks.runDocumentTimelines host.Document (fun () -> Ranvier.View.WebCore.Animations.forHost host)
+        with error ->
+            (host :> System.IDisposable).Dispose ()
+            raise error
+
+    let service = Ranvier.View.WebCore.Animations.forHost host
+    let held = service.CreateDocumentTimeline 100.0
+    let document = host.Document.timeline
+    expect held.currentTime.IsSome "A new DocumentTimeline has a current time"
+    (host :> System.IDisposable).Dispose ()
+
+    let afterDisposal (timeline: Ranvier.Dom.AnimationTimeline) =
+        try
+            timeline.currentTime.IsNone
+        with _ ->
+            true
+
+    expect (afterDisposal held) "A held DocumentTimeline reads no current time after host disposal"
+    expect (afterDisposal document) "document.timeline reads no current time after host disposal"
+    service.Dispose ()
+
+    if TimelineChecksCount <> 0 && shared <> TimelineChecksCount then
+        failwith $"Animation timeline shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API A06 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API A06 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared cascade fixture with native thread, snapshot release and teardown checks.</summary>
 [<Literal>]
 let private CascadeChecksCount = 609
@@ -2874,6 +2918,7 @@ let private runAll () =
     runCascade () |> ignore
     runCoordinates () |> ignore
     runAnimations () |> ignore
+    runTimelines () |> ignore
     runBlobUrls () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
@@ -3889,6 +3934,9 @@ let main args =
         0
     elif Array.contains "--animations-only" args then
         runAnimations () |> ignore
+        0
+    elif Array.contains "--timelines-only" args then
+        runTimelines () |> ignore
         0
     elif Array.contains "--coordinates-only" args then
         runCoordinates () |> ignore

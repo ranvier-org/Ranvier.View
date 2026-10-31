@@ -352,6 +352,21 @@ const runAnimations = async () => {
   }
 };
 const ANIMATION_ASSERTIONS = 110;
+// A06 runs the animation timeline fixture in its own page.
+const runTimelines = async () => {
+  const timelinesBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await timelinesBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runTimelines(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (typeof result.timelines !== 'number') throw new Error(`Animation timeline fixture failed: ${JSON.stringify(result)}`);
+    if (TIMELINE_ASSERTIONS !== 0 && result.timelines !== TIMELINE_ASSERTIONS) throw new Error(`Animation timeline assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API A06 PASS assertions=${result.timelines} engine=chromium`);
+  } finally {
+    await timelinesBrowser.close();
+  }
+};
+const TIMELINE_ASSERTIONS = 24;
 // G14 runs the coordinate fixture in its own page.
 const runCoordinates = async () => {
   const coordinatesBrowser = await chromium.launch({ headless: true });
@@ -458,6 +473,7 @@ try {
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
   else if (process.argv.includes('--animations-only')) { await runAnimations(); process.exitCode = 0; }
+  else if (process.argv.includes('--timelines-only')) { await runTimelines(); process.exitCode = 0; }
   else if (process.argv.includes('--coordinates-only')) { await runCoordinates(); process.exitCode = 0; }
   else if (screenOnly) { await runScreen(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
@@ -703,6 +719,7 @@ try {
   await runCascade();
   await runCoordinates();
   await runAnimations();
+  await runTimelines();
   await runBlobUrls();
   await runScreen();
   await runEventDetails();
