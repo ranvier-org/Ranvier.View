@@ -533,6 +533,10 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
                     |> String.concat " "
 
                 Ok (wrap $"(match {value}.tag with {branches} | _ -> invalidOp \"Unknown {plain.Name} union tag from WebCore\")")
+    | "union" when (Metadata.items "subtypes" mapping).Length = 1 ->
+        // The model types a single-arm union as its arm.
+        let arm = (Metadata.items "subtypes" mapping)[0]
+        decoded ctx arm plain $"{value}.arm0" owner |> Result.map wrap
     | _ -> Error $"Unsupported owned result {kind} as {name managed}"
 
 /// <summary>The body of a mapped member, or why it cannot be mapped.</summary>
