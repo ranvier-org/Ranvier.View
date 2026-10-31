@@ -3396,6 +3396,223 @@ let private runWakeLocks () =
 
     shared
 
+/// <summary>Cycles the host until <c>condition</c> holds; a hang guard raises.</summary>
+let private cycleUntil (host: WebCoreHost) (condition: unit -> bool) =
+    let mutable turns = 0
+
+    while not (condition ()) do
+        turns <- turns + 1
+
+        if turns > 2000 then
+            failwith "The host did not reach the expected state"
+
+        host.Cycle 5
+
+/// <summary>Runs a task on the host thread, cycling the host until it completes; a hang guard raises.</summary>
+let private settleTask (host: WebCoreHost) (pending: System.Threading.Tasks.Task<'T>) =
+    cycleUntil host (fun () -> pending.IsCompleted)
+    pending.GetAwaiter().GetResult()
+
+/// <summary>Runs the shared notification fixture and native presenter, permission, badge, thread and teardown checks.</summary>
+let private runNotifications () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let requests =
+        ResizeArray<Ranvier.Dom.NotificationHandle * Ranvier.View.WebCore.NotificationRequest>()
+
+    let badgeValues = ResizeArray<uint64 option>()
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let shared =
+        try
+            let presenter (handle: Ranvier.Dom.NotificationHandle) (request: Ranvier.View.WebCore.NotificationRequest) =
+                requests.Add ((handle, request))
+
+                match request with
+                | Ranvier.View.WebCore.NotificationRequest.Show ->
+                    Ranvier.View.WebCore.Notifications.report handle Ranvier.View.WebCore.NotificationEvent.Show
+                    Ranvier.View.WebCore.Notifications.report handle Ranvier.View.WebCore.NotificationEvent.Click
+                | Ranvier.View.WebCore.NotificationRequest.Cancel ->
+                    Ranvier.View.WebCore.Notifications.report handle Ranvier.View.WebCore.NotificationEvent.Close
+                | _ -> ()
+
+            let service =
+                Ranvier.View.WebCore.Notifications.forHost host Ranvier.Dom.NotificationPermission.Granted (Some presenter)
+
+            let badges =
+                Ranvier.View.WebCore.Notifications.badgeForHost host (Some badgeValues.Add)
+
+            let cancellation = Ranvier.View.WebCore.Cancellation.forHost host
+
+            let count =
+                settleTask host (NativeApiConformance.Notifications.run service badges cancellation)
+
+            expect (List.ofSeq badgeValues = [ Some 3UL; None; Some 0UL ]) "The badge handler receives each badge in order"
+
+            requests.Clear ()
+            let log = ResizeArray<string>()
+            let shown = service.Show ("Shown", Ranvier.Dom.NotificationOptions.Default, None)
+            use _show = shown.OnShow (fun () -> log.Add "show")
+            use _click = shown.OnClick (fun () -> log.Add "click")
+            use _close = shown.OnClose (fun () -> log.Add "close")
+            use _error = shown.OnError (fun () -> log.Add "error")
+
+            expect
+                ((requests
+                  |> Seq.filter (fun (item, _) -> obj.ReferenceEquals (item, shown))
+                  |> Seq.length)
+                    =
+                    0)
+                "Show requests nothing inside the call"
+
+            cycleUntil host (fun () -> log.Count >= 2)
+            expect (List.ofSeq log = [ "show"; "click" ]) "The presenter's show and click dispatch"
+            shown.Close ()
+
+            expect
+                ((requests
+                  |> Seq.filter (fun (item, _) -> obj.ReferenceEquals (item, shown))
+                  |> Seq.length)
+                    =
+                    1)
+                "Close requests nothing inside the call"
+
+            cycleUntil host (fun () -> log.Count >= 3)
+            expect (List.ofSeq log = [ "show"; "click"; "close" ]) "The cancel request leads to close"
+
+            expect
+                (requests
+                 |> Seq.filter (fun (item, _) -> obj.ReferenceEquals (item, shown))
+                 |> Seq.map snd
+                 |> List.ofSeq
+                    =
+                    [
+                        Ranvier.View.WebCore.NotificationRequest.Show
+                        Ranvier.View.WebCore.NotificationRequest.Cancel
+                    ])
+                "Presenter requests in order"
+
+            let quiet =
+                Ranvier.View.WebCore.Notifications.forHost host Ranvier.Dom.NotificationPermission.Default None
+
+            expect (quiet.Permission = Ranvier.Dom.NotificationPermission.Default) "Default permission"
+            let mutable errors = 0
+            let refused = quiet.Show ("Refused", Ranvier.Dom.NotificationOptions.Default, None)
+            use _refused = refused.OnError (fun () -> errors <- errors + 1)
+            cycleUntil host (fun () -> errors > 0)
+            expect (errors = 1) "A show under default permission fires error"
+
+            let granted =
+                Ranvier.View.WebCore.Notifications.forHost host Ranvier.Dom.NotificationPermission.Granted None
+
+            let mutable unpresented = 0
+            let lonely = granted.Show ("Lonely", Ranvier.Dom.NotificationOptions.Default, None)
+            use _lonely = lonely.OnError (fun () -> unpresented <- unpresented + 1)
+            cycleUntil host (fun () -> unpresented > 0)
+            expect (unpresented = 1) "A granted show without a presenter fires error"
+            granted.Dispose ()
+            expect (quiet.Permission = Ranvier.Dom.NotificationPermission.Default) "Disposal resets the permission"
+
+            let destroyed = ResizeArray<Ranvier.View.WebCore.NotificationRequest>()
+
+            let watcher =
+                Ranvier.View.WebCore.Notifications.forHost
+                    host
+                    Ranvier.Dom.NotificationPermission.Granted
+                    (Some (fun _ request -> destroyed.Add request))
+
+            watcher.Show ("Kept", Ranvier.Dom.NotificationOptions.Default, None)
+            |> ignore
+
+            cycleUntil host (fun () -> destroyed.Count >= 1)
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            cycleUntil host (fun () -> destroyed.Contains Ranvier.View.WebCore.NotificationRequest.Destroyed)
+            expect (destroyed[0] = Ranvier.View.WebCore.NotificationRequest.Show) "The watcher saw the show"
+
+            let unbadged = Ranvier.View.WebCore.Notifications.badgeForHost host None
+
+            let unsupported =
+                try
+                    settleTask host (unbadged.Set (Some 1UL))
+                    false
+                with
+                | :? System.NotSupportedException -> true
+                | :? System.AggregateException as error -> (error.InnerException :? System.NotSupportedException)
+
+            expect unsupported "Without a handler the badge is unsupported"
+            use registry = Ranvier.Dom.Capabilities.create ()
+
+            use _provider =
+                registry.Register Ranvier.View.WebCore.Notifications.badgeCapabilityProvider
+
+            let badgeKey =
+                Ranvier.Dom.Capabilities.key Ranvier.Dom.CapabilityCategory.PlatformFacility "app-badge"
+
+            let available =
+                settleTask host (registry.Observe (badgeKey, System.Threading.CancellationToken.None))
+
+            expect (available.Available.State = Ranvier.Dom.CapabilityState.Yes) "A registered handler makes the badge available"
+            badges.Dispose ()
+
+            let unavailable =
+                settleTask host (registry.Observe (badgeKey, System.Threading.CancellationToken.None))
+
+            expect (unavailable.Available.State = Ranvier.Dom.CapabilityState.No) "Without a handler the badge is unavailable"
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            watcher.Show ("t", Ranvier.Dom.NotificationOptions.Default, None)
+                            |> ignore
+
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Notifications reject another thread"
+            quiet.Dispose ()
+
+            let disposedShow =
+                try
+                    quiet.Show ("t", Ranvier.Dom.NotificationOptions.Default, None)
+                    |> ignore
+
+                    false
+                with :? System.ObjectDisposedException ->
+                    true
+
+            expect disposedShow "A disposed service rejects shows"
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Notification fixture leaves no live native objects"
+
+    if shared <> 16 then
+        failwith (
+            "Notification shared assertions did not run: "
+            + string shared
+        )
+
+    System.Console.WriteLine ("NATIVE_API B09 PASS assertions=" + string shared)
+
+    System.Console.WriteLine (
+        "NATIVE_API B09 LIFETIME PASS assertions="
+        + string lifetime
+    )
+
+    shared
+
 let private runCapabilities () =
     let host = WebCoreHost.Create (320, 240)
     let session = host.Session
@@ -3718,6 +3935,7 @@ let private runAll () =
     UserTimingNative.run ()
     runCapabilities () |> ignore
     runCancellation () |> ignore
+    runNotifications () |> ignore
     runResources () |> ignore
     runFonts () |> ignore
     runCustomEvents () |> ignore
@@ -4811,6 +5029,8 @@ let main args =
         0
     elif Array.contains "--wake-locks-only" args then
         runWakeLocks () |> ignore
+    elif Array.contains "--notifications-only" args then
+        runNotifications () |> ignore
         0
     elif Array.contains "--capabilities-only" args then
         runCapabilities () |> ignore

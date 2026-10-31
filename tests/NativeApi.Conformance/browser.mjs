@@ -613,7 +613,7 @@ try {
     return pixel[1] < 64 && pixel[2] < 64 && pixel[3] < 64;
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
-  await page.context().grantPermissions(['screen-wake-lock'], { origin: `http://127.0.0.1:${server.address().port}` });
+  await page.context().grantPermissions(['screen-wake-lock', 'notifications'], { origin: `http://127.0.0.1:${server.address().port}` });
   const checks = await page.evaluate(async focused => {
     try {
       const fixture = await import('/Browser.js');
@@ -738,6 +738,8 @@ try {
   console.log(`BROWSER_API H07 PASS assertions=${checks.capabilities} engine=chromium`);
   if (checks.cancellation !== 56 || checks.cancellationInterop !== 12) throw new Error(`Cancellation assertions did not run: ${checks.cancellation}/${checks.cancellationInterop}`);
   console.log(`BROWSER_API I01 PASS assertions=${checks.cancellation} interop=${checks.cancellationInterop} engine=chromium`);
+  if (checks.notifications !== 16) throw new Error(`Notification assertions did not run: ${checks.notifications}`);
+  console.log(`BROWSER_API B09 PASS assertions=${checks.notifications} engine=chromium`);
   if (checks.customEvents !== 45) throw new Error(`Custom event assertions did not run: ${checks.customEvents}`);
   console.log(`BROWSER_API I02 PASS assertions=${checks.customEvents} engine=chromium`);
   checkDomModel();
