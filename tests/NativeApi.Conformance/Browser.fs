@@ -1264,7 +1264,10 @@ let runScreen () =
 
         let driver: ScreenChecks.Driver =
             {
-                Set = fun (width, height, orientation) -> setScreen width height (int orientation) |> Async.AwaitPromise
+                Set =
+                    fun (width, height, orientation) ->
+                        setScreen width height (int orientation)
+                        |> Async.AwaitPromise
                 Settle =
                     fun () ->
                         async {
@@ -1282,8 +1285,20 @@ let runScreen () =
 /// <summary>Runs the shared custom highlight assertions.</summary>
 let runHighlights () =
     let document = document ()
-    let count = HighlightChecks.run (fun () -> BrowserHighlights.forDocument document) document HighlightChecks.Chromium
+
+    let count =
+        HighlightChecks.run (fun () -> BrowserHighlights.forDocument document) document HighlightChecks.Chromium
+
     {| highlights = count |}
+
+/// <summary>Runs the shared diagnostics assertions.</summary>
+let runDiagnostics () =
+    let document = document ()
+
+    let count =
+        DiagnosticsChecks.run (fun () -> BrowserDiagnostics.forDocument document) document DiagnosticsChecks.Chromium
+
+    {| diagnostics = count |}
 
 /// <summary>Runs the shared crypto assertions in a secure context.</summary>
 let runCrypto () =
