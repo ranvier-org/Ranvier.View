@@ -691,7 +691,7 @@ let private runCaret () =
 
 /// <summary>Runs the shared form fixture with native thread, collection, FormData and event teardown checks.</summary>
 [<Literal>]
-let private FormChecksCount = 67
+let private FormChecksCount = 69
 
 let private runForms () =
     let host = WebCoreHost.Create (320, 240)
@@ -790,6 +790,115 @@ let private runForms () =
 
     System.Console.WriteLine $"NATIVE_API D13 PASS assertions={shared}"
     System.Console.WriteLine $"NATIVE_API D13 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared binary value fixture with native thread, document replacement and teardown checks.</summary>
+[<Literal>]
+let private BinaryChecksCount = 102
+
+let private runBinary () =
+    let host = WebCoreHost.Create (320, 200)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let driver: BinaryChecks.Driver =
+        {
+            Settle = fun () -> async { host.Cycle () |> ignore }
+            CrlfLineEndings = System.OperatingSystem.IsWindows ()
+        }
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                BinaryChecks.run
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.BinaryValues.forHost host)
+                    (fun () -> Ranvier.View.WebCore.FormData.forHost host)
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 60000L do
+                host.Cycle () |> ignore
+
+            let count = count.GetAwaiter().GetResult()
+            use service = Ranvier.View.WebCore.BinaryValues.forHost host
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.CreateBlob ([||], Ranvier.Dom.BlobOptions.Default) |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Blob construction rejects another thread"
+
+            let file =
+                service.CreateFile (
+                    [| Ranvier.Dom.BlobPart.Text "kept" |],
+                    "kept.txt",
+                    { Ranvier.Dom.FileOptions.Default with LastModified = Some 7L }
+                )
+
+            let slice = file.slice (1L, 3L)
+            let list = service.CreateFileList [| file |]
+            System.GC.Collect ()
+            System.GC.WaitForPendingFinalizers ()
+            host.Cycle () |> ignore
+            RanvierWebCoreAbi.Native.rv_collect_garbage ()
+            expect (file.size = 4UL && slice.size = 2UL) "A File and its slice survive collection"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            let result = ref None
+            use _ = service.ReadBytes (slice, fun outcome -> result.Value <- Some outcome)
+
+            while result.Value.IsNone do
+                host.Cycle () |> ignore
+
+            expect
+                (result.Value = Some (Ranvier.Dom.ResourceOutcome.Succeeded "ep"B))
+                "A slice reads after document replacement"
+
+            expect (list.length = 1u && obj.ReferenceEquals (list.item 0u, file)) "A FileList survives document replacement"
+            let pending = service.ReadBytes (file, ignore)
+            held <- Some (file, list, pending)
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Binary fixture leaves no live native objects"
+    let file, list, pending = held.Value
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    expect (rejected (fun () -> file.size |> ignore)) "A held File rejects use after host disposal"
+    expect (rejected (fun () -> list.length |> ignore)) "A held FileList rejects use after host disposal"
+    pending.Dispose ()
+
+    if shared <> BinaryChecksCount then
+        failwith $"Binary shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API H11 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API H11 LIFETIME PASS assertions={lifetime}"
     shared
 
 /// <summary>Runs the shared dialog, popover and command invoker fixture with native thread and teardown checks.</summary>
@@ -1334,6 +1443,7 @@ let private runAll () =
     runCaret () |> ignore
     runForms () |> ignore
     runDialogs () |> ignore
+    runBinary () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
@@ -2321,6 +2431,9 @@ let main args =
         0
     elif Array.contains "--dialogs-only" args then
         runDialogs () |> ignore
+        0
+    elif Array.contains "--binary-only" args then
+        runBinary () |> ignore
         0
     elif Array.contains "--frames-only" args then
         runFrames () |> ignore

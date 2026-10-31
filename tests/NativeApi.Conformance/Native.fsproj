@@ -67,6 +67,7 @@
     <Compile Include="CaretChecks.fs" />
     <Compile Include="FormChecks.fs" />
     <Compile Include="DialogChecks.fs" />
+    <Compile Include="BinaryChecks.fs" />
     <Compile Include="TreeTraversal.fs" />
     <Compile Include="MathMLElements.fs" />
     <Compile Include="TraversalLifecycle.fs" />

@@ -10,7 +10,7 @@ open RanvierWebCoreAbi
 module FormData =
     let private bytes (value: string) = Encoding.UTF8.GetBytes value
 
-    let private value (union: NativeDom.RvDomUnionFileOrUSVString) =
+    let private entryValue (file: nativeint -> File) (union: NativeDom.RvDomUnionFileOrUSVString) =
         if union.present <> 1 then
             invalidOp "WebCore returned an absent FormData entry value"
 
@@ -22,7 +22,7 @@ module FormData =
                 invalidOp "WebCore returned a null FormData string entry"
 
             FormDataEntryValue.String text
-        | NativeDom.RV_DOM_UNION_FILE_OR_USV_STRING_FILE -> FormDataEntryValue.File FormDataFile.Opaque
+        | NativeDom.RV_DOM_UNION_FILE_OR_USV_STRING_FILE -> FormDataEntryValue.File (file union.arm0)
         | other -> invalidOp $"WebCore returned the unknown FormData entry tag {other}"
 
     let inline private sequence<'T, 'U when 'T: struct> (items: nativeint) (count: int) ([<InlineIfLambda>] read: 'T -> 'U) =
@@ -71,6 +71,21 @@ module FormData =
                 Func<Session, nativeint, NativeObject>(fun s h -> DOMFormDataObject (s, h))
             )
             |> unbox<DOMFormData>
+
+        let value =
+            entryValue (fun handle ->
+                if handle = 0n then
+                    invalidOp "WebCore returned a File entry without a handle"
+
+                NativeDom.rv_dom_blob_retain handle |> ignore
+
+                session.Object (
+                    handle,
+                    Kind.Blob,
+                    unbox<NativeObject> (box document),
+                    Func<Session, nativeint, NativeObject>(fun s h -> FileObject (s, h))
+                )
+                |> unbox<File>)
 
         let create (form: nativeint) (submitter: nativeint) =
             let mutable result = 0n
