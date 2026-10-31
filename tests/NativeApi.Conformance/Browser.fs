@@ -641,6 +641,10 @@ let run () =
         if timing <> 180 || timingDeterministic <> 181 then
             failwith "User timing assertions did not run"
 
+        let! capabilities =
+            Capabilities.run (fun () -> BrowserCapabilities.forDocument document)
+            |> Async.AwaitTask
+
         let! geometryProof = runGeometry () |> Async.AwaitPromise
         let! matrixProof = runMatrix () |> Async.AwaitPromise
         let! transformProof = runTransforms () |> Async.AwaitPromise
@@ -812,6 +816,7 @@ let run () =
                 localeContext = localeResult.localeContext
                 timing = timing
                 timingDeterministic = timingDeterministic
+                capabilities = capabilities
                 scopeRules = scopeRules
                 nestedDeclarations = nestedDeclarations
                 importContentsReadable = importContentsReadable
