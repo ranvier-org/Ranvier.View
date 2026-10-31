@@ -178,7 +178,7 @@ const runCaret = async () => {
     await caretBrowser.close();
   }
 };
-const CARET_ASSERTIONS = 0;
+const CARET_ASSERTIONS = 1537;
 // H01 runs the idle fixture on the manual scheduler and on the Window's idle callbacks and frames.
 const runIdle = async () => {
   const idleBrowser = await chromium.launch({ headless: true });
