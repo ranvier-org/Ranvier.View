@@ -30,6 +30,7 @@ const segmentsOnly = process.argv.includes('--segments-only');
 const binaryOnly = process.argv.includes('--binary-only');
 const cryptoOnly = process.argv.includes('--crypto-only');
 const highlightsOnly = process.argv.includes('--highlights-only');
+const diagnosticsOnly = process.argv.includes('--diagnostics-only');
 const screenOnly = process.argv.includes('--screen-only');
 const submissionsOnly = process.argv.includes('--submissions-only');
 const eventDetailsOnly = process.argv.includes('--event-details-only');
@@ -277,6 +278,20 @@ const runHighlights = async () => {
   }
 };
 const HIGHLIGHT_ASSERTIONS = 35;
+// H08 runs the diagnostics fixture in its own page.
+const runDiagnostics = async () => {
+  const diagnosticsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await diagnosticsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runDiagnostics(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.diagnostics !== DIAGNOSTICS_ASSERTIONS) throw new Error(`Diagnostics assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API H08 PASS assertions=${result.diagnostics} engine=chromium`);
+  } finally {
+    await diagnosticsBrowser.close();
+  }
+};
+const DIAGNOSTICS_ASSERTIONS = 46;
 // D14 runs the form submission fixture in its own page; the provider keeps the page in place.
 const runSubmissions = async () => {
   const submissionsBrowser = await chromium.launch({ headless: true });
@@ -364,6 +379,7 @@ try {
   else if (binaryOnly) { await runBinary(); process.exitCode = 0; }
   else if (cryptoOnly) { await runCrypto(); process.exitCode = 0; }
   else if (highlightsOnly) { await runHighlights(); process.exitCode = 0; }
+  else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (screenOnly) { await runScreen(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
   else if (eventDetailsOnly) { await runEventDetails(); process.exitCode = 0; }
@@ -603,6 +619,7 @@ try {
   await runSubmissions();
   await runCrypto();
   await runHighlights();
+  await runDiagnostics();
   await runScreen();
   await runEventDetails();
   await runFrames();

@@ -1541,19 +1541,29 @@ let private runScreen () =
             let service = Ranvier.View.WebCore.Screen.forHost host
             let first = service.Read ()
             expect ((first.Width, first.Height, first.AvailWidth, first.ColorDepth) = (320, 200, 320, 24)) "The default screen is the viewport"
-            expect (first.Orientation = Ranvier.Dom.ScreenOrientationType.LandscapePrimary && first.Angle = 0) "The default orientation"
+
+            expect
+                (first.Orientation = Ranvier.Dom.ScreenOrientationType.LandscapePrimary
+                 && first.Angle = 0)
+                "The default orientation"
+
             let resized = ref None
             use _ = service.Subscribe (fun info -> resized.Value <- Some info)
             host.Resize (200, 320)
-            expect (resized.Value |> Option.map (fun info -> info.Width, info.Height, info.Angle) = Some (200, 320, 90)) "Resize changes the default screen"
+
+            expect
+                (resized.Value
+                 |> Option.map (fun info -> info.Width, info.Height, info.Angle)
+                    =
+                    Some (200, 320, 90))
+                "Resize changes the default screen"
+
             host.Resize (320, 200)
             service.Dispose ()
 
             let driver: ScreenChecks.Driver =
                 {
-                    Set =
-                        fun (width, height, orientation) ->
-                            async { host.SetScreen (width, height, 0, 0, width, height, 24, orientation) }
+                    Set = fun (width, height, orientation) -> async { host.SetScreen (width, height, 0, 0, width, height, 24, orientation) }
                     Settle = fun () -> async { host.Cycle () |> ignore }
                     LockResolves = false
                 }
@@ -1564,7 +1574,8 @@ let private runScreen () =
 
             let timeout = System.Diagnostics.Stopwatch.StartNew ()
 
-            while not count.IsCompleted && timeout.ElapsedMilliseconds < 60000L do
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 60000L do
                 host.Cycle () |> ignore
 
             let count = count.GetAwaiter().GetResult()
@@ -1650,21 +1661,18 @@ let private runHighlights () =
     let shared =
         try
             let count =
-                HighlightChecks.run
-                    (fun () -> Ranvier.View.WebCore.Highlights.forHost host)
-                    host.Document
-                    HighlightChecks.WebKit
+                HighlightChecks.run (fun () -> Ranvier.View.WebCore.Highlights.forHost host) host.Document HighlightChecks.WebKit
 
             let service = Ranvier.View.WebCore.Highlights.forHost host
             let registry = service.Registry
-            let highlight = service.Create [| host.Document.createRange () :> Ranvier.Dom.AbstractRange |]
+
+            let highlight =
+                service.Create [| host.Document.createRange () :> Ranvier.Dom.AbstractRange |]
+
             service.Set (registry, "kept", highlight)
 
             let wrongThread =
-                System.Threading.Tasks.Task
-                    .Run(fun () -> rejected (fun () -> service.Size highlight |> ignore))
-                    .GetAwaiter()
-                    .GetResult()
+                System.Threading.Tasks.Task.Run(fun () -> rejected (fun () -> service.Size highlight |> ignore)).GetAwaiter().GetResult()
 
             expect wrongThread "Highlight.size rejects another thread"
             host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
@@ -1690,6 +1698,83 @@ let private runHighlights () =
 
     System.Console.WriteLine $"NATIVE_API T03 PASS assertions={shared}"
     System.Console.WriteLine $"NATIVE_API T03 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared diagnostics fixture with native thread, snapshot release and teardown checks.</summary>
+[<Literal>]
+let private DiagnosticsChecksCount = 73
+
+let private runDiagnostics () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let snapshots = RanvierWebCoreAbi.Native.rv_diagnostic_live_count ()
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                DiagnosticsChecks.run (fun () -> Ranvier.View.WebCore.Diagnostics.forHost host) host.Document DiagnosticsChecks.Native
+
+            expect (RanvierWebCoreAbi.Native.rv_diagnostic_live_count () = snapshots) "Every native diagnostics snapshot is released"
+            let service = Ranvier.View.WebCore.Diagnostics.forHost host
+            service.Enable ()
+            let body = host.Document.body
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.BoxModel body |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "A diagnostics read rejects another thread"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            expect (service.BoxModel body = Error Ranvier.Dom.DiagnosticsUnavailable.NotRendered) "An element of a replaced document is not rendered"
+
+            expect
+                (service.DocumentRenderTree Ranvier.Dom.RenderTreeOptions.None
+                 |> Result.isOk)
+                "The replaced document has a render tree"
+
+            held <- Some service
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Diagnostics fixture leaves no live native objects"
+    let service = held.Value
+
+    let rejected =
+        try
+            service.DocumentRenderTree Ranvier.Dom.RenderTreeOptions.None
+            |> ignore
+
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect rejected "A held diagnostics service rejects reads after host disposal"
+    service.Dispose ()
+    expect (not service.Enabled) "Disposing after host disposal disables the service"
+    expect (RanvierWebCoreAbi.Native.rv_diagnostic_live_count () = snapshots) "No snapshot outlives the fixture"
+
+    if shared <> DiagnosticsChecksCount then
+        failwith $"Diagnostics shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API H08 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API H08 LIFETIME PASS assertions={lifetime}"
     shared
 
 /// <summary>Runs the shared crypto fixture with native thread and teardown checks.</summary>
@@ -2323,6 +2408,7 @@ let private runAll () =
     runScreen () |> ignore
     runEventDetails () |> ignore
     runHighlights () |> ignore
+    runDiagnostics () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
@@ -3322,6 +3408,9 @@ let main args =
         0
     elif Array.contains "--highlights-only" args then
         runHighlights () |> ignore
+        0
+    elif Array.contains "--diagnostics-only" args then
+        runDiagnostics () |> ignore
         0
     elif Array.contains "--crypto-only" args then
         runCrypto () |> ignore
