@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "group": "A07 scroll-driven timelines",
+  "heads": {
+    "native": "55d2aa3cc76de5ec714edc9ce02dfe2d915438b5",
+    "core": "3deb5644676ba3691ebdccd29647982b1b49be29",
+    "views": "03a321a52b47e21e9747b287cdb3bc075a8e0d19"
+  },
+  "privateFeed": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.49.nupkg": "5c17be2a5088f7cccceb2b59b32fef754f6695980ca9416c7f7224ffd0c471fd",
+    "Ranvier.Dom.0.1.0-alpha.49.nupkg": "a169217db61f4a0f2b1bc6b4f9a448afdd42ba7cd80e71101d06c954fbcd568c",
+    "Ranvier.WebCore.0.1.0-preview.46.nupkg": "8162de278079c96f6c57f98fab7df5403b4b4d167354cf1888099edb0bb9fe7e"
+  },
+  "nativeRuntime": "C:/wk/native-waapi-tl/artifacts/waapi-candidate-tl1-frozen (Ranvier.WebCore docs/animation-timelines-evidence/a07/final-evidence.json)",
+  "jit": {
+    "exitCode": 0,
+    "log": "C:\\wk\\waapi-tl-artifacts\\managed\\a07-full\\jit.log",
+    "logSha256": "0eb17d490c4cacb5e466cd8d2c14578e62beddec94f8a9377749db3451eb4585",
+    "passLines": 124,
+    "group": [
+      "NATIVE_API A06 PASS assertions=24",
+      "NATIVE_API A06 LIFETIME PASS assertions=5",
+      "NATIVE_API A07 PASS assertions=38"
+    ]
+  },
+  "aot": {
+    "exitCode": 0,
+    "log": "C:\\wk\\waapi-tl-artifacts\\managed\\a07-full\\aot.log",
+    "logSha256": "ca655e7e478e79f10c94d2b279abcad2f2ff58340c07d14b55799b1a86758df4",
+    "passLines": 124,
+    "group": [
+      "NATIVE_API A06 PASS assertions=24",
+      "NATIVE_API A06 LIFETIME PASS assertions=5",
+      "NATIVE_API A07 PASS assertions=38"
+    ]
+  },
+  "chromium": {
+    "exitCode": 0,
+    "log": "C:\\wk\\waapi-tl-artifacts\\managed\\a07-full\\chromium.log",
+    "logSha256": "bc126d869fa957029205c7f2791b8265cf181008018038aa017c8f1e4b4916e8",
+    "passLines": 89,
+    "group": [
+      "BROWSER_API A06 PASS assertions=24 engine=chromium",
+      "BROWSER_API A07 PASS assertions=38 engine=chromium"
+    ]
+  },
+  "repeat30": {
+    "aot": {
+      "file": "C:\\wk\\waapi-tl-artifacts\\managed\\a07-repeat30\\aot-timelines-repeat30.txt",
+      "sha256": "28435bceb6cba620d050a261ddabe2649a73fdf7859a98db087ee820243b9e98",
+      "counts": {
+        "NATIVE_API A06 PASS assertions=24": 30,
+        "NATIVE_API A07 PASS assertions=38": 30
+      }
+    },
+    "chromium": {
+      "file": "C:\\wk\\waapi-tl-artifacts\\managed\\a07-repeat30\\chromium-timelines-repeat30.txt",
+      "sha256": "64ab6ec8edc04dcca4f02d2c207de57fe676df20eab676c3e75f62074c97374b",
+      "counts": {
+        "BROWSER_API A06 PASS assertions=24 engine=chromium": 30,
+        "BROWSER_API A07 PASS assertions=38 engine=chromium": 30
+      }
+    }
+  }
+}

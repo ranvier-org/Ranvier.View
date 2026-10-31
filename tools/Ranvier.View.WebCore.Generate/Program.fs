@@ -24,6 +24,8 @@ let private hand (dom: Type) (header: string) : Map<string, string> =
             "EventTarget.removeEventListener", "Events.Remove(this, {0}, {1}, {2})"
             "EventTarget.dispatchEvent", "Events.Dispatch(this, {0})"
             "Event.currentTarget.get", "Events.CurrentTarget this"
+            "WebAnimation.rangeStart.get", "TimelineRanges.read (Interop.handle (box this)) true (fun handle -> box (this.Session.Object(handle, Kind.StyleValue, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleValue(session, handle)))))"
+            "WebAnimation.rangeEnd.get", "TimelineRanges.read (Interop.handle (box this)) false (fun handle -> box (this.Session.Object(handle, Kind.StyleValue, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSStyleValue(session, handle)))))"
             "Event.target.get", "Events.Target this"
             "MouseEvent.relatedTarget.get", "Events.RelatedTarget this"
             "FocusEvent.relatedTarget.get", "Events.RelatedTarget this"

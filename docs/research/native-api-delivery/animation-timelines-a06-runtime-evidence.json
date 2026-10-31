@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "group": "A06 document/custom timelines",
+  "heads": {
+    "native": "c74641ccc31252d5f8bb3aec3dd00322cb573c97",
+    "core": "75e905668a33f7ec6f79d9191ead2c411e8f1149",
+    "views": "1ef91097a40d18a031a657941884aa6f998c1d53"
+  },
+  "privateFeed": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.49.nupkg": "5606e3d386347ef1e079cc9af1653cc0f309b32b45ea8415fbb04064ccfd60ef",
+    "Ranvier.Dom.0.1.0-alpha.49.nupkg": "e5f2b91401c8b88504653dd7b4d7ef77b5d06d53d7dabd2a88618a9b6fbe27a0",
+    "Ranvier.WebCore.0.1.0-preview.46.nupkg": "afb7b07abaf515051414c8eb0096eb039ff473f310ce53d9189ffd62f16817e7"
+  },
+  "nativeRuntime": "C:/wk/native-waapi/artifacts/waapi-candidate-3-frozen (A01 runtime; A06 adds no export; Ranvier.WebCore docs/animation-timelines-evidence/a06/a06-evidence.json)",
+  "jit": {
+    "exitCode": 0,
+    "log": "C:\\wk\\waapi-tl-artifacts\\managed\\a06-full\\rerun\\jit.log",
+    "logSha256": "d66f807aa42cc3c41ffe56e4db1c9c801b464ca340ec0981b9648632cffcc1a6",
+    "passLines": 123,
+    "group": [
+      "NATIVE_API A06 PASS assertions=24",
+      "NATIVE_API A06 LIFETIME PASS assertions=3"
+    ]
+  },
+  "aot": {
+    "exitCode": 0,
+    "log": "C:\\wk\\waapi-tl-artifacts\\managed\\a06-full\\rerun\\aot.log",
+    "logSha256": "0a1b59b97da1d23d780a2b1561c46e705e71b25d11ee60f6a413515be9fb42a9",
+    "passLines": 123,
+    "group": [
+      "NATIVE_API A06 PASS assertions=24",
+      "NATIVE_API A06 LIFETIME PASS assertions=3"
+    ]
+  },
+  "chromium": {
+    "exitCode": 0,
+    "log": "C:\\wk\\waapi-tl-artifacts\\managed\\a06-full\\chromium.log",
+    "logSha256": "206888e79a01759b6151d9eb6a6d42999db76366751c3cc9134286ec6cdbb3e9",
+    "passLines": 88,
+    "group": [
+      "BROWSER_API A06 PASS assertions=24 engine=chromium"
+    ]
+  },
+  "repeat30": {
+    "aot": {
+      "file": "C:\\wk\\waapi-tl-artifacts\\managed\\a06-repeat30\\aot-timelines-repeat30.txt",
+      "sha256": "d74a62ba8afb0be6c6cdf9cccc786ab68dd3913e4cc3491e222ba192abf0ff9f",
+      "counts": {
+        "NATIVE_API A06 PASS assertions=24": 30
+      }
+    },
+    "chromium": {
+      "file": "C:\\wk\\waapi-tl-artifacts\\managed\\a06-repeat30\\chromium-timelines-repeat30.txt",
+      "sha256": "392d4172abf7f6cee62eb56c2c1324fe22fe8bc375ed07dc85834fcf23950dea",
+      "counts": {
+        "BROWSER_API A06 PASS assertions=24 engine=chromium": 30
+      }
+    }
+  },
+  "qualifications": [
+    "The first JIT and AOT full runs (C:/wk/waapi-tl-artifacts/managed/a06-full/{jit,aot}.log) stopped at the pre-existing SVG check \"begin starts at paused document time\" (0.124 s against a 0.05 s tolerance) under machine load; AOT reported it through printf (missing native code). That check precedes every animation fixture. The reruns above passed unchanged binaries.",
+    "Start times shared by animations started before one rendering update are checked by the native probe only: the browser fixture is synchronous and a frame is asynchronous."
+  ]
+}

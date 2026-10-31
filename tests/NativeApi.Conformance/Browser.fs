@@ -1661,6 +1661,37 @@ let runAnimationEvents () =
     }
     |> Async.StartAsPromise
 
+[<Emit("new Promise(resolve => { let n = $0; const step = () => (--n > 0 ? requestAnimationFrame(step) : resolve()); requestAnimationFrame(step); })")>]
+let private animationFrames (count: int) : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared animation timeline assertions on the browser's timelines.</summary>
+let runTimelines () =
+    let document = document ()
+
+    let settle () =
+        animationFrames 2 |> Async.AwaitPromise
+
+    async {
+        let timelines = TimelineChecks.runDocumentTimelines document (fun () -> BrowserAnimations.forDocument document)
+
+        let! scroll =
+            TimelineChecks.runScrollTimelines
+                document
+                (fun () -> BrowserTimelines.forDocument document)
+                (fun () -> Ranvier.Dom.ComputedStyles.forDocument document)
+                settle
+
+        let name (error: exn) =
+            match error with
+            | AnimationException (name, _) -> name
+            | error -> errorName error
+
+        let! view = TimelineChecks.runViewTimelines document (fun () -> BrowserTimelines.forDocument document) settle name
+
+        return {| timelines = timelines; scrollTimelines = scroll; viewTimelines = view |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared coordinate assertions, with an iframe's element as the foreign one.</summary>
 let runCoordinates () =
     let document = document ()

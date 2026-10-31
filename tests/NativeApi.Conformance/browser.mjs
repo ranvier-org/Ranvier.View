@@ -580,6 +580,27 @@ const ANIMATION_LIFECYCLE_ASSERTIONS = 29;
 const ANIMATION_EVENT_ASSERTIONS = 9;
 const runAnimationLifecycle = () => runAnimationFixture('runAnimationLifecycle', 'lifecycle', 'A03', ANIMATION_LIFECYCLE_ASSERTIONS);
 const runAnimationEvents = () => runAnimationFixture('runAnimationEvents', 'events', 'A10', ANIMATION_EVENT_ASSERTIONS);
+// A06 runs the animation timeline fixture in its own page.
+const runTimelines = async () => {
+  const timelinesBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await timelinesBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runTimelines(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (typeof result.timelines !== 'number') throw new Error(`Animation timeline fixture failed: ${JSON.stringify(result)}`);
+    if (TIMELINE_ASSERTIONS !== 0 && result.timelines !== TIMELINE_ASSERTIONS) throw new Error(`Animation timeline assertions did not run: ${JSON.stringify(result)}`);
+    if (SCROLL_TIMELINE_ASSERTIONS !== 0 && result.scrollTimelines !== SCROLL_TIMELINE_ASSERTIONS) throw new Error(`Scroll timeline assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API A06 PASS assertions=${result.timelines} engine=chromium`);
+    if (VIEW_TIMELINE_ASSERTIONS !== 0 && result.viewTimelines !== VIEW_TIMELINE_ASSERTIONS) throw new Error(`View timeline assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API A07 PASS assertions=${result.scrollTimelines} engine=chromium`);
+    console.log(`BROWSER_API A08 PASS assertions=${result.viewTimelines} engine=chromium`);
+  } finally {
+    await timelinesBrowser.close();
+  }
+};
+const TIMELINE_ASSERTIONS = 24;
+const SCROLL_TIMELINE_ASSERTIONS = 38;
+const VIEW_TIMELINE_ASSERTIONS = 54;
 // G14 runs the coordinate fixture in its own page.
 const runCoordinates = async () => {
   const coordinatesBrowser = await chromium.launch({ headless: true });
@@ -738,6 +759,7 @@ try {
   else if (process.argv.includes('--animations-only')) { await runAnimations(); process.exitCode = 0; }
   else if (process.argv.includes('--animation-lifecycle-only')) { await runAnimationLifecycle(); process.exitCode = 0; }
   else if (process.argv.includes('--animation-events-only')) { await runAnimationEvents(); process.exitCode = 0; }
+  else if (process.argv.includes('--timelines-only')) { await runTimelines(); process.exitCode = 0; }
   else if (process.argv.includes('--coordinates-only')) { await runCoordinates(); process.exitCode = 0; }
   else if (process.argv.includes('--resize-only')) { await runResizeObservation(); process.exitCode = 0; }
   else if (process.argv.includes('--intersection-only')) { await runIntersectionObservation(); process.exitCode = 0; }
@@ -1012,6 +1034,7 @@ try {
   await runAnimations();
   await runAnimationLifecycle();
   await runAnimationEvents();
+  await runTimelines();
   await runBlobUrls();
   await runMediaCapabilities();
   await runSnapshots();

@@ -3361,6 +3361,108 @@ let private runAnimationEvents () =
     System.Console.WriteLine $"NATIVE_API A10 PASS assertions={shared}"
     shared
 
+/// <summary>Runs the shared animation timeline fixture, then reads a held timeline past host disposal.</summary>
+[<Literal>]
+let private TimelineChecksCount = 24
+
+[<Literal>]
+let private ScrollTimelineChecksCount = 38
+
+[<Literal>]
+let private ViewTimelineChecksCount = 54
+
+let private runTimelines () =
+    let host = WebCoreHost.Create (320, 240)
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let settle () =
+        async {
+            host.Frame ()
+            host.Frame ()
+        }
+
+    let errorName =
+        function
+        | Ranvier.Dom.AnimationException (name, _) -> name
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let shared, scroll, view =
+        try
+            let shared = TimelineChecks.runDocumentTimelines host.Document (fun () -> Ranvier.View.WebCore.Animations.forHost host)
+
+            let scroll =
+                TimelineChecks.runScrollTimelines
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.Timelines.forHost host)
+                    (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost host)
+                    settle
+                |> fun work -> (Async.StartImmediateAsTask work).GetAwaiter().GetResult()
+
+            let view =
+                TimelineChecks.runViewTimelines
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.Timelines.forHost host)
+                    settle
+                    errorName
+                |> fun work -> (Async.StartImmediateAsTask work).GetAwaiter().GetResult()
+
+            shared, scroll, view
+        with error ->
+            (host :> System.IDisposable).Dispose ()
+            raise error
+
+    let timelines = Ranvier.View.WebCore.Timelines.forHost host
+    let heldScroll = timelines.CreateScrollTimeline host.Document.body
+
+    let service = Ranvier.View.WebCore.Animations.forHost host
+    let held = service.CreateDocumentTimeline 100.0
+    let document = host.Document.timeline
+    expect held.currentTime.IsSome "A new DocumentTimeline has a current time"
+    (host :> System.IDisposable).Dispose ()
+
+    let afterDisposal (timeline: Ranvier.Dom.AnimationTimeline) =
+        try
+            timeline.currentTime.IsNone
+        with _ ->
+            true
+
+    expect (afterDisposal held) "A held DocumentTimeline reads no current time after host disposal"
+    expect (afterDisposal document) "document.timeline reads no current time after host disposal"
+    expect (afterDisposal heldScroll) "A held ScrollTimeline reads no current time after host disposal"
+
+    let rejected =
+        try
+            timelines.CreateScrollTimeline () |> ignore
+            false
+        with _ ->
+            true
+
+    expect rejected "A held timeline service rejects construction after host disposal"
+    service.Dispose ()
+    timelines.Dispose ()
+
+    if TimelineChecksCount <> 0 && shared <> TimelineChecksCount then
+        failwith $"Animation timeline shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API A06 PASS assertions={shared}"
+    if ScrollTimelineChecksCount <> 0 && scroll <> ScrollTimelineChecksCount then
+        failwith $"Scroll timeline shared assertions did not run: {scroll}"
+
+    System.Console.WriteLine $"NATIVE_API A06 LIFETIME PASS assertions={lifetime}"
+    if ViewTimelineChecksCount <> 0 && view <> ViewTimelineChecksCount then
+        failwith $"View timeline shared assertions did not run: {view}"
+
+    System.Console.WriteLine $"NATIVE_API A07 PASS assertions={scroll}"
+    System.Console.WriteLine $"NATIVE_API A08 PASS assertions={view}"
+    shared + scroll + view
+
 /// <summary>Runs the shared cascade fixture with native thread, snapshot release and teardown checks.</summary>
 [<Literal>]
 let private CascadeChecksCount = 609
@@ -5045,6 +5147,7 @@ let private runAll () =
     runAnimations () |> ignore
     runAnimationLifecycle () |> ignore
     runAnimationEvents () |> ignore
+    runTimelines () |> ignore
     runBlobUrls () |> ignore
     runMediaCapabilities () |> ignore
     runSnapshots () |> ignore
@@ -6094,6 +6197,9 @@ let main args =
         0
     elif Array.contains "--animation-events-only" args then
         runAnimationEvents () |> ignore
+        0
+    elif Array.contains "--timelines-only" args then
+        runTimelines () |> ignore
         0
     elif Array.contains "--coordinates-only" args then
         runCoordinates () |> ignore

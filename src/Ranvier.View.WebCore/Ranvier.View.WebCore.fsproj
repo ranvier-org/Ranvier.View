@@ -55,6 +55,7 @@
         <Compile Include="Traversal.fs" />
         <Compile Include="Marshalling.fs" />
         <Compile Include="AnimationResults.fs" />
+        <Compile Include="TimelineRanges.fs" />
         <Compile Include="Generated/Objects.fs" />
         <Compile Include="EventTargets.fs" />
         <Compile Include="Host.fs" />
@@ -106,6 +107,7 @@
         <Compile Include="WakeLocks.fs" />
         <Compile Include="Notifications.fs" />
         <Compile Include="Animations.fs" />
+        <Compile Include="Timelines.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />
