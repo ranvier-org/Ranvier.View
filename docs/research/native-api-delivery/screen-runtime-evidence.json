@@ -5,7 +5,7 @@
   "route": "Engine Screen and ScreenOrientation (Native38 / ABI46, patch 0038) set by the app display integration",
   "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/49",
   "coreSourceCommit": "b59d5c5661d64681f323c85b76e5f5842a059a0b",
-  "viewsSourceCommit": "438917b153c685685243a223f6fe16e5b28e6e68",
+  "viewsSourceCommit": "e891d2ba3e06756e6c9c38b0766fe0341e103caa",
   "stackedOn": {
     "core": "G03 b9c943d1 (DOM alpha.40; includes B22 ec5f369c, T06, D14, H13, G09, H11) + G04 Screen.fs; pins native ed56af2",
     "views": "G03 102ab61 (Views 0.1.30; includes B22 dcd8cc7) + G04 provider, SetScreen, SDL display feed and fixture"
@@ -91,6 +91,7 @@
   "jitAotPassLinesIdentical": true,
   "repeats": {
     "aotScreenOnly": "aot --screen-only repeat30: 30/30 (G04 30 + lifetime 10)",
+    "sdlDisplayFeedWindowTest": "sdl display feed test repeat30: 30/30",
     "nativeCryptoRandom": "Ranvier.WebCore docs/screen-evidence/crypto-random-repeat30.txt"
   },
   "wrapperRegeneration": {
@@ -108,6 +109,6 @@
     "Native orientation locking reads Unsupported; Chromium headless resolves lock(portrait), which the driver records.",
     "A browser observes screen changes through orientation and resize events; a size-only change is not delivered there, so the fixture asserts delivery per orientation change.",
     "The order of orientation change and resize events is never asserted.",
-    "Until SetScreen the native screen is the viewport; the SDL display feed is not part of this run."
+    "Until SetScreen the native screen is the viewport. The SDL window feeds SetScreen from its display through a core effect; its window test pushes fake SDL display events against a stand-in display reader because CI has no displays."
   ]
 }
