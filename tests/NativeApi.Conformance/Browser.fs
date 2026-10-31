@@ -762,7 +762,8 @@ let runResources () =
         let engine: Resources.Engine =
             {
                 CorruptImageDecodes = true
-                TransportReleaseReachesProvider = false
+                TransportReleaseRequests = 0
+                ReleaseEngineCaches = ignore
             }
 
         let! count =

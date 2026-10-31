@@ -383,7 +383,16 @@ let private runResources () =
                 Resources.run
                     {
                         CorruptImageDecodes = false
-                        TransportReleaseReachesProvider = true
+                        TransportReleaseRequests = 1
+                        ReleaseEngineCaches =
+                            fun () ->
+                                // Lets each image loader release its element, then prunes images without clients.
+                                for _ in 1..3 do
+                                    host.Cycle 50
+                                    RanvierWebCoreAbi.Native.rv_collect_garbage ()
+
+                                RanvierWebCoreAbi.Native.rv_release_memory ()
+                                host.Cycle 5
                     }
                     (resourceFixture ())
                     (fun provider -> Ranvier.View.WebCore.Resources.forHost host provider)

@@ -17,9 +17,45 @@ type Engine =
     {
         /// <summary>The engine resolves decode for a PNG whose header is valid and whose image data is corrupt.</summary>
         CorruptImageDecodes: bool
-        /// <summary>A released transport URL is observable as a new provider request.</summary>
-        TransportReleaseReachesProvider: bool
+        /// <summary>Provider requests when a new element loads a released transport URL after ReleaseEngineCaches.</summary>
+        TransportReleaseRequests: int
+        /// <summary>Releases the engine's reusable copy of resources no element still uses.</summary>
+        /// <remarks>WebCore reuses a same-document image while its CachedImage stays in the memory cache
+        /// (CachedImage::canSkipRevalidation, the per-document image list).</remarks>
+        ReleaseEngineCaches: unit -> unit
     }
+
+/// <summary>Describes a fixture value without printf formatting, which NativeAOT trimming does not support reliably.</summary>
+let rec private describe (value: obj) : string =
+    match value with
+    | null -> "null"
+    | :? string as text -> "\"" + text + "\""
+    | :? bool as flag -> if flag then "true" else "false"
+    | :? int as number -> number.ToString ()
+    | :? byte as number -> number.ToString ()
+    | :? (byte array) as bytes ->
+        "["
+        + String.Join (";", bytes |> Array.map (fun b -> b.ToString ()))
+        + "]"
+    | :? ResourceFailure as failure ->
+        match failure with
+        | ResourceFailure.LoadFailed message -> "LoadFailed " + message
+        | ResourceFailure.DecodeFailed message -> "DecodeFailed " + message
+        | ResourceFailure.Cancelled -> "Cancelled"
+        | ResourceFailure.Invalidated reason -> "Invalidated " + reason
+    | :? ResourceFont as font -> "Font " + font.Family
+    | :? ResourceImage as image ->
+        "Image "
+        + image.Width.ToString ()
+        + "x"
+        + image.Height.ToString ()
+    | :? ResourceImageInfo as image ->
+        "ImageInfo "
+        + image.Width.ToString ()
+        + "x"
+        + image.Height.ToString ()
+    | :? ResourceResponse as response -> "Response " + describe (box response.Bytes)
+    | _ -> value.GetType().Name
 
 /// <summary>Checks cache policies, single terminal outcomes, cancellation, image and font readiness and disposal.</summary>
 /// <param name="create">Creates a service over a provider.</param>
@@ -32,7 +68,13 @@ let run (engine: Engine) (fixture: Fixture) (create: ResourceProvider -> Resourc
             checks <- checks + 1
 
             if expected <> actual then
-                failwith $"{label}: expected %A{expected}, got %A{actual}"
+                failwith (
+                    label
+                    + ": expected "
+                    + describe (box expected)
+                    + ", got "
+                    + describe (box actual)
+                )
 
         let requests = Dictionary<string, int>()
         let held = Dictionary<string, Result<ResourceResponse, string> -> unit>()
@@ -105,7 +147,7 @@ let run (engine: Engine) (fixture: Fixture) (create: ResourceProvider -> Resourc
         let bytes outcome =
             match outcome with
             | ResourceOutcome.Succeeded response -> response.Bytes
-            | ResourceOutcome.Failed failure -> failwith $"Unexpected failure %A{failure}"
+            | ResourceOutcome.Failed failure -> failwith ("Unexpected failure " + describe (box failure))
 
         let counterUrl = "https://h05.test/counter"
         let op1, t1, first = await (load counterUrl ResourceCachePolicy.UseCache)
@@ -190,7 +232,7 @@ let run (engine: Engine) (fixture: Fixture) (create: ResourceProvider -> Resourc
                 equal "image source URL" imageUrl value.SourceUrl
                 equal "distinct transport URL" true (value.TransportUrl <> value.SourceUrl)
                 value.TransportUrl
-            | ResourceOutcome.Failed failure -> failwith $"LoadImage failed %A{failure}"
+            | ResourceOutcome.Failed failure -> failwith ("LoadImage failed " + describe (box failure))
 
         opImage.Dispose ()
 
@@ -224,15 +266,25 @@ let run (engine: Engine) (fixture: Fixture) (create: ResourceProvider -> Resourc
         | ResourceOutcome.Succeeded value ->
             equal "element decode size" (3, 2) (value.Width, value.Height)
             equal "element source" true (value.SourceUrl.EndsWith "/element.png")
-        | ResourceOutcome.Failed failure -> failwith $"DecodeImage failed %A{failure}"
+        | ResourceOutcome.Failed failure -> failwith ("DecodeImage failed " + describe (box failure))
 
+        engine.ReleaseEngineCaches ()
         let afterTransport = image transport
 
         let _, _, released =
             await (fun terminal -> service.DecodeImage (afterTransport, terminal))
 
-        let! _ = released
-        equal "a disposed image releases its transport URL" (if engine.TransportReleaseReachesProvider then 1 else 0) (count transport)
+        let! released = released
+        let requested = count transport
+        equal "a disposed image releases its transport URL" engine.TransportReleaseRequests requested
+
+        equal
+            "an unrequested released URL was served from the engine cache"
+            true
+            (requested <> 0
+             || (match released with
+                 | ResourceOutcome.Succeeded value -> (value.Width, value.Height) = (3, 2)
+                 | ResourceOutcome.Failed _ -> engine.TransportReleaseRequests = 0))
 
         let opFont, _, font =
             await (fun terminal ->

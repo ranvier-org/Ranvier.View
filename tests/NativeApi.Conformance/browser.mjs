@@ -97,7 +97,7 @@ try {
     }
   }, resourcesOnly ? 'resources' : localesOnly ? 'locales' : svgOnly ? 'svg' : svgSurfacesOnly ? 'svg-surfaces' : svgPaintOnly ? 'svg-paint' : transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
   if (resourcesOnly) {
-    if (checks.resources !== 28) throw new Error(`Resource shared assertions did not run: ${JSON.stringify(checks)}`);
+    if (checks.resources !== 29) throw new Error(`Resource shared assertions did not run: ${JSON.stringify(checks)}`);
     console.log(`BROWSER_API H05 PASS assertions=${checks.resources} engine=chromium`);
   } else if (localesOnly) {
     if (checks.locales !== 35 || checks.localeDeterministic !== 14 || checks.localeContext !== 6) throw new Error(`Locale preference assertions did not run: ${JSON.stringify(checks)}`);

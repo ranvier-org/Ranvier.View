@@ -1,0 +1,87 @@
+{
+  "retained": {
+    "reloadRequests": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "reloadOutcomes": [
+      "(0, 3, 2)"
+    ]
+  },
+  "released": {
+    "reloadRequests": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "reloadOutcomes": [
+      "(0, 3, 2)"
+    ]
+  },
+  "purged": {
+    "reloadRequests": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "reloadOutcomes": [
+      "(0, 3, 2)"
+    ]
+  },
+  "evicted": {
+    "reloadRequests": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "reloadOutcomes": [
+      "(0, 3, 2)"
+    ]
+  },
+  "navigated": {
+    "reloadRequests": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "reloadOutcomes": [
+      "(0, 3, 2)"
+    ]
+  }
+}
