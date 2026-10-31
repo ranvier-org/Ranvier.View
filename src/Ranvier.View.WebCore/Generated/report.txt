@@ -1,4 +1,4 @@
-250 classes; 2651 members: 2622 mapped to 2542 of 2658 rv_dom_* functions, 29 hand-written, 0 unmapped
+250 classes; 2665 members: 2636 mapped to 2556 of 2672 rv_dom_* functions, 29 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_animation_playback_event_create: AnimationPlaybackEvent.constructor (op)
@@ -189,7 +189,7 @@ Members by class (mapped / hand-written / unmapped):
   DOMTokenListObject: 10 / 0 / 0
   DocumentFragmentObject: 11 / 0 / 0
   DocumentObject: 72 / 2 / 0
-  ElementObject: 181 / 0 / 0
+  ElementObject: 195 / 0 / 0
   ErrorEventObject: 4 / 0 / 0
   EventObject: 16 / 2 / 0
   EventTargetObject: 0 / 9 / 0

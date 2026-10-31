@@ -68,6 +68,7 @@
     <Compile Include="CaretChecks.fs" />
     <Compile Include="FormChecks.fs" />
     <Compile Include="UrlChecks.fs" />
+    <Compile Include="AriaChecks.fs" />
     <Compile Include="SubmissionChecks.fs" />
     <Compile Include="TextSegmentationChecks.fs" />
     <Compile Include="EventDetailChecks.fs" />
