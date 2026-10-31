@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "group": "G03 visual viewport",
+  "status": "green (private integration; not accepted)",
+  "route": "Engine (Native37 / ABI45)",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/48",
+  "coreSourceCommit": "b9c943d11981adec93377fe334aba4748bc52bfb",
+  "viewsSourceCommit": "632b7f5a13ca6b8e15e07bef815617368c3f5f96",
+  "stackedOn": {
+    "core": "B22 ec5f369c (alpha.39), T06 2e58628a, D14 522a7fa6, H13 d246756e, G09 dcaf0ad8",
+    "views": "B22 dcd8cc7 (0.1.29), T06 8332dbc, D14 fc88949, H13 8a5def2, G09 5fe038b"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-visual-viewport",
+    "head": "cdf1a4e1674ce1a56d2ce1c992b6d9f2d632ef7d",
+    "abi": 45,
+    "runtime": "native-vv artifacts/vv-candidate-4-frozen",
+    "evidence": "Ranvier.WebCore docs/visual-viewport-evidence/final-evidence.json"
+  },
+  "versions": {
+    "native": "0.1.0-preview.37",
+    "dom": "0.1.0-alpha.40",
+    "views": "0.1.30",
+    "webcoreBackend": "0.1.0-alpha.30"
+  },
+  "allocationReceipt": "Ranvier docs/research/native-api-delivery/g03-managed40-allocation.json; Ranvier.WebCore docs/visual-viewport-evidence/allocation-absence.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.40.nupkg": "647fce3cfeda762e6101d4b0bb2737e77f0f883d05982a03714ecf890839eadb",
+    "Ranvier.Dom.0.1.0-alpha.40.nupkg": "46bbc27c1abdaf2fae87ad00e2080a0c8548d6402cce840df5b8223cddd8b13e",
+    "Ranvier.WebCore.0.1.0-preview.37.nupkg": "9aa4d9f869887cd2e9c4979f262532001bf451e14766dccbeb88ae7c0c760671"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "dc677c6c1144935ba3a7b4d7efc2bc0d10ee8ec79ef5333ccf4d5a6010cc9cff",
+    "WebCore.dll": "4bf0cc13d99dcb4d93927e8eec01dfea1fb00f6f8087b46356895ffe178fddb8",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "stageMatchesAot": true,
+  "nativeAotExecutable": {
+    "path": "C:/wk/vv-private/aot-api/Native.exe",
+    "sha256": "41af00519adb7229da5653da3f5ec89fe5cc37273dd8fbc668f2c7e2e942ae23"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "27272529b81191624a21d608edb871be1bf7e61ef9778a5bdd7d23b3e4e25000",
+      "passLines": 101,
+      "failLines": [],
+      "g03": [
+        "NATIVE_API G03 LIFETIME PASS assertions=10",
+        "NATIVE_API G03 PASS assertions=66"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "27272529b81191624a21d608edb871be1bf7e61ef9778a5bdd7d23b3e4e25000",
+      "passLines": 101,
+      "failLines": [],
+      "g03": [
+        "NATIVE_API G03 LIFETIME PASS assertions=10",
+        "NATIVE_API G03 PASS assertions=66"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "ded2d468046ee36d9728b3babda92ff44de7e21d387697d31928b3d04a173302",
+      "passLines": 77,
+      "failLines": [],
+      "g03": [
+        "BROWSER_API G03 NAVIGATION PASS assertions=3 engine=chromium",
+        "BROWSER_API G03 PASS assertions=66 engine=chromium"
+      ]
+    },
+    "baselinePassLines": {
+      "jitAot": 99,
+      "chromium": 75,
+      "source": "B22 final (root)"
+    },
+    "added": {
+      "native": [
+        "NATIVE_API G03 PASS assertions=66",
+        "NATIVE_API G03 LIFETIME PASS assertions=10"
+      ],
+      "chromium": [
+        "BROWSER_API G03 PASS assertions=66",
+        "BROWSER_API G03 NAVIGATION PASS assertions=3"
+      ]
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "nativeProbeRepeats": {
+    "aotVisualViewportOnly": "30/30 runs with both G03 PASS lines (2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2)",
+    "nativeVisualViewport": "30/30 visual_viewport 987 on vv-candidate-4-frozen (Ranvier.WebCore docs/visual-viewport-evidence/visual-viewport-repeat30.txt)"
+  },
+  "wrapperRegeneration": {
+    "objectsFs": "a69ca5716d84f57d8dc0dc93f4ad79544b6aa84c41ea5f9e38effacd9e61a057",
+    "reportTxt": "8676dc62109b5b226d949cb575b47dde17676c6fee78b15289f3ff22ba546656",
+    "inputs": "restored Ranvier.WebCore preview.37 model + interop and Ranvier.Dom alpha.40 from the private feed",
+    "rootKindRule": "an interface with its own release kind is a root class; with and without the rule only VisualViewportObject changes base (EventTargetObject -> NativeObject Kind.VisualViewport 74)"
+  },
+  "fixture": {
+    "shared": "tests/NativeApi.Conformance/VisualViewportChecks.fs",
+    "sharedChecks": 66,
+    "nativeLifetimeChecks": 10,
+    "chromiumNavigationChecks": 3
+  },
+  "qualifications": [
+    "While page-scaled, WebKit keeps the layout viewport at the document origin: offsetLeft/offsetTop equal pageLeft/pageTop (Chromium 0/0 after scrollTo(100, 50), 15/20 after the wheel pan).",
+    "A WebKit window scroll at page scale 2 also fires the visual viewport scroll, which Chromium does not.",
+    "The page scale and obscured insets are host inputs: the browser provider reports both Unsupported. Obscured insets are native-only.",
+    "WebKit keeps the frame window across a page replacement; the native provider reads Detached once the host shows another document, as a VisualViewport held across a Chromium frame navigation reads zeros (reported Detached).",
+    "Fable has no ArgumentOutOfRangeException constructor or exception type tests: Core raises ArgumentException and the shared checks accept any exception."
+  ]
+}

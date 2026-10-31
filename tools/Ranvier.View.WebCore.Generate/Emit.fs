@@ -1043,8 +1043,10 @@ let run (input: Input) (tagMap: (string * string * string) list) : string * Entr
         |> List.map snd
         |> List.sortBy (fun t -> t.GetInterfaces().Length, t.Name)
 
+    // An interface with its own release kind is a root class: its handle is released as that kind, not as its base's.
     let rec chainOf (t: Type) =
         match baseOf classes t with
+        | Some _ when input.Kinds.ContainsKey t.Name -> []
         | Some b -> b :: chainOf b
         | None -> []
 

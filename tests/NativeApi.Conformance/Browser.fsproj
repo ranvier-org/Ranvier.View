@@ -53,6 +53,7 @@
     <Compile Include="InputStateChecks.fs" />
     <Compile Include="ViewportChecks.fs" />
     <Compile Include="ScrollChecks.fs" />
+    <Compile Include="VisualViewportChecks.fs" />
     <Compile Include="CaretOracle.fs" />
     <Compile Include="CaretChecks.fs" />
     <Compile Include="FormChecks.fs" />
