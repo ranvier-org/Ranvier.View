@@ -82,6 +82,7 @@
     <Compile Include="CascadeChecks.fs" />
     <Compile Include="CoordinateChecks.fs" />
     <Compile Include="ScreenChecks.fs" />
+    <Compile Include="MediaQueryChecks.fs" />
     <Compile Include="TreeTraversal.fs" />
     <Compile Include="MathMLElements.fs" />
     <Compile Include="TraversalLifecycle.fs" />
