@@ -17,9 +17,12 @@ type Engine =
     {
         /// <summary>The engine resolves decode for a PNG whose header is valid and whose image data is corrupt.</summary>
         CorruptImageDecodes: bool
-        /// <summary>Provider request counts allowed when a new element loads a released transport URL; an engine
-        /// memory cache may still satisfy it.</summary>
-        TransportReleaseRequests: int array
+        /// <summary>Provider requests when a new element loads a released transport URL after ReleaseEngineCaches.</summary>
+        TransportReleaseRequests: int
+        /// <summary>Releases the engine's reusable copy of resources no element still uses.</summary>
+        /// <remarks>WebCore reuses a same-document image while its CachedImage stays in the memory cache
+        /// (CachedImage::canSkipRevalidation, the per-document image list).</remarks>
+        ReleaseEngineCaches: unit -> unit
     }
 
 /// <summary>Describes a fixture value without printf formatting, which NativeAOT trimming does not support reliably.</summary>
@@ -265,6 +268,7 @@ let run (engine: Engine) (fixture: Fixture) (create: ResourceProvider -> Resourc
             equal "element source" true (value.SourceUrl.EndsWith "/element.png")
         | ResourceOutcome.Failed failure -> failwith ("DecodeImage failed " + describe (box failure))
 
+        engine.ReleaseEngineCaches ()
         let afterTransport = image transport
 
         let _, _, released =
@@ -272,7 +276,7 @@ let run (engine: Engine) (fixture: Fixture) (create: ResourceProvider -> Resourc
 
         let! released = released
         let requested = count transport
-        equal "a disposed image releases its transport URL" true (Array.contains requested engine.TransportReleaseRequests)
+        equal "a disposed image releases its transport URL" engine.TransportReleaseRequests requested
 
         equal
             "an unrequested released URL was served from the engine cache"
@@ -280,7 +284,7 @@ let run (engine: Engine) (fixture: Fixture) (create: ResourceProvider -> Resourc
             (requested <> 0
              || (match released with
                  | ResourceOutcome.Succeeded value -> (value.Width, value.Height) = (3, 2)
-                 | ResourceOutcome.Failed _ -> engine.TransportReleaseRequests = [| 0 |]))
+                 | ResourceOutcome.Failed _ -> engine.TransportReleaseRequests = 0))
 
         let opFont, _, font =
             await (fun terminal ->
