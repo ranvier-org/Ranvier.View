@@ -28,6 +28,7 @@ const dialogsOnly = process.argv.includes('--dialogs-only');
 const urlsOnly = process.argv.includes('--urls-only');
 const segmentsOnly = process.argv.includes('--segments-only');
 const binaryOnly = process.argv.includes('--binary-only');
+const dataTransferOnly = process.argv.includes('--data-transfer-only');
 const cryptoOnly = process.argv.includes('--crypto-only');
 const highlightsOnly = process.argv.includes('--highlights-only');
 const blobUrlsOnly = process.argv.includes('--blob-urls-only');
@@ -223,6 +224,20 @@ const runBinary = async () => {
   }
 };
 const BINARY_ASSERTIONS = 102;
+// I07 runs the DataTransfer fixture in its own page.
+const runDataTransfer = async () => {
+  const transferBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await transferBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runDataTransfer(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.dataTransfer !== DATA_TRANSFER_ASSERTIONS) throw new Error(`DataTransfer assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API I07 PASS assertions=${result.dataTransfer} engine=chromium`);
+  } finally {
+    await transferBrowser.close();
+  }
+};
+const DATA_TRANSFER_ASSERTIONS = 49;
 // #144 runs the blob URL fixture in its own page.
 const runBlobUrls = async () => {
   const blobBrowser = await chromium.launch({ headless: true });
@@ -450,6 +465,7 @@ try {
   else if (process.argv.includes('--aria-only')) { await runAria(); process.exitCode = 0; }
   else if (segmentsOnly) { await runSegments(); process.exitCode = 0; }
   else if (binaryOnly) { await runBinary(); process.exitCode = 0; }
+  else if (dataTransferOnly) { await runDataTransfer(); process.exitCode = 0; }
   else if (cryptoOnly) { await runCrypto(); process.exitCode = 0; }
   else if (highlightsOnly) { await runHighlights(); process.exitCode = 0; }
   else if (blobUrlsOnly) { await runBlobUrls(); process.exitCode = 0; }
@@ -691,6 +707,7 @@ try {
   await runForms();
   await runDialogs();
   await runBinary();
+  await runDataTransfer();
   await runUrls();
   await runAria();
   await runSegments();

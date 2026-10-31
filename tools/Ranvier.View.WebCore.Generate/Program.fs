@@ -126,6 +126,9 @@ let private kinds =
             "Highlight", "Kind.Highlight"
             "HighlightRegistry", "Kind.HighlightRegistry"
             "FileReader", "Kind.FileReader"
+            "DataTransfer", "Kind.DataTransfer"
+            "DataTransferItemList", "Kind.DataTransferItemList"
+            "DataTransferItem", "Kind.DataTransferItem"
         ]
 
 [<EntryPoint>]

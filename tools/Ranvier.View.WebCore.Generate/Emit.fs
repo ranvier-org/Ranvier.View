@@ -364,6 +364,9 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                     "DOMURL"
                     "URLSearchParams"
                     "URLPattern"
+                    "DataTransfer"
+                    "DataTransferItemList"
+                    "DataTransferItem"
                 ]
         then
             let kind = ctx.Input.Kinds[publicRoot]
@@ -380,6 +383,8 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                     || root = "DOMMatrixReadOnly"
                 then
                     $"(let document = Interop.contextDocument this in let target = {create} in target.BindDocumentContext(document); target)"
+                elif root.StartsWith ("DataTransfer", System.StringComparison.Ordinal) then
+                    $"(let document = Interop.transferDocument this in let target = {create} in target.BindDocumentContext(document); target)"
                 else
                     create
 

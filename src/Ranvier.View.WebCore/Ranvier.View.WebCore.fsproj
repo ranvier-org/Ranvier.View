@@ -78,6 +78,7 @@
         <Compile Include="ToggleEvents.fs" />
         <Compile Include="EventDetails.fs" />
         <Compile Include="BinaryValues.fs" />
+        <Compile Include="DataTransfers.fs" />
         <Compile Include="BlobUrls.fs" />
         <Compile Include="Urls.fs" />
         <Compile Include="TextSegmentation.fs" />

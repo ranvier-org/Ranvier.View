@@ -207,6 +207,16 @@ module internal Kind =
     [<Literal>]
     let FileReader = 98
 
+    // Placeholder kinds of the drag/drop lane (I07, T09, T04); renumbered at batch integration.
+    [<Literal>]
+    let DataTransfer = 160
+
+    [<Literal>]
+    let DataTransferItemList = 161
+
+    [<Literal>]
+    let DataTransferItem = 162
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -384,6 +394,9 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.UrlPattern -> NativeDom.rv_dom_url_pattern_release handle
         | Kind.VisualViewport -> Native.rv_event_target_release handle
         | Kind.FileReader -> Native.rv_event_target_release handle
+        | Kind.DataTransfer -> NativeDom.rv_dom_data_transfer_release handle
+        | Kind.DataTransferItemList -> NativeDom.rv_dom_data_transfer_item_list_release handle
+        | Kind.DataTransferItem -> NativeDom.rv_dom_data_transfer_item_release handle
         | Kind.Highlight -> NativeDom.rv_dom_highlight_release handle
         | Kind.HighlightRegistry -> NativeDom.rv_dom_highlight_registry_release handle
         | _ -> ()
@@ -508,6 +521,10 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
     /// <summary>The object of a node handle the caller owns a reference to, or null for zero.</summary>
     member this.Node(handle: nativeint) : NativeObject =
         this.Wrap (handle, this.NodeFactory, Kind.Node)
+
+    /// <summary>The object of the host's current document.</summary>
+    member internal this.HostDocument: NativeObject =
+        this.Node (Native.rv_host_document host)
 
     /// <summary>The object of an event handle the caller owns a reference to, or null for zero.</summary>
     member this.Event(handle: nativeint) : NativeObject =
@@ -849,6 +866,15 @@ module internal Interop =
     /// <summary>The live document handle bound to a context-requiring object.</summary>
     let contextHandle target =
         handle (box (contextDocument target))
+
+    /// <summary>
+    /// The document a DataTransfer, item list or item reads and writes in: the owner's context, or the host's document
+    /// for one a host event carries.
+    /// </summary>
+    let transferDocument (owner: NativeObject) =
+        match box owner with
+        | :? Ranvier.Dom.Event -> owner.Session.HostDocument
+        | _ -> contextDocument owner
 
     /// <summary>Copies a length-delimited owned result before its container is released.</summary>
     let spanText (span: NativeDom.RvDomUtf8StringSpan) =
