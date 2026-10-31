@@ -1,0 +1,182 @@
+{
+  "checkedAtUtc": "2026-10-31T02:14:03.315398+00:00",
+  "purpose": "I01 event cancellation managed23/Views13 reservation",
+  "packages": [
+    {
+      "package": "Ranvier.Dom",
+      "version": "0.1.0-alpha.23",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/ranvier.dom/index.json"
+    },
+    {
+      "package": "Ranvier.Dom.Traced",
+      "version": "0.1.0-alpha.23",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/ranvier.dom.traced/index.json"
+    },
+    {
+      "package": "Fable.Ranvier.Dom",
+      "version": "0.1.0-alpha.23",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/fable.ranvier.dom/index.json"
+    },
+    {
+      "package": "Fable.Ranvier.Dom.Traced",
+      "version": "0.1.0-alpha.23",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/fable.ranvier.dom.traced/index.json"
+    },
+    {
+      "package": "Ranvier.View",
+      "version": "0.1.13",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view/index.json"
+    },
+    {
+      "package": "Ranvier.View.Traced",
+      "version": "0.1.13",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.traced/index.json"
+    },
+    {
+      "package": "Ranvier.View.Dom",
+      "version": "0.1.13",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.dom/index.json"
+    },
+    {
+      "package": "Ranvier.View.Dom.Traced",
+      "version": "0.1.13",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.dom.traced/index.json"
+    },
+    {
+      "package": "Ranvier.View.Anime",
+      "version": "0.1.13",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.anime/index.json"
+    },
+    {
+      "package": "Ranvier.View.Anime.Traced",
+      "version": "0.1.13",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.anime.traced/index.json"
+    },
+    {
+      "package": "Fable.Ranvier.Anime",
+      "version": "0.1.13",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/fable.ranvier.anime/index.json"
+    },
+    {
+      "package": "Fable.Ranvier.Anime.Traced",
+      "version": "0.1.13",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/fable.ranvier.anime.traced/index.json"
+    },
+    {
+      "package": "Ranvier.View.WebCore",
+      "version": "0.1.0-alpha.13",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.webcore/index.json"
+    },
+    {
+      "package": "Ranvier.View.WebCore.Traced",
+      "version": "0.1.0-alpha.13",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.webcore.traced/index.json"
+    },
+    {
+      "package": "Ranvier.View.WebCore.Sdl",
+      "version": "0.1.0-alpha.13",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.webcore.sdl/index.json"
+    },
+    {
+      "package": "Ranvier.View.WebCore.Sdl.Traced",
+      "version": "0.1.0-alpha.13",
+      "published": false,
+      "source": "https://api.nuget.org/v3-flatcontainer/ranvier.view.webcore.sdl.traced/index.json"
+    }
+  ],
+  "github": [
+    {
+      "repository": "ranvier-org/Ranvier",
+      "matchingTags": [],
+      "openPullRequests": [
+        {
+          "headRefName": "codex/native-api-svg-surfaces",
+          "number": 272,
+          "title": "feat(svg): shapes, text, views and SMIL contracts (Core alpha.21)",
+          "url": "https://github.com/ranvier-org/Ranvier/pull/272"
+        },
+        {
+          "headRefName": "codex/native-api-locale",
+          "number": 270,
+          "title": "feat(dom): add qualified locale preference services",
+          "url": "https://github.com/ranvier-org/Ranvier/pull/270"
+        },
+        {
+          "headRefName": "codex/native-api-svg-values",
+          "number": 269,
+          "title": "feat(dom): add SVG geometry and live value contracts (cohort 19)",
+          "url": "https://github.com/ranvier-org/Ranvier/pull/269"
+        },
+        {
+          "headRefName": "codex/native-api-timing",
+          "number": 268,
+          "title": "feat(dom): add shared monotonic user timing",
+          "url": "https://github.com/ranvier-org/Ranvier/pull/268"
+        },
+        {
+          "headRefName": "codex/native-api-transform-values",
+          "number": 267,
+          "title": "feat(dom): expose shared typed transform construction",
+          "url": "https://github.com/ranvier-org/Ranvier/pull/267"
+        }
+      ]
+    },
+    {
+      "repository": "ranvier-org/Ranvier.View",
+      "matchingTags": [],
+      "openPullRequests": [
+        {
+          "headRefName": "codex/native-api-svg-surfaces",
+          "number": 26,
+          "title": "feat(webcore): SVG shapes, text, views and SMIL on Native20 (Views 0.1.11)",
+          "url": "https://github.com/ranvier-org/Ranvier.View/pull/26"
+        },
+        {
+          "headRefName": "codex/native-api-locale",
+          "number": 22,
+          "title": "feat(webcore): add guarded locale preference services",
+          "url": "https://github.com/ranvier-org/Ranvier.View/pull/22"
+        },
+        {
+          "headRefName": "codex/native-api-svg-values",
+          "number": 21,
+          "title": "feat(webcore): add shared SVG geometry and live values (Views 0.1.9)",
+          "url": "https://github.com/ranvier-org/Ranvier.View/pull/21"
+        },
+        {
+          "headRefName": "codex/native-api-timing",
+          "number": 19,
+          "title": "feat(webcore): share profiling marks with the host frame clock",
+          "url": "https://github.com/ranvier-org/Ranvier.View/pull/19"
+        },
+        {
+          "headRefName": "codex/native-api-transform-values",
+          "number": 18,
+          "title": "feat(webcore): add typed transform services and conformance",
+          "url": "https://github.com/ranvier-org/Ranvier.View/pull/18"
+        },
+        {
+          "headRefName": "codex/release-views16",
+          "number": 17,
+          "title": "feat(webcore): provide shared geometry and matrix values",
+          "url": "https://github.com/ranvier-org/Ranvier.View/pull/17"
+        }
+      ]
+    }
+  ]
+}

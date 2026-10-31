@@ -629,6 +629,65 @@ let runStyleValues () =
     }
     |> Async.StartAsPromise
 
+[<Emit("new Promise(resolve => setTimeout(resolve, 0))")>]
+let private macrotask () : JS.Promise<unit> = jsNative
+
+[<Emit("$0.reason")>]
+let private rawReason (signal: obj) : obj = jsNative
+
+[<Emit("$0 === $1")>]
+let private identical (left: obj) (right: obj) : bool = jsNative
+
+/// <summary>Checks raw realm reason identity, capability facts and the active-window requirement.</summary>
+let private cancellationInterop (document: Document) =
+    async {
+        let mutable checks = 0
+
+        let expect condition message =
+            checks <- checks + 1
+
+            if not condition then
+                failwith message
+
+        use service = BrowserCancellation.forDocument document
+        let source = service.CreateController ()
+        let composite = service.Any [| source.Signal |]
+        source.Abort (AbortReason.Custom (TimingDetail.Object [| "code", TimingDetail.Number 3.0 |]))
+        let raw = BrowserCancellation.rawSignal source.Signal
+        expect (identical (rawReason raw) (rawReason raw)) "Raw reason keeps its identity"
+        expect (identical (rawReason raw) (rawReason (BrowserCancellation.rawSignal composite))) "AbortSignal.any keeps the raw reason object"
+        expect (unbox<float>((rawReason raw)?code) = 3.0) "Raw reason carries the portable payload"
+        let timeout = service.Abort AbortReason.Timeout
+        expect (unbox<string>((rawReason (BrowserCancellation.rawSignal timeout))?name) = "TimeoutError") "Timeout reason is a realm TimeoutError"
+        let defaulted = service.Abort AbortReason.Abort
+        expect (unbox<string>((rawReason (BrowserCancellation.rawSignal defaulted))?name) = "AbortError") "Default reason is a realm AbortError"
+        use registry = Ranvier.Dom.Capabilities.create ()
+
+        use _registration =
+            registry.Register (BrowserCancellation.capabilityProvider document)
+
+        for name in [ "abort"; "timeout"; "any" ] do
+            let! report =
+                registry.Observe (
+                    Ranvier.Dom.Capabilities.key CapabilityCategory.PlatformFacility ("abort-signal-" + name),
+                    System.Threading.CancellationToken.None
+                )
+                |> Async.AwaitTask
+
+            expect (report.Exported.State = CapabilityState.Yes) $"Realm defines AbortSignal.{name}"
+            expect (report.Available.State = CapabilityState.Unknown) $"AbortSignal.{name} availability stays unknown"
+
+        try
+            BrowserCancellation.forDocument (windowlessDocument ())
+            |> ignore
+
+            failwith "Cancellation accepted a document without a Window"
+        with :? System.NotSupportedException ->
+            checks <- checks + 1
+
+        return checks
+    }
+
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {
@@ -644,6 +703,15 @@ let run () =
         let! capabilities =
             Capabilities.run (fun () -> BrowserCapabilities.forDocument document)
             |> Async.AwaitTask
+
+        let! cancellation =
+            Cancellation.run document (fun () -> BrowserCancellation.forDocument document) (fun () ->
+                macrotask ()
+                |> Async.AwaitPromise
+                |> Async.StartAsTask)
+            |> Async.AwaitTask
+
+        let! cancellationInterop = cancellationInterop document
 
         let! geometryProof = runGeometry () |> Async.AwaitPromise
         let! matrixProof = runMatrix () |> Async.AwaitPromise
@@ -817,6 +885,8 @@ let run () =
                 timing = timing
                 timingDeterministic = timingDeterministic
                 capabilities = capabilities
+                cancellation = cancellation
+                cancellationInterop = cancellationInterop
                 scopeRules = scopeRules
                 nestedDeclarations = nestedDeclarations
                 importContentsReadable = importContentsReadable
