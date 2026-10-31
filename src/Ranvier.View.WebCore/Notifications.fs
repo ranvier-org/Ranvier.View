@@ -74,7 +74,14 @@ type internal NativeNotification(host: WebCoreHost, handle: nativeint) =
                 delegates.Add run
 
                 let listener =
-                    Native.rv_event_target_add_listener (handle, kind, 0, Marshal.GetFunctionPointerForDelegate<Native.EventCallback> run, 0n)
+                    Native.rv_event_target_add_listener (
+                        handle,
+                        Native.utf8 kind,
+                        Native.utf8Length kind,
+                        0,
+                        Marshal.GetFunctionPointerForDelegate<Native.EventCallback> run,
+                        0n
+                    )
 
                 if listener = 0n then
                     raise (InvalidOperationException "rv_event_target_add_listener returned no listener")

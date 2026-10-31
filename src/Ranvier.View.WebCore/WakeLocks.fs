@@ -75,7 +75,14 @@ type internal NativeWakeLock(host: WebCoreHost, handle: nativeint) as this =
             0)
 
     let listener =
-        Native.rv_event_target_add_listener (handle, "release", 0, Marshal.GetFunctionPointerForDelegate<Native.EventCallback> run, 0n)
+        Native.rv_event_target_add_listener (
+            handle,
+            Native.utf8 "release",
+            Native.utf8Length "release",
+            0,
+            Marshal.GetFunctionPointerForDelegate<Native.EventCallback> run,
+            0n
+        )
 
     do
         if listener = 0n then

@@ -5271,6 +5271,7 @@ let main args =
         0
     elif Array.contains "--wake-locks-only" args then
         runWakeLocks () |> ignore
+        0
     elif Array.contains "--notifications-only" args then
         runNotifications () |> ignore
         0
