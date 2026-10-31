@@ -8,34 +8,36 @@ open RanvierWebCoreAbi
 module Screen =
     let private read (host: WebCoreHost) =
         let document = Interop.handle (box host.Document)
-
-        let int32 name call =
-            let mutable value = 0
-            call (document, &value) |> Interop.check name
-            value
-
-        let uint32 name call =
-            let mutable value = 0u
-            call (document, &value) |> Interop.check name
-            int value
-
+        let mutable width = 0
+        let mutable height = 0
+        let mutable availLeft = 0
+        let mutable availTop = 0
+        let mutable availWidth = 0
+        let mutable availHeight = 0
+        let mutable colorDepth = 0u
+        let mutable pixelDepth = 0u
         let mutable orientation = 0
-        NativeDom.rv_dom_screen_orientation_get_type (document, &orientation)
-        |> Interop.check "ScreenOrientation.type"
-
         let mutable angle = 0us
-        NativeDom.rv_dom_screen_orientation_get_angle (document, &angle)
-        |> Interop.check "ScreenOrientation.angle"
+        NativeDom.rv_dom_screen_get_width (document, &width) |> Interop.check "Screen.width"
+        NativeDom.rv_dom_screen_get_height (document, &height) |> Interop.check "Screen.height"
+        NativeDom.rv_dom_screen_get_avail_left (document, &availLeft) |> Interop.check "Screen.availLeft"
+        NativeDom.rv_dom_screen_get_avail_top (document, &availTop) |> Interop.check "Screen.availTop"
+        NativeDom.rv_dom_screen_get_avail_width (document, &availWidth) |> Interop.check "Screen.availWidth"
+        NativeDom.rv_dom_screen_get_avail_height (document, &availHeight) |> Interop.check "Screen.availHeight"
+        NativeDom.rv_dom_screen_get_color_depth (document, &colorDepth) |> Interop.check "Screen.colorDepth"
+        NativeDom.rv_dom_screen_get_pixel_depth (document, &pixelDepth) |> Interop.check "Screen.pixelDepth"
+        NativeDom.rv_dom_screen_orientation_get_type (document, &orientation) |> Interop.check "ScreenOrientation.type"
+        NativeDom.rv_dom_screen_orientation_get_angle (document, &angle) |> Interop.check "ScreenOrientation.angle"
 
         {
-            Width = int32 "Screen.width" NativeDom.rv_dom_screen_get_width
-            Height = int32 "Screen.height" NativeDom.rv_dom_screen_get_height
-            AvailLeft = int32 "Screen.availLeft" NativeDom.rv_dom_screen_get_avail_left
-            AvailTop = int32 "Screen.availTop" NativeDom.rv_dom_screen_get_avail_top
-            AvailWidth = int32 "Screen.availWidth" NativeDom.rv_dom_screen_get_avail_width
-            AvailHeight = int32 "Screen.availHeight" NativeDom.rv_dom_screen_get_avail_height
-            ColorDepth = uint32 "Screen.colorDepth" NativeDom.rv_dom_screen_get_color_depth
-            PixelDepth = uint32 "Screen.pixelDepth" NativeDom.rv_dom_screen_get_pixel_depth
+            Width = width
+            Height = height
+            AvailLeft = availLeft
+            AvailTop = availTop
+            AvailWidth = availWidth
+            AvailHeight = availHeight
+            ColorDepth = int colorDepth
+            PixelDepth = int pixelDepth
             Orientation = enum<ScreenOrientationType> orientation
             Angle = int angle
         }

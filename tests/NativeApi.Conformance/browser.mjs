@@ -245,7 +245,7 @@ const runScreen = async () => {
     await screenBrowser.close();
   }
 };
-const SCREEN_ASSERTIONS = 29;
+const SCREEN_ASSERTIONS = 30;
 const CRYPTO_INSECURE_ASSERTIONS = 4;
 // D14 runs the form submission fixture in its own page; the provider keeps the page in place.
 const runSubmissions = async () => {

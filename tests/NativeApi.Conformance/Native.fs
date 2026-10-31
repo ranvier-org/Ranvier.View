@@ -1335,7 +1335,7 @@ let private runSegments () =
 
 /// <summary>Runs the shared screen fixture with native default, work area, thread and teardown checks.</summary>
 [<Literal>]
-let private ScreenChecksCount = 29
+let private ScreenChecksCount = 30
 
 let private runScreen () =
     let host = WebCoreHost.Create (320, 200)
