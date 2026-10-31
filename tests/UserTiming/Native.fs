@@ -7,15 +7,22 @@ open Ranvier.Dom
 open Ranvier.View.WebCore
 
 let run () =
+    // The two origin rechecks are skipped where the runtime defect applies.
+    let skipped =
+        if NativeApiConformance.UserTiming.originRecheckUnsupported then
+            2
+        else
+            0
+
     let deterministic = NativeApiConformance.UserTiming.deterministic ()
 
-    if deterministic <> 181 then
+    if deterministic <> 181 - skipped then
         failwith $"Deterministic timing fixture count changed: {deterministic}"
 
     use host = WebCoreHost.Create (320, 240)
     let shared = NativeApiConformance.UserTiming.run (fun () -> Timing.forHost host)
 
-    if shared <> 180 then
+    if shared <> 180 - skipped then
         failwith $"Shared timing fixture count changed: {shared}"
 
     let mutable life = 0

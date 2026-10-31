@@ -25,7 +25,8 @@ module ViewportScroll =
         if not (WebCoreHost.Has "dom-window-scrolling") then
             Interop.unsupported<unit> "dom-window-scrolling"
 
-        let document () = (box host.Document :?> NativeObject).Handle
+        let document () =
+            (box host.Document :?> NativeObject).Handle
 
         let scroll name (call: nativeint * NativeDom.RvDomScrollToOptions[] -> int) (request: ScrollRequest) =
             host.EnsureActive ()
@@ -33,22 +34,25 @@ module ViewportScroll =
             if isNull (box request) then
                 nullArg (nameof request)
 
-            let coordinates =
-                [|
-                    defaultArg request.Left 0.0
-                    defaultArg request.Top 0.0
-                |]
+            let coordinates = [| defaultArg request.Left 0.0; defaultArg request.Top 0.0 |]
 
             let pinned = GCHandle.Alloc (coordinates, GCHandleType.Pinned)
 
             try
                 let address = pinned.AddrOfPinnedObject ()
                 let mutable options = NativeDom.RvDomScrollToOptions ()
-                options.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomScrollToOptions> ())
+                options.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomScrollToOptions>())
                 options.behavior <- behavior request.Behavior
                 options.left <- if request.Left.IsSome then address else 0n
-                options.top <- if request.Top.IsSome then address + nativeint sizeof<float> else 0n
-                call (document (), [| options |]) |> Interop.check name
+
+                options.top <-
+                    if request.Top.IsSome then
+                        address + nativeint sizeof<float>
+                    else
+                        0n
+
+                call (document (), [| options |])
+                |> Interop.check name
             finally
                 pinned.Free ()
 

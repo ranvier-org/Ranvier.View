@@ -115,16 +115,18 @@ module Diagnostics =
                 Shorthand = if shorthand.Length = 0 then None else Some shorthand
                 HasVariableReference = number 11 = 1
                 Depth = number 7
-                Position = if sheet < 0 then None else Some { Sheet = sheet; Rule = number 9 }
+                Position =
+                    if sheet < 0 then
+                        None
+                    else
+                        Some { Sheet = sheet; Rule = number 9 }
                 DeclarationIndex = number 10
                 IsWinner = number 6 = 1
             })
 
     let private cascade (diagnostic: nativeint) =
         {
-            Property =
-                copy "rv_diagnostic_text" (fun buffer capacity length ->
-                    Native.rv_diagnostic_text (diagnostic, buffer, capacity, length))
+            Property = copy "rv_diagnostic_text" (fun buffer capacity length -> Native.rv_diagnostic_text (diagnostic, buffer, capacity, length))
             Declarations = declarations diagnostic
         }
 
@@ -159,8 +161,7 @@ module Diagnostics =
         let mutable frontend = 0
         let cascadeSupported = WebCoreHost.Has "cascade-diagnostics"
 
-        let noCascade =
-            "The native library has no cascade diagnostics."
+        let noCascade = "The native library has no cascade diagnostics."
 
         Native.rv_host_capability_fact (host.Handle, 4, "inspector-frontend", 1, &frontend)
         |> Interop.check "rv_host_capability_fact"

@@ -67,7 +67,8 @@ let run (document: Document) (errorName: exn -> string) (readReference: bool) =
                 node <- iterator.nextNode ()
         ]
 
-    let names nodes = nodes |> List.map name |> String.concat ","
+    let names nodes =
+        nodes |> List.map name |> String.concat ","
 
     let texts nodes =
         nodes
@@ -96,7 +97,12 @@ let run (document: Document) (errorName: exn -> string) (readReference: bool) =
         equal "elements" "DIV,P,SPAN,SECTION,EM" (names (iterate (document.createNodeIterator (root, ShowElement))))
         equal "texts" "one,two,three" (texts (iterate (document.createNodeIterator (root, ShowText))))
         equal "comments" "c" (texts (iterate (document.createNodeIterator (root, ShowComment))))
-        equal "elements and comments" "DIV,P,#comment,SPAN,SECTION,EM" (names (iterate (document.createNodeIterator (root, ShowElement ||| ShowComment))))
+
+        equal
+            "elements and comments"
+            "DIV,P,#comment,SPAN,SECTION,EM"
+            (names (iterate (document.createNodeIterator (root, ShowElement ||| ShowComment))))
+
         equal "whatToShow getter" (ShowElement ||| ShowComment) (document.createNodeIterator (root, ShowElement ||| ShowComment)).whatToShow
 
         // Filters.
@@ -120,7 +126,12 @@ let run (document: Document) (errorName: exn -> string) (readReference: bool) =
         checks <- checks + 1
         equal "iterator reject" "DIV,P,SECTION,EM" (names (iterate filtered))
         equal "filter calls" 5 seen.Length
-        same "filter receives the node object" span (seen |> List.find (fun node -> node.nodeName = "SPAN"))
+
+        same
+            "filter receives the node object"
+            span
+            (seen
+             |> List.find (fun node -> node.nodeName = "SPAN"))
 
         let skipP: NodeFilter =
             fun node ->
@@ -257,7 +268,10 @@ let run (document: Document) (errorName: exn -> string) (readReference: bool) =
 
         let iteratorFilter: NodeFilter =
             fun node ->
-                if iteratorOutcome = "not called" && obj.ReferenceEquals (node, p) then
+                if
+                    iteratorOutcome = "not called"
+                    && obj.ReferenceEquals (node, p)
+                then
                     iteratorOutcome <- "pending"
                     iteratorOutcome <- outcome (fun () -> reentrantIterator.nextNode () |> ignore)
 
@@ -278,7 +292,10 @@ let run (document: Document) (errorName: exn -> string) (readReference: bool) =
 
         let walkerFilter: NodeFilter =
             fun node ->
-                if walkerOutcome = "not called" && obj.ReferenceEquals (node, p) then
+                if
+                    walkerOutcome = "not called"
+                    && obj.ReferenceEquals (node, p)
+                then
                     walkerOutcome <- "pending"
                     walkerOutcome <- outcome (fun () -> reentrantWalker.nextNode () |> ignore)
 

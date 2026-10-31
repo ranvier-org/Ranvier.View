@@ -3,6 +3,8 @@ import io
 import json
 from pathlib import Path
 import sys
+import struct
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -14,6 +16,151 @@ spec.loader.exec_module(gate)
 
 
 class PublishedSharedApiTests(unittest.TestCase):
+    def test_aot_receipt_rejects_successful_publish_of_managed_apphost(self):
+        self.assertTrue(hasattr(gate, 'verify_aot_publish'), 'A successful publish and CLR-free apphost do not prove NativeAOT.')
+        image = bytearray(512)
+        image[:2] = b'MZ'
+        struct.pack_into('<I', image, 60, 128)
+        image[128:132] = b'PE\0\0'
+        struct.pack_into('<H', image, 132, 0x8664)
+        struct.pack_into('<H', image, 148, 240)
+        struct.pack_into('<H', image, 152, 0x20b)
+        struct.pack_into('<I', image, 152 + 108, 16)
+        with tempfile.TemporaryDirectory() as temporary:
+            executable = Path(temporary) / 'Consumer.exe'
+            executable.write_bytes(image)
+            with self.assertRaisesRegex(ValueError, 'native code generation'):
+                gate.verify_aot_publish('Publish succeeded; apphost copied.\n', executable)
+            receipt = gate.verify_aot_publish('  Generating native code\n', executable)
+            self.assertEqual(receipt['sha256'], gate.hashlib.sha256(image).hexdigest())
+            self.assertEqual(receipt['bytes'], len(image))
+            self.assertEqual(receipt['clr_directory'], [0, 0])
+            struct.pack_into('<II', image, 152 + 112 + 14 * 8, 100, 72)
+            executable.write_bytes(image)
+            with self.assertRaisesRegex(ValueError, 'CLR'):
+                gate.verify_aot_publish('  Generating native code\n', executable)
+
+    def test_native_consumers_verify_each_payload_before_execution(self):
+        self.assertTrue(hasattr(gate, 'execute_native'), 'Native payload verification must precede each process execution.')
+        profile = {'shared_assertions': 50, 'native_lifetime_assertions': 2}
+        log = ('NATIVE_API D11_VIEW_HYPERLINKS PASS assertions=50\n'
+               'NATIVE_API C04 LIFETIME PASS assertions=2\nNATIVE_API TEARDOWN PASS\n'
+               'NATIVE_API D09 TAB PASS\nOFFICIAL_TRACE_METADATA PASS expected=False assemblies=5\n')
+        for corrupt in [None, 'win-x64', 'published-aot']:
+            events = []
+            def run(label, *command):
+                events.append(label)
+                if label == 'jit':
+                    self.assertIn('--no-build', command)
+                return log
+            def payload(directory):
+                events.append('payload-' + directory.name)
+                if directory.name == corrupt:
+                    raise ValueError('corrupt payload')
+            if corrupt:
+                with self.assertRaisesRegex(ValueError, 'corrupt payload'):
+                    gate.execute_native(run, payload, Path('Consumer.fsproj'), Path('consumer'), 'normal', profile)
+                self.assertNotIn('aot', events)
+                if corrupt == 'win-x64':
+                    self.assertNotIn('jit', events)
+            else:
+                with patch.object(gate, 'verify_aot_publish', return_value={}):
+                    gate.execute_native(run, payload, Path('Consumer.fsproj'), Path('consumer'), 'normal', profile)
+                self.assertEqual(events, ['build', 'payload-win-x64', 'jit', 'publish', 'payload-published-aot', 'aot'])
+
+    def test_views14_profile_uses_immutable_release_and_complete_modules(self):
+        path = ROOT / 'tests/native-packages/shared-api-0.1.4.json'
+        self.assertTrue(path.is_file(), 'The released Views14 cohort needs an independent immutable profile.')
+        profile = json.loads(path.read_text())
+        gate.validate_profile(profile)
+        self.assertEqual(profile['source_commit'], '7fa387551e86f0c7a4a6b1c8224fadbcbb7cf517')
+        self.assertEqual(profile['shared_assertions'], {'native': 1628, 'browser': 1641})
+        self.assertEqual(profile['native_lifetime_assertions'], 54)
+        self.assertEqual(profile['browser_context_assertions'], 10)
+        for target in ['native', 'browser']:
+            for group, count in {'C11': 82, 'C12': 50, 'C14': 99, 'C19': 64, 'C21': 44, 'D12': 109}.items():
+                self.assertEqual(profile['module_assertions'][target][group], count)
+
+    def test_views15_profile_uses_immutable_release_and_complete_modules(self):
+        path = ROOT / 'tests/native-packages/shared-api-0.1.5.json'
+        self.assertTrue(path.is_file(), 'The released Views15 cohort needs an independent immutable profile.')
+        profile = json.loads(path.read_text())
+        gate.validate_profile(profile)
+        self.assertEqual(profile['source_commit'], '65c0711c03c73fde809462db4571e529f881b183')
+        self.assertEqual((profile['view_version'], profile['backend_version'], profile['dom_version'],
+                          profile['native_version'], profile['native_abi']),
+                         ('0.1.5', '0.1.0-alpha.5', '0.1.0-alpha.15', '0.1.0-preview.15', 23))
+        self.assertEqual(profile['shared_assertions'], {'native': 1755, 'browser': 1768})
+        self.assertEqual(profile['native_lifetime_assertions'], 87)
+        self.assertEqual(profile['browser_context_assertions'], 13)
+        previous = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.4.json').read_text())
+        for target in ['native', 'browser']:
+            self.assertEqual(profile['module_assertions'][target]['C13'], 127)
+            self.assertEqual(set(profile['module_assertions'][target]),
+                             set(previous['module_assertions'][target]) | {'C13'})
+
+    def test_views16_profile_uses_immutable_release_and_complete_modules(self):
+        profile = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.6.json').read_text())
+        gate.validate_profile(profile)
+        self.assertEqual(profile['source_commit'], 'fdb46f000bc5d3ad8471e6734fca11efdf9d7e19')
+        self.assertEqual((profile['view_version'], profile['backend_version'], profile['dom_version'],
+                          profile['native_version'], profile['native_abi']),
+                         ('0.1.6', '0.1.0-alpha.6', '0.1.0-alpha.16', '0.1.0-preview.16', 24))
+        self.assertEqual(profile['shared_assertions'], {'native': 2642, 'browser': 2655})
+        self.assertEqual(profile['native_lifetime_assertions'], 136)
+        self.assertEqual(profile['browser_context_assertions'], 19)
+        previous = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.5.json').read_text())
+        for target in ['native', 'browser']:
+            self.assertEqual((profile['module_assertions'][target]['G07'], profile['module_assertions'][target]['G08']), (177, 710))
+            self.assertEqual(set(profile['module_assertions'][target]),
+                             set(previous['module_assertions'][target]) | {'G07', 'G08'})
+
+    def test_views17_profile_uses_immutable_release_and_complete_modules(self):
+        profile = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.7.json').read_text())
+        gate.validate_profile(profile)
+        self.assertEqual(profile['source_commit'], '3ed59e373e189d9f12ee3bfa74b97d01c6063863')
+        self.assertEqual((profile['view_version'], profile['backend_version'], profile['dom_version'],
+                          profile['native_version'], profile['native_abi']),
+                         ('0.1.7', '0.1.0-alpha.7', '0.1.0-alpha.17', '0.1.0-preview.17', 25))
+        self.assertEqual(profile['shared_assertions'], {'native': 3113, 'browser': 3126})
+        self.assertEqual(profile['native_lifetime_assertions'], 183)
+        self.assertEqual(profile['browser_context_assertions'], 22)
+        previous = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.6.json').read_text())
+        for target in ['native', 'browser']:
+            self.assertEqual(profile['module_assertions'][target]['C16'], 471)
+            self.assertEqual(set(profile['module_assertions'][target]),
+                             set(previous['module_assertions'][target]) | {'C16'})
+
+    def test_views18_profile_uses_immutable_release_and_complete_modules(self):
+        profile = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.8.json').read_text())
+        gate.validate_profile(profile)
+        self.assertEqual(profile['source_commit'], 'd343d46cff3ba371062a3561383c0257148ea68e')
+        self.assertEqual((profile['view_version'], profile['backend_version'], profile['dom_version'],
+                          profile['native_version'], profile['native_abi']),
+                         ('0.1.8', '0.1.0-alpha.8', '0.1.0-alpha.18', '0.1.0-preview.17', 25))
+        self.assertEqual(profile['shared_assertions'], {'native': 3293, 'browser': 3306})
+        self.assertEqual(profile['native_lifetime_assertions'], 183)
+        self.assertEqual(profile['browser_context_assertions'], 22)
+        previous = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.7.json').read_text())
+        for target in ['native', 'browser']:
+            for module, count in {'H02': 180}.items():
+                self.assertEqual(profile['module_assertions'][target][module], count)
+            self.assertEqual(set(profile['module_assertions'][target]),
+                             set(previous['module_assertions'][target]) | {'H02'})
+
+    def test_trace_precheck_preserves_argument_aware_and_original_entries(self):
+        self.assertTrue(hasattr(gate, 'instrument_native_runner'), 'Argument-aware released entry point needs a checked trace precheck.')
+        for entry in ['let main _ =\n', 'let main args =\n']:
+            source = '[<EntryPoint>]\n' + entry + '    originalBody ()\n'
+            patched = gate.instrument_native_runner(source)
+            self.assertEqual(patched, source.replace(entry, entry + '    OfficialTraceProbe.verify ()\n'))
+            with self.assertRaisesRegex(ValueError, 'entry point'):
+                gate.instrument_native_runner(source + source)
+            with self.assertRaisesRegex(ValueError, 'precheck'):
+                gate.instrument_native_runner(patched)
+        with self.assertRaisesRegex(ValueError, 'entry point'):
+            gate.instrument_native_runner('let main unsupported =\n    0\n')
+
     def test_release_profiles_keep_independent_target_totals(self):
         old = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.2.json').read_text())
         new = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.3.json').read_text())
@@ -80,6 +227,19 @@ class PublishedSharedApiTests(unittest.TestCase):
     def test_source_compile_list_cannot_escape_fixture_directory(self):
         with self.assertRaises(ValueError):
             gate.compile_names('<Project><Compile Include="../private.fs" /></Project>')
+
+    def test_linked_sibling_test_files_keep_their_link_name(self):
+        project = ('<Project><Compile Include="UserTiming.fs" />'
+                   '<Compile Include="../UserTiming/Native.fs" Link="UserTimingNative.fs" /><Compile Include="Native.fs" /></Project>')
+        self.assertEqual(gate.compile_items(project), [('tests/NativeApi.Conformance/UserTiming.fs', 'UserTiming.fs'),
+                                                       ('tests/UserTiming/Native.fs', 'UserTimingNative.fs'),
+                                                       ('tests/NativeApi.Conformance/Native.fs', 'Native.fs')])
+        for include in ['<Compile Include="../UserTiming/Native.fs" />',
+                        '<Compile Include="../../src/Secret.fs" Link="Secret.fs" />',
+                        '<Compile Include="../UserTiming/Native.fs" Link="../Native.fs" />',
+                        '<Compile Include="../UserTiming/Native.fs" Link="Native.fs" /><Compile Include="Native.fs" />']:
+            with self.assertRaises(ValueError):
+                gate.compile_items('<Project>' + include + '</Project>')
 
     def test_package_commit_must_match_fixture_revision(self):
         valid = ('<package><metadata><repository url="https://github.com/ranvier-org/Ranvier.View" commit="'

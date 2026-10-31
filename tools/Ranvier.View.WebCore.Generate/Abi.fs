@@ -260,7 +260,10 @@ let readModel (nativeDom: Type) (model: JsonElement) : Function list =
                 |> List.pairwise
                 |> List.filter (fun (previous, parameter) ->
                     Some parameter.Name <> contextParameter
-                    && not (previous.C = "const uint8_t*" && parameter.Name = previous.Name + "_length"))
+                    && not (
+                        previous.C = "const uint8_t*"
+                        && parameter.Name = previous.Name + "_length"
+                    ))
                 |> List.map snd
 
             let defaults =

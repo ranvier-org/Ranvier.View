@@ -40,11 +40,20 @@ let private rectangle (rect: DOMRect) =
     if isNull rect then
         "[null]"
     else
-        "[" + String.Join (",", [ rect.x; rect.y; rect.width; rect.height ] |> List.map number) + "]"
+        "["
+        + String.Join (
+            ",",
+            [ rect.x; rect.y; rect.width; rect.height ]
+            |> List.map number
+        )
+        + "]"
 
 /// <summary>WebIDL <c>long</c> conversion of a coordinate: non-finite values become 0, others truncate.</summary>
 let private long (value: float) =
-    if Double.IsNaN value || Double.IsInfinity value then 0 else int (Math.Truncate value)
+    if Double.IsNaN value || Double.IsInfinity value then
+        0
+    else
+        int (Math.Truncate value)
 
 /// <summary>
 /// Hit-tests the caret fixture at device scales 1, 1.5 and 2, unscrolled and scrolled, through
@@ -74,7 +83,11 @@ let run (document: Document) (scroller: ViewportScrollService) (errorName: exn -
 
         let head = document.head
         let sheet = document.createElement "style"
-        sheet.textContent <- $"@font-face{{font-family:RvAhem;src:url(data:font/ttf;base64,{driver.Font})}}" + style
+
+        sheet.textContent <-
+            $"@font-face{{font-family:RvAhem;src:url(data:font/ttf;base64,{driver.Font})}}"
+            + style
+
         head.appendChild sheet |> ignore
         let mutable roots: ShadowRoot list = []
 
@@ -114,11 +127,7 @@ let run (document: Document) (scroller: ViewportScrollService) (errorName: exn -
                 let id = (parent :?> Element).id
                 $"text:{(if String.IsNullOrEmpty id then parent.nodeName else id)}#{index}@{scope node}"
             else
-                let id =
-                    if node.nodeType = 1us then
-                        (node :?> Element).id
-                    else
-                        ""
+                let id = if node.nodeType = 1us then (node :?> Element).id else ""
 
                 $"{node.nodeName}#{id}@{scope node}"
 
@@ -148,7 +157,8 @@ let run (document: Document) (scroller: ViewportScrollService) (errorName: exn -
             async {
                 let mutable tries = 0
 
-                while (document.getElementById "inline").getBoundingClientRect().width <> 160.0
+                while (document.getElementById "inline").getBoundingClientRect().width
+                      <> 160.0
                       && tries < 200 do
                     tries <- tries + 1
                     do! driver.Settle ()
@@ -189,7 +199,12 @@ let run (document: Document) (scroller: ViewportScrollService) (errorName: exn -
 
             let read step =
                 equal $"held {step} offsetNode" true (held.offsetNode.isSameNode text)
-                let chromium = CaretOracle.lifetime |> List.find (fun (name, _) -> name = step) |> snd
+
+                let chromium =
+                    CaretOracle.lifetime
+                    |> List.find (fun (name, _) -> name = step)
+                    |> snd
+
                 let offset, connected, data, rect = chromium
                 equal $"held {step} offset" offset held.offset
                 equal $"held {step} isConnected" connected text.isConnected
@@ -200,7 +215,7 @@ let run (document: Document) (scroller: ViewportScrollService) (errorName: exn -
             (text :?> CharacterData).data <- "AA"
             do! driver.Settle ()
             read "shortened"
-            (document.getElementById "wrap").remove ()
+            (document.getElementById "wrap").remove()
             do! driver.Settle ()
             read "removed"
             let detached = document.implementation.createHTMLDocument ""

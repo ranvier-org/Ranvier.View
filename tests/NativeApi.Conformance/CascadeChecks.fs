@@ -62,10 +62,17 @@ let private author value =
         Conditions = []
     }
 
-let private wins (e: Expected) = { e with Winner = true }
-let private important (e: Expected) = { e with Important = true }
-let private layer name (e: Expected) = { e with Layer = Some name }
-let private depth n (e: Expected) = { e with Depth = n }
+let private wins (e: Expected) =
+    { e with Winner = true }
+
+let private important (e: Expected) =
+    { e with Important = true }
+
+let private layer name (e: Expected) =
+    { e with Layer = Some name }
+
+let private depth n (e: Expected) =
+    { e with Depth = n }
 
 /// <summary>A case: element, property, the computed value every engine reports, whether user-agent declarations lead,
 /// and the expected declarations after them.</summary>
@@ -95,7 +102,16 @@ let private Cases =
         case "source order" "cx-src" "order" 5.0 [ author "4"; wins (author "5") ]
         case "specificity over source order" "cx-wh" "order" 6.0 [ author "7"; wins (author "6") ]
         case "important over specificity" "cx-imp" "order" 8.0 [ wins (important (author "8")); author "9" ]
-        case "unlayered over layers" "cx-lay" "order" 12.0 [ layer "cx-one" (author "11"); layer "cx-two" (author "10"); wins (author "12") ]
+        case
+            "unlayered over layers"
+            "cx-lay"
+            "order"
+            12.0
+            [
+                layer "cx-one" (author "11")
+                layer "cx-two" (author "10")
+                wins (author "12")
+            ]
         case
             "important reverses layer order"
             "cx-limp"
@@ -145,7 +161,17 @@ let private Cases =
                         Origin = CascadeOrigin.PresentationalHint
                     }
             ]
-        case "shorthand longhand" "cx-sh" "margin-top" 7.0 [ wins { author "7px" with Shorthand = Some "margin" } ]
+        case
+            "shorthand longhand"
+            "cx-sh"
+            "margin-top"
+            7.0
+            [
+                wins
+                    { author "7px" with
+                        Shorthand = Some "margin"
+                    }
+            ]
         case
             "vertical logical over physical"
             "cx-vt"
@@ -161,11 +187,40 @@ let private Cases =
         case "custom property" "cx-cv" "--cx-x" 41.0 [ author "42"; wins (author "41") ]
         case "unregistered custom property inherits" "cx-cvkid" "--cx-x" 41.0 [ depth 1 (author "42"); wins (depth 1 (author "41")) ]
         case "registered inherits false" "cx-rnkid" "--cx-reg" 0.0 []
-        case "inherit chain" "cx-ch3" "order" 50.0 [ wins (author "inherit"); wins (depth 1 (author "inherit")); wins (depth 2 (author "50")) ]
+        case
+            "inherit chain"
+            "cx-ch3"
+            "order"
+            50.0
+            [
+                wins (author "inherit")
+                wins (depth 1 (author "inherit"))
+                wins (depth 2 (author "50"))
+            ]
         case "unset inherited chain" "cx-u3" "tab-size" 5.0 [ wins (depth 1 (author "unset")); wins (depth 2 (author "5")) ]
         case "no declaration" "cx-plain" "order" 0.0 []
-        case "var reference" "cx-var" "order" 60.0 [ wins { author "var(--cx-o)" with Variable = true } ]
-        case "media and supports" "cx-cond" "order" 61.0 [ wins { author "61" with Conditions = [ "@media"; "@supports" ] } ]
+        case
+            "var reference"
+            "cx-var"
+            "order"
+            60.0
+            [
+                wins
+                    { author "var(--cx-o)" with
+                        Variable = true
+                    }
+            ]
+        case
+            "media and supports"
+            "cx-cond"
+            "order"
+            61.0
+            [
+                wins
+                    { author "61" with
+                        Conditions = [ "@media"; "@supports" ]
+                    }
+            ]
     ]
 
 /// <summary>
@@ -210,7 +265,7 @@ let run (create: unit -> DiagnosticsService) (styles: ComputedStyleService) (doc
             digits.Length > 0 && float digits = number
         | Choice2Of2 keyword -> actual.Trim () = keyword
 
-    let created = ResizeArray<Element> ()
+    let created = ResizeArray<Element>()
 
     let element (tag: string) (id: string) (parent: Element) =
         let value = document.createElement tag
@@ -242,18 +297,28 @@ let run (create: unit -> DiagnosticsService) (styles: ComputedStyleService) (doc
     for id in [ "cx-limp"; "cx-anon"; "cx-nest"; "cx-sh"; "cx-plain"; "cx-var"; "cx-cond" ] do
         top "div" id |> ignore
 
-    (top "div" "cx-inl").setAttribute ("style", "order:19")
-    (top "div" "cx-inl2").setAttribute ("style", "order:21")
+    (top "div" "cx-inl").setAttribute("style", "order:19")
+    (top "div" "cx-inl2").setAttribute("style", "order:21")
     (classed "p" "cx-uap" "cx-uap").textContent <- "P"
-    (top "hr" "cx-hint").setAttribute ("width", "30")
+    (top "hr" "cx-hint").setAttribute("width", "30")
     (top "div" "cx-vt").textContent <- "V"
-    element "div" "cx-cvkid" (classed "div" "cx-cv" "cx-cv") |> ignore
-    element "div" "cx-rnkid" (top "div" "cx-rn") |> ignore
-    element "div" "cx-ch3" (element "div" "cx-ch2" (top "div" "cx-ch1")) |> ignore
-    element "div" "cx-u3" (element "div" "cx-u2" (top "div" "cx-u1")) |> ignore
+
+    element "div" "cx-cvkid" (classed "div" "cx-cv" "cx-cv")
+    |> ignore
+
+    element "div" "cx-rnkid" (top "div" "cx-rn")
+    |> ignore
+
+    element "div" "cx-ch3" (element "div" "cx-ch2" (top "div" "cx-ch1"))
+    |> ignore
+
+    element "div" "cx-u3" (element "div" "cx-u2" (top "div" "cx-u1"))
+    |> ignore
+
     let detached = document.createElement "div"
 
-    let byId (id: string) = document.getElementById id
+    let byId (id: string) =
+        document.getElementById id
 
     let service = create ()
 
@@ -264,23 +329,56 @@ let run (create: unit -> DiagnosticsService) (styles: ComputedStyleService) (doc
             equal (item.Name + " computed") true (matches item.Computed value)
 
         let spec = byId "cx-spec"
-        equal "cascade disabled" (Error DiagnosticsUnavailable.Disabled) (service.Cascade (spec, "order") |> Result.map ignore)
+
+        equal
+            "cascade disabled"
+            (Error DiagnosticsUnavailable.Disabled)
+            (service.Cascade (spec, "order")
+             |> Result.map ignore)
+
         raises "null property" (fun () -> service.Cascade (spec, null) |> ignore)
         raises "empty property" (fun () -> service.Cascade (spec, "") |> ignore)
-        raises "null element" (fun () -> service.Cascade (Unchecked.defaultof<Element>, "order") |> ignore)
+
+        raises "null element" (fun () ->
+            service.Cascade (Unchecked.defaultof<Element>, "order")
+            |> ignore)
+
         service.Enable ()
 
         match engine with
         | Chromium ->
-            equal "cascade unsupported" true (service.Features.Cascade <> DiagnosticsAvailability.Supported)
+            equal
+                "cascade unsupported"
+                true
+                (service.Features.Cascade
+                 <> DiagnosticsAvailability.Supported)
 
             for item in Cases do
-                equal (item.Name + " unsupported") true (service.Cascade (byId item.Element, item.Property) |> Result.isError)
+                equal
+                    (item.Name + " unsupported")
+                    true
+                    (service.Cascade (byId item.Element, item.Property)
+                     |> Result.isError)
         | Native ->
             equal "cascade supported" DiagnosticsAvailability.Supported service.Features.Cascade
-            equal "shorthand" (Error DiagnosticsUnavailable.UnsupportedProperty) (service.Cascade (spec, "margin") |> Result.map ignore)
-            equal "unknown property" (Error DiagnosticsUnavailable.UnsupportedProperty) (service.Cascade (spec, "cx-nope") |> Result.map ignore)
-            equal "detached element" (Error DiagnosticsUnavailable.NotRendered) (service.Cascade (detached, "order") |> Result.map ignore)
+
+            equal
+                "shorthand"
+                (Error DiagnosticsUnavailable.UnsupportedProperty)
+                (service.Cascade (spec, "margin")
+                 |> Result.map ignore)
+
+            equal
+                "unknown property"
+                (Error DiagnosticsUnavailable.UnsupportedProperty)
+                (service.Cascade (spec, "cx-nope")
+                 |> Result.map ignore)
+
+            equal
+                "detached element"
+                (Error DiagnosticsUnavailable.NotRendered)
+                (service.Cascade (detached, "order")
+                 |> Result.map ignore)
 
             for item in Cases do
                 match service.Cascade (byId item.Element, item.Property) with
@@ -320,14 +418,20 @@ let run (create: unit -> DiagnosticsService) (styles: ComputedStyleService) (doc
                         equal (label + " selector") ruled (actual.MatchedSelector.Length > 0)
 
                     // Layer orders follow the layers' declaration, and source order follows rule positions.
-                    let orders = rest |> Array.choose (fun d -> d.Layer |> Option.map _.Order)
+                    let orders =
+                        rest
+                        |> Array.choose (fun d -> d.Layer |> Option.map _.Order)
+
                     equal (item.Name + " layer orders") (Array.sort orders) orders
 
                     if item.Name = "source order" then
                         equal "later rule position" true (rest[0].Position.Value.Rule < rest[1].Position.Value.Rule)
 
                     match cascade.Winner with
-                    | Some winner when winner.Origin <> CascadeOrigin.UserAgent && not winner.HasVariableReference ->
+                    | Some winner when
+                        winner.Origin <> CascadeOrigin.UserAgent
+                        && not winner.HasVariableReference
+                        ->
                         equal (item.Name + " winner value") true (matches item.Computed winner.Value)
                     | _ -> ()
 
@@ -336,7 +440,13 @@ let run (create: unit -> DiagnosticsService) (styles: ComputedStyleService) (doc
             | _ -> failwith "repeat queries"
 
         service.Disable ()
-        equal "disabled again" (Error DiagnosticsUnavailable.Disabled) (service.Cascade (spec, "order") |> Result.map ignore)
+
+        equal
+            "disabled again"
+            (Error DiagnosticsUnavailable.Disabled)
+            (service.Cascade (spec, "order")
+             |> Result.map ignore)
+
         service.Dispose ()
         raises "disposed" (fun () -> service.Cascade (spec, "order") |> ignore)
         checks

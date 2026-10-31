@@ -571,11 +571,24 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             colorDepth: int,
             orientation: ScreenOrientationType
         ) =
-        let values = [| 36; width; height; availLeft; availTop; availWidth; availHeight; colorDepth; int orientation |]
+        let values =
+            [|
+                36
+                width
+                height
+                availLeft
+                availTop
+                availWidth
+                availHeight
+                colorDepth
+                int orientation
+            |]
+
         let metrics = Marshal.AllocHGlobal (values.Length * 4)
 
         try
             Marshal.Copy (values, 0, metrics, values.Length)
+
             Native.rv_host_set_screen (handle, metrics)
             |> Interop.check "rv_host_set_screen"
         finally

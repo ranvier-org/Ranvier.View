@@ -19,11 +19,9 @@ type internal Traversal private () =
 
     static member private Invoke(context: nativeint, node: nativeint) : int =
         try
-            let session, filter =
-                GCHandle.FromIntPtr(context).Target :?> (Session * NodeFilter)
+            let session, filter = GCHandle.FromIntPtr(context).Target :?> (Session * NodeFilter)
 
-            let target =
-                unbox<Node> (session.Node (Native.rv_node_retain node))
+            let target = unbox<Node>(session.Node (Native.rv_node_retain node))
 
             match filter target with
             | NodeFilterResult.Accept
@@ -35,19 +33,16 @@ type internal Traversal private () =
             0
 
     static member private Free(context: nativeint) =
-        GCHandle.FromIntPtr(context).Free ()
+        GCHandle.FromIntPtr(context).Free()
         live <- live - 1
 
-    static member val private Callback =
-        Native.NodeFilterCallback (fun context node -> Traversal.Invoke (context, node))
+    static member val private Callback = Native.NodeFilterCallback (fun context node -> Traversal.Invoke (context, node))
 
     static member val private Release = Native.NodeFilterRelease (fun context -> Traversal.Free context)
 
-    static member val private CallbackPointer =
-        Marshal.GetFunctionPointerForDelegate<Native.NodeFilterCallback> Traversal.Callback
+    static member val private CallbackPointer = Marshal.GetFunctionPointerForDelegate<Native.NodeFilterCallback> Traversal.Callback
 
-    static member val private ReleasePointer =
-        Marshal.GetFunctionPointerForDelegate<Native.NodeFilterRelease> Traversal.Release
+    static member val private ReleasePointer = Marshal.GetFunctionPointerForDelegate<Native.NodeFilterRelease> Traversal.Release
 
     /// <summary>The managed filter functions the engine still holds, on every host.</summary>
     static member Live = live
@@ -111,8 +106,7 @@ type internal Traversal private () =
                 if context = 0n then
                     raise (InvalidOperationException "The NodeFilter was not created by this host")
 
-                let _, filter =
-                    GCHandle.FromIntPtr(context).Target :?> (Session * NodeFilter)
+                let _, filter = GCHandle.FromIntPtr(context).Target :?> (Session * NodeFilter)
 
                 Some filter
             finally

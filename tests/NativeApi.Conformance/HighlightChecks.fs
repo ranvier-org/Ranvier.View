@@ -69,7 +69,9 @@ let run (create: unit -> HighlightService) (document: Document) (engine: Engine)
     try
         let registry = service.Registry
         same "CSS.highlights is one registry" (box registry) (box service.Registry)
-        let h1, h2, h4 = service.Create [||], service.Create [| range 0 1 |], service.Create [||]
+
+        let h1, h2, h4 =
+            service.Create [||], service.Create [| range 0 1 |], service.Create [||]
 
         let label (value: Highlight) =
             if obj.ReferenceEquals (value, h1) then "h1"
@@ -78,7 +80,9 @@ let run (create: unit -> HighlightService) (document: Document) (engine: Engine)
             else "?"
 
         let keys () =
-            service.Entries registry |> Array.map fst |> List.ofArray
+            service.Entries registry
+            |> Array.map fst
+            |> List.ofArray
 
         equal "registry.empty" 0 (service.Count registry)
         service.Set (registry, "a", h1)
@@ -87,7 +91,14 @@ let run (create: unit -> HighlightService) (document: Document) (engine: Engine)
         equal "registry.order" ([ "a"; "b"; "c" ], 3) (keys (), service.Count registry)
         service.Set (registry, "a", h4)
         equal "registry.replace keeps the position" [ "a"; "b"; "c" ] (keys ())
-        equal "registry.get after replace" "h4" (service.TryGet (registry, "a") |> Option.map label |> Option.defaultValue "-")
+
+        equal
+            "registry.get after replace"
+            "h4"
+            (service.TryGet (registry, "a")
+             |> Option.map label
+             |> Option.defaultValue "-")
+
         equal "registry.delete" (true, false) (service.Remove (registry, "b"), service.Remove (registry, "b"))
         equal "registry after delete" ([ "a"; "c" ], false, true) (keys (), service.Contains (registry, "b"), service.Contains (registry, "a"))
         equal "registry.get of an unregistered name" None (service.TryGet (registry, "zz"))
@@ -97,7 +108,9 @@ let run (create: unit -> HighlightService) (document: Document) (engine: Engine)
         equal
             "registry.entries"
             [ "a", "h4"; "c", "h1"; "b", "h2" ]
-            (service.Entries registry |> Array.map (fun (key, value) -> key, label value) |> List.ofArray)
+            (service.Entries registry
+             |> Array.map (fun (key, value) -> key, label value)
+             |> List.ofArray)
 
         same "registry.get returns the created highlight" (box h1) (box (service.TryGet (registry, "c")).Value)
         let snapshot = service.Entries registry
@@ -118,7 +131,9 @@ let run (create: unit -> HighlightService) (document: Document) (engine: Engine)
             |> Option.defaultValue "?"
 
         let names (value: Highlight) =
-            service.Ranges value |> Array.map name |> List.ofArray
+            service.Ranges value
+            |> Array.map name
+            |> List.ofArray
 
         equal "highlight.emptyConstructor" 0 (service.Size (service.Create [||]))
         let h = service.Create [| r1; r2; r1 |]
@@ -140,13 +155,26 @@ let run (create: unit -> HighlightService) (document: Document) (engine: Engine)
         equal
             "highlight.priority"
             [ 5; -1; Int32.MaxValue; Int32.MinValue; 0 ]
-            ([ 5; -1; Int32.MaxValue; Int32.MinValue; 0 ] |> List.map (fun value -> h.priority <- value; h.priority))
+            ([ 5; -1; Int32.MaxValue; Int32.MinValue; 0 ]
+             |> List.map (fun value ->
+                 h.priority <- value
+                 h.priority))
 
         equal
             "highlight.type"
-            [ HighlightType.SpellingError; HighlightType.GrammarError; HighlightType.Highlight ]
-            ([ HighlightType.SpellingError; HighlightType.GrammarError; HighlightType.Highlight ]
-             |> List.map (fun value -> h.``type`` <- value; h.``type``))
+            [
+                HighlightType.SpellingError
+                HighlightType.GrammarError
+                HighlightType.Highlight
+            ]
+            ([
+                HighlightType.SpellingError
+                HighlightType.GrammarError
+                HighlightType.Highlight
+             ]
+             |> List.map (fun value ->
+                 h.``type`` <- value
+                 h.``type``))
 
         service.Set (registry, "red", h)
         equal "a registered highlight leaves the text unchanged" (Text, 1) (paragraph.textContent, paragraph.childNodes.length |> int)

@@ -7,7 +7,21 @@ let MathML = "http://www.w3.org/1998/Math/MathML"
 
 /// <summary>The MathML elements of the fixture, by local name.</summary>
 let names =
-    [ "math"; "mi"; "mo"; "mn"; "ms"; "mtext"; "mrow"; "mfrac"; "msqrt"; "mroot"; "msub"; "msup"; "mspace" ]
+    [
+        "math"
+        "mi"
+        "mo"
+        "mn"
+        "ms"
+        "mtext"
+        "mrow"
+        "mfrac"
+        "msqrt"
+        "mroot"
+        "msub"
+        "msup"
+        "mspace"
+    ]
 
 /// <summary>
 /// Checks typed MathML elements on the supplied engine document. <c>interfaceOf</c> names the most derived DOM
@@ -34,10 +48,7 @@ let run (document: Document) (interfaceOf: Element -> string) (mathInterface: st
             equal $"{local} localName" local element.localName
             equal $"{local} tagName" local element.tagName
 
-            equal
-                $"{local} interface"
-                (if local = "math" then mathInterface else "MathMLElement")
-                (interfaceOf element)
+            equal $"{local} interface" (if local = "math" then mathInterface else "MathMLElement") (interfaceOf element)
 
             let typed = element :?> MathMLElement
             equal $"{local} default tabIndex" -1 typed.tabIndex
