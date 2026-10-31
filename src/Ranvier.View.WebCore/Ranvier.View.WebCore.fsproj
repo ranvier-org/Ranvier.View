@@ -13,7 +13,7 @@
         <PackageTags>reactive;signals;view;dom;webcore;native;fsharp</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>Experimental. The API may change.</PackageReleaseNotes>
-        <Version>0.1.0-alpha.19</Version>
+        <Version>0.1.0-alpha.20</Version>
         <IsAotCompatible>true</IsAotCompatible>
         <IsPackable>true</IsPackable>
         <!-- Generated wrapper implementation members inherit their contracts' documentation. -->
