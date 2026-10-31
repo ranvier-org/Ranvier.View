@@ -55,6 +55,7 @@
         <Compile Include="Marshalling.fs" />
         <Compile Include="Generated/Objects.fs" />
         <Compile Include="Host.fs" />
+        <Compile Include="SvgViews.fs" />
         <Compile Include="StyleSheets.fs" />
         <Compile Include="CssQueries.fs" />
         <Compile Include="CustomProperties.fs" />
@@ -63,6 +64,7 @@
         <Compile Include="Geometry.fs" />
         <Compile Include="TransformValues.fs" />
         <Compile Include="ComputedStyles.fs" />
+        <Compile Include="Locales.fs" />
         <Compile Include="Timing.fs" />
         <Compile Include="Capabilities.fs" />
         <None Include="Generated/report.txt" />

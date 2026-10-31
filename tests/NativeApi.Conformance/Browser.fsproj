@@ -23,6 +23,12 @@
     <Compile Include="GeometryValues.fs" />
     <Compile Include="MatrixValues.fs" />
     <Compile Include="TransformValues.fs" />
+    <Compile Include="SvgGeometry.fs" />
+    <Compile Include="SvgValues.fs" />
+    <Compile Include="SvgShapes.fs" />
+    <Compile Include="SvgText.fs" />
+    <Compile Include="SvgViewSelection.fs" />
+    <Compile Include="SvgAnimations.fs" />
     <Compile Include="TypedStyles.fs" />
     <Compile Include="FragmentRectangles.fs" />
     <Compile Include="FontTransitionRules.fs" />
@@ -33,6 +39,7 @@
     <Compile Include="CascadeRules.fs" />
     <Compile Include="SheetConstruction.fs" />
     <Compile Include="SheetElements.fs" />
+    <Compile Include="LocalePreferences.fs" />
     <Compile Include="UserTiming.fs" />
     <Compile Include="Capabilities.fs" />
     <Compile Include="Browser.fs" />

@@ -19,6 +19,160 @@ let private windowlessDocument () : Document = jsNative
 [<Emit("$0.name || 'Error'")>]
 let private errorName (error: exn) : string = jsNative
 
+let private svgRealmTargets (target: Document) =
+    let root =
+        target.createElementNS ("http://www.w3.org/2000/svg", "svg") :?> SVGSVGElement
+
+    root.id <- "native-api-svg-realm"
+    target.body.appendChild root |> ignore
+
+    let dictionary =
+        DOMMatrix2DInit (m11 = Some 2., m12 = Some 3., m21 = Some 4., m22 = Some 5., m41 = Some 6., m42 = Some 7.)
+
+    let setter = root.createSVGTransform ()
+    setter.setMatrix dictionary
+
+    [|
+        root.createSVGTransformFromMatrix dictionary
+        root.transform.baseVal.createSVGTransformFromMatrix dictionary
+        setter
+    |]
+
+[<Emit("""(async () => {
+    const frame=document.createElement('iframe');
+    let checks=0;
+    const check=(value,label)=>{checks++;if(!value)throw new Error(label);};
+    try {
+        const loaded=new Promise(resolve=>frame.addEventListener('load',resolve,{once:true}));
+        frame.srcdoc='<!doctype html><body></body>';document.body.append(frame);await loaded;
+        for(const target of [document,frame.contentDocument]) {
+            const values=$0(target),realm=target.defaultView,fields=['a','b','c','d','e','f'],expected=[2,3,4,5,6,7];
+            for(const value of values) {
+                check(Object.getPrototypeOf(value)===realm.SVGTransform.prototype,'SVG transform realm');
+                check(Object.getPrototypeOf(value.matrix)===realm.SVGMatrix.prototype,'SVG matrix realm');
+                for(let i=0;i<fields.length;i++)check(value.matrix[fields[i]]===expected[i],'SVG alias coefficient');
+            }
+            for(let i=0;i<values.length;i++)for(let j=i+1;j<values.length;j++)check(values[i].matrix!==values[j].matrix,'SVG independent matrix results');
+        }
+        return checks;
+    } finally {document.getElementById('native-api-svg-realm')?.remove();frame.remove();}
+})()""")>]
+let private svgRealmProof (create: Document -> SVGTransform array) : JS.Promise<int> = jsNative
+
+/// <summary>Runs shared SVG geometry/values and compiled matrix-dictionary adapters in two browser realms.</summary>
+let runSvg () =
+    async {
+        let target = document ()
+        let geometry = SvgGeometry.run target errorName
+        let values = SvgValues.run target errorName true false
+
+        let! context =
+            svgRealmProof svgRealmTargets
+            |> Async.AwaitPromise
+
+        if geometry <> 126 || values <> 361 || context <> 54 then
+            failwith "SVG shared/realm assertions did not run"
+
+        return
+            {|
+                svgGeometry = geometry
+                svgValues = values
+                svgContext = context
+            |}
+    }
+    |> Async.StartAsPromise
+
+[<Emit("new Promise(resolve => setTimeout(resolve, $0))")>]
+let private delay (milliseconds: int) : JS.Promise<unit> = jsNative
+
+[<Emit("fetch('/Ahem.ttf').then(r => r.arrayBuffer()).then(b => { let s = ''; for (const v of new Uint8Array(b)) s += String.fromCharCode(v); return btoa(s); })")>]
+let private ahem () : JS.Promise<string> = jsNative
+
+[<Emit("globalThis.__nativeApiPaintAt($0, $1)")>]
+let private paintAt (x: float) (y: float) : JS.Promise<bool> = jsNative
+
+[<Emit("""(async () => {
+    const frame = document.createElement('iframe');
+    frame.id = 'native-api-svg-view';
+    frame.style.cssText = 'width:300px;height:300px;border:0';
+    const loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+    frame.src = URL.createObjectURL(new Blob([$0], {type:'image/svg+xml'}));
+    document.body.append(frame);
+    await loaded;
+    return frame.contentDocument;
+})()""")>]
+let private svgDocument (markup: string) : JS.Promise<Document> = jsNative
+
+[<Emit("new Promise(resolve => $0.defaultView.requestAnimationFrame(() => $0.defaultView.requestAnimationFrame(() => resolve())))")>]
+let private frames (target: Document) : JS.Promise<unit> = jsNative
+
+[<Emit("document.getElementById('native-api-svg-view')?.remove()")>]
+let private removeViewFrame () : unit = jsNative
+
+let private wait (milliseconds: int) =
+    delay milliseconds |> Async.AwaitPromise
+
+/// <summary>Runs shared SVG shapes, text, standalone views and SMIL controls in Chromium.</summary>
+let runSvgSurfaces () =
+    async {
+        let target = document ()
+        let shapes = SvgShapes.run target errorName "Error" false
+        let! fontData = ahem () |> Async.AwaitPromise
+
+        let! text =
+            SvgText.run target fontData wait (fun (x, y) -> paintAt x y |> Async.AwaitPromise) errorName false
+
+        let! animations = SvgAnimations.run target wait errorName true
+
+        let! standalone =
+            svgDocument SvgViewSelection.markup
+            |> Async.AwaitPromise
+
+        let mutable arguments = 0
+
+        let outcome action =
+            try
+                action ()
+                "accepted"
+            with error ->
+                error.Message
+
+        let expect label (expected: string) (actual: string) =
+            arguments <- arguments + 1
+
+            if not (actual.Contains expected) then
+                failwithf "%s: expected %s, got %s" label expected actual
+
+        expect "null fragment rejects" "fragment" (outcome (fun () -> SvgViews.requestView standalone null))
+        expect "HTML document rejects" "SVG XML document" (outcome (fun () -> SvgViews.requestView target "half"))
+
+        let! views =
+            SvgViewSelection.run
+                standalone
+                (fun fragment ->
+                    async {
+                        SvgViews.requestView standalone fragment
+                        return None
+                    })
+                (fun () -> frames standalone |> Async.AwaitPromise)
+                SvgViews.inspect
+                false
+                true
+
+        removeViewFrame ()
+        expect "inactive document rejects" "no longer active" (outcome (fun () -> SvgViews.requestView standalone "half"))
+
+        return
+            {|
+                svgShapes = shapes
+                svgText = text
+                svgViews = views
+                svgViewArguments = arguments
+                svgAnimations = animations
+            |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("$0.constructor.name + ':' + $0.message")>]
 let private disposalError (error: exn) : string = jsNative
 
@@ -284,6 +438,81 @@ let private resizeViewport (width: int) (height: int) : JS.Promise<unit> = jsNat
 })()""")>]
 let private cssEscapeOracle (escape: string -> string) : int = jsNative
 
+[<Emit("""(async () => {
+    const frame = document.createElement('iframe');
+    try {
+        frame.srcdoc = '<body>locale first</body>';
+        let loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        document.body.append(frame); await loaded;
+        const oldDocument = frame.contentDocument;
+        const call = $0(oldDocument);
+        if (!call()) throw new Error('Live locale context rejected');
+        loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        frame.srcdoc = '<body>locale replacement</body>'; await loaded;
+        if (oldDocument === frame.contentDocument) throw new Error('Locale document identity did not change');
+        if (call()) throw new Error('Old locale context stayed active');
+        if (!$0(frame.contentDocument)()) throw new Error('Replacement locale context rejected');
+        return 4;
+    } finally { frame.remove(); }
+})()""")>]
+let private localeDocumentLifetime (createCall: Document -> System.Func<bool>) : JS.Promise<int> = jsNative
+
+let private localeCall document =
+    let service = Ranvier.Dom.Locales.forDocument document
+
+    System.Func<bool>(fun () ->
+        try
+            service.Current |> ignore
+            true
+        with _ ->
+            false)
+
+let runLocales () =
+    async {
+        let create () =
+            Ranvier.Dom.Locales.forDocument (document ())
+
+        let service = create ()
+        let mutable nullRejected = false
+
+        try
+            Ranvier.Dom.Locales.forDocument Unchecked.defaultof<Document>
+            |> ignore
+        with :? System.ArgumentNullException ->
+            nullRejected <- true
+
+        if not nullRejected then
+            failwith "Locale provider accepted a null document"
+
+        let mutable windowlessRejected = false
+
+        try
+            Ranvier.Dom.Locales.forDocument (windowlessDocument ())
+            |> ignore
+        with :? System.NotSupportedException ->
+            windowlessRejected <- true
+
+        if not windowlessRejected then
+            failwith "Locale provider fabricated windowless preferences"
+
+        let! context =
+            localeDocumentLifetime localeCall
+            |> Async.AwaitPromise
+
+        return
+            {|
+                locales = LocalePreferences.run create
+                localeDeterministic = LocalePreferences.deterministic ()
+                localeContext = context + 2
+                localeProvider = service.ProviderName
+                localePolicy = service.LocaleCanonicalization
+                timeZonePolicy = service.TimeZoneCanonicalization
+                localeAlias = service.CanonicalizeLocale "iw-IL"
+                timeZoneAlias = service.CanonicalizeTimeZone "US/Eastern"
+            |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the focused registration fixture and document-navigation ownership proof.</summary>
 let runCustomProperties () =
     async {
@@ -403,7 +632,9 @@ let runStyleValues () =
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {
+        let! localeResult = runLocales () |> Async.AwaitPromise
         let document = document ()
+        let! svgProof = runSvg () |> Async.AwaitPromise
         let timing = UserTiming.run (fun () -> Ranvier.Dom.Timing.forDocument document)
         let timingDeterministic = UserTiming.deterministic ()
 
@@ -570,6 +801,9 @@ let run () =
 
         return
             {|
+                svgGeometry = svgProof.svgGeometry
+                svgValues = svgProof.svgValues
+                svgContext = svgProof.svgContext
                 geometry = geometryProof.geometry
                 geometryContext = geometryProof.geometryContext
                 matrices = matrixProof.matrices
@@ -577,6 +811,9 @@ let run () =
                 transformValues = transformProof.transformValues
                 transformContext = transformProof.transformContext
                 cascadeRules = cascadeRules
+                locales = localeResult.locales
+                localeDeterministic = localeResult.localeDeterministic
+                localeContext = localeResult.localeContext
                 timing = timing
                 timingDeterministic = timingDeterministic
                 capabilities = capabilities
