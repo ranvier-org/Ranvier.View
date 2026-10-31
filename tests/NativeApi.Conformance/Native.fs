@@ -3335,7 +3335,7 @@ let private runAnimations () =
     shared
 
 /// <summary>Drives a shared async fixture on the host until it completes.</summary>
-let private drive (host: WebCoreHost) (work: Async<int>) =
+let private driveAsync (host: WebCoreHost) (work: Async<int>) =
     let task = work |> Async.StartImmediateAsTask
     let timeout = System.Diagnostics.Stopwatch.StartNew ()
 
@@ -3370,7 +3370,7 @@ let private runAnimationLifecycle () =
     let shared =
         try
             AnimationLifecycleChecks.run host.Document (fun () -> Ranvier.View.WebCore.Animations.forHost host) { Settle = settleFrame host }
-            |> drive host
+            |> driveAsync host
         with error ->
             (host :> System.IDisposable).Dispose()
             raise error
@@ -3450,7 +3450,7 @@ let private runAnimationEvents () =
                     Settle = settleFrame host
                     InterfaceName = interfaceName
                 }
-            |> drive host
+            |> driveAsync host
         finally
             (host :> System.IDisposable).Dispose()
 
