@@ -164,5 +164,5 @@ let main _ =
 
     afterDispose.SetResult (Some (contribution "disposed"))
     expect disposalRequest.IsFaulted "Late provider cannot revive disposed report"
-    printfn "CAPABILITY_NATIVE_LIFECYCLE_CHECKS=%d" checks
+    Console.WriteLine $"CAPABILITY_NATIVE_LIFECYCLE_CHECKS={checks}"
     0

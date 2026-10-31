@@ -2,8 +2,9 @@ import { createRequire } from 'node:module';
 import { readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import path from 'node:path';
-const require = createRequire('C:/wk/ranvier-views/tests/NativeApi.Conformance/package.json');
-const { chromium } = require('playwright');
+import { fileURLToPath } from 'node:url';
+const require = createRequire(process.env.NATIVE_API_BROWSER_PACKAGE || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../NativeApi.Conformance/package.json'));
+const { chromium } = require('@playwright/test');
 const root = process.cwd();
 const server = createServer(async (request,response) => {
   try {

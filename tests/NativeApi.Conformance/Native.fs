@@ -31,8 +31,67 @@ let private runTransforms (host: WebCoreHost) =
 
     shared + effects
 
+/// <summary>Drives a task on the host owner thread: continuations run between host cycles.</summary>
+type private OwnerLoop() =
+    inherit System.Threading.SynchronizationContext()
+
+    let queue =
+        System.Collections.Concurrent.ConcurrentQueue<struct (System.Threading.SendOrPostCallback * obj)>()
+
+    override _.Post(callback, state) =
+        queue.Enqueue (struct (callback, state))
+
+    override this.Send(callback, state) =
+        callback.Invoke state
+
+    member _.Drain() =
+        let mutable item = Unchecked.defaultof<_>
+
+        while queue.TryDequeue (&item) do
+            let struct (callback, state) = item
+            callback.Invoke state
+
+let private runCapabilities () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let previous = System.Threading.SynchronizationContext.Current
+    let loop = OwnerLoop ()
+    System.Threading.SynchronizationContext.SetSynchronizationContext loop
+
+    let count =
+        try
+            let pending =
+                Capabilities.run (fun () -> Ranvier.View.WebCore.Capabilities.forHost host)
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not pending.IsCompleted
+                  && timeout.ElapsedMilliseconds < 10000L do
+                loop.Drain ()
+                host.Cycle ()
+                System.Threading.Thread.Sleep 1
+
+            if not pending.IsCompleted then
+                failwith "Capability fixture did not complete on the owner loop"
+
+            pending.GetAwaiter().GetResult()
+        finally
+            System.Threading.SynchronizationContext.SetSynchronizationContext previous
+            (host :> System.IDisposable).Dispose()
+
+    if count <> 42 then
+        failwith "Capability shared assertions did not run"
+
+    if session.LiveObjects <> 0 then
+        failwith $"Capability fixture leaked {session.LiveObjects} managed native objects"
+
+    System.Console.WriteLine $"NATIVE_API H07 PASS assertions={count}"
+    System.Console.WriteLine "NATIVE_API H07 TEARDOWN PASS"
+    count
+
 let private runAll () =
     UserTimingNative.run ()
+    runCapabilities () |> ignore
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
@@ -774,6 +833,9 @@ let main args =
 
         System.Console.WriteLine "NATIVE_API C14 TEARDOWN PASS"
 
+        0
+    elif Array.contains "--capabilities-only" args then
+        runCapabilities () |> ignore
         0
     elif Array.contains "--custom-properties-only" args then
         let lifecycle = CustomPropertyLifecycle.run ()

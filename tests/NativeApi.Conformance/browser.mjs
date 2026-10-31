@@ -101,6 +101,8 @@ try {
   console.log(`BROWSER_API D10 PASS assertions=${checks.tables} engine=chromium`);
   if (checks.timing !== 180 || checks.timingDeterministic !== 181) throw new Error('User timing assertions did not run');
   console.log(`BROWSER_API H02 PASS assertions=${checks.timing} deterministic=${checks.timingDeterministic} engine=chromium`);
+  if (checks.capabilities !== 42) throw new Error(`Capability shared assertions did not run: ${checks.capabilities}`);
+  console.log(`BROWSER_API H07 PASS assertions=${checks.capabilities} engine=chromium`);
   console.log(`BROWSER_API D10_VIEW PASS assertions=${checks.viewTables} engine=chromium`);
   if (checks.viewHyperlinks !== 50) throw new Error('View hyperlink authoring assertions did not run');
   console.log(`BROWSER_API D11_VIEW_HYPERLINKS PASS assertions=${checks.viewHyperlinks} engine=chromium`);
