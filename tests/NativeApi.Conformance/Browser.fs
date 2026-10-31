@@ -1133,6 +1133,20 @@ let runBinary () =
     }
     |> Async.StartAsPromise
 
+/// <summary>Runs the shared form submission assertions.</summary>
+let runSubmissions () =
+    async {
+        let document = document ()
+
+        let driver: SubmissionChecks.Driver = { Settle = fun () -> Async.Sleep 20 }
+
+        let! count =
+            SubmissionChecks.run document (fun () -> BrowserFormSubmission.forDocument document) driver
+
+        return {| submissions = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared caret hit-testing assertions under device-metrics emulation.</summary>
 let runCaret () =
     async {

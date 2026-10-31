@@ -27,6 +27,7 @@ const formsOnly = process.argv.includes('--forms-only');
 const dialogsOnly = process.argv.includes('--dialogs-only');
 const urlsOnly = process.argv.includes('--urls-only');
 const binaryOnly = process.argv.includes('--binary-only');
+const submissionsOnly = process.argv.includes('--submissions-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
@@ -185,6 +186,20 @@ const runBinary = async () => {
   }
 };
 const BINARY_ASSERTIONS = 102;
+// D14 runs the form submission fixture in its own page; the provider keeps the page in place.
+const runSubmissions = async () => {
+  const submissionsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await submissionsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runSubmissions(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.submissions !== SUBMISSION_ASSERTIONS) throw new Error(`Form submission assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API D14 PASS assertions=${result.submissions} engine=chromium`);
+  } finally {
+    await submissionsBrowser.close();
+  }
+};
+const SUBMISSION_ASSERTIONS = 26;
 // A12 runs the frame fixture on the manual scheduler and on the Window's frames, timers and microtasks.
 const runFrames = async () => {
   const framesBrowser = await chromium.launch({ headless: true });
@@ -240,6 +255,7 @@ try {
   else if (dialogsOnly) { await runDialogs(); process.exitCode = 0; }
   else if (urlsOnly) { await runUrls(); process.exitCode = 0; }
   else if (binaryOnly) { await runBinary(); process.exitCode = 0; }
+  else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
   else if (idleOnly) { await runIdle(); process.exitCode = 0; }
   else if (caretOnly) { await runCaret(); process.exitCode = 0; }
@@ -471,6 +487,7 @@ try {
   await runDialogs();
   await runBinary();
   await runUrls();
+  await runSubmissions();
   await runFrames();
   await runIdle();
   await runCaret();

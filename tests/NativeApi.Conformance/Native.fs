@@ -1165,6 +1165,110 @@ let private runUrls () =
     System.Console.WriteLine $"NATIVE_API H13 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared form submission fixture with native exception, thread and teardown checks.</summary>
+[<Literal>]
+let private SubmissionChecksCount = 26
+
+let private runSubmissions () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let raisesType (accept: exn -> bool) (action: unit -> unit) =
+        try
+            action ()
+            false
+        with error ->
+            accept error
+
+    let driver: SubmissionChecks.Driver =
+        {
+            Settle =
+                fun () ->
+                    async {
+                        for _ in 1..3 do
+                            host.Cycle 1 |> ignore
+                    }
+        }
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                SubmissionChecks.run host.Document (fun () -> Ranvier.View.WebCore.FormSubmissions.forHost host) driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 60000L do
+                host.Cycle () |> ignore
+
+            let count = count.GetAwaiter().GetResult()
+            let service = Ranvier.View.WebCore.FormSubmissions.forHost host
+
+            expect
+                (raisesType (fun error -> error :? System.ArgumentNullException) (fun () ->
+                    service.Subscribe (Unchecked.defaultof<_>)
+                    |> ignore))
+                "A null handler raises ArgumentNullException"
+
+            expect
+                (raisesType (fun error -> error :? System.InvalidOperationException) (fun () ->
+                    Ranvier.View.WebCore.FormSubmissions.forHost host
+                    |> ignore))
+                "A second service raises InvalidOperationException"
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () -> raisesType (fun error -> error :? System.InvalidOperationException) (fun () -> service.Subscribe ignore |> ignore))
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Subscribe rejects another thread"
+            let mutable late = 0
+
+            service.Subscribe (fun _ -> late <- late + 1)
+            |> ignore
+
+            let document = host.Document
+            let form = unbox<Ranvier.Dom.HTMLFormElement>(document.createElement "form")
+            form.setAttribute ("action", "https://app.test/late")
+            document.body.appendChild form |> ignore
+            form.requestSubmit ()
+            expect (late = 0) "A submission waits for a later task"
+            held <- Some (service, (fun () -> late))
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    let service, late = held.Value
+
+    RanvierWebCoreAbi.Native.rv_run_loop_cycle 50
+    |> ignore
+
+    expect (late () = 0) "A submission pending at host disposal reaches no handler"
+    expect (session.LiveObjects = 0) "Form submission fixture leaves no live native objects"
+    service.Dispose ()
+
+    expect
+        (raisesType (fun error -> error :? System.ObjectDisposedException) (fun () -> service.Subscribe ignore |> ignore))
+        "Subscribe after disposal raises ObjectDisposedException"
+
+    if shared <> SubmissionChecksCount then
+        failwith $"Form submission shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API D14 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API D14 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared dialog, popover and command invoker fixture with native thread and teardown checks.</summary>
 [<Literal>]
 let private DialogChecksCount = 143
@@ -1710,6 +1814,7 @@ let private runAll () =
     runDialogs () |> ignore
     runBinary () |> ignore
     runUrls () |> ignore
+    runSubmissions () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
@@ -2700,6 +2805,9 @@ let main args =
         0
     elif Array.contains "--urls-only" args then
         runUrls () |> ignore
+        0
+    elif Array.contains "--submissions-only" args then
+        runSubmissions () |> ignore
         0
     elif Array.contains "--dialogs-only" args then
         runDialogs () |> ignore
