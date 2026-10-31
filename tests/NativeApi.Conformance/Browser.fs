@@ -1289,9 +1289,6 @@ let runDiagnostics () =
 [<Emit("devicePixelRatio")>]
 let private devicePixelRatio () : float = jsNative
 
-[<Emit("$0.contentDocument")>]
-let private frameDocument (frame: Element) : Document = jsNative
-
 /// <summary>Runs the shared coordinate assertions, with an iframe's element as the foreign one.</summary>
 let runCoordinates () =
     let document = document ()

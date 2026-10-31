@@ -53,7 +53,9 @@ module Coordinates =
 
         let rendered (element: Element) =
             let quad = Array.zeroCreate<float> 8
-            Native.rv_node_box_quad (handleOf element, 0, 0n, 1, &quad[0]) <> Unsupported
+
+            Native.rv_node_box_quad (handleOf element, 0, 0n, 1, &quad[0])
+            <> Unsupported
 
         // RV_ERR_UNSUPPORTED covers an element space without a CSS box and a singular inverse map.
         let failure name (from: CoordinateSpace) (target: CoordinateSpace) status =
@@ -78,14 +80,22 @@ module Coordinates =
             if source = 0n || destination = 0n then
                 Error CoordinateUnavailable.Detached
             else
-                let xy = Array.zeroCreate<float> (2 * points.Length)
+                let xy = Array.zeroCreate<float>(2 * points.Length)
 
                 for index in 0 .. points.Length - 1 do
                     xy[2 * index] <- points[index].X
                     xy[2 * index + 1] <- points[index].Y
 
                 match Native.rv_node_convert_points (source, fromSpace, destination, toSpace, &xy[0], points.Length) with
-                | 0 -> Ok (Array.init points.Length (fun index -> { X = xy[2 * index]; Y = xy[2 * index + 1] }))
+                | 0 ->
+                    Ok (
+                        Array.init points.Length (fun index ->
+                            ({
+                                X = xy[2 * index]
+                                Y = xy[2 * index + 1]
+                            }
+                            : CoordinatePoint))
+                    )
                 | status -> Error (failure "rv_node_convert_points" from target status)
 
         Ranvier.Dom.Coordinates.create
@@ -111,7 +121,11 @@ module Coordinates =
 
                             match Native.rv_node_box_quad (node, edge, destination, toSpace, &quad[0]) with
                             | 0 ->
-                                let point index = { X = quad[2 * index]; Y = quad[2 * index + 1] }
+                                let point index : CoordinatePoint =
+                                    {
+                                        X = quad[2 * index]
+                                        Y = quad[2 * index + 1]
+                                    }
 
                                 Ok
                                     {

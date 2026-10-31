@@ -1812,7 +1812,7 @@ let private runDiagnostics () =
 
 /// <summary>Runs the shared coordinate fixture with page scale, thread and teardown checks.</summary>
 [<Literal>]
-let private CoordinateChecksCount = 0
+let private CoordinateChecksCount = 304
 
 let private runCoordinates () =
     let host = WebCoreHost.Create (320, 240)
@@ -1853,7 +1853,7 @@ let private runCoordinates () =
 
             // While page-scaled, HOST is CLIENT times the page scale in both directions.
             RanvierWebCoreAbi.Native.rv_host_set_page_scale (host.Handle, 2.0, 40, 60)
-            |> Interop.check "rv_host_set_page_scale"
+            |> fun status -> if status <> 0 then failwith $"rv_host_set_page_scale {status}"
 
             expect (service.Convert (point 10.0 20.0, client, hostSpace) = Ok (point 20.0 40.0)) "Client to host doubles at page scale 2"
             expect (service.Convert (point 10.0 20.0, hostSpace, client) = Ok (point 5.0 10.0)) "Host to client halves at page scale 2"
@@ -1864,7 +1864,7 @@ let private runCoordinates () =
                 "Device is host times the device scale"
 
             RanvierWebCoreAbi.Native.rv_host_set_page_scale (host.Handle, 1.0, 0, 0)
-            |> Interop.check "rv_host_set_page_scale"
+            |> fun status -> if status <> 0 then failwith $"rv_host_set_page_scale {status}"
 
             let wrongThread =
                 System.Threading.Tasks.Task

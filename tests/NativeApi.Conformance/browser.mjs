@@ -320,7 +320,7 @@ const runCoordinates = async () => {
     await coordinatesBrowser.close();
   }
 };
-const COORDINATE_ASSERTIONS = 0;
+const COORDINATE_ASSERTIONS = 304;
 // D14 runs the form submission fixture in its own page; the provider keeps the page in place.
 const runSubmissions = async () => {
   const submissionsBrowser = await chromium.launch({ headless: true });

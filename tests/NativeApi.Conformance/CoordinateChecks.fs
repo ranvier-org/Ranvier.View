@@ -24,20 +24,26 @@ let private Css =
     + "#cs-r{position:absolute;left:150px;top:150px;width:80px;height:50px;margin:0;transform:rotateY(-35deg) rotateX(20deg)}"
     + "#cs-n{display:none}"
 
-let private radians (degrees: float) = degrees * Math.PI / 180.0
+let private radians (degrees: float) =
+    degrees * Math.PI / 180.0
 
 /// <summary>A 2D affine map as (a, b, c, d, e, f): x' = a x + c y + e, y' = b x + d y + f.</summary>
 type private Affine = float * float * float * float * float * float
 
-let private apply ((a, b, c, d, e, f): Affine) (p: CoordinatePoint) =
-    { X = a * p.X + c * p.Y + e; Y = b * p.X + d * p.Y + f }
+let private apply ((a, b, c, d, e, f): Affine) (p: CoordinatePoint) : CoordinatePoint =
+    {
+        X = a * p.X + c * p.Y + e
+        Y = b * p.X + d * p.Y + f
+    }
 
 let private compose ((a1, b1, c1, d1, e1, f1): Affine) ((a2, b2, c2, d2, e2, f2): Affine) : Affine =
     a1 * a2 + c1 * b2, b1 * a2 + d1 * b2, a1 * c2 + c1 * d2, b1 * c2 + d1 * d2, a1 * e2 + c1 * f2 + e1, b1 * e2 + d1 * f2 + f1
 
-let private translate x y : Affine = 1.0, 0.0, 0.0, 1.0, x, y
+let private translate x y : Affine =
+    1.0, 0.0, 0.0, 1.0, x, y
 
-let private linear a b c d : Affine = a, b, c, d, 0.0, 0.0
+let private linear a b c d : Affine =
+    a, b, c, d, 0.0, 0.0
 
 let private rotate degrees =
     let r = radians degrees
@@ -53,13 +59,7 @@ let private level (ox, oy) (originX, originY) (transform: Affine) =
 /// a singular transform, elements without a CSS box, a perspective chain, a removed element, an element of another
 /// document and argument validation; the result is the assertion count.
 /// </summary>
-let run
-    (create: unit -> CoordinateService)
-    (document: Document)
-    (foreign: unit -> Element)
-    (devicePixelRatio: unit -> float)
-    (engine: Engine)
-    =
+let run (create: unit -> CoordinateService) (document: Document) (foreign: unit -> Element) (devicePixelRatio: unit -> float) (engine: Engine) =
     let mutable checks = 0
 
     let equal label (expected: 'T) (actual: 'T) =
@@ -71,8 +71,10 @@ let run
     let near label (expected: CoordinatePoint) (actual: CoordinatePoint) =
         checks <- checks + 1
 
-        if abs (expected.X - actual.X) > 1.0 / 64.0
-           || abs (expected.Y - actual.Y) > 1.0 / 64.0 then
+        if
+            abs (expected.X - actual.X) > 1.0 / 64.0
+            || abs (expected.Y - actual.Y) > 1.0 / 64.0
+        then
             failwith $"{label}: expected {expected}, got {actual}"
 
     // Services raise ArgumentNullException, ArgumentException and ObjectDisposedException; Fable erases the types.
@@ -122,7 +124,8 @@ let run
     s.scrollTop <- 40
     let service = create ()
 
-    let point x y = { X = x; Y = y }
+    let point x y : CoordinatePoint =
+        { X = x; Y = y }
 
     let ok label =
         function
@@ -133,23 +136,49 @@ let run
         service.Convert (value, from, target) |> ok label
 
     try
-        let element (value: Element) = CoordinateSpace.Element value
+        let element (value: Element) =
+            CoordinateSpace.Element value
         // Local-to-page maps composed from the CSS.
-        let oMap = level (100.0, 50.0) (100.0, 50.0) (compose (rotate 30.0) (linear 1.5 0.0 0.0 1.5))
-        let iMap = compose oMap (level (28.0, 8.0) (20.0, 20.0) (compose (translate 10.0 5.0) (rotate 45.0)))
+        let oMap =
+            level (100.0, 50.0) (100.0, 50.0) (compose (rotate 30.0) (linear 1.5 0.0 0.0 1.5))
+
+        let iMap =
+            compose oMap (level (28.0, 8.0) (20.0, 20.0) (compose (translate 10.0 5.0) (rotate 45.0)))
+
         let tMap = level (0.0, 300.0 + 150.0 - 40.0) (10.0, 10.0) (rotate 10.0)
         let theta, phi = radians -35.0, radians 20.0
-        let rMap = level (150.0, 150.0) (40.0, 25.0) (linear (cos theta) 0.0 (sin theta * sin phi) (cos phi))
 
-        let corners w h = [ point 0.0 0.0; point w 0.0; point w h; point 0.0 h; point (w / 2.0) (h / 3.0) ]
+        let rMap =
+            level (150.0, 150.0) (40.0, 25.0) (linear (cos theta) 0.0 (sin theta * sin phi) (cos phi))
 
-        for name, value, map, w, h in [ "o", o, oMap, 200.0, 100.0; "i", i, iMap, 40.0, 40.0; "t", t, tMap, 20.0, 20.0; "r", r, rMap, 80.0, 50.0 ] do
+        let corners w h =
+            [
+                point 0.0 0.0
+                point w 0.0
+                point w h
+                point 0.0 h
+                point (w / 2.0) (h / 3.0)
+            ]
+
+        for name, value, map, w, h in
+            [
+                "o", o, oMap, 200.0, 100.0
+                "i", i, iMap, 40.0, 40.0
+                "t", t, tMap, 20.0, 20.0
+                "r", r, rMap, 80.0, 50.0
+            ] do
             for local in corners w h do
                 near $"{name} {local} to page" (apply map local) (convert $"{name} to page" local (element value) CoordinateSpace.Page)
 
         // Every ordered pair of spaces round-trips.
         let spaces (value: Element) =
-            [ element value; CoordinateSpace.Page; CoordinateSpace.Client; CoordinateSpace.Host; CoordinateSpace.Device ]
+            [
+                element value
+                CoordinateSpace.Page
+                CoordinateSpace.Client
+                CoordinateSpace.Host
+                CoordinateSpace.Device
+            ]
 
         for name, value in [ "o", o :> Element; "i", i; "b", b; "t", t; "r", r; "m", m ] do
             for from in spaces value do
@@ -178,7 +207,10 @@ let run
             (convert "b corner to client" (point 50.0 50.0) (element b) CoordinateSpace.Client)
 
         near "b origin in page" (point 0.0 40.0) (convert "b to page" (point 0.0 0.0) (element b) CoordinateSpace.Page)
-        let client = convert "b to client" (point 10.0 10.0) (element b) CoordinateSpace.Client
+
+        let client =
+            convert "b to client" (point 10.0 10.0) (element b) CoordinateSpace.Client
+
         near "host equals client at page scale 1" client (convert "client to host" client CoordinateSpace.Client CoordinateSpace.Host)
         let ratio = devicePixelRatio ()
 
@@ -197,13 +229,18 @@ let run
                 CoordinateBox.Content, (8.0, 6.0, 60.0, 40.0)
                 CoordinateBox.Margin, (-9.0, -3.0, 90.0, 62.0)
             ] do
-            let quad = service.BoxQuad (m, cssBox, CoordinateSpace.Page) |> ok $"m {cssBox}"
+            let quad =
+                service.BoxQuad (m, cssBox, CoordinateSpace.Page)
+                |> ok $"m {cssBox}"
+
             near $"m {cssBox} p1" (point (mx + x) (my + y)) quad.P1
             near $"m {cssBox} p2" (point (mx + x + w) (my + y)) quad.P2
             near $"m {cssBox} p3" (point (mx + x + w) (my + y + h)) quad.P3
             near $"m {cssBox} p4" (point (mx + x) (my + y + h)) quad.P4
 
-        let border = service.BoxQuad (o, CoordinateBox.Border, CoordinateSpace.Client) |> ok "o border"
+        let border =
+            service.BoxQuad (o, CoordinateBox.Border, CoordinateSpace.Client)
+            |> ok "o border"
 
         let mapped =
             service.ConvertQuad (
@@ -224,7 +261,13 @@ let run
         // A singular transform maps forward and refuses points mapped into it.
         near "scale(0) collapses to its origin" (point 710.0 410.0) (convert "z to page" (point 3.0 4.0) (element z) CoordinateSpace.Page)
         equal "page to scale(0)" (Error CoordinateUnavailable.NonInvertible) (service.Convert (point 1.0 1.0, CoordinateSpace.Page, element z))
-        equal "box quad of scale(0)" true (service.BoxQuad (z, CoordinateBox.Border, CoordinateSpace.Page) |> Result.isOk)
+
+        equal
+            "box quad of scale(0)"
+            true
+            (service.BoxQuad (z, CoordinateBox.Border, CoordinateSpace.Page)
+             |> Result.isOk)
+
         equal "display:none" (Error CoordinateUnavailable.NotRendered) (service.Convert (point 0.0 0.0, element n, CoordinateSpace.Page))
         equal "inline box" (Error CoordinateUnavailable.NotRendered) (service.Convert (point 0.0 0.0, element k, CoordinateSpace.Page))
         equal "display:none box quad" (Error CoordinateUnavailable.NotRendered) (service.BoxQuad (n, CoordinateBox.Border, CoordinateSpace.Page))
@@ -243,9 +286,22 @@ let run
                  | _ -> false)
 
         let other = foreign ()
-        equal "element of another document" (Error CoordinateUnavailable.WrongDocument) (service.Convert (point 0.0 0.0, element other, CoordinateSpace.Page))
-        equal "into another document" (Error CoordinateUnavailable.WrongDocument) (service.Convert (point 0.0 0.0, CoordinateSpace.Page, element other))
-        equal "box quad of another document" (Error CoordinateUnavailable.WrongDocument) (service.BoxQuad (other, CoordinateBox.Border, CoordinateSpace.Client))
+
+        equal
+            "element of another document"
+            (Error CoordinateUnavailable.WrongDocument)
+            (service.Convert (point 0.0 0.0, element other, CoordinateSpace.Page))
+
+        equal
+            "into another document"
+            (Error CoordinateUnavailable.WrongDocument)
+            (service.Convert (point 0.0 0.0, CoordinateSpace.Page, element other))
+
+        equal
+            "box quad of another document"
+            (Error CoordinateUnavailable.WrongDocument)
+            (service.BoxQuad (other, CoordinateBox.Border, CoordinateSpace.Client))
+
         r.remove ()
         equal "removed element" (Error CoordinateUnavailable.Detached) (service.Convert (point 0.0 0.0, element r, CoordinateSpace.Page))
         equal "into a removed element" (Error CoordinateUnavailable.Detached) (service.Convert (point 0.0 0.0, CoordinateSpace.Page, element r))
