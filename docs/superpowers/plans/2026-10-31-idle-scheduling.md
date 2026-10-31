@@ -69,6 +69,10 @@ pending frame running first, a timeout giving `DidTimeout = true` with 0 remaini
 50 ms deadline bound, owner disposal and scheduler disposal. Native timing differences from Chromium are recorded as
 qualifications in the evidence. Native lifetime cases: host disposal with pending idle callbacks and timeouts.
 
+The full default runs carry 85 native JIT, 85 NativeAOT and 67 Chromium PASS lines on DOM alpha.32, Views 0.1.22,
+backend alpha.22 and Native preview.29, each a superset of G05's 83/83/66
+(`docs/research/native-api-delivery/idle-runtime-evidence.json`).
+
 ## Decisions (root, 2026-10-31)
 
 - `IdleScheduler` is separate from `FrameScheduler`.

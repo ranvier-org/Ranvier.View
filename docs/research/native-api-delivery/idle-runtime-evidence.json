@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "group": "H01",
+  "status": "green (private integration; not accepted)",
+  "route": "Managed only, no ABI",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/108",
+  "coreSourceCommit": "60b0fa69165efc94d18fa55087e602293e51b2ef",
+  "viewsSourceCommit": "2d2907e4b78c013ea4c86c1d9502bc426c89967b",
+  "stackedOn": {
+    "core": "G05 135897c2 (DOM alpha.31, includes A12 8077b67e)",
+    "views": "G05 670e77b + c828dd1 (wrapper regeneration), includes A12 db4cb38"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-viewport-scroll",
+    "head": "dc0951a2034dc74cb69170ea34055b90cf1573c4",
+    "abi": 37,
+    "runtime": "G05 native29-stage, unchanged"
+  },
+  "versions": {
+    "native": "0.1.0-preview.29",
+    "dom": "0.1.0-alpha.32",
+    "views": "0.1.22",
+    "webcoreBackend": "0.1.0-alpha.22"
+  },
+  "allocationReceipt": "Ranvier: docs/research/native-api-delivery/h01-managed32-allocation.json",
+  "redReceipt": "Ranvier.View: docs/research/native-api-delivery/idle-red-measurements.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.32.nupkg": "adf70469f23b7395b1026626f5ae8183b0bde29d69ab9efda154a89ede285d50",
+    "Ranvier.Dom.0.1.0-alpha.32.nupkg": "bb2703149da1bb4bb5c03243abe528c8dc07d1ba3d6cd1106c2619a904b7c383",
+    "Ranvier.WebCore.0.1.0-preview.29.nupkg": "9f486ccac1f29ee94c6034372f9303853351dae26185f3fb8e76753830e20a2a"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "8f47ba7fa3eed0a59484fcd9b6bbe32938cfa8f543a3c7f1e45dd6efbca12499",
+    "WebCore.dll": "a264e234ed27365f2c50b6d0cf6c70e7d01c977ba6bc349fa57669d9e1ade604",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "stageMatchesAot": true,
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\h01-private\\aot-api\\Native.exe",
+    "sha256": "8dd0334b66a7dd1e1d13d9f1201947dd7486d0e8d2d60f82ee3a79378990967b"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "d871b0b4d51fb73ace55c3754022be20ed4aba5e0b6f871ced06e5a33dcaa6b3",
+      "passLines": 85,
+      "g05BaselinePassLines": 83,
+      "g05PassLinesMissing": [],
+      "failLines": [],
+      "h01": [
+        "NATIVE_API H01 LIFETIME PASS assertions=4",
+        "NATIVE_API H01 PASS assertions=14 manual=14"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "d871b0b4d51fb73ace55c3754022be20ed4aba5e0b6f871ced06e5a33dcaa6b3",
+      "passLines": 85,
+      "g05BaselinePassLines": 83,
+      "g05PassLinesMissing": [],
+      "failLines": [],
+      "h01": [
+        "NATIVE_API H01 LIFETIME PASS assertions=4",
+        "NATIVE_API H01 PASS assertions=14 manual=14"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "a275bd778de60aed21eb28293ea5f841befd51cb98619b2e8b2fcb742d0280d2",
+      "passLines": 67,
+      "g05BaselinePassLines": 66,
+      "g05PassLinesMissing": [],
+      "failLines": [],
+      "h01": [
+        "BROWSER_API H01 PASS assertions=14 manual=14 capability=available engine=chromium"
+      ]
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "wrapperRegeneration": {
+    "objectsFs": "f4a8a0542d5fdff694c11f74c6e19388903a36220dcebeae77203693b6808e02",
+    "reportTxt": "0721d25ea77ee39acb5163ff41e47de206d6a515dd03040b8d3bb8ac57739a2d",
+    "committed": "Views 3693559 (root cherry-picked to G05 as c828dd1)",
+    "g05CheckScript": "tools/check-webcore-generated.py on c828dd1 with the G05 preview.29 restore: PASS Objects.fs 2434724a, report.txt d9189cfe"
+  },
+  "fcs": {
+    "Ranvier.Dom": {
+      "verdict": "clean",
+      "errors": 0,
+      "warnings": 0,
+      "diagnostics": []
+    },
+    "Fable.Ranvier.Dom": {
+      "verdict": "clean",
+      "errors": 0,
+      "warnings": 0,
+      "diagnostics": []
+    },
+    "Ranvier.View.WebCore": {
+      "verdict": "clean",
+      "errors": 0,
+      "warnings": 1,
+      "diagnostics": []
+    },
+    "Ranvier.View.Dom": {
+      "verdict": "errors",
+      "errors": 2,
+      "warnings": 0,
+      "diagnostics": [
+        "Debug.fs:985 FS0039 The value, constructor, namespace or type 'snapshot' is not defined.",
+        "Debug.fs:985 FS0072 The type of this expression could not be inferred before accessing its members. Add a type annotation, e.g. (expr: SomeType), to constrain the type before this point."
+      ]
+    }
+  },
+  "contract": {
+    "deadline": "Ranvier.Dom.IdleDeadline (TimeRemaining 0..50 ms, DidTimeout)",
+    "scheduler": "Ranvier.Dom.IdleScheduler (Idle: timeout option * callback), separate from FrameScheduler",
+    "manual": "ManualFrameScheduler.RunIdle",
+    "browserProvider": "Ranvier.Dom.BrowserIdle.forDocument (None without requestIdleCallback) and BrowserIdle.capabilities",
+    "nativeProvider": "Ranvier.View.WebCore.Frames.idleForHost over WebCoreHost.RequestIdleCallback / CancelIdleCallback",
+    "viewOwner": "Ranvier.View.Dom.Frames.idle",
+    "capability": "PlatformFacility idle.callbacks (IdleCapabilities.provider)"
+  },
+  "fixture": "tests/NativeApi.Conformance/IdleChecks.fs (14 shared assertions on the manual scheduler and the host scheduler) + 4 native host-loop lifetime checks in Native.fs runIdle",
+  "qualifications": [
+    "Native deadline: min(start + 50 ms, next host timer) on the host timing clock; Chromium reports at most 49.9 ms. Native idle periods start only in WebCoreHost.Cycle with no frame requested, so an app that requests a frame every Cycle reaches idle callbacks only through timeouts.",
+    "Native timeouts run at the first Cycle after the timeout elapses (host timer granularity); Chromium runs them as tasks.",
+    "The browser fixture starves idle periods with a busy setInterval to force timeouts; background-tab throttling is outside headless scope.",
+    "FCS on Ranvier.View.Dom reports the pre-existing Debug.fs:985 Trace.snapshot errors (ionide evaluates the traced Debug configuration); Debug.fs is unchanged by H01.",
+    "The regenerated Generated/Objects.fs differs only in its header comment; the executed binaries were built before that commit.",
+    "Win-x64 only; Linux and macOS not run locally."
+  ]
+}
