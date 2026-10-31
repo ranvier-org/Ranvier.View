@@ -4,7 +4,7 @@
  "status": "private-integrated-win-x64-verification on surfaces21 parents",
  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/112",
  "coreSourceCommit": "ce3c169ea640fd7168427116ee35c6190b1f1d3c",
- "viewsSourceCommit": "24d29497fcef5c4ffa741c19ec8a2f2c04244e69",
+ "viewsSourceCommit": "f5f10eefc9c9a1ae3aeb81f389f8234c04b7b1d5",
  "nativeProducer": {
   "pr": "https://github.com/ranvier-org/Ranvier.WebCore/pull/130",
   "frozenProofCommit": "5f2e9c5c86e92e3f82c4e4bb744a448ab6af6c5a",
@@ -18,18 +18,10 @@
   },
   "views": {
    "parent": "ranvier-org/Ranvier.View#26 codex/native-api-svg-surfaces",
-   "parentHead": "517b555a174c5abdf11b9cb24dae40214e61de96"
+   "parentHead": "3b5f8940e537aadbedeed6132d9420f24da1e954"
   }
  },
- "deviations": [
-  {
-   "what": "Chromium full conformance ran with tests/NativeApi.Conformance/Assets/Ahem.ttf copied by hand into the gitignored generated/ directory",
-   "why": "Parent Views 517b555 serves /Ahem.ttf from generated/ but no build step stages it; the parent defect is routed to the SVG surfaces lane",
-   "red": "artifacts/h07/managed22/chromium-full-no-ahem-red.log",
-   "redSha256": "4c5c2bc9477bc34e892799b6360b75b724bec521c960185018f1f67bbb500ad0",
-   "resolution": "Drop after forward-merging the surfaces fix and rerunning Chromium capabilities from a clean generated/ directory"
-  }
- ],
+ "chromiumParentFix": "Views 3b5f8940 serves Ahem.ttf from Assets; Chromium reran from a clean generated directory. Native runs predate that merge; its delta touches only browser.mjs, README and parent evidence.",
  "versions": {
   "coreDom": "0.1.0-alpha.22",
   "native": "0.1.0-preview.20",
@@ -270,7 +262,6 @@
   "Only win-x64 is exercised; official packages, other RIDs and traced builds remain acceptance gates."
  ],
  "remaining": [
-  "Forward-merge the surfaces Ahem staging fix and rerun Chromium capabilities",
   "Hosted Core/Views CI",
   "Official Native20/Core22/Views12 packages and normal/traced consumer acceptance"
  ]
