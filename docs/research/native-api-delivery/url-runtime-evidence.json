@@ -113,7 +113,6 @@
   },
   "qualifications": [
     "Four URL parse cases and two setters follow the WHATWG URL standard on WebKit and differ on Chromium 156 (space in a host, \"|\" in a path, file:c: drive case, file://localhost, the mailto protocol setter, search = \"?\").",
-    "URLPattern groups come in engine (pattern) order on WebKit, and in JavaScript object order (integer-like keys first) on Chromium, for /:name/(\\d+).",
-    "Fable erases Some null to None, so a null base parses without a base in the browser and raises ArgumentNullException natively."
+    "URLPattern groups come in engine (pattern) order on WebKit, and in JavaScript object order (integer-like keys first) on Chromium, for /:name/(\\d+)."
   ]
 }

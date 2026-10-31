@@ -180,7 +180,7 @@ const runUrls = async () => {
     await urlsBrowser.close();
   }
 };
-const URL_ASSERTIONS = 189;
+const URL_ASSERTIONS = 190;
 // I11 runs the ARIA element reflection fixture in its own page.
 const runAria = async () => {
   const ariaBrowser = await chromium.launch({ headless: true });
