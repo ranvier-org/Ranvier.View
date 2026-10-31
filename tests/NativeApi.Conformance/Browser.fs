@@ -173,6 +173,34 @@ let runSvgSurfaces () =
     }
     |> Async.StartAsPromise
 
+[<Emit("globalThis.__nativeApiPixelAt($0, $1)")>]
+let private pixelAt (x: float) (y: float) : JS.Promise<int array> = jsNative
+
+let private pixel (x: float, y: float) =
+    async {
+        let! value = pixelAt x y |> Async.AwaitPromise
+        return value[0], value[1], value[2]
+    }
+
+/// <summary>Runs shared SVG paint servers, filters, clipping and resources in Chromium.</summary>
+let runSvgPaint () =
+    async {
+        let target = document ()
+        let! paint = SvgPaintServers.run target pixel errorName
+        let! filters = SvgFilters.run target pixel errorName
+        let! clipping = SvgClipping.run target pixel errorName
+        let! resources = SvgResources.run target pixel wait errorName true
+
+        return
+            {|
+                svgPaint = paint
+                svgFilters = filters
+                svgClipping = clipping
+                svgResources = resources
+            |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("$0.constructor.name + ':' + $0.message")>]
 let private disposalError (error: exn) : string = jsNative
 
@@ -687,6 +715,62 @@ let private cancellationInterop (document: Document) =
 
         return checks
     }
+
+[<Emit("fetch($0).then(r => r.arrayBuffer()).then(b => new Uint8Array(b))")>]
+let private fixtureBytes (url: string) : JS.Promise<byte array> = jsNative
+
+[<Emit("Uint8Array.from(atob($0), c => c.charCodeAt(0))")>]
+let private base64 (text: string) : byte array = jsNative
+
+[<Literal>]
+let private ResourcePng =
+    "iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAYAAACddGYaAAAAEUlEQVR4nGP4z8DwH4YZkDkAm34L9XKwuTwAAAAASUVORK5CYII="
+
+/// <summary>Runs the shared resource-service assertions over Image.decode, FontFace and document.fonts.</summary>
+/// <remarks>Chromium resolves decode for a PNG with corrupt image data, and a revoked object URL reaches no provider.</remarks>
+let runResources () =
+    async {
+        let document = document ()
+
+        let! font =
+            fixtureBytes "/fixtures/Ahem.ttf"
+            |> Async.AwaitPromise
+
+        let fixture: Resources.Fixture =
+            {
+                Png = base64 ResourcePng
+                CorruptPng =
+                    base64
+                        "iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAYAAACddGYaAAAAKUlEQVR4nAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJ4rAmh4AAAAASUVORK5CYII="
+                Font = font
+            }
+
+        let image (url: string) =
+            let element = document.createElement "img"
+
+            let source =
+                if url.EndsWith "/element.png" then
+                    "data:image/png;base64,"
+                    + ResourcePng
+                    + "#/element.png"
+                else
+                    url
+
+            element.setAttribute ("src", source)
+            element
+
+        let engine: Resources.Engine =
+            {
+                CorruptImageDecodes = true
+                TransportReleaseReachesProvider = false
+            }
+
+        let! count =
+            Resources.run engine fixture (fun provider -> BrowserResources.forDocument document provider) image
+
+        return {| resources = count |}
+    }
+    |> Async.StartAsPromise
 
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =

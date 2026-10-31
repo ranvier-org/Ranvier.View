@@ -1,4 +1,4 @@
-188 classes; 2271 members: 2255 mapped to 2185 of 2455 rv_dom_* functions, 16 hand-written, 0 unmapped
+221 classes; 2492 members: 2476 mapped to 2406 of 2455 rv_dom_* functions, 16 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
@@ -49,227 +49,6 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_shadow_root_get_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (get)
   rv_dom_shadow_root_set_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (set)
   rv_dom_style_property_map_read_only_entries: StylePropertyMapReadOnly.entries (op)
-  rv_dom_svg_clip_path_element_get_clip_path_units: SVGClipPathElement.clipPathUnits (get)
-  rv_dom_svg_clip_path_element_get_transform: SVGClipPathElement.transform (get)
-  rv_dom_svg_component_transfer_function_element_get_amplitude: SVGComponentTransferFunctionElement.amplitude (get)
-  rv_dom_svg_component_transfer_function_element_get_exponent: SVGComponentTransferFunctionElement.exponent (get)
-  rv_dom_svg_component_transfer_function_element_get_intercept: SVGComponentTransferFunctionElement.intercept (get)
-  rv_dom_svg_component_transfer_function_element_get_offset: SVGComponentTransferFunctionElement.offset (get)
-  rv_dom_svg_component_transfer_function_element_get_slope: SVGComponentTransferFunctionElement.slope (get)
-  rv_dom_svg_component_transfer_function_element_get_table_values: SVGComponentTransferFunctionElement.tableValues (get)
-  rv_dom_svg_component_transfer_function_element_get_type: SVGComponentTransferFunctionElement.type (get)
-  rv_dom_svg_filter_element_get_filter_units: SVGFilterElement.filterUnits (get)
-  rv_dom_svg_filter_element_get_height: SVGFilterElement.height (get)
-  rv_dom_svg_filter_element_get_href: SVGFilterElement.href (get)
-  rv_dom_svg_filter_element_get_primitive_units: SVGFilterElement.primitiveUnits (get)
-  rv_dom_svg_filter_element_get_width: SVGFilterElement.width (get)
-  rv_dom_svg_filter_element_get_x: SVGFilterElement.x (get)
-  rv_dom_svg_filter_element_get_y: SVGFilterElement.y (get)
-  rv_dom_svg_foreign_object_element_get_height: SVGForeignObjectElement.height (get)
-  rv_dom_svg_foreign_object_element_get_width: SVGForeignObjectElement.width (get)
-  rv_dom_svg_foreign_object_element_get_x: SVGForeignObjectElement.x (get)
-  rv_dom_svg_foreign_object_element_get_y: SVGForeignObjectElement.y (get)
-  rv_dom_svg_gradient_element_get_gradient_transform: SVGGradientElement.gradientTransform (get)
-  rv_dom_svg_gradient_element_get_gradient_units: SVGGradientElement.gradientUnits (get)
-  rv_dom_svg_gradient_element_get_href: SVGGradientElement.href (get)
-  rv_dom_svg_gradient_element_get_spread_method: SVGGradientElement.spreadMethod (get)
-  rv_dom_svg_image_element_get_cross_origin: SVGImageElement.crossOrigin (get)
-  rv_dom_svg_image_element_get_height: SVGImageElement.height (get)
-  rv_dom_svg_image_element_get_href: SVGImageElement.href (get)
-  rv_dom_svg_image_element_get_preserve_aspect_ratio: SVGImageElement.preserveAspectRatio (get)
-  rv_dom_svg_image_element_get_width: SVGImageElement.width (get)
-  rv_dom_svg_image_element_get_x: SVGImageElement.x (get)
-  rv_dom_svg_image_element_get_y: SVGImageElement.y (get)
-  rv_dom_svg_image_element_set_cross_origin: SVGImageElement.crossOrigin (set)
-  rv_dom_svg_linear_gradient_element_get_x1: SVGLinearGradientElement.x1 (get)
-  rv_dom_svg_linear_gradient_element_get_x2: SVGLinearGradientElement.x2 (get)
-  rv_dom_svg_linear_gradient_element_get_y1: SVGLinearGradientElement.y1 (get)
-  rv_dom_svg_linear_gradient_element_get_y2: SVGLinearGradientElement.y2 (get)
-  rv_dom_svg_mask_element_get_height: SVGMaskElement.height (get)
-  rv_dom_svg_mask_element_get_mask_content_units: SVGMaskElement.maskContentUnits (get)
-  rv_dom_svg_mask_element_get_mask_units: SVGMaskElement.maskUnits (get)
-  rv_dom_svg_mask_element_get_required_extensions: SVGMaskElement.requiredExtensions (get)
-  rv_dom_svg_mask_element_get_system_language: SVGMaskElement.systemLanguage (get)
-  rv_dom_svg_mask_element_get_width: SVGMaskElement.width (get)
-  rv_dom_svg_mask_element_get_x: SVGMaskElement.x (get)
-  rv_dom_svg_mask_element_get_y: SVGMaskElement.y (get)
-  rv_dom_svg_radial_gradient_element_get_cx: SVGRadialGradientElement.cx (get)
-  rv_dom_svg_radial_gradient_element_get_cy: SVGRadialGradientElement.cy (get)
-  rv_dom_svg_radial_gradient_element_get_fr: SVGRadialGradientElement.fr (get)
-  rv_dom_svg_radial_gradient_element_get_fx: SVGRadialGradientElement.fx (get)
-  rv_dom_svg_radial_gradient_element_get_fy: SVGRadialGradientElement.fy (get)
-  rv_dom_svg_radial_gradient_element_get_r: SVGRadialGradientElement.r (get)
-  rv_dom_svg_script_element_get_async: SVGScriptElement.async (get)
-  rv_dom_svg_script_element_get_href: SVGScriptElement.href (get)
-  rv_dom_svg_script_element_get_type: SVGScriptElement.type (get)
-  rv_dom_svg_script_element_set_async: SVGScriptElement.async (set)
-  rv_dom_svg_script_element_set_type: SVGScriptElement.type (set)
-  rv_dom_svg_stop_element_get_offset: SVGStopElement.offset (get)
-  rv_dom_svg_use_element_get_height: SVGUseElement.height (get)
-  rv_dom_svg_use_element_get_href: SVGUseElement.href (get)
-  rv_dom_svg_use_element_get_width: SVGUseElement.width (get)
-  rv_dom_svg_use_element_get_x: SVGUseElement.x (get)
-  rv_dom_svg_use_element_get_y: SVGUseElement.y (get)
-  rv_dom_svga_element_get_href: SVGAElement.href (get)
-  rv_dom_svga_element_get_hreflang: SVGAElement.hreflang (get)
-  rv_dom_svga_element_get_rel: SVGAElement.rel (get)
-  rv_dom_svga_element_get_rel_list: SVGAElement.relList (get)
-  rv_dom_svga_element_get_target: SVGAElement.target (get)
-  rv_dom_svga_element_get_type: SVGAElement.type (get)
-  rv_dom_svga_element_set_hreflang: SVGAElement.hreflang (set)
-  rv_dom_svga_element_set_rel: SVGAElement.rel (set)
-  rv_dom_svga_element_set_type: SVGAElement.type (set)
-  rv_dom_svgfe_blend_element_get_height: SVGFEBlendElement.height (get)
-  rv_dom_svgfe_blend_element_get_in1: SVGFEBlendElement.in1 (get)
-  rv_dom_svgfe_blend_element_get_in2: SVGFEBlendElement.in2 (get)
-  rv_dom_svgfe_blend_element_get_mode: SVGFEBlendElement.mode (get)
-  rv_dom_svgfe_blend_element_get_result: SVGFEBlendElement.result (get)
-  rv_dom_svgfe_blend_element_get_width: SVGFEBlendElement.width (get)
-  rv_dom_svgfe_blend_element_get_x: SVGFEBlendElement.x (get)
-  rv_dom_svgfe_blend_element_get_y: SVGFEBlendElement.y (get)
-  rv_dom_svgfe_color_matrix_element_get_height: SVGFEColorMatrixElement.height (get)
-  rv_dom_svgfe_color_matrix_element_get_in1: SVGFEColorMatrixElement.in1 (get)
-  rv_dom_svgfe_color_matrix_element_get_result: SVGFEColorMatrixElement.result (get)
-  rv_dom_svgfe_color_matrix_element_get_type: SVGFEColorMatrixElement.type (get)
-  rv_dom_svgfe_color_matrix_element_get_values: SVGFEColorMatrixElement.values (get)
-  rv_dom_svgfe_color_matrix_element_get_width: SVGFEColorMatrixElement.width (get)
-  rv_dom_svgfe_color_matrix_element_get_x: SVGFEColorMatrixElement.x (get)
-  rv_dom_svgfe_color_matrix_element_get_y: SVGFEColorMatrixElement.y (get)
-  rv_dom_svgfe_component_transfer_element_get_height: SVGFEComponentTransferElement.height (get)
-  rv_dom_svgfe_component_transfer_element_get_in1: SVGFEComponentTransferElement.in1 (get)
-  rv_dom_svgfe_component_transfer_element_get_result: SVGFEComponentTransferElement.result (get)
-  rv_dom_svgfe_component_transfer_element_get_width: SVGFEComponentTransferElement.width (get)
-  rv_dom_svgfe_component_transfer_element_get_x: SVGFEComponentTransferElement.x (get)
-  rv_dom_svgfe_component_transfer_element_get_y: SVGFEComponentTransferElement.y (get)
-  rv_dom_svgfe_composite_element_get_height: SVGFECompositeElement.height (get)
-  rv_dom_svgfe_composite_element_get_in1: SVGFECompositeElement.in1 (get)
-  rv_dom_svgfe_composite_element_get_in2: SVGFECompositeElement.in2 (get)
-  rv_dom_svgfe_composite_element_get_k1: SVGFECompositeElement.k1 (get)
-  rv_dom_svgfe_composite_element_get_k2: SVGFECompositeElement.k2 (get)
-  rv_dom_svgfe_composite_element_get_k3: SVGFECompositeElement.k3 (get)
-  rv_dom_svgfe_composite_element_get_k4: SVGFECompositeElement.k4 (get)
-  rv_dom_svgfe_composite_element_get_operator: SVGFECompositeElement.operator (get)
-  rv_dom_svgfe_composite_element_get_result: SVGFECompositeElement.result (get)
-  rv_dom_svgfe_composite_element_get_width: SVGFECompositeElement.width (get)
-  rv_dom_svgfe_composite_element_get_x: SVGFECompositeElement.x (get)
-  rv_dom_svgfe_composite_element_get_y: SVGFECompositeElement.y (get)
-  rv_dom_svgfe_diffuse_lighting_element_get_diffuse_constant: SVGFEDiffuseLightingElement.diffuseConstant (get)
-  rv_dom_svgfe_diffuse_lighting_element_get_height: SVGFEDiffuseLightingElement.height (get)
-  rv_dom_svgfe_diffuse_lighting_element_get_in1: SVGFEDiffuseLightingElement.in1 (get)
-  rv_dom_svgfe_diffuse_lighting_element_get_kernel_unit_length_x: SVGFEDiffuseLightingElement.kernelUnitLengthX (get)
-  rv_dom_svgfe_diffuse_lighting_element_get_kernel_unit_length_y: SVGFEDiffuseLightingElement.kernelUnitLengthY (get)
-  rv_dom_svgfe_diffuse_lighting_element_get_result: SVGFEDiffuseLightingElement.result (get)
-  rv_dom_svgfe_diffuse_lighting_element_get_surface_scale: SVGFEDiffuseLightingElement.surfaceScale (get)
-  rv_dom_svgfe_diffuse_lighting_element_get_width: SVGFEDiffuseLightingElement.width (get)
-  rv_dom_svgfe_diffuse_lighting_element_get_x: SVGFEDiffuseLightingElement.x (get)
-  rv_dom_svgfe_diffuse_lighting_element_get_y: SVGFEDiffuseLightingElement.y (get)
-  rv_dom_svgfe_displacement_map_element_get_height: SVGFEDisplacementMapElement.height (get)
-  rv_dom_svgfe_displacement_map_element_get_in1: SVGFEDisplacementMapElement.in1 (get)
-  rv_dom_svgfe_displacement_map_element_get_in2: SVGFEDisplacementMapElement.in2 (get)
-  rv_dom_svgfe_displacement_map_element_get_result: SVGFEDisplacementMapElement.result (get)
-  rv_dom_svgfe_displacement_map_element_get_scale: SVGFEDisplacementMapElement.scale (get)
-  rv_dom_svgfe_displacement_map_element_get_width: SVGFEDisplacementMapElement.width (get)
-  rv_dom_svgfe_displacement_map_element_get_x: SVGFEDisplacementMapElement.x (get)
-  rv_dom_svgfe_displacement_map_element_get_x_channel_selector: SVGFEDisplacementMapElement.xChannelSelector (get)
-  rv_dom_svgfe_displacement_map_element_get_y: SVGFEDisplacementMapElement.y (get)
-  rv_dom_svgfe_displacement_map_element_get_y_channel_selector: SVGFEDisplacementMapElement.yChannelSelector (get)
-  rv_dom_svgfe_distant_light_element_get_azimuth: SVGFEDistantLightElement.azimuth (get)
-  rv_dom_svgfe_distant_light_element_get_elevation: SVGFEDistantLightElement.elevation (get)
-  rv_dom_svgfe_drop_shadow_element_get_dx: SVGFEDropShadowElement.dx (get)
-  rv_dom_svgfe_drop_shadow_element_get_dy: SVGFEDropShadowElement.dy (get)
-  rv_dom_svgfe_drop_shadow_element_get_height: SVGFEDropShadowElement.height (get)
-  rv_dom_svgfe_drop_shadow_element_get_in1: SVGFEDropShadowElement.in1 (get)
-  rv_dom_svgfe_drop_shadow_element_get_result: SVGFEDropShadowElement.result (get)
-  rv_dom_svgfe_drop_shadow_element_get_std_deviation_x: SVGFEDropShadowElement.stdDeviationX (get)
-  rv_dom_svgfe_drop_shadow_element_get_std_deviation_y: SVGFEDropShadowElement.stdDeviationY (get)
-  rv_dom_svgfe_drop_shadow_element_get_width: SVGFEDropShadowElement.width (get)
-  rv_dom_svgfe_drop_shadow_element_get_x: SVGFEDropShadowElement.x (get)
-  rv_dom_svgfe_drop_shadow_element_get_y: SVGFEDropShadowElement.y (get)
-  rv_dom_svgfe_drop_shadow_element_set_std_deviation: SVGFEDropShadowElement.setStdDeviation (op)
-  rv_dom_svgfe_flood_element_get_height: SVGFEFloodElement.height (get)
-  rv_dom_svgfe_flood_element_get_result: SVGFEFloodElement.result (get)
-  rv_dom_svgfe_flood_element_get_width: SVGFEFloodElement.width (get)
-  rv_dom_svgfe_flood_element_get_x: SVGFEFloodElement.x (get)
-  rv_dom_svgfe_flood_element_get_y: SVGFEFloodElement.y (get)
-  rv_dom_svgfe_gaussian_blur_element_get_edge_mode: SVGFEGaussianBlurElement.edgeMode (get)
-  rv_dom_svgfe_gaussian_blur_element_get_height: SVGFEGaussianBlurElement.height (get)
-  rv_dom_svgfe_gaussian_blur_element_get_in1: SVGFEGaussianBlurElement.in1 (get)
-  rv_dom_svgfe_gaussian_blur_element_get_result: SVGFEGaussianBlurElement.result (get)
-  rv_dom_svgfe_gaussian_blur_element_get_std_deviation_x: SVGFEGaussianBlurElement.stdDeviationX (get)
-  rv_dom_svgfe_gaussian_blur_element_get_std_deviation_y: SVGFEGaussianBlurElement.stdDeviationY (get)
-  rv_dom_svgfe_gaussian_blur_element_get_width: SVGFEGaussianBlurElement.width (get)
-  rv_dom_svgfe_gaussian_blur_element_get_x: SVGFEGaussianBlurElement.x (get)
-  rv_dom_svgfe_gaussian_blur_element_get_y: SVGFEGaussianBlurElement.y (get)
-  rv_dom_svgfe_gaussian_blur_element_set_std_deviation: SVGFEGaussianBlurElement.setStdDeviation (op)
-  rv_dom_svgfe_image_element_get_height: SVGFEImageElement.height (get)
-  rv_dom_svgfe_image_element_get_href: SVGFEImageElement.href (get)
-  rv_dom_svgfe_image_element_get_preserve_aspect_ratio: SVGFEImageElement.preserveAspectRatio (get)
-  rv_dom_svgfe_image_element_get_result: SVGFEImageElement.result (get)
-  rv_dom_svgfe_image_element_get_width: SVGFEImageElement.width (get)
-  rv_dom_svgfe_image_element_get_x: SVGFEImageElement.x (get)
-  rv_dom_svgfe_image_element_get_y: SVGFEImageElement.y (get)
-  rv_dom_svgfe_merge_element_get_height: SVGFEMergeElement.height (get)
-  rv_dom_svgfe_merge_element_get_result: SVGFEMergeElement.result (get)
-  rv_dom_svgfe_merge_element_get_width: SVGFEMergeElement.width (get)
-  rv_dom_svgfe_merge_element_get_x: SVGFEMergeElement.x (get)
-  rv_dom_svgfe_merge_element_get_y: SVGFEMergeElement.y (get)
-  rv_dom_svgfe_merge_node_element_get_in1: SVGFEMergeNodeElement.in1 (get)
-  rv_dom_svgfe_morphology_element_get_height: SVGFEMorphologyElement.height (get)
-  rv_dom_svgfe_morphology_element_get_in1: SVGFEMorphologyElement.in1 (get)
-  rv_dom_svgfe_morphology_element_get_operator: SVGFEMorphologyElement.operator (get)
-  rv_dom_svgfe_morphology_element_get_radius_x: SVGFEMorphologyElement.radiusX (get)
-  rv_dom_svgfe_morphology_element_get_radius_y: SVGFEMorphologyElement.radiusY (get)
-  rv_dom_svgfe_morphology_element_get_result: SVGFEMorphologyElement.result (get)
-  rv_dom_svgfe_morphology_element_get_width: SVGFEMorphologyElement.width (get)
-  rv_dom_svgfe_morphology_element_get_x: SVGFEMorphologyElement.x (get)
-  rv_dom_svgfe_morphology_element_get_y: SVGFEMorphologyElement.y (get)
-  rv_dom_svgfe_offset_element_get_dx: SVGFEOffsetElement.dx (get)
-  rv_dom_svgfe_offset_element_get_dy: SVGFEOffsetElement.dy (get)
-  rv_dom_svgfe_offset_element_get_height: SVGFEOffsetElement.height (get)
-  rv_dom_svgfe_offset_element_get_in1: SVGFEOffsetElement.in1 (get)
-  rv_dom_svgfe_offset_element_get_result: SVGFEOffsetElement.result (get)
-  rv_dom_svgfe_offset_element_get_width: SVGFEOffsetElement.width (get)
-  rv_dom_svgfe_offset_element_get_x: SVGFEOffsetElement.x (get)
-  rv_dom_svgfe_offset_element_get_y: SVGFEOffsetElement.y (get)
-  rv_dom_svgfe_point_light_element_get_x: SVGFEPointLightElement.x (get)
-  rv_dom_svgfe_point_light_element_get_y: SVGFEPointLightElement.y (get)
-  rv_dom_svgfe_point_light_element_get_z: SVGFEPointLightElement.z (get)
-  rv_dom_svgfe_specular_lighting_element_get_height: SVGFESpecularLightingElement.height (get)
-  rv_dom_svgfe_specular_lighting_element_get_in1: SVGFESpecularLightingElement.in1 (get)
-  rv_dom_svgfe_specular_lighting_element_get_kernel_unit_length_x: SVGFESpecularLightingElement.kernelUnitLengthX (get)
-  rv_dom_svgfe_specular_lighting_element_get_kernel_unit_length_y: SVGFESpecularLightingElement.kernelUnitLengthY (get)
-  rv_dom_svgfe_specular_lighting_element_get_result: SVGFESpecularLightingElement.result (get)
-  rv_dom_svgfe_specular_lighting_element_get_specular_constant: SVGFESpecularLightingElement.specularConstant (get)
-  rv_dom_svgfe_specular_lighting_element_get_specular_exponent: SVGFESpecularLightingElement.specularExponent (get)
-  rv_dom_svgfe_specular_lighting_element_get_surface_scale: SVGFESpecularLightingElement.surfaceScale (get)
-  rv_dom_svgfe_specular_lighting_element_get_width: SVGFESpecularLightingElement.width (get)
-  rv_dom_svgfe_specular_lighting_element_get_x: SVGFESpecularLightingElement.x (get)
-  rv_dom_svgfe_specular_lighting_element_get_y: SVGFESpecularLightingElement.y (get)
-  rv_dom_svgfe_spot_light_element_get_limiting_cone_angle: SVGFESpotLightElement.limitingConeAngle (get)
-  rv_dom_svgfe_spot_light_element_get_points_at_x: SVGFESpotLightElement.pointsAtX (get)
-  rv_dom_svgfe_spot_light_element_get_points_at_y: SVGFESpotLightElement.pointsAtY (get)
-  rv_dom_svgfe_spot_light_element_get_points_at_z: SVGFESpotLightElement.pointsAtZ (get)
-  rv_dom_svgfe_spot_light_element_get_specular_exponent: SVGFESpotLightElement.specularExponent (get)
-  rv_dom_svgfe_spot_light_element_get_x: SVGFESpotLightElement.x (get)
-  rv_dom_svgfe_spot_light_element_get_y: SVGFESpotLightElement.y (get)
-  rv_dom_svgfe_spot_light_element_get_z: SVGFESpotLightElement.z (get)
-  rv_dom_svgfe_tile_element_get_height: SVGFETileElement.height (get)
-  rv_dom_svgfe_tile_element_get_in1: SVGFETileElement.in1 (get)
-  rv_dom_svgfe_tile_element_get_result: SVGFETileElement.result (get)
-  rv_dom_svgfe_tile_element_get_width: SVGFETileElement.width (get)
-  rv_dom_svgfe_tile_element_get_x: SVGFETileElement.x (get)
-  rv_dom_svgfe_tile_element_get_y: SVGFETileElement.y (get)
-  rv_dom_svgfe_turbulence_element_get_base_frequency_x: SVGFETurbulenceElement.baseFrequencyX (get)
-  rv_dom_svgfe_turbulence_element_get_base_frequency_y: SVGFETurbulenceElement.baseFrequencyY (get)
-  rv_dom_svgfe_turbulence_element_get_height: SVGFETurbulenceElement.height (get)
-  rv_dom_svgfe_turbulence_element_get_num_octaves: SVGFETurbulenceElement.numOctaves (get)
-  rv_dom_svgfe_turbulence_element_get_result: SVGFETurbulenceElement.result (get)
-  rv_dom_svgfe_turbulence_element_get_seed: SVGFETurbulenceElement.seed (get)
-  rv_dom_svgfe_turbulence_element_get_stitch_tiles: SVGFETurbulenceElement.stitchTiles (get)
-  rv_dom_svgfe_turbulence_element_get_type: SVGFETurbulenceElement.type (get)
-  rv_dom_svgfe_turbulence_element_get_width: SVGFETurbulenceElement.width (get)
-  rv_dom_svgfe_turbulence_element_get_x: SVGFETurbulenceElement.x (get)
-  rv_dom_svgfe_turbulence_element_get_y: SVGFETurbulenceElement.y (get)
   rv_dom_window_get_computed_style: DOMWindow.getComputedStyle (op)
 
 Unmapped members by reason:
@@ -407,6 +186,7 @@ Members by class (mapped / hand-written / unmapped):
   PointerEventObject: 14 / 0 / 0
   RadioNodeListObject: 2 / 0 / 0
   RangeObject: 26 / 0 / 0
+  SVGAElementObject: 9 / 0 / 0
   SVGAngleObject: 9 / 0 / 0
   SVGAnimatedAngleObject: 2 / 0 / 0
   SVGAnimatedBooleanObject: 3 / 0 / 0
@@ -422,16 +202,44 @@ Members by class (mapped / hand-written / unmapped):
   SVGAnimatedTransformListObject: 2 / 0 / 0
   SVGAnimationElementObject: 10 / 0 / 0
   SVGCircleElementObject: 3 / 0 / 0
+  SVGClipPathElementObject: 2 / 0 / 0
+  SVGComponentTransferFunctionElementObject: 7 / 0 / 0
   SVGElementObject: 14 / 0 / 0
   SVGEllipseElementObject: 4 / 0 / 0
+  SVGFEBlendElementObject: 8 / 0 / 0
+  SVGFEColorMatrixElementObject: 8 / 0 / 0
+  SVGFEComponentTransferElementObject: 6 / 0 / 0
+  SVGFECompositeElementObject: 12 / 0 / 0
   SVGFEConvolveMatrixElementObject: 17 / 0 / 0
+  SVGFEDiffuseLightingElementObject: 10 / 0 / 0
+  SVGFEDisplacementMapElementObject: 10 / 0 / 0
+  SVGFEDistantLightElementObject: 2 / 0 / 0
+  SVGFEDropShadowElementObject: 11 / 0 / 0
+  SVGFEFloodElementObject: 5 / 0 / 0
+  SVGFEGaussianBlurElementObject: 10 / 0 / 0
+  SVGFEImageElementObject: 7 / 0 / 0
+  SVGFEMergeElementObject: 5 / 0 / 0
+  SVGFEMergeNodeElementObject: 1 / 0 / 0
+  SVGFEMorphologyElementObject: 9 / 0 / 0
+  SVGFEOffsetElementObject: 8 / 0 / 0
+  SVGFEPointLightElementObject: 3 / 0 / 0
+  SVGFESpecularLightingElementObject: 11 / 0 / 0
+  SVGFESpotLightElementObject: 8 / 0 / 0
+  SVGFETileElementObject: 6 / 0 / 0
+  SVGFETurbulenceElementObject: 11 / 0 / 0
+  SVGFilterElementObject: 7 / 0 / 0
+  SVGForeignObjectElementObject: 4 / 0 / 0
   SVGGeometryElementObject: 5 / 0 / 0
+  SVGGradientElementObject: 4 / 0 / 0
   SVGGraphicsElementObject: 6 / 0 / 0
+  SVGImageElementObject: 8 / 0 / 0
   SVGLengthListObject: 10 / 0 / 0
   SVGLengthObject: 9 / 0 / 0
   SVGLineElementObject: 4 / 0 / 0
+  SVGLinearGradientElementObject: 4 / 0 / 0
   SVGMPathElementObject: 1 / 0 / 0
   SVGMarkerElementObject: 13 / 0 / 0
+  SVGMaskElementObject: 8 / 0 / 0
   SVGMatrixObject: 23 / 0 / 0
   SVGNumberListObject: 10 / 0 / 0
   SVGNumberObject: 2 / 0 / 0
@@ -441,9 +249,12 @@ Members by class (mapped / hand-written / unmapped):
   SVGPolygonElementObject: 2 / 0 / 0
   SVGPolylineElementObject: 2 / 0 / 0
   SVGPreserveAspectRatioObject: 4 / 0 / 0
+  SVGRadialGradientElementObject: 6 / 0 / 0
   SVGRectElementObject: 6 / 0 / 0
   SVGRectObject: 8 / 0 / 0
   SVGSVGElementObject: 36 / 0 / 0
+  SVGScriptElementObject: 5 / 0 / 0
+  SVGStopElementObject: 1 / 0 / 0
   SVGStringListObject: 10 / 0 / 0
   SVGStyleElementObject: 9 / 0 / 0
   SVGSymbolElementObject: 2 / 0 / 0
@@ -452,6 +263,7 @@ Members by class (mapped / hand-written / unmapped):
   SVGTextPositioningElementObject: 5 / 0 / 0
   SVGTransformListObject: 12 / 0 / 0
   SVGTransformObject: 9 / 0 / 0
+  SVGUseElementObject: 5 / 0 / 0
   SVGViewElementObject: 4 / 0 / 0
   SVGViewSpecObject: 8 / 0 / 0
   ShadowRootObject: 18 / 0 / 0
