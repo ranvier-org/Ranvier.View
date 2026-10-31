@@ -2,7 +2,42 @@ module internal NativeApiConformance.Native
 
 open Ranvier.View.WebCore
 
+let private runTransforms (host: WebCoreHost) =
+    let shared =
+        TransformValues.run
+            (fun () -> Ranvier.View.WebCore.TransformValues.forHost host)
+            (fun () -> Ranvier.View.WebCore.StyleValues.forHost host)
+            (fun () -> Geometry.forHost host)
+            (function
+             | WebCoreDomException (name, _) -> name
+             | error -> error.GetType().Name)
+
+    use transforms = Ranvier.View.WebCore.TransformValues.forHost host
+    use values = Ranvier.View.WebCore.StyleValues.forHost host
+    use maps = Ranvier.View.WebCore.StyleMaps.forHost host
+
+    let effects =
+        TransformValues.runEffects
+            host.Document
+            transforms
+            values
+            maps
+            (fun () -> host.Frame () |> ignore)
+            (fun value -> value :? Ranvier.Dom.CSSTransformValue)
+            (fun value -> value :? Ranvier.Dom.CSSTranslate)
+
+    if shared <> 450 || effects <> 21 then
+        failwith "Typed transform shared/effect assertions did not run"
+
+    shared + effects
+
 let private runAll () =
+    let transformLifecycle = TransformLifecycle.run ()
+
+    if transformLifecycle <> 47 then
+        failwith "Typed transform lifetime assertions did not run"
+
+    System.Console.WriteLine $"NATIVE_API C16 LIFETIME PASS assertions={transformLifecycle}"
     let matrixLifecycle = MatrixLifecycle.run ()
 
     if matrixLifecycle <> 23 then
@@ -59,6 +94,9 @@ let private runAll () =
     let session = host.Session
 
     try
+        let transforms = runTransforms host
+        System.Console.WriteLine $"NATIVE_API C16 PASS assertions={transforms}"
+
         let matrices =
             MatrixValues.run
                 (fun () -> Geometry.forHost host)
@@ -603,7 +641,28 @@ let private runAll () =
 
 [<EntryPoint>]
 let main args =
-    if Array.contains "--matrix-only" args then
+    if Array.contains "--transforms-only" args then
+        let lifecycle = TransformLifecycle.run ()
+        let host = WebCoreHost.Create (64, 64)
+        let session = host.Session
+
+        try
+            let count = runTransforms host
+
+            if count <> 471 || lifecycle <> 47 then
+                failwith "Typed transform focused shared/lifetime assertions did not run"
+
+            System.Console.WriteLine $"NATIVE_API C16 PASS assertions={count}"
+            System.Console.WriteLine $"NATIVE_API C16 LIFETIME PASS assertions={lifecycle}"
+        finally
+            (host :> System.IDisposable).Dispose()
+
+        if session.LiveObjects <> 0 then
+            failwith "Typed transform fixture leaked native wrappers"
+
+        System.Console.WriteLine "NATIVE_API C16 TEARDOWN PASS"
+        0
+    elif Array.contains "--matrix-only" args then
         let lifecycle = MatrixLifecycle.run ()
         use host = WebCoreHost.Create (64, 64)
 

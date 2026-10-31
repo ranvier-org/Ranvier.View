@@ -84,6 +84,9 @@ module internal Kind =
     [<Literal>]
     let Matrix = 24
 
+    [<Literal>]
+    let TransformComponent = 25
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -222,6 +225,7 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.Point -> NativeDom.rv_dom_dom_point_read_only_release handle
         | Kind.Quad -> NativeDom.rv_dom_dom_quad_release handle
         | Kind.Matrix -> NativeDom.rv_dom_dom_matrix_read_only_release handle
+        | Kind.TransformComponent -> NativeDom.rv_dom_css_transform_component_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =
@@ -564,6 +568,19 @@ module internal Interop =
             ->
             handle value
         | _ -> invalidArg (nameof value) "The typed value must belong to the same native host"
+
+    /// <summary>Validates a transform component or matrix argument against its receiver's native session.</summary>
+    let transformHandle (session: Session) (kind: int) (value: obj) =
+        if isNull value then
+            nullArg (nameof value)
+
+        match value with
+        | :? NativeObject as target when
+            obj.ReferenceEquals (session, target.Session)
+            && target.Kind = kind
+            ->
+            handle value
+        | _ -> invalidArg (nameof value) "The transform input must have the expected type in the same native host"
 
     /// <summary>Finds a retained acquisition document without substituting the host's current document.</summary>
     let contextDocument (target: NativeObject) =

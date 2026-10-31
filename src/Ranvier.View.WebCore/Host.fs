@@ -177,12 +177,12 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// </exception>
     static member Create(width: int, height: int) : WebCoreHost =
         if
-            Native.rv_abi_version () < 24
+            Native.rv_abi_version () < 25
             || Native.rv_abi_has "dom-generated" <> 1
         then
             raise (
                 InvalidOperationException
-                    $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks this backend's geometry and matrix transport (ABI 24)"
+                    $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks this backend's geometry and typed transform transport (ABI 25)"
             )
 
         let handle = Native.rv_host_create (width, height)
