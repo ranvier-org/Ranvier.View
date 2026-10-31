@@ -2498,6 +2498,126 @@ let private runIntersectionObservation () =
     System.Console.WriteLine ("NATIVE_API G11 LIFETIME PASS assertions=" + string lifetime)
     shared
 
+/// <summary>Runs the shared media query fixture (G01/G15) with native supply, thread and teardown checks.</summary>
+[<Literal>]
+let private MediaQueryChecksCount = 41
+
+let private runMediaQueries () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let settle () =
+        async {
+            for _ in 1..3 do
+                host.Frame ()
+                host.Cycle 20 |> ignore
+
+            host.Frame ()
+        }
+
+    let mutable held = None
+
+    let shared =
+        try
+            let supplier = Ranvier.View.WebCore.MediaQueries.forHost host
+
+            let driver: MediaQueryChecks.Driver =
+                {
+                    Apply =
+                        fun step ->
+                            async {
+                                host.Resize (step.Width, step.Height)
+                                host.SetDeviceScale (float32 step.Scale)
+                                supplier.Supply step.Preferences
+                                do! settle ()
+                            }
+                    Settle = settle
+                    Native = true
+                }
+
+            let count =
+                MediaQueryChecks.run (fun () -> Ranvier.View.WebCore.MediaQueries.forHost host) driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 60000L do
+                host.Cycle () |> ignore
+
+            let count = count.GetAwaiter().GetResult()
+
+            let service = Ranvier.View.WebCore.MediaQueries.forHost host
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.Supply Ranvier.Dom.MediaPreferences.Default
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Supply rejects another thread"
+            let dark = service.Match "(prefers-color-scheme: dark)"
+            let changes = ResizeArray<bool>()
+            use _ = dark.Subscribe changes.Add
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+
+            service.Supply
+                { Ranvier.Dom.MediaPreferences.Default with
+                    ColorScheme = Some Ranvier.Dom.ColorSchemePreference.Dark
+                }
+
+            settle () |> Async.StartImmediateAsTask |> ignore
+            expect (changes.Count = 0) "A query of a replaced document receives no change"
+            let fresh = service.Match "(prefers-color-scheme: dark)"
+            expect fresh.Matches "The replacing document sees the supplied preferences"
+            held <- Some (service, fresh)
+            supplier.Dispose ()
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Media query fixture leaves no live native objects"
+    let service, fresh = held.Value
+
+    let rejected =
+        try
+            service.Supply Ranvier.Dom.MediaPreferences.Default
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    expect rejected "A held media query service rejects Supply after host disposal"
+    service.Dispose ()
+    let closed =
+        try
+            fresh.Matches |> ignore
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect closed "Disposing the service after host disposal disposes its queries"
+
+    if shared <> MediaQueryChecksCount then
+        failwith $"Media query shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API G01 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G15 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G01/G15 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared crypto fixture with native thread and teardown checks.</summary>
 [<Literal>]
 let private CryptoChecksCount = 155
@@ -3127,6 +3247,7 @@ let private runAll () =
     runSegments () |> ignore
     runCrypto () |> ignore
     runScreen () |> ignore
+    runMediaQueries () |> ignore
     runEventDetails () |> ignore
     runHighlights () |> ignore
     runStrings () |> ignore
@@ -4151,6 +4272,9 @@ let main args =
         0
     elif Array.contains "--cascade-only" args then
         runCascade () |> ignore
+        0
+    elif Array.contains "--media-only" args then
+        runMediaQueries () |> ignore
         0
     elif Array.contains "--coordinates-only" args then
         runCoordinates () |> ignore

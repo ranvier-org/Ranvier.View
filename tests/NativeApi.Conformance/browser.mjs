@@ -280,6 +280,30 @@ const runScreen = async () => {
   }
 };
 const SCREEN_ASSERTIONS = 30;
+// G01/G15 applies each media step through CDP: device metrics, emulated media features and touch emulation for a
+// coarse pointer without hover.
+const runMediaQueries = async () => {
+  const mediaBrowser = await chromium.launch({ headless: true });
+  try {
+    const context = await mediaBrowser.newContext({ viewport: { width: 320, height: 240 } });
+    const page = await context.newPage();
+    const cdp = await context.newCDPSession(page);
+    await page.exposeFunction('__rvMediaStep', async (width, height, deviceScaleFactor, colorScheme, reducedMotion, contrast, touch) => {
+      await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor, mobile: false });
+      await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: colorScheme },
+        { name: 'prefers-reduced-motion', value: reducedMotion }, { name: 'prefers-contrast', value: contrast }] });
+      await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: touch, maxTouchPoints: 5 });
+    });
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runMediaQueries(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.media !== MEDIA_ASSERTIONS) throw new Error(`Media query assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API G01 PASS assertions=${result.media} engine=chromium`);
+    console.log(`BROWSER_API G15 PASS assertions=${result.media} engine=chromium`);
+  } finally {
+    await mediaBrowser.close();
+  }
+};
+const MEDIA_ASSERTIONS = 30;
 const CRYPTO_INSECURE_ASSERTIONS = 4;
 // T03 runs the custom highlight fixture in its own page.
 const runHighlights = async () => {
@@ -489,6 +513,7 @@ try {
   else if (process.argv.includes('--resize-only')) { await runResizeObservation(); process.exitCode = 0; }
   else if (process.argv.includes('--intersection-only')) { await runIntersectionObservation(); process.exitCode = 0; }
   else if (screenOnly) { await runScreen(); process.exitCode = 0; }
+  else if (process.argv.includes('--media-only')) { await runMediaQueries(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
   else if (eventDetailsOnly) { await runEventDetails(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
@@ -736,6 +761,7 @@ try {
   await runIntersectionObservation();
   await runBlobUrls();
   await runScreen();
+  await runMediaQueries();
   await runEventDetails();
   await runFrames();
   await runIdle();

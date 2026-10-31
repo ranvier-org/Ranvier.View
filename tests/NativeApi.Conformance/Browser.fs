@@ -1282,6 +1282,63 @@ let runScreen () =
     }
     |> Async.StartAsPromise
 
+[<Emit("window.__rvMediaStep($0, $1, $2, $3, $4, $5, $6)")>]
+let private mediaStep
+    (width: int)
+    (height: int)
+    (scale: float)
+    (colorScheme: string)
+    (reducedMotion: string)
+    (contrast: string)
+    (touch: bool)
+    : JS.Promise<unit> =
+    jsNative
+
+/// <summary>Runs the shared media query assertions (G01/G15); browser.mjs applies each step through CDP.</summary>
+let runMediaQueries () =
+    async {
+        let document = document ()
+
+        let driver: MediaQueryChecks.Driver =
+            {
+                Apply =
+                    fun step ->
+                        let p = step.Preferences
+
+                        let scheme =
+                            match p.ColorScheme with
+                            | Some ColorSchemePreference.Dark -> "dark"
+                            | Some ColorSchemePreference.Light -> "light"
+                            | None -> ""
+
+                        let motion =
+                            match p.ReducedMotion with
+                            | Some MotionPreference.Reduce -> "reduce"
+                            | Some MotionPreference.NoPreference -> "no-preference"
+                            | None -> ""
+
+                        let contrast =
+                            match p.Contrast with
+                            | Some ContrastPreference.More -> "more"
+                            | Some ContrastPreference.NoPreference -> "no-preference"
+                            | None -> ""
+
+                        mediaStep step.Width step.Height step.Scale scheme motion contrast (p.Pointer = Some PointerAccuracy.Coarse)
+                        |> Async.AwaitPromise
+                Settle =
+                    fun () ->
+                        async {
+                            for _ in 1..2 do
+                                do! viewportFrames () |> Async.AwaitPromise
+                        }
+                Native = false
+            }
+
+        let! count = MediaQueryChecks.run (fun () -> BrowserMediaQueries.forDocument document) driver
+        return {| media = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared custom highlight assertions.</summary>
 let runHighlights () =
     let document = document ()
