@@ -1,4 +1,4 @@
-253 classes; 2689 members: 2651 mapped to 2571 of 2690 rv_dom_* functions, 38 hand-written, 0 unmapped
+258 classes; 2712 members: 2674 mapped to 2594 of 2728 rv_dom_* functions, 38 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_animation_playback_event_create: AnimationPlaybackEvent.constructor (op)
@@ -32,6 +32,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_css_unparsed_value_create: CSSUnparsedValue.constructor (op)
   rv_dom_cssom_keyword_value_create: CSSOMKeywordValue.constructor (op)
   rv_dom_cssom_variable_reference_value_create: CSSOMVariableReferenceValue.constructor (op)
+  rv_dom_data_transfer_create: DataTransfer.constructor (op)
   rv_dom_document_create: Document.constructor (op)
   rv_dom_document_create_node_iterator: Document.createNodeIterator (op)
   rv_dom_document_create_tree_walker: Document.createTreeWalker (op)
