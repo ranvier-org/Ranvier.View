@@ -1737,6 +1737,9 @@ let private runHighlights () =
 [<Literal>]
 let private CanvasChecksCount = 41
 
+[<Literal>]
+let private CanvasPathChecksCount = 43
+
 let private runCanvas () =
     let host = WebCoreHost.Create (320, 240)
     let session = host.Session
@@ -1757,10 +1760,17 @@ let private runCanvas () =
         | :? System.InvalidOperationException -> true
 
     let mutable held = None
+    let mutable paths = 0
+
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
 
     let shared =
         try
             let count = CanvasChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document
+            paths <- CanvasPathChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
             let service = Ranvier.View.WebCore.Canvas.forHost host
             let document = host.Document
             document.body.innerHTML <- ""
@@ -1811,6 +1821,11 @@ let private runCanvas () =
         failwith $"Canvas shared assertions did not run: {shared}"
 
     System.Console.WriteLine $"NATIVE_API R01 PASS assertions={shared}"
+
+    if paths <> CanvasPathChecksCount then
+        failwith $"Canvas path shared assertions did not run: {paths}"
+
+    System.Console.WriteLine $"NATIVE_API R02 PASS assertions={paths}"
     System.Console.WriteLine $"NATIVE_API R01 LIFETIME PASS assertions={lifetime}"
     shared
 

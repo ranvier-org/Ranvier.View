@@ -1,4 +1,4 @@
-253 classes; 2689 members: 2651 mapped to 2571 of 2690 rv_dom_* functions, 38 hand-written, 0 unmapped
+254 classes; 2728 members: 2690 mapped to 2606 of 2728 rv_dom_* functions, 38 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_animation_playback_event_create: AnimationPlaybackEvent.constructor (op)
@@ -87,6 +87,9 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_mouse_event_get_related_target: MouseEvent.relatedTarget (get)
   rv_dom_node_iterator_get_filter: NodeIterator.filter (get)
   rv_dom_page_transition_event_create: PageTransitionEvent.constructor (op)
+  rv_dom_path2_d_create_0: Path2D.constructor (op)
+  rv_dom_path2_d_create_1_d: Path2D.constructor (op)
+  rv_dom_path2_d_create_1_path: Path2D.constructor (op)
   rv_dom_pop_state_event_create: PopStateEvent.constructor (op)
   rv_dom_progress_event_create: ProgressEvent.constructor (op)
   rv_dom_screen_get_avail_height: Screen.availHeight (op)
@@ -172,7 +175,7 @@ Members by class (mapped / hand-written / unmapped):
   CSSUnparsedValueObject: 4 / 0 / 0
   CSSVariableReferenceValueObject: 3 / 0 / 0
   CSSViewTransitionRuleObject: 2 / 0 / 0
-  CanvasRenderingContext2DObject: 5 / 0 / 0
+  CanvasRenderingContext2DObject: 30 / 0 / 0
   CaretPositionObject: 3 / 0 / 0
   CharacterDataObject: 14 / 0 / 0
   CommandEventObject: 2 / 0 / 0
@@ -275,6 +278,7 @@ Members by class (mapped / hand-written / unmapped):
   NodeListObject: 2 / 0 / 0
   NodeObject: 31 / 0 / 0
   PageTransitionEventObject: 1 / 0 / 0
+  Path2DObject: 14 / 0 / 0
   PointerEventObject: 14 / 0 / 0
   PopStateEventObject: 1 / 0 / 0
   ProgressEventObject: 3 / 0 / 0

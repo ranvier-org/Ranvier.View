@@ -185,8 +185,12 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
             else
                 match fn.Defaults.TryFind p.Name with
                 | Some raw ->
+                    // An enumeration entry is [values, attributes, IDL file].
+                    let entry =
+                        ctx.Input.Model.GetProperty("enumerations").GetProperty (Metadata.text "enum" mapping)
+
                     let values =
-                        ctx.Input.Model.GetProperty("enumerations").GetProperty(Metadata.text "enum" mapping).EnumerateArray()
+                        entry[0].EnumerateArray ()
                         |> Seq.map _.GetString()
                         |> Seq.toArray
 

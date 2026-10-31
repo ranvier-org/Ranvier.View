@@ -129,6 +129,7 @@ let private kinds =
             "CanvasRenderingContext2D", "Kind.CanvasRenderingContext2D"
             "CanvasGradient", "Kind.CanvasGradient"
             "CanvasPattern", "Kind.CanvasPattern"
+            "Path2D", "Kind.Path2D"
         ]
 
 [<EntryPoint>]
