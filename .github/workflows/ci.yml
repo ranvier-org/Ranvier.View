@@ -60,7 +60,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: ranvier-org/Ranvier
-          ref: 25cc091114f5fdf72efec57e40008a5f8e8a9234
+          ref: a5898106dcadc0c9123759c3455d94f9ad518d3a
           path: .ci/ranvier
           persist-credentials: false
       - name: Reference the core source for the counters suites

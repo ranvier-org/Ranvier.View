@@ -78,6 +78,7 @@
         <Compile Include="ToggleEvents.fs" />
         <Compile Include="BinaryValues.fs" />
         <Compile Include="Urls.fs" />
+        <Compile Include="TextSegmentation.fs" />
         <Compile Include="Viewport.fs" />
         <Compile Include="ViewportScroll.fs" />
         <Compile Include="VisualViewport.fs" />

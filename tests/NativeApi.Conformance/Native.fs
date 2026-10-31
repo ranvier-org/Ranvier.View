@@ -1269,6 +1269,70 @@ let private runSubmissions () =
     System.Console.WriteLine $"NATIVE_API D14 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared text segmentation fixture with native thread and teardown checks.</summary>
+[<Literal>]
+let private SegmentChecksCount = 219
+
+let private runSegments () =
+    let host = WebCoreHost.Create (320, 240)
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let shared =
+        try
+            let count =
+                TextSegmentationChecks.run
+                    (fun () -> Ranvier.View.WebCore.TextSegmentation.forHost host)
+                    errorName
+                    TextSegmentationChecks.WebKit
+
+            use segmenter = Ranvier.View.WebCore.TextSegmentation.forHost host
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            segmenter.Segment ("a b", Ranvier.Dom.SegmentGranularity.Word, None) |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Text segmentation rejects another thread"
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    // Segmentation needs no live host: it keeps working after the host is destroyed.
+    let after = WebCoreHost.Create (320, 240)
+    let segmenter = Ranvier.View.WebCore.TextSegmentation.forHost after
+    (after :> System.IDisposable).Dispose()
+
+    let segments =
+        match segmenter.Segment ("e\u0301x", Ranvier.Dom.SegmentGranularity.Grapheme, None) with
+        | Ranvier.Dom.SegmentationResult.Segmented result -> result.Segments |> Array.map (fun s -> s.Segment)
+        | _ -> [||]
+
+    expect (segments = [| "e\u0301"; "x" |]) "A segmenter keeps working after its host is destroyed"
+
+    if shared <> SegmentChecksCount then
+        failwith $"Text segmentation shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API T06 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API T06 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared dialog, popover and command invoker fixture with native thread and teardown checks.</summary>
 [<Literal>]
 let private DialogChecksCount = 143
@@ -1815,6 +1879,7 @@ let private runAll () =
     runBinary () |> ignore
     runUrls () |> ignore
     runSubmissions () |> ignore
+    runSegments () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
@@ -2802,6 +2867,9 @@ let main args =
         0
     elif Array.contains "--forms-only" args then
         runForms () |> ignore
+        0
+    elif Array.contains "--segments-only" args then
+        runSegments () |> ignore
         0
     elif Array.contains "--urls-only" args then
         runUrls () |> ignore

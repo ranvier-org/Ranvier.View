@@ -26,6 +26,7 @@ const viewportOnly = process.argv.includes('--viewport-only');
 const formsOnly = process.argv.includes('--forms-only');
 const dialogsOnly = process.argv.includes('--dialogs-only');
 const urlsOnly = process.argv.includes('--urls-only');
+const segmentsOnly = process.argv.includes('--segments-only');
 const binaryOnly = process.argv.includes('--binary-only');
 const submissionsOnly = process.argv.includes('--submissions-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
@@ -172,6 +173,20 @@ const runUrls = async () => {
   }
 };
 const URL_ASSERTIONS = 189;
+// T06 runs the text segmentation fixture in its own page.
+const runSegments = async () => {
+  const segmentsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await segmentsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runSegments(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.segments !== SEGMENT_ASSERTIONS) throw new Error(`Text segmentation assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API T06 PASS assertions=${result.segments} engine=chromium`);
+  } finally {
+    await segmentsBrowser.close();
+  }
+};
+const SEGMENT_ASSERTIONS = 219;
 // H11 runs the binary value fixture in its own page.
 const runBinary = async () => {
   const binaryBrowser = await chromium.launch({ headless: true });
@@ -254,6 +269,7 @@ try {
   else if (formsOnly) { await runForms(); process.exitCode = 0; }
   else if (dialogsOnly) { await runDialogs(); process.exitCode = 0; }
   else if (urlsOnly) { await runUrls(); process.exitCode = 0; }
+  else if (segmentsOnly) { await runSegments(); process.exitCode = 0; }
   else if (binaryOnly) { await runBinary(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
@@ -487,6 +503,7 @@ try {
   await runDialogs();
   await runBinary();
   await runUrls();
+  await runSegments();
   await runSubmissions();
   await runFrames();
   await runIdle();

@@ -1205,6 +1205,13 @@ let runUrls () =
 
     {| urls = count |}
 
+/// <summary>Runs the shared text segmentation assertions.</summary>
+let runSegments () =
+    let count =
+        TextSegmentationChecks.run (fun () -> BrowserTextSegmentation.create ()) errorName TextSegmentationChecks.Chromium
+
+    {| segments = count |}
+
 [<Emit("$0.constructor.name")>]
 let private constructorName (element: Element) : string = jsNative
 
