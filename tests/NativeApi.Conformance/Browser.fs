@@ -804,6 +804,63 @@ let runInputState () =
     }
     |> Async.StartAsPromise
 
+[<Emit("globalThis.__nativeApiViewport($0, $1, $2)")>]
+let private emulateViewport (width: int) (height: int) (scale: float) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiPaintSize()")>]
+let private paintSize () : JS.Promise<int array> = jsNative
+
+[<Emit("new Promise(resolve => { let done = false; const finish = () => { if (!done) { done = true; setTimeout(resolve, 100) } }; requestAnimationFrame(() => requestAnimationFrame(finish)); setTimeout(finish, 400) })")>]
+let private viewportFrames () : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared viewport assertions with Chromium device-metrics emulation and page activation.</summary>
+/// <remarks>Headless Chromium keeps the page visible, so the visibility steps are native-only.</remarks>
+let runViewport () =
+    async {
+        let document = document ()
+
+        let settle () =
+            async {
+                for _ in 1..3 do
+                    do! viewportFrames () |> Async.AwaitPromise
+            }
+
+        let driver: ViewportChecks.Driver =
+            {
+                Resize =
+                    fun width height scale ->
+                        async {
+                            do!
+                                emulateViewport width height scale
+                                |> Async.AwaitPromise
+
+                            do! settle ()
+                        }
+                Settle = settle
+                SetActive =
+                    fun active ->
+                        async {
+                            do! setActive active |> Async.AwaitPromise
+                            do! settle ()
+                        }
+                SetVisible = None
+                PaintSize =
+                    fun () ->
+                        async {
+                            let! size = paintSize () |> Async.AwaitPromise
+                            return size[0], size[1]
+                        }
+                PaintRounds = true
+                OuterIsViewport = false
+            }
+
+        let! count =
+            ViewportChecks.run document (fun () -> BrowserViewport.forDocument document) driver
+
+        return {| viewport = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {
