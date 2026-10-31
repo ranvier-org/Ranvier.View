@@ -5,7 +5,7 @@
  "route": "Qualified",
  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/100",
  "coreSourceCommit": "88e75d3fdcc20be69d48670107b95f239b16ab0d",
- "viewsParentBeforeEvidenceCommit": "3f2cc10d7e66485c9466373a006615a074f0a09a",
+ "viewsParentBeforeEvidenceCommit": "46637fad59a6d863bce366f2c34f1137e46d6adb",
  "nativeProducer": {
   "pr": "https://github.com/ranvier-org/Ranvier.WebCore/pull/136",
   "head": "230ea5d621d529520ce2a6b8f96befbd6a998e07",
@@ -123,9 +123,14 @@
  "chromium": {
   "logSha256": "682a1127f674005ea8118a58692aba7cb50a853b44c10e5319b6e5d4262fd738",
   "lines": [
+   "BROWSER_API H06 PASS assertions=35 deterministic=14 context=6 engine=chromium",
+   "BROWSER_API H06 CONTEXT PASS assertions=6 engine=chromium",
+   "BROWSER_API H05 PASS assertions=29 engine=chromium",
    "BROWSER_API I01 PASS assertions=56 interop=12 engine=chromium",
    "BROWSER_API I02 PASS assertions=45 engine=chromium"
-  ]
+  ],
+  "resourcesOnlyLogSha256": "a8ddd40a215526675fd8caebfa9190f99d2c043792bab55855616ee410d8a4ff",
+  "defaultRunIncludesResources": "The default browser.mjs run now runs the H05 Resources fixture and requires 29; before, only --resources-only ran it."
  },
  "nativeAotExecutable": {
   "sha256": "bd2e0837d69a1106dfdc76c11faa4967303168db1c93e355260335367873ceca",
