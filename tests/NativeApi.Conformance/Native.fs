@@ -778,7 +778,7 @@ let private runSurfaces () =
             |> runOnHostThread
 
         let animations =
-            SvgAnimations.run host.Document (nativeWait host) surfaceErrorName false
+            SvgAnimations.run host.Document (nativeWait host) surfaceErrorName true
             |> runOnHostThread
 
         let arguments = viewSelectionArguments host
