@@ -66,6 +66,7 @@
     <Compile Include="CaretOracle.fs" />
     <Compile Include="CaretChecks.fs" />
     <Compile Include="FormChecks.fs" />
+    <Compile Include="DialogChecks.fs" />
     <Compile Include="TreeTraversal.fs" />
     <Compile Include="MathMLElements.fs" />
     <Compile Include="TraversalLifecycle.fs" />

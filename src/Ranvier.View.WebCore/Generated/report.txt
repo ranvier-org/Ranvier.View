@@ -1,6 +1,7 @@
-228 classes; 2541 members: 2521 mapped to 2443 of 2510 rv_dom_* functions, 20 hand-written, 0 unmapped
+230 classes; 2546 members: 2526 mapped to 2448 of 2517 rv_dom_* functions, 20 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
+  rv_dom_command_event_create: CommandEvent.constructor (op)
   rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
   rv_dom_css_perspective_create: CSSPerspective.constructor (op)
   rv_dom_css_register_property: DOMCSSNamespace.registerProperty (op)
@@ -58,6 +59,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_shadow_root_set_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (set)
   rv_dom_style_property_map_read_only_entries: StylePropertyMapReadOnly.entries (op)
   rv_dom_submit_event_create: SubmitEvent.constructor (op)
+  rv_dom_toggle_event_create: ToggleEvent.constructor (op)
   rv_dom_tree_walker_get_filter: TreeWalker.filter (get)
   rv_dom_window_get_computed_style: DOMWindow.getComputedStyle (op)
   rv_dom_window_get_scroll_x: DOMWindow.scrollX (op)
@@ -117,6 +119,7 @@ Members by class (mapped / hand-written / unmapped):
   CSSVariableReferenceValueObject: 3 / 0 / 0
   CSSViewTransitionRuleObject: 2 / 0 / 0
   CharacterDataObject: 14 / 0 / 0
+  CommandEventObject: 2 / 0 / 0
   CompositionEventObject: 1 / 0 / 0
   DOMFormDataObject: 4 / 0 / 0
   DOMImplementationObject: 2 / 0 / 0
@@ -296,6 +299,7 @@ Members by class (mapped / hand-written / unmapped):
   StyleSheetObject: 8 / 0 / 0
   SubmitEventObject: 1 / 0 / 0
   TextObject: 3 / 0 / 0
+  ToggleEventObject: 3 / 0 / 0
   TreeWalkerObject: 11 / 1 / 0
   UIEventObject: 6 / 0 / 0
   ValidityStateObject: 11 / 0 / 0
