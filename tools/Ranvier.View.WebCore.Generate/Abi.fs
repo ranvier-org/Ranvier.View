@@ -197,7 +197,14 @@ let private validateUnionTags (nativeDom: Type) (model: JsonElement) =
                     | "string" -> "STRING"
                     | "bytes" -> Metadata.text "label" arm |> constantName
                     | "sequence" -> constantName ((Metadata.text "ctype" arm).Substring("RvDom".Length))
-                    | _ -> Metadata.text "interface" arm |> constantName
+                    | _ ->
+                        // The native header names an arm by its interface, enumeration or label (domtypes.union_arm_name).
+                        [ "interface"; "enum"; "label"; "kind" ]
+                        |> List.pick (fun name ->
+                            match arm.TryGetProperty name with
+                            | true, value when value.ValueKind = JsonValueKind.String -> Some (value.GetString ())
+                            | _ -> None)
+                        |> constantName
 
                 let fieldName = prefix + "_" + suffix
                 let field = nativeDom.GetField fieldName

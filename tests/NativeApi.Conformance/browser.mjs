@@ -25,6 +25,7 @@ const caretOnly = process.argv.includes('--caret-only');
 const viewportOnly = process.argv.includes('--viewport-only');
 const formsOnly = process.argv.includes('--forms-only');
 const dialogsOnly = process.argv.includes('--dialogs-only');
+const urlsOnly = process.argv.includes('--urls-only');
 const binaryOnly = process.argv.includes('--binary-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
@@ -147,6 +148,20 @@ const runDialogs = async () => {
   }
 };
 const DIALOG_ASSERTIONS = 143;
+// H13 runs the URL fixture in its own page.
+const runUrls = async () => {
+  const urlsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await urlsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runUrls(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.urls !== URL_ASSERTIONS) throw new Error(`URL assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API H13 PASS assertions=${result.urls} engine=chromium`);
+  } finally {
+    await urlsBrowser.close();
+  }
+};
+const URL_ASSERTIONS = 185;
 // H11 runs the binary value fixture in its own page.
 const runBinary = async () => {
   const binaryBrowser = await chromium.launch({ headless: true });
@@ -214,6 +229,7 @@ try {
   else if (viewportOnly) { await runViewport(); process.exitCode = 0; }
   else if (formsOnly) { await runForms(); process.exitCode = 0; }
   else if (dialogsOnly) { await runDialogs(); process.exitCode = 0; }
+  else if (urlsOnly) { await runUrls(); process.exitCode = 0; }
   else if (binaryOnly) { await runBinary(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
   else if (idleOnly) { await runIdle(); process.exitCode = 0; }
@@ -445,6 +461,7 @@ try {
   await runForms();
   await runDialogs();
   await runBinary();
+  await runUrls();
   await runFrames();
   await runIdle();
   await runCaret();

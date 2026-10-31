@@ -348,6 +348,9 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                     "CSSOMVariableReferenceValue"
                     "Blob"
                     "FileList"
+                    "DOMURL"
+                    "URLSearchParams"
+                    "URLPattern"
                 ]
         then
             let kind = ctx.Input.Kinds[publicRoot]
@@ -541,12 +544,20 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
                     let local = $"nativeString{index}"
 
                     let length =
-                        if expression.EndsWith "| None -> null)" then
+                        if expression = "null" then
+                            "-1"
+                        elif expression.EndsWith "| None -> null)" then
                             $"(if isNull {local} then -1 else {local}.Length)"
                         else
                             local + ".Length"
 
-                    [ $"let {local} = {expression}" ], [ local; length ]
+                    let binding =
+                        if expression = "null" then
+                            $"let {local}: byte[] = null"
+                        else
+                            $"let {local} = {expression}"
+
+                    [ binding ], [ local; length ]
                 else
                     [], [ expression ])
 
@@ -1188,7 +1199,12 @@ let run (input: Input) (tagMap: (string * string * string) list) : string * Entr
     // The canonical tag table lists HTML and SVG tags only; MathMLMathElement is the one typed MathML tag interface.
     if
         classes.ContainsKey "MathMLMathElement"
-        && not (tagMap |> List.exists (fun (ns, tag, _) -> ns = "http://www.w3.org/1998/Math/MathML" && tag = "math"))
+        && not (
+            tagMap
+            |> List.exists (fun (ns, tag, _) ->
+                ns = "http://www.w3.org/1998/Math/MathML"
+                && tag = "math")
+        )
     then
         emitter.Line (2, "| \"http://www.w3.org/1998/Math/MathML\", \"math\" -> MathMLMathElementObject (session, handle)")
 

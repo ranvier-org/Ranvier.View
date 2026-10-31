@@ -186,6 +186,15 @@ module internal Kind =
     [<Literal>]
     let CaretPosition = 58
 
+    [<Literal>]
+    let Url = 59
+
+    [<Literal>]
+    let UrlSearchParams = 60
+
+    [<Literal>]
+    let UrlPattern = 61
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -358,6 +367,9 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.Blob -> NativeDom.rv_dom_blob_release handle
         | Kind.FileList -> NativeDom.rv_dom_file_list_release handle
         | Kind.CaretPosition -> NativeDom.rv_dom_caret_position_release handle
+        | Kind.Url -> NativeDom.rv_dom_domurl_release handle
+        | Kind.UrlSearchParams -> NativeDom.rv_dom_url_search_params_release handle
+        | Kind.UrlPattern -> NativeDom.rv_dom_url_pattern_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =
@@ -669,7 +681,8 @@ module internal Interop =
     /// Records the exception a host callback raised. The next failed call that reports
     /// <c>ExistingExceptionError</c> on the thread rethrows it with its original stack.
     /// </summary>
-    let callbackFailed (error: exn) = Callbacks.Pending <- error
+    let callbackFailed (error: exn) =
+        Callbacks.Pending <- error
 
     /// <summary>Raises the status's exception unless it is <c>RV_OK</c>.</summary>
     let check (name: string) (status: int) =
@@ -682,7 +695,7 @@ module internal Interop =
                 && not (isNull pending)
                 && lastException 0 = "ExistingExceptionError"
             then
-                Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(pending).Throw ()
+                Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(pending).Throw()
 
             raise (failure name status)
 
