@@ -339,6 +339,13 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
     | None -> Error $"returns {name managed}, which has no class"
     | Some cls ->
         let root = Metadata.text "root" mapping
+        // An event-target object with its own kind (Animation) is a session object keyed by its handle, anchored to
+        // the object that returned it, so its identity and acquisition document carry over.
+        let eventTargetObject =
+            root = "EventTarget"
+            && ctx.Input.Kinds.ContainsKey (Metadata.publicInterfaceName ctx.Input.Model (Metadata.text "interface" mapping))
+
+        let root = if eventTargetObject then Metadata.text "interface" mapping else root
         let publicRoot = Metadata.publicInterfaceName ctx.Input.Model root
 
         let query =
@@ -347,6 +354,7 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
 
         if
             query.IsSome
+            || eventTargetObject
             || (root.StartsWith ("SVG", System.StringComparison.Ordinal)
                 && ctx.Input.Kinds.ContainsKey publicRoot)
             || List.contains

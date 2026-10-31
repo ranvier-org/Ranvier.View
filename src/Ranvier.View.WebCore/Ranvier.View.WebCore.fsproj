@@ -54,6 +54,7 @@
         <Compile Include="Events.fs" />
         <Compile Include="Traversal.fs" />
         <Compile Include="Marshalling.fs" />
+        <Compile Include="AnimationResults.fs" />
         <Compile Include="Generated/Objects.fs" />
         <Compile Include="EventTargets.fs" />
         <Compile Include="Host.fs" />

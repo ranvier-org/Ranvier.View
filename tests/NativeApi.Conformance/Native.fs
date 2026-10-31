@@ -3137,6 +3137,15 @@ let private runCoordinates () =
 [<Literal>]
 let private AnimationChecksCount = 110
 
+[<Literal>]
+let private AnimationEffectChecksCount = 54
+
+[<Literal>]
+let private AnimationDiscoveryChecksCount = 33
+
+[<Literal>]
+let private AnimationCommitChecksCount = 9
+
 let private runAnimations () =
     let host = WebCoreHost.Create (320, 240)
     let mutable lifetime = 0
@@ -3199,6 +3208,31 @@ let private runAnimations () =
 
     System.Console.WriteLine $"NATIVE_API A01 PASS assertions={shared}"
     System.Console.WriteLine $"NATIVE_API A01 LIFETIME PASS assertions={lifetime}"
+    let effectHost = WebCoreHost.Create (320, 240)
+
+    let effects =
+        try
+            AnimationEffectChecks.run effectHost.Document (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost effectHost) errorName
+        finally
+            (effectHost :> System.IDisposable).Dispose ()
+
+    if effects <> AnimationEffectChecksCount then
+        failwith $"Web Animations effect assertions did not run: {effects}"
+
+    System.Console.WriteLine $"NATIVE_API A02 PASS assertions={effects}"
+    let discoveryHost = WebCoreHost.Create (320, 240)
+
+    let discovery, commits =
+        try
+            AnimationDiscoveryChecks.run discoveryHost.Document (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost discoveryHost)
+        finally
+            (discoveryHost :> System.IDisposable).Dispose ()
+
+    if (discovery, commits) <> (AnimationDiscoveryChecksCount, AnimationCommitChecksCount) then
+        failwith $"Web Animations discovery assertions did not run: {discovery} {commits}"
+
+    System.Console.WriteLine $"NATIVE_API A05 PASS assertions={discovery}"
+    System.Console.WriteLine $"NATIVE_API A04 PASS assertions={commits}"
     shared
 
 /// <summary>Runs the shared cascade fixture with native thread, snapshot release and teardown checks.</summary>

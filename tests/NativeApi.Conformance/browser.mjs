@@ -550,11 +550,19 @@ const runAnimations = async () => {
     if (result.animations !== ANIMATION_ASSERTIONS) throw new Error(`Web Animations assertions did not run: ${JSON.stringify(result)}`);
     if (typeof result.animations !== 'number') throw new Error(`Web Animations fixture failed: ${JSON.stringify(result)}`);
     console.log(`BROWSER_API A01 PASS assertions=${result.animations} engine=chromium`);
+    if (result.effects !== EFFECT_ASSERTIONS) throw new Error(`Web Animations effect assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API A02 PASS assertions=${result.effects} engine=chromium`);
+    if ((result.discovery !== DISCOVERY_ASSERTIONS || result.commits !== COMMIT_ASSERTIONS)) throw new Error(`Web Animations discovery assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API A05 PASS assertions=${result.discovery} engine=chromium`);
+    console.log(`BROWSER_API A04 PASS assertions=${result.commits} engine=chromium`);
   } finally {
     await animationsBrowser.close();
   }
 };
 const ANIMATION_ASSERTIONS = 110;
+const EFFECT_ASSERTIONS = 54;
+const DISCOVERY_ASSERTIONS = 33;
+const COMMIT_ASSERTIONS = 9;
 // G14 runs the coordinate fixture in its own page.
 const runCoordinates = async () => {
   const coordinatesBrowser = await chromium.launch({ headless: true });
