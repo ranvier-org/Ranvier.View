@@ -45,6 +45,21 @@ module internal Factories =
         | 4 -> KeyboardEventObject (session, handle)
         | 5 -> InputEventObject (session, handle)
         | 6 -> FocusEventObject (session, handle)
+        | 7 ->
+            let mutable probe = 0n
+
+            if NativeDom.rv_dom_submit_event_get_submitter (handle, &probe) = 0 then
+                if probe <> 0n then
+                    Native.rv_node_release probe
+
+                SubmitEventObject (session, handle)
+            elif NativeDom.rv_dom_form_data_event_get_form_data (handle, &probe) = 0 then
+                if probe <> 0n then
+                    NativeDom.rv_dom_dom_form_data_release probe
+
+                FormDataEventObject (session, handle)
+            else
+                EventObject (session, handle)
         | _ -> EventObject (session, handle)
 
 /// <summary>Posts work to a host's loop, which runs it on the host thread during <c>WebCoreHost.Cycle</c>.</summary>

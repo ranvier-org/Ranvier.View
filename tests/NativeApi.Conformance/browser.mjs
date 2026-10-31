@@ -21,6 +21,8 @@ const svgPaintOnly = process.argv.includes('--svg-paint-only');
 const inputStateOnly = process.argv.includes('--input-state-only');
 const framesOnly = process.argv.includes('--frames-only');
 const viewportOnly = process.argv.includes('--viewport-only');
+const formsOnly = process.argv.includes('--forms-only');
+const domModelOnly = process.argv.includes('--dom-model-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
 const server = createServer(async (request, response) => {
@@ -107,6 +109,20 @@ const runViewport = async () => {
   }
 };
 const VIEWPORT_ASSERTIONS = 44;
+// D13 runs in its own page: the fixture forms submit into a sink frame of that page.
+const runForms = async () => {
+  const formsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await formsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runForms(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.forms !== FORMS_ASSERTIONS) throw new Error(`Form assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API D13 PASS assertions=${result.forms} engine=chromium`);
+  } finally {
+    await formsBrowser.close();
+  }
+};
+const FORMS_ASSERTIONS = 67;
 // A12 runs the frame fixture on the manual scheduler and on the Window's frames, timers and microtasks.
 const runFrames = async () => {
   const framesBrowser = await chromium.launch({ headless: true });
@@ -124,6 +140,7 @@ let browser;
 try {
   if (inputStateOnly) { await runInputState(); process.exitCode = 0; }
   else if (viewportOnly) { await runViewport(); process.exitCode = 0; }
+  else if (formsOnly) { await runForms(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
   else {
   browser = await chromium.launch({ headless: true });
@@ -165,7 +182,7 @@ try {
   const checks = await page.evaluate(async focused => {
     try {
       const fixture = await import('/Browser.js');
-      return await (focused === 'resources' ? fixture.runResources() : focused === 'locales' ? fixture.runLocales() : focused === 'svg' ? fixture.runSvg() : focused === 'svg-surfaces' ? fixture.runSvgSurfaces() : focused === 'svg-paint' ? fixture.runSvgPaint() : focused === 'transforms' ? fixture.runTransforms() : focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : { ...await fixture.runSvgSurfaces(), ...await fixture.runSvgPaint(), ...await fixture.runResources(), ...await fixture.run() });
+      return await (focused === 'dom-model' ? fixture.runDomModel() : focused === 'resources' ? fixture.runResources() : focused === 'locales' ? fixture.runLocales() : focused === 'svg' ? fixture.runSvg() : focused === 'svg-surfaces' ? fixture.runSvgSurfaces() : focused === 'svg-paint' ? fixture.runSvgPaint() : focused === 'transforms' ? fixture.runTransforms() : focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : { ...await fixture.runSvgSurfaces(), ...await fixture.runSvgPaint(), ...await fixture.runResources(), ...await fixture.run() });
     } catch (error) {
       throw new Error(JSON.stringify({
         type: error?.constructor?.name,
@@ -176,8 +193,16 @@ try {
         fields: Object.fromEntries(Object.getOwnPropertyNames(error).filter(key => key !== 'stack').map(key => [key, error[key]])),
       }));
     }
-  }, resourcesOnly ? 'resources' : localesOnly ? 'locales' : svgOnly ? 'svg' : svgSurfacesOnly ? 'svg-surfaces' : svgPaintOnly ? 'svg-paint' : transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
-  if (resourcesOnly) {
+  }, domModelOnly ? 'dom-model' : resourcesOnly ? 'resources' : localesOnly ? 'locales' : svgOnly ? 'svg' : svgSurfacesOnly ? 'svg-surfaces' : svgPaintOnly ? 'svg-paint' : transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
+  const checkDomModel = () => {
+    if (checks.traversal !== 62 || checks.mathml !== 116) throw new Error(`DOM model assertions did not run: ${JSON.stringify(checks)}`);
+    if (checks.traversalReentry !== 'InvalidStateError/InvalidStateError/unread') throw new Error(`Unexpected traversal re-entry: ${checks.traversalReentry}`);
+    console.log(`BROWSER_API D01 PASS assertions=${checks.traversal} reentry=${checks.traversalReentry} engine=chromium`);
+    console.log(`BROWSER_API S13 PASS assertions=${checks.mathml} math=MathMLElement engine=chromium`);
+  };
+  if (domModelOnly) {
+    checkDomModel();
+  } else if (resourcesOnly) {
     if (checks.resources !== 29) throw new Error(`Resource shared assertions did not run: ${JSON.stringify(checks)}`);
     console.log(`BROWSER_API H05 PASS assertions=${checks.resources} engine=chromium`);
   } else if (localesOnly) {
@@ -275,6 +300,7 @@ try {
   console.log(`BROWSER_API I01 PASS assertions=${checks.cancellation} interop=${checks.cancellationInterop} engine=chromium`);
   if (checks.customEvents !== 45) throw new Error(`Custom event assertions did not run: ${checks.customEvents}`);
   console.log(`BROWSER_API I02 PASS assertions=${checks.customEvents} engine=chromium`);
+  checkDomModel();
   console.log(`BROWSER_API D10_VIEW PASS assertions=${checks.viewTables} engine=chromium`);
   if (checks.viewHyperlinks !== 50) throw new Error('View hyperlink authoring assertions did not run');
   console.log(`BROWSER_API D11_VIEW_HYPERLINKS PASS assertions=${checks.viewHyperlinks} engine=chromium`);
@@ -340,6 +366,7 @@ try {
   }
   await runInputState();
   await runViewport();
+  await runForms();
   await runFrames();
   }
 } finally {

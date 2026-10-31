@@ -33,6 +33,14 @@ let private hand (dom: Type) (header: string) : Map<string, string> =
             "Events.Init(this, \"data\", fun () -> Interop.text \"InputEvent.data\" (fun b c l -> NativeDom.rv_dom_input_event_get_data (this.Handle, b, c, l)))"
             "InputEvent.inputType.get",
             "Events.Init(this, \"inputType\", fun () -> Interop.text \"InputEvent.inputType\" (fun b c l -> NativeDom.rv_dom_input_event_get_input_type (this.Handle, b, c, l)))"
+            "Document.createNodeIterator",
+            "unbox<Ranvier.Dom.NodeIterator> (Traversal.Create(this, {0}, {1}, {2}, (fun target root show filter -> let mutable result = 0n in Interop.check \"Document.createNodeIterator\" (NativeDom.rv_dom_document_create_node_iterator (target, root, show, filter, &result)); result), (fun session handle -> NodeIteratorObject(session, handle) :> NativeObject)))"
+            "Document.createTreeWalker",
+            "unbox<Ranvier.Dom.TreeWalker> (Traversal.Create(this, {0}, {1}, {2}, (fun target root show filter -> let mutable result = 0n in Interop.check \"Document.createTreeWalker\" (NativeDom.rv_dom_document_create_tree_walker (target, root, show, filter, &result)); result), (fun session handle -> TreeWalkerObject(session, handle) :> NativeObject)))"
+            "NodeIterator.filter.get",
+            "Traversal.FilterOf(fun () -> let mutable result = 0n in Interop.check \"NodeIterator.filter\" (NativeDom.rv_dom_node_iterator_get_filter (Interop.handle (box this), &result)); result)"
+            "TreeWalker.filter.get",
+            "Traversal.FilterOf(fun () -> let mutable result = 0n in Interop.check \"TreeWalker.filter\" (NativeDom.rv_dom_tree_walker_get_filter (Interop.handle (box this), &result)); result)"
         ]
 
     let styles = []
@@ -93,6 +101,7 @@ let private kinds =
             "DOMRectList", "Kind.RectList"
             "NodeList", "Kind.NodeList"
             "HTMLCollection", "Kind.Collection"
+            "DOMFormData", "Kind.FormData"
             "HTMLCollectionOf`1", "Kind.Collection"
             "ValidityState", "Kind.Validity"
             "DOMImplementation", "Kind.DOMImplementation"
@@ -105,6 +114,8 @@ let private kinds =
             "CSSStyleValue", "Kind.StyleValue"
             "CSSVariableReferenceValue", "Kind.VariableReferenceValue"
             "StylePropertyMapReadOnly", "Kind.StyleMap"
+            "NodeIterator", "Kind.NodeIterator"
+            "TreeWalker", "Kind.TreeWalker"
         ]
 
 [<EntryPoint>]

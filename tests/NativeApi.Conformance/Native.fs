@@ -360,6 +360,94 @@ let private runViewport () =
     System.Console.WriteLine $"NATIVE_API G02/G12 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared form fixture with native thread, collection, FormData and event teardown checks.</summary>
+[<Literal>]
+let private FormChecksCount = 67
+
+let private runForms () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                FormChecks.run host.Document (fun () -> Ranvier.View.WebCore.FormData.forHost host) errorName
+
+            use service = Ranvier.View.WebCore.FormData.forHost host
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.Create () |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "FormData rejects another thread"
+            let document = host.Document
+            let form = unbox<Ranvier.Dom.HTMLFormElement> (document.createElement "form")
+            let input = document.createElement "input"
+            input.setAttribute ("name", "kept")
+            input.setAttribute ("value", "v")
+            form.appendChild input |> ignore
+            document.body.appendChild form |> ignore
+            let data = service.FromForm (form, null)
+            let elements = form.elements
+            let submit = service.CreateSubmitEvent ("submit", Ranvier.Dom.EventOptions.Default, null)
+            let event = service.CreateFormDataEvent ("formdata", Ranvier.Dom.EventOptions.Default, data)
+            System.GC.Collect ()
+            System.GC.WaitForPendingFinalizers ()
+            host.Cycle ()
+            RanvierWebCoreAbi.Native.rv_collect_garbage ()
+            expect (service.Entries data = [| { Name = "kept"; Value = Ranvier.Dom.FormDataEntryValue.String "v" } |]) "FormData survives collection"
+            expect (elements.length = 1u) "Form controls collection survives collection"
+            expect (service.Entries event.formData = service.Entries data) "FormDataEvent keeps its FormData"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            expect (service.Get (data, "kept") = Some (Ranvier.Dom.FormDataEntryValue.String "v")) "FormData survives document replacement"
+            held <- Some (data, elements, submit)
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Form fixture leaves no live native objects"
+    let data, elements, submit = held.Value
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    expect (rejected (fun () -> data.append ("k", "v"))) "A held FormData rejects use after host disposal"
+    expect (rejected (fun () -> elements.length |> ignore)) "A held collection rejects use after host disposal"
+    expect (rejected (fun () -> submit.submitter |> ignore)) "A held SubmitEvent rejects use after host disposal"
+
+    if shared <> FormChecksCount then
+        failwith $"Form shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API D13 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API D13 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared custom event fixture with native standalone-target lifetime checks.</summary>
 let private runCustomEvents () =
     let host = WebCoreHost.Create (320, 240)
@@ -697,6 +785,46 @@ let private runResources () =
     System.Console.WriteLine "NATIVE_API H05 TEARDOWN PASS"
     count
 
+/// <summary>Runs the shared tree traversal and MathML fixtures with native traversal lifetime checks.</summary>
+let private runDomModel () =
+    let lifetime = TraversalLifecycle.run ()
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let interfaceOf (element: Ranvier.Dom.Element) =
+        let name = element.GetType().Name
+        name.Substring (0, name.Length - "Object".Length)
+
+    let traversal, reentry, mathml =
+        try
+            let traversal, reentry = TreeTraversal.run host.Document errorName true
+            let mathml = MathMLElements.run host.Document interfaceOf "MathMLMathElement"
+            traversal, reentry, mathml
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith $"DOM model fixture leaked {session.LiveObjects} managed native objects"
+
+    if traversal <> 62 || lifetime <> 15 || mathml <> 116 then
+        failwith $"DOM model assertions did not run: {traversal}/{lifetime}/{mathml}"
+
+    // Qualification: the engine leaves the re-entered iterator's referenceNode null.
+    if reentry <> { TreeTraversal.Iterator = "InvalidStateError"; TreeTraversal.Walker = "InvalidStateError"; TreeTraversal.Reference = "null" } then
+        failwith $"Unexpected traversal re-entry outcome: {reentry}"
+
+    System.Console.WriteLine $"NATIVE_API D01 PASS assertions={traversal}"
+    System.Console.WriteLine $"NATIVE_API D01 REENTRY iterator={reentry.Iterator} walker={reentry.Walker} reference={reentry.Reference}"
+    System.Console.WriteLine $"NATIVE_API D01 LIFETIME PASS assertions={lifetime}"
+    System.Console.WriteLine $"NATIVE_API S13 PASS assertions={mathml}"
+    System.Console.WriteLine "NATIVE_API D01 S13 TEARDOWN PASS"
+    traversal + mathml
+
 let private runAll () =
     runLocales () |> ignore
     let svgLifecycle = SvgLifecycle.run ()
@@ -712,6 +840,8 @@ let private runAll () =
     runCustomEvents () |> ignore
     runInputState () |> ignore
     runViewport () |> ignore
+    runForms () |> ignore
+    runDomModel () |> ignore
     runFrames () |> ignore
     let transformLifecycle = TransformLifecycle.run ()
 
@@ -1677,11 +1807,17 @@ let main args =
     elif Array.contains "--custom-events-only" args then
         runCustomEvents () |> ignore
         0
+    elif Array.contains "--dom-model-only" args then
+        runDomModel () |> ignore
+        0
     elif Array.contains "--input-state-only" args then
         runInputState () |> ignore
         0
     elif Array.contains "--viewport-only" args then
         runViewport () |> ignore
+        0
+    elif Array.contains "--forms-only" args then
+        runForms () |> ignore
         0
     elif Array.contains "--frames-only" args then
         runFrames () |> ignore

@@ -903,6 +903,32 @@ let runViewport () =
     }
     |> Async.StartAsPromise
 
+/// <summary>Runs the shared form collection, FormData and form event assertions.</summary>
+let runForms () =
+    let document = document ()
+
+    let count =
+        FormChecks.run document (fun () -> BrowserForms.forDocument document) errorName
+
+    {| forms = count |}
+
+[<Emit("$0.constructor.name")>]
+let private constructorName (element: Element) : string = jsNative
+
+let private domModel (document: Document) =
+    let traversal, reentry = TreeTraversal.run document errorName false
+    let mathml = MathMLElements.run document constructorName "MathMLElement"
+
+    {|
+        traversal = traversal
+        traversalReentry = $"{reentry.Iterator}/{reentry.Walker}/{reentry.Reference}"
+        mathml = mathml
+    |}
+
+/// <summary>Runs the shared tree traversal and MathML fixtures against the browser document.</summary>
+let runDomModel () =
+    async { return domModel (document ()) } |> Async.StartAsPromise
+
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {
@@ -927,6 +953,8 @@ let run () =
             |> Async.AwaitTask
 
         let! cancellationInterop = cancellationInterop document
+
+        let domModelResult = domModel document
 
         let customEvents =
             CustomEvents.run document (fun () -> BrowserEvents.forDocument document) (fun () -> BrowserCancellation.forDocument document)
@@ -1106,6 +1134,9 @@ let run () =
                 cancellation = cancellation
                 cancellationInterop = cancellationInterop
                 customEvents = customEvents
+                traversal = domModelResult.traversal
+                traversalReentry = domModelResult.traversalReentry
+                mathml = domModelResult.mathml
                 scopeRules = scopeRules
                 nestedDeclarations = nestedDeclarations
                 importContentsReadable = importContentsReadable

@@ -62,6 +62,10 @@
     <Compile Include="CustomEvents.fs" />
     <Compile Include="InputStateChecks.fs" />
     <Compile Include="ViewportChecks.fs" />
+    <Compile Include="FormChecks.fs" />
+    <Compile Include="TreeTraversal.fs" />
+    <Compile Include="MathMLElements.fs" />
+    <Compile Include="TraversalLifecycle.fs" />
     <Compile Include="FrameChecks.fs" />
     <Compile Include="../UserTiming/Native.fs" Link="UserTimingNative.fs" />
     <Compile Include="Native.fs" />

@@ -96,6 +96,7 @@ let private literal (value: string) =
     | "false" -> Some "0"
     | "true" -> Some "1"
     | "\"\"" -> Some "\"\""
+    | _ when value.StartsWith "0x" -> Some (string (Convert.ToUInt64 (value, 16)))
     | _ when fst (Double.TryParse value) -> Some value
     | _ -> None
 
@@ -1167,6 +1168,13 @@ let run (input: Input) (tagMap: (string * string * string) list) : string * Entr
 
     emitter.Line (2, "| \"http://www.w3.org/1999/xhtml\", _ -> HTMLElementObject (session, handle)")
     emitter.Line (2, "| \"http://www.w3.org/2000/svg\", _ -> SVGElementObject (session, handle)")
+
+    // The canonical tag table lists HTML and SVG tags only; MathMLMathElement is the one typed MathML tag interface.
+    if
+        classes.ContainsKey "MathMLMathElement"
+        && not (tagMap |> List.exists (fun (ns, tag, _) -> ns = "http://www.w3.org/1998/Math/MathML" && tag = "math"))
+    then
+        emitter.Line (2, "| \"http://www.w3.org/1998/Math/MathML\", \"math\" -> MathMLMathElementObject (session, handle)")
 
     if classes.ContainsKey "MathMLElement" then
         emitter.Line (2, "| \"http://www.w3.org/1998/Math/MathML\", _ -> MathMLElementObject (session, handle)")

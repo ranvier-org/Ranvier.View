@@ -52,6 +52,9 @@
     <Compile Include="CustomEvents.fs" />
     <Compile Include="InputStateChecks.fs" />
     <Compile Include="ViewportChecks.fs" />
+    <Compile Include="FormChecks.fs" />
+    <Compile Include="TreeTraversal.fs" />
+    <Compile Include="MathMLElements.fs" />
     <Compile Include="FrameChecks.fs" />
     <Compile Include="Browser.fs" />
     <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" Condition="'$(NativeApiContractRoot)' == ''" />
