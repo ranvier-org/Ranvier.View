@@ -54,9 +54,27 @@ non-finite coordinates.
   struct sizes; holds a `CaretPosition` past a text change, node removal and `rv_host_destroy`. Its own build.yml
   slim step runs it on every slim runtime.
 - Managed: `tests/NativeApi.Conformance/CaretChecks.fs` replays the same oracle through `Ranvier.Dom` on native JIT,
-  NativeAOT and Chromium, with the qualified differences per backend, and a host-disposal lifetime case.
+  NativeAOT and Chromium (1537 assertions each), with the qualified differences per backend, and a host-disposal
+  lifetime case.
 
 ## Qualifications
 
-Recorded with numbers in the evidence once measured on the candidate; see the native evidence
-`docs/caret-hit-evidence/final-evidence.json`.
+Measured on Native32 (Source 0000-0035) against Chromium 156.0.8078.4; the native probe requires exactly these
+(`tests/fixtures/caret-hit-qualified.json`, 90 of 1476 comparisons) and the managed fixture asserts the same 30
+outcomes at each of the three scales:
+
+- Legacy `caretRangeFromPoint` retargets a hit in a shadow tree or text control to the host at offset 0; Chromium
+  gives the host's parent at the host's index (21 comparisons). `caretPositionFromPoint` agrees with Chromium.
+- `CaretPosition.getClientRect` is 0x0 at (0, 0) at a line end before a collapsed space (wrap offsets 4 and 9, RTL
+  offset 4); Chromium gives the 0x20 caret box (48).
+- `getClientRect` in a text control (`INPUT`, offset 1) is 0x0 at (0, 0); Chromium gives the caret box (18).
+- A held caret whose text shrank below its offset gives the 0x20 box at x 40; Chromium gives 0x0 (3).
+- After `scrollTo(0.5, 20.5)` the engine sits at (0, 20) and Chromium at (1, 21) (G05); each backend is checked at
+  its own offset, so this adds no hit difference.
+
+Patch 0035 fixes the one engine defect found: with a non-empty `shadowRoots`, a hit in a text control outside any
+shadow tree returned a node of the control's user-agent shadow root.
+
+Evidence: Ranvier.WebCore `docs/caret-hit-evidence/final-evidence.json`; Views
+`docs/research/native-api-delivery/caret-runtime-evidence.json` (JIT 91, NativeAOT 91, Chromium 70 PASS lines,
+a superset of H11's 89/89/69).
