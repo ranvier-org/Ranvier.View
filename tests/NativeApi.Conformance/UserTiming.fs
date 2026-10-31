@@ -5,7 +5,7 @@ open Ranvier.Dom
 
 /// True on osx-arm64 NativeAOT, where the time origin captured before the invalid-value checks reads back
 /// -Infinity afterwards. That runtime defect is recorded in the H02 evidence.
-let private originRecheckUnsupported =
+let originRecheckUnsupported =
 #if FABLE_COMPILER
     false
 #else
