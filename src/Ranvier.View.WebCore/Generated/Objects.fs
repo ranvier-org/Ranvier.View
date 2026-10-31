@@ -2602,12 +2602,12 @@ and internal URLSearchParamsObject(session: Session, handle: nativeint) =
         member this.getAll(name: string) : string array =
             use scope = new InputScope()
             let nativeString0 = scope.Bytes(name)
-            let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceUSVString>
+            let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceUSVStringUtf8>
             try
                 Interop.check "URLSearchParams.getAll" (NativeDom.rv_dom_url_search_params_get_all (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
-                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in System.Runtime.InteropServices.Marshal.PtrToStringUTF8(item)))
+                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<NativeDom.RvDomUtf8StringSpan>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomUtf8StringSpan>())) in Interop.spanText (item)))
             finally
-                NativeDom.rv_dom_sequence_usv_string_release(&result)
+                NativeDom.rv_dom_sequence_usv_string_utf8_release(&result)
         member this.has(name: string, ?value: string) : bool =
             use scope = new InputScope()
             let nativeString0 = scope.Bytes(name)

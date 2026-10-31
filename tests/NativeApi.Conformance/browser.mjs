@@ -162,7 +162,7 @@ const runUrls = async () => {
     await urlsBrowser.close();
   }
 };
-const URL_ASSERTIONS = 185;
+const URL_ASSERTIONS = 189;
 // H11 runs the binary value fixture in its own page.
 const runBinary = async () => {
   const binaryBrowser = await chromium.launch({ headless: true });
