@@ -108,6 +108,7 @@
         <Compile Include="Notifications.fs" />
         <Compile Include="Animations.fs" />
         <Compile Include="Timelines.fs" />
+        <Compile Include="CustomEffects.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />

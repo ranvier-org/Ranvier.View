@@ -540,6 +540,23 @@ const runCascade = async () => {
   }
 };
 const CASCADE_ASSERTIONS = 51;
+// A09 runs the custom effect fixture on the facade (Chromium has no CustomEffect) in its own page.
+const runCustomEffects = async () => {
+  const effectsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await effectsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runCustomEffects(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (typeof result.customEffects !== 'number') throw new Error(`Custom effect fixture failed: ${JSON.stringify(result)}`);
+    if (CUSTOM_EFFECT_ASSERTIONS !== 0 && result.customEffects !== CUSTOM_EFFECT_ASSERTIONS) throw new Error(`Custom effect assertions did not run: ${JSON.stringify(result)}`);
+    const facts = JSON.stringify(result.capability);
+    if (facts !== JSON.stringify(['No', 'Yes', 'Unknown', 'Unknown', 'Unknown', 'Ranvier facade emulation'])) throw new Error(`Custom effect facade capability is not truthful: ${facts}`);
+    console.log(`BROWSER_API A09 PASS assertions=${result.customEffects} engine=chromium facade=${facts}`);
+  } finally {
+    await effectsBrowser.close();
+  }
+};
+const CUSTOM_EFFECT_ASSERTIONS = 23;
 // A01 runs the Web Animations fixture in its own page.
 const runAnimations = async () => {
   const animationsBrowser = await chromium.launch({ headless: true });
@@ -756,6 +773,7 @@ try {
   else if (process.argv.includes('--host-strings-only')) { await runHostStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
+  else if (process.argv.includes('--custom-effects-only')) { await runCustomEffects(); process.exitCode = 0; }
   else if (process.argv.includes('--animations-only')) { await runAnimations(); process.exitCode = 0; }
   else if (process.argv.includes('--animation-lifecycle-only')) { await runAnimationLifecycle(); process.exitCode = 0; }
   else if (process.argv.includes('--animation-events-only')) { await runAnimationEvents(); process.exitCode = 0; }
@@ -1035,6 +1053,7 @@ try {
   await runAnimationLifecycle();
   await runAnimationEvents();
   await runTimelines();
+  await runCustomEffects();
   await runBlobUrls();
   await runMediaCapabilities();
   await runSnapshots();

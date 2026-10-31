@@ -1605,6 +1605,70 @@ let runDiagnostics () =
 [<Emit("devicePixelRatio")>]
 let private devicePixelRatio () : float = jsNative
 
+[<Emit("(() => { window.__customEffectErrors = 0; window.addEventListener('error', e => { if (String(e.message).includes('tick failure') || String(e.error?.message).includes('tick failure')) { window.__customEffectErrors++; e.preventDefault(); } }); })()")>]
+let private watchTickErrors () : unit = jsNative
+
+[<Emit("window.__customEffectErrors")>]
+let private tickErrors () : int = jsNative
+
+/// <summary>Runs the shared custom effect fixture on the browser facade, and checks the facade's capability observation.</summary>
+let runCustomEffects () =
+    async {
+        watchTickErrors ()
+        let document = document ()
+
+        let name (error: exn) =
+            match error with
+            | AnimationException (name, _) -> name
+            | error -> errorName error
+
+        let! count =
+            CustomEffectChecks.run
+                document
+                (fun () -> BrowserCustomEffects.forDocument document)
+                (fun () -> BrowserAnimations.forDocument document)
+                (fun () -> Ranvier.Dom.ComputedStyles.forDocument document)
+                name
+                {
+                    NextFrame =
+                        fun () ->
+                            async {
+                                do! animationFrame () |> Async.AwaitPromise
+                                do! animationFrame () |> Async.AwaitPromise
+                            }
+                    RoutedErrors = tickErrors
+                }
+
+        let provider = BrowserCustomEffects.capabilityProvider document
+
+        let key =
+            Capabilities.key CapabilityCategory.PlatformFacility "animation-custom-effects"
+
+        let! observation =
+            provider.Observe key System.Threading.CancellationToken.None
+            |> Async.AwaitTask
+
+        let facts =
+            match observation with
+            | Some (value: CapabilityObservation) ->
+                [|
+                    string value.Exported.State
+                    string value.Implemented.State
+                    string value.Enabled.State
+                    string value.Permitted.State
+                    string value.Available.State
+                    value.Mechanism
+                |]
+            | None -> [||]
+
+        return
+            {|
+                customEffects = count
+                capability = facts
+            |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared Web Animations assertions on the browser's constructors.</summary>
 let runAnimations () =
     let document = document ()
