@@ -65,13 +65,30 @@ def validate_profile(profile):
                 raise ValueError('Module assertion counts must match the target total.')
 
 
-def compile_names(project):
-    names = [item.attrib['Include'] for item in ET.fromstring(project).iter('Compile')]
+def compile_items(project):
+    """Pairs each fixture compile item with its repository path and its file name in the consumer.
+
+    An item is a file in the fixture directory, or a linked file from a sibling test directory.
+    """
+    items = []
+    for item in ET.fromstring(project).iter('Compile'):
+        include, link = item.attrib['Include'], item.attrib.get('Link')
+        if link is None and re.fullmatch(r'[A-Za-z][A-Za-z0-9]*\.fs', include):
+            items.append((FIXTURES + include, include))
+            continue
+        sibling = re.fullmatch(r'\.\./([A-Za-z][A-Za-z0-9.]*)/([A-Za-z][A-Za-z0-9]*\.fs)', include)
+        if sibling and link is not None and re.fullmatch(r'[A-Za-z][A-Za-z0-9]*\.fs', link):
+            items.append(('tests/' + sibling.group(1) + '/' + sibling.group(2), link))
+            continue
+        raise ValueError('Fixture compile files must stay in their source directory or a linked sibling test directory.')
+    names = [name for _, name in items]
     if not names or len(names) != len(set(names)):
         raise ValueError('Fixture compile list must be nonempty and unique.')
-    if any(not re.fullmatch(r'[A-Za-z][A-Za-z0-9]*\.fs', name) for name in names):
-        raise ValueError('Fixture compile files must stay in their source directory.')
-    return names
+    return items
+
+
+def compile_names(project):
+    return [name for _, name in compile_items(project)]
 
 
 def verify_nuspec(source, commit):
@@ -228,9 +245,10 @@ def main():
                           '<package pattern="*"/></packageSource></packageSourceMapping></configuration>')
         (output / 'global.json').write_bytes(source('global.json'))
         name = 'Native' if args.target == 'native' else 'Browser'
-        names = compile_names(source(FIXTURES + name + '.fsproj'))
-        for filename in names:
-            (output / filename).write_bytes(source(FIXTURES + filename))
+        compiled = compile_items(source(FIXTURES + name + '.fsproj'))
+        names = [filename for _, filename in compiled]
+        for path, filename in compiled:
+            (output / filename).write_bytes(source(path))
         properties = '<OutputType>Exe</OutputType><RuntimeIdentifier>win-x64</RuntimeIdentifier><PublishAot>true</PublishAot>' if args.target == 'native' else ''
         if args.target == 'native':
             trace = REPOSITORY / 'tests/native-packages/SharedTraceProbe.fs'
