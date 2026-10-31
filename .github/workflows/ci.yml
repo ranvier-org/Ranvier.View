@@ -1,7 +1,10 @@
 name: CI
 
 on:
+  # A pull request runs the Windows x64 backend only, unless it is a codex/batch-* branch or is labelled
+  # full-matrix; adding the label starts the full run.
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
   push:
     branches: [main, master]
   workflow_dispatch:
@@ -112,13 +115,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - runner: windows-2025
-            rid: win-x64
-            arch: X64
-          - runner: windows-11-arm
-            rid: win-arm64
-            arch: ARM64
+        include: ${{ fromJSON((github.event_name == 'pull_request' && !startsWith(github.head_ref, 'codex/batch-') && !contains(github.event.pull_request.labels.*.name, 'full-matrix')) && '[{"runner":"windows-2025","rid":"win-x64","arch":"X64"}]' || '[{"runner":"windows-2025","rid":"win-x64","arch":"X64"},{"runner":"windows-11-arm","rid":"win-arm64","arch":"ARM64"}]') }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -236,6 +233,7 @@ jobs:
   # macos-26: the osx-arm64 native package needs macOS 26 (decision G12).
   webcore-macos:
     name: WebCore backend (macOS)
+    if: ${{ !(github.event_name == 'pull_request' && !startsWith(github.head_ref, 'codex/batch-') && !contains(github.event.pull_request.labels.*.name, 'full-matrix')) }}
     runs-on: macos-26
     timeout-minutes: 30
     steps:
@@ -280,6 +278,7 @@ jobs:
 
   webcore-linux:
     name: WebCore backend (linux-x64)
+    if: ${{ !(github.event_name == 'pull_request' && !startsWith(github.head_ref, 'codex/batch-') && !contains(github.event.pull_request.labels.*.name, 'full-matrix')) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -390,12 +389,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - env:
-          RESULTS: ${{ needs.views.result }} ${{ needs.analyze.result }} ${{ needs.webcore.result }} ${{ needs['webcore-macos'].result }} ${{ needs['webcore-linux'].result }} ${{ needs['native-api-browser'].result }} ${{ needs.packages.result }} ${{ needs.format.result }}
+          RESULTS: ${{ needs.views.result }} ${{ needs.analyze.result }} ${{ needs.webcore.result }} ${{ needs['native-api-browser'].result }} ${{ needs.packages.result }} ${{ needs.format.result }}
+          PLATFORM_RESULTS: ${{ needs['webcore-macos'].result }} ${{ needs['webcore-linux'].result }}
+          LIGHT: ${{ github.event_name == 'pull_request' && !startsWith(github.head_ref, 'codex/batch-') && !contains(github.event.pull_request.labels.*.name, 'full-matrix') }}
           GPU_ENABLED: ${{ github.event_name == 'workflow_dispatch' && inputs.gpu_runtime_version != '' }}
           GPU_RESULT: ${{ needs['webcore-gpu'].result }}
         run: |
           for result in $RESULTS; do
             case "$result" in success) ;; *) exit 1 ;; esac
+          done
+          for result in $PLATFORM_RESULTS; do
+            if [ "$LIGHT" = true ]; then [ "$result" = skipped ] || exit 1; else [ "$result" = success ] || exit 1; fi
           done
           if [ "$GPU_ENABLED" = true ]; then
             [ "$GPU_RESULT" = success ] || exit 1
