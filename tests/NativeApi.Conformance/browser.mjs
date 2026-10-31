@@ -30,6 +30,7 @@ const segmentsOnly = process.argv.includes('--segments-only');
 const binaryOnly = process.argv.includes('--binary-only');
 const cryptoOnly = process.argv.includes('--crypto-only');
 const highlightsOnly = process.argv.includes('--highlights-only');
+const blobUrlsOnly = process.argv.includes('--blob-urls-only');
 const stringsOnly = process.argv.includes('--strings-only');
 const diagnosticsOnly = process.argv.includes('--diagnostics-only');
 const screenOnly = process.argv.includes('--screen-only');
@@ -221,6 +222,20 @@ const runBinary = async () => {
   }
 };
 const BINARY_ASSERTIONS = 102;
+// #144 runs the blob URL fixture in its own page.
+const runBlobUrls = async () => {
+  const blobBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await blobBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runBlobUrls(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.blobUrls !== BLOB_URL_ASSERTIONS) throw new Error(`Blob URL assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API B144 PASS assertions=${result.blobUrls} engine=chromium`);
+  } finally {
+    await blobBrowser.close();
+  }
+};
+const BLOB_URL_ASSERTIONS = 42;
 // B22 runs the crypto fixture on http://127.0.0.1 (a secure context) and on http://insecure.test, which the browser
 // resolves to the same server but treats as insecure.
 const runCrypto = async () => {
@@ -408,6 +423,7 @@ try {
   else if (binaryOnly) { await runBinary(); process.exitCode = 0; }
   else if (cryptoOnly) { await runCrypto(); process.exitCode = 0; }
   else if (highlightsOnly) { await runHighlights(); process.exitCode = 0; }
+  else if (blobUrlsOnly) { await runBlobUrls(); process.exitCode = 0; }
   else if (stringsOnly) { await runStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (process.argv.includes('--coordinates-only')) { await runCoordinates(); process.exitCode = 0; }
@@ -653,6 +669,7 @@ try {
   await runStrings();
   await runDiagnostics();
   await runCoordinates();
+  await runBlobUrls();
   await runScreen();
   await runEventDetails();
   await runFrames();

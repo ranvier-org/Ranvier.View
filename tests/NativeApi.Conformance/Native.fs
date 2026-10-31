@@ -1810,6 +1810,147 @@ let private runDiagnostics () =
     System.Console.WriteLine $"NATIVE_API H08 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared blob URL fixture with native thread, file-backed, document replacement and teardown checks.</summary>
+[<Literal>]
+let private BlobUrlChecksCount = 42
+
+let private runBlobUrls () =
+    let host = WebCoreHost.Create (320, 200)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    let wait (result: 'T option ref) =
+        let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+        while result.Value.IsNone && timeout.ElapsedMilliseconds < 60000L do
+            host.Cycle () |> ignore
+
+        result.Value.Value
+
+    let driver: BlobUrlChecks.Driver =
+        {
+            Settle = fun () -> async { host.Cycle () |> ignore }
+            CharsetFromType = true
+            Origin = "null"
+        }
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                BlobUrlChecks.run
+                    (fun () -> Ranvier.View.WebCore.BlobUrls.forHost host)
+                    (fun () -> Ranvier.View.WebCore.BinaryValues.forHost host)
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted && timeout.ElapsedMilliseconds < 120000L do
+                host.Cycle () |> ignore
+
+            let count = count.GetAwaiter().GetResult()
+            let service = Ranvier.View.WebCore.BlobUrls.forHost host
+            use values = Ranvier.View.WebCore.BinaryValues.forHost host
+            let blob = values.CreateBlob ([| Ranvier.Dom.BlobPart.Text "kept" |], Ranvier.Dom.BlobOptions.Default)
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () -> rejected (fun () -> service.CreateObjectUrl blob |> ignore))
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "URL.createObjectURL rejects another thread"
+
+            // A file-backed File: read, then the file deleted between create and read.
+            let directory = System.IO.Directory.CreateTempSubdirectory "rv-blob-"
+            let path = System.IO.Path.Combine (directory.FullName, "data.txt")
+            System.IO.File.WriteAllText (path, "file-bytes")
+            let file = Ranvier.View.WebCore.BlobUrls.createFile host path
+            expect (file.name = "data.txt" && file.size = 10UL && file.``type`` = "text/plain") "A file-backed File takes its name, size and type from the path"
+            let text = ref None
+            use _ = service.ReadText (file, fun outcome -> text.Value <- Some outcome)
+            expect (wait text = Ranvier.Dom.ResourceOutcome.Succeeded "file-bytes") "A file-backed File reads its bytes"
+            host.Cycle 100 |> ignore
+            System.IO.File.Delete path
+            directory.Delete ()
+            let missing = ref None
+            use _ = service.ReadText (file, fun outcome -> missing.Value <- Some outcome)
+
+            expect
+                (wait missing = Ranvier.Dom.ResourceOutcome.Failed (Ranvier.Dom.ResourceFailure.LoadFailed "NotFoundError"))
+                "A deleted file fails its read with NotFoundError"
+
+            expect
+                (try
+                    Ranvier.View.WebCore.BlobUrls.createFile host "relative.txt" |> ignore
+                    false
+                 with :? System.ArgumentException ->
+                     true)
+                "A relative path is rejected"
+
+            // Document replacement revokes the document's URLs and invalidates a read in flight.
+            let url = service.CreateObjectUrl blob
+            let big = values.CreateBlob ([| Ranvier.Dom.BlobPart.Bytes (Array.zeroCreate (1 <<< 20)) |], Ranvier.Dom.BlobOptions.Default)
+            let replaced = ref None
+            use _ = service.ReadBytes (big, fun outcome -> replaced.Value <- Some outcome)
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+
+            expect
+                (match wait replaced with
+                 | Ranvier.Dom.ResourceOutcome.Failed (Ranvier.Dom.ResourceFailure.Invalidated _) -> true
+                 | _ -> false)
+                "Document replacement invalidates a read in flight"
+
+            expect (rejected (fun () -> service.CreateObjectUrl blob |> ignore)) "A blob URL service rejects calls after document replacement"
+            use fresh = Ranvier.View.WebCore.BlobUrls.forHost host
+            let afterReplace = ref None
+            use _ = fresh.ReadUrl (url, fun outcome -> afterReplace.Value <- Some outcome)
+
+            expect
+                (match wait afterReplace with
+                 | Ranvier.Dom.ResourceOutcome.Failed (Ranvier.Dom.ResourceFailure.LoadFailed _) -> true
+                 | _ -> false)
+                "A blob URL stops loading after its document is replaced"
+
+            let reader = fresh.CreateFileReader ()
+            reader.readAsArrayBuffer big
+            let pending = fresh.ReadBytes (big, ignore)
+            held <- Some (fresh, reader, pending)
+            service.Dispose ()
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Blob URL fixture leaves no live native objects"
+    let service, _, pending = held.Value
+    expect (pending.Snapshot <> Ranvier.Dom.ResourceState.Pending) "Host disposal ends a read in flight"
+    expect (rejected (fun () -> service.CreateFileReader () |> ignore)) "A held blob URL service rejects calls after host disposal"
+    pending.Dispose ()
+    service.Dispose ()
+
+    if shared <> BlobUrlChecksCount then
+        failwith $"Blob URL shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API B144 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API B144 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared coordinate fixture with page scale, thread and teardown checks.</summary>
 [<Literal>]
 let private CoordinateChecksCount = 304
@@ -2557,6 +2698,7 @@ let private runAll () =
     runStrings () |> ignore
     runDiagnostics () |> ignore
     runCoordinates () |> ignore
+    runBlobUrls () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
@@ -3553,6 +3695,9 @@ let main args =
         0
     elif Array.contains "--urls-only" args then
         runUrls () |> ignore
+        0
+    elif Array.contains "--blob-urls-only" args then
+        runBlobUrls () |> ignore
         0
     elif Array.contains "--highlights-only" args then
         runHighlights () |> ignore

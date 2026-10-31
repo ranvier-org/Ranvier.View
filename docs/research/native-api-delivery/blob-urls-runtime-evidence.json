@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "group": "#144 blob URLs, blob: loading and FileReader",
+  "status": "green (private integration; not accepted)",
+  "route": "Engine object URLs, blob: loads in WebCore, engine blob reads and FileReader (Native44 / ABI52)",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/144",
+  "coreSourceCommit": "6b44bfac3ca764c46aec5c51c640e7f3ad990d64",
+  "viewsSourceCommit": "e404988fe68b35178f70783e0ea9e3f3022512f4",
+  "stackedOn": {
+    "core": "Core forward-merged I11 afe86b90, H08 cd57a763, #142 5bab74fb",
+    "views": "Views forward-merged I11 acea78c, H08 60a7797, #142 9f22896"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-blob-urls",
+    "head": "f0eb376fb5883a5110a178fef955cd6d2ccb92ed",
+    "abi": 52,
+    "runtime": "native-blob artifacts/native44-candidate-5-frozen",
+    "evidence": "Ranvier.WebCore docs/blob-urls-evidence/final-evidence.json",
+    "runtimeSourceHead": "43e30584cb9dbe238dedeea12b4e438299d43cc0"
+  },
+  "versions": {
+    "native": "0.1.0-preview.44",
+    "dom": "0.1.0-alpha.47",
+    "views": "0.1.37",
+    "webcoreBackend": "0.1.0-alpha.37"
+  },
+  "allocationReceipt": "Ranvier docs/research/native-api-delivery/blob-managed47-allocation.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.47.nupkg": "3d8dc1090b3c72cc29624ff878265c9d6adec81e707859349423b6b91451737d",
+    "Ranvier.Dom.0.1.0-alpha.47.nupkg": "9756d9fb8f649372dbaea12dbd53c5d66a6533a491d3f3ff2e9d7d0cf8b300e4",
+    "Ranvier.WebCore.0.1.0-preview.44.nupkg": "94aa670017f164e2fed6e6b48b932ae28a8332fd4fd7a72ad6ee0466270c6426"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "0e396ebcd2283fd38fdf8f648dfcff868bfccd16337b06a768127ebeb83bdb07",
+    "WebCore.dll": "6e143b1718e34499be2c019a1fadf987c75f365b3c5a40d84870312cb6514d07",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\blob-artifacts\\managed\\final-1\\aot\\Native.exe",
+    "sha256": "2a776f2f3c6dfa80393c5ac57e002b563929e8b4670312c69eedbd38e8b764be"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "4808bf178e7a4f84c3baae55b504b91144c3156738522178887a199aa8a78d65",
+      "passLines": 115,
+      "failLines": [],
+      "b144": [
+        "NATIVE_API B144 LIFETIME PASS assertions=11",
+        "NATIVE_API B144 PASS assertions=42"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "20740b5583c3a31055ad55672bbafaf8ba23cc038bf195962d26c795aeb9457f",
+      "passLines": 115,
+      "failLines": [],
+      "b144": [
+        "NATIVE_API B144 LIFETIME PASS assertions=11",
+        "NATIVE_API B144 PASS assertions=42"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "95dd57fb1caa84215aa9cc959d8e33657cdbf9db605fff16f3a3f0444822740f",
+      "passLines": 84,
+      "failLines": [],
+      "b144": [
+        "BROWSER_API B144 PASS assertions=42 engine=chromium"
+      ]
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "repeats": {
+    "aotBlobUrlsOnly": "30 NATIVE_API B144 PASS assertions=42",
+    "chromiumBlobUrlsOnly": "30 BROWSER_API B144 PASS assertions=42 engine=chromium"
+  },
+  "wrapperRegeneration": {
+    "objectsFs": "1d2db922e892a0949139e3e337b7e11a359e3fb762e8fdddaf4d85a03e21aa2c",
+    "reportTxt": "c0562a7f72e30ae4fa5ed04ff27530935a27fe0eb8547eedc23b3e6a23b14d32",
+    "result": "identical to the generator output from preview.44 and alpha.47 (FileReaderObject, Kind 98)"
+  },
+  "fixture": {
+    "shared": "tests/NativeApi.Conformance/BlobUrlChecks.fs",
+    "nativeChecks": 42,
+    "chromiumChecks": 42,
+    "nativeLifetimeChecks": 11
+  },
+  "qualifications": [
+    "readAsText without an encoding decodes with the blob type charset in WebKit (File API) and UTF-8 in Chromium; the fixture asserts each engine.",
+    "A read in flight at document replacement is Invalidated natively (H05); Chromium leaves the removed document promise pending.",
+    "Object URLs carry the document origin: blob:null for the native opaque documents, blob:http://127.0.0.1:<port> in the Chromium fixture page.",
+    "An iframe loading a blob URL is browser-only: the native host has no subframes.",
+    "BlobUrls.createFile (file-backed File from an app-supplied absolute path) is native-only."
+  ]
+}
