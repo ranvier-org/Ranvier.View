@@ -1387,6 +1387,35 @@ let runResizeObservation () =
     }
     |> Async.StartAsPromise
 
+[<Emit("new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(resolve, 0))))")>]
+let private intersectionFrame () : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared intersection observation assertions; Chromium delivers entries in a task after the frame
+/// that computes them.</summary>
+let runIntersectionObservation () =
+    async {
+        let document = document ()
+        let errors = countErrors ()
+
+        let driver: IntersectionObservationChecks.Driver =
+            {
+                Update = fun () -> intersectionFrame () |> Async.AwaitPromise
+                Errors = errors
+                Engine = IntersectionObservationChecks.Chromium
+            }
+
+        let! count =
+            IntersectionObservationChecks.run
+                document
+                (fun () -> BrowserIntersectionObservation.forDocument document)
+                (fun () -> Timing.forDocument document)
+                (fun () -> BrowserCancellation.forDocument document)
+                driver
+
+        return {| intersection = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared crypto assertions in a secure context.</summary>
 let runCrypto () =
     async {

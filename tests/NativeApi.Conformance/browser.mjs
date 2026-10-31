@@ -379,6 +379,20 @@ const runResizeObservation = async () => {
   }
 };
 const RESIZE_ASSERTIONS = 34;
+// G11 runs the intersection observation fixture in its own 320x240 page.
+const runIntersectionObservation = async () => {
+  const intersectionBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await intersectionBrowser.newPage({ viewport: { width: 320, height: 240 } });
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runIntersectionObservation(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.intersection !== INTERSECTION_ASSERTIONS) throw new Error(`Intersection observation assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API G11 PASS assertions=${result.intersection} engine=chromium`);
+  } finally {
+    await intersectionBrowser.close();
+  }
+};
+const INTERSECTION_ASSERTIONS = 40;
 // D14 runs the form submission fixture in its own page; the provider keeps the page in place.
 const runSubmissions = async () => {
   const submissionsBrowser = await chromium.launch({ headless: true });
@@ -473,6 +487,7 @@ try {
   else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
   else if (process.argv.includes('--coordinates-only')) { await runCoordinates(); process.exitCode = 0; }
   else if (process.argv.includes('--resize-only')) { await runResizeObservation(); process.exitCode = 0; }
+  else if (process.argv.includes('--intersection-only')) { await runIntersectionObservation(); process.exitCode = 0; }
   else if (screenOnly) { await runScreen(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
   else if (eventDetailsOnly) { await runEventDetails(); process.exitCode = 0; }
@@ -718,6 +733,7 @@ try {
   await runCascade();
   await runCoordinates();
   await runResizeObservation();
+  await runIntersectionObservation();
   await runBlobUrls();
   await runScreen();
   await runEventDetails();

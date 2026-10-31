@@ -70,9 +70,19 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let frames = Dictionary<int, float -> unit>()
     let idles = List<struct (int * (IdleDeadline -> unit))>()
     let idleTimeouts = Dictionary<int, struct (float * int)>()
-    let timeOrigin = float (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds ())
+    // The document's performance.now() when the host is constructed: the clock continues the engine's, so frame
+    // times, user timing and intersection entry times share one origin.
+    let engineNow =
+        let mutable value = 0.0
+
+        if Native.rv_abi_has "intersection-entries" = 1 && Native.rv_host_now (handle, &value) = 0 then
+            value
+        else
+            0.0
+
+    let timeOrigin = float (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds ()) - engineNow
     let clock = Stopwatch.StartNew ()
-    let mutable advanced = 0.0
+    let mutable advanced = engineNow
     let mutable manual = false
 
     let context = HostContext (posted, thread)
