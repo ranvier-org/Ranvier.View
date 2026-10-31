@@ -10,7 +10,7 @@ open System
 open Ranvier
 open global.Ranvier.Dom
 
-let private owned (start: (unit -> unit) -> IDisposable) (run: unit -> unit) : IDisposable =
+let internal owned (start: (unit -> unit) -> IDisposable) (run: unit -> unit) : IDisposable =
     createRoot (fun owner ->
         let handle =
             start (fun () ->
