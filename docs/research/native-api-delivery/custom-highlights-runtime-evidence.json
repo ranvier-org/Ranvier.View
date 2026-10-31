@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "group": "T03 custom highlights",
+  "status": "green (private integration; not accepted)",
+  "route": "Engine Highlight and HighlightRegistry (Native40 / ABI48); browser Highlight constructor and CSS.highlights",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/74",
+  "coreSourceCommit": "b490d7d69ac1d43022dabeb98032a8843ab034c1",
+  "viewsSourceCommit": "482d6bd5080143eaf0790bb3b0faf99110798f67",
+  "stackedOn": {
+    "core": "Core b490d7d6: I08 2008a4cc, G04 b59d5c56, G03 b9c943d1, B22 ec5f369c, T06 2e58628a",
+    "views": "Views 482d6bd: I08 61722bc, G04 dbcf651, G03 102ab61, B22 dcd8cc7, T06 8332dbc"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-custom-highlights",
+    "head": "828fb2bd137df78be963b35ba8030d9cd30b6e60",
+    "abi": 48,
+    "runtime": "C:/wk/native-highlight/artifacts/native40-candidate-9-frozen",
+    "evidence": "Ranvier.WebCore docs/custom-highlights-evidence/final-evidence.json"
+  },
+  "versions": {
+    "native": "0.1.0-preview.40",
+    "dom": "0.1.0-alpha.43",
+    "views": "0.1.33",
+    "webcoreBackend": "0.1.0-alpha.33"
+  },
+  "allocationReceipt": "Ranvier docs/research/native-api-delivery/t03-managed43-allocation.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.43.nupkg": "7f40fbdb40bb84b514ef0d8b4887ff5c2716fd4938a156b8adbfb70b7d920545",
+    "Ranvier.Dom.0.1.0-alpha.43.nupkg": "9886bea920d55b5b87a305dbdcc27ee41826aed99d1f476d92d6ff5afe412660",
+    "Ranvier.WebCore.0.1.0-preview.40.nupkg": "7e1934c148ed36391e6cd464ff0bafd7b18cf11824da5a1c23919b84602c6e00"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "eff7b3ab8f0e25731a485fc0bb39b8f3834a98ee64f8115bcdd179365d5b145c",
+    "WebCore.dll": "2afe68c280aad0963e882bd067f5f20861f896aa4aa75044a9940de3ffb310ed",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\t03-artifacts\\managed\\final-1\\aot\\Native.exe",
+    "sha256": "468646eb818df106a5b0238a1e6e1e6613eaf1b2c5ab1b46b593035206905209"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "90b3ce82730d2cbe0970238fcd22e92b2007ddb990cfcf6f3213688965b1702f",
+      "passLines": 107,
+      "failLines": [],
+      "t03": [
+        "NATIVE_API T03 LIFETIME PASS assertions=8",
+        "NATIVE_API T03 PASS assertions=35"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "92d09c3e8f811b125b95dce13f701b97f8f0eb864019fc75dae6fd0cfa9dffc9",
+      "passLines": 107,
+      "failLines": [],
+      "t03": [
+        "NATIVE_API T03 LIFETIME PASS assertions=8",
+        "NATIVE_API T03 PASS assertions=35"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "87bfc7142ffbb865a39433f52c42565e3921a448d16220b0384d85138de5951e",
+      "passLines": 80,
+      "failLines": [],
+      "t03": [
+        "BROWSER_API T03 PASS assertions=35 engine=chromium"
+      ]
+    },
+    "i08BaselinePassLines": {
+      "jitAot": 105,
+      "chromium": 79
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "repeats": {
+    "aotHighlightsOnly": "aot highlights-only 30/30",
+    "chromiumHighlightsOnly": "chromium highlights-only 30/30",
+    "nativeCustomHighlights": "Ranvier.WebCore docs/custom-highlights-evidence/custom-highlights-repeat30.txt"
+  },
+  "wrapperRegeneration": {
+    "objectsFs": "5c07736bebf7b1b1b3238cfc806c314c14568bc99e0938702ceea5ad07abbeab",
+    "reportTxt": "0cc8931f491f70703040c701310b9acbc6e745782f6375aa5e9ad94421ba5d6c",
+    "inputs": "restored Ranvier.WebCore preview.40 model + interop and Ranvier.Dom alpha.43 from the private feed"
+  },
+  "fixture": {
+    "shared": "tests/NativeApi.Conformance/HighlightChecks.fs",
+    "sharedChecks": 35,
+    "nativeLifetimeChecks": 8
+  },
+  "qualifications": [
+    "highlightsFromPoint is absent from the pinned WebKit: the native provider answers HighlightHitTest.Unsupported, the browser provider Hits.",
+    "Ranges and Entries are snapshot copies on both providers; Chromium iterators are live.",
+    "Native document replacement and host disposal clear the document registry and empty its registered highlights.",
+    "Paint order and pixel colours are checked by the Ranvier.WebCore probe tests/abi/custom_highlights.py against the Chromium oracle."
+  ]
+}

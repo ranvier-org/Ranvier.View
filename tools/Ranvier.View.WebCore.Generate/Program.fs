@@ -123,6 +123,8 @@ let private kinds =
             "TreeWalker", "Kind.TreeWalker"
             "CaretPosition", "Kind.CaretPosition"
             "VisualViewport", "Kind.VisualViewport"
+            "Highlight", "Kind.Highlight"
+            "HighlightRegistry", "Kind.HighlightRegistry"
         ]
 
 [<EntryPoint>]

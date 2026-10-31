@@ -1622,6 +1622,76 @@ let private runScreen () =
     System.Console.WriteLine $"NATIVE_API G04 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared custom highlight fixture with native thread, document replacement and teardown checks.</summary>
+[<Literal>]
+let private HighlightChecksCount = 35
+
+let private runHighlights () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                HighlightChecks.run
+                    (fun () -> Ranvier.View.WebCore.Highlights.forHost host)
+                    host.Document
+                    HighlightChecks.WebKit
+
+            let service = Ranvier.View.WebCore.Highlights.forHost host
+            let registry = service.Registry
+            let highlight = service.Create [| host.Document.createRange () :> Ranvier.Dom.AbstractRange |]
+            service.Set (registry, "kept", highlight)
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () -> rejected (fun () -> service.Size highlight |> ignore))
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Highlight.size rejects another thread"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            expect (rejected (fun () -> service.Count registry |> ignore)) "A highlight service rejects calls after document replacement"
+            use fresh = Ranvier.View.WebCore.Highlights.forHost host
+            expect (fresh.Count fresh.Registry = 0) "The new document has its own empty registry"
+            expect (not (obj.ReferenceEquals (fresh.Registry, registry))) "The new document has another registry"
+            expect (fresh.Size highlight = 0) "Document replacement empties a highlight registered in the replaced document"
+            highlight.priority <- 3
+            expect (highlight.priority = 3) "A held highlight stays usable after document replacement"
+            held <- Some service
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Highlight fixture leaves no live native objects"
+    let service = held.Value
+    expect (rejected (fun () -> service.Registry |> ignore)) "A held highlight service rejects calls after host disposal"
+    service.Dispose ()
+
+    if shared <> HighlightChecksCount then
+        failwith $"Highlight shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API T03 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API T03 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared crypto fixture with native thread and teardown checks.</summary>
 [<Literal>]
 let private CryptoChecksCount = 155
@@ -2252,6 +2322,7 @@ let private runAll () =
     runCrypto () |> ignore
     runScreen () |> ignore
     runEventDetails () |> ignore
+    runHighlights () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
@@ -3248,6 +3319,9 @@ let main args =
         0
     elif Array.contains "--urls-only" args then
         runUrls () |> ignore
+        0
+    elif Array.contains "--highlights-only" args then
+        runHighlights () |> ignore
         0
     elif Array.contains "--crypto-only" args then
         runCrypto () |> ignore
