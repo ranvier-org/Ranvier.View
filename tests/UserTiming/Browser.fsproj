@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(NativeApiContractRoot)/src/Ranvier.Dom/Generated/Dom.fs" Link="Generated/Dom.fs" Condition="'$(NativeApiContractRoot)' != ''" />
+    <Compile Include="$(NativeApiContractRoot)/src/Ranvier.Dom/Timing.fs" Link="Timing.fs" Condition="'$(NativeApiContractRoot)' != ''" />
+    <Compile Include="$(NativeApiContractRoot)/src/Fable.Ranvier.Dom/BrowserTiming.fs" Link="BrowserTiming.fs" Condition="'$(NativeApiContractRoot)' != ''" />
+    <Compile Include="../NativeApi.Conformance/UserTiming.fs" Link="UserTiming.fs" />
+    <Compile Include="Browser.fs" />
+    <PackageReference Include="Fable.Core" Version="5.3.0" />
+    <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" Condition="'$(NativeApiContractRoot)' == ''" />
+  </ItemGroup>
+</Project>

@@ -32,6 +32,7 @@ let private runTransforms (host: WebCoreHost) =
     shared + effects
 
 let private runAll () =
+    UserTimingNative.run ()
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then

@@ -80,6 +80,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let timers = SortedDictionary<struct (float * int), unit -> unit>()
     let timerKeys = Dictionary<int, struct (float * int)>()
     let frames = Dictionary<int, float -> unit>()
+    let timeOrigin = float (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds ())
     let clock = Stopwatch.StartNew ()
     let mutable advanced = 0.0
     let mutable manual = false
@@ -233,6 +234,18 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
         if disposed then
             raise (ObjectDisposedException (nameof WebCoreHost))
+
+    /// <summary>The clock shared by frame callbacks, timers and user timing, with its fixed Unix-millisecond origin.</summary>
+    member internal this.TimingClock: TimingClock =
+        this.EnsureActive ()
+
+        { new TimingClock with
+            member _.TimeOrigin = timeOrigin
+
+            member _.Now() =
+                this.EnsureActive ()
+                now ()
+        }
 
     /// <summary>Posts a callback to the host's thread-safe work queue.</summary>
     member internal _.PostToOwner(action: unit -> unit) =
