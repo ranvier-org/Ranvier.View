@@ -163,7 +163,7 @@ const runUrls = async () => {
     await urlsBrowser.close();
   }
 };
-const URL_ASSERTIONS = 185;
+const URL_ASSERTIONS = 189;
 // T06 runs the text segmentation fixture in its own page.
 const runSegments = async () => {
   const segmentsBrowser = await chromium.launch({ headless: true });
