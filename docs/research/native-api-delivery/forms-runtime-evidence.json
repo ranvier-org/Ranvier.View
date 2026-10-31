@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "group": "D13",
+  "status": "green (private integration; not accepted)",
+  "route": "Qualified",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/22",
+  "coreSourceCommit": "b968acd4c9d86dbf225bdd526021948234947f8d",
+  "viewsSourceCommit": "ac319e198391f5dbb28517f8db1706b0f7d3ba99",
+  "nativeProducer": {
+    "branch": "codex/native-api-forms",
+    "head": "cd90d0d4805d3943daa68c111c053537b6331f7a",
+    "producerEvidence": "docs/forms-evidence/final-evidence.json",
+    "abi": 36,
+    "candidate": "private win-x64 slim forms-candidate-4, frozen native28-frozen"
+  },
+  "versions": {
+    "native": "0.1.0-preview.28",
+    "dom": "0.1.0-alpha.29",
+    "views": "0.1.19",
+    "webcoreBackend": "0.1.0-alpha.19"
+  },
+  "allocationReceipt": "Ranvier: docs/research/native-api-delivery/d13-managed29-allocation.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.29.nupkg": "6fb2ce1ccc0580fd0ba6121153fd1935795bfbf5547eb4a96d7ff48b29498133",
+    "Ranvier.Dom.0.1.0-alpha.29.nupkg": "91efdc212a28f72d3efd45cd49bcb885874918460bba4800282e5ee31aa847aa",
+    "Ranvier.WebCore.0.1.0-preview.28.nupkg": "aeb8a279d3f7e26587776be6eaee5f9e2ac632b38017f3e7ab561d5bd8319755"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "029b88fc4de18dca718a1caf8b1e091c6f2d94be5080be5f2ab30f6e0b7401b5",
+    "WebCore.dll": "07e3c413fc28a9be11a845755ee866a6c52b359194663ab0959bb84650a9ee83",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "stageMatchesAot": true,
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "c15dbd0b135107c82ee12549ecaea6094825aed11d26d84b1f27997e3446ef91",
+      "passLines": 80,
+      "failLines": [],
+      "d13": [
+        "NATIVE_API D13 PASS assertions=67",
+        "NATIVE_API D13 LIFETIME PASS assertions=9"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "c15dbd0b135107c82ee12549ecaea6094825aed11d26d84b1f27997e3446ef91",
+      "passLines": 80,
+      "failLines": [],
+      "d13": [
+        "NATIVE_API D13 PASS assertions=67",
+        "NATIVE_API D13 LIFETIME PASS assertions=9"
+      ]
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\d13-private\\aot-api\\Native.exe",
+    "sha256": "285ca67e3452a2ce11c2bfedc7f33fe85b80f548f115f2409689206e43f0558c"
+  },
+  "chromium": {
+    "exitCode": 0,
+    "logSha256": "45b83d71490cfec3691dad6d2a12df0feabb6fbb12b28a1587c5679ff3199be0",
+    "passLines": 64,
+    "failLines": [],
+    "d13": [
+      "BROWSER_API D13 PASS assertions=67 engine=chromium"
+    ]
+  },
+  "contract": {
+    "service": "Ranvier.Dom.FormDataService (Create, FromForm, Get, GetAll, Entries, CreateSubmitEvent, CreateFormDataEvent)",
+    "browserProvider": "Ranvier.Dom.BrowserForms.forDocument",
+    "nativeProvider": "Ranvier.View.WebCore.FormData.forHost",
+    "entryValue": "FormDataEntryValue = String of string | File of FormDataFile (opaque)"
+  },
+  "fixture": "tests/NativeApi.Conformance/FormChecks.fs (67 shared assertions) + native lifetime checks in Native.fs runForms",
+  "fixtureQualifications": [
+    "File entries are opaque until H11: FormDataContract.readFile raises NotSupportedException on every provider.",
+    "Host documents never navigate on form submission; the fixture forms target a sink iframe so Chromium keeps the page."
+  ],
+  "generatorFix": "native cd90d0d: under Fable an inherited intrinsic member that a descendant adapter redeclares is emitted as an extension, so HTMLFormControlsCollection.namedItem returns RadioNodeListOrElement option on every backend (test_domgen 78)."
+}
