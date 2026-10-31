@@ -52,11 +52,9 @@ const runInputState = async () => {
     const context = await inputBrowser.newContext();
     const page = await context.newPage();
     const other = await context.newPage();
-    const cdp = await context.newCDPSession(page);
-    await cdp.send('Emulation.setFocusEmulationEnabled', { enabled: false });
     await page.exposeFunction('__nativeApiSetActive', async active => {
       await (active ? page : other).bringToFront();
-      await page.waitForFunction(value => document.hasFocus() === value, active);
+      await page.waitForFunction(value => document.hasFocus() === value, active, { polling: 20 });
     });
     await page.exposeFunction('__nativeApiMouse', async (action, x, y) => {
       if (action === 'move') await page.mouse.move(x, y);
@@ -65,8 +63,11 @@ const runInputState = async () => {
     });
     await page.exposeFunction('__nativeApiTab', async () => { await page.keyboard.press('Tab'); });
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    // Playwright emulates focus for every page; navigation restores the emulation, so it is disabled afterwards.
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Emulation.setFocusEmulationEnabled', { enabled: false });
     await page.bringToFront();
-    const result = await page.evaluate(async () => (await import('/Browser.js')).runInputState());
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runInputState(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.inputState !== 39) throw new Error(`Input state assertions did not run: ${JSON.stringify(result)}`);
     console.log(`BROWSER_API I12 PASS assertions=${result.inputState} engine=chromium headless=new`);
   } finally {

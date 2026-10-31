@@ -1317,7 +1317,7 @@ let private runPaint () =
             |> runOnHostThread
 
         let resources =
-            SvgResources.run host.Document pixel (nativeWait host) surfaceErrorName false
+            SvgResources.run host.Document pixel (nativeWait host) surfaceErrorName
             |> runOnHostThread
 
         if

@@ -189,7 +189,7 @@ let runSvgPaint () =
         let! paint = SvgPaintServers.run target pixel errorName
         let! filters = SvgFilters.run target pixel errorName
         let! clipping = SvgClipping.run target pixel errorName
-        let! resources = SvgResources.run target pixel wait errorName true
+        let! resources = SvgResources.run target pixel wait errorName
 
         return
             {|
