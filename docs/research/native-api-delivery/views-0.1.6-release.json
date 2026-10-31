@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "status": "release-requested",
+  "cohort": "Views 0.1.6 / WebCore and SDL alpha.6",
+  "implementationCommit": "5e3b88a2b9257cc533523f7c726b23a2b711a34d",
+  "implementationPullRequest": "https://github.com/ranvier-org/Ranvier.View/pull/17",
+  "implementationSourceHead": "6d14112c0b16dc1f027900fc0dcaddf1252a4876",
+  "implementationSourceAndSquashTreesEqual": true,
+  "sourceCi": 41159361866,
+  "sourceContribution": 41159361875,
+  "sourceCiStatus": "success",
+  "core": {
+    "version": "0.1.0-alpha.16",
+    "source": "9f57c32c6499dffbe1c9475b6d2d1ebb2a28e2fa",
+    "verification": "Fresh official-only normal/traced restore, package-only graph, .NET 8/10 execution, Fable Node and Chromium named lookup (121 each)."
+  },
+  "native": {
+    "version": "0.1.0-preview.16",
+    "abi": 24,
+    "source": "fae0e7925c5e9bd70c71b51cda1025076839dfe4",
+    "verification": "Seven fresh official-only packages, five exact runtime manifests and 5047 Windows packaged API assertions."
+  },
+  "packageAbsence": {
+    "Ranvier.View": "0.1.6 absent on nuget.org",
+    "Ranvier.View.WebCore": "0.1.0-alpha.6 absent on nuget.org",
+    "Ranvier.View.WebCore.Sdl": "0.1.0-alpha.6 absent on nuget.org",
+    "matchingTags": 0
+  },
+  "sourceAndVersionChangesInThisDeclaration": false,
+  "publisherPolicy": "A successful trusted main push whose commit message starts with chore: release publishes its exact CI package artifact using NuGet OIDC.",
+  "remaining": [
+    "Trusted release-declaration main CI and publication.",
+    "Fresh normal/traced package-only JIT, real NativeAOT and Chromium execution of the published cohort.",
+    "Independent full-scope acceptance; the groups remain open."
+  ]
+}

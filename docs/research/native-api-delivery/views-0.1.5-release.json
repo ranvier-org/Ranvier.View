@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "status": "release-requested",
+  "cohort": "Views 0.1.5 / WebCore and SDL alpha.5",
+  "implementationCommit": "f70985ccf8a33d8b435739e0d5cb71ed715d8abb",
+  "implementationPullRequest": "https://github.com/ranvier-org/Ranvier.View/pull/16",
+  "implementationSourceHead": "dd5da4e23b14291ef37d84df0da8c9e807fba168",
+  "implementationSourceAndSquashTreesEqual": true,
+  "sourceCi": 41022534876,
+  "mainCi": 41024822674,
+  "sourceAndMainCiStatus": "success",
+  "core": {
+    "version": "0.1.0-alpha.15",
+    "source": "a412e67be249f671a9e7fdf2298da135fb58aad4",
+    "verification": "Fresh official-only restore, package-only graph and repository provenance for normal/traced DOM and Fable DOM."
+  },
+  "native": {
+    "version": "0.1.0-preview.15",
+    "abi": 23,
+    "source": "93ab9a45e728f8948b4d2eac8f8bdc480b7379a3",
+    "verification": "Seven fresh official-only packages, five exact runtime manifests and 3696 Windows packaged API assertions."
+  },
+  "authoringAccessorRepair": "typed-style-maps-authoring-accessor-repair.json",
+  "nativeGeneratedAccessorAssertions": 6,
+  "sourceAndVersionChangesInThisDeclaration": false,
+  "publisherPolicy": "A successful trusted main push whose commit message starts with chore: release publishes its exact CI package artifact using NuGet OIDC.",
+  "remaining": [
+    "Trusted release-declaration main CI and publication.",
+    "Public package indexing and fresh normal/traced package-only JIT, real NativeAOT and Chromium execution.",
+    "Independent full-scope C13 acceptance; the group remains open."
+  ]
+}
