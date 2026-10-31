@@ -1,4 +1,4 @@
-249 classes; 2647 members: 2618 mapped to 2538 of 2639 rv_dom_* functions, 29 hand-written, 0 unmapped
+250 classes; 2651 members: 2622 mapped to 2542 of 2658 rv_dom_* functions, 29 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_animation_playback_event_create: AnimationPlaybackEvent.constructor (op)
@@ -9,6 +9,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_crypto_get_random_values: Crypto.getRandomValues (op)
   rv_dom_crypto_random_uuid: Crypto.randomUUID (op)
   rv_dom_css_animation_event_create: CSSAnimationEvent.constructor (op)
+  rv_dom_css_get_highlights: DOMCSSNamespace.highlights (op)
   rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
   rv_dom_css_perspective_create: CSSPerspective.constructor (op)
   rv_dom_css_register_property: DOMCSSNamespace.registerProperty (op)
@@ -61,6 +62,20 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_focus_event_get_related_target: FocusEvent.relatedTarget (get)
   rv_dom_form_data_event_create: FormDataEvent.constructor (op)
   rv_dom_hash_change_event_create: HashChangeEvent.constructor (op)
+  rv_dom_highlight_add: Highlight.add (op)
+  rv_dom_highlight_clear: Highlight.clear (op)
+  rv_dom_highlight_create: Highlight.constructor (op)
+  rv_dom_highlight_delete: Highlight.delete (op)
+  rv_dom_highlight_has: Highlight.has (op)
+  rv_dom_highlight_registry_clear: HighlightRegistry.clear (op)
+  rv_dom_highlight_registry_delete: HighlightRegistry.delete (op)
+  rv_dom_highlight_registry_entries: HighlightRegistry.entries (op)
+  rv_dom_highlight_registry_get: HighlightRegistry.get (op)
+  rv_dom_highlight_registry_has: HighlightRegistry.has (op)
+  rv_dom_highlight_registry_set: HighlightRegistry.set (op)
+  rv_dom_highlight_registry_size: HighlightRegistry.size (op)
+  rv_dom_highlight_size: Highlight.size (op)
+  rv_dom_highlight_values: Highlight.values (op)
   rv_dom_html_select_element_remove_0: HTMLSelectElement.remove (op)
   rv_dom_input_event_get_data: InputEvent.data (get)
   rv_dom_input_event_get_input_type: InputEvent.inputType (get)
@@ -242,6 +257,7 @@ Members by class (mapped / hand-written / unmapped):
   HTMLTitleElementObject: 2 / 0 / 0
   HTMLUListElementObject: 4 / 0 / 0
   HashChangeEventObject: 2 / 0 / 0
+  HighlightObject: 4 / 0 / 0
   InputEventObject: 2 / 2 / 0
   KeyboardEventObject: 12 / 1 / 0
   MathMLElementObject: 11 / 0 / 0

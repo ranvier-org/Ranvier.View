@@ -198,6 +198,12 @@ module internal Kind =
     [<Literal>]
     let VisualViewport = 74
 
+    [<Literal>]
+    let Highlight = 86
+
+    [<Literal>]
+    let HighlightRegistry = 87
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -374,6 +380,8 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.UrlSearchParams -> NativeDom.rv_dom_url_search_params_release handle
         | Kind.UrlPattern -> NativeDom.rv_dom_url_pattern_release handle
         | Kind.VisualViewport -> Native.rv_event_target_release handle
+        | Kind.Highlight -> NativeDom.rv_dom_highlight_release handle
+        | Kind.HighlightRegistry -> NativeDom.rv_dom_highlight_registry_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =
@@ -525,6 +533,15 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
     member internal _.Track<'T when 'T :> NativeObject>(target: 'T) : 'T =
         others.Add (WeakReference<NativeObject>(target))
         target
+
+    /// <summary>Makes <c>target</c> the wrapper <c>Object</c> returns for its kind and handle while no other is live.</summary>
+    member internal _.Remember(target: NativeObject) =
+        let key = struct (target.Kind, target.Handle)
+        let mutable existing = null
+
+        match objectTable.TryGetValue key with
+        | true, weak when weak.TryGetTarget (&existing) && existing.Handle = target.Handle -> ()
+        | _ -> objectTable[key] <- WeakReference<NativeObject>(target)
 
     /// <summary>Consumes an owned reference, reusing a live wrapper or creating one anchored to its owner.</summary>
     member internal this.Object(handle: nativeint, kind: int, owner: NativeObject, factory: Func<Session, nativeint, NativeObject>) =
