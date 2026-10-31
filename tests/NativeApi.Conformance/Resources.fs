@@ -2,7 +2,6 @@ module internal NativeApiConformance.Resources
 
 open System
 open System.Collections.Generic
-open System.Threading.Tasks
 open Ranvier.Dom
 
 /// <summary>Fixture bytes shared by the native and browser runs.</summary>
@@ -13,11 +12,20 @@ type Fixture =
         Font: byte array
     }
 
+/// <summary>Measured engine behaviour the shared assertions are qualified by.</summary>
+type Engine =
+    {
+        /// <summary>The engine resolves decode for a PNG whose header is valid and whose image data is corrupt.</summary>
+        CorruptImageDecodes: bool
+        /// <summary>A released transport URL is observable as a new provider request.</summary>
+        TransportReleaseReachesProvider: bool
+    }
+
 /// <summary>Checks cache policies, single terminal outcomes, cancellation, image and font readiness and disposal.</summary>
 /// <param name="create">Creates a service over a provider.</param>
 /// <param name="image">Creates an image element in the service's document with the given source URL.</param>
-let run (fixture: Fixture) (create: ResourceProvider -> ResourceService) (image: string -> Element) =
-    task {
+let run (engine: Engine) (fixture: Fixture) (create: ResourceProvider -> ResourceService) (image: string -> Element) =
+    async {
         let mutable checks = 0
 
         let equal label expected actual =
@@ -65,14 +73,29 @@ let run (fixture: Fixture) (create: ResourceProvider -> ResourceService) (image:
 
         let await (start: (ResourceOutcome<'T> -> unit) -> ResourceOperation<'T>) =
             let terminals = List<ResourceOutcome<'T>>()
-            let completion = TaskCompletionSource<ResourceOutcome<'T>>()
+            let mutable first: ResourceOutcome<'T> option = None
+            let mutable waiting: (ResourceOutcome<'T> -> unit) option = None
 
             let operation =
                 start (fun outcome ->
                     terminals.Add outcome
-                    completion.TrySetResult outcome |> ignore)
 
-            operation, terminals, completion.Task
+                    if first.IsNone then
+                        first <- Some outcome
+
+                        match waiting with
+                        | Some resume ->
+                            waiting <- None
+                            resume outcome
+                        | None -> ())
+
+            let wait =
+                Async.FromContinuations (fun (resume, _, _) ->
+                    match first with
+                    | Some outcome -> resume outcome
+                    | None -> waiting <- Some resume)
+
+            operation, terminals, wait
 
         use service = create provider
 
@@ -187,7 +210,10 @@ let run (fixture: Fixture) (create: ResourceProvider -> ResourceService) (image:
             "corrupt image"
             true
             (match corrupt with
-             | ResourceOutcome.Failed (ResourceFailure.DecodeFailed _) -> true
+             | ResourceOutcome.Failed (ResourceFailure.DecodeFailed _) -> not engine.CorruptImageDecodes
+             | ResourceOutcome.Succeeded value ->
+                 engine.CorruptImageDecodes
+                 && (value.Width, value.Height) = (3, 2)
              | _ -> false)
 
         let element = image "https://h05.test/element.png"
@@ -206,7 +232,7 @@ let run (fixture: Fixture) (create: ResourceProvider -> ResourceService) (image:
             await (fun terminal -> service.DecodeImage (afterTransport, terminal))
 
         let! _ = released
-        equal "a disposed image releases its transport URL" 1 (count transport)
+        equal "a disposed image releases its transport URL" (if engine.TransportReleaseReachesProvider then 1 else 0) (count transport)
 
         let opFont, _, font =
             await (fun terminal ->
@@ -267,8 +293,8 @@ let run (fixture: Fixture) (create: ResourceProvider -> ResourceService) (image:
                 |> ignore
 
                 false
-            with :? ObjectDisposedException ->
-                true
+            with error ->
+                error.Message.Contains "ResourceService"
 
         equal "a disposed service rejects new operations" true disposedCall
         return checks

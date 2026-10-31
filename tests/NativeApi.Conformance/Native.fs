@@ -179,7 +179,15 @@ let private runResources () =
                 element
 
             let pending =
-                Resources.run (resourceFixture ()) (fun provider -> Ranvier.View.WebCore.Resources.forHost host provider) image
+                Resources.run
+                    {
+                        CorruptImageDecodes = false
+                        TransportReleaseReachesProvider = true
+                    }
+                    (resourceFixture ())
+                    (fun provider -> Ranvier.View.WebCore.Resources.forHost host provider)
+                    image
+                |> Async.StartImmediateAsTask
 
             let timeout = System.Diagnostics.Stopwatch.StartNew ()
 
