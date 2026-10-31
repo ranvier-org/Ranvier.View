@@ -183,6 +183,9 @@ module internal Kind =
     [<Literal>]
     let FileList = 57
 
+    [<Literal>]
+    let CaretPosition = 58
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -354,6 +357,7 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.FormData -> NativeDom.rv_dom_dom_form_data_release handle
         | Kind.Blob -> NativeDom.rv_dom_blob_release handle
         | Kind.FileList -> NativeDom.rv_dom_file_list_release handle
+        | Kind.CaretPosition -> NativeDom.rv_dom_caret_position_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =
