@@ -52,7 +52,10 @@ type internal Events private () =
                  | Some true -> 6)
 
         let listener =
-            Native.rv_node_add_event_listener (registration.Target, eventType, flags, Events.Pointer, GCHandle.ToIntPtr context)
+            if target.Kind = Kind.EventTarget then
+                Native.rv_event_target_add_listener (registration.Target, eventType, flags, Events.Pointer, GCHandle.ToIntPtr context)
+            else
+                Native.rv_node_add_event_listener (registration.Target, eventType, flags, Events.Pointer, GCHandle.ToIntPtr context)
 
         if listener = 0n then
             context.Free ()
@@ -203,7 +206,10 @@ type internal Events private () =
             session.ScriptDepth <- session.ScriptDepth + 1
 
             try
-                Native.rv_node_dispatch (Interop.handle (box target), native.Handle, &prevented)
+                (if target.Kind = Kind.EventTarget then
+                     Native.rv_event_target_dispatch (target.Handle, native.Handle, &prevented)
+                 else
+                     Native.rv_node_dispatch (Interop.handle (box target), native.Handle, &prevented))
                 |> Interop.check "EventTarget.dispatchEvent"
             finally
                 session.ScriptDepth <- session.ScriptDepth - 1
@@ -220,10 +226,31 @@ type internal Events private () =
             | true, value -> unbox<'T> value
             | _ -> read ()
 
+    /// <summary>The object of an owned EventTarget handle: the node object for a node, else the standalone target.</summary>
+    static member internal TargetObject(session: Session, handle: nativeint) : EventTarget =
+        if handle = 0n then
+            Unchecked.defaultof<EventTarget>
+        else
+            let node = Native.rv_event_target_as_node handle
+
+            if node <> 0n then
+                Native.rv_event_target_release handle
+                unbox<EventTarget>(session.Node node)
+            else
+                unbox<EventTarget>(session.Target handle)
+
+    /// <summary><c>Event.target</c>, including standalone targets.</summary>
+    static member Target(event: NativeObject) : EventTarget =
+        Events.TargetObject (event.Session, Native.rv_event_get_target (event.Handle, 0))
+
+    /// <summary><c>relatedTarget</c> of a mouse or focus event, including standalone targets.</summary>
+    static member RelatedTarget(event: NativeObject) : EventTarget =
+        Events.TargetObject (event.Session, Native.rv_event_get_related_target event.Handle)
+
     /// <summary><c>Event.currentTarget</c>, or the override the view's delegation set for the dispatch.</summary>
     static member CurrentTarget(event: NativeObject) : EventTarget =
         if isNull (box event.CurrentTargetOverride) then
-            unbox<EventTarget>(event.Session.Node (Native.rv_event_target (event.Handle, 1)))
+            Events.TargetObject (event.Session, Native.rv_event_get_target (event.Handle, 1))
         else
             match event.CurrentTargetOverride () with
             | null -> Unchecked.defaultof<EventTarget>

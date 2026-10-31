@@ -24,6 +24,9 @@ let private hand (dom: Type) (header: string) : Map<string, string> =
             "EventTarget.removeEventListener", "Events.Remove(this, {0}, {1}, {2})"
             "EventTarget.dispatchEvent", "Events.Dispatch(this, {0})"
             "Event.currentTarget.get", "Events.CurrentTarget this"
+            "Event.target.get", "Events.Target this"
+            "MouseEvent.relatedTarget.get", "Events.RelatedTarget this"
+            "FocusEvent.relatedTarget.get", "Events.RelatedTarget this"
             "KeyboardEvent.key.get",
             "Events.Init(this, \"key\", fun () -> Interop.text \"KeyboardEvent.key\" (fun b c l -> NativeDom.rv_dom_keyboard_event_get_key (this.Handle, b, c, l)))"
             "InputEvent.data.get",

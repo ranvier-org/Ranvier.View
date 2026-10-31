@@ -154,6 +154,8 @@ try {
   console.log(`BROWSER_API H07 PASS assertions=${checks.capabilities} engine=chromium`);
   if (checks.cancellation !== 56 || checks.cancellationInterop !== 12) throw new Error(`Cancellation assertions did not run: ${checks.cancellation}/${checks.cancellationInterop}`);
   console.log(`BROWSER_API I01 PASS assertions=${checks.cancellation} interop=${checks.cancellationInterop} engine=chromium`);
+  if (checks.customEvents !== 45) throw new Error(`Custom event assertions did not run: ${checks.customEvents}`);
+  console.log(`BROWSER_API I02 PASS assertions=${checks.customEvents} engine=chromium`);
   console.log(`BROWSER_API D10_VIEW PASS assertions=${checks.viewTables} engine=chromium`);
   if (checks.viewHyperlinks !== 50) throw new Error('View hyperlink authoring assertions did not run');
   console.log(`BROWSER_API D11_VIEW_HYPERLINKS PASS assertions=${checks.viewHyperlinks} engine=chromium`);

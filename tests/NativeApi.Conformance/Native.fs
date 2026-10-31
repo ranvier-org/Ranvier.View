@@ -82,6 +82,84 @@ type private OwnerLoop() =
             let struct (callback, state) = item
             callback.Invoke state
 
+let mutable private survivor: (Ranvier.Dom.EventTarget * Ranvier.Dom.Event) option =
+    None
+
+/// <summary>Runs the shared custom event fixture with native standalone-target lifetime checks.</summary>
+let private runCustomEvents () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let shared =
+        try
+            let count =
+                CustomEvents.run host.Document (fun () -> Ranvier.View.WebCore.EventConstruction.forHost host) (fun () ->
+                    Ranvier.View.WebCore.Cancellation.forHost host)
+
+            use service = Ranvier.View.WebCore.EventConstruction.forHost host
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.CreateTarget () |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Event construction rejects another thread"
+            let mutable calls = 0
+            let target = service.CreateTarget ()
+            target.addEventListener ("kept", fun _ -> calls <- calls + 1)
+
+            let custom =
+                service.Create ("kept", Ranvier.Dom.EventConstruction.Custom (Ranvier.Dom.EventOptions.Default, Ranvier.Dom.TimingDetail.Text "kept"))
+
+            System.GC.Collect ()
+            System.GC.WaitForPendingFinalizers ()
+            host.Cycle ()
+            RanvierWebCoreAbi.Native.rv_collect_garbage ()
+            expect (service.Detail custom = Some (Ranvier.Dom.TimingDetail.Text "kept")) "Detail survives managed and engine collection"
+            expect (target.dispatchEvent custom) "Dispatch on a retained standalone target"
+            expect (calls = 1) "Listener ran"
+            survivor <- Some (target, custom)
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Custom event fixture leaves no live native objects"
+    let disposedTarget, disposedEvent = survivor.Value
+
+    let rejected =
+        try
+            disposedTarget.dispatchEvent disposedEvent
+            |> ignore
+
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    expect rejected "Host disposal invalidates standalone targets"
+
+    System.Console.WriteLine $"NATIVE_API I02 COUNT {shared}"
+
+    if shared <> 45 then
+        failwith $"Custom event shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API I02 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API I02 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared cancellation fixture and native thread, error, timer and teardown checks.</summary>
 let private runCancellation () =
     let host = WebCoreHost.Create (320, 240)
@@ -223,6 +301,7 @@ let private runAll () =
     UserTimingNative.run ()
     runCapabilities () |> ignore
     runCancellation () |> ignore
+    runCustomEvents () |> ignore
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
@@ -1128,6 +1207,9 @@ let main args =
 
         System.Console.WriteLine "NATIVE_API C14 TEARDOWN PASS"
 
+        0
+    elif Array.contains "--custom-events-only" args then
+        runCustomEvents () |> ignore
         0
     elif Array.contains "--cancellation-only" args then
         runCancellation () |> ignore
