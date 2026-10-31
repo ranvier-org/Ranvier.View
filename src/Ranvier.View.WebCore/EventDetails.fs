@@ -91,13 +91,14 @@ module EventDetails =
             member _.CreateErrorEvent(eventType, options, fields) =
                 check ()
                 let eventType = name eventType
+                use inputs = new InputScope ()
                 let mutable init = NativeDom.RvDomErrorEventInit ()
                 init.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomErrorEventInit>())
                 init.bubbles <- flag options.Bubbles
                 init.cancelable <- flag options.Cancelable
                 init.composed <- flag options.Composed
-                init.message <- EventDetailContract.text "Message" fields.Message
-                init.filename <- EventDetailContract.text "Filename" fields.Filename
+                init.message <- inputs.TextInput (Option.ofObj (EventDetailContract.text "Message" fields.Message))
+                init.filename <- inputs.TextInput (Option.ofObj (EventDetailContract.text "Filename" fields.Filename))
                 init.lineno <- fields.Lineno
                 init.colno <- fields.Colno
                 let mutable result = 0n
@@ -128,14 +129,15 @@ module EventDetails =
             member _.CreateAnimationEvent(eventType, options, fields) =
                 check ()
                 let eventType = name eventType
+                use inputs = new InputScope ()
                 let mutable init = NativeDom.RvDomAnimationEventInit ()
                 init.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomAnimationEventInit>())
                 init.bubbles <- flag options.Bubbles
                 init.cancelable <- flag options.Cancelable
                 init.composed <- flag options.Composed
-                init.animation_name <- EventDetailContract.text "Name" fields.Name
+                init.animation_name <- inputs.TextInput (Option.ofObj (EventDetailContract.text "Name" fields.Name))
                 init.elapsed_time <- EventDetailContract.finite "ElapsedTime" fields.ElapsedTime
-                init.pseudo_element <- EventDetailContract.text "PseudoElement" fields.PseudoElement
+                init.pseudo_element <- inputs.TextInput (Option.ofObj (EventDetailContract.text "PseudoElement" fields.PseudoElement))
                 let mutable result = 0n
 
                 let status =
@@ -146,14 +148,15 @@ module EventDetails =
             member _.CreateTransitionEvent(eventType, options, fields) =
                 check ()
                 let eventType = name eventType
+                use inputs = new InputScope ()
                 let mutable init = NativeDom.RvDomTransitionEventInit ()
                 init.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomTransitionEventInit>())
                 init.bubbles <- flag options.Bubbles
                 init.cancelable <- flag options.Cancelable
                 init.composed <- flag options.Composed
-                init.property_name <- EventDetailContract.text "Name" fields.Name
+                init.property_name <- inputs.TextInput (Option.ofObj (EventDetailContract.text "Name" fields.Name))
                 init.elapsed_time <- EventDetailContract.finite "ElapsedTime" fields.ElapsedTime
-                init.pseudo_element <- EventDetailContract.text "PseudoElement" fields.PseudoElement
+                init.pseudo_element <- inputs.TextInput (Option.ofObj (EventDetailContract.text "PseudoElement" fields.PseudoElement))
                 let mutable result = 0n
 
                 let status =
@@ -223,13 +226,14 @@ module EventDetails =
             member _.CreateHashChangeEvent(eventType, options, fields) =
                 check ()
                 let eventType = name eventType
+                use inputs = new InputScope ()
                 let mutable init = NativeDom.RvDomHashChangeEventInit ()
                 init.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomHashChangeEventInit>())
                 init.bubbles <- flag options.Bubbles
                 init.cancelable <- flag options.Cancelable
                 init.composed <- flag options.Composed
-                init.old_url <- EventDetailContract.text "OldURL" fields.OldURL
-                init.new_url <- EventDetailContract.text "NewURL" fields.NewURL
+                init.old_url <- inputs.TextInput (Option.ofObj (EventDetailContract.text "OldURL" fields.OldURL))
+                init.new_url <- inputs.TextInput (Option.ofObj (EventDetailContract.text "NewURL" fields.NewURL))
                 let mutable result = 0n
 
                 let status =
@@ -240,12 +244,13 @@ module EventDetails =
             member _.CreateMediaQueryListEvent(eventType, options, fields) =
                 check ()
                 let eventType = name eventType
+                use inputs = new InputScope ()
                 let mutable init = NativeDom.RvDomMediaQueryListEventInit ()
                 init.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomMediaQueryListEventInit>())
                 init.bubbles <- flag options.Bubbles
                 init.cancelable <- flag options.Cancelable
                 init.composed <- flag options.Composed
-                init.media <- EventDetailContract.text "Media" fields.Media
+                init.media <- inputs.TextInput (Option.ofObj (EventDetailContract.text "Media" fields.Media))
                 init.matches <- flag fields.Matches
                 let mutable result = 0n
 
@@ -273,13 +278,14 @@ module EventDetails =
             member _.CreateCompositionEvent(eventType, options, fields) =
                 check ()
                 let eventType = name eventType
+                use inputs = new InputScope ()
                 let mutable init = NativeDom.RvDomCompositionEventInit ()
                 init.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomCompositionEventInit>())
                 init.bubbles <- flag options.Bubbles
                 init.cancelable <- flag options.Cancelable
                 init.composed <- flag options.Composed
                 init.detail <- fields.Detail
-                init.data <- EventDetailContract.text "Data" fields.Data
+                init.data <- inputs.TextInput (Option.ofObj (EventDetailContract.text "Data" fields.Data))
                 let mutable result = 0n
 
                 let status =

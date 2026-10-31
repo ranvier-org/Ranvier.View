@@ -48,13 +48,14 @@ module ToggleEvents =
             member _.CreateToggleEvent(eventType, options, fields) =
                 check ()
                 let eventType = Encoding.UTF8.GetBytes (ToggleEventContract.eventType eventType)
+                use inputs = new InputScope ()
                 let mutable dictionary = NativeDom.RvDomToggleEventInit ()
                 dictionary.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomToggleEventInit>())
                 dictionary.bubbles <- flag options.Bubbles
                 dictionary.cancelable <- flag options.Cancelable
                 dictionary.composed <- flag options.Composed
-                dictionary.old_state <- ToggleEventContract.text "OldState" fields.OldState
-                dictionary.new_state <- ToggleEventContract.text "NewState" fields.NewState
+                dictionary.old_state <- inputs.TextInput (Option.ofObj (ToggleEventContract.text "OldState" fields.OldState))
+                dictionary.new_state <- inputs.TextInput (Option.ofObj (ToggleEventContract.text "NewState" fields.NewState))
                 dictionary.source <- source fields.Source
                 let mutable result = 0n
 
@@ -66,12 +67,13 @@ module ToggleEvents =
             member _.CreateCommandEvent(eventType, options, fields) =
                 check ()
                 let eventType = Encoding.UTF8.GetBytes (ToggleEventContract.eventType eventType)
+                use inputs = new InputScope ()
                 let mutable dictionary = NativeDom.RvDomCommandEventInit ()
                 dictionary.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomCommandEventInit>())
                 dictionary.bubbles <- flag options.Bubbles
                 dictionary.cancelable <- flag options.Cancelable
                 dictionary.composed <- flag options.Composed
-                dictionary.command <- ToggleEventContract.text "Command" fields.Command
+                dictionary.command <- inputs.TextInput (Option.ofObj (ToggleEventContract.text "Command" fields.Command))
                 dictionary.source <- source fields.Source
                 let mutable result = 0n
 
