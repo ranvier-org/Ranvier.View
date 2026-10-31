@@ -1633,6 +1633,39 @@ let private runScreen () =
     System.Console.WriteLine $"NATIVE_API G04 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared U+0000 round-trip fixture (WebCore #142) on a native host.</summary>
+[<Literal>]
+let private StringChecksCount = 18
+
+let private runStrings () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let shared =
+        try
+            StringChecks.run
+                host.Document
+                (fun () -> Ranvier.View.WebCore.EventDetails.forHost host)
+                (fun () -> Ranvier.View.WebCore.BinaryValues.forHost host)
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "U+0000 round-trip fixture leaves no live native objects"
+
+    if shared <> StringChecksCount then
+        failwith $"U+0000 round-trip shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API WC142 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API WC142 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared custom highlight fixture with native thread, document replacement and teardown checks.</summary>
 [<Literal>]
 let private HighlightChecksCount = 35
@@ -2549,6 +2582,7 @@ let private runAll () =
     runScreen () |> ignore
     runEventDetails () |> ignore
     runHighlights () |> ignore
+    runStrings () |> ignore
     runDiagnostics () |> ignore
     runBlobUrls () |> ignore
     runDomModel () |> ignore
@@ -3553,6 +3587,9 @@ let main args =
         0
     elif Array.contains "--highlights-only" args then
         runHighlights () |> ignore
+        0
+    elif Array.contains "--strings-only" args then
+        runStrings () |> ignore
         0
     elif Array.contains "--diagnostics-only" args then
         runDiagnostics () |> ignore

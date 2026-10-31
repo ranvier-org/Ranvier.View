@@ -61,7 +61,9 @@ and internal CSSRuleObject(session: Session, handle: nativeint) =
             with get () : string =
                 Interop.nonNull (Interop.text "CSSRule.cssText" (fun buffer capacity length -> NativeDom.rv_dom_css_rule_get_css_text (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSRule.cssText" (NativeDom.rv_dom_css_rule_set_css_text (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSRule.cssText" (NativeDom.rv_dom_css_rule_set_css_text (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.parentRule
             with get () : Ranvier.Dom.CSSRule =
                 let mutable result = 0n
@@ -98,7 +100,9 @@ and internal CSSStyleDeclarationObject(session: Session, handle: nativeint) =
             with get () : string =
                 Interop.nonNull (Interop.text "CSSStyleDeclaration.cssText" (fun buffer capacity length -> NativeDom.rv_dom_css_style_declaration_get_css_text (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSStyleDeclaration.cssText" (NativeDom.rv_dom_css_style_declaration_set_css_text (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSStyleDeclaration.cssText" (NativeDom.rv_dom_css_style_declaration_set_css_text (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.cssRules
             with get () : Ranvier.Dom.CSSRuleList =
                 let mutable result = 0n
@@ -117,13 +121,23 @@ and internal CSSStyleDeclarationObject(session: Session, handle: nativeint) =
         member this.item(index: uint32) : string =
             Interop.nonNull (Interop.text "CSSStyleDeclaration.item" (fun buffer capacity length -> NativeDom.rv_dom_css_style_declaration_item (Interop.handle (box this), uint32 index, buffer, capacity, length)))
         member this.getPropertyValue(property: string) : string =
-            Interop.nonNull (Interop.text "CSSStyleDeclaration.getPropertyValue" (fun buffer capacity length -> NativeDom.rv_dom_css_style_declaration_get_property_value (Interop.handle (box this), (if isNull property then "" else property), buffer, capacity, length)))
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(property)
+            Interop.nonNull (Interop.text "CSSStyleDeclaration.getPropertyValue" (fun buffer capacity length -> NativeDom.rv_dom_css_style_declaration_get_property_value (Interop.handle (box this), nativeString0, nativeString0.Length, buffer, capacity, length)))
         member this.getPropertyPriority(property: string) : string =
-            Interop.nonNull (Interop.text "CSSStyleDeclaration.getPropertyPriority" (fun buffer capacity length -> NativeDom.rv_dom_css_style_declaration_get_property_priority (Interop.handle (box this), (if isNull property then "" else property), buffer, capacity, length)))
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(property)
+            Interop.nonNull (Interop.text "CSSStyleDeclaration.getPropertyPriority" (fun buffer capacity length -> NativeDom.rv_dom_css_style_declaration_get_property_priority (Interop.handle (box this), nativeString0, nativeString0.Length, buffer, capacity, length)))
         member this.setProperty(property: string, value: string, ?priority: string) : unit =
-            Interop.check "CSSStyleDeclaration.setProperty" (NativeDom.rv_dom_css_style_declaration_set_property (Interop.handle (box this), (if isNull property then "" else property), (if isNull value then "" else value), Option.defaultValue "" priority))
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(property)
+            let nativeString1 = scope.Bytes(if isNull value then "" else value)
+            let nativeString2 = scope.Bytes(defaultArg priority "")
+            Interop.check "CSSStyleDeclaration.setProperty" (NativeDom.rv_dom_css_style_declaration_set_property (Interop.handle (box this), nativeString0, nativeString0.Length, nativeString1, nativeString1.Length, nativeString2, nativeString2.Length))
         member this.removeProperty(property: string) : string =
-            Interop.nonNull (Interop.text "CSSStyleDeclaration.removeProperty" (fun buffer capacity length -> NativeDom.rv_dom_css_style_declaration_remove_property (Interop.handle (box this), (if isNull property then "" else property), buffer, capacity, length)))
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(property)
+            Interop.nonNull (Interop.text "CSSStyleDeclaration.removeProperty" (fun buffer capacity length -> NativeDom.rv_dom_css_style_declaration_remove_property (Interop.handle (box this), nativeString0, nativeString0.Length, buffer, capacity, length)))
 
 and internal CSSStyleValueObject(session: Session, handle: nativeint) =
     inherit NativeObject(session, handle, Kind.StyleValue)
@@ -251,8 +265,10 @@ and internal DOMImplementationObject(session: Session, handle: nativeint) =
     inherit NativeObject(session, handle, Kind.DOMImplementation)
     interface Ranvier.Dom.DOMImplementation with
         member this.createHTMLDocument(?title: string) : Ranvier.Dom.HTMLDocument =
+            use scope = new InputScope()
+            let nativeString0 = (match title with Some x -> scope.Bytes(x) | None -> null)
             let mutable result = 0n
-            Interop.check "DOMImplementation.createHTMLDocument" (NativeDom.rv_dom_dom_implementation_create_html_document (Interop.handle (box this), Option.toObj title, &result))
+            Interop.check "DOMImplementation.createHTMLDocument" (NativeDom.rv_dom_dom_implementation_create_html_document (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), &result))
             unbox<Ranvier.Dom.HTMLDocument> (this.Session.Node result)
         member this.hasFeature() : bool =
             let mutable result = 0
@@ -674,17 +690,28 @@ and internal DOMSelectionObject(session: Session, handle: nativeint) =
         member this.toString() : string =
             Interop.nonNull (Interop.text "DOMSelection.toString" (fun buffer capacity length -> NativeDom.rv_dom_dom_selection_to_string (Interop.handle (box this), buffer, capacity, length)))
         member this.modify(?alter: string, ?direction: string, ?granularity: string) : unit =
-            Interop.check "DOMSelection.modify" (NativeDom.rv_dom_dom_selection_modify (Interop.handle (box this), Option.toObj alter, Option.toObj direction, Option.toObj granularity))
+            use scope = new InputScope()
+            let nativeString0 = (match alter with Some x -> scope.Bytes(x) | None -> null)
+            let nativeString1 = (match direction with Some x -> scope.Bytes(x) | None -> null)
+            let nativeString2 = (match granularity with Some x -> scope.Bytes(x) | None -> null)
+            Interop.check "DOMSelection.modify" (NativeDom.rv_dom_dom_selection_modify (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, (if isNull nativeString1 then -1 else nativeString1.Length), nativeString2, (if isNull nativeString2 then -1 else nativeString2.Length)))
 
 and internal DOMStringMapObject(session: Session, handle: nativeint) =
     inherit NativeObject(session, handle, Kind.StringMap)
     interface Ranvier.Dom.DOMStringMap with
         member this.namedItem(name: string) : string =
-            Interop.nonNull (Interop.text "DOMStringMap.namedItem" (fun buffer capacity length -> NativeDom.rv_dom_dom_string_map_named_item (Interop.handle (box this), (if isNull name then "" else name), buffer, capacity, length)))
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(name)
+            Interop.nonNull (Interop.text "DOMStringMap.namedItem" (fun buffer capacity length -> NativeDom.rv_dom_dom_string_map_named_item (Interop.handle (box this), nativeString0, nativeString0.Length, buffer, capacity, length)))
         member this.setNamedItem(name: string, value: string) : unit =
-            Interop.check "DOMStringMap.setNamedItem" (NativeDom.rv_dom_dom_string_map_set_named_item (Interop.handle (box this), (if isNull name then "" else name), (if isNull value then "" else value)))
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(name)
+            let nativeString1 = scope.Bytes(value)
+            Interop.check "DOMStringMap.setNamedItem" (NativeDom.rv_dom_dom_string_map_set_named_item (Interop.handle (box this), nativeString0, nativeString0.Length, nativeString1, nativeString1.Length))
         member this.deleteNamedProperty(name: string) : unit =
-            Interop.check "DOMStringMap.deleteNamedProperty" (NativeDom.rv_dom_dom_string_map_delete_named_property (Interop.handle (box this), (if isNull name then "" else name)))
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(name)
+            Interop.check "DOMStringMap.deleteNamedProperty" (NativeDom.rv_dom_dom_string_map_delete_named_property (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal DOMTokenListObject(session: Session, handle: nativeint) =
     inherit NativeObject(session, handle, Kind.TokenList)
@@ -698,30 +725,41 @@ and internal DOMTokenListObject(session: Session, handle: nativeint) =
             with get () : string =
                 Interop.nonNull (Interop.text "DOMTokenList.value" (fun buffer capacity length -> NativeDom.rv_dom_dom_token_list_get_value (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "DOMTokenList.value" (NativeDom.rv_dom_dom_token_list_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "DOMTokenList.value" (NativeDom.rv_dom_dom_token_list_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.item(index: uint32) : string =
             Interop.text "DOMTokenList.item" (fun buffer capacity length -> NativeDom.rv_dom_dom_token_list_item (Interop.handle (box this), uint32 index, buffer, capacity, length))
         member this.contains(token: string) : bool =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(token)
             let mutable result = 0
-            Interop.check "DOMTokenList.contains" (NativeDom.rv_dom_dom_token_list_contains (Interop.handle (box this), (if isNull token then "" else token), &result))
+            Interop.check "DOMTokenList.contains" (NativeDom.rv_dom_dom_token_list_contains (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
             result <> 0
         member this.add([<System.ParamArray>] tokens: string array) : unit =
             use scope = new InputScope()
-            Interop.check "DOMTokenList.add" (NativeDom.rv_dom_dom_token_list_add (Interop.handle (box this), [| (let values = (tokens) |> Array.map (fun item -> scope.Text(item)) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+            Interop.check "DOMTokenList.add" (NativeDom.rv_dom_dom_token_list_add (Interop.handle (box this), [| (let values = (tokens) |> Array.map (fun item -> scope.TextSpan(item)) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.remove([<System.ParamArray>] tokens: string array) : unit =
             use scope = new InputScope()
-            Interop.check "DOMTokenList.remove" (NativeDom.rv_dom_dom_token_list_remove (Interop.handle (box this), [| (let values = (tokens) |> Array.map (fun item -> scope.Text(item)) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+            Interop.check "DOMTokenList.remove" (NativeDom.rv_dom_dom_token_list_remove (Interop.handle (box this), [| (let values = (tokens) |> Array.map (fun item -> scope.TextSpan(item)) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.toggle(token: string, ?force: bool) : bool =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(token)
             let mutable result = 0
-            Interop.check "DOMTokenList.toggle" (NativeDom.rv_dom_dom_token_list_toggle (Interop.handle (box this), (if isNull token then "" else token), (match force with Some x -> [| (if x then 1 else 0) |] | None -> null), &result))
+            Interop.check "DOMTokenList.toggle" (NativeDom.rv_dom_dom_token_list_toggle (Interop.handle (box this), nativeString0, nativeString0.Length, (match force with Some x -> [| (if x then 1 else 0) |] | None -> null), &result))
             result <> 0
         member this.replace(token: string, newToken: string) : bool =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(token)
+            let nativeString1 = scope.Bytes(newToken)
             let mutable result = 0
-            Interop.check "DOMTokenList.replace" (NativeDom.rv_dom_dom_token_list_replace (Interop.handle (box this), (if isNull token then "" else token), (if isNull newToken then "" else newToken), &result))
+            Interop.check "DOMTokenList.replace" (NativeDom.rv_dom_dom_token_list_replace (Interop.handle (box this), nativeString0, nativeString0.Length, nativeString1, nativeString1.Length, &result))
             result <> 0
         member this.supports(token: string) : bool =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(token)
             let mutable result = 0
-            Interop.check "DOMTokenList.supports" (NativeDom.rv_dom_dom_token_list_supports (Interop.handle (box this), (if isNull token then "" else token), &result))
+            Interop.check "DOMTokenList.supports" (NativeDom.rv_dom_dom_token_list_supports (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
             result <> 0
 
 and internal EventObject(session: Session, handle: nativeint) =
@@ -792,7 +830,9 @@ and internal EventObject(session: Session, handle: nativeint) =
         member this.preventDefault() : unit =
             Interop.check "Event.preventDefault" (NativeDom.rv_dom_event_prevent_default (Interop.handle (box this)))
         member this.initEvent(``type``: string, ?bubbles: bool, ?cancelable: bool) : unit =
-            Interop.check "Event.initEvent" (NativeDom.rv_dom_event_init_event (Interop.handle (box this), (if isNull ``type`` then "" else ``type``), (match bubbles with Some x -> (if x then 1 else 0) | None -> 0), (match cancelable with Some x -> (if x then 1 else 0) | None -> 0)))
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(``type``)
+            Interop.check "Event.initEvent" (NativeDom.rv_dom_event_init_event (Interop.handle (box this), nativeString0, nativeString0.Length, (match bubbles with Some x -> (if x then 1 else 0) | None -> 0), (match cancelable with Some x -> (if x then 1 else 0) | None -> 0)))
 
 and internal EventTargetObject(session: Session, handle: nativeint) =
     inherit NativeObject(session, handle, Kind.Node)
@@ -930,8 +970,10 @@ and internal HTMLCollectionObject(session: Session, handle: nativeint) =
             Interop.check "HTMLCollection.item" (NativeDom.rv_dom_html_collection_item (Interop.handle (box this), uint32 index, &result))
             unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.namedItem(name: string) : Ranvier.Dom.Element =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(name)
             let mutable result = 0n
-            Interop.check "HTMLCollection.namedItem" (NativeDom.rv_dom_html_collection_named_item (Interop.handle (box this), (if isNull name then "" else name), &result))
+            Interop.check "HTMLCollection.namedItem" (NativeDom.rv_dom_html_collection_named_item (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
             unbox<Ranvier.Dom.Element> (this.Session.Node result)
 
 and internal HighlightObject(session: Session, handle: nativeint) =
@@ -963,7 +1005,9 @@ and internal MediaListObject(session: Session, handle: nativeint) =
             with get () : string =
                 Interop.nonNull (Interop.text "MediaList.mediaText" (fun buffer capacity length -> NativeDom.rv_dom_media_list_get_media_text (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "MediaList.mediaText" (NativeDom.rv_dom_media_list_set_media_text (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "MediaList.mediaText" (NativeDom.rv_dom_media_list_set_media_text (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.length
             with get () : uint32 =
                 let mutable result = 0u
@@ -972,9 +1016,13 @@ and internal MediaListObject(session: Session, handle: nativeint) =
         member this.item(index: uint32) : string =
             Interop.text "MediaList.item" (fun buffer capacity length -> NativeDom.rv_dom_media_list_item (Interop.handle (box this), uint32 index, buffer, capacity, length))
         member this.deleteMedium(oldMedium: string) : unit =
-            Interop.check "MediaList.deleteMedium" (NativeDom.rv_dom_media_list_delete_medium (Interop.handle (box this), (if isNull oldMedium then "" else oldMedium)))
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(oldMedium)
+            Interop.check "MediaList.deleteMedium" (NativeDom.rv_dom_media_list_delete_medium (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.appendMedium(newMedium: string) : unit =
-            Interop.check "MediaList.appendMedium" (NativeDom.rv_dom_media_list_append_medium (Interop.handle (box this), (if isNull newMedium then "" else newMedium)))
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(newMedium)
+            Interop.check "MediaList.appendMedium" (NativeDom.rv_dom_media_list_append_medium (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal NamedNodeMapObject(session: Session, handle: nativeint) =
     inherit NativeObject(session, handle, Kind.NamedNodeMap)
@@ -989,12 +1037,17 @@ and internal NamedNodeMapObject(session: Session, handle: nativeint) =
             Interop.check "NamedNodeMap.item" (NativeDom.rv_dom_named_node_map_item (Interop.handle (box this), uint32 index, &result))
             unbox<Ranvier.Dom.Attr> (this.Session.Node result)
         member this.getNamedItem(qualifiedName: string) : Ranvier.Dom.Attr =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(qualifiedName)
             let mutable result = 0n
-            Interop.check "NamedNodeMap.getNamedItem" (NativeDom.rv_dom_named_node_map_get_named_item (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), &result))
+            Interop.check "NamedNodeMap.getNamedItem" (NativeDom.rv_dom_named_node_map_get_named_item (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
             unbox<Ranvier.Dom.Attr> (this.Session.Node result)
         member this.getNamedItemNS(namespaceURI: string, localName: string) : Ranvier.Dom.Attr =
+            use scope = new InputScope()
+            let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+            let nativeString1 = scope.Bytes(localName)
             let mutable result = 0n
-            Interop.check "NamedNodeMap.getNamedItemNS" (NativeDom.rv_dom_named_node_map_get_named_item_ns (Interop.handle (box this), namespaceURI, (if isNull localName then "" else localName), &result))
+            Interop.check "NamedNodeMap.getNamedItemNS" (NativeDom.rv_dom_named_node_map_get_named_item_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, &result))
             unbox<Ranvier.Dom.Attr> (this.Session.Node result)
         member this.setNamedItem(attr: Ranvier.Dom.Attr) : Ranvier.Dom.Attr =
             let mutable result = 0n
@@ -1005,12 +1058,17 @@ and internal NamedNodeMapObject(session: Session, handle: nativeint) =
             Interop.check "NamedNodeMap.setNamedItemNS" (NativeDom.rv_dom_named_node_map_set_named_item_ns (Interop.handle (box this), Interop.handle (box attr), &result))
             unbox<Ranvier.Dom.Attr> (this.Session.Node result)
         member this.removeNamedItem(qualifiedName: string) : Ranvier.Dom.Attr =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(qualifiedName)
             let mutable result = 0n
-            Interop.check "NamedNodeMap.removeNamedItem" (NativeDom.rv_dom_named_node_map_remove_named_item (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), &result))
+            Interop.check "NamedNodeMap.removeNamedItem" (NativeDom.rv_dom_named_node_map_remove_named_item (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
             unbox<Ranvier.Dom.Attr> (this.Session.Node result)
         member this.removeNamedItemNS(namespaceURI: string, localName: string) : Ranvier.Dom.Attr =
+            use scope = new InputScope()
+            let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+            let nativeString1 = scope.Bytes(localName)
             let mutable result = 0n
-            Interop.check "NamedNodeMap.removeNamedItemNS" (NativeDom.rv_dom_named_node_map_remove_named_item_ns (Interop.handle (box this), namespaceURI, (if isNull localName then "" else localName), &result))
+            Interop.check "NamedNodeMap.removeNamedItemNS" (NativeDom.rv_dom_named_node_map_remove_named_item_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, &result))
             unbox<Ranvier.Dom.Attr> (this.Session.Node result)
 
 and internal NodeIteratorObject(session: Session, handle: nativeint) =
@@ -1109,8 +1167,10 @@ and internal SVGAngleObject(session: Session, handle: nativeint) =
                 finally
                     System.GC.KeepAlive this
             and set (value: string) =
+                use scope = new InputScope()
                 try
-                    Interop.check "SVGAngle.valueAsString" (NativeDom.rv_dom_svg_angle_set_value_as_string (Interop.handle (box this), (if isNull value then "" else value)))
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "SVGAngle.valueAsString" (NativeDom.rv_dom_svg_angle_set_value_as_string (Interop.handle (box this), nativeString0, nativeString0.Length))
                 finally
                     System.GC.KeepAlive this
                     System.GC.KeepAlive (box value)
@@ -1362,8 +1422,10 @@ and internal SVGAnimatedStringObject(session: Session, handle: nativeint) =
                 finally
                     System.GC.KeepAlive this
             and set (value: string) =
+                use scope = new InputScope()
                 try
-                    Interop.check "SVGAnimatedString.baseVal" (NativeDom.rv_dom_svg_animated_string_set_base_val (Interop.handle (box this), (if isNull value then "" else value)))
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "SVGAnimatedString.baseVal" (NativeDom.rv_dom_svg_animated_string_set_base_val (Interop.handle (box this), nativeString0, nativeString0.Length))
                 finally
                     System.GC.KeepAlive this
                     System.GC.KeepAlive (box value)
@@ -1440,8 +1502,10 @@ and internal SVGLengthObject(session: Session, handle: nativeint) =
                 finally
                     System.GC.KeepAlive this
             and set (value: string) =
+                use scope = new InputScope()
                 try
-                    Interop.check "SVGLength.valueAsString" (NativeDom.rv_dom_svg_length_set_value_as_string (Interop.handle (box this), (if isNull value then "" else value)))
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "SVGLength.valueAsString" (NativeDom.rv_dom_svg_length_set_value_as_string (Interop.handle (box this), nativeString0, nativeString0.Length))
                 finally
                     System.GC.KeepAlive this
                     System.GC.KeepAlive (box value)
@@ -2056,8 +2120,10 @@ and internal SVGStringListObject(session: Session, handle: nativeint) =
             finally
                 System.GC.KeepAlive this
         member this.initialize(newItem: string) : string =
+            use scope = new InputScope()
             try
-                Interop.nonNull (Interop.text "SVGStringList.initialize" (fun buffer capacity length -> NativeDom.rv_dom_svg_string_list_initialize (Interop.handle (box this), (if isNull newItem then "" else newItem), buffer, capacity, length)))
+                let nativeString0 = scope.Bytes(newItem)
+                Interop.nonNull (Interop.text "SVGStringList.initialize" (fun buffer capacity length -> NativeDom.rv_dom_svg_string_list_initialize (Interop.handle (box this), nativeString0, nativeString0.Length, buffer, capacity, length)))
             finally
                 System.GC.KeepAlive this
                 System.GC.KeepAlive (box newItem)
@@ -2068,15 +2134,19 @@ and internal SVGStringListObject(session: Session, handle: nativeint) =
                 System.GC.KeepAlive this
                 System.GC.KeepAlive (box index)
         member this.insertItemBefore(newItem: string, index: uint32) : string =
+            use scope = new InputScope()
             try
-                Interop.nonNull (Interop.text "SVGStringList.insertItemBefore" (fun buffer capacity length -> NativeDom.rv_dom_svg_string_list_insert_item_before (Interop.handle (box this), (if isNull newItem then "" else newItem), uint32 index, buffer, capacity, length)))
+                let nativeString0 = scope.Bytes(newItem)
+                Interop.nonNull (Interop.text "SVGStringList.insertItemBefore" (fun buffer capacity length -> NativeDom.rv_dom_svg_string_list_insert_item_before (Interop.handle (box this), nativeString0, nativeString0.Length, uint32 index, buffer, capacity, length)))
             finally
                 System.GC.KeepAlive this
                 System.GC.KeepAlive (box newItem)
                 System.GC.KeepAlive (box index)
         member this.replaceItem(newItem: string, index: uint32) : string =
+            use scope = new InputScope()
             try
-                Interop.nonNull (Interop.text "SVGStringList.replaceItem" (fun buffer capacity length -> NativeDom.rv_dom_svg_string_list_replace_item (Interop.handle (box this), (if isNull newItem then "" else newItem), uint32 index, buffer, capacity, length)))
+                let nativeString0 = scope.Bytes(newItem)
+                Interop.nonNull (Interop.text "SVGStringList.replaceItem" (fun buffer capacity length -> NativeDom.rv_dom_svg_string_list_replace_item (Interop.handle (box this), nativeString0, nativeString0.Length, uint32 index, buffer, capacity, length)))
             finally
                 System.GC.KeepAlive this
                 System.GC.KeepAlive (box newItem)
@@ -2088,14 +2158,18 @@ and internal SVGStringListObject(session: Session, handle: nativeint) =
                 System.GC.KeepAlive this
                 System.GC.KeepAlive (box index)
         member this.appendItem(newItem: string) : string =
+            use scope = new InputScope()
             try
-                Interop.nonNull (Interop.text "SVGStringList.appendItem" (fun buffer capacity length -> NativeDom.rv_dom_svg_string_list_append_item (Interop.handle (box this), (if isNull newItem then "" else newItem), buffer, capacity, length)))
+                let nativeString0 = scope.Bytes(newItem)
+                Interop.nonNull (Interop.text "SVGStringList.appendItem" (fun buffer capacity length -> NativeDom.rv_dom_svg_string_list_append_item (Interop.handle (box this), nativeString0, nativeString0.Length, buffer, capacity, length)))
             finally
                 System.GC.KeepAlive this
                 System.GC.KeepAlive (box newItem)
         member this.setItem(index: uint32, newItem: string) : unit =
+            use scope = new InputScope()
             try
-                Interop.check "SVGStringList.setItem" (NativeDom.rv_dom_svg_string_list_set_item (Interop.handle (box this), uint32 index, (if isNull newItem then "" else newItem)))
+                let nativeString1 = scope.Bytes(newItem)
+                Interop.check "SVGStringList.setItem" (NativeDom.rv_dom_svg_string_list_set_item (Interop.handle (box this), uint32 index, nativeString1, nativeString1.Length))
             finally
                 System.GC.KeepAlive this
                 System.GC.KeepAlive (box index)
@@ -2409,8 +2483,10 @@ and internal StyleSheetListObject(session: Session, handle: nativeint) =
             Interop.check "StyleSheetList.item" (NativeDom.rv_dom_style_sheet_list_item (Interop.handle (box this), uint32 index, &result))
             (if result = 0n then Unchecked.defaultof<Ranvier.Dom.StyleSheet> else (unbox<Ranvier.Dom.StyleSheet> (this.Session.Object(result, Kind.StyleSheet, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.StyleSheet(session, handle))))))
         member this.namedItem(name: string) : Ranvier.Dom.CSSStyleSheet =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(name)
             let mutable result = 0n
-            Interop.check "StyleSheetList.namedItem" (NativeDom.rv_dom_style_sheet_list_named_item (Interop.handle (box this), (if isNull name then "" else name), &result))
+            Interop.check "StyleSheetList.namedItem" (NativeDom.rv_dom_style_sheet_list_named_item (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
             (unbox<Ranvier.Dom.CSSStyleSheet> (this.Session.Object(result, Kind.StyleSheet, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.StyleSheet(session, handle)))))
 
 and internal TreeWalkerObject(session: Session, handle: nativeint) =
@@ -2748,7 +2824,9 @@ and internal BeforeUnloadEventObject(session: Session, handle: nativeint) =
             with get () : string =
                 Interop.nonNull (Interop.text "BeforeUnloadEvent.returnValue" (fun buffer capacity length -> NativeDom.rv_dom_before_unload_event_get_return_value (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "BeforeUnloadEvent.returnValue" (NativeDom.rv_dom_before_unload_event_set_return_value (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "BeforeUnloadEvent.returnValue" (NativeDom.rv_dom_before_unload_event_set_return_value (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal CSSCounterStyleRuleObject(session: Session, handle: nativeint) =
     inherit CSSRuleObject(session, handle)
@@ -2757,57 +2835,79 @@ and internal CSSCounterStyleRuleObject(session: Session, handle: nativeint) =
             with get () : string =
                 Interop.nonNull (Interop.text "CSSCounterStyleRule.name" (fun buffer capacity length -> NativeDom.rv_dom_css_counter_style_rule_get_name (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSCounterStyleRule.name" (NativeDom.rv_dom_css_counter_style_rule_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSCounterStyleRule.name" (NativeDom.rv_dom_css_counter_style_rule_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.system
             with get () : string =
                 Interop.nonNull (Interop.text "CSSCounterStyleRule.system" (fun buffer capacity length -> NativeDom.rv_dom_css_counter_style_rule_get_system (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSCounterStyleRule.system" (NativeDom.rv_dom_css_counter_style_rule_set_system (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSCounterStyleRule.system" (NativeDom.rv_dom_css_counter_style_rule_set_system (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.symbols
             with get () : string =
                 Interop.nonNull (Interop.text "CSSCounterStyleRule.symbols" (fun buffer capacity length -> NativeDom.rv_dom_css_counter_style_rule_get_symbols (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSCounterStyleRule.symbols" (NativeDom.rv_dom_css_counter_style_rule_set_symbols (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSCounterStyleRule.symbols" (NativeDom.rv_dom_css_counter_style_rule_set_symbols (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.additiveSymbols
             with get () : string =
                 Interop.nonNull (Interop.text "CSSCounterStyleRule.additiveSymbols" (fun buffer capacity length -> NativeDom.rv_dom_css_counter_style_rule_get_additive_symbols (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSCounterStyleRule.additiveSymbols" (NativeDom.rv_dom_css_counter_style_rule_set_additive_symbols (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSCounterStyleRule.additiveSymbols" (NativeDom.rv_dom_css_counter_style_rule_set_additive_symbols (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.negative
             with get () : string =
                 Interop.nonNull (Interop.text "CSSCounterStyleRule.negative" (fun buffer capacity length -> NativeDom.rv_dom_css_counter_style_rule_get_negative (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSCounterStyleRule.negative" (NativeDom.rv_dom_css_counter_style_rule_set_negative (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSCounterStyleRule.negative" (NativeDom.rv_dom_css_counter_style_rule_set_negative (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.prefix
             with get () : string =
                 Interop.nonNull (Interop.text "CSSCounterStyleRule.prefix" (fun buffer capacity length -> NativeDom.rv_dom_css_counter_style_rule_get_prefix (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSCounterStyleRule.prefix" (NativeDom.rv_dom_css_counter_style_rule_set_prefix (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSCounterStyleRule.prefix" (NativeDom.rv_dom_css_counter_style_rule_set_prefix (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.suffix
             with get () : string =
                 Interop.nonNull (Interop.text "CSSCounterStyleRule.suffix" (fun buffer capacity length -> NativeDom.rv_dom_css_counter_style_rule_get_suffix (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSCounterStyleRule.suffix" (NativeDom.rv_dom_css_counter_style_rule_set_suffix (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSCounterStyleRule.suffix" (NativeDom.rv_dom_css_counter_style_rule_set_suffix (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.range
             with get () : string =
                 Interop.nonNull (Interop.text "CSSCounterStyleRule.range" (fun buffer capacity length -> NativeDom.rv_dom_css_counter_style_rule_get_range (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSCounterStyleRule.range" (NativeDom.rv_dom_css_counter_style_rule_set_range (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSCounterStyleRule.range" (NativeDom.rv_dom_css_counter_style_rule_set_range (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.pad
             with get () : string =
                 Interop.nonNull (Interop.text "CSSCounterStyleRule.pad" (fun buffer capacity length -> NativeDom.rv_dom_css_counter_style_rule_get_pad (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSCounterStyleRule.pad" (NativeDom.rv_dom_css_counter_style_rule_set_pad (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSCounterStyleRule.pad" (NativeDom.rv_dom_css_counter_style_rule_set_pad (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.speakAs
             with get () : string =
                 Interop.nonNull (Interop.text "CSSCounterStyleRule.speakAs" (fun buffer capacity length -> NativeDom.rv_dom_css_counter_style_rule_get_speak_as (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSCounterStyleRule.speakAs" (NativeDom.rv_dom_css_counter_style_rule_set_speak_as (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSCounterStyleRule.speakAs" (NativeDom.rv_dom_css_counter_style_rule_set_speak_as (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fallback
             with get () : string =
                 Interop.nonNull (Interop.text "CSSCounterStyleRule.fallback" (fun buffer capacity length -> NativeDom.rv_dom_css_counter_style_rule_get_fallback (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSCounterStyleRule.fallback" (NativeDom.rv_dom_css_counter_style_rule_set_fallback (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSCounterStyleRule.fallback" (NativeDom.rv_dom_css_counter_style_rule_set_fallback (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal CSSFontFaceDescriptorsObject(session: Session, handle: nativeint) =
     inherit CSSStyleDeclarationObject(session, handle)
@@ -2816,127 +2916,177 @@ and internal CSSFontFaceDescriptorsObject(session: Session, handle: nativeint) =
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.src" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_src (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.src" (NativeDom.rv_dom_css_font_face_descriptors_set_src (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.src" (NativeDom.rv_dom_css_font_face_descriptors_set_src (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fontFamily
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.fontFamily" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_family (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.fontFamily" (NativeDom.rv_dom_css_font_face_descriptors_set_font_family (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.fontFamily" (NativeDom.rv_dom_css_font_face_descriptors_set_font_family (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``font-family``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.font-family" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_family_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.font-family" (NativeDom.rv_dom_css_font_face_descriptors_set_font_family_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.font-family" (NativeDom.rv_dom_css_font_face_descriptors_set_font_family_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fontStyle
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.fontStyle" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_style (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.fontStyle" (NativeDom.rv_dom_css_font_face_descriptors_set_font_style (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.fontStyle" (NativeDom.rv_dom_css_font_face_descriptors_set_font_style (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``font-style``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.font-style" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_style_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.font-style" (NativeDom.rv_dom_css_font_face_descriptors_set_font_style_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.font-style" (NativeDom.rv_dom_css_font_face_descriptors_set_font_style_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fontWeight
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.fontWeight" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_weight (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.fontWeight" (NativeDom.rv_dom_css_font_face_descriptors_set_font_weight (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.fontWeight" (NativeDom.rv_dom_css_font_face_descriptors_set_font_weight (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``font-weight``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.font-weight" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_weight_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.font-weight" (NativeDom.rv_dom_css_font_face_descriptors_set_font_weight_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.font-weight" (NativeDom.rv_dom_css_font_face_descriptors_set_font_weight_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fontStretch
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.fontStretch" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_stretch (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.fontStretch" (NativeDom.rv_dom_css_font_face_descriptors_set_font_stretch (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.fontStretch" (NativeDom.rv_dom_css_font_face_descriptors_set_font_stretch (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``font-stretch``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.font-stretch" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_stretch_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.font-stretch" (NativeDom.rv_dom_css_font_face_descriptors_set_font_stretch_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.font-stretch" (NativeDom.rv_dom_css_font_face_descriptors_set_font_stretch_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fontWidth
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.fontWidth" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_width (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.fontWidth" (NativeDom.rv_dom_css_font_face_descriptors_set_font_width (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.fontWidth" (NativeDom.rv_dom_css_font_face_descriptors_set_font_width (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``font-width``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.font-width" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_width_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.font-width" (NativeDom.rv_dom_css_font_face_descriptors_set_font_width_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.font-width" (NativeDom.rv_dom_css_font_face_descriptors_set_font_width_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.sizeAdjust
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.sizeAdjust" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_size_adjust (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.sizeAdjust" (NativeDom.rv_dom_css_font_face_descriptors_set_size_adjust (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.sizeAdjust" (NativeDom.rv_dom_css_font_face_descriptors_set_size_adjust (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``size-adjust``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.size-adjust" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_size_adjust_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.size-adjust" (NativeDom.rv_dom_css_font_face_descriptors_set_size_adjust_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.size-adjust" (NativeDom.rv_dom_css_font_face_descriptors_set_size_adjust_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.unicodeRange
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.unicodeRange" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_unicode_range (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.unicodeRange" (NativeDom.rv_dom_css_font_face_descriptors_set_unicode_range (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.unicodeRange" (NativeDom.rv_dom_css_font_face_descriptors_set_unicode_range (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``unicode-range``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.unicode-range" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_unicode_range_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.unicode-range" (NativeDom.rv_dom_css_font_face_descriptors_set_unicode_range_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.unicode-range" (NativeDom.rv_dom_css_font_face_descriptors_set_unicode_range_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fontFeatureSettings
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.fontFeatureSettings" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_feature_settings (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.fontFeatureSettings" (NativeDom.rv_dom_css_font_face_descriptors_set_font_feature_settings (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.fontFeatureSettings" (NativeDom.rv_dom_css_font_face_descriptors_set_font_feature_settings (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``font-feature-settings``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.font-feature-settings" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_feature_settings_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.font-feature-settings" (NativeDom.rv_dom_css_font_face_descriptors_set_font_feature_settings_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.font-feature-settings" (NativeDom.rv_dom_css_font_face_descriptors_set_font_feature_settings_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fontDisplay
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.fontDisplay" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_display (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.fontDisplay" (NativeDom.rv_dom_css_font_face_descriptors_set_font_display (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.fontDisplay" (NativeDom.rv_dom_css_font_face_descriptors_set_font_display (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``font-display``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.font-display" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_display_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.font-display" (NativeDom.rv_dom_css_font_face_descriptors_set_font_display_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.font-display" (NativeDom.rv_dom_css_font_face_descriptors_set_font_display_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.ascentOverride
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.ascentOverride" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_ascent_override (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.ascentOverride" (NativeDom.rv_dom_css_font_face_descriptors_set_ascent_override (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.ascentOverride" (NativeDom.rv_dom_css_font_face_descriptors_set_ascent_override (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``ascent-override``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.ascent-override" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_ascent_override_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.ascent-override" (NativeDom.rv_dom_css_font_face_descriptors_set_ascent_override_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.ascent-override" (NativeDom.rv_dom_css_font_face_descriptors_set_ascent_override_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.descentOverride
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.descentOverride" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_descent_override (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.descentOverride" (NativeDom.rv_dom_css_font_face_descriptors_set_descent_override (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.descentOverride" (NativeDom.rv_dom_css_font_face_descriptors_set_descent_override (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``descent-override``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.descent-override" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_descent_override_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.descent-override" (NativeDom.rv_dom_css_font_face_descriptors_set_descent_override_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.descent-override" (NativeDom.rv_dom_css_font_face_descriptors_set_descent_override_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.lineGapOverride
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.lineGapOverride" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_line_gap_override (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.lineGapOverride" (NativeDom.rv_dom_css_font_face_descriptors_set_line_gap_override (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.lineGapOverride" (NativeDom.rv_dom_css_font_face_descriptors_set_line_gap_override (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``line-gap-override``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.line-gap-override" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_line_gap_override_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFaceDescriptors.line-gap-override" (NativeDom.rv_dom_css_font_face_descriptors_set_line_gap_override_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSFontFaceDescriptors.line-gap-override" (NativeDom.rv_dom_css_font_face_descriptors_set_line_gap_override_css (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal CSSFontFaceRuleObject(session: Session, handle: nativeint) =
     inherit CSSRuleObject(session, handle)
@@ -2954,7 +3104,9 @@ and internal CSSFontFeatureValuesRuleObject(session: Session, handle: nativeint)
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFeatureValuesRule.fontFamily" (fun buffer capacity length -> NativeDom.rv_dom_css_font_feature_values_rule_get_font_family (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSFontFeatureValuesRule.fontFamily" (NativeDom.rv_dom_css_font_feature_values_rule_set_font_family (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSFontFeatureValuesRule.fontFamily" (NativeDom.rv_dom_css_font_feature_values_rule_set_font_family (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal CSSFontPaletteValuesRuleObject(session: Session, handle: nativeint) =
     inherit CSSRuleObject(session, handle)
@@ -2981,8 +3133,10 @@ and internal CSSGroupingRuleObject(session: Session, handle: nativeint) =
                 Interop.check "CSSGroupingRule.cssRules" (NativeDom.rv_dom_css_grouping_rule_get_css_rules (Interop.handle (box this), &result))
                 (unbox<Ranvier.Dom.CSSRuleList> (this.Session.Object(result, Kind.CSSRuleList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (CSSRuleListObject(session, handle) :> NativeObject)))))
         member this.insertRule(rule: string, ?index: uint32) : uint32 =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(rule)
             let mutable result = 0u
-            Interop.check "CSSGroupingRule.insertRule" (NativeDom.rv_dom_css_grouping_rule_insert_rule (Interop.handle (box this), (if isNull rule then "" else rule), (match index with Some x -> uint32 x | None -> 0u), &result))
+            Interop.check "CSSGroupingRule.insertRule" (NativeDom.rv_dom_css_grouping_rule_insert_rule (Interop.handle (box this), nativeString0, nativeString0.Length, (match index with Some x -> uint32 x | None -> 0u), &result))
             uint32 result
         member this.deleteRule(index: uint32) : unit =
             Interop.check "CSSGroupingRule.deleteRule" (NativeDom.rv_dom_css_grouping_rule_delete_rule (Interop.handle (box this), uint32 index))
@@ -3021,7 +3175,9 @@ and internal CSSKeyframeRuleObject(session: Session, handle: nativeint) =
             with get () : string =
                 Interop.nonNull (Interop.text "CSSKeyframeRule.keyText" (fun buffer capacity length -> NativeDom.rv_dom_css_keyframe_rule_get_key_text (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSKeyframeRule.keyText" (NativeDom.rv_dom_css_keyframe_rule_set_key_text (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSKeyframeRule.keyText" (NativeDom.rv_dom_css_keyframe_rule_set_key_text (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.style
             with get () : Ranvier.Dom.CSSStyleProperties =
                 let mutable result = 0n
@@ -3035,7 +3191,9 @@ and internal CSSKeyframesRuleObject(session: Session, handle: nativeint) =
             with get () : string =
                 Interop.nonNull (Interop.text "CSSKeyframesRule.name" (fun buffer capacity length -> NativeDom.rv_dom_css_keyframes_rule_get_name (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSKeyframesRule.name" (NativeDom.rv_dom_css_keyframes_rule_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSKeyframesRule.name" (NativeDom.rv_dom_css_keyframes_rule_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.cssRules
             with get () : Ranvier.Dom.CSSRuleList =
                 let mutable result = 0n
@@ -3051,12 +3209,18 @@ and internal CSSKeyframesRuleObject(session: Session, handle: nativeint) =
             Interop.check "CSSKeyframesRule.item" (NativeDom.rv_dom_css_keyframes_rule_item (Interop.handle (box this), uint32 index, &result))
             (unbox<Ranvier.Dom.CSSKeyframeRule> (this.Session.Object(result, Kind.CSSRule, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSRule(session, handle)))))
         member this.appendRule(rule: string) : unit =
-            Interop.check "CSSKeyframesRule.appendRule" (NativeDom.rv_dom_css_keyframes_rule_append_rule (Interop.handle (box this), (if isNull rule then "" else rule)))
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(rule)
+            Interop.check "CSSKeyframesRule.appendRule" (NativeDom.rv_dom_css_keyframes_rule_append_rule (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.deleteRule(key: string) : unit =
-            Interop.check "CSSKeyframesRule.deleteRule" (NativeDom.rv_dom_css_keyframes_rule_delete_rule (Interop.handle (box this), (if isNull key then "" else key)))
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(key)
+            Interop.check "CSSKeyframesRule.deleteRule" (NativeDom.rv_dom_css_keyframes_rule_delete_rule (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.findRule(key: string) : Ranvier.Dom.CSSKeyframeRule =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(key)
             let mutable result = 0n
-            Interop.check "CSSKeyframesRule.findRule" (NativeDom.rv_dom_css_keyframes_rule_find_rule (Interop.handle (box this), (if isNull key then "" else key), &result))
+            Interop.check "CSSKeyframesRule.findRule" (NativeDom.rv_dom_css_keyframes_rule_find_rule (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
             (if result = 0n then Unchecked.defaultof<Ranvier.Dom.CSSKeyframeRule> else (unbox<Ranvier.Dom.CSSKeyframeRule> (this.Session.Object(result, Kind.CSSRule, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.CSSRule(session, handle))))))
 
 and internal CSSKeywordValueObject(session: Session, handle: nativeint) =
@@ -3078,7 +3242,7 @@ and internal CSSLayerStatementRuleObject(session: Session, handle: nativeint) =
                 let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceUSVString>
                 try
                     Interop.check "CSSLayerStatementRule.nameList" (NativeDom.rv_dom_css_layer_statement_rule_get_name_list (Interop.handle (box this), &result))
-                    (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in System.Runtime.InteropServices.Marshal.PtrToStringUTF8(item)))
+                    (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<NativeDom.RvDomUtf8StringSpan>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomUtf8StringSpan>())) in Interop.spanText (item)))
                 finally
                     NativeDom.rv_dom_sequence_usv_string_release(&result)
 
@@ -3152,352 +3316,492 @@ and internal CSSPositionTryDescriptorsObject(session: Session, handle: nativeint
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.margin" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.margin" (NativeDom.rv_dom_css_position_try_descriptors_set_margin (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.margin" (NativeDom.rv_dom_css_position_try_descriptors_set_margin (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.marginTop
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.marginTop" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_top (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.marginTop" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_top (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.marginTop" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_top (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.marginRight
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.marginRight" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_right (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.marginRight" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_right (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.marginRight" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_right (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.marginBottom
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.marginBottom" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_bottom (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.marginBottom" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_bottom (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.marginBottom" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_bottom (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.marginLeft
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.marginLeft" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_left (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.marginLeft" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_left (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.marginLeft" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_left (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.marginBlock
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.marginBlock" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_block (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.marginBlock" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_block (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.marginBlock" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_block (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.marginBlockStart
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.marginBlockStart" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_block_start (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.marginBlockStart" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_block_start (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.marginBlockStart" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_block_start (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.marginBlockEnd
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.marginBlockEnd" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_block_end (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.marginBlockEnd" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_block_end (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.marginBlockEnd" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_block_end (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.marginInline
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.marginInline" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_inline (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.marginInline" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_inline (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.marginInline" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_inline (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.marginInlineStart
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.marginInlineStart" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_inline_start (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.marginInlineStart" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_inline_start (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.marginInlineStart" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_inline_start (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.marginInlineEnd
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.marginInlineEnd" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_inline_end (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.marginInlineEnd" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_inline_end (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.marginInlineEnd" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_inline_end (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``margin-top``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.margin-top" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_top_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.margin-top" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_top_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.margin-top" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_top_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``margin-right``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.margin-right" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_right_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.margin-right" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_right_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.margin-right" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_right_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``margin-bottom``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.margin-bottom" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_bottom_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.margin-bottom" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_bottom_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.margin-bottom" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_bottom_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``margin-left``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.margin-left" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_left_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.margin-left" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_left_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.margin-left" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_left_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``margin-block``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.margin-block" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_block_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.margin-block" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_block_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.margin-block" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_block_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``margin-block-start``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.margin-block-start" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_block_start_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.margin-block-start" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_block_start_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.margin-block-start" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_block_start_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``margin-block-end``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.margin-block-end" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_block_end_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.margin-block-end" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_block_end_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.margin-block-end" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_block_end_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``margin-inline``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.margin-inline" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_inline_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.margin-inline" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_inline_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.margin-inline" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_inline_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``margin-inline-start``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.margin-inline-start" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_inline_start_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.margin-inline-start" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_inline_start_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.margin-inline-start" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_inline_start_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``margin-inline-end``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.margin-inline-end" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_margin_inline_end_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.margin-inline-end" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_inline_end_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.margin-inline-end" (NativeDom.rv_dom_css_position_try_descriptors_set_margin_inline_end_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.inset
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.inset" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inset (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.inset" (NativeDom.rv_dom_css_position_try_descriptors_set_inset (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.inset" (NativeDom.rv_dom_css_position_try_descriptors_set_inset (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.insetBlock
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.insetBlock" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inset_block (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.insetBlock" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_block (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.insetBlock" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_block (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.insetBlockStart
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.insetBlockStart" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inset_block_start (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.insetBlockStart" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_block_start (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.insetBlockStart" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_block_start (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.insetBlockEnd
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.insetBlockEnd" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inset_block_end (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.insetBlockEnd" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_block_end (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.insetBlockEnd" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_block_end (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.insetInline
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.insetInline" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inset_inline (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.insetInline" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_inline (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.insetInline" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_inline (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.insetInlineStart
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.insetInlineStart" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inset_inline_start (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.insetInlineStart" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_inline_start (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.insetInlineStart" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_inline_start (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.insetInlineEnd
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.insetInlineEnd" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inset_inline_end (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.insetInlineEnd" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_inline_end (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.insetInlineEnd" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_inline_end (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.top
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.top" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_top (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.top" (NativeDom.rv_dom_css_position_try_descriptors_set_top (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.top" (NativeDom.rv_dom_css_position_try_descriptors_set_top (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.left
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.left" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_left (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.left" (NativeDom.rv_dom_css_position_try_descriptors_set_left (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.left" (NativeDom.rv_dom_css_position_try_descriptors_set_left (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.right
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.right" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_right (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.right" (NativeDom.rv_dom_css_position_try_descriptors_set_right (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.right" (NativeDom.rv_dom_css_position_try_descriptors_set_right (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.bottom
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.bottom" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_bottom (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.bottom" (NativeDom.rv_dom_css_position_try_descriptors_set_bottom (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.bottom" (NativeDom.rv_dom_css_position_try_descriptors_set_bottom (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``inset-block``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.inset-block" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inset_block_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.inset-block" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_block_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.inset-block" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_block_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``inset-block-start``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.inset-block-start" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inset_block_start_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.inset-block-start" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_block_start_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.inset-block-start" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_block_start_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``inset-block-end``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.inset-block-end" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inset_block_end_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.inset-block-end" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_block_end_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.inset-block-end" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_block_end_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``inset-inline``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.inset-inline" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inset_inline_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.inset-inline" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_inline_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.inset-inline" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_inline_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``inset-inline-start``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.inset-inline-start" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inset_inline_start_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.inset-inline-start" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_inline_start_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.inset-inline-start" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_inline_start_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``inset-inline-end``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.inset-inline-end" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inset_inline_end_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.inset-inline-end" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_inline_end_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.inset-inline-end" (NativeDom.rv_dom_css_position_try_descriptors_set_inset_inline_end_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.width
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.width" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_width (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.width" (NativeDom.rv_dom_css_position_try_descriptors_set_width (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.width" (NativeDom.rv_dom_css_position_try_descriptors_set_width (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.minWidth
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.minWidth" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_min_width (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.minWidth" (NativeDom.rv_dom_css_position_try_descriptors_set_min_width (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.minWidth" (NativeDom.rv_dom_css_position_try_descriptors_set_min_width (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.maxWidth
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.maxWidth" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_max_width (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.maxWidth" (NativeDom.rv_dom_css_position_try_descriptors_set_max_width (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.maxWidth" (NativeDom.rv_dom_css_position_try_descriptors_set_max_width (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.height
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.height" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_height (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.height" (NativeDom.rv_dom_css_position_try_descriptors_set_height (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.height" (NativeDom.rv_dom_css_position_try_descriptors_set_height (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.minHeight
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.minHeight" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_min_height (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.minHeight" (NativeDom.rv_dom_css_position_try_descriptors_set_min_height (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.minHeight" (NativeDom.rv_dom_css_position_try_descriptors_set_min_height (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.maxHeight
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.maxHeight" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_max_height (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.maxHeight" (NativeDom.rv_dom_css_position_try_descriptors_set_max_height (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.maxHeight" (NativeDom.rv_dom_css_position_try_descriptors_set_max_height (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.blockSize
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.blockSize" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_block_size (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.blockSize" (NativeDom.rv_dom_css_position_try_descriptors_set_block_size (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.blockSize" (NativeDom.rv_dom_css_position_try_descriptors_set_block_size (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.minBlockSize
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.minBlockSize" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_min_block_size (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.minBlockSize" (NativeDom.rv_dom_css_position_try_descriptors_set_min_block_size (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.minBlockSize" (NativeDom.rv_dom_css_position_try_descriptors_set_min_block_size (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.maxBlockSize
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.maxBlockSize" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_max_block_size (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.maxBlockSize" (NativeDom.rv_dom_css_position_try_descriptors_set_max_block_size (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.maxBlockSize" (NativeDom.rv_dom_css_position_try_descriptors_set_max_block_size (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.inlineSize
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.inlineSize" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inline_size (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.inlineSize" (NativeDom.rv_dom_css_position_try_descriptors_set_inline_size (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.inlineSize" (NativeDom.rv_dom_css_position_try_descriptors_set_inline_size (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.minInlineSize
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.minInlineSize" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_min_inline_size (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.minInlineSize" (NativeDom.rv_dom_css_position_try_descriptors_set_min_inline_size (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.minInlineSize" (NativeDom.rv_dom_css_position_try_descriptors_set_min_inline_size (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.maxInlineSize
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.maxInlineSize" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_max_inline_size (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.maxInlineSize" (NativeDom.rv_dom_css_position_try_descriptors_set_max_inline_size (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.maxInlineSize" (NativeDom.rv_dom_css_position_try_descriptors_set_max_inline_size (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``min-width``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.min-width" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_min_width_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.min-width" (NativeDom.rv_dom_css_position_try_descriptors_set_min_width_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.min-width" (NativeDom.rv_dom_css_position_try_descriptors_set_min_width_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``max-width``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.max-width" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_max_width_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.max-width" (NativeDom.rv_dom_css_position_try_descriptors_set_max_width_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.max-width" (NativeDom.rv_dom_css_position_try_descriptors_set_max_width_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``min-height``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.min-height" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_min_height_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.min-height" (NativeDom.rv_dom_css_position_try_descriptors_set_min_height_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.min-height" (NativeDom.rv_dom_css_position_try_descriptors_set_min_height_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``max-height``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.max-height" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_max_height_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.max-height" (NativeDom.rv_dom_css_position_try_descriptors_set_max_height_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.max-height" (NativeDom.rv_dom_css_position_try_descriptors_set_max_height_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``block-size``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.block-size" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_block_size_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.block-size" (NativeDom.rv_dom_css_position_try_descriptors_set_block_size_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.block-size" (NativeDom.rv_dom_css_position_try_descriptors_set_block_size_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``min-block-size``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.min-block-size" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_min_block_size_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.min-block-size" (NativeDom.rv_dom_css_position_try_descriptors_set_min_block_size_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.min-block-size" (NativeDom.rv_dom_css_position_try_descriptors_set_min_block_size_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``max-block-size``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.max-block-size" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_max_block_size_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.max-block-size" (NativeDom.rv_dom_css_position_try_descriptors_set_max_block_size_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.max-block-size" (NativeDom.rv_dom_css_position_try_descriptors_set_max_block_size_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``inline-size``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.inline-size" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_inline_size_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.inline-size" (NativeDom.rv_dom_css_position_try_descriptors_set_inline_size_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.inline-size" (NativeDom.rv_dom_css_position_try_descriptors_set_inline_size_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``min-inline-size``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.min-inline-size" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_min_inline_size_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.min-inline-size" (NativeDom.rv_dom_css_position_try_descriptors_set_min_inline_size_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.min-inline-size" (NativeDom.rv_dom_css_position_try_descriptors_set_min_inline_size_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``max-inline-size``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.max-inline-size" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_max_inline_size_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.max-inline-size" (NativeDom.rv_dom_css_position_try_descriptors_set_max_inline_size_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.max-inline-size" (NativeDom.rv_dom_css_position_try_descriptors_set_max_inline_size_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.placeSelf
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.placeSelf" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_place_self (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.placeSelf" (NativeDom.rv_dom_css_position_try_descriptors_set_place_self (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.placeSelf" (NativeDom.rv_dom_css_position_try_descriptors_set_place_self (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.alignSelf
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.alignSelf" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_align_self (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.alignSelf" (NativeDom.rv_dom_css_position_try_descriptors_set_align_self (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.alignSelf" (NativeDom.rv_dom_css_position_try_descriptors_set_align_self (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.justifySelf
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.justifySelf" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_justify_self (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.justifySelf" (NativeDom.rv_dom_css_position_try_descriptors_set_justify_self (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.justifySelf" (NativeDom.rv_dom_css_position_try_descriptors_set_justify_self (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``place-self``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.place-self" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_place_self_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.place-self" (NativeDom.rv_dom_css_position_try_descriptors_set_place_self_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.place-self" (NativeDom.rv_dom_css_position_try_descriptors_set_place_self_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``align-self``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.align-self" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_align_self_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.align-self" (NativeDom.rv_dom_css_position_try_descriptors_set_align_self_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.align-self" (NativeDom.rv_dom_css_position_try_descriptors_set_align_self_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``justify-self``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.justify-self" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_justify_self_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.justify-self" (NativeDom.rv_dom_css_position_try_descriptors_set_justify_self_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.justify-self" (NativeDom.rv_dom_css_position_try_descriptors_set_justify_self_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.positionAnchor
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.positionAnchor" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_position_anchor (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.positionAnchor" (NativeDom.rv_dom_css_position_try_descriptors_set_position_anchor (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.positionAnchor" (NativeDom.rv_dom_css_position_try_descriptors_set_position_anchor (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``position-anchor``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.position-anchor" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_position_anchor_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.position-anchor" (NativeDom.rv_dom_css_position_try_descriptors_set_position_anchor_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.position-anchor" (NativeDom.rv_dom_css_position_try_descriptors_set_position_anchor_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.positionArea
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.positionArea" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_position_area (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.positionArea" (NativeDom.rv_dom_css_position_try_descriptors_set_position_area (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.positionArea" (NativeDom.rv_dom_css_position_try_descriptors_set_position_area (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``position-area``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSPositionTryDescriptors.position-area" (fun buffer capacity length -> NativeDom.rv_dom_css_position_try_descriptors_get_position_area_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSPositionTryDescriptors.position-area" (NativeDom.rv_dom_css_position_try_descriptors_set_position_area_css (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSPositionTryDescriptors.position-area" (NativeDom.rv_dom_css_position_try_descriptors_set_position_area_css (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal CSSPositionTryRuleObject(session: Session, handle: nativeint) =
     inherit CSSRuleObject(session, handle)
@@ -3728,7 +4032,9 @@ and internal CSSStylePropertiesObject(session: Session, handle: nativeint) =
             with get () : string =
                 Interop.nonNull (Interop.text "CSSStyleProperties.cssFloat" (fun buffer capacity length -> NativeDom.rv_dom_css_style_properties_get_css_float (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSStyleProperties.cssFloat" (NativeDom.rv_dom_css_style_properties_set_css_float (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                Interop.check "CSSStyleProperties.cssFloat" (NativeDom.rv_dom_css_style_properties_set_css_float (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal CSSStyleRuleObject(session: Session, handle: nativeint) =
     inherit CSSRuleObject(session, handle)
@@ -3737,7 +4043,9 @@ and internal CSSStyleRuleObject(session: Session, handle: nativeint) =
             with get () : string =
                 Interop.nonNull (Interop.text "CSSStyleRule.selectorText" (fun buffer capacity length -> NativeDom.rv_dom_css_style_rule_get_selector_text (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "CSSStyleRule.selectorText" (NativeDom.rv_dom_css_style_rule_set_selector_text (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "CSSStyleRule.selectorText" (NativeDom.rv_dom_css_style_rule_set_selector_text (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.style
             with get () : Ranvier.Dom.CSSStyleProperties =
                 let mutable result = 0n
@@ -3754,8 +4062,10 @@ and internal CSSStyleRuleObject(session: Session, handle: nativeint) =
                 Interop.check "CSSStyleRule.styleMap" (NativeDom.rv_dom_css_style_rule_get_style_map (Interop.handle (box this), &result))
                 (unbox<Ranvier.Dom.StylePropertyMap> (this.Session.Object(result, Kind.StyleMap, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (let document = Interop.contextDocument this in let target = Classes.StylePropertyMapReadOnly(session, handle) in target.BindDocumentContext(document); target)))))
         member this.insertRule(rule: string, ?index: uint32) : uint32 =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(rule)
             let mutable result = 0u
-            Interop.check "CSSStyleRule.insertRule" (NativeDom.rv_dom_css_style_rule_insert_rule (Interop.handle (box this), (if isNull rule then "" else rule), (match index with Some x -> uint32 x | None -> 0u), &result))
+            Interop.check "CSSStyleRule.insertRule" (NativeDom.rv_dom_css_style_rule_insert_rule (Interop.handle (box this), nativeString0, nativeString0.Length, (match index with Some x -> uint32 x | None -> 0u), &result))
             uint32 result
         member this.deleteRule(index: uint32) : unit =
             Interop.check "CSSStyleRule.deleteRule" (NativeDom.rv_dom_css_style_rule_delete_rule (Interop.handle (box this), uint32 index))
@@ -3779,16 +4089,23 @@ and internal CSSStyleSheetObject(session: Session, handle: nativeint) =
                 Interop.check "CSSStyleSheet.rules" (NativeDom.rv_dom_css_style_sheet_get_rules (Interop.handle (box this), &result))
                 (unbox<Ranvier.Dom.CSSRuleList> (this.Session.Object(result, Kind.CSSRuleList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (CSSRuleListObject(session, handle) :> NativeObject)))))
         member this.insertRule(rule: string, ?index: uint32) : uint32 =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(rule)
             let mutable result = 0u
-            Interop.check "CSSStyleSheet.insertRule" (NativeDom.rv_dom_css_style_sheet_insert_rule (Interop.handle (box this), (if isNull rule then "" else rule), (match index with Some x -> uint32 x | None -> 0u), &result))
+            Interop.check "CSSStyleSheet.insertRule" (NativeDom.rv_dom_css_style_sheet_insert_rule (Interop.handle (box this), nativeString0, nativeString0.Length, (match index with Some x -> uint32 x | None -> 0u), &result))
             uint32 result
         member this.deleteRule(index: uint32) : unit =
             Interop.check "CSSStyleSheet.deleteRule" (NativeDom.rv_dom_css_style_sheet_delete_rule (Interop.handle (box this), uint32 index))
         member this.replaceSync(text: string) : unit =
-            Interop.check "CSSStyleSheet.replaceSync" (NativeDom.rv_dom_css_style_sheet_replace_sync (Interop.handle (box this), (if isNull text then "" else text)))
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(text)
+            Interop.check "CSSStyleSheet.replaceSync" (NativeDom.rv_dom_css_style_sheet_replace_sync (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.addRule(?selector: string, ?style: string, ?index: uint32) : int =
+            use scope = new InputScope()
+            let nativeString0 = (match selector with Some x -> scope.Bytes(x) | None -> null)
+            let nativeString1 = (match style with Some x -> scope.Bytes(x) | None -> null)
             let mutable result = 0
-            Interop.check "CSSStyleSheet.addRule" (NativeDom.rv_dom_css_style_sheet_add_rule (Interop.handle (box this), Option.defaultValue "undefined" selector, Option.defaultValue "undefined" style, (match index with Some x -> [| uint32 x |] | None -> null), &result))
+            Interop.check "CSSStyleSheet.addRule" (NativeDom.rv_dom_css_style_sheet_add_rule (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, (if isNull nativeString1 then -1 else nativeString1.Length), (match index with Some x -> [| uint32 x |] | None -> null), &result))
             int result
         member this.removeRule(?index: uint32) : unit =
             Interop.check "CSSStyleSheet.removeRule" (NativeDom.rv_dom_css_style_sheet_remove_rule (Interop.handle (box this), (match index with Some x -> uint32 x | None -> 0u)))
@@ -3913,7 +4230,7 @@ and internal CSSViewTransitionRuleObject(session: Session, handle: nativeint) =
                 let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceUSVString>
                 try
                     Interop.check "CSSViewTransitionRule.types" (NativeDom.rv_dom_css_view_transition_rule_get_types (Interop.handle (box this), &result))
-                    (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in System.Runtime.InteropServices.Marshal.PtrToStringUTF8(item)))
+                    (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<NativeDom.RvDomUtf8StringSpan>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomUtf8StringSpan>())) in Interop.spanText (item)))
                 finally
                     NativeDom.rv_dom_sequence_usv_string_release(&result)
 
@@ -4556,9 +4873,11 @@ and internal HTMLFormControlsCollectionObject(session: Session, handle: nativein
             Interop.check "HTMLFormControlsCollection.item" (NativeDom.rv_dom_html_form_controls_collection_item (Interop.handle (box this), uint32 index, &result))
             unbox<Ranvier.Dom.HTMLElement> (this.Session.Node result)
         member this.namedItem(name: string) : Ranvier.Dom.RadioNodeListOrElement option =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(name)
             let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionRadioNodeListOrElementNullable>
             try
-                Interop.check "HTMLFormControlsCollection.namedItem" (NativeDom.rv_dom_html_form_controls_collection_named_item (Interop.handle (box this), (if isNull name then "" else name), &result))
+                Interop.check "HTMLFormControlsCollection.namedItem" (NativeDom.rv_dom_html_form_controls_collection_named_item (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 (if result.present = 0 then None else Some ((match result.tag with | 1 -> Ranvier.Dom.RadioNodeListOrElement.RadioNodeList ((let handle = result.arm0 in NativeDom.rv_dom_node_list_retain handle |> ignore; (this.Session.Track (RadioNodeListObject(this.Session, handle)) :> Ranvier.Dom.RadioNodeList))) | 2 -> Ranvier.Dom.RadioNodeListOrElement.Element ((let handle = result.arm1 in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))) | _ -> invalidOp "Unknown RadioNodeListOrElement union tag from WebCore")))
             finally
                 NativeDom.rv_dom_union_radio_node_list_or_element_nullable_release(&result)
@@ -4576,8 +4895,10 @@ and internal HTMLOptionsCollectionObject(session: Session, handle: nativeint) =
             Interop.check "HTMLCollection.item" (NativeDom.rv_dom_html_collection_item (Interop.handle (box this), uint32 index, &result))
             unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.namedItem(name: string) : Ranvier.Dom.Element =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(name)
             let mutable result = 0n
-            Interop.check "HTMLCollection.namedItem" (NativeDom.rv_dom_html_collection_named_item (Interop.handle (box this), (if isNull name then "" else name), &result))
+            Interop.check "HTMLCollection.namedItem" (NativeDom.rv_dom_html_collection_named_item (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
             unbox<Ranvier.Dom.Element> (this.Session.Node result)
     interface Ranvier.Dom.HTMLOptionsCollection with
         member this.length
@@ -4615,8 +4936,10 @@ and internal HTMLOptionsCollectionObject(session: Session, handle: nativeint) =
             Interop.check "HTMLOptionsCollection.item" (NativeDom.rv_dom_html_options_collection_item (Interop.handle (box this), uint32 index, &result))
             unbox<Ranvier.Dom.HTMLOptionElement> (this.Session.Node result)
         member this.namedItem(name: string) : Ranvier.Dom.HTMLOptionElement =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(name)
             let mutable result = 0n
-            Interop.check "HTMLOptionsCollection.namedItem" (NativeDom.rv_dom_html_options_collection_named_item (Interop.handle (box this), (if isNull name then "" else name), &result))
+            Interop.check "HTMLOptionsCollection.namedItem" (NativeDom.rv_dom_html_options_collection_named_item (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
             unbox<Ranvier.Dom.HTMLOptionElement> (this.Session.Node result)
 
 and internal HashChangeEventObject(session: Session, handle: nativeint) =
@@ -4823,11 +5146,15 @@ and internal NodeObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_nodeValue" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "Node.nodeValue" (NativeDom.rv_dom_node_set_node_value (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "Node.nodeValue" (NativeDom.rv_dom_node_set_node_value (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "Node.nodeValue" (NativeDom.rv_dom_node_set_node_value (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "Node.nodeValue" (NativeDom.rv_dom_node_set_node_value (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.textContent
             with get () : string =
                 if this.Session.Intercepting then
@@ -4843,11 +5170,15 @@ and internal NodeObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_textContent" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "Node.textContent" (NativeDom.rv_dom_node_set_text_content (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "Node.textContent" (NativeDom.rv_dom_node_set_text_content (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "Node.textContent" (NativeDom.rv_dom_node_set_text_content (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "Node.textContent" (NativeDom.rv_dom_node_set_text_content (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.getRootNode(?options: Ranvier.Dom.GetRootNodeOptions) : Ranvier.Dom.Node =
             if this.Session.Intercepting then
                 Interop.intercept this "getRootNode" [| box options |] (fun args ->
@@ -4959,34 +5290,46 @@ and internal NodeObject(session: Session, handle: nativeint) =
                 Interop.intercept this "lookupPrefix" [| box namespaceURI |] (fun args ->
                     let namespaceURI: string = unbox args[0]
                     let result =
-                        Interop.text "Node.lookupPrefix" (fun buffer capacity length -> NativeDom.rv_dom_node_lookup_prefix (Interop.handle (box this), namespaceURI, buffer, capacity, length))
+                        use scope = new InputScope()
+                        let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                        Interop.text "Node.lookupPrefix" (fun buffer capacity length -> NativeDom.rv_dom_node_lookup_prefix (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), buffer, capacity, length))
                     box result)
                 |> unbox<string>
             else
-                Interop.text "Node.lookupPrefix" (fun buffer capacity length -> NativeDom.rv_dom_node_lookup_prefix (Interop.handle (box this), namespaceURI, buffer, capacity, length))
+                use scope = new InputScope()
+                let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                Interop.text "Node.lookupPrefix" (fun buffer capacity length -> NativeDom.rv_dom_node_lookup_prefix (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), buffer, capacity, length))
         member this.lookupNamespaceURI(prefix: string) : string =
             if this.Session.Intercepting then
                 Interop.intercept this "lookupNamespaceURI" [| box prefix |] (fun args ->
                     let prefix: string = unbox args[0]
                     let result =
-                        Interop.text "Node.lookupNamespaceURI" (fun buffer capacity length -> NativeDom.rv_dom_node_lookup_namespace_uri (Interop.handle (box this), prefix, buffer, capacity, length))
+                        use scope = new InputScope()
+                        let nativeString0 = (if isNull prefix then null else scope.Bytes(prefix))
+                        Interop.text "Node.lookupNamespaceURI" (fun buffer capacity length -> NativeDom.rv_dom_node_lookup_namespace_uri (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), buffer, capacity, length))
                     box result)
                 |> unbox<string>
             else
-                Interop.text "Node.lookupNamespaceURI" (fun buffer capacity length -> NativeDom.rv_dom_node_lookup_namespace_uri (Interop.handle (box this), prefix, buffer, capacity, length))
+                use scope = new InputScope()
+                let nativeString0 = (if isNull prefix then null else scope.Bytes(prefix))
+                Interop.text "Node.lookupNamespaceURI" (fun buffer capacity length -> NativeDom.rv_dom_node_lookup_namespace_uri (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), buffer, capacity, length))
         member this.isDefaultNamespace(namespaceURI: string) : bool =
             if this.Session.Intercepting then
                 Interop.intercept this "isDefaultNamespace" [| box namespaceURI |] (fun args ->
                     let namespaceURI: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
                         let mutable result = 0
-                        Interop.check "Node.isDefaultNamespace" (NativeDom.rv_dom_node_is_default_namespace (Interop.handle (box this), namespaceURI, &result))
+                        Interop.check "Node.isDefaultNamespace" (NativeDom.rv_dom_node_is_default_namespace (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), &result))
                         result <> 0
                     box result)
                 |> unbox<bool>
             else
+                use scope = new InputScope()
+                let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
                 let mutable result = 0
-                Interop.check "Node.isDefaultNamespace" (NativeDom.rv_dom_node_is_default_namespace (Interop.handle (box this), namespaceURI, &result))
+                Interop.check "Node.isDefaultNamespace" (NativeDom.rv_dom_node_is_default_namespace (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), &result))
                 result <> 0
         member this.insertBefore(node: Ranvier.Dom.Node, child: Ranvier.Dom.Node) : Ranvier.Dom.Node =
             if this.Session.Intercepting then
@@ -5107,7 +5450,9 @@ and internal RadioNodeListObject(session: Session, handle: nativeint) =
             with get () : string =
                 Interop.nonNull (Interop.text "RadioNodeList.value" (fun buffer capacity length -> NativeDom.rv_dom_radio_node_list_get_value (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
-                Interop.check "RadioNodeList.value" (NativeDom.rv_dom_radio_node_list_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "RadioNodeList.value" (NativeDom.rv_dom_radio_node_list_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal RangeObject(session: Session, handle: nativeint) =
     inherit AbstractRangeObject(session, handle)
@@ -5172,7 +5517,9 @@ and internal RangeObject(session: Session, handle: nativeint) =
             Interop.check "Range.intersectsNode" (NativeDom.rv_dom_range_intersects_node (Interop.handle (box this), Interop.handle (box node), &result))
             result <> 0
         member this.expand(?unit: string) : unit =
-            Interop.check "Range.expand" (NativeDom.rv_dom_range_expand (Interop.handle (box this), Option.toObj unit))
+            use scope = new InputScope()
+            let nativeString0 = (match unit with Some x -> scope.Bytes(x) | None -> null)
+            Interop.check "Range.expand" (NativeDom.rv_dom_range_expand (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.compareNode(node: Ranvier.Dom.Node) : int16 =
             let mutable result = 0s
             Interop.check "Range.compareNode" (NativeDom.rv_dom_range_compare_node (Interop.handle (box this), Interop.handle (box node), &result))
@@ -5186,8 +5533,10 @@ and internal RangeObject(session: Session, handle: nativeint) =
             Interop.check "Range.getBoundingClientRect" (NativeDom.rv_dom_range_get_bounding_client_rect (Interop.handle (box this), &result))
             (unbox<Ranvier.Dom.DOMRect> (this.Session.Object(result, Kind.Rect, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.DOMRectReadOnly(session, handle)))))
         member this.createContextualFragment(fragment: string) : Ranvier.Dom.DocumentFragment =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(fragment)
             let mutable result = 0n
-            Interop.check "Range.createContextualFragment" (NativeDom.rv_dom_range_create_contextual_fragment (Interop.handle (box this), (if isNull fragment then "" else fragment), &result))
+            Interop.check "Range.createContextualFragment" (NativeDom.rv_dom_range_create_contextual_fragment (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
             unbox<Ranvier.Dom.DocumentFragment> (this.Session.Node result)
 
 and internal SecurityPolicyViolationEventObject(session: Session, handle: nativeint) =
@@ -5409,11 +5758,15 @@ and internal AttrObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_value" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "Attr.value" (NativeDom.rv_dom_attr_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "Attr.value" (NativeDom.rv_dom_attr_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "Attr.value" (NativeDom.rv_dom_attr_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "Attr.value" (NativeDom.rv_dom_attr_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.ownerElement
             with get () : Ranvier.Dom.Element =
                 if this.Session.Intercepting then
@@ -5593,8 +5946,10 @@ and internal KeyboardEventObject(session: Session, handle: nativeint) =
                 Interop.check "KeyboardEvent.keyCode" (NativeDom.rv_dom_keyboard_event_get_key_code (Interop.handle (box this), &result))
                 uint32 result
         member this.getModifierState(keyArg: string) : bool =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(keyArg)
             let mutable result = 0
-            Interop.check "KeyboardEvent.getModifierState" (NativeDom.rv_dom_keyboard_event_get_modifier_state (Interop.handle (box this), (if isNull keyArg then "" else keyArg), &result))
+            Interop.check "KeyboardEvent.getModifierState" (NativeDom.rv_dom_keyboard_event_get_modifier_state (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
             result <> 0
 
 and internal MouseEventObject(session: Session, handle: nativeint) =
@@ -5694,8 +6049,10 @@ and internal MouseEventObject(session: Session, handle: nativeint) =
                 Interop.check "MouseEvent.toElement" (NativeDom.rv_dom_mouse_event_get_to_element (Interop.handle (box this), &result))
                 unbox<Ranvier.Dom.Node> (this.Session.Node result)
         member this.getModifierState(keyArg: string) : bool =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(keyArg)
             let mutable result = 0
-            Interop.check "MouseEvent.getModifierState" (NativeDom.rv_dom_mouse_event_get_modifier_state (Interop.handle (box this), (if isNull keyArg then "" else keyArg), &result))
+            Interop.check "MouseEvent.getModifierState" (NativeDom.rv_dom_mouse_event_get_modifier_state (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
             result <> 0
 
 and internal TouchEventObject(session: Session, handle: nativeint) =
@@ -5790,36 +6147,36 @@ and internal DocumentFragmentObject(session: Session, handle: nativeint) =
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ParentNode.prepend" (NativeDom.rv_dom_document_fragment_prepend (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ParentNode.prepend" (NativeDom.rv_dom_document_fragment_prepend (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ParentNode.prepend" (NativeDom.rv_dom_document_fragment_prepend (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ParentNode.prepend" (NativeDom.rv_dom_document_fragment_prepend (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.append([<System.ParamArray>] nodes: Ranvier.Dom.NodeOrDOMString array) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "append" [| box nodes |] (fun args ->
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ParentNode.append" (NativeDom.rv_dom_document_fragment_append (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ParentNode.append" (NativeDom.rv_dom_document_fragment_append (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ParentNode.append" (NativeDom.rv_dom_document_fragment_append (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ParentNode.append" (NativeDom.rv_dom_document_fragment_append (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.replaceChildren([<System.ParamArray>] nodes: Ranvier.Dom.NodeOrDOMString array) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "replaceChildren" [| box nodes |] (fun args ->
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ParentNode.replaceChildren" (NativeDom.rv_dom_document_fragment_replace_children (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ParentNode.replaceChildren" (NativeDom.rv_dom_document_fragment_replace_children (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ParentNode.replaceChildren" (NativeDom.rv_dom_document_fragment_replace_children (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ParentNode.replaceChildren" (NativeDom.rv_dom_document_fragment_replace_children (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.moveBefore(node: Ranvier.Dom.Node, child: Ranvier.Dom.Node) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "moveBefore" [| box node; box child |] (fun args ->
@@ -5836,28 +6193,36 @@ and internal DocumentFragmentObject(session: Session, handle: nativeint) =
                 Interop.intercept this "querySelector" [| box selectors |] (fun args ->
                     let selectors: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(selectors)
                         let mutable result = 0n
-                        Interop.check "ParentNode.querySelector" (NativeDom.rv_dom_document_fragment_query_selector (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                        Interop.check "ParentNode.querySelector" (NativeDom.rv_dom_document_fragment_query_selector (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         unbox<Ranvier.Dom.Element> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Element>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(selectors)
                 let mutable result = 0n
-                Interop.check "ParentNode.querySelector" (NativeDom.rv_dom_document_fragment_query_selector (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                Interop.check "ParentNode.querySelector" (NativeDom.rv_dom_document_fragment_query_selector (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.querySelectorAll(selectors: string) : Ranvier.Dom.NodeList =
             if this.Session.Intercepting then
                 Interop.intercept this "querySelectorAll" [| box selectors |] (fun args ->
                     let selectors: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(selectors)
                         let mutable result = 0n
-                        Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_document_fragment_query_selector_all (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                        Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_document_fragment_query_selector_all (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
                     box result)
                 |> unbox<Ranvier.Dom.NodeList>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(selectors)
                 let mutable result = 0n
-                Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_document_fragment_query_selector_all (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_document_fragment_query_selector_all (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
     interface Ranvier.Dom.DocumentFragment with
         member this.getElementById(elementId: string) : Ranvier.Dom.Element =
@@ -5865,14 +6230,18 @@ and internal DocumentFragmentObject(session: Session, handle: nativeint) =
                 Interop.intercept this "getElementById" [| box elementId |] (fun args ->
                     let elementId: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(elementId)
                         let mutable result = 0n
-                        Interop.check "DocumentFragment.getElementById" (NativeDom.rv_dom_document_fragment_get_element_by_id (Interop.handle (box this), (if isNull elementId then "" else elementId), &result))
+                        Interop.check "DocumentFragment.getElementById" (NativeDom.rv_dom_document_fragment_get_element_by_id (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         unbox<Ranvier.Dom.Element> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Element>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(elementId)
                 let mutable result = 0n
-                Interop.check "DocumentFragment.getElementById" (NativeDom.rv_dom_document_fragment_get_element_by_id (Interop.handle (box this), (if isNull elementId then "" else elementId), &result))
+                Interop.check "DocumentFragment.getElementById" (NativeDom.rv_dom_document_fragment_get_element_by_id (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 unbox<Ranvier.Dom.Element> (this.Session.Node result)
 
 and internal DragEventObject(session: Session, handle: nativeint) =
@@ -6003,36 +6372,36 @@ and internal CharacterDataObject(session: Session, handle: nativeint) =
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ChildNode.before" (NativeDom.rv_dom_character_data_before (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ChildNode.before" (NativeDom.rv_dom_character_data_before (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ChildNode.before" (NativeDom.rv_dom_character_data_before (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ChildNode.before" (NativeDom.rv_dom_character_data_before (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.after([<System.ParamArray>] nodes: Ranvier.Dom.NodeOrDOMString array) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "after" [| box nodes |] (fun args ->
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ChildNode.after" (NativeDom.rv_dom_character_data_after (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ChildNode.after" (NativeDom.rv_dom_character_data_after (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ChildNode.after" (NativeDom.rv_dom_character_data_after (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ChildNode.after" (NativeDom.rv_dom_character_data_after (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.replaceWith([<System.ParamArray>] nodes: Ranvier.Dom.NodeOrDOMString array) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "replaceWith" [| box nodes |] (fun args ->
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ChildNode.replaceWith" (NativeDom.rv_dom_character_data_replace_with (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ChildNode.replaceWith" (NativeDom.rv_dom_character_data_replace_with (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ChildNode.replaceWith" (NativeDom.rv_dom_character_data_replace_with (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ChildNode.replaceWith" (NativeDom.rv_dom_character_data_replace_with (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.remove() : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "remove" [|  |] (fun args ->
@@ -6087,11 +6456,15 @@ and internal CharacterDataObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_data" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "CharacterData.data" (NativeDom.rv_dom_character_data_set_data (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "CharacterData.data" (NativeDom.rv_dom_character_data_set_data (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "CharacterData.data" (NativeDom.rv_dom_character_data_set_data (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "CharacterData.data" (NativeDom.rv_dom_character_data_set_data (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.length
             with get () : uint32 =
                 if this.Session.Intercepting then
@@ -6122,22 +6495,30 @@ and internal CharacterDataObject(session: Session, handle: nativeint) =
                 Interop.intercept this "appendData" [| box data |] (fun args ->
                     let data: string = unbox args[0]
                     let result =
-                        Interop.check "CharacterData.appendData" (NativeDom.rv_dom_character_data_append_data (Interop.handle (box this), (if isNull data then "" else data)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(data)
+                        Interop.check "CharacterData.appendData" (NativeDom.rv_dom_character_data_append_data (Interop.handle (box this), nativeString0, nativeString0.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "CharacterData.appendData" (NativeDom.rv_dom_character_data_append_data (Interop.handle (box this), (if isNull data then "" else data)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(data)
+                Interop.check "CharacterData.appendData" (NativeDom.rv_dom_character_data_append_data (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.insertData(offset: uint32, data: string) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "insertData" [| box offset; box data |] (fun args ->
                     let offset: uint32 = unbox args[0]
                     let data: string = unbox args[1]
                     let result =
-                        Interop.check "CharacterData.insertData" (NativeDom.rv_dom_character_data_insert_data (Interop.handle (box this), uint32 offset, (if isNull data then "" else data)))
+                        use scope = new InputScope()
+                        let nativeString1 = scope.Bytes(data)
+                        Interop.check "CharacterData.insertData" (NativeDom.rv_dom_character_data_insert_data (Interop.handle (box this), uint32 offset, nativeString1, nativeString1.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "CharacterData.insertData" (NativeDom.rv_dom_character_data_insert_data (Interop.handle (box this), uint32 offset, (if isNull data then "" else data)))
+                use scope = new InputScope()
+                let nativeString1 = scope.Bytes(data)
+                Interop.check "CharacterData.insertData" (NativeDom.rv_dom_character_data_insert_data (Interop.handle (box this), uint32 offset, nativeString1, nativeString1.Length))
         member this.deleteData(offset: uint32, count: uint32) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "deleteData" [| box offset; box count |] (fun args ->
@@ -6156,11 +6537,15 @@ and internal CharacterDataObject(session: Session, handle: nativeint) =
                     let count: uint32 = unbox args[1]
                     let data: string = unbox args[2]
                     let result =
-                        Interop.check "CharacterData.replaceData" (NativeDom.rv_dom_character_data_replace_data (Interop.handle (box this), uint32 offset, uint32 count, (if isNull data then "" else data)))
+                        use scope = new InputScope()
+                        let nativeString2 = scope.Bytes(data)
+                        Interop.check "CharacterData.replaceData" (NativeDom.rv_dom_character_data_replace_data (Interop.handle (box this), uint32 offset, uint32 count, nativeString2, nativeString2.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "CharacterData.replaceData" (NativeDom.rv_dom_character_data_replace_data (Interop.handle (box this), uint32 offset, uint32 count, (if isNull data then "" else data)))
+                use scope = new InputScope()
+                let nativeString2 = scope.Bytes(data)
+                Interop.check "CharacterData.replaceData" (NativeDom.rv_dom_character_data_replace_data (Interop.handle (box this), uint32 offset, uint32 count, nativeString2, nativeString2.Length))
 
 and internal DocumentObject(session: Session, handle: nativeint) =
     inherit NodeObject(session, handle)
@@ -6228,36 +6613,36 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ParentNode.prepend" (NativeDom.rv_dom_document_prepend (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ParentNode.prepend" (NativeDom.rv_dom_document_prepend (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ParentNode.prepend" (NativeDom.rv_dom_document_prepend (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ParentNode.prepend" (NativeDom.rv_dom_document_prepend (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.append([<System.ParamArray>] nodes: Ranvier.Dom.NodeOrDOMString array) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "append" [| box nodes |] (fun args ->
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ParentNode.append" (NativeDom.rv_dom_document_append (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ParentNode.append" (NativeDom.rv_dom_document_append (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ParentNode.append" (NativeDom.rv_dom_document_append (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ParentNode.append" (NativeDom.rv_dom_document_append (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.replaceChildren([<System.ParamArray>] nodes: Ranvier.Dom.NodeOrDOMString array) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "replaceChildren" [| box nodes |] (fun args ->
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ParentNode.replaceChildren" (NativeDom.rv_dom_document_replace_children (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ParentNode.replaceChildren" (NativeDom.rv_dom_document_replace_children (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ParentNode.replaceChildren" (NativeDom.rv_dom_document_replace_children (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ParentNode.replaceChildren" (NativeDom.rv_dom_document_replace_children (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.moveBefore(node: Ranvier.Dom.Node, child: Ranvier.Dom.Node) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "moveBefore" [| box node; box child |] (fun args ->
@@ -6274,28 +6659,36 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                 Interop.intercept this "querySelector" [| box selectors |] (fun args ->
                     let selectors: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(selectors)
                         let mutable result = 0n
-                        Interop.check "ParentNode.querySelector" (NativeDom.rv_dom_document_query_selector (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                        Interop.check "ParentNode.querySelector" (NativeDom.rv_dom_document_query_selector (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         unbox<Ranvier.Dom.Element> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Element>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(selectors)
                 let mutable result = 0n
-                Interop.check "ParentNode.querySelector" (NativeDom.rv_dom_document_query_selector (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                Interop.check "ParentNode.querySelector" (NativeDom.rv_dom_document_query_selector (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.querySelectorAll(selectors: string) : Ranvier.Dom.NodeList =
             if this.Session.Intercepting then
                 Interop.intercept this "querySelectorAll" [| box selectors |] (fun args ->
                     let selectors: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(selectors)
                         let mutable result = 0n
-                        Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_document_query_selector_all (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                        Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_document_query_selector_all (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
                     box result)
                 |> unbox<Ranvier.Dom.NodeList>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(selectors)
                 let mutable result = 0n
-                Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_document_query_selector_all (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_document_query_selector_all (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
     interface Ranvier.Dom.Document with
         member this.implementation
@@ -6399,11 +6792,15 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_title" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "Document.title" (NativeDom.rv_dom_document_set_title (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "Document.title" (NativeDom.rv_dom_document_set_title (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "Document.title" (NativeDom.rv_dom_document_set_title (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "Document.title" (NativeDom.rv_dom_document_set_title (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.dir
             with get () : string =
                 if this.Session.Intercepting then
@@ -6419,11 +6816,15 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_dir" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "Document.dir" (NativeDom.rv_dom_document_set_dir (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "Document.dir" (NativeDom.rv_dom_document_set_dir (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "Document.dir" (NativeDom.rv_dom_document_set_dir (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "Document.dir" (NativeDom.rv_dom_document_set_dir (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.body
             with get () : Ranvier.Dom.HTMLElement =
                 if this.Session.Intercepting then
@@ -6533,11 +6934,15 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_designMode" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "Document.designMode" (NativeDom.rv_dom_document_set_design_mode (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "Document.designMode" (NativeDom.rv_dom_document_set_design_mode (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "Document.designMode" (NativeDom.rv_dom_document_set_design_mode (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "Document.designMode" (NativeDom.rv_dom_document_set_design_mode (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.anchors
             with get () : Ranvier.Dom.HTMLCollection =
                 if this.Session.Intercepting then
@@ -6627,14 +7032,18 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                 Interop.intercept this "createElement" [| box localName |] (fun args ->
                     let localName: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(localName)
                         let mutable result = 0n
-                        Interop.check "Document.createElement" (NativeDom.rv_dom_document_create_element (Interop.handle (box this), (if isNull localName then "" else localName), null, &result))
+                        Interop.check "Document.createElement" (NativeDom.rv_dom_document_create_element (Interop.handle (box this), nativeString0, nativeString0.Length, null, &result))
                         unbox<Ranvier.Dom.Element> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Element>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(localName)
                 let mutable result = 0n
-                Interop.check "Document.createElement" (NativeDom.rv_dom_document_create_element (Interop.handle (box this), (if isNull localName then "" else localName), null, &result))
+                Interop.check "Document.createElement" (NativeDom.rv_dom_document_create_element (Interop.handle (box this), nativeString0, nativeString0.Length, null, &result))
                 unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.createElement(localName: string, options: string) : Ranvier.Dom.Element =
             if this.Session.Intercepting then
@@ -6643,15 +7052,17 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let options: string = unbox args[1]
                     let result =
                         use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(localName)
                         let mutable result = 0n
-                        Interop.check "Document.createElement" (NativeDom.rv_dom_document_create_element (Interop.handle (box this), (if isNull localName then "" else localName), [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 1; result.arm0 <- scope.Text(options); result) |], &result))
+                        Interop.check "Document.createElement" (NativeDom.rv_dom_document_create_element (Interop.handle (box this), nativeString0, nativeString0.Length, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 1; result.arm0 <- scope.TextSpan(options); result) |], &result))
                         unbox<Ranvier.Dom.Element> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Element>
             else
                 use scope = new InputScope()
+                let nativeString0 = scope.Bytes(localName)
                 let mutable result = 0n
-                Interop.check "Document.createElement" (NativeDom.rv_dom_document_create_element (Interop.handle (box this), (if isNull localName then "" else localName), [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 1; result.arm0 <- scope.Text(options); result) |], &result))
+                Interop.check "Document.createElement" (NativeDom.rv_dom_document_create_element (Interop.handle (box this), nativeString0, nativeString0.Length, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 1; result.arm0 <- scope.TextSpan(options); result) |], &result))
                 unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.createElement(localName: string, options: Ranvier.Dom.ElementCreationOptions) : Ranvier.Dom.Element =
             if this.Session.Intercepting then
@@ -6660,15 +7071,17 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let options: Ranvier.Dom.ElementCreationOptions = unbox args[1]
                     let result =
                         use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(localName)
                         let mutable result = 0n
-                        Interop.check "Document.createElement" (NativeDom.rv_dom_document_create_element (Interop.handle (box this), (if isNull localName then "" else localName), [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Pin([| (let mutable result = Unchecked.defaultof<NativeDom.RvDomElementCreationOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomElementCreationOptions>()); result) |]); result) |], &result))
+                        Interop.check "Document.createElement" (NativeDom.rv_dom_document_create_element (Interop.handle (box this), nativeString0, nativeString0.Length, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Pin([| (let mutable result = Unchecked.defaultof<NativeDom.RvDomElementCreationOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomElementCreationOptions>()); result) |]); result) |], &result))
                         unbox<Ranvier.Dom.Element> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Element>
             else
                 use scope = new InputScope()
+                let nativeString0 = scope.Bytes(localName)
                 let mutable result = 0n
-                Interop.check "Document.createElement" (NativeDom.rv_dom_document_create_element (Interop.handle (box this), (if isNull localName then "" else localName), [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Pin([| (let mutable result = Unchecked.defaultof<NativeDom.RvDomElementCreationOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomElementCreationOptions>()); result) |]); result) |], &result))
+                Interop.check "Document.createElement" (NativeDom.rv_dom_document_create_element (Interop.handle (box this), nativeString0, nativeString0.Length, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Pin([| (let mutable result = Unchecked.defaultof<NativeDom.RvDomElementCreationOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomElementCreationOptions>()); result) |]); result) |], &result))
                 unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.createElementNS(namespaceURI: string, qualifiedName: string) : Ranvier.Dom.Element =
             if this.Session.Intercepting then
@@ -6676,14 +7089,20 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let namespaceURI: string = unbox args[0]
                     let qualifiedName: string = unbox args[1]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                        let nativeString1 = scope.Bytes(qualifiedName)
                         let mutable result = 0n
-                        Interop.check "Document.createElementNS" (NativeDom.rv_dom_document_create_element_ns (Interop.handle (box this), namespaceURI, (if isNull qualifiedName then "" else qualifiedName), null, &result))
+                        Interop.check "Document.createElementNS" (NativeDom.rv_dom_document_create_element_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, null, &result))
                         unbox<Ranvier.Dom.Element> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Element>
             else
+                use scope = new InputScope()
+                let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                let nativeString1 = scope.Bytes(qualifiedName)
                 let mutable result = 0n
-                Interop.check "Document.createElementNS" (NativeDom.rv_dom_document_create_element_ns (Interop.handle (box this), namespaceURI, (if isNull qualifiedName then "" else qualifiedName), null, &result))
+                Interop.check "Document.createElementNS" (NativeDom.rv_dom_document_create_element_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, null, &result))
                 unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.createElementNS(namespaceURI: string, qualifiedName: string, options: string) : Ranvier.Dom.Element =
             if this.Session.Intercepting then
@@ -6693,15 +7112,19 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let options: string = unbox args[2]
                     let result =
                         use scope = new InputScope()
+                        let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                        let nativeString1 = scope.Bytes(qualifiedName)
                         let mutable result = 0n
-                        Interop.check "Document.createElementNS" (NativeDom.rv_dom_document_create_element_ns (Interop.handle (box this), namespaceURI, (if isNull qualifiedName then "" else qualifiedName), [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 1; result.arm0 <- scope.Text(options); result) |], &result))
+                        Interop.check "Document.createElementNS" (NativeDom.rv_dom_document_create_element_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 1; result.arm0 <- scope.TextSpan(options); result) |], &result))
                         unbox<Ranvier.Dom.Element> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Element>
             else
                 use scope = new InputScope()
+                let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                let nativeString1 = scope.Bytes(qualifiedName)
                 let mutable result = 0n
-                Interop.check "Document.createElementNS" (NativeDom.rv_dom_document_create_element_ns (Interop.handle (box this), namespaceURI, (if isNull qualifiedName then "" else qualifiedName), [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 1; result.arm0 <- scope.Text(options); result) |], &result))
+                Interop.check "Document.createElementNS" (NativeDom.rv_dom_document_create_element_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 1; result.arm0 <- scope.TextSpan(options); result) |], &result))
                 unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.createElementNS(namespaceURI: string, qualifiedName: string, options: Ranvier.Dom.ElementCreationOptions) : Ranvier.Dom.Element =
             if this.Session.Intercepting then
@@ -6711,29 +7134,37 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let options: Ranvier.Dom.ElementCreationOptions = unbox args[2]
                     let result =
                         use scope = new InputScope()
+                        let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                        let nativeString1 = scope.Bytes(qualifiedName)
                         let mutable result = 0n
-                        Interop.check "Document.createElementNS" (NativeDom.rv_dom_document_create_element_ns (Interop.handle (box this), namespaceURI, (if isNull qualifiedName then "" else qualifiedName), [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Pin([| (let mutable result = Unchecked.defaultof<NativeDom.RvDomElementCreationOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomElementCreationOptions>()); result) |]); result) |], &result))
+                        Interop.check "Document.createElementNS" (NativeDom.rv_dom_document_create_element_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Pin([| (let mutable result = Unchecked.defaultof<NativeDom.RvDomElementCreationOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomElementCreationOptions>()); result) |]); result) |], &result))
                         unbox<Ranvier.Dom.Element> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Element>
             else
                 use scope = new InputScope()
+                let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                let nativeString1 = scope.Bytes(qualifiedName)
                 let mutable result = 0n
-                Interop.check "Document.createElementNS" (NativeDom.rv_dom_document_create_element_ns (Interop.handle (box this), namespaceURI, (if isNull qualifiedName then "" else qualifiedName), [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Pin([| (let mutable result = Unchecked.defaultof<NativeDom.RvDomElementCreationOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomElementCreationOptions>()); result) |]); result) |], &result))
+                Interop.check "Document.createElementNS" (NativeDom.rv_dom_document_create_element_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionDOMStringOrElementCreationOptions> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Pin([| (let mutable result = Unchecked.defaultof<NativeDom.RvDomElementCreationOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomElementCreationOptions>()); result) |]); result) |], &result))
                 unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.getElementsByTagName(qualifiedName: string) : Ranvier.Dom.HTMLCollection =
             if this.Session.Intercepting then
                 Interop.intercept this "getElementsByTagName" [| box qualifiedName |] (fun args ->
                     let qualifiedName: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(qualifiedName)
                         let mutable result = 0n
-                        Interop.check "Document.getElementsByTagName" (NativeDom.rv_dom_document_get_elements_by_tag_name (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), &result))
+                        Interop.check "Document.getElementsByTagName" (NativeDom.rv_dom_document_get_elements_by_tag_name (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                     box result)
                 |> unbox<Ranvier.Dom.HTMLCollection>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(qualifiedName)
                 let mutable result = 0n
-                Interop.check "Document.getElementsByTagName" (NativeDom.rv_dom_document_get_elements_by_tag_name (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), &result))
+                Interop.check "Document.getElementsByTagName" (NativeDom.rv_dom_document_get_elements_by_tag_name (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.getElementsByTagNameNS(namespaceURI: string, localName: string) : Ranvier.Dom.HTMLCollection =
             if this.Session.Intercepting then
@@ -6741,28 +7172,38 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let namespaceURI: string = unbox args[0]
                     let localName: string = unbox args[1]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                        let nativeString1 = scope.Bytes(localName)
                         let mutable result = 0n
-                        Interop.check "Document.getElementsByTagNameNS" (NativeDom.rv_dom_document_get_elements_by_tag_name_ns (Interop.handle (box this), namespaceURI, (if isNull localName then "" else localName), &result))
+                        Interop.check "Document.getElementsByTagNameNS" (NativeDom.rv_dom_document_get_elements_by_tag_name_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, &result))
                         (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                     box result)
                 |> unbox<Ranvier.Dom.HTMLCollection>
             else
+                use scope = new InputScope()
+                let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                let nativeString1 = scope.Bytes(localName)
                 let mutable result = 0n
-                Interop.check "Document.getElementsByTagNameNS" (NativeDom.rv_dom_document_get_elements_by_tag_name_ns (Interop.handle (box this), namespaceURI, (if isNull localName then "" else localName), &result))
+                Interop.check "Document.getElementsByTagNameNS" (NativeDom.rv_dom_document_get_elements_by_tag_name_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, &result))
                 (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.getElementsByClassName(classNames: string) : Ranvier.Dom.HTMLCollection =
             if this.Session.Intercepting then
                 Interop.intercept this "getElementsByClassName" [| box classNames |] (fun args ->
                     let classNames: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(classNames)
                         let mutable result = 0n
-                        Interop.check "Document.getElementsByClassName" (NativeDom.rv_dom_document_get_elements_by_class_name (Interop.handle (box this), (if isNull classNames then "" else classNames), &result))
+                        Interop.check "Document.getElementsByClassName" (NativeDom.rv_dom_document_get_elements_by_class_name (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                     box result)
                 |> unbox<Ranvier.Dom.HTMLCollection>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(classNames)
                 let mutable result = 0n
-                Interop.check "Document.getElementsByClassName" (NativeDom.rv_dom_document_get_elements_by_class_name (Interop.handle (box this), (if isNull classNames then "" else classNames), &result))
+                Interop.check "Document.getElementsByClassName" (NativeDom.rv_dom_document_get_elements_by_class_name (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.createDocumentFragment() : Ranvier.Dom.DocumentFragment =
             if this.Session.Intercepting then
@@ -6782,28 +7223,36 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                 Interop.intercept this "createTextNode" [| box data |] (fun args ->
                     let data: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(data)
                         let mutable result = 0n
-                        Interop.check "Document.createTextNode" (NativeDom.rv_dom_document_create_text_node (Interop.handle (box this), (if isNull data then "" else data), &result))
+                        Interop.check "Document.createTextNode" (NativeDom.rv_dom_document_create_text_node (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         unbox<Ranvier.Dom.Text> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Text>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(data)
                 let mutable result = 0n
-                Interop.check "Document.createTextNode" (NativeDom.rv_dom_document_create_text_node (Interop.handle (box this), (if isNull data then "" else data), &result))
+                Interop.check "Document.createTextNode" (NativeDom.rv_dom_document_create_text_node (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 unbox<Ranvier.Dom.Text> (this.Session.Node result)
         member this.createComment(data: string) : Ranvier.Dom.Comment =
             if this.Session.Intercepting then
                 Interop.intercept this "createComment" [| box data |] (fun args ->
                     let data: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(data)
                         let mutable result = 0n
-                        Interop.check "Document.createComment" (NativeDom.rv_dom_document_create_comment (Interop.handle (box this), (if isNull data then "" else data), &result))
+                        Interop.check "Document.createComment" (NativeDom.rv_dom_document_create_comment (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         unbox<Ranvier.Dom.Comment> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Comment>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(data)
                 let mutable result = 0n
-                Interop.check "Document.createComment" (NativeDom.rv_dom_document_create_comment (Interop.handle (box this), (if isNull data then "" else data), &result))
+                Interop.check "Document.createComment" (NativeDom.rv_dom_document_create_comment (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 unbox<Ranvier.Dom.Comment> (this.Session.Node result)
         member this.importNode(node: Ranvier.Dom.Node) : Ranvier.Dom.Node =
             if this.Session.Intercepting then
@@ -6870,14 +7319,18 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                 Interop.intercept this "createAttribute" [| box localName |] (fun args ->
                     let localName: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(localName)
                         let mutable result = 0n
-                        Interop.check "Document.createAttribute" (NativeDom.rv_dom_document_create_attribute (Interop.handle (box this), (if isNull localName then "" else localName), &result))
+                        Interop.check "Document.createAttribute" (NativeDom.rv_dom_document_create_attribute (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         unbox<Ranvier.Dom.Attr> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Attr>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(localName)
                 let mutable result = 0n
-                Interop.check "Document.createAttribute" (NativeDom.rv_dom_document_create_attribute (Interop.handle (box this), (if isNull localName then "" else localName), &result))
+                Interop.check "Document.createAttribute" (NativeDom.rv_dom_document_create_attribute (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 unbox<Ranvier.Dom.Attr> (this.Session.Node result)
         member this.createAttributeNS(namespaceURI: string, qualifiedName: string) : Ranvier.Dom.Attr =
             if this.Session.Intercepting then
@@ -6885,28 +7338,38 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let namespaceURI: string = unbox args[0]
                     let qualifiedName: string = unbox args[1]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                        let nativeString1 = scope.Bytes(qualifiedName)
                         let mutable result = 0n
-                        Interop.check "Document.createAttributeNS" (NativeDom.rv_dom_document_create_attribute_ns (Interop.handle (box this), namespaceURI, (if isNull qualifiedName then "" else qualifiedName), &result))
+                        Interop.check "Document.createAttributeNS" (NativeDom.rv_dom_document_create_attribute_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, &result))
                         unbox<Ranvier.Dom.Attr> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Attr>
             else
+                use scope = new InputScope()
+                let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                let nativeString1 = scope.Bytes(qualifiedName)
                 let mutable result = 0n
-                Interop.check "Document.createAttributeNS" (NativeDom.rv_dom_document_create_attribute_ns (Interop.handle (box this), namespaceURI, (if isNull qualifiedName then "" else qualifiedName), &result))
+                Interop.check "Document.createAttributeNS" (NativeDom.rv_dom_document_create_attribute_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, &result))
                 unbox<Ranvier.Dom.Attr> (this.Session.Node result)
         member this.createEvent(``type``: string) : Ranvier.Dom.Event =
             if this.Session.Intercepting then
                 Interop.intercept this "createEvent" [| box ``type`` |] (fun args ->
                     let ``type``: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(``type``)
                         let mutable result = 0n
-                        Interop.check "Document.createEvent" (NativeDom.rv_dom_document_create_event (Interop.handle (box this), (if isNull ``type`` then "" else ``type``), &result))
+                        Interop.check "Document.createEvent" (NativeDom.rv_dom_document_create_event (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         unbox<Ranvier.Dom.Event> (this.Session.Event result)
                     box result)
                 |> unbox<Ranvier.Dom.Event>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(``type``)
                 let mutable result = 0n
-                Interop.check "Document.createEvent" (NativeDom.rv_dom_document_create_event (Interop.handle (box this), (if isNull ``type`` then "" else ``type``), &result))
+                Interop.check "Document.createEvent" (NativeDom.rv_dom_document_create_event (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 unbox<Ranvier.Dom.Event> (this.Session.Event result)
         member this.createRange() : Ranvier.Dom.Range =
             if this.Session.Intercepting then
@@ -6965,11 +7428,15 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                 Interop.intercept this "ariaNotify" [| box announcement |] (fun args ->
                     let announcement: string = unbox args[0]
                     let result =
-                        Interop.check "Document.ariaNotify" (NativeDom.rv_dom_document_aria_notify (Interop.handle (box this), (if isNull announcement then "" else announcement)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(announcement)
+                        Interop.check "Document.ariaNotify" (NativeDom.rv_dom_document_aria_notify (Interop.handle (box this), nativeString0, nativeString0.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "Document.ariaNotify" (NativeDom.rv_dom_document_aria_notify (Interop.handle (box this), (if isNull announcement then "" else announcement)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(announcement)
+                Interop.check "Document.ariaNotify" (NativeDom.rv_dom_document_aria_notify (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.ariaNotify(announcement: string, options: Ranvier.Dom.AriaNotifyOptions) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "ariaNotify" [| box announcement; box options |] (fun args ->
@@ -6977,12 +7444,14 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let options: Ranvier.Dom.AriaNotifyOptions = unbox args[1]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "Document.ariaNotify" (NativeDom.rv_dom_document_aria_notify_2 (Interop.handle (box this), (if isNull announcement then "" else announcement), [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomAriaNotifyOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomAriaNotifyOptions>()); result.priority <- (match (options).priority with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationPriority.Normal -> 0 | Ranvier.Dom.AriaNotificationPriority.High -> 1) |])); result.interrupt <- (match (options).interrupt with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationInterrupt.None -> 0 | Ranvier.Dom.AriaNotificationInterrupt.All -> 1 | Ranvier.Dom.AriaNotificationInterrupt.Pending -> 2) |])); result) |]))
+                        let nativeString0 = scope.Bytes(announcement)
+                        Interop.check "Document.ariaNotify" (NativeDom.rv_dom_document_aria_notify_2 (Interop.handle (box this), nativeString0, nativeString0.Length, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomAriaNotifyOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomAriaNotifyOptions>()); result.priority <- (match (options).priority with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationPriority.Normal -> 0 | Ranvier.Dom.AriaNotificationPriority.High -> 1) |])); result.interrupt <- (match (options).interrupt with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationInterrupt.None -> 0 | Ranvier.Dom.AriaNotificationInterrupt.All -> 1 | Ranvier.Dom.AriaNotificationInterrupt.Pending -> 2) |])); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "Document.ariaNotify" (NativeDom.rv_dom_document_aria_notify_2 (Interop.handle (box this), (if isNull announcement then "" else announcement), [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomAriaNotifyOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomAriaNotifyOptions>()); result.priority <- (match (options).priority with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationPriority.Normal -> 0 | Ranvier.Dom.AriaNotificationPriority.High -> 1) |])); result.interrupt <- (match (options).interrupt with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationInterrupt.None -> 0 | Ranvier.Dom.AriaNotificationInterrupt.All -> 1 | Ranvier.Dom.AriaNotificationInterrupt.Pending -> 2) |])); result) |]))
+                let nativeString0 = scope.Bytes(announcement)
+                Interop.check "Document.ariaNotify" (NativeDom.rv_dom_document_aria_notify_2 (Interop.handle (box this), nativeString0, nativeString0.Length, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomAriaNotifyOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomAriaNotifyOptions>()); result.priority <- (match (options).priority with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationPriority.Normal -> 0 | Ranvier.Dom.AriaNotificationPriority.High -> 1) |])); result.interrupt <- (match (options).interrupt with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationInterrupt.None -> 0 | Ranvier.Dom.AriaNotificationInterrupt.All -> 1 | Ranvier.Dom.AriaNotificationInterrupt.Pending -> 2) |])); result) |]))
         member this.caretPositionFromPoint(x: float, y: float, ?options: Ranvier.Dom.CaretPositionFromPointOptions) : Ranvier.Dom.CaretPosition =
             if this.Session.Intercepting then
                 Interop.intercept this "caretPositionFromPoint" [| box x; box y; box options |] (fun args ->
@@ -7006,14 +7475,18 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                 Interop.intercept this "getElementsByName" [| box elementName |] (fun args ->
                     let elementName: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(elementName)
                         let mutable result = 0n
-                        Interop.check "Document.getElementsByName" (NativeDom.rv_dom_document_get_elements_by_name (Interop.handle (box this), (if isNull elementName then "" else elementName), &result))
+                        Interop.check "Document.getElementsByName" (NativeDom.rv_dom_document_get_elements_by_name (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
                     box result)
                 |> unbox<Ranvier.Dom.NodeList>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(elementName)
                 let mutable result = 0n
-                Interop.check "Document.getElementsByName" (NativeDom.rv_dom_document_get_elements_by_name (Interop.handle (box this), (if isNull elementName then "" else elementName), &result))
+                Interop.check "Document.getElementsByName" (NativeDom.rv_dom_document_get_elements_by_name (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
         member this.hasFocus() : bool =
             if this.Session.Intercepting then
@@ -7035,81 +7508,107 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let showUI: bool option = unbox args[1]
                     let value: string option = unbox args[2]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(commandId)
+                        let nativeString2 = scope.Bytes(defaultArg value "")
                         let mutable result = 0
-                        Interop.check "Document.execCommand" (NativeDom.rv_dom_document_exec_command (Interop.handle (box this), (if isNull commandId then "" else commandId), (match showUI with Some x -> (if x then 1 else 0) | None -> 0), Option.defaultValue "" value, &result))
+                        Interop.check "Document.execCommand" (NativeDom.rv_dom_document_exec_command (Interop.handle (box this), nativeString0, nativeString0.Length, (match showUI with Some x -> (if x then 1 else 0) | None -> 0), nativeString2, nativeString2.Length, &result))
                         result <> 0
                     box result)
                 |> unbox<bool>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(commandId)
+                let nativeString2 = scope.Bytes(defaultArg value "")
                 let mutable result = 0
-                Interop.check "Document.execCommand" (NativeDom.rv_dom_document_exec_command (Interop.handle (box this), (if isNull commandId then "" else commandId), (match showUI with Some x -> (if x then 1 else 0) | None -> 0), Option.defaultValue "" value, &result))
+                Interop.check "Document.execCommand" (NativeDom.rv_dom_document_exec_command (Interop.handle (box this), nativeString0, nativeString0.Length, (match showUI with Some x -> (if x then 1 else 0) | None -> 0), nativeString2, nativeString2.Length, &result))
                 result <> 0
         member this.queryCommandEnabled(commandId: string) : bool =
             if this.Session.Intercepting then
                 Interop.intercept this "queryCommandEnabled" [| box commandId |] (fun args ->
                     let commandId: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(commandId)
                         let mutable result = 0
-                        Interop.check "Document.queryCommandEnabled" (NativeDom.rv_dom_document_query_command_enabled (Interop.handle (box this), (if isNull commandId then "" else commandId), &result))
+                        Interop.check "Document.queryCommandEnabled" (NativeDom.rv_dom_document_query_command_enabled (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         result <> 0
                     box result)
                 |> unbox<bool>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(commandId)
                 let mutable result = 0
-                Interop.check "Document.queryCommandEnabled" (NativeDom.rv_dom_document_query_command_enabled (Interop.handle (box this), (if isNull commandId then "" else commandId), &result))
+                Interop.check "Document.queryCommandEnabled" (NativeDom.rv_dom_document_query_command_enabled (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 result <> 0
         member this.queryCommandIndeterm(commandId: string) : bool =
             if this.Session.Intercepting then
                 Interop.intercept this "queryCommandIndeterm" [| box commandId |] (fun args ->
                     let commandId: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(commandId)
                         let mutable result = 0
-                        Interop.check "Document.queryCommandIndeterm" (NativeDom.rv_dom_document_query_command_indeterm (Interop.handle (box this), (if isNull commandId then "" else commandId), &result))
+                        Interop.check "Document.queryCommandIndeterm" (NativeDom.rv_dom_document_query_command_indeterm (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         result <> 0
                     box result)
                 |> unbox<bool>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(commandId)
                 let mutable result = 0
-                Interop.check "Document.queryCommandIndeterm" (NativeDom.rv_dom_document_query_command_indeterm (Interop.handle (box this), (if isNull commandId then "" else commandId), &result))
+                Interop.check "Document.queryCommandIndeterm" (NativeDom.rv_dom_document_query_command_indeterm (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 result <> 0
         member this.queryCommandState(commandId: string) : bool =
             if this.Session.Intercepting then
                 Interop.intercept this "queryCommandState" [| box commandId |] (fun args ->
                     let commandId: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(commandId)
                         let mutable result = 0
-                        Interop.check "Document.queryCommandState" (NativeDom.rv_dom_document_query_command_state (Interop.handle (box this), (if isNull commandId then "" else commandId), &result))
+                        Interop.check "Document.queryCommandState" (NativeDom.rv_dom_document_query_command_state (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         result <> 0
                     box result)
                 |> unbox<bool>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(commandId)
                 let mutable result = 0
-                Interop.check "Document.queryCommandState" (NativeDom.rv_dom_document_query_command_state (Interop.handle (box this), (if isNull commandId then "" else commandId), &result))
+                Interop.check "Document.queryCommandState" (NativeDom.rv_dom_document_query_command_state (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 result <> 0
         member this.queryCommandSupported(commandId: string) : bool =
             if this.Session.Intercepting then
                 Interop.intercept this "queryCommandSupported" [| box commandId |] (fun args ->
                     let commandId: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(commandId)
                         let mutable result = 0
-                        Interop.check "Document.queryCommandSupported" (NativeDom.rv_dom_document_query_command_supported (Interop.handle (box this), (if isNull commandId then "" else commandId), &result))
+                        Interop.check "Document.queryCommandSupported" (NativeDom.rv_dom_document_query_command_supported (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         result <> 0
                     box result)
                 |> unbox<bool>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(commandId)
                 let mutable result = 0
-                Interop.check "Document.queryCommandSupported" (NativeDom.rv_dom_document_query_command_supported (Interop.handle (box this), (if isNull commandId then "" else commandId), &result))
+                Interop.check "Document.queryCommandSupported" (NativeDom.rv_dom_document_query_command_supported (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 result <> 0
         member this.queryCommandValue(commandId: string) : string =
             if this.Session.Intercepting then
                 Interop.intercept this "queryCommandValue" [| box commandId |] (fun args ->
                     let commandId: string = unbox args[0]
                     let result =
-                        Interop.nonNull (Interop.text "Document.queryCommandValue" (fun buffer capacity length -> NativeDom.rv_dom_document_query_command_value (Interop.handle (box this), (if isNull commandId then "" else commandId), buffer, capacity, length)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(commandId)
+                        Interop.nonNull (Interop.text "Document.queryCommandValue" (fun buffer capacity length -> NativeDom.rv_dom_document_query_command_value (Interop.handle (box this), nativeString0, nativeString0.Length, buffer, capacity, length)))
                     box result)
                 |> unbox<string>
             else
-                Interop.nonNull (Interop.text "Document.queryCommandValue" (fun buffer capacity length -> NativeDom.rv_dom_document_query_command_value (Interop.handle (box this), (if isNull commandId then "" else commandId), buffer, capacity, length)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(commandId)
+                Interop.nonNull (Interop.text "Document.queryCommandValue" (fun buffer capacity length -> NativeDom.rv_dom_document_query_command_value (Interop.handle (box this), nativeString0, nativeString0.Length, buffer, capacity, length)))
         member this.getSelection() : Ranvier.Dom.DOMSelection =
             if this.Session.Intercepting then
                 Interop.intercept this "getSelection" [|  |] (fun args ->
@@ -7128,14 +7627,18 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                 Interop.intercept this "getElementById" [| box elementId |] (fun args ->
                     let elementId: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(elementId)
                         let mutable result = 0n
-                        Interop.check "Document.getElementById" (NativeDom.rv_dom_document_get_element_by_id (Interop.handle (box this), (if isNull elementId then "" else elementId), &result))
+                        Interop.check "Document.getElementById" (NativeDom.rv_dom_document_get_element_by_id (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         unbox<Ranvier.Dom.Element> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Element>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(elementId)
                 let mutable result = 0n
-                Interop.check "Document.getElementById" (NativeDom.rv_dom_document_get_element_by_id (Interop.handle (box this), (if isNull elementId then "" else elementId), &result))
+                Interop.check "Document.getElementById" (NativeDom.rv_dom_document_get_element_by_id (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.elementFromPoint(x: float, y: float) : Ranvier.Dom.Element =
             if this.Session.Intercepting then
@@ -7276,11 +7779,15 @@ and internal ShadowRootObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_referenceTarget" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ShadowRoot.referenceTarget" (NativeDom.rv_dom_shadow_root_set_reference_target (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "ShadowRoot.referenceTarget" (NativeDom.rv_dom_shadow_root_set_reference_target (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ShadowRoot.referenceTarget" (NativeDom.rv_dom_shadow_root_set_reference_target (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "ShadowRoot.referenceTarget" (NativeDom.rv_dom_shadow_root_set_reference_target (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.activeElement
             with get () : Ranvier.Dom.Element =
                 if this.Session.Intercepting then
@@ -7352,11 +7859,15 @@ and internal ShadowRootObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_innerHTML" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ShadowRoot.innerHTML" (NativeDom.rv_dom_shadow_root_set_inner_html (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "ShadowRoot.innerHTML" (NativeDom.rv_dom_shadow_root_set_inner_html (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ShadowRoot.innerHTML" (NativeDom.rv_dom_shadow_root_set_inner_html (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "ShadowRoot.innerHTML" (NativeDom.rv_dom_shadow_root_set_inner_html (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.elementFromPoint(x: float, y: float) : Ranvier.Dom.Element =
             if this.Session.Intercepting then
                 Interop.intercept this "elementFromPoint" [| box x; box y |] (fun args ->
@@ -7398,11 +7909,15 @@ and internal ShadowRootObject(session: Session, handle: nativeint) =
                 Interop.intercept this "setHTMLUnsafe" [| box html |] (fun args ->
                     let html: string = unbox args[0]
                     let result =
-                        Interop.check "ShadowRoot.setHTMLUnsafe" (NativeDom.rv_dom_shadow_root_set_html_unsafe (Interop.handle (box this), (if isNull html then "" else html)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(html)
+                        Interop.check "ShadowRoot.setHTMLUnsafe" (NativeDom.rv_dom_shadow_root_set_html_unsafe (Interop.handle (box this), nativeString0, nativeString0.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "ShadowRoot.setHTMLUnsafe" (NativeDom.rv_dom_shadow_root_set_html_unsafe (Interop.handle (box this), (if isNull html then "" else html)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(html)
+                Interop.check "ShadowRoot.setHTMLUnsafe" (NativeDom.rv_dom_shadow_root_set_html_unsafe (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.getHTML(?options: Ranvier.Dom.GetHTMLOptions) : string =
             if this.Session.Intercepting then
                 Interop.intercept this "getHTML" [| box options |] (fun args ->
@@ -7541,11 +8056,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaAtomic" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaAtomic" (NativeDom.rv_dom_element_set_aria_atomic (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaAtomic" (NativeDom.rv_dom_element_set_aria_atomic (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaAtomic" (NativeDom.rv_dom_element_set_aria_atomic (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaAtomic" (NativeDom.rv_dom_element_set_aria_atomic (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaAutoComplete
             with get () : string =
                 if this.Session.Intercepting then
@@ -7561,11 +8080,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaAutoComplete" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaAutoComplete" (NativeDom.rv_dom_element_set_aria_auto_complete (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaAutoComplete" (NativeDom.rv_dom_element_set_aria_auto_complete (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaAutoComplete" (NativeDom.rv_dom_element_set_aria_auto_complete (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaAutoComplete" (NativeDom.rv_dom_element_set_aria_auto_complete (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaBrailleLabel
             with get () : string =
                 if this.Session.Intercepting then
@@ -7581,11 +8104,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaBrailleLabel" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaBrailleLabel" (NativeDom.rv_dom_element_set_aria_braille_label (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaBrailleLabel" (NativeDom.rv_dom_element_set_aria_braille_label (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaBrailleLabel" (NativeDom.rv_dom_element_set_aria_braille_label (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaBrailleLabel" (NativeDom.rv_dom_element_set_aria_braille_label (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaBrailleRoleDescription
             with get () : string =
                 if this.Session.Intercepting then
@@ -7601,11 +8128,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaBrailleRoleDescription" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaBrailleRoleDescription" (NativeDom.rv_dom_element_set_aria_braille_role_description (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaBrailleRoleDescription" (NativeDom.rv_dom_element_set_aria_braille_role_description (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaBrailleRoleDescription" (NativeDom.rv_dom_element_set_aria_braille_role_description (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaBrailleRoleDescription" (NativeDom.rv_dom_element_set_aria_braille_role_description (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaBusy
             with get () : string =
                 if this.Session.Intercepting then
@@ -7621,11 +8152,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaBusy" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaBusy" (NativeDom.rv_dom_element_set_aria_busy (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaBusy" (NativeDom.rv_dom_element_set_aria_busy (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaBusy" (NativeDom.rv_dom_element_set_aria_busy (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaBusy" (NativeDom.rv_dom_element_set_aria_busy (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaChecked
             with get () : string =
                 if this.Session.Intercepting then
@@ -7641,11 +8176,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaChecked" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaChecked" (NativeDom.rv_dom_element_set_aria_checked (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaChecked" (NativeDom.rv_dom_element_set_aria_checked (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaChecked" (NativeDom.rv_dom_element_set_aria_checked (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaChecked" (NativeDom.rv_dom_element_set_aria_checked (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaColCount
             with get () : string =
                 if this.Session.Intercepting then
@@ -7661,11 +8200,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaColCount" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaColCount" (NativeDom.rv_dom_element_set_aria_col_count (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaColCount" (NativeDom.rv_dom_element_set_aria_col_count (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaColCount" (NativeDom.rv_dom_element_set_aria_col_count (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaColCount" (NativeDom.rv_dom_element_set_aria_col_count (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaColIndex
             with get () : string =
                 if this.Session.Intercepting then
@@ -7681,11 +8224,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaColIndex" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaColIndex" (NativeDom.rv_dom_element_set_aria_col_index (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaColIndex" (NativeDom.rv_dom_element_set_aria_col_index (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaColIndex" (NativeDom.rv_dom_element_set_aria_col_index (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaColIndex" (NativeDom.rv_dom_element_set_aria_col_index (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaColIndexText
             with get () : string =
                 if this.Session.Intercepting then
@@ -7701,11 +8248,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaColIndexText" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaColIndexText" (NativeDom.rv_dom_element_set_aria_col_index_text (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaColIndexText" (NativeDom.rv_dom_element_set_aria_col_index_text (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaColIndexText" (NativeDom.rv_dom_element_set_aria_col_index_text (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaColIndexText" (NativeDom.rv_dom_element_set_aria_col_index_text (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaColSpan
             with get () : string =
                 if this.Session.Intercepting then
@@ -7721,11 +8272,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaColSpan" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaColSpan" (NativeDom.rv_dom_element_set_aria_col_span (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaColSpan" (NativeDom.rv_dom_element_set_aria_col_span (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaColSpan" (NativeDom.rv_dom_element_set_aria_col_span (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaColSpan" (NativeDom.rv_dom_element_set_aria_col_span (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaControlsElements
             with get () : Ranvier.Dom.Element array =
                 if this.Session.Intercepting then
@@ -7773,11 +8328,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaCurrent" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaCurrent" (NativeDom.rv_dom_element_set_aria_current (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaCurrent" (NativeDom.rv_dom_element_set_aria_current (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaCurrent" (NativeDom.rv_dom_element_set_aria_current (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaCurrent" (NativeDom.rv_dom_element_set_aria_current (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaDescribedByElements
             with get () : Ranvier.Dom.Element array =
                 if this.Session.Intercepting then
@@ -7825,11 +8384,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaDescription" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaDescription" (NativeDom.rv_dom_element_set_aria_description (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaDescription" (NativeDom.rv_dom_element_set_aria_description (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaDescription" (NativeDom.rv_dom_element_set_aria_description (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaDescription" (NativeDom.rv_dom_element_set_aria_description (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaDetailsElements
             with get () : Ranvier.Dom.Element array =
                 if this.Session.Intercepting then
@@ -7877,11 +8440,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaDisabled" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaDisabled" (NativeDom.rv_dom_element_set_aria_disabled (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaDisabled" (NativeDom.rv_dom_element_set_aria_disabled (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaDisabled" (NativeDom.rv_dom_element_set_aria_disabled (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaDisabled" (NativeDom.rv_dom_element_set_aria_disabled (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaErrorMessageElements
             with get () : Ranvier.Dom.Element array =
                 if this.Session.Intercepting then
@@ -7929,11 +8496,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaExpanded" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaExpanded" (NativeDom.rv_dom_element_set_aria_expanded (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaExpanded" (NativeDom.rv_dom_element_set_aria_expanded (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaExpanded" (NativeDom.rv_dom_element_set_aria_expanded (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaExpanded" (NativeDom.rv_dom_element_set_aria_expanded (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaFlowToElements
             with get () : Ranvier.Dom.Element array =
                 if this.Session.Intercepting then
@@ -7981,11 +8552,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaHasPopup" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaHasPopup" (NativeDom.rv_dom_element_set_aria_has_popup (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaHasPopup" (NativeDom.rv_dom_element_set_aria_has_popup (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaHasPopup" (NativeDom.rv_dom_element_set_aria_has_popup (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaHasPopup" (NativeDom.rv_dom_element_set_aria_has_popup (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaHidden
             with get () : string =
                 if this.Session.Intercepting then
@@ -8001,11 +8576,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaHidden" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaHidden" (NativeDom.rv_dom_element_set_aria_hidden (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaHidden" (NativeDom.rv_dom_element_set_aria_hidden (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaHidden" (NativeDom.rv_dom_element_set_aria_hidden (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaHidden" (NativeDom.rv_dom_element_set_aria_hidden (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaInvalid
             with get () : string =
                 if this.Session.Intercepting then
@@ -8021,11 +8600,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaInvalid" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaInvalid" (NativeDom.rv_dom_element_set_aria_invalid (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaInvalid" (NativeDom.rv_dom_element_set_aria_invalid (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaInvalid" (NativeDom.rv_dom_element_set_aria_invalid (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaInvalid" (NativeDom.rv_dom_element_set_aria_invalid (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaKeyShortcuts
             with get () : string =
                 if this.Session.Intercepting then
@@ -8041,11 +8624,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaKeyShortcuts" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaKeyShortcuts" (NativeDom.rv_dom_element_set_aria_key_shortcuts (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaKeyShortcuts" (NativeDom.rv_dom_element_set_aria_key_shortcuts (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaKeyShortcuts" (NativeDom.rv_dom_element_set_aria_key_shortcuts (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaKeyShortcuts" (NativeDom.rv_dom_element_set_aria_key_shortcuts (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaLabel
             with get () : string =
                 if this.Session.Intercepting then
@@ -8061,11 +8648,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaLabel" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaLabel" (NativeDom.rv_dom_element_set_aria_label (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaLabel" (NativeDom.rv_dom_element_set_aria_label (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaLabel" (NativeDom.rv_dom_element_set_aria_label (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaLabel" (NativeDom.rv_dom_element_set_aria_label (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaLabelledByElements
             with get () : Ranvier.Dom.Element array =
                 if this.Session.Intercepting then
@@ -8113,11 +8704,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaLevel" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaLevel" (NativeDom.rv_dom_element_set_aria_level (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaLevel" (NativeDom.rv_dom_element_set_aria_level (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaLevel" (NativeDom.rv_dom_element_set_aria_level (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaLevel" (NativeDom.rv_dom_element_set_aria_level (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaLive
             with get () : string =
                 if this.Session.Intercepting then
@@ -8133,11 +8728,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaLive" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaLive" (NativeDom.rv_dom_element_set_aria_live (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaLive" (NativeDom.rv_dom_element_set_aria_live (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaLive" (NativeDom.rv_dom_element_set_aria_live (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaLive" (NativeDom.rv_dom_element_set_aria_live (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaModal
             with get () : string =
                 if this.Session.Intercepting then
@@ -8153,11 +8752,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaModal" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaModal" (NativeDom.rv_dom_element_set_aria_modal (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaModal" (NativeDom.rv_dom_element_set_aria_modal (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaModal" (NativeDom.rv_dom_element_set_aria_modal (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaModal" (NativeDom.rv_dom_element_set_aria_modal (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaMultiLine
             with get () : string =
                 if this.Session.Intercepting then
@@ -8173,11 +8776,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaMultiLine" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaMultiLine" (NativeDom.rv_dom_element_set_aria_multi_line (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaMultiLine" (NativeDom.rv_dom_element_set_aria_multi_line (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaMultiLine" (NativeDom.rv_dom_element_set_aria_multi_line (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaMultiLine" (NativeDom.rv_dom_element_set_aria_multi_line (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaMultiSelectable
             with get () : string =
                 if this.Session.Intercepting then
@@ -8193,11 +8800,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaMultiSelectable" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaMultiSelectable" (NativeDom.rv_dom_element_set_aria_multi_selectable (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaMultiSelectable" (NativeDom.rv_dom_element_set_aria_multi_selectable (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaMultiSelectable" (NativeDom.rv_dom_element_set_aria_multi_selectable (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaMultiSelectable" (NativeDom.rv_dom_element_set_aria_multi_selectable (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaOrientation
             with get () : string =
                 if this.Session.Intercepting then
@@ -8213,11 +8824,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaOrientation" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaOrientation" (NativeDom.rv_dom_element_set_aria_orientation (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaOrientation" (NativeDom.rv_dom_element_set_aria_orientation (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaOrientation" (NativeDom.rv_dom_element_set_aria_orientation (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaOrientation" (NativeDom.rv_dom_element_set_aria_orientation (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaPlaceholder
             with get () : string =
                 if this.Session.Intercepting then
@@ -8233,11 +8848,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaPlaceholder" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaPlaceholder" (NativeDom.rv_dom_element_set_aria_placeholder (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaPlaceholder" (NativeDom.rv_dom_element_set_aria_placeholder (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaPlaceholder" (NativeDom.rv_dom_element_set_aria_placeholder (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaPlaceholder" (NativeDom.rv_dom_element_set_aria_placeholder (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaPosInSet
             with get () : string =
                 if this.Session.Intercepting then
@@ -8253,11 +8872,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaPosInSet" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaPosInSet" (NativeDom.rv_dom_element_set_aria_pos_in_set (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaPosInSet" (NativeDom.rv_dom_element_set_aria_pos_in_set (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaPosInSet" (NativeDom.rv_dom_element_set_aria_pos_in_set (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaPosInSet" (NativeDom.rv_dom_element_set_aria_pos_in_set (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaPressed
             with get () : string =
                 if this.Session.Intercepting then
@@ -8273,11 +8896,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaPressed" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaPressed" (NativeDom.rv_dom_element_set_aria_pressed (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaPressed" (NativeDom.rv_dom_element_set_aria_pressed (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaPressed" (NativeDom.rv_dom_element_set_aria_pressed (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaPressed" (NativeDom.rv_dom_element_set_aria_pressed (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaReadOnly
             with get () : string =
                 if this.Session.Intercepting then
@@ -8293,11 +8920,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaReadOnly" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaReadOnly" (NativeDom.rv_dom_element_set_aria_read_only (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaReadOnly" (NativeDom.rv_dom_element_set_aria_read_only (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaReadOnly" (NativeDom.rv_dom_element_set_aria_read_only (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaReadOnly" (NativeDom.rv_dom_element_set_aria_read_only (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaRelevant
             with get () : string =
                 if this.Session.Intercepting then
@@ -8313,11 +8944,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaRelevant" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaRelevant" (NativeDom.rv_dom_element_set_aria_relevant (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaRelevant" (NativeDom.rv_dom_element_set_aria_relevant (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaRelevant" (NativeDom.rv_dom_element_set_aria_relevant (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaRelevant" (NativeDom.rv_dom_element_set_aria_relevant (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaRequired
             with get () : string =
                 if this.Session.Intercepting then
@@ -8333,11 +8968,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaRequired" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaRequired" (NativeDom.rv_dom_element_set_aria_required (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaRequired" (NativeDom.rv_dom_element_set_aria_required (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaRequired" (NativeDom.rv_dom_element_set_aria_required (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaRequired" (NativeDom.rv_dom_element_set_aria_required (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaRoleDescription
             with get () : string =
                 if this.Session.Intercepting then
@@ -8353,11 +8992,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaRoleDescription" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaRoleDescription" (NativeDom.rv_dom_element_set_aria_role_description (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaRoleDescription" (NativeDom.rv_dom_element_set_aria_role_description (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaRoleDescription" (NativeDom.rv_dom_element_set_aria_role_description (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaRoleDescription" (NativeDom.rv_dom_element_set_aria_role_description (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaRowCount
             with get () : string =
                 if this.Session.Intercepting then
@@ -8373,11 +9016,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaRowCount" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaRowCount" (NativeDom.rv_dom_element_set_aria_row_count (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaRowCount" (NativeDom.rv_dom_element_set_aria_row_count (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaRowCount" (NativeDom.rv_dom_element_set_aria_row_count (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaRowCount" (NativeDom.rv_dom_element_set_aria_row_count (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaRowIndex
             with get () : string =
                 if this.Session.Intercepting then
@@ -8393,11 +9040,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaRowIndex" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaRowIndex" (NativeDom.rv_dom_element_set_aria_row_index (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaRowIndex" (NativeDom.rv_dom_element_set_aria_row_index (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaRowIndex" (NativeDom.rv_dom_element_set_aria_row_index (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaRowIndex" (NativeDom.rv_dom_element_set_aria_row_index (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaRowIndexText
             with get () : string =
                 if this.Session.Intercepting then
@@ -8413,11 +9064,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaRowIndexText" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaRowIndexText" (NativeDom.rv_dom_element_set_aria_row_index_text (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaRowIndexText" (NativeDom.rv_dom_element_set_aria_row_index_text (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaRowIndexText" (NativeDom.rv_dom_element_set_aria_row_index_text (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaRowIndexText" (NativeDom.rv_dom_element_set_aria_row_index_text (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaRowSpan
             with get () : string =
                 if this.Session.Intercepting then
@@ -8433,11 +9088,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaRowSpan" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaRowSpan" (NativeDom.rv_dom_element_set_aria_row_span (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaRowSpan" (NativeDom.rv_dom_element_set_aria_row_span (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaRowSpan" (NativeDom.rv_dom_element_set_aria_row_span (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaRowSpan" (NativeDom.rv_dom_element_set_aria_row_span (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaSelected
             with get () : string =
                 if this.Session.Intercepting then
@@ -8453,11 +9112,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaSelected" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaSelected" (NativeDom.rv_dom_element_set_aria_selected (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaSelected" (NativeDom.rv_dom_element_set_aria_selected (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaSelected" (NativeDom.rv_dom_element_set_aria_selected (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaSelected" (NativeDom.rv_dom_element_set_aria_selected (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaSetSize
             with get () : string =
                 if this.Session.Intercepting then
@@ -8473,11 +9136,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaSetSize" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaSetSize" (NativeDom.rv_dom_element_set_aria_set_size (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaSetSize" (NativeDom.rv_dom_element_set_aria_set_size (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaSetSize" (NativeDom.rv_dom_element_set_aria_set_size (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaSetSize" (NativeDom.rv_dom_element_set_aria_set_size (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaSort
             with get () : string =
                 if this.Session.Intercepting then
@@ -8493,11 +9160,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaSort" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaSort" (NativeDom.rv_dom_element_set_aria_sort (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaSort" (NativeDom.rv_dom_element_set_aria_sort (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaSort" (NativeDom.rv_dom_element_set_aria_sort (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaSort" (NativeDom.rv_dom_element_set_aria_sort (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaValueMax
             with get () : string =
                 if this.Session.Intercepting then
@@ -8513,11 +9184,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaValueMax" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaValueMax" (NativeDom.rv_dom_element_set_aria_value_max (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaValueMax" (NativeDom.rv_dom_element_set_aria_value_max (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaValueMax" (NativeDom.rv_dom_element_set_aria_value_max (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaValueMax" (NativeDom.rv_dom_element_set_aria_value_max (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaValueMin
             with get () : string =
                 if this.Session.Intercepting then
@@ -8533,11 +9208,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaValueMin" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaValueMin" (NativeDom.rv_dom_element_set_aria_value_min (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaValueMin" (NativeDom.rv_dom_element_set_aria_value_min (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaValueMin" (NativeDom.rv_dom_element_set_aria_value_min (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaValueMin" (NativeDom.rv_dom_element_set_aria_value_min (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaValueNow
             with get () : string =
                 if this.Session.Intercepting then
@@ -8553,11 +9232,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaValueNow" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaValueNow" (NativeDom.rv_dom_element_set_aria_value_now (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaValueNow" (NativeDom.rv_dom_element_set_aria_value_now (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaValueNow" (NativeDom.rv_dom_element_set_aria_value_now (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaValueNow" (NativeDom.rv_dom_element_set_aria_value_now (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.ariaValueText
             with get () : string =
                 if this.Session.Intercepting then
@@ -8573,11 +9256,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ariaValueText" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ARIAMixin.ariaValueText" (NativeDom.rv_dom_element_set_aria_value_text (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "ARIAMixin.ariaValueText" (NativeDom.rv_dom_element_set_aria_value_text (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ARIAMixin.ariaValueText" (NativeDom.rv_dom_element_set_aria_value_text (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "ARIAMixin.ariaValueText" (NativeDom.rv_dom_element_set_aria_value_text (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
     interface Ranvier.Dom.ChildNode with
         member this.before([<System.ParamArray>] nodes: Ranvier.Dom.NodeOrDOMString array) : unit =
             if this.Session.Intercepting then
@@ -8585,36 +9272,36 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ChildNode.before" (NativeDom.rv_dom_element_before (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ChildNode.before" (NativeDom.rv_dom_element_before (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ChildNode.before" (NativeDom.rv_dom_element_before (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ChildNode.before" (NativeDom.rv_dom_element_before (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.after([<System.ParamArray>] nodes: Ranvier.Dom.NodeOrDOMString array) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "after" [| box nodes |] (fun args ->
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ChildNode.after" (NativeDom.rv_dom_element_after (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ChildNode.after" (NativeDom.rv_dom_element_after (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ChildNode.after" (NativeDom.rv_dom_element_after (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ChildNode.after" (NativeDom.rv_dom_element_after (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.replaceWith([<System.ParamArray>] nodes: Ranvier.Dom.NodeOrDOMString array) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "replaceWith" [| box nodes |] (fun args ->
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ChildNode.replaceWith" (NativeDom.rv_dom_element_replace_with (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ChildNode.replaceWith" (NativeDom.rv_dom_element_replace_with (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ChildNode.replaceWith" (NativeDom.rv_dom_element_replace_with (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ChildNode.replaceWith" (NativeDom.rv_dom_element_replace_with (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.remove() : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "remove" [|  |] (fun args ->
@@ -8716,36 +9403,36 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ParentNode.prepend" (NativeDom.rv_dom_element_prepend (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ParentNode.prepend" (NativeDom.rv_dom_element_prepend (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ParentNode.prepend" (NativeDom.rv_dom_element_prepend (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ParentNode.prepend" (NativeDom.rv_dom_element_prepend (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.append([<System.ParamArray>] nodes: Ranvier.Dom.NodeOrDOMString array) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "append" [| box nodes |] (fun args ->
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ParentNode.append" (NativeDom.rv_dom_element_append (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ParentNode.append" (NativeDom.rv_dom_element_append (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ParentNode.append" (NativeDom.rv_dom_element_append (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ParentNode.append" (NativeDom.rv_dom_element_append (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.replaceChildren([<System.ParamArray>] nodes: Ranvier.Dom.NodeOrDOMString array) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "replaceChildren" [| box nodes |] (fun args ->
                     let nodes: Ranvier.Dom.NodeOrDOMString array = unbox args[0]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "ParentNode.replaceChildren" (NativeDom.rv_dom_element_replace_children (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                        Interop.check "ParentNode.replaceChildren" (NativeDom.rv_dom_element_replace_children (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "ParentNode.replaceChildren" (NativeDom.rv_dom_element_replace_children (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.Text(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                Interop.check "ParentNode.replaceChildren" (NativeDom.rv_dom_element_replace_children (Interop.handle (box this), [| (let values = (nodes) |> Array.map (fun item -> (match item with | Ranvier.Dom.NodeOrDOMString.Node item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 1; result.arm0 <- Interop.handle (box (item)); result) | Ranvier.Dom.NodeOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionNodeOrDOMString> in result.present <- 1; result.tag <- 2; result.arm1 <- scope.TextSpan(item); result))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceNodeOrDOMString> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
         member this.moveBefore(node: Ranvier.Dom.Node, child: Ranvier.Dom.Node) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "moveBefore" [| box node; box child |] (fun args ->
@@ -8762,28 +9449,36 @@ and internal ElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "querySelector" [| box selectors |] (fun args ->
                     let selectors: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(selectors)
                         let mutable result = 0n
-                        Interop.check "ParentNode.querySelector" (NativeDom.rv_dom_element_query_selector (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                        Interop.check "ParentNode.querySelector" (NativeDom.rv_dom_element_query_selector (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         unbox<Ranvier.Dom.Element> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Element>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(selectors)
                 let mutable result = 0n
-                Interop.check "ParentNode.querySelector" (NativeDom.rv_dom_element_query_selector (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                Interop.check "ParentNode.querySelector" (NativeDom.rv_dom_element_query_selector (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.querySelectorAll(selectors: string) : Ranvier.Dom.NodeList =
             if this.Session.Intercepting then
                 Interop.intercept this "querySelectorAll" [| box selectors |] (fun args ->
                     let selectors: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(selectors)
                         let mutable result = 0n
-                        Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_element_query_selector_all (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                        Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_element_query_selector_all (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
                     box result)
                 |> unbox<Ranvier.Dom.NodeList>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(selectors)
                 let mutable result = 0n
-                Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_element_query_selector_all (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                Interop.check "ParentNode.querySelectorAll" (NativeDom.rv_dom_element_query_selector_all (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 (this.Session.Track (NodeListObject(this.Session, result)) :> Ranvier.Dom.NodeList)
     interface Ranvier.Dom.Slottable with
         member this.assignedSlot
@@ -8856,11 +9551,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_id" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "Element.id" (NativeDom.rv_dom_element_set_id (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "Element.id" (NativeDom.rv_dom_element_set_id (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "Element.id" (NativeDom.rv_dom_element_set_id (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "Element.id" (NativeDom.rv_dom_element_set_id (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.className
             with get () : string =
                 if this.Session.Intercepting then
@@ -8876,11 +9575,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_className" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "Element.className" (NativeDom.rv_dom_element_set_class_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "Element.className" (NativeDom.rv_dom_element_set_class_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "Element.className" (NativeDom.rv_dom_element_set_class_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "Element.className" (NativeDom.rv_dom_element_set_class_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.classList
             with get () : Ranvier.Dom.DOMTokenList =
                 if this.Session.Intercepting then
@@ -8910,11 +9613,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_slot" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "Element.slot" (NativeDom.rv_dom_element_set_slot (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "Element.slot" (NativeDom.rv_dom_element_set_slot (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "Element.slot" (NativeDom.rv_dom_element_set_slot (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "Element.slot" (NativeDom.rv_dom_element_set_slot (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.part
             with get () : Ranvier.Dom.DOMTokenList =
                 if this.Session.Intercepting then
@@ -9104,11 +9811,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_outerHTML" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "Element.outerHTML" (NativeDom.rv_dom_element_set_outer_html (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "Element.outerHTML" (NativeDom.rv_dom_element_set_outer_html (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "Element.outerHTML" (NativeDom.rv_dom_element_set_outer_html (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "Element.outerHTML" (NativeDom.rv_dom_element_set_outer_html (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.role
             with get () : string =
                 if this.Session.Intercepting then
@@ -9124,11 +9835,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_role" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "Element.role" (NativeDom.rv_dom_element_set_role (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "Element.role" (NativeDom.rv_dom_element_set_role (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "Element.role" (NativeDom.rv_dom_element_set_role (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "Element.role" (NativeDom.rv_dom_element_set_role (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.innerHTML
             with get () : string =
                 if this.Session.Intercepting then
@@ -9144,11 +9859,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_innerHTML" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "Element.innerHTML" (NativeDom.rv_dom_element_set_inner_html (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "Element.innerHTML" (NativeDom.rv_dom_element_set_inner_html (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "Element.innerHTML" (NativeDom.rv_dom_element_set_inner_html (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "Element.innerHTML" (NativeDom.rv_dom_element_set_inner_html (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.hasAttributes() : bool =
             if this.Session.Intercepting then
                 Interop.intercept this "hasAttributes" [|  |] (fun args ->
@@ -9169,7 +9888,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                         let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceDOMString>
                         try
                             Interop.check "Element.getAttributeNames" (NativeDom.rv_dom_element_get_attribute_names (Interop.handle (box this), &result))
-                            (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in System.Runtime.InteropServices.Marshal.PtrToStringUTF8(item)))
+                            (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<NativeDom.RvDomUtf8StringSpan>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomUtf8StringSpan>())) in Interop.spanText (item)))
                         finally
                             NativeDom.rv_dom_sequence_dom_string_release(&result)
                     box result)
@@ -9178,7 +9897,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                 let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceDOMString>
                 try
                     Interop.check "Element.getAttributeNames" (NativeDom.rv_dom_element_get_attribute_names (Interop.handle (box this), &result))
-                    (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in System.Runtime.InteropServices.Marshal.PtrToStringUTF8(item)))
+                    (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<NativeDom.RvDomUtf8StringSpan>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomUtf8StringSpan>())) in Interop.spanText (item)))
                 finally
                     NativeDom.rv_dom_sequence_dom_string_release(&result)
         member this.getAttribute(qualifiedName: string) : string =
@@ -9186,33 +9905,49 @@ and internal ElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "getAttribute" [| box qualifiedName |] (fun args ->
                     let qualifiedName: string = unbox args[0]
                     let result =
-                        Interop.text "Element.getAttribute" (fun buffer capacity length -> NativeDom.rv_dom_element_get_attribute (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), buffer, capacity, length))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(qualifiedName)
+                        Interop.text "Element.getAttribute" (fun buffer capacity length -> NativeDom.rv_dom_element_get_attribute (Interop.handle (box this), nativeString0, nativeString0.Length, buffer, capacity, length))
                     box result)
                 |> unbox<string>
             else
-                Interop.text "Element.getAttribute" (fun buffer capacity length -> NativeDom.rv_dom_element_get_attribute (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), buffer, capacity, length))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(qualifiedName)
+                Interop.text "Element.getAttribute" (fun buffer capacity length -> NativeDom.rv_dom_element_get_attribute (Interop.handle (box this), nativeString0, nativeString0.Length, buffer, capacity, length))
         member this.getAttributeNS(namespaceURI: string, localName: string) : string =
             if this.Session.Intercepting then
                 Interop.intercept this "getAttributeNS" [| box namespaceURI; box localName |] (fun args ->
                     let namespaceURI: string = unbox args[0]
                     let localName: string = unbox args[1]
                     let result =
-                        Interop.text "Element.getAttributeNS" (fun buffer capacity length -> NativeDom.rv_dom_element_get_attribute_ns (Interop.handle (box this), namespaceURI, (if isNull localName then "" else localName), buffer, capacity, length))
+                        use scope = new InputScope()
+                        let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                        let nativeString1 = scope.Bytes(localName)
+                        Interop.text "Element.getAttributeNS" (fun buffer capacity length -> NativeDom.rv_dom_element_get_attribute_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, buffer, capacity, length))
                     box result)
                 |> unbox<string>
             else
-                Interop.text "Element.getAttributeNS" (fun buffer capacity length -> NativeDom.rv_dom_element_get_attribute_ns (Interop.handle (box this), namespaceURI, (if isNull localName then "" else localName), buffer, capacity, length))
+                use scope = new InputScope()
+                let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                let nativeString1 = scope.Bytes(localName)
+                Interop.text "Element.getAttributeNS" (fun buffer capacity length -> NativeDom.rv_dom_element_get_attribute_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, buffer, capacity, length))
         member this.setAttribute(qualifiedName: string, value: string) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "setAttribute" [| box qualifiedName; box value |] (fun args ->
                     let qualifiedName: string = unbox args[0]
                     let value: string = unbox args[1]
                     let result =
-                        Interop.check "Element.setAttribute" (NativeDom.rv_dom_element_set_attribute (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), (if isNull value then "" else value)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(qualifiedName)
+                        let nativeString1 = scope.Bytes(value)
+                        Interop.check "Element.setAttribute" (NativeDom.rv_dom_element_set_attribute (Interop.handle (box this), nativeString0, nativeString0.Length, nativeString1, nativeString1.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "Element.setAttribute" (NativeDom.rv_dom_element_set_attribute (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(qualifiedName)
+                let nativeString1 = scope.Bytes(value)
+                Interop.check "Element.setAttribute" (NativeDom.rv_dom_element_set_attribute (Interop.handle (box this), nativeString0, nativeString0.Length, nativeString1, nativeString1.Length))
         member this.setAttributeNS(namespaceURI: string, qualifiedName: string, value: string) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "setAttributeNS" [| box namespaceURI; box qualifiedName; box value |] (fun args ->
@@ -9220,60 +9955,86 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let qualifiedName: string = unbox args[1]
                     let value: string = unbox args[2]
                     let result =
-                        Interop.check "Element.setAttributeNS" (NativeDom.rv_dom_element_set_attribute_ns (Interop.handle (box this), namespaceURI, (if isNull qualifiedName then "" else qualifiedName), (if isNull value then "" else value)))
+                        use scope = new InputScope()
+                        let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                        let nativeString1 = scope.Bytes(qualifiedName)
+                        let nativeString2 = scope.Bytes(value)
+                        Interop.check "Element.setAttributeNS" (NativeDom.rv_dom_element_set_attribute_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, nativeString2, nativeString2.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "Element.setAttributeNS" (NativeDom.rv_dom_element_set_attribute_ns (Interop.handle (box this), namespaceURI, (if isNull qualifiedName then "" else qualifiedName), (if isNull value then "" else value)))
+                use scope = new InputScope()
+                let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                let nativeString1 = scope.Bytes(qualifiedName)
+                let nativeString2 = scope.Bytes(value)
+                Interop.check "Element.setAttributeNS" (NativeDom.rv_dom_element_set_attribute_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, nativeString2, nativeString2.Length))
         member this.removeAttribute(qualifiedName: string) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "removeAttribute" [| box qualifiedName |] (fun args ->
                     let qualifiedName: string = unbox args[0]
                     let result =
-                        Interop.check "Element.removeAttribute" (NativeDom.rv_dom_element_remove_attribute (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(qualifiedName)
+                        Interop.check "Element.removeAttribute" (NativeDom.rv_dom_element_remove_attribute (Interop.handle (box this), nativeString0, nativeString0.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "Element.removeAttribute" (NativeDom.rv_dom_element_remove_attribute (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(qualifiedName)
+                Interop.check "Element.removeAttribute" (NativeDom.rv_dom_element_remove_attribute (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.removeAttributeNS(namespaceURI: string, localName: string) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "removeAttributeNS" [| box namespaceURI; box localName |] (fun args ->
                     let namespaceURI: string = unbox args[0]
                     let localName: string = unbox args[1]
                     let result =
-                        Interop.check "Element.removeAttributeNS" (NativeDom.rv_dom_element_remove_attribute_ns (Interop.handle (box this), namespaceURI, (if isNull localName then "" else localName)))
+                        use scope = new InputScope()
+                        let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                        let nativeString1 = scope.Bytes(localName)
+                        Interop.check "Element.removeAttributeNS" (NativeDom.rv_dom_element_remove_attribute_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "Element.removeAttributeNS" (NativeDom.rv_dom_element_remove_attribute_ns (Interop.handle (box this), namespaceURI, (if isNull localName then "" else localName)))
+                use scope = new InputScope()
+                let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                let nativeString1 = scope.Bytes(localName)
+                Interop.check "Element.removeAttributeNS" (NativeDom.rv_dom_element_remove_attribute_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length))
         member this.toggleAttribute(qualifiedName: string, ?force: bool) : bool =
             if this.Session.Intercepting then
                 Interop.intercept this "toggleAttribute" [| box qualifiedName; box force |] (fun args ->
                     let qualifiedName: string = unbox args[0]
                     let force: bool option = unbox args[1]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(qualifiedName)
                         let mutable result = 0
-                        Interop.check "Element.toggleAttribute" (NativeDom.rv_dom_element_toggle_attribute (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), (match force with Some x -> [| (if x then 1 else 0) |] | None -> null), &result))
+                        Interop.check "Element.toggleAttribute" (NativeDom.rv_dom_element_toggle_attribute (Interop.handle (box this), nativeString0, nativeString0.Length, (match force with Some x -> [| (if x then 1 else 0) |] | None -> null), &result))
                         result <> 0
                     box result)
                 |> unbox<bool>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(qualifiedName)
                 let mutable result = 0
-                Interop.check "Element.toggleAttribute" (NativeDom.rv_dom_element_toggle_attribute (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), (match force with Some x -> [| (if x then 1 else 0) |] | None -> null), &result))
+                Interop.check "Element.toggleAttribute" (NativeDom.rv_dom_element_toggle_attribute (Interop.handle (box this), nativeString0, nativeString0.Length, (match force with Some x -> [| (if x then 1 else 0) |] | None -> null), &result))
                 result <> 0
         member this.hasAttribute(qualifiedName: string) : bool =
             if this.Session.Intercepting then
                 Interop.intercept this "hasAttribute" [| box qualifiedName |] (fun args ->
                     let qualifiedName: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(qualifiedName)
                         let mutable result = 0
-                        Interop.check "Element.hasAttribute" (NativeDom.rv_dom_element_has_attribute (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), &result))
+                        Interop.check "Element.hasAttribute" (NativeDom.rv_dom_element_has_attribute (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         result <> 0
                     box result)
                 |> unbox<bool>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(qualifiedName)
                 let mutable result = 0
-                Interop.check "Element.hasAttribute" (NativeDom.rv_dom_element_has_attribute (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), &result))
+                Interop.check "Element.hasAttribute" (NativeDom.rv_dom_element_has_attribute (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 result <> 0
         member this.hasAttributeNS(namespaceURI: string, localName: string) : bool =
             if this.Session.Intercepting then
@@ -9281,28 +10042,38 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let namespaceURI: string = unbox args[0]
                     let localName: string = unbox args[1]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                        let nativeString1 = scope.Bytes(localName)
                         let mutable result = 0
-                        Interop.check "Element.hasAttributeNS" (NativeDom.rv_dom_element_has_attribute_ns (Interop.handle (box this), namespaceURI, (if isNull localName then "" else localName), &result))
+                        Interop.check "Element.hasAttributeNS" (NativeDom.rv_dom_element_has_attribute_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, &result))
                         result <> 0
                     box result)
                 |> unbox<bool>
             else
+                use scope = new InputScope()
+                let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                let nativeString1 = scope.Bytes(localName)
                 let mutable result = 0
-                Interop.check "Element.hasAttributeNS" (NativeDom.rv_dom_element_has_attribute_ns (Interop.handle (box this), namespaceURI, (if isNull localName then "" else localName), &result))
+                Interop.check "Element.hasAttributeNS" (NativeDom.rv_dom_element_has_attribute_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, &result))
                 result <> 0
         member this.getAttributeNode(qualifiedName: string) : Ranvier.Dom.Attr =
             if this.Session.Intercepting then
                 Interop.intercept this "getAttributeNode" [| box qualifiedName |] (fun args ->
                     let qualifiedName: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(qualifiedName)
                         let mutable result = 0n
-                        Interop.check "Element.getAttributeNode" (NativeDom.rv_dom_element_get_attribute_node (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), &result))
+                        Interop.check "Element.getAttributeNode" (NativeDom.rv_dom_element_get_attribute_node (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         unbox<Ranvier.Dom.Attr> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Attr>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(qualifiedName)
                 let mutable result = 0n
-                Interop.check "Element.getAttributeNode" (NativeDom.rv_dom_element_get_attribute_node (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), &result))
+                Interop.check "Element.getAttributeNode" (NativeDom.rv_dom_element_get_attribute_node (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 unbox<Ranvier.Dom.Attr> (this.Session.Node result)
         member this.getAttributeNodeNS(namespaceURI: string, localName: string) : Ranvier.Dom.Attr =
             if this.Session.Intercepting then
@@ -9310,14 +10081,20 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let namespaceURI: string = unbox args[0]
                     let localName: string = unbox args[1]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                        let nativeString1 = scope.Bytes(localName)
                         let mutable result = 0n
-                        Interop.check "Element.getAttributeNodeNS" (NativeDom.rv_dom_element_get_attribute_node_ns (Interop.handle (box this), namespaceURI, (if isNull localName then "" else localName), &result))
+                        Interop.check "Element.getAttributeNodeNS" (NativeDom.rv_dom_element_get_attribute_node_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, &result))
                         unbox<Ranvier.Dom.Attr> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Attr>
             else
+                use scope = new InputScope()
+                let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                let nativeString1 = scope.Bytes(localName)
                 let mutable result = 0n
-                Interop.check "Element.getAttributeNodeNS" (NativeDom.rv_dom_element_get_attribute_node_ns (Interop.handle (box this), namespaceURI, (if isNull localName then "" else localName), &result))
+                Interop.check "Element.getAttributeNodeNS" (NativeDom.rv_dom_element_get_attribute_node_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, &result))
                 unbox<Ranvier.Dom.Attr> (this.Session.Node result)
         member this.setAttributeNode(attr: Ranvier.Dom.Attr) : Ranvier.Dom.Attr =
             if this.Session.Intercepting then
@@ -9380,42 +10157,54 @@ and internal ElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "closest" [| box selectors |] (fun args ->
                     let selectors: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(selectors)
                         let mutable result = 0n
-                        Interop.check "Element.closest" (NativeDom.rv_dom_element_closest (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                        Interop.check "Element.closest" (NativeDom.rv_dom_element_closest (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         unbox<Ranvier.Dom.Element> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Element>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(selectors)
                 let mutable result = 0n
-                Interop.check "Element.closest" (NativeDom.rv_dom_element_closest (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                Interop.check "Element.closest" (NativeDom.rv_dom_element_closest (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.matches(selectors: string) : bool =
             if this.Session.Intercepting then
                 Interop.intercept this "matches" [| box selectors |] (fun args ->
                     let selectors: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(selectors)
                         let mutable result = 0
-                        Interop.check "Element.matches" (NativeDom.rv_dom_element_matches (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                        Interop.check "Element.matches" (NativeDom.rv_dom_element_matches (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         result <> 0
                     box result)
                 |> unbox<bool>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(selectors)
                 let mutable result = 0
-                Interop.check "Element.matches" (NativeDom.rv_dom_element_matches (Interop.handle (box this), (if isNull selectors then "" else selectors), &result))
+                Interop.check "Element.matches" (NativeDom.rv_dom_element_matches (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 result <> 0
         member this.getElementsByTagName(qualifiedName: string) : Ranvier.Dom.HTMLCollection =
             if this.Session.Intercepting then
                 Interop.intercept this "getElementsByTagName" [| box qualifiedName |] (fun args ->
                     let qualifiedName: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(qualifiedName)
                         let mutable result = 0n
-                        Interop.check "Element.getElementsByTagName" (NativeDom.rv_dom_element_get_elements_by_tag_name (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), &result))
+                        Interop.check "Element.getElementsByTagName" (NativeDom.rv_dom_element_get_elements_by_tag_name (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                     box result)
                 |> unbox<Ranvier.Dom.HTMLCollection>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(qualifiedName)
                 let mutable result = 0n
-                Interop.check "Element.getElementsByTagName" (NativeDom.rv_dom_element_get_elements_by_tag_name (Interop.handle (box this), (if isNull qualifiedName then "" else qualifiedName), &result))
+                Interop.check "Element.getElementsByTagName" (NativeDom.rv_dom_element_get_elements_by_tag_name (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.getElementsByTagNameNS(namespaceURI: string, localName: string) : Ranvier.Dom.HTMLCollection =
             if this.Session.Intercepting then
@@ -9423,28 +10212,38 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let namespaceURI: string = unbox args[0]
                     let localName: string = unbox args[1]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                        let nativeString1 = scope.Bytes(localName)
                         let mutable result = 0n
-                        Interop.check "Element.getElementsByTagNameNS" (NativeDom.rv_dom_element_get_elements_by_tag_name_ns (Interop.handle (box this), namespaceURI, (if isNull localName then "" else localName), &result))
+                        Interop.check "Element.getElementsByTagNameNS" (NativeDom.rv_dom_element_get_elements_by_tag_name_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, &result))
                         (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                     box result)
                 |> unbox<Ranvier.Dom.HTMLCollection>
             else
+                use scope = new InputScope()
+                let nativeString0 = (if isNull namespaceURI then null else scope.Bytes(namespaceURI))
+                let nativeString1 = scope.Bytes(localName)
                 let mutable result = 0n
-                Interop.check "Element.getElementsByTagNameNS" (NativeDom.rv_dom_element_get_elements_by_tag_name_ns (Interop.handle (box this), namespaceURI, (if isNull localName then "" else localName), &result))
+                Interop.check "Element.getElementsByTagNameNS" (NativeDom.rv_dom_element_get_elements_by_tag_name_ns (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length), nativeString1, nativeString1.Length, &result))
                 (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.getElementsByClassName(name: string) : Ranvier.Dom.HTMLCollection =
             if this.Session.Intercepting then
                 Interop.intercept this "getElementsByClassName" [| box name |] (fun args ->
                     let name: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(name)
                         let mutable result = 0n
-                        Interop.check "Element.getElementsByClassName" (NativeDom.rv_dom_element_get_elements_by_class_name (Interop.handle (box this), (if isNull name then "" else name), &result))
+                        Interop.check "Element.getElementsByClassName" (NativeDom.rv_dom_element_get_elements_by_class_name (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
                     box result)
                 |> unbox<Ranvier.Dom.HTMLCollection>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(name)
                 let mutable result = 0n
-                Interop.check "Element.getElementsByClassName" (NativeDom.rv_dom_element_get_elements_by_class_name (Interop.handle (box this), (if isNull name then "" else name), &result))
+                Interop.check "Element.getElementsByClassName" (NativeDom.rv_dom_element_get_elements_by_class_name (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 (this.Session.Track (HTMLCollectionObject(this.Session, result)) :> Ranvier.Dom.HTMLCollection)
         member this.insertAdjacentElement(where: string, element: Ranvier.Dom.Element) : Ranvier.Dom.Element =
             if this.Session.Intercepting then
@@ -9452,14 +10251,18 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let where: string = unbox args[0]
                     let element: Ranvier.Dom.Element = unbox args[1]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(where)
                         let mutable result = 0n
-                        Interop.check "Element.insertAdjacentElement" (NativeDom.rv_dom_element_insert_adjacent_element (Interop.handle (box this), (if isNull where then "" else where), Interop.handle (box element), &result))
+                        Interop.check "Element.insertAdjacentElement" (NativeDom.rv_dom_element_insert_adjacent_element (Interop.handle (box this), nativeString0, nativeString0.Length, Interop.handle (box element), &result))
                         unbox<Ranvier.Dom.Element> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.Element>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(where)
                 let mutable result = 0n
-                Interop.check "Element.insertAdjacentElement" (NativeDom.rv_dom_element_insert_adjacent_element (Interop.handle (box this), (if isNull where then "" else where), Interop.handle (box element), &result))
+                Interop.check "Element.insertAdjacentElement" (NativeDom.rv_dom_element_insert_adjacent_element (Interop.handle (box this), nativeString0, nativeString0.Length, Interop.handle (box element), &result))
                 unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.insertAdjacentText(where: string, data: string) : unit =
             if this.Session.Intercepting then
@@ -9467,21 +10270,31 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let where: string = unbox args[0]
                     let data: string = unbox args[1]
                     let result =
-                        Interop.check "Element.insertAdjacentText" (NativeDom.rv_dom_element_insert_adjacent_text (Interop.handle (box this), (if isNull where then "" else where), (if isNull data then "" else data)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(where)
+                        let nativeString1 = scope.Bytes(data)
+                        Interop.check "Element.insertAdjacentText" (NativeDom.rv_dom_element_insert_adjacent_text (Interop.handle (box this), nativeString0, nativeString0.Length, nativeString1, nativeString1.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "Element.insertAdjacentText" (NativeDom.rv_dom_element_insert_adjacent_text (Interop.handle (box this), (if isNull where then "" else where), (if isNull data then "" else data)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(where)
+                let nativeString1 = scope.Bytes(data)
+                Interop.check "Element.insertAdjacentText" (NativeDom.rv_dom_element_insert_adjacent_text (Interop.handle (box this), nativeString0, nativeString0.Length, nativeString1, nativeString1.Length))
         member this.ariaNotify(announcement: string) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "ariaNotify" [| box announcement |] (fun args ->
                     let announcement: string = unbox args[0]
                     let result =
-                        Interop.check "Element.ariaNotify" (NativeDom.rv_dom_element_aria_notify (Interop.handle (box this), (if isNull announcement then "" else announcement)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(announcement)
+                        Interop.check "Element.ariaNotify" (NativeDom.rv_dom_element_aria_notify (Interop.handle (box this), nativeString0, nativeString0.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "Element.ariaNotify" (NativeDom.rv_dom_element_aria_notify (Interop.handle (box this), (if isNull announcement then "" else announcement)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(announcement)
+                Interop.check "Element.ariaNotify" (NativeDom.rv_dom_element_aria_notify (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.ariaNotify(announcement: string, options: Ranvier.Dom.AriaNotifyOptions) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "ariaNotify" [| box announcement; box options |] (fun args ->
@@ -9489,12 +10302,14 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let options: Ranvier.Dom.AriaNotifyOptions = unbox args[1]
                     let result =
                         use scope = new InputScope()
-                        Interop.check "Element.ariaNotify" (NativeDom.rv_dom_element_aria_notify_2 (Interop.handle (box this), (if isNull announcement then "" else announcement), [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomAriaNotifyOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomAriaNotifyOptions>()); result.priority <- (match (options).priority with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationPriority.Normal -> 0 | Ranvier.Dom.AriaNotificationPriority.High -> 1) |])); result.interrupt <- (match (options).interrupt with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationInterrupt.None -> 0 | Ranvier.Dom.AriaNotificationInterrupt.All -> 1 | Ranvier.Dom.AriaNotificationInterrupt.Pending -> 2) |])); result) |]))
+                        let nativeString0 = scope.Bytes(announcement)
+                        Interop.check "Element.ariaNotify" (NativeDom.rv_dom_element_aria_notify_2 (Interop.handle (box this), nativeString0, nativeString0.Length, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomAriaNotifyOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomAriaNotifyOptions>()); result.priority <- (match (options).priority with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationPriority.Normal -> 0 | Ranvier.Dom.AriaNotificationPriority.High -> 1) |])); result.interrupt <- (match (options).interrupt with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationInterrupt.None -> 0 | Ranvier.Dom.AriaNotificationInterrupt.All -> 1 | Ranvier.Dom.AriaNotificationInterrupt.Pending -> 2) |])); result) |]))
                     box result)
                 |> ignore
             else
                 use scope = new InputScope()
-                Interop.check "Element.ariaNotify" (NativeDom.rv_dom_element_aria_notify_2 (Interop.handle (box this), (if isNull announcement then "" else announcement), [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomAriaNotifyOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomAriaNotifyOptions>()); result.priority <- (match (options).priority with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationPriority.Normal -> 0 | Ranvier.Dom.AriaNotificationPriority.High -> 1) |])); result.interrupt <- (match (options).interrupt with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationInterrupt.None -> 0 | Ranvier.Dom.AriaNotificationInterrupt.All -> 1 | Ranvier.Dom.AriaNotificationInterrupt.Pending -> 2) |])); result) |]))
+                let nativeString0 = scope.Bytes(announcement)
+                Interop.check "Element.ariaNotify" (NativeDom.rv_dom_element_aria_notify_2 (Interop.handle (box this), nativeString0, nativeString0.Length, [| (let mutable result = Unchecked.defaultof<NativeDom.RvDomAriaNotifyOptions> in result.size <- uint32 (System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomAriaNotifyOptions>()); result.priority <- (match (options).priority with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationPriority.Normal -> 0 | Ranvier.Dom.AriaNotificationPriority.High -> 1) |])); result.interrupt <- (match (options).interrupt with None -> 0n | Some item -> scope.Pin([| (match item with | Ranvier.Dom.AriaNotificationInterrupt.None -> 0 | Ranvier.Dom.AriaNotificationInterrupt.All -> 1 | Ranvier.Dom.AriaNotificationInterrupt.Pending -> 2) |])); result) |]))
         member this.getClientRects() : Ranvier.Dom.DOMRectList =
             if this.Session.Intercepting then
                 Interop.intercept this "getClientRects" [|  |] (fun args ->
@@ -9651,11 +10466,17 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let position: string = unbox args[0]
                     let text: string = unbox args[1]
                     let result =
-                        Interop.check "Element.insertAdjacentHTML" (NativeDom.rv_dom_element_insert_adjacent_html (Interop.handle (box this), (if isNull position then "" else position), (if isNull text then "" else text)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(position)
+                        let nativeString1 = scope.Bytes(text)
+                        Interop.check "Element.insertAdjacentHTML" (NativeDom.rv_dom_element_insert_adjacent_html (Interop.handle (box this), nativeString0, nativeString0.Length, nativeString1, nativeString1.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "Element.insertAdjacentHTML" (NativeDom.rv_dom_element_insert_adjacent_html (Interop.handle (box this), (if isNull position then "" else position), (if isNull text then "" else text)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(position)
+                let nativeString1 = scope.Bytes(text)
+                Interop.check "Element.insertAdjacentHTML" (NativeDom.rv_dom_element_insert_adjacent_html (Interop.handle (box this), nativeString0, nativeString0.Length, nativeString1, nativeString1.Length))
         member this.setPointerCapture(pointerId: int) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "setPointerCapture" [| box pointerId |] (fun args ->
@@ -9708,11 +10529,15 @@ and internal ElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "setHTMLUnsafe" [| box html |] (fun args ->
                     let html: string = unbox args[0]
                     let result =
-                        Interop.check "Element.setHTMLUnsafe" (NativeDom.rv_dom_element_set_html_unsafe (Interop.handle (box this), (if isNull html then "" else html)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(html)
+                        Interop.check "Element.setHTMLUnsafe" (NativeDom.rv_dom_element_set_html_unsafe (Interop.handle (box this), nativeString0, nativeString0.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "Element.setHTMLUnsafe" (NativeDom.rv_dom_element_set_html_unsafe (Interop.handle (box this), (if isNull html then "" else html)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(html)
+                Interop.check "Element.setHTMLUnsafe" (NativeDom.rv_dom_element_set_html_unsafe (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.getHTML(?options: Ranvier.Dom.GetHTMLOptions) : string =
             if this.Session.Intercepting then
                 Interop.intercept this "getHTML" [| box options |] (fun args ->
@@ -9788,11 +10613,15 @@ and internal MathMLElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_nonce" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLOrSVGElement.nonce" (NativeDom.rv_dom_math_ml_element_set_nonce (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLOrSVGElement.nonce" (NativeDom.rv_dom_math_ml_element_set_nonce (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLOrSVGElement.nonce" (NativeDom.rv_dom_math_ml_element_set_nonce (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLOrSVGElement.nonce" (NativeDom.rv_dom_math_ml_element_set_nonce (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.autofocus
             with get () : bool =
                 if this.Session.Intercepting then
@@ -9926,11 +10755,15 @@ and internal SVGElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_nonce" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLOrSVGElement.nonce" (NativeDom.rv_dom_svg_element_set_nonce (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLOrSVGElement.nonce" (NativeDom.rv_dom_svg_element_set_nonce (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLOrSVGElement.nonce" (NativeDom.rv_dom_svg_element_set_nonce (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLOrSVGElement.nonce" (NativeDom.rv_dom_svg_element_set_nonce (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.autofocus
             with get () : bool =
                 if this.Session.Intercepting then
@@ -10091,11 +10924,15 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_contentEditable" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ElementContentEditable.contentEditable" (NativeDom.rv_dom_html_element_set_content_editable (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "ElementContentEditable.contentEditable" (NativeDom.rv_dom_html_element_set_content_editable (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ElementContentEditable.contentEditable" (NativeDom.rv_dom_html_element_set_content_editable (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "ElementContentEditable.contentEditable" (NativeDom.rv_dom_html_element_set_content_editable (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.enterKeyHint
             with get () : string =
                 if this.Session.Intercepting then
@@ -10111,11 +10948,15 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_enterKeyHint" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ElementContentEditable.enterKeyHint" (NativeDom.rv_dom_html_element_set_enter_key_hint (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "ElementContentEditable.enterKeyHint" (NativeDom.rv_dom_html_element_set_enter_key_hint (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ElementContentEditable.enterKeyHint" (NativeDom.rv_dom_html_element_set_enter_key_hint (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "ElementContentEditable.enterKeyHint" (NativeDom.rv_dom_html_element_set_enter_key_hint (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.isContentEditable
             with get () : bool =
                 if this.Session.Intercepting then
@@ -10145,11 +10986,15 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_inputMode" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "ElementContentEditable.inputMode" (NativeDom.rv_dom_html_element_set_input_mode (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "ElementContentEditable.inputMode" (NativeDom.rv_dom_html_element_set_input_mode (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "ElementContentEditable.inputMode" (NativeDom.rv_dom_html_element_set_input_mode (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "ElementContentEditable.inputMode" (NativeDom.rv_dom_html_element_set_input_mode (Interop.handle (box this), nativeString0, nativeString0.Length))
     interface Ranvier.Dom.GlobalEventHandlers
     interface Ranvier.Dom.HTMLOrSVGElement with
         member this.dataset
@@ -10181,11 +11026,15 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_nonce" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLOrSVGElement.nonce" (NativeDom.rv_dom_html_element_set_nonce (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLOrSVGElement.nonce" (NativeDom.rv_dom_html_element_set_nonce (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLOrSVGElement.nonce" (NativeDom.rv_dom_html_element_set_nonce (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLOrSVGElement.nonce" (NativeDom.rv_dom_html_element_set_nonce (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.autofocus
             with get () : bool =
                 if this.Session.Intercepting then
@@ -10271,11 +11120,15 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_title" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLElement.title" (NativeDom.rv_dom_html_element_set_title (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLElement.title" (NativeDom.rv_dom_html_element_set_title (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLElement.title" (NativeDom.rv_dom_html_element_set_title (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLElement.title" (NativeDom.rv_dom_html_element_set_title (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.lang
             with get () : string =
                 if this.Session.Intercepting then
@@ -10291,11 +11144,15 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_lang" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLElement.lang" (NativeDom.rv_dom_html_element_set_lang (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLElement.lang" (NativeDom.rv_dom_html_element_set_lang (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLElement.lang" (NativeDom.rv_dom_html_element_set_lang (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLElement.lang" (NativeDom.rv_dom_html_element_set_lang (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.translate
             with get () : bool =
                 if this.Session.Intercepting then
@@ -10335,11 +11192,15 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_dir" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLElement.dir" (NativeDom.rv_dom_html_element_set_dir (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLElement.dir" (NativeDom.rv_dom_html_element_set_dir (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLElement.dir" (NativeDom.rv_dom_html_element_set_dir (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLElement.dir" (NativeDom.rv_dom_html_element_set_dir (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.cue
             with get () : bool =
                 if this.Session.Intercepting then
@@ -10396,7 +11257,7 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                             let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionBooleanOrUnrestrictedDoubleOrDOMStringNullable>
                             try
                                 Interop.check "HTMLElement.hidden" (NativeDom.rv_dom_html_element_get_hidden (Interop.handle (box this), &result))
-                                (if result.present = 0 then None else Some ((match result.tag with | 1 -> Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.Boolean ((result.arm0 <> 0)) | 2 -> Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.UnrestrictedDouble (float (result.arm1)) | 3 -> Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.DOMString (System.Runtime.InteropServices.Marshal.PtrToStringUTF8(result.arm2)) | _ -> invalidOp "Unknown BooleanOrUnrestrictedDoubleOrDOMString union tag from WebCore")))
+                                (if result.present = 0 then None else Some ((match result.tag with | 1 -> Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.Boolean ((result.arm0 <> 0)) | 2 -> Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.UnrestrictedDouble (float (result.arm1)) | 3 -> Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.DOMString (Interop.spanText (result.arm2)) | _ -> invalidOp "Unknown BooleanOrUnrestrictedDoubleOrDOMString union tag from WebCore")))
                             finally
                                 NativeDom.rv_dom_union_boolean_or_unrestricted_double_or_dom_string_nullable_release(&result)
                         box result)
@@ -10405,7 +11266,7 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionBooleanOrUnrestrictedDoubleOrDOMStringNullable>
                     try
                         Interop.check "HTMLElement.hidden" (NativeDom.rv_dom_html_element_get_hidden (Interop.handle (box this), &result))
-                        (if result.present = 0 then None else Some ((match result.tag with | 1 -> Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.Boolean ((result.arm0 <> 0)) | 2 -> Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.UnrestrictedDouble (float (result.arm1)) | 3 -> Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.DOMString (System.Runtime.InteropServices.Marshal.PtrToStringUTF8(result.arm2)) | _ -> invalidOp "Unknown BooleanOrUnrestrictedDoubleOrDOMString union tag from WebCore")))
+                        (if result.present = 0 then None else Some ((match result.tag with | 1 -> Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.Boolean ((result.arm0 <> 0)) | 2 -> Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.UnrestrictedDouble (float (result.arm1)) | 3 -> Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.DOMString (Interop.spanText (result.arm2)) | _ -> invalidOp "Unknown BooleanOrUnrestrictedDoubleOrDOMString union tag from WebCore")))
                     finally
                         NativeDom.rv_dom_union_boolean_or_unrestricted_double_or_dom_string_nullable_release(&result)
             and set (value: Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString option) =
@@ -10414,12 +11275,12 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                         let value: Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString option = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            Interop.check "HTMLElement.hidden" (NativeDom.rv_dom_html_element_set_hidden (Interop.handle (box this), (match value with None -> null | Some item -> [| (match item with | Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.Boolean item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionBooleanOrUnrestrictedDoubleOrDOMStringNullable> in result.present <- 1; result.tag <- 1; result.arm0 <- (if item then 1 else 0); result) | Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.UnrestrictedDouble item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionBooleanOrUnrestrictedDoubleOrDOMStringNullable> in result.present <- 1; result.tag <- 2; result.arm1 <- float (item); result) | Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionBooleanOrUnrestrictedDoubleOrDOMStringNullable> in result.present <- 1; result.tag <- 3; result.arm2 <- scope.Text(item); result)) |])))
+                            Interop.check "HTMLElement.hidden" (NativeDom.rv_dom_html_element_set_hidden (Interop.handle (box this), (match value with None -> null | Some item -> [| (match item with | Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.Boolean item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionBooleanOrUnrestrictedDoubleOrDOMStringNullable> in result.present <- 1; result.tag <- 1; result.arm0 <- (if item then 1 else 0); result) | Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.UnrestrictedDouble item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionBooleanOrUnrestrictedDoubleOrDOMStringNullable> in result.present <- 1; result.tag <- 2; result.arm1 <- float (item); result) | Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionBooleanOrUnrestrictedDoubleOrDOMStringNullable> in result.present <- 1; result.tag <- 3; result.arm2 <- scope.TextSpan(item); result)) |])))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    Interop.check "HTMLElement.hidden" (NativeDom.rv_dom_html_element_set_hidden (Interop.handle (box this), (match value with None -> null | Some item -> [| (match item with | Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.Boolean item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionBooleanOrUnrestrictedDoubleOrDOMStringNullable> in result.present <- 1; result.tag <- 1; result.arm0 <- (if item then 1 else 0); result) | Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.UnrestrictedDouble item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionBooleanOrUnrestrictedDoubleOrDOMStringNullable> in result.present <- 1; result.tag <- 2; result.arm1 <- float (item); result) | Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionBooleanOrUnrestrictedDoubleOrDOMStringNullable> in result.present <- 1; result.tag <- 3; result.arm2 <- scope.Text(item); result)) |])))
+                    Interop.check "HTMLElement.hidden" (NativeDom.rv_dom_html_element_set_hidden (Interop.handle (box this), (match value with None -> null | Some item -> [| (match item with | Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.Boolean item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionBooleanOrUnrestrictedDoubleOrDOMStringNullable> in result.present <- 1; result.tag <- 1; result.arm0 <- (if item then 1 else 0); result) | Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.UnrestrictedDouble item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionBooleanOrUnrestrictedDoubleOrDOMStringNullable> in result.present <- 1; result.tag <- 2; result.arm1 <- float (item); result) | Ranvier.Dom.BooleanOrUnrestrictedDoubleOrDOMString.DOMString item -> (let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionBooleanOrUnrestrictedDoubleOrDOMStringNullable> in result.present <- 1; result.tag <- 3; result.arm2 <- scope.TextSpan(item); result)) |])))
         member this.accessKey
             with get () : string =
                 if this.Session.Intercepting then
@@ -10435,11 +11296,15 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_accessKey" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLElement.accessKey" (NativeDom.rv_dom_html_element_set_access_key (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLElement.accessKey" (NativeDom.rv_dom_html_element_set_access_key (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLElement.accessKey" (NativeDom.rv_dom_html_element_set_access_key (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLElement.accessKey" (NativeDom.rv_dom_html_element_set_access_key (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.accessKeyLabel
             with get () : string =
                 if this.Session.Intercepting then
@@ -10513,11 +11378,15 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_autocapitalize" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLElement.autocapitalize" (NativeDom.rv_dom_html_element_set_autocapitalize (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLElement.autocapitalize" (NativeDom.rv_dom_html_element_set_autocapitalize (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLElement.autocapitalize" (NativeDom.rv_dom_html_element_set_autocapitalize (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLElement.autocapitalize" (NativeDom.rv_dom_html_element_set_autocapitalize (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.innerText
             with get () : string =
                 if this.Session.Intercepting then
@@ -10533,11 +11402,15 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_innerText" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLElement.innerText" (NativeDom.rv_dom_html_element_set_inner_text (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLElement.innerText" (NativeDom.rv_dom_html_element_set_inner_text (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLElement.innerText" (NativeDom.rv_dom_html_element_set_inner_text (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLElement.innerText" (NativeDom.rv_dom_html_element_set_inner_text (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.inert
             with get () : bool =
                 if this.Session.Intercepting then
@@ -10625,11 +11498,15 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_popover" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLElement.popover" (NativeDom.rv_dom_html_element_set_popover (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "HTMLElement.popover" (NativeDom.rv_dom_html_element_set_popover (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLElement.popover" (NativeDom.rv_dom_html_element_set_popover (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "HTMLElement.popover" (NativeDom.rv_dom_html_element_set_popover (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.outerText
             with get () : string =
                 if this.Session.Intercepting then
@@ -10645,11 +11522,15 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_outerText" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLElement.outerText" (NativeDom.rv_dom_html_element_set_outer_text (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLElement.outerText" (NativeDom.rv_dom_html_element_set_outer_text (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLElement.outerText" (NativeDom.rv_dom_html_element_set_outer_text (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLElement.outerText" (NativeDom.rv_dom_html_element_set_outer_text (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.autocorrect
             with get () : bool =
                 if this.Session.Intercepting then
@@ -10689,11 +11570,15 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_writingSuggestions" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLElement.writingSuggestions" (NativeDom.rv_dom_html_element_set_writing_suggestions (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLElement.writingSuggestions" (NativeDom.rv_dom_html_element_set_writing_suggestions (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLElement.writingSuggestions" (NativeDom.rv_dom_html_element_set_writing_suggestions (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLElement.writingSuggestions" (NativeDom.rv_dom_html_element_set_writing_suggestions (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.offsetParent
             with get () : Ranvier.Dom.Element =
                 if this.Session.Intercepting then
@@ -15202,16 +16087,20 @@ and internal SVGMarkerElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_orient" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
+                            use scope = new InputScope()
                             try
-                                Interop.check "SVGMarkerElement.orient" (NativeDom.rv_dom_svg_marker_element_set_orient (Interop.handle (box this), (if isNull value then "" else value)))
+                                let nativeString0 = scope.Bytes(value)
+                                Interop.check "SVGMarkerElement.orient" (NativeDom.rv_dom_svg_marker_element_set_orient (Interop.handle (box this), nativeString0, nativeString0.Length))
                             finally
                                 System.GC.KeepAlive this
                                 System.GC.KeepAlive (box value)
                         box result)
                     |> ignore
                 else
+                    use scope = new InputScope()
                     try
-                        Interop.check "SVGMarkerElement.orient" (NativeDom.rv_dom_svg_marker_element_set_orient (Interop.handle (box this), (if isNull value then "" else value)))
+                        let nativeString0 = scope.Bytes(value)
+                        Interop.check "SVGMarkerElement.orient" (NativeDom.rv_dom_svg_marker_element_set_orient (Interop.handle (box this), nativeString0, nativeString0.Length))
                     finally
                         System.GC.KeepAlive this
                         System.GC.KeepAlive (box value)
@@ -15725,16 +16614,20 @@ and internal SVGScriptElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_type" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
+                            use scope = new InputScope()
                             try
-                                Interop.check "SVGScriptElement.type" (NativeDom.rv_dom_svg_script_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                                let nativeString0 = scope.Bytes(value)
+                                Interop.check "SVGScriptElement.type" (NativeDom.rv_dom_svg_script_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                             finally
                                 System.GC.KeepAlive this
                                 System.GC.KeepAlive (box value)
                         box result)
                     |> ignore
                 else
+                    use scope = new InputScope()
                     try
-                        Interop.check "SVGScriptElement.type" (NativeDom.rv_dom_svg_script_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                        let nativeString0 = scope.Bytes(value)
+                        Interop.check "SVGScriptElement.type" (NativeDom.rv_dom_svg_script_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                     finally
                         System.GC.KeepAlive this
                         System.GC.KeepAlive (box value)
@@ -15929,11 +16822,15 @@ and internal HTMLBRElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_clear" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLBRElement.clear" (NativeDom.rv_dom_htmlbr_element_set_clear (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLBRElement.clear" (NativeDom.rv_dom_htmlbr_element_set_clear (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLBRElement.clear" (NativeDom.rv_dom_htmlbr_element_set_clear (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLBRElement.clear" (NativeDom.rv_dom_htmlbr_element_set_clear (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLBaseElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -15953,11 +16850,15 @@ and internal HTMLBaseElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_href" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLBaseElement.href" (NativeDom.rv_dom_html_base_element_set_href (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLBaseElement.href" (NativeDom.rv_dom_html_base_element_set_href (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLBaseElement.href" (NativeDom.rv_dom_html_base_element_set_href (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLBaseElement.href" (NativeDom.rv_dom_html_base_element_set_href (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.target
             with get () : string =
                 if this.Session.Intercepting then
@@ -15973,11 +16874,15 @@ and internal HTMLBaseElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_target" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLBaseElement.target" (NativeDom.rv_dom_html_base_element_set_target (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLBaseElement.target" (NativeDom.rv_dom_html_base_element_set_target (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLBaseElement.target" (NativeDom.rv_dom_html_base_element_set_target (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLBaseElement.target" (NativeDom.rv_dom_html_base_element_set_target (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLBodyElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -15997,11 +16902,15 @@ and internal HTMLBodyElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_aLink" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLBodyElement.aLink" (NativeDom.rv_dom_html_body_element_set_a_link (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLBodyElement.aLink" (NativeDom.rv_dom_html_body_element_set_a_link (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLBodyElement.aLink" (NativeDom.rv_dom_html_body_element_set_a_link (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLBodyElement.aLink" (NativeDom.rv_dom_html_body_element_set_a_link (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.background
             with get () : string =
                 if this.Session.Intercepting then
@@ -16017,11 +16926,15 @@ and internal HTMLBodyElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_background" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLBodyElement.background" (NativeDom.rv_dom_html_body_element_set_background (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLBodyElement.background" (NativeDom.rv_dom_html_body_element_set_background (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLBodyElement.background" (NativeDom.rv_dom_html_body_element_set_background (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLBodyElement.background" (NativeDom.rv_dom_html_body_element_set_background (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.bgColor
             with get () : string =
                 if this.Session.Intercepting then
@@ -16037,11 +16950,15 @@ and internal HTMLBodyElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_bgColor" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLBodyElement.bgColor" (NativeDom.rv_dom_html_body_element_set_bg_color (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLBodyElement.bgColor" (NativeDom.rv_dom_html_body_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLBodyElement.bgColor" (NativeDom.rv_dom_html_body_element_set_bg_color (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLBodyElement.bgColor" (NativeDom.rv_dom_html_body_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.link
             with get () : string =
                 if this.Session.Intercepting then
@@ -16057,11 +16974,15 @@ and internal HTMLBodyElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_link" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLBodyElement.link" (NativeDom.rv_dom_html_body_element_set_link (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLBodyElement.link" (NativeDom.rv_dom_html_body_element_set_link (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLBodyElement.link" (NativeDom.rv_dom_html_body_element_set_link (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLBodyElement.link" (NativeDom.rv_dom_html_body_element_set_link (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.text
             with get () : string =
                 if this.Session.Intercepting then
@@ -16077,11 +16998,15 @@ and internal HTMLBodyElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_text" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLBodyElement.text" (NativeDom.rv_dom_html_body_element_set_text (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLBodyElement.text" (NativeDom.rv_dom_html_body_element_set_text (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLBodyElement.text" (NativeDom.rv_dom_html_body_element_set_text (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLBodyElement.text" (NativeDom.rv_dom_html_body_element_set_text (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.vLink
             with get () : string =
                 if this.Session.Intercepting then
@@ -16097,11 +17022,15 @@ and internal HTMLBodyElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_vLink" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLBodyElement.vLink" (NativeDom.rv_dom_html_body_element_set_v_link (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLBodyElement.vLink" (NativeDom.rv_dom_html_body_element_set_v_link (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLBodyElement.vLink" (NativeDom.rv_dom_html_body_element_set_v_link (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLBodyElement.vLink" (NativeDom.rv_dom_html_body_element_set_v_link (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLCanvasElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -16153,11 +17082,15 @@ and internal HTMLDataElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_value" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLDataElement.value" (NativeDom.rv_dom_html_data_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLDataElement.value" (NativeDom.rv_dom_html_data_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLDataElement.value" (NativeDom.rv_dom_html_data_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLDataElement.value" (NativeDom.rv_dom_html_data_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLDataListElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -16195,11 +17128,15 @@ and internal HTMLDetailsElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_name" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLDetailsElement.name" (NativeDom.rv_dom_html_details_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLDetailsElement.name" (NativeDom.rv_dom_html_details_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLDetailsElement.name" (NativeDom.rv_dom_html_details_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLDetailsElement.name" (NativeDom.rv_dom_html_details_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``open``
             with get () : bool =
                 if this.Session.Intercepting then
@@ -16267,11 +17204,15 @@ and internal HTMLDialogElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_returnValue" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLDialogElement.returnValue" (NativeDom.rv_dom_html_dialog_element_set_return_value (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLDialogElement.returnValue" (NativeDom.rv_dom_html_dialog_element_set_return_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLDialogElement.returnValue" (NativeDom.rv_dom_html_dialog_element_set_return_value (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLDialogElement.returnValue" (NativeDom.rv_dom_html_dialog_element_set_return_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.closedBy
             with get () : string =
                 if this.Session.Intercepting then
@@ -16287,11 +17228,15 @@ and internal HTMLDialogElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_closedBy" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLDialogElement.closedBy" (NativeDom.rv_dom_html_dialog_element_set_closed_by (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLDialogElement.closedBy" (NativeDom.rv_dom_html_dialog_element_set_closed_by (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLDialogElement.closedBy" (NativeDom.rv_dom_html_dialog_element_set_closed_by (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLDialogElement.closedBy" (NativeDom.rv_dom_html_dialog_element_set_closed_by (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.show() : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "show" [|  |] (fun args ->
@@ -16315,21 +17260,29 @@ and internal HTMLDialogElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "close" [| box returnValue |] (fun args ->
                     let returnValue: string option = unbox args[0]
                     let result =
-                        Interop.check "HTMLDialogElement.close" (NativeDom.rv_dom_html_dialog_element_close (Interop.handle (box this), Option.toObj returnValue))
+                        use scope = new InputScope()
+                        let nativeString0 = (match returnValue with Some x -> scope.Bytes(x) | None -> null)
+                        Interop.check "HTMLDialogElement.close" (NativeDom.rv_dom_html_dialog_element_close (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                     box result)
                 |> ignore
             else
-                Interop.check "HTMLDialogElement.close" (NativeDom.rv_dom_html_dialog_element_close (Interop.handle (box this), Option.toObj returnValue))
+                use scope = new InputScope()
+                let nativeString0 = (match returnValue with Some x -> scope.Bytes(x) | None -> null)
+                Interop.check "HTMLDialogElement.close" (NativeDom.rv_dom_html_dialog_element_close (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.requestClose(?returnValue: string) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "requestClose" [| box returnValue |] (fun args ->
                     let returnValue: string option = unbox args[0]
                     let result =
-                        Interop.check "HTMLDialogElement.requestClose" (NativeDom.rv_dom_html_dialog_element_request_close (Interop.handle (box this), Option.toObj returnValue))
+                        use scope = new InputScope()
+                        let nativeString0 = (match returnValue with Some x -> scope.Bytes(x) | None -> null)
+                        Interop.check "HTMLDialogElement.requestClose" (NativeDom.rv_dom_html_dialog_element_request_close (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                     box result)
                 |> ignore
             else
-                Interop.check "HTMLDialogElement.requestClose" (NativeDom.rv_dom_html_dialog_element_request_close (Interop.handle (box this), Option.toObj returnValue))
+                use scope = new InputScope()
+                let nativeString0 = (match returnValue with Some x -> scope.Bytes(x) | None -> null)
+                Interop.check "HTMLDialogElement.requestClose" (NativeDom.rv_dom_html_dialog_element_request_close (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
 
 and internal HTMLDirectoryElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -16377,11 +17330,15 @@ and internal HTMLDivElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_align" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLDivElement.align" (NativeDom.rv_dom_html_div_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLDivElement.align" (NativeDom.rv_dom_html_div_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLDivElement.align" (NativeDom.rv_dom_html_div_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLDivElement.align" (NativeDom.rv_dom_html_div_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLEmbedElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -16443,11 +17400,15 @@ and internal HTMLFieldSetElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_name" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLFieldSetElement.name" (NativeDom.rv_dom_html_field_set_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLFieldSetElement.name" (NativeDom.rv_dom_html_field_set_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLFieldSetElement.name" (NativeDom.rv_dom_html_field_set_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLFieldSetElement.name" (NativeDom.rv_dom_html_field_set_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``type``
             with get () : string =
                 if this.Session.Intercepting then
@@ -16541,11 +17502,15 @@ and internal HTMLFieldSetElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "setCustomValidity" [| box error |] (fun args ->
                     let error: string = unbox args[0]
                     let result =
-                        Interop.check "HTMLFieldSetElement.setCustomValidity" (NativeDom.rv_dom_html_field_set_element_set_custom_validity (Interop.handle (box this), (if isNull error then "" else error)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(error)
+                        Interop.check "HTMLFieldSetElement.setCustomValidity" (NativeDom.rv_dom_html_field_set_element_set_custom_validity (Interop.handle (box this), nativeString0, nativeString0.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "HTMLFieldSetElement.setCustomValidity" (NativeDom.rv_dom_html_field_set_element_set_custom_validity (Interop.handle (box this), (if isNull error then "" else error)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(error)
+                Interop.check "HTMLFieldSetElement.setCustomValidity" (NativeDom.rv_dom_html_field_set_element_set_custom_validity (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLFontElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -16565,11 +17530,15 @@ and internal HTMLFontElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_color" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLFontElement.color" (NativeDom.rv_dom_html_font_element_set_color (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLFontElement.color" (NativeDom.rv_dom_html_font_element_set_color (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLFontElement.color" (NativeDom.rv_dom_html_font_element_set_color (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLFontElement.color" (NativeDom.rv_dom_html_font_element_set_color (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.face
             with get () : string =
                 if this.Session.Intercepting then
@@ -16585,11 +17554,15 @@ and internal HTMLFontElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_face" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLFontElement.face" (NativeDom.rv_dom_html_font_element_set_face (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLFontElement.face" (NativeDom.rv_dom_html_font_element_set_face (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLFontElement.face" (NativeDom.rv_dom_html_font_element_set_face (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLFontElement.face" (NativeDom.rv_dom_html_font_element_set_face (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.size
             with get () : string =
                 if this.Session.Intercepting then
@@ -16605,11 +17578,15 @@ and internal HTMLFontElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_size" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLFontElement.size" (NativeDom.rv_dom_html_font_element_set_size (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLFontElement.size" (NativeDom.rv_dom_html_font_element_set_size (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLFontElement.size" (NativeDom.rv_dom_html_font_element_set_size (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLFontElement.size" (NativeDom.rv_dom_html_font_element_set_size (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLFormElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -16629,11 +17606,15 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_acceptCharset" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLFormElement.acceptCharset" (NativeDom.rv_dom_html_form_element_set_accept_charset (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLFormElement.acceptCharset" (NativeDom.rv_dom_html_form_element_set_accept_charset (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLFormElement.acceptCharset" (NativeDom.rv_dom_html_form_element_set_accept_charset (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLFormElement.acceptCharset" (NativeDom.rv_dom_html_form_element_set_accept_charset (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.action
             with get () : string =
                 if this.Session.Intercepting then
@@ -16649,11 +17630,15 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_action" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLFormElement.action" (NativeDom.rv_dom_html_form_element_set_action (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLFormElement.action" (NativeDom.rv_dom_html_form_element_set_action (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLFormElement.action" (NativeDom.rv_dom_html_form_element_set_action (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLFormElement.action" (NativeDom.rv_dom_html_form_element_set_action (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.autocomplete
             with get () : string =
                 if this.Session.Intercepting then
@@ -16669,11 +17654,15 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_autocomplete" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLFormElement.autocomplete" (NativeDom.rv_dom_html_form_element_set_autocomplete (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLFormElement.autocomplete" (NativeDom.rv_dom_html_form_element_set_autocomplete (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLFormElement.autocomplete" (NativeDom.rv_dom_html_form_element_set_autocomplete (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLFormElement.autocomplete" (NativeDom.rv_dom_html_form_element_set_autocomplete (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.enctype
             with get () : string =
                 if this.Session.Intercepting then
@@ -16689,11 +17678,15 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_enctype" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLFormElement.enctype" (NativeDom.rv_dom_html_form_element_set_enctype (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLFormElement.enctype" (NativeDom.rv_dom_html_form_element_set_enctype (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLFormElement.enctype" (NativeDom.rv_dom_html_form_element_set_enctype (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLFormElement.enctype" (NativeDom.rv_dom_html_form_element_set_enctype (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.encoding
             with get () : string =
                 if this.Session.Intercepting then
@@ -16709,11 +17702,15 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_encoding" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLFormElement.encoding" (NativeDom.rv_dom_html_form_element_set_encoding (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLFormElement.encoding" (NativeDom.rv_dom_html_form_element_set_encoding (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLFormElement.encoding" (NativeDom.rv_dom_html_form_element_set_encoding (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLFormElement.encoding" (NativeDom.rv_dom_html_form_element_set_encoding (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.method
             with get () : string =
                 if this.Session.Intercepting then
@@ -16729,11 +17726,15 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_method" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLFormElement.method" (NativeDom.rv_dom_html_form_element_set_method (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLFormElement.method" (NativeDom.rv_dom_html_form_element_set_method (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLFormElement.method" (NativeDom.rv_dom_html_form_element_set_method (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLFormElement.method" (NativeDom.rv_dom_html_form_element_set_method (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.name
             with get () : string =
                 if this.Session.Intercepting then
@@ -16749,11 +17750,15 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_name" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLFormElement.name" (NativeDom.rv_dom_html_form_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLFormElement.name" (NativeDom.rv_dom_html_form_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLFormElement.name" (NativeDom.rv_dom_html_form_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLFormElement.name" (NativeDom.rv_dom_html_form_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.noValidate
             with get () : bool =
                 if this.Session.Intercepting then
@@ -16793,11 +17798,15 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_target" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLFormElement.target" (NativeDom.rv_dom_html_form_element_set_target (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLFormElement.target" (NativeDom.rv_dom_html_form_element_set_target (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLFormElement.target" (NativeDom.rv_dom_html_form_element_set_target (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLFormElement.target" (NativeDom.rv_dom_html_form_element_set_target (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.rel
             with get () : string =
                 if this.Session.Intercepting then
@@ -16813,11 +17822,15 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_rel" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLFormElement.rel" (NativeDom.rv_dom_html_form_element_set_rel (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLFormElement.rel" (NativeDom.rv_dom_html_form_element_set_rel (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLFormElement.rel" (NativeDom.rv_dom_html_form_element_set_rel (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLFormElement.rel" (NativeDom.rv_dom_html_form_element_set_rel (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.relList
             with get () : Ranvier.Dom.DOMTokenList =
                 if this.Session.Intercepting then
@@ -16879,18 +17892,22 @@ and internal HTMLFormElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "namedItem" [| box name |] (fun args ->
                     let name: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(name)
                         let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionRadioNodeListOrElementNullable>
                         try
-                            Interop.check "HTMLFormElement.namedItem" (NativeDom.rv_dom_html_form_element_named_item (Interop.handle (box this), (if isNull name then "" else name), &result))
+                            Interop.check "HTMLFormElement.namedItem" (NativeDom.rv_dom_html_form_element_named_item (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                             (if result.present = 0 then None else Some ((match result.tag with | 1 -> Ranvier.Dom.RadioNodeListOrElement.RadioNodeList ((let handle = result.arm0 in NativeDom.rv_dom_node_list_retain handle |> ignore; (this.Session.Track (RadioNodeListObject(this.Session, handle)) :> Ranvier.Dom.RadioNodeList))) | 2 -> Ranvier.Dom.RadioNodeListOrElement.Element ((let handle = result.arm1 in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))) | _ -> invalidOp "Unknown RadioNodeListOrElement union tag from WebCore")))
                         finally
                             NativeDom.rv_dom_union_radio_node_list_or_element_nullable_release(&result)
                     box result)
                 |> unbox<Ranvier.Dom.RadioNodeListOrElement option>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(name)
                 let mutable result = Unchecked.defaultof<NativeDom.RvDomUnionRadioNodeListOrElementNullable>
                 try
-                    Interop.check "HTMLFormElement.namedItem" (NativeDom.rv_dom_html_form_element_named_item (Interop.handle (box this), (if isNull name then "" else name), &result))
+                    Interop.check "HTMLFormElement.namedItem" (NativeDom.rv_dom_html_form_element_named_item (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                     (if result.present = 0 then None else Some ((match result.tag with | 1 -> Ranvier.Dom.RadioNodeListOrElement.RadioNodeList ((let handle = result.arm0 in NativeDom.rv_dom_node_list_retain handle |> ignore; (this.Session.Track (RadioNodeListObject(this.Session, handle)) :> Ranvier.Dom.RadioNodeList))) | 2 -> Ranvier.Dom.RadioNodeListOrElement.Element ((let handle = result.arm1 in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))) | _ -> invalidOp "Unknown RadioNodeListOrElement union tag from WebCore")))
                 finally
                     NativeDom.rv_dom_union_radio_node_list_or_element_nullable_release(&result)
@@ -16975,11 +17992,15 @@ and internal HTMLHRElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_align" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLHRElement.align" (NativeDom.rv_dom_htmlhr_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLHRElement.align" (NativeDom.rv_dom_htmlhr_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLHRElement.align" (NativeDom.rv_dom_htmlhr_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLHRElement.align" (NativeDom.rv_dom_htmlhr_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.color
             with get () : string =
                 if this.Session.Intercepting then
@@ -16995,11 +18016,15 @@ and internal HTMLHRElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_color" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLHRElement.color" (NativeDom.rv_dom_htmlhr_element_set_color (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLHRElement.color" (NativeDom.rv_dom_htmlhr_element_set_color (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLHRElement.color" (NativeDom.rv_dom_htmlhr_element_set_color (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLHRElement.color" (NativeDom.rv_dom_htmlhr_element_set_color (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.noShade
             with get () : bool =
                 if this.Session.Intercepting then
@@ -17039,11 +18064,15 @@ and internal HTMLHRElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_size" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLHRElement.size" (NativeDom.rv_dom_htmlhr_element_set_size (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLHRElement.size" (NativeDom.rv_dom_htmlhr_element_set_size (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLHRElement.size" (NativeDom.rv_dom_htmlhr_element_set_size (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLHRElement.size" (NativeDom.rv_dom_htmlhr_element_set_size (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.width
             with get () : string =
                 if this.Session.Intercepting then
@@ -17059,11 +18088,15 @@ and internal HTMLHRElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_width" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLHRElement.width" (NativeDom.rv_dom_htmlhr_element_set_width (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLHRElement.width" (NativeDom.rv_dom_htmlhr_element_set_width (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLHRElement.width" (NativeDom.rv_dom_htmlhr_element_set_width (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLHRElement.width" (NativeDom.rv_dom_htmlhr_element_set_width (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLHeadElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -17087,11 +18120,15 @@ and internal HTMLHeadingElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_align" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLHeadingElement.align" (NativeDom.rv_dom_html_heading_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLHeadingElement.align" (NativeDom.rv_dom_html_heading_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLHeadingElement.align" (NativeDom.rv_dom_html_heading_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLHeadingElement.align" (NativeDom.rv_dom_html_heading_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLHtmlElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -17111,11 +18148,15 @@ and internal HTMLHtmlElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_version" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLHtmlElement.version" (NativeDom.rv_dom_html_html_element_set_version (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLHtmlElement.version" (NativeDom.rv_dom_html_html_element_set_version (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLHtmlElement.version" (NativeDom.rv_dom_html_html_element_set_version (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLHtmlElement.version" (NativeDom.rv_dom_html_html_element_set_version (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLIFrameElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -17139,11 +18180,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_alt" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.alt" (NativeDom.rv_dom_html_image_element_set_alt (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLImageElement.alt" (NativeDom.rv_dom_html_image_element_set_alt (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.alt" (NativeDom.rv_dom_html_image_element_set_alt (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLImageElement.alt" (NativeDom.rv_dom_html_image_element_set_alt (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.src
             with get () : string =
                 if this.Session.Intercepting then
@@ -17159,11 +18204,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_src" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.src" (NativeDom.rv_dom_html_image_element_set_src (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLImageElement.src" (NativeDom.rv_dom_html_image_element_set_src (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.src" (NativeDom.rv_dom_html_image_element_set_src (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLImageElement.src" (NativeDom.rv_dom_html_image_element_set_src (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.srcset
             with get () : string =
                 if this.Session.Intercepting then
@@ -17179,11 +18228,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_srcset" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.srcset" (NativeDom.rv_dom_html_image_element_set_srcset (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLImageElement.srcset" (NativeDom.rv_dom_html_image_element_set_srcset (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.srcset" (NativeDom.rv_dom_html_image_element_set_srcset (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLImageElement.srcset" (NativeDom.rv_dom_html_image_element_set_srcset (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.sizes
             with get () : string =
                 if this.Session.Intercepting then
@@ -17199,11 +18252,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_sizes" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.sizes" (NativeDom.rv_dom_html_image_element_set_sizes (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLImageElement.sizes" (NativeDom.rv_dom_html_image_element_set_sizes (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.sizes" (NativeDom.rv_dom_html_image_element_set_sizes (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLImageElement.sizes" (NativeDom.rv_dom_html_image_element_set_sizes (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.crossOrigin
             with get () : string =
                 if this.Session.Intercepting then
@@ -17219,11 +18276,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_crossOrigin" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.crossOrigin" (NativeDom.rv_dom_html_image_element_set_cross_origin (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "HTMLImageElement.crossOrigin" (NativeDom.rv_dom_html_image_element_set_cross_origin (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.crossOrigin" (NativeDom.rv_dom_html_image_element_set_cross_origin (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "HTMLImageElement.crossOrigin" (NativeDom.rv_dom_html_image_element_set_cross_origin (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.useMap
             with get () : string =
                 if this.Session.Intercepting then
@@ -17239,11 +18300,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_useMap" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.useMap" (NativeDom.rv_dom_html_image_element_set_use_map (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLImageElement.useMap" (NativeDom.rv_dom_html_image_element_set_use_map (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.useMap" (NativeDom.rv_dom_html_image_element_set_use_map (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLImageElement.useMap" (NativeDom.rv_dom_html_image_element_set_use_map (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.isMap
             with get () : bool =
                 if this.Session.Intercepting then
@@ -17407,11 +18472,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_referrerPolicy" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.referrerPolicy" (NativeDom.rv_dom_html_image_element_set_referrer_policy (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLImageElement.referrerPolicy" (NativeDom.rv_dom_html_image_element_set_referrer_policy (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.referrerPolicy" (NativeDom.rv_dom_html_image_element_set_referrer_policy (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLImageElement.referrerPolicy" (NativeDom.rv_dom_html_image_element_set_referrer_policy (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.decoding
             with get () : string =
                 if this.Session.Intercepting then
@@ -17427,11 +18496,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_decoding" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.decoding" (NativeDom.rv_dom_html_image_element_set_decoding (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLImageElement.decoding" (NativeDom.rv_dom_html_image_element_set_decoding (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.decoding" (NativeDom.rv_dom_html_image_element_set_decoding (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLImageElement.decoding" (NativeDom.rv_dom_html_image_element_set_decoding (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.loading
             with get () : string =
                 if this.Session.Intercepting then
@@ -17447,11 +18520,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_loading" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.loading" (NativeDom.rv_dom_html_image_element_set_loading (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLImageElement.loading" (NativeDom.rv_dom_html_image_element_set_loading (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.loading" (NativeDom.rv_dom_html_image_element_set_loading (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLImageElement.loading" (NativeDom.rv_dom_html_image_element_set_loading (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.name
             with get () : string =
                 if this.Session.Intercepting then
@@ -17467,11 +18544,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_name" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.name" (NativeDom.rv_dom_html_image_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLImageElement.name" (NativeDom.rv_dom_html_image_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.name" (NativeDom.rv_dom_html_image_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLImageElement.name" (NativeDom.rv_dom_html_image_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.lowsrc
             with get () : string =
                 if this.Session.Intercepting then
@@ -17487,11 +18568,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_lowsrc" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.lowsrc" (NativeDom.rv_dom_html_image_element_set_lowsrc (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLImageElement.lowsrc" (NativeDom.rv_dom_html_image_element_set_lowsrc (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.lowsrc" (NativeDom.rv_dom_html_image_element_set_lowsrc (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLImageElement.lowsrc" (NativeDom.rv_dom_html_image_element_set_lowsrc (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.align
             with get () : string =
                 if this.Session.Intercepting then
@@ -17507,11 +18592,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_align" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.align" (NativeDom.rv_dom_html_image_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLImageElement.align" (NativeDom.rv_dom_html_image_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.align" (NativeDom.rv_dom_html_image_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLImageElement.align" (NativeDom.rv_dom_html_image_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.hspace
             with get () : uint32 =
                 if this.Session.Intercepting then
@@ -17575,11 +18664,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_longDesc" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.longDesc" (NativeDom.rv_dom_html_image_element_set_long_desc (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLImageElement.longDesc" (NativeDom.rv_dom_html_image_element_set_long_desc (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.longDesc" (NativeDom.rv_dom_html_image_element_set_long_desc (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLImageElement.longDesc" (NativeDom.rv_dom_html_image_element_set_long_desc (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.border
             with get () : string =
                 if this.Session.Intercepting then
@@ -17595,11 +18688,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_border" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.border" (NativeDom.rv_dom_html_image_element_set_border (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLImageElement.border" (NativeDom.rv_dom_html_image_element_set_border (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.border" (NativeDom.rv_dom_html_image_element_set_border (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLImageElement.border" (NativeDom.rv_dom_html_image_element_set_border (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fetchPriority
             with get () : string =
                 if this.Session.Intercepting then
@@ -17615,11 +18712,15 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_fetchPriority" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLImageElement.fetchPriority" (NativeDom.rv_dom_html_image_element_set_fetch_priority (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLImageElement.fetchPriority" (NativeDom.rv_dom_html_image_element_set_fetch_priority (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLImageElement.fetchPriority" (NativeDom.rv_dom_html_image_element_set_fetch_priority (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLImageElement.fetchPriority" (NativeDom.rv_dom_html_image_element_set_fetch_priority (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.attachmentIdentifier
             with get () : string =
                 if this.Session.Intercepting then
@@ -17677,11 +18778,15 @@ and internal HTMLLIElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_type" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLIElement.type" (NativeDom.rv_dom_htmlli_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLIElement.type" (NativeDom.rv_dom_htmlli_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLIElement.type" (NativeDom.rv_dom_htmlli_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLIElement.type" (NativeDom.rv_dom_htmlli_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.value
             with get () : int =
                 if this.Session.Intercepting then
@@ -17739,11 +18844,15 @@ and internal HTMLLabelElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_htmlFor" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLabelElement.htmlFor" (NativeDom.rv_dom_html_label_element_set_html_for (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLabelElement.htmlFor" (NativeDom.rv_dom_html_label_element_set_html_for (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLabelElement.htmlFor" (NativeDom.rv_dom_html_label_element_set_html_for (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLabelElement.htmlFor" (NativeDom.rv_dom_html_label_element_set_html_for (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.control
             with get () : Ranvier.Dom.HTMLElement =
                 if this.Session.Intercepting then
@@ -17791,11 +18900,15 @@ and internal HTMLLegendElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_align" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLegendElement.align" (NativeDom.rv_dom_html_legend_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLegendElement.align" (NativeDom.rv_dom_html_legend_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLegendElement.align" (NativeDom.rv_dom_html_legend_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLegendElement.align" (NativeDom.rv_dom_html_legend_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLMapElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -17829,11 +18942,15 @@ and internal HTMLMapElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_name" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLMapElement.name" (NativeDom.rv_dom_html_map_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLMapElement.name" (NativeDom.rv_dom_html_map_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLMapElement.name" (NativeDom.rv_dom_html_map_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLMapElement.name" (NativeDom.rv_dom_html_map_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLMarqueeElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -17853,11 +18970,15 @@ and internal HTMLMarqueeElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_behavior" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLMarqueeElement.behavior" (NativeDom.rv_dom_html_marquee_element_set_behavior (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLMarqueeElement.behavior" (NativeDom.rv_dom_html_marquee_element_set_behavior (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLMarqueeElement.behavior" (NativeDom.rv_dom_html_marquee_element_set_behavior (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLMarqueeElement.behavior" (NativeDom.rv_dom_html_marquee_element_set_behavior (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.bgColor
             with get () : string =
                 if this.Session.Intercepting then
@@ -17873,11 +18994,15 @@ and internal HTMLMarqueeElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_bgColor" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLMarqueeElement.bgColor" (NativeDom.rv_dom_html_marquee_element_set_bg_color (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLMarqueeElement.bgColor" (NativeDom.rv_dom_html_marquee_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLMarqueeElement.bgColor" (NativeDom.rv_dom_html_marquee_element_set_bg_color (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLMarqueeElement.bgColor" (NativeDom.rv_dom_html_marquee_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.direction
             with get () : string =
                 if this.Session.Intercepting then
@@ -17893,11 +19018,15 @@ and internal HTMLMarqueeElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_direction" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLMarqueeElement.direction" (NativeDom.rv_dom_html_marquee_element_set_direction (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLMarqueeElement.direction" (NativeDom.rv_dom_html_marquee_element_set_direction (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLMarqueeElement.direction" (NativeDom.rv_dom_html_marquee_element_set_direction (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLMarqueeElement.direction" (NativeDom.rv_dom_html_marquee_element_set_direction (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.height
             with get () : string =
                 if this.Session.Intercepting then
@@ -17913,11 +19042,15 @@ and internal HTMLMarqueeElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_height" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLMarqueeElement.height" (NativeDom.rv_dom_html_marquee_element_set_height (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLMarqueeElement.height" (NativeDom.rv_dom_html_marquee_element_set_height (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLMarqueeElement.height" (NativeDom.rv_dom_html_marquee_element_set_height (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLMarqueeElement.height" (NativeDom.rv_dom_html_marquee_element_set_height (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.hspace
             with get () : uint32 =
                 if this.Session.Intercepting then
@@ -18077,11 +19210,15 @@ and internal HTMLMarqueeElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_width" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLMarqueeElement.width" (NativeDom.rv_dom_html_marquee_element_set_width (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLMarqueeElement.width" (NativeDom.rv_dom_html_marquee_element_set_width (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLMarqueeElement.width" (NativeDom.rv_dom_html_marquee_element_set_width (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLMarqueeElement.width" (NativeDom.rv_dom_html_marquee_element_set_width (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.start() : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "start" [|  |] (fun args ->
@@ -18151,11 +19288,15 @@ and internal HTMLMetaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_content" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLMetaElement.content" (NativeDom.rv_dom_html_meta_element_set_content (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLMetaElement.content" (NativeDom.rv_dom_html_meta_element_set_content (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLMetaElement.content" (NativeDom.rv_dom_html_meta_element_set_content (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLMetaElement.content" (NativeDom.rv_dom_html_meta_element_set_content (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.httpEquiv
             with get () : string =
                 if this.Session.Intercepting then
@@ -18171,11 +19312,15 @@ and internal HTMLMetaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_httpEquiv" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLMetaElement.httpEquiv" (NativeDom.rv_dom_html_meta_element_set_http_equiv (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLMetaElement.httpEquiv" (NativeDom.rv_dom_html_meta_element_set_http_equiv (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLMetaElement.httpEquiv" (NativeDom.rv_dom_html_meta_element_set_http_equiv (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLMetaElement.httpEquiv" (NativeDom.rv_dom_html_meta_element_set_http_equiv (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.media
             with get () : string =
                 if this.Session.Intercepting then
@@ -18191,11 +19336,15 @@ and internal HTMLMetaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_media" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLMetaElement.media" (NativeDom.rv_dom_html_meta_element_set_media (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLMetaElement.media" (NativeDom.rv_dom_html_meta_element_set_media (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLMetaElement.media" (NativeDom.rv_dom_html_meta_element_set_media (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLMetaElement.media" (NativeDom.rv_dom_html_meta_element_set_media (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.name
             with get () : string =
                 if this.Session.Intercepting then
@@ -18211,11 +19360,15 @@ and internal HTMLMetaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_name" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLMetaElement.name" (NativeDom.rv_dom_html_meta_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLMetaElement.name" (NativeDom.rv_dom_html_meta_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLMetaElement.name" (NativeDom.rv_dom_html_meta_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLMetaElement.name" (NativeDom.rv_dom_html_meta_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.scheme
             with get () : string =
                 if this.Session.Intercepting then
@@ -18231,11 +19384,15 @@ and internal HTMLMetaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_scheme" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLMetaElement.scheme" (NativeDom.rv_dom_html_meta_element_set_scheme (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLMetaElement.scheme" (NativeDom.rv_dom_html_meta_element_set_scheme (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLMetaElement.scheme" (NativeDom.rv_dom_html_meta_element_set_scheme (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLMetaElement.scheme" (NativeDom.rv_dom_html_meta_element_set_scheme (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLMeterElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -18417,11 +19574,15 @@ and internal HTMLModElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_cite" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLModElement.cite" (NativeDom.rv_dom_html_mod_element_set_cite (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLModElement.cite" (NativeDom.rv_dom_html_mod_element_set_cite (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLModElement.cite" (NativeDom.rv_dom_html_mod_element_set_cite (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLModElement.cite" (NativeDom.rv_dom_html_mod_element_set_cite (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.dateTime
             with get () : string =
                 if this.Session.Intercepting then
@@ -18437,11 +19598,15 @@ and internal HTMLModElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_dateTime" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLModElement.dateTime" (NativeDom.rv_dom_html_mod_element_set_date_time (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLModElement.dateTime" (NativeDom.rv_dom_html_mod_element_set_date_time (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLModElement.dateTime" (NativeDom.rv_dom_html_mod_element_set_date_time (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLModElement.dateTime" (NativeDom.rv_dom_html_mod_element_set_date_time (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLModelElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -18537,11 +19702,15 @@ and internal HTMLOListElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_type" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLOListElement.type" (NativeDom.rv_dom_htmlo_list_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLOListElement.type" (NativeDom.rv_dom_htmlo_list_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLOListElement.type" (NativeDom.rv_dom_htmlo_list_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLOListElement.type" (NativeDom.rv_dom_htmlo_list_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLObjectElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -18589,11 +19758,15 @@ and internal HTMLOptGroupElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_label" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLOptGroupElement.label" (NativeDom.rv_dom_html_opt_group_element_set_label (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLOptGroupElement.label" (NativeDom.rv_dom_html_opt_group_element_set_label (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLOptGroupElement.label" (NativeDom.rv_dom_html_opt_group_element_set_label (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLOptGroupElement.label" (NativeDom.rv_dom_html_opt_group_element_set_label (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLOptionElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -18651,11 +19824,15 @@ and internal HTMLOptionElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_label" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLOptionElement.label" (NativeDom.rv_dom_html_option_element_set_label (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLOptionElement.label" (NativeDom.rv_dom_html_option_element_set_label (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLOptionElement.label" (NativeDom.rv_dom_html_option_element_set_label (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLOptionElement.label" (NativeDom.rv_dom_html_option_element_set_label (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.defaultSelected
             with get () : bool =
                 if this.Session.Intercepting then
@@ -18719,11 +19896,15 @@ and internal HTMLOptionElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_value" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLOptionElement.value" (NativeDom.rv_dom_html_option_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLOptionElement.value" (NativeDom.rv_dom_html_option_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLOptionElement.value" (NativeDom.rv_dom_html_option_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLOptionElement.value" (NativeDom.rv_dom_html_option_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.text
             with get () : string =
                 if this.Session.Intercepting then
@@ -18739,11 +19920,15 @@ and internal HTMLOptionElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_text" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLOptionElement.text" (NativeDom.rv_dom_html_option_element_set_text (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLOptionElement.text" (NativeDom.rv_dom_html_option_element_set_text (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLOptionElement.text" (NativeDom.rv_dom_html_option_element_set_text (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLOptionElement.text" (NativeDom.rv_dom_html_option_element_set_text (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.index
             with get () : int =
                 if this.Session.Intercepting then
@@ -18805,11 +19990,15 @@ and internal HTMLOutputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_name" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLOutputElement.name" (NativeDom.rv_dom_html_output_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLOutputElement.name" (NativeDom.rv_dom_html_output_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLOutputElement.name" (NativeDom.rv_dom_html_output_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLOutputElement.name" (NativeDom.rv_dom_html_output_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``type``
             with get () : string =
                 if this.Session.Intercepting then
@@ -18835,11 +20024,15 @@ and internal HTMLOutputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_defaultValue" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLOutputElement.defaultValue" (NativeDom.rv_dom_html_output_element_set_default_value (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLOutputElement.defaultValue" (NativeDom.rv_dom_html_output_element_set_default_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLOutputElement.defaultValue" (NativeDom.rv_dom_html_output_element_set_default_value (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLOutputElement.defaultValue" (NativeDom.rv_dom_html_output_element_set_default_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.value
             with get () : string =
                 if this.Session.Intercepting then
@@ -18855,11 +20048,15 @@ and internal HTMLOutputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_value" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLOutputElement.value" (NativeDom.rv_dom_html_output_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLOutputElement.value" (NativeDom.rv_dom_html_output_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLOutputElement.value" (NativeDom.rv_dom_html_output_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLOutputElement.value" (NativeDom.rv_dom_html_output_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.willValidate
             with get () : bool =
                 if this.Session.Intercepting then
@@ -18943,11 +20140,15 @@ and internal HTMLOutputElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "setCustomValidity" [| box error |] (fun args ->
                     let error: string = unbox args[0]
                     let result =
-                        Interop.check "HTMLOutputElement.setCustomValidity" (NativeDom.rv_dom_html_output_element_set_custom_validity (Interop.handle (box this), (if isNull error then "" else error)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(error)
+                        Interop.check "HTMLOutputElement.setCustomValidity" (NativeDom.rv_dom_html_output_element_set_custom_validity (Interop.handle (box this), nativeString0, nativeString0.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "HTMLOutputElement.setCustomValidity" (NativeDom.rv_dom_html_output_element_set_custom_validity (Interop.handle (box this), (if isNull error then "" else error)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(error)
+                Interop.check "HTMLOutputElement.setCustomValidity" (NativeDom.rv_dom_html_output_element_set_custom_validity (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLParagraphElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -18967,11 +20168,15 @@ and internal HTMLParagraphElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_align" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLParagraphElement.align" (NativeDom.rv_dom_html_paragraph_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLParagraphElement.align" (NativeDom.rv_dom_html_paragraph_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLParagraphElement.align" (NativeDom.rv_dom_html_paragraph_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLParagraphElement.align" (NativeDom.rv_dom_html_paragraph_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLParamElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -18991,11 +20196,15 @@ and internal HTMLParamElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_name" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLParamElement.name" (NativeDom.rv_dom_html_param_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLParamElement.name" (NativeDom.rv_dom_html_param_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLParamElement.name" (NativeDom.rv_dom_html_param_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLParamElement.name" (NativeDom.rv_dom_html_param_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``type``
             with get () : string =
                 if this.Session.Intercepting then
@@ -19011,11 +20220,15 @@ and internal HTMLParamElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_type" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLParamElement.type" (NativeDom.rv_dom_html_param_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLParamElement.type" (NativeDom.rv_dom_html_param_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLParamElement.type" (NativeDom.rv_dom_html_param_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLParamElement.type" (NativeDom.rv_dom_html_param_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.value
             with get () : string =
                 if this.Session.Intercepting then
@@ -19031,11 +20244,15 @@ and internal HTMLParamElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_value" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLParamElement.value" (NativeDom.rv_dom_html_param_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLParamElement.value" (NativeDom.rv_dom_html_param_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLParamElement.value" (NativeDom.rv_dom_html_param_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLParamElement.value" (NativeDom.rv_dom_html_param_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.valueType
             with get () : string =
                 if this.Session.Intercepting then
@@ -19051,11 +20268,15 @@ and internal HTMLParamElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_valueType" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLParamElement.valueType" (NativeDom.rv_dom_html_param_element_set_value_type (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLParamElement.valueType" (NativeDom.rv_dom_html_param_element_set_value_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLParamElement.valueType" (NativeDom.rv_dom_html_param_element_set_value_type (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLParamElement.valueType" (NativeDom.rv_dom_html_param_element_set_value_type (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLPictureElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -19187,11 +20408,15 @@ and internal HTMLQuoteElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_cite" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLQuoteElement.cite" (NativeDom.rv_dom_html_quote_element_set_cite (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLQuoteElement.cite" (NativeDom.rv_dom_html_quote_element_set_cite (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLQuoteElement.cite" (NativeDom.rv_dom_html_quote_element_set_cite (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLQuoteElement.cite" (NativeDom.rv_dom_html_quote_element_set_cite (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLScriptElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -19215,11 +20440,15 @@ and internal HTMLSelectElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_autocomplete" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLSelectElement.autocomplete" (NativeDom.rv_dom_html_select_element_set_autocomplete (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLSelectElement.autocomplete" (NativeDom.rv_dom_html_select_element_set_autocomplete (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLSelectElement.autocomplete" (NativeDom.rv_dom_html_select_element_set_autocomplete (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLSelectElement.autocomplete" (NativeDom.rv_dom_html_select_element_set_autocomplete (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.disabled
             with get () : bool =
                 if this.Session.Intercepting then
@@ -19297,11 +20526,15 @@ and internal HTMLSelectElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_name" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLSelectElement.name" (NativeDom.rv_dom_html_select_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLSelectElement.name" (NativeDom.rv_dom_html_select_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLSelectElement.name" (NativeDom.rv_dom_html_select_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLSelectElement.name" (NativeDom.rv_dom_html_select_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.required
             with get () : bool =
                 if this.Session.Intercepting then
@@ -19451,11 +20684,15 @@ and internal HTMLSelectElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_value" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLSelectElement.value" (NativeDom.rv_dom_html_select_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLSelectElement.value" (NativeDom.rv_dom_html_select_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLSelectElement.value" (NativeDom.rv_dom_html_select_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLSelectElement.value" (NativeDom.rv_dom_html_select_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.willValidate
             with get () : bool =
                 if this.Session.Intercepting then
@@ -19527,14 +20764,18 @@ and internal HTMLSelectElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "namedItem" [| box name |] (fun args ->
                     let name: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(name)
                         let mutable result = 0n
-                        Interop.check "HTMLSelectElement.namedItem" (NativeDom.rv_dom_html_select_element_named_item (Interop.handle (box this), (if isNull name then "" else name), &result))
+                        Interop.check "HTMLSelectElement.namedItem" (NativeDom.rv_dom_html_select_element_named_item (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                         unbox<Ranvier.Dom.HTMLOptionElement> (this.Session.Node result)
                     box result)
                 |> unbox<Ranvier.Dom.HTMLOptionElement>
             else
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(name)
                 let mutable result = 0n
-                Interop.check "HTMLSelectElement.namedItem" (NativeDom.rv_dom_html_select_element_named_item (Interop.handle (box this), (if isNull name then "" else name), &result))
+                Interop.check "HTMLSelectElement.namedItem" (NativeDom.rv_dom_html_select_element_named_item (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                 unbox<Ranvier.Dom.HTMLOptionElement> (this.Session.Node result)
         member this.add(element: Ranvier.Dom.HTMLOptionElement) : unit =
             if this.Session.Intercepting then
@@ -19652,11 +20893,15 @@ and internal HTMLSelectElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "setCustomValidity" [| box error |] (fun args ->
                     let error: string = unbox args[0]
                     let result =
-                        Interop.check "HTMLSelectElement.setCustomValidity" (NativeDom.rv_dom_html_select_element_set_custom_validity (Interop.handle (box this), (if isNull error then "" else error)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(error)
+                        Interop.check "HTMLSelectElement.setCustomValidity" (NativeDom.rv_dom_html_select_element_set_custom_validity (Interop.handle (box this), nativeString0, nativeString0.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "HTMLSelectElement.setCustomValidity" (NativeDom.rv_dom_html_select_element_set_custom_validity (Interop.handle (box this), (if isNull error then "" else error)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(error)
+                Interop.check "HTMLSelectElement.setCustomValidity" (NativeDom.rv_dom_html_select_element_set_custom_validity (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLSelectedContentElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -19680,11 +20925,15 @@ and internal HTMLSlotElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_name" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLSlotElement.name" (NativeDom.rv_dom_html_slot_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLSlotElement.name" (NativeDom.rv_dom_html_slot_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLSlotElement.name" (NativeDom.rv_dom_html_slot_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLSlotElement.name" (NativeDom.rv_dom_html_slot_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.assignedNodes(?options: Ranvier.Dom.AssignedNodesOptions) : Ranvier.Dom.Node array =
             if this.Session.Intercepting then
                 Interop.intercept this "assignedNodes" [| box options |] (fun args ->
@@ -19756,11 +21005,15 @@ and internal HTMLSourceElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_src" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLSourceElement.src" (NativeDom.rv_dom_html_source_element_set_src (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLSourceElement.src" (NativeDom.rv_dom_html_source_element_set_src (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLSourceElement.src" (NativeDom.rv_dom_html_source_element_set_src (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLSourceElement.src" (NativeDom.rv_dom_html_source_element_set_src (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``type``
             with get () : string =
                 if this.Session.Intercepting then
@@ -19776,11 +21029,15 @@ and internal HTMLSourceElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_type" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLSourceElement.type" (NativeDom.rv_dom_html_source_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLSourceElement.type" (NativeDom.rv_dom_html_source_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLSourceElement.type" (NativeDom.rv_dom_html_source_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLSourceElement.type" (NativeDom.rv_dom_html_source_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.srcset
             with get () : string =
                 if this.Session.Intercepting then
@@ -19796,11 +21053,15 @@ and internal HTMLSourceElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_srcset" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLSourceElement.srcset" (NativeDom.rv_dom_html_source_element_set_srcset (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLSourceElement.srcset" (NativeDom.rv_dom_html_source_element_set_srcset (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLSourceElement.srcset" (NativeDom.rv_dom_html_source_element_set_srcset (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLSourceElement.srcset" (NativeDom.rv_dom_html_source_element_set_srcset (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.sizes
             with get () : string =
                 if this.Session.Intercepting then
@@ -19816,11 +21077,15 @@ and internal HTMLSourceElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_sizes" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLSourceElement.sizes" (NativeDom.rv_dom_html_source_element_set_sizes (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLSourceElement.sizes" (NativeDom.rv_dom_html_source_element_set_sizes (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLSourceElement.sizes" (NativeDom.rv_dom_html_source_element_set_sizes (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLSourceElement.sizes" (NativeDom.rv_dom_html_source_element_set_sizes (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.media
             with get () : string =
                 if this.Session.Intercepting then
@@ -19836,11 +21101,15 @@ and internal HTMLSourceElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_media" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLSourceElement.media" (NativeDom.rv_dom_html_source_element_set_media (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLSourceElement.media" (NativeDom.rv_dom_html_source_element_set_media (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLSourceElement.media" (NativeDom.rv_dom_html_source_element_set_media (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLSourceElement.media" (NativeDom.rv_dom_html_source_element_set_media (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.width
             with get () : uint32 =
                 if this.Session.Intercepting then
@@ -19922,11 +21191,15 @@ and internal HTMLTableCaptionElementObject(session: Session, handle: nativeint) 
                     Interop.intercept this "set_align" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableCaptionElement.align" (NativeDom.rv_dom_html_table_caption_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableCaptionElement.align" (NativeDom.rv_dom_html_table_caption_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableCaptionElement.align" (NativeDom.rv_dom_html_table_caption_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableCaptionElement.align" (NativeDom.rv_dom_html_table_caption_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLTableCellElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -19960,11 +21233,15 @@ and internal HTMLTableCellElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_align" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableCellElement.align" (NativeDom.rv_dom_html_table_cell_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableCellElement.align" (NativeDom.rv_dom_html_table_cell_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableCellElement.align" (NativeDom.rv_dom_html_table_cell_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableCellElement.align" (NativeDom.rv_dom_html_table_cell_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.axis
             with get () : string =
                 if this.Session.Intercepting then
@@ -19980,11 +21257,15 @@ and internal HTMLTableCellElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_axis" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableCellElement.axis" (NativeDom.rv_dom_html_table_cell_element_set_axis (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableCellElement.axis" (NativeDom.rv_dom_html_table_cell_element_set_axis (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableCellElement.axis" (NativeDom.rv_dom_html_table_cell_element_set_axis (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableCellElement.axis" (NativeDom.rv_dom_html_table_cell_element_set_axis (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.bgColor
             with get () : string =
                 if this.Session.Intercepting then
@@ -20000,11 +21281,15 @@ and internal HTMLTableCellElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_bgColor" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableCellElement.bgColor" (NativeDom.rv_dom_html_table_cell_element_set_bg_color (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLTableCellElement.bgColor" (NativeDom.rv_dom_html_table_cell_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableCellElement.bgColor" (NativeDom.rv_dom_html_table_cell_element_set_bg_color (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLTableCellElement.bgColor" (NativeDom.rv_dom_html_table_cell_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.ch
             with get () : string =
                 if this.Session.Intercepting then
@@ -20020,11 +21305,15 @@ and internal HTMLTableCellElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ch" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableCellElement.ch" (NativeDom.rv_dom_html_table_cell_element_set_ch (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableCellElement.ch" (NativeDom.rv_dom_html_table_cell_element_set_ch (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableCellElement.ch" (NativeDom.rv_dom_html_table_cell_element_set_ch (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableCellElement.ch" (NativeDom.rv_dom_html_table_cell_element_set_ch (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.chOff
             with get () : string =
                 if this.Session.Intercepting then
@@ -20040,11 +21329,15 @@ and internal HTMLTableCellElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_chOff" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableCellElement.chOff" (NativeDom.rv_dom_html_table_cell_element_set_ch_off (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableCellElement.chOff" (NativeDom.rv_dom_html_table_cell_element_set_ch_off (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableCellElement.chOff" (NativeDom.rv_dom_html_table_cell_element_set_ch_off (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableCellElement.chOff" (NativeDom.rv_dom_html_table_cell_element_set_ch_off (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.colSpan
             with get () : uint32 =
                 if this.Session.Intercepting then
@@ -20108,11 +21401,15 @@ and internal HTMLTableCellElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_headers" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableCellElement.headers" (NativeDom.rv_dom_html_table_cell_element_set_headers (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableCellElement.headers" (NativeDom.rv_dom_html_table_cell_element_set_headers (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableCellElement.headers" (NativeDom.rv_dom_html_table_cell_element_set_headers (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableCellElement.headers" (NativeDom.rv_dom_html_table_cell_element_set_headers (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.height
             with get () : string =
                 if this.Session.Intercepting then
@@ -20128,11 +21425,15 @@ and internal HTMLTableCellElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_height" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableCellElement.height" (NativeDom.rv_dom_html_table_cell_element_set_height (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableCellElement.height" (NativeDom.rv_dom_html_table_cell_element_set_height (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableCellElement.height" (NativeDom.rv_dom_html_table_cell_element_set_height (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableCellElement.height" (NativeDom.rv_dom_html_table_cell_element_set_height (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.noWrap
             with get () : bool =
                 if this.Session.Intercepting then
@@ -20172,11 +21473,15 @@ and internal HTMLTableCellElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_vAlign" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableCellElement.vAlign" (NativeDom.rv_dom_html_table_cell_element_set_v_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableCellElement.vAlign" (NativeDom.rv_dom_html_table_cell_element_set_v_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableCellElement.vAlign" (NativeDom.rv_dom_html_table_cell_element_set_v_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableCellElement.vAlign" (NativeDom.rv_dom_html_table_cell_element_set_v_align (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.width
             with get () : string =
                 if this.Session.Intercepting then
@@ -20192,11 +21497,15 @@ and internal HTMLTableCellElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_width" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableCellElement.width" (NativeDom.rv_dom_html_table_cell_element_set_width (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableCellElement.width" (NativeDom.rv_dom_html_table_cell_element_set_width (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableCellElement.width" (NativeDom.rv_dom_html_table_cell_element_set_width (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableCellElement.width" (NativeDom.rv_dom_html_table_cell_element_set_width (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.abbr
             with get () : string =
                 if this.Session.Intercepting then
@@ -20212,11 +21521,15 @@ and internal HTMLTableCellElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_abbr" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableCellElement.abbr" (NativeDom.rv_dom_html_table_cell_element_set_abbr (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableCellElement.abbr" (NativeDom.rv_dom_html_table_cell_element_set_abbr (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableCellElement.abbr" (NativeDom.rv_dom_html_table_cell_element_set_abbr (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableCellElement.abbr" (NativeDom.rv_dom_html_table_cell_element_set_abbr (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.scope
             with get () : string =
                 if this.Session.Intercepting then
@@ -20232,11 +21545,15 @@ and internal HTMLTableCellElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_scope" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableCellElement.scope" (NativeDom.rv_dom_html_table_cell_element_set_scope (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableCellElement.scope" (NativeDom.rv_dom_html_table_cell_element_set_scope (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableCellElement.scope" (NativeDom.rv_dom_html_table_cell_element_set_scope (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableCellElement.scope" (NativeDom.rv_dom_html_table_cell_element_set_scope (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLTableColElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -20256,11 +21573,15 @@ and internal HTMLTableColElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_align" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableColElement.align" (NativeDom.rv_dom_html_table_col_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableColElement.align" (NativeDom.rv_dom_html_table_col_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableColElement.align" (NativeDom.rv_dom_html_table_col_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableColElement.align" (NativeDom.rv_dom_html_table_col_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.ch
             with get () : string =
                 if this.Session.Intercepting then
@@ -20276,11 +21597,15 @@ and internal HTMLTableColElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ch" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableColElement.ch" (NativeDom.rv_dom_html_table_col_element_set_ch (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableColElement.ch" (NativeDom.rv_dom_html_table_col_element_set_ch (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableColElement.ch" (NativeDom.rv_dom_html_table_col_element_set_ch (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableColElement.ch" (NativeDom.rv_dom_html_table_col_element_set_ch (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.chOff
             with get () : string =
                 if this.Session.Intercepting then
@@ -20296,11 +21621,15 @@ and internal HTMLTableColElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_chOff" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableColElement.chOff" (NativeDom.rv_dom_html_table_col_element_set_ch_off (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableColElement.chOff" (NativeDom.rv_dom_html_table_col_element_set_ch_off (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableColElement.chOff" (NativeDom.rv_dom_html_table_col_element_set_ch_off (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableColElement.chOff" (NativeDom.rv_dom_html_table_col_element_set_ch_off (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.span
             with get () : uint32 =
                 if this.Session.Intercepting then
@@ -20340,11 +21669,15 @@ and internal HTMLTableColElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_vAlign" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableColElement.vAlign" (NativeDom.rv_dom_html_table_col_element_set_v_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableColElement.vAlign" (NativeDom.rv_dom_html_table_col_element_set_v_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableColElement.vAlign" (NativeDom.rv_dom_html_table_col_element_set_v_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableColElement.vAlign" (NativeDom.rv_dom_html_table_col_element_set_v_align (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.width
             with get () : string =
                 if this.Session.Intercepting then
@@ -20360,11 +21693,15 @@ and internal HTMLTableColElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_width" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableColElement.width" (NativeDom.rv_dom_html_table_col_element_set_width (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableColElement.width" (NativeDom.rv_dom_html_table_col_element_set_width (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableColElement.width" (NativeDom.rv_dom_html_table_col_element_set_width (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableColElement.width" (NativeDom.rv_dom_html_table_col_element_set_width (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLTableElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -20484,11 +21821,15 @@ and internal HTMLTableElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_align" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableElement.align" (NativeDom.rv_dom_html_table_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableElement.align" (NativeDom.rv_dom_html_table_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableElement.align" (NativeDom.rv_dom_html_table_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableElement.align" (NativeDom.rv_dom_html_table_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.border
             with get () : string =
                 if this.Session.Intercepting then
@@ -20504,11 +21845,15 @@ and internal HTMLTableElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_border" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableElement.border" (NativeDom.rv_dom_html_table_element_set_border (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableElement.border" (NativeDom.rv_dom_html_table_element_set_border (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableElement.border" (NativeDom.rv_dom_html_table_element_set_border (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableElement.border" (NativeDom.rv_dom_html_table_element_set_border (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.frame
             with get () : string =
                 if this.Session.Intercepting then
@@ -20524,11 +21869,15 @@ and internal HTMLTableElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_frame" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableElement.frame" (NativeDom.rv_dom_html_table_element_set_frame (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableElement.frame" (NativeDom.rv_dom_html_table_element_set_frame (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableElement.frame" (NativeDom.rv_dom_html_table_element_set_frame (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableElement.frame" (NativeDom.rv_dom_html_table_element_set_frame (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.rules
             with get () : string =
                 if this.Session.Intercepting then
@@ -20544,11 +21893,15 @@ and internal HTMLTableElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_rules" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableElement.rules" (NativeDom.rv_dom_html_table_element_set_rules (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableElement.rules" (NativeDom.rv_dom_html_table_element_set_rules (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableElement.rules" (NativeDom.rv_dom_html_table_element_set_rules (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableElement.rules" (NativeDom.rv_dom_html_table_element_set_rules (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.summary
             with get () : string =
                 if this.Session.Intercepting then
@@ -20564,11 +21917,15 @@ and internal HTMLTableElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_summary" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableElement.summary" (NativeDom.rv_dom_html_table_element_set_summary (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableElement.summary" (NativeDom.rv_dom_html_table_element_set_summary (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableElement.summary" (NativeDom.rv_dom_html_table_element_set_summary (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableElement.summary" (NativeDom.rv_dom_html_table_element_set_summary (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.width
             with get () : string =
                 if this.Session.Intercepting then
@@ -20584,11 +21941,15 @@ and internal HTMLTableElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_width" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableElement.width" (NativeDom.rv_dom_html_table_element_set_width (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableElement.width" (NativeDom.rv_dom_html_table_element_set_width (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableElement.width" (NativeDom.rv_dom_html_table_element_set_width (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableElement.width" (NativeDom.rv_dom_html_table_element_set_width (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.bgColor
             with get () : string =
                 if this.Session.Intercepting then
@@ -20604,11 +21965,15 @@ and internal HTMLTableElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_bgColor" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableElement.bgColor" (NativeDom.rv_dom_html_table_element_set_bg_color (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLTableElement.bgColor" (NativeDom.rv_dom_html_table_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableElement.bgColor" (NativeDom.rv_dom_html_table_element_set_bg_color (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLTableElement.bgColor" (NativeDom.rv_dom_html_table_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.cellPadding
             with get () : string =
                 if this.Session.Intercepting then
@@ -20624,11 +21989,15 @@ and internal HTMLTableElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_cellPadding" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableElement.cellPadding" (NativeDom.rv_dom_html_table_element_set_cell_padding (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLTableElement.cellPadding" (NativeDom.rv_dom_html_table_element_set_cell_padding (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableElement.cellPadding" (NativeDom.rv_dom_html_table_element_set_cell_padding (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLTableElement.cellPadding" (NativeDom.rv_dom_html_table_element_set_cell_padding (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.cellSpacing
             with get () : string =
                 if this.Session.Intercepting then
@@ -20644,11 +22013,15 @@ and internal HTMLTableElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_cellSpacing" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableElement.cellSpacing" (NativeDom.rv_dom_html_table_element_set_cell_spacing (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLTableElement.cellSpacing" (NativeDom.rv_dom_html_table_element_set_cell_spacing (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableElement.cellSpacing" (NativeDom.rv_dom_html_table_element_set_cell_spacing (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLTableElement.cellSpacing" (NativeDom.rv_dom_html_table_element_set_cell_spacing (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.createCaption() : Ranvier.Dom.HTMLTableCaptionElement =
             if this.Session.Intercepting then
                 Interop.intercept this "createCaption" [|  |] (fun args ->
@@ -20813,11 +22186,15 @@ and internal HTMLTableRowElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_align" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableRowElement.align" (NativeDom.rv_dom_html_table_row_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableRowElement.align" (NativeDom.rv_dom_html_table_row_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableRowElement.align" (NativeDom.rv_dom_html_table_row_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableRowElement.align" (NativeDom.rv_dom_html_table_row_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.bgColor
             with get () : string =
                 if this.Session.Intercepting then
@@ -20833,11 +22210,15 @@ and internal HTMLTableRowElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_bgColor" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableRowElement.bgColor" (NativeDom.rv_dom_html_table_row_element_set_bg_color (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLTableRowElement.bgColor" (NativeDom.rv_dom_html_table_row_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableRowElement.bgColor" (NativeDom.rv_dom_html_table_row_element_set_bg_color (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLTableRowElement.bgColor" (NativeDom.rv_dom_html_table_row_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.ch
             with get () : string =
                 if this.Session.Intercepting then
@@ -20853,11 +22234,15 @@ and internal HTMLTableRowElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_ch" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableRowElement.ch" (NativeDom.rv_dom_html_table_row_element_set_ch (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableRowElement.ch" (NativeDom.rv_dom_html_table_row_element_set_ch (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableRowElement.ch" (NativeDom.rv_dom_html_table_row_element_set_ch (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableRowElement.ch" (NativeDom.rv_dom_html_table_row_element_set_ch (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.chOff
             with get () : string =
                 if this.Session.Intercepting then
@@ -20873,11 +22258,15 @@ and internal HTMLTableRowElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_chOff" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableRowElement.chOff" (NativeDom.rv_dom_html_table_row_element_set_ch_off (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableRowElement.chOff" (NativeDom.rv_dom_html_table_row_element_set_ch_off (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableRowElement.chOff" (NativeDom.rv_dom_html_table_row_element_set_ch_off (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableRowElement.chOff" (NativeDom.rv_dom_html_table_row_element_set_ch_off (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.vAlign
             with get () : string =
                 if this.Session.Intercepting then
@@ -20893,11 +22282,15 @@ and internal HTMLTableRowElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_vAlign" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableRowElement.vAlign" (NativeDom.rv_dom_html_table_row_element_set_v_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableRowElement.vAlign" (NativeDom.rv_dom_html_table_row_element_set_v_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableRowElement.vAlign" (NativeDom.rv_dom_html_table_row_element_set_v_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableRowElement.vAlign" (NativeDom.rv_dom_html_table_row_element_set_v_align (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.insertCell(?index: int) : Ranvier.Dom.HTMLElement =
             if this.Session.Intercepting then
                 Interop.intercept this "insertCell" [| box index |] (fun args ->
@@ -20955,11 +22348,15 @@ and internal HTMLTableSectionElementObject(session: Session, handle: nativeint) 
                     Interop.intercept this "set_align" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableSectionElement.align" (NativeDom.rv_dom_html_table_section_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableSectionElement.align" (NativeDom.rv_dom_html_table_section_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableSectionElement.align" (NativeDom.rv_dom_html_table_section_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableSectionElement.align" (NativeDom.rv_dom_html_table_section_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.ch
             with get () : string =
                 if this.Session.Intercepting then
@@ -20975,11 +22372,15 @@ and internal HTMLTableSectionElementObject(session: Session, handle: nativeint) 
                     Interop.intercept this "set_ch" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableSectionElement.ch" (NativeDom.rv_dom_html_table_section_element_set_ch (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableSectionElement.ch" (NativeDom.rv_dom_html_table_section_element_set_ch (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableSectionElement.ch" (NativeDom.rv_dom_html_table_section_element_set_ch (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableSectionElement.ch" (NativeDom.rv_dom_html_table_section_element_set_ch (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.chOff
             with get () : string =
                 if this.Session.Intercepting then
@@ -20995,11 +22396,15 @@ and internal HTMLTableSectionElementObject(session: Session, handle: nativeint) 
                     Interop.intercept this "set_chOff" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableSectionElement.chOff" (NativeDom.rv_dom_html_table_section_element_set_ch_off (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableSectionElement.chOff" (NativeDom.rv_dom_html_table_section_element_set_ch_off (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableSectionElement.chOff" (NativeDom.rv_dom_html_table_section_element_set_ch_off (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableSectionElement.chOff" (NativeDom.rv_dom_html_table_section_element_set_ch_off (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.vAlign
             with get () : string =
                 if this.Session.Intercepting then
@@ -21015,11 +22420,15 @@ and internal HTMLTableSectionElementObject(session: Session, handle: nativeint) 
                     Interop.intercept this "set_vAlign" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTableSectionElement.vAlign" (NativeDom.rv_dom_html_table_section_element_set_v_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTableSectionElement.vAlign" (NativeDom.rv_dom_html_table_section_element_set_v_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTableSectionElement.vAlign" (NativeDom.rv_dom_html_table_section_element_set_v_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTableSectionElement.vAlign" (NativeDom.rv_dom_html_table_section_element_set_v_align (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.insertRow(?index: int) : Ranvier.Dom.HTMLTableRowElement =
             if this.Session.Intercepting then
                 Interop.intercept this "insertRow" [| box index |] (fun args ->
@@ -21077,11 +22486,15 @@ and internal HTMLTemplateElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_shadowRootMode" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTemplateElement.shadowRootMode" (NativeDom.rv_dom_html_template_element_set_shadow_root_mode (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTemplateElement.shadowRootMode" (NativeDom.rv_dom_html_template_element_set_shadow_root_mode (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTemplateElement.shadowRootMode" (NativeDom.rv_dom_html_template_element_set_shadow_root_mode (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTemplateElement.shadowRootMode" (NativeDom.rv_dom_html_template_element_set_shadow_root_mode (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.shadowRootDelegatesFocus
             with get () : bool =
                 if this.Session.Intercepting then
@@ -21121,11 +22534,15 @@ and internal HTMLTemplateElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_shadowRootSlotAssignment" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTemplateElement.shadowRootSlotAssignment" (NativeDom.rv_dom_html_template_element_set_shadow_root_slot_assignment (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTemplateElement.shadowRootSlotAssignment" (NativeDom.rv_dom_html_template_element_set_shadow_root_slot_assignment (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTemplateElement.shadowRootSlotAssignment" (NativeDom.rv_dom_html_template_element_set_shadow_root_slot_assignment (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTemplateElement.shadowRootSlotAssignment" (NativeDom.rv_dom_html_template_element_set_shadow_root_slot_assignment (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.shadowRootClonable
             with get () : bool =
                 if this.Session.Intercepting then
@@ -21189,11 +22606,15 @@ and internal HTMLTemplateElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_shadowRootCustomElementRegistry" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTemplateElement.shadowRootCustomElementRegistry" (NativeDom.rv_dom_html_template_element_set_shadow_root_custom_element_registry (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTemplateElement.shadowRootCustomElementRegistry" (NativeDom.rv_dom_html_template_element_set_shadow_root_custom_element_registry (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTemplateElement.shadowRootCustomElementRegistry" (NativeDom.rv_dom_html_template_element_set_shadow_root_custom_element_registry (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTemplateElement.shadowRootCustomElementRegistry" (NativeDom.rv_dom_html_template_element_set_shadow_root_custom_element_registry (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.shadowRootReferenceTarget
             with get () : string =
                 if this.Session.Intercepting then
@@ -21209,11 +22630,15 @@ and internal HTMLTemplateElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_shadowRootReferenceTarget" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTemplateElement.shadowRootReferenceTarget" (NativeDom.rv_dom_html_template_element_set_shadow_root_reference_target (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTemplateElement.shadowRootReferenceTarget" (NativeDom.rv_dom_html_template_element_set_shadow_root_reference_target (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTemplateElement.shadowRootReferenceTarget" (NativeDom.rv_dom_html_template_element_set_shadow_root_reference_target (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTemplateElement.shadowRootReferenceTarget" (NativeDom.rv_dom_html_template_element_set_shadow_root_reference_target (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -21233,11 +22658,15 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_dirName" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTextAreaElement.dirName" (NativeDom.rv_dom_html_text_area_element_set_dir_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTextAreaElement.dirName" (NativeDom.rv_dom_html_text_area_element_set_dir_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTextAreaElement.dirName" (NativeDom.rv_dom_html_text_area_element_set_dir_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTextAreaElement.dirName" (NativeDom.rv_dom_html_text_area_element_set_dir_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.disabled
             with get () : bool =
                 if this.Session.Intercepting then
@@ -21339,11 +22768,15 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_name" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTextAreaElement.name" (NativeDom.rv_dom_html_text_area_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTextAreaElement.name" (NativeDom.rv_dom_html_text_area_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTextAreaElement.name" (NativeDom.rv_dom_html_text_area_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTextAreaElement.name" (NativeDom.rv_dom_html_text_area_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.placeholder
             with get () : string =
                 if this.Session.Intercepting then
@@ -21359,11 +22792,15 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_placeholder" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTextAreaElement.placeholder" (NativeDom.rv_dom_html_text_area_element_set_placeholder (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTextAreaElement.placeholder" (NativeDom.rv_dom_html_text_area_element_set_placeholder (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTextAreaElement.placeholder" (NativeDom.rv_dom_html_text_area_element_set_placeholder (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTextAreaElement.placeholder" (NativeDom.rv_dom_html_text_area_element_set_placeholder (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.readOnly
             with get () : bool =
                 if this.Session.Intercepting then
@@ -21475,11 +22912,15 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_wrap" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTextAreaElement.wrap" (NativeDom.rv_dom_html_text_area_element_set_wrap (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTextAreaElement.wrap" (NativeDom.rv_dom_html_text_area_element_set_wrap (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTextAreaElement.wrap" (NativeDom.rv_dom_html_text_area_element_set_wrap (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTextAreaElement.wrap" (NativeDom.rv_dom_html_text_area_element_set_wrap (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``type``
             with get () : string =
                 if this.Session.Intercepting then
@@ -21505,11 +22946,15 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_defaultValue" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTextAreaElement.defaultValue" (NativeDom.rv_dom_html_text_area_element_set_default_value (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTextAreaElement.defaultValue" (NativeDom.rv_dom_html_text_area_element_set_default_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTextAreaElement.defaultValue" (NativeDom.rv_dom_html_text_area_element_set_default_value (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTextAreaElement.defaultValue" (NativeDom.rv_dom_html_text_area_element_set_default_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.value
             with get () : string =
                 if this.Session.Intercepting then
@@ -21525,11 +22970,15 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_value" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTextAreaElement.value" (NativeDom.rv_dom_html_text_area_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLTextAreaElement.value" (NativeDom.rv_dom_html_text_area_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTextAreaElement.value" (NativeDom.rv_dom_html_text_area_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLTextAreaElement.value" (NativeDom.rv_dom_html_text_area_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.textLength
             with get () : uint32 =
                 if this.Session.Intercepting then
@@ -21659,11 +23108,15 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_selectionDirection" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTextAreaElement.selectionDirection" (NativeDom.rv_dom_html_text_area_element_set_selection_direction (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTextAreaElement.selectionDirection" (NativeDom.rv_dom_html_text_area_element_set_selection_direction (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTextAreaElement.selectionDirection" (NativeDom.rv_dom_html_text_area_element_set_selection_direction (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTextAreaElement.selectionDirection" (NativeDom.rv_dom_html_text_area_element_set_selection_direction (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.autocomplete
             with get () : string =
                 if this.Session.Intercepting then
@@ -21679,11 +23132,15 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_autocomplete" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTextAreaElement.autocomplete" (NativeDom.rv_dom_html_text_area_element_set_autocomplete (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTextAreaElement.autocomplete" (NativeDom.rv_dom_html_text_area_element_set_autocomplete (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTextAreaElement.autocomplete" (NativeDom.rv_dom_html_text_area_element_set_autocomplete (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTextAreaElement.autocomplete" (NativeDom.rv_dom_html_text_area_element_set_autocomplete (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.checkValidity() : bool =
             if this.Session.Intercepting then
                 Interop.intercept this "checkValidity" [|  |] (fun args ->
@@ -21715,11 +23172,15 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "setCustomValidity" [| box error |] (fun args ->
                     let error: string = unbox args[0]
                     let result =
-                        Interop.check "HTMLTextAreaElement.setCustomValidity" (NativeDom.rv_dom_html_text_area_element_set_custom_validity (Interop.handle (box this), (if isNull error then "" else error)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(error)
+                        Interop.check "HTMLTextAreaElement.setCustomValidity" (NativeDom.rv_dom_html_text_area_element_set_custom_validity (Interop.handle (box this), nativeString0, nativeString0.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "HTMLTextAreaElement.setCustomValidity" (NativeDom.rv_dom_html_text_area_element_set_custom_validity (Interop.handle (box this), (if isNull error then "" else error)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(error)
+                Interop.check "HTMLTextAreaElement.setCustomValidity" (NativeDom.rv_dom_html_text_area_element_set_custom_validity (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``select``() : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "select" [|  |] (fun args ->
@@ -21734,11 +23195,15 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "setRangeText" [| box replacement |] (fun args ->
                     let replacement: string = unbox args[0]
                     let result =
-                        Interop.check "HTMLTextAreaElement.setRangeText" (NativeDom.rv_dom_html_text_area_element_set_range_text_1 (Interop.handle (box this), (if isNull replacement then "" else replacement)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(replacement)
+                        Interop.check "HTMLTextAreaElement.setRangeText" (NativeDom.rv_dom_html_text_area_element_set_range_text_1 (Interop.handle (box this), nativeString0, nativeString0.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "HTMLTextAreaElement.setRangeText" (NativeDom.rv_dom_html_text_area_element_set_range_text_1 (Interop.handle (box this), (if isNull replacement then "" else replacement)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(replacement)
+                Interop.check "HTMLTextAreaElement.setRangeText" (NativeDom.rv_dom_html_text_area_element_set_range_text_1 (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.setRangeText(replacement: string, start: uint32, ``end``: uint32, ?selectionMode: string) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "setRangeText" [| box replacement; box start; box ``end``; box selectionMode |] (fun args ->
@@ -21747,11 +23212,17 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                     let ``end``: uint32 = unbox args[2]
                     let selectionMode: string option = unbox args[3]
                     let result =
-                        Interop.check "HTMLTextAreaElement.setRangeText" (NativeDom.rv_dom_html_text_area_element_set_range_text_4 (Interop.handle (box this), (if isNull replacement then "" else replacement), uint32 start, uint32 ``end``, Option.toObj selectionMode))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(replacement)
+                        let nativeString3 = (match selectionMode with Some x -> scope.Bytes(x) | None -> null)
+                        Interop.check "HTMLTextAreaElement.setRangeText" (NativeDom.rv_dom_html_text_area_element_set_range_text_4 (Interop.handle (box this), nativeString0, nativeString0.Length, uint32 start, uint32 ``end``, nativeString3, (if isNull nativeString3 then -1 else nativeString3.Length)))
                     box result)
                 |> ignore
             else
-                Interop.check "HTMLTextAreaElement.setRangeText" (NativeDom.rv_dom_html_text_area_element_set_range_text_4 (Interop.handle (box this), (if isNull replacement then "" else replacement), uint32 start, uint32 ``end``, Option.toObj selectionMode))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(replacement)
+                let nativeString3 = (match selectionMode with Some x -> scope.Bytes(x) | None -> null)
+                Interop.check "HTMLTextAreaElement.setRangeText" (NativeDom.rv_dom_html_text_area_element_set_range_text_4 (Interop.handle (box this), nativeString0, nativeString0.Length, uint32 start, uint32 ``end``, nativeString3, (if isNull nativeString3 then -1 else nativeString3.Length)))
         member this.setSelectionRange(start: uint32, ``end``: uint32, ?direction: string) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "setSelectionRange" [| box start; box ``end``; box direction |] (fun args ->
@@ -21759,11 +23230,15 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                     let ``end``: uint32 = unbox args[1]
                     let direction: string option = unbox args[2]
                     let result =
-                        Interop.check "HTMLTextAreaElement.setSelectionRange" (NativeDom.rv_dom_html_text_area_element_set_selection_range (Interop.handle (box this), uint32 start, uint32 ``end``, Option.toObj direction))
+                        use scope = new InputScope()
+                        let nativeString2 = (match direction with Some x -> scope.Bytes(x) | None -> null)
+                        Interop.check "HTMLTextAreaElement.setSelectionRange" (NativeDom.rv_dom_html_text_area_element_set_selection_range (Interop.handle (box this), uint32 start, uint32 ``end``, nativeString2, (if isNull nativeString2 then -1 else nativeString2.Length)))
                     box result)
                 |> ignore
             else
-                Interop.check "HTMLTextAreaElement.setSelectionRange" (NativeDom.rv_dom_html_text_area_element_set_selection_range (Interop.handle (box this), uint32 start, uint32 ``end``, Option.toObj direction))
+                use scope = new InputScope()
+                let nativeString2 = (match direction with Some x -> scope.Bytes(x) | None -> null)
+                Interop.check "HTMLTextAreaElement.setSelectionRange" (NativeDom.rv_dom_html_text_area_element_set_selection_range (Interop.handle (box this), uint32 start, uint32 ``end``, nativeString2, (if isNull nativeString2 then -1 else nativeString2.Length)))
 
 and internal HTMLTimeElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -21783,11 +23258,15 @@ and internal HTMLTimeElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_dateTime" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTimeElement.dateTime" (NativeDom.rv_dom_html_time_element_set_date_time (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTimeElement.dateTime" (NativeDom.rv_dom_html_time_element_set_date_time (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTimeElement.dateTime" (NativeDom.rv_dom_html_time_element_set_date_time (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTimeElement.dateTime" (NativeDom.rv_dom_html_time_element_set_date_time (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLTitleElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -21807,11 +23286,15 @@ and internal HTMLTitleElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_text" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLTitleElement.text" (NativeDom.rv_dom_html_title_element_set_text (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLTitleElement.text" (NativeDom.rv_dom_html_title_element_set_text (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLTitleElement.text" (NativeDom.rv_dom_html_title_element_set_text (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLTitleElement.text" (NativeDom.rv_dom_html_title_element_set_text (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLTrackElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -21859,11 +23342,15 @@ and internal HTMLUListElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_type" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLUListElement.type" (NativeDom.rv_dom_htmlu_list_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLUListElement.type" (NativeDom.rv_dom_htmlu_list_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLUListElement.type" (NativeDom.rv_dom_htmlu_list_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLUListElement.type" (NativeDom.rv_dom_htmlu_list_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLUnknownElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -21913,16 +23400,20 @@ and internal SVGAElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_hreflang" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
+                            use scope = new InputScope()
                             try
-                                Interop.check "SVGAElement.hreflang" (NativeDom.rv_dom_svga_element_set_hreflang (Interop.handle (box this), (if isNull value then "" else value)))
+                                let nativeString0 = scope.Bytes(value)
+                                Interop.check "SVGAElement.hreflang" (NativeDom.rv_dom_svga_element_set_hreflang (Interop.handle (box this), nativeString0, nativeString0.Length))
                             finally
                                 System.GC.KeepAlive this
                                 System.GC.KeepAlive (box value)
                         box result)
                     |> ignore
                 else
+                    use scope = new InputScope()
                     try
-                        Interop.check "SVGAElement.hreflang" (NativeDom.rv_dom_svga_element_set_hreflang (Interop.handle (box this), (if isNull value then "" else value)))
+                        let nativeString0 = scope.Bytes(value)
+                        Interop.check "SVGAElement.hreflang" (NativeDom.rv_dom_svga_element_set_hreflang (Interop.handle (box this), nativeString0, nativeString0.Length))
                     finally
                         System.GC.KeepAlive this
                         System.GC.KeepAlive (box value)
@@ -21947,16 +23438,20 @@ and internal SVGAElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_rel" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
+                            use scope = new InputScope()
                             try
-                                Interop.check "SVGAElement.rel" (NativeDom.rv_dom_svga_element_set_rel (Interop.handle (box this), (if isNull value then "" else value)))
+                                let nativeString0 = scope.Bytes(value)
+                                Interop.check "SVGAElement.rel" (NativeDom.rv_dom_svga_element_set_rel (Interop.handle (box this), nativeString0, nativeString0.Length))
                             finally
                                 System.GC.KeepAlive this
                                 System.GC.KeepAlive (box value)
                         box result)
                     |> ignore
                 else
+                    use scope = new InputScope()
                     try
-                        Interop.check "SVGAElement.rel" (NativeDom.rv_dom_svga_element_set_rel (Interop.handle (box this), (if isNull value then "" else value)))
+                        let nativeString0 = scope.Bytes(value)
+                        Interop.check "SVGAElement.rel" (NativeDom.rv_dom_svga_element_set_rel (Interop.handle (box this), nativeString0, nativeString0.Length))
                     finally
                         System.GC.KeepAlive this
                         System.GC.KeepAlive (box value)
@@ -22001,16 +23496,20 @@ and internal SVGAElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_type" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
+                            use scope = new InputScope()
                             try
-                                Interop.check "SVGAElement.type" (NativeDom.rv_dom_svga_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                                let nativeString0 = scope.Bytes(value)
+                                Interop.check "SVGAElement.type" (NativeDom.rv_dom_svga_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                             finally
                                 System.GC.KeepAlive this
                                 System.GC.KeepAlive (box value)
                         box result)
                     |> ignore
                 else
+                    use scope = new InputScope()
                     try
-                        Interop.check "SVGAElement.type" (NativeDom.rv_dom_svga_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                        let nativeString0 = scope.Bytes(value)
+                        Interop.check "SVGAElement.type" (NativeDom.rv_dom_svga_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                     finally
                         System.GC.KeepAlive this
                         System.GC.KeepAlive (box value)
@@ -22388,16 +23887,20 @@ and internal SVGImageElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_crossOrigin" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
+                            use scope = new InputScope()
                             try
-                                Interop.check "SVGImageElement.crossOrigin" (NativeDom.rv_dom_svg_image_element_set_cross_origin (Interop.handle (box this), value))
+                                let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                                Interop.check "SVGImageElement.crossOrigin" (NativeDom.rv_dom_svg_image_element_set_cross_origin (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                             finally
                                 System.GC.KeepAlive this
                                 System.GC.KeepAlive (box value)
                         box result)
                     |> ignore
                 else
+                    use scope = new InputScope()
                     try
-                        Interop.check "SVGImageElement.crossOrigin" (NativeDom.rv_dom_svg_image_element_set_cross_origin (Interop.handle (box this), value))
+                        let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                        Interop.check "SVGImageElement.crossOrigin" (NativeDom.rv_dom_svg_image_element_set_cross_origin (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                     finally
                         System.GC.KeepAlive this
                         System.GC.KeepAlive (box value)
@@ -23166,9 +24669,11 @@ and internal SVGSVGElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "getElementById" [| box elementId |] (fun args ->
                     let elementId: string = unbox args[0]
                     let result =
+                        use scope = new InputScope()
                         try
+                            let nativeString0 = scope.Bytes(elementId)
                             let mutable result = 0n
-                            Interop.check "SVGSVGElement.getElementById" (NativeDom.rv_dom_svgsvg_element_get_element_by_id (Interop.handle (box this), (if isNull elementId then "" else elementId), &result))
+                            Interop.check "SVGSVGElement.getElementById" (NativeDom.rv_dom_svgsvg_element_get_element_by_id (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                             unbox<Ranvier.Dom.Element> (this.Session.Node result)
                         finally
                             System.GC.KeepAlive this
@@ -23176,9 +24681,11 @@ and internal SVGSVGElementObject(session: Session, handle: nativeint) =
                     box result)
                 |> unbox<Ranvier.Dom.Element>
             else
+                use scope = new InputScope()
                 try
+                    let nativeString0 = scope.Bytes(elementId)
                     let mutable result = 0n
-                    Interop.check "SVGSVGElement.getElementById" (NativeDom.rv_dom_svgsvg_element_get_element_by_id (Interop.handle (box this), (if isNull elementId then "" else elementId), &result))
+                    Interop.check "SVGSVGElement.getElementById" (NativeDom.rv_dom_svgsvg_element_get_element_by_id (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
                     unbox<Ranvier.Dom.Element> (this.Session.Node result)
                 finally
                     System.GC.KeepAlive this
@@ -23401,11 +24908,15 @@ and internal SVGStyleElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_type" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "SVGStyleElement.type" (NativeDom.rv_dom_svg_style_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "SVGStyleElement.type" (NativeDom.rv_dom_svg_style_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "SVGStyleElement.type" (NativeDom.rv_dom_svg_style_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "SVGStyleElement.type" (NativeDom.rv_dom_svg_style_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.media
             with get () : string =
                 if this.Session.Intercepting then
@@ -23421,11 +24932,15 @@ and internal SVGStyleElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_media" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "SVGStyleElement.media" (NativeDom.rv_dom_svg_style_element_set_media (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "SVGStyleElement.media" (NativeDom.rv_dom_svg_style_element_set_media (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "SVGStyleElement.media" (NativeDom.rv_dom_svg_style_element_set_media (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "SVGStyleElement.media" (NativeDom.rv_dom_svg_style_element_set_media (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.title
             with get () : string =
                 if this.Session.Intercepting then
@@ -23441,11 +24956,15 @@ and internal SVGStyleElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_title" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "SVGStyleElement.title" (NativeDom.rv_dom_svg_style_element_set_title (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "SVGStyleElement.title" (NativeDom.rv_dom_svg_style_element_set_title (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "SVGStyleElement.title" (NativeDom.rv_dom_svg_style_element_set_title (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "SVGStyleElement.title" (NativeDom.rv_dom_svg_style_element_set_title (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal SVGSwitchElementObject(session: Session, handle: nativeint) =
     inherit SVGGraphicsElementObject(session, handle)
@@ -23855,11 +25374,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_href" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLHyperlinkElementUtils.href" (NativeDom.rv_dom_html_anchor_element_set_href (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLHyperlinkElementUtils.href" (NativeDom.rv_dom_html_anchor_element_set_href (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLHyperlinkElementUtils.href" (NativeDom.rv_dom_html_anchor_element_set_href (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLHyperlinkElementUtils.href" (NativeDom.rv_dom_html_anchor_element_set_href (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.target
             with get () : string =
                 if this.Session.Intercepting then
@@ -23875,11 +25398,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_target" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLHyperlinkElementUtils.target" (NativeDom.rv_dom_html_anchor_element_set_target (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLHyperlinkElementUtils.target" (NativeDom.rv_dom_html_anchor_element_set_target (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLHyperlinkElementUtils.target" (NativeDom.rv_dom_html_anchor_element_set_target (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLHyperlinkElementUtils.target" (NativeDom.rv_dom_html_anchor_element_set_target (Interop.handle (box this), nativeString0, nativeString0.Length))
     interface Ranvier.Dom.HTMLAnchorElement with
         member this.charset
             with get () : string =
@@ -23896,11 +25423,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_charset" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.charset" (NativeDom.rv_dom_html_anchor_element_set_charset (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.charset" (NativeDom.rv_dom_html_anchor_element_set_charset (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.charset" (NativeDom.rv_dom_html_anchor_element_set_charset (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.charset" (NativeDom.rv_dom_html_anchor_element_set_charset (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.coords
             with get () : string =
                 if this.Session.Intercepting then
@@ -23916,11 +25447,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_coords" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.coords" (NativeDom.rv_dom_html_anchor_element_set_coords (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.coords" (NativeDom.rv_dom_html_anchor_element_set_coords (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.coords" (NativeDom.rv_dom_html_anchor_element_set_coords (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.coords" (NativeDom.rv_dom_html_anchor_element_set_coords (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.download
             with get () : string =
                 if this.Session.Intercepting then
@@ -23936,11 +25471,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_download" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.download" (NativeDom.rv_dom_html_anchor_element_set_download (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.download" (NativeDom.rv_dom_html_anchor_element_set_download (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.download" (NativeDom.rv_dom_html_anchor_element_set_download (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.download" (NativeDom.rv_dom_html_anchor_element_set_download (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.hreflang
             with get () : string =
                 if this.Session.Intercepting then
@@ -23956,11 +25495,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_hreflang" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.hreflang" (NativeDom.rv_dom_html_anchor_element_set_hreflang (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.hreflang" (NativeDom.rv_dom_html_anchor_element_set_hreflang (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.hreflang" (NativeDom.rv_dom_html_anchor_element_set_hreflang (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.hreflang" (NativeDom.rv_dom_html_anchor_element_set_hreflang (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.name
             with get () : string =
                 if this.Session.Intercepting then
@@ -23976,11 +25519,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_name" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.name" (NativeDom.rv_dom_html_anchor_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.name" (NativeDom.rv_dom_html_anchor_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.name" (NativeDom.rv_dom_html_anchor_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.name" (NativeDom.rv_dom_html_anchor_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.rel
             with get () : string =
                 if this.Session.Intercepting then
@@ -23996,11 +25543,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_rel" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.rel" (NativeDom.rv_dom_html_anchor_element_set_rel (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.rel" (NativeDom.rv_dom_html_anchor_element_set_rel (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.rel" (NativeDom.rv_dom_html_anchor_element_set_rel (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.rel" (NativeDom.rv_dom_html_anchor_element_set_rel (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.rev
             with get () : string =
                 if this.Session.Intercepting then
@@ -24016,11 +25567,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_rev" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.rev" (NativeDom.rv_dom_html_anchor_element_set_rev (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.rev" (NativeDom.rv_dom_html_anchor_element_set_rev (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.rev" (NativeDom.rv_dom_html_anchor_element_set_rev (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.rev" (NativeDom.rv_dom_html_anchor_element_set_rev (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.shape
             with get () : string =
                 if this.Session.Intercepting then
@@ -24036,11 +25591,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_shape" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.shape" (NativeDom.rv_dom_html_anchor_element_set_shape (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.shape" (NativeDom.rv_dom_html_anchor_element_set_shape (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.shape" (NativeDom.rv_dom_html_anchor_element_set_shape (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.shape" (NativeDom.rv_dom_html_anchor_element_set_shape (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``type``
             with get () : string =
                 if this.Session.Intercepting then
@@ -24056,11 +25615,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_type" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.type" (NativeDom.rv_dom_html_anchor_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.type" (NativeDom.rv_dom_html_anchor_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.type" (NativeDom.rv_dom_html_anchor_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.type" (NativeDom.rv_dom_html_anchor_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.text
             with get () : string =
                 if this.Session.Intercepting then
@@ -24076,11 +25639,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_text" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.text" (NativeDom.rv_dom_html_anchor_element_set_text (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.text" (NativeDom.rv_dom_html_anchor_element_set_text (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.text" (NativeDom.rv_dom_html_anchor_element_set_text (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.text" (NativeDom.rv_dom_html_anchor_element_set_text (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.relList
             with get () : Ranvier.Dom.DOMTokenList =
                 if this.Session.Intercepting then
@@ -24110,11 +25677,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_referrerPolicy" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.referrerPolicy" (NativeDom.rv_dom_html_anchor_element_set_referrer_policy (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.referrerPolicy" (NativeDom.rv_dom_html_anchor_element_set_referrer_policy (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.referrerPolicy" (NativeDom.rv_dom_html_anchor_element_set_referrer_policy (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.referrerPolicy" (NativeDom.rv_dom_html_anchor_element_set_referrer_policy (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.origin
             with get () : string =
                 if this.Session.Intercepting then
@@ -24140,11 +25711,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_protocol" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.protocol" (NativeDom.rv_dom_html_anchor_element_set_protocol (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.protocol" (NativeDom.rv_dom_html_anchor_element_set_protocol (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.protocol" (NativeDom.rv_dom_html_anchor_element_set_protocol (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.protocol" (NativeDom.rv_dom_html_anchor_element_set_protocol (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.username
             with get () : string =
                 if this.Session.Intercepting then
@@ -24160,11 +25735,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_username" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.username" (NativeDom.rv_dom_html_anchor_element_set_username (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.username" (NativeDom.rv_dom_html_anchor_element_set_username (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.username" (NativeDom.rv_dom_html_anchor_element_set_username (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.username" (NativeDom.rv_dom_html_anchor_element_set_username (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.password
             with get () : string =
                 if this.Session.Intercepting then
@@ -24180,11 +25759,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_password" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.password" (NativeDom.rv_dom_html_anchor_element_set_password (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.password" (NativeDom.rv_dom_html_anchor_element_set_password (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.password" (NativeDom.rv_dom_html_anchor_element_set_password (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.password" (NativeDom.rv_dom_html_anchor_element_set_password (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.host
             with get () : string =
                 if this.Session.Intercepting then
@@ -24200,11 +25783,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_host" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.host" (NativeDom.rv_dom_html_anchor_element_set_host (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.host" (NativeDom.rv_dom_html_anchor_element_set_host (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.host" (NativeDom.rv_dom_html_anchor_element_set_host (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.host" (NativeDom.rv_dom_html_anchor_element_set_host (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.hostname
             with get () : string =
                 if this.Session.Intercepting then
@@ -24220,11 +25807,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_hostname" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.hostname" (NativeDom.rv_dom_html_anchor_element_set_hostname (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.hostname" (NativeDom.rv_dom_html_anchor_element_set_hostname (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.hostname" (NativeDom.rv_dom_html_anchor_element_set_hostname (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.hostname" (NativeDom.rv_dom_html_anchor_element_set_hostname (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.port
             with get () : string =
                 if this.Session.Intercepting then
@@ -24240,11 +25831,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_port" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.port" (NativeDom.rv_dom_html_anchor_element_set_port (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.port" (NativeDom.rv_dom_html_anchor_element_set_port (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.port" (NativeDom.rv_dom_html_anchor_element_set_port (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.port" (NativeDom.rv_dom_html_anchor_element_set_port (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.pathname
             with get () : string =
                 if this.Session.Intercepting then
@@ -24260,11 +25855,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_pathname" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.pathname" (NativeDom.rv_dom_html_anchor_element_set_pathname (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.pathname" (NativeDom.rv_dom_html_anchor_element_set_pathname (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.pathname" (NativeDom.rv_dom_html_anchor_element_set_pathname (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.pathname" (NativeDom.rv_dom_html_anchor_element_set_pathname (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.search
             with get () : string =
                 if this.Session.Intercepting then
@@ -24280,11 +25879,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_search" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.search" (NativeDom.rv_dom_html_anchor_element_set_search (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.search" (NativeDom.rv_dom_html_anchor_element_set_search (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.search" (NativeDom.rv_dom_html_anchor_element_set_search (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.search" (NativeDom.rv_dom_html_anchor_element_set_search (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.hash
             with get () : string =
                 if this.Session.Intercepting then
@@ -24300,11 +25903,15 @@ and internal HTMLAnchorElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_hash" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAnchorElement.hash" (NativeDom.rv_dom_html_anchor_element_set_hash (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAnchorElement.hash" (NativeDom.rv_dom_html_anchor_element_set_hash (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAnchorElement.hash" (NativeDom.rv_dom_html_anchor_element_set_hash (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAnchorElement.hash" (NativeDom.rv_dom_html_anchor_element_set_hash (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -24324,11 +25931,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_href" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLHyperlinkElementUtils.href" (NativeDom.rv_dom_html_area_element_set_href (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLHyperlinkElementUtils.href" (NativeDom.rv_dom_html_area_element_set_href (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLHyperlinkElementUtils.href" (NativeDom.rv_dom_html_area_element_set_href (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLHyperlinkElementUtils.href" (NativeDom.rv_dom_html_area_element_set_href (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.target
             with get () : string =
                 if this.Session.Intercepting then
@@ -24344,11 +25955,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_target" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLHyperlinkElementUtils.target" (NativeDom.rv_dom_html_area_element_set_target (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLHyperlinkElementUtils.target" (NativeDom.rv_dom_html_area_element_set_target (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLHyperlinkElementUtils.target" (NativeDom.rv_dom_html_area_element_set_target (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLHyperlinkElementUtils.target" (NativeDom.rv_dom_html_area_element_set_target (Interop.handle (box this), nativeString0, nativeString0.Length))
     interface Ranvier.Dom.HTMLAreaElement with
         member this.alt
             with get () : string =
@@ -24365,11 +25980,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_alt" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.alt" (NativeDom.rv_dom_html_area_element_set_alt (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.alt" (NativeDom.rv_dom_html_area_element_set_alt (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.alt" (NativeDom.rv_dom_html_area_element_set_alt (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.alt" (NativeDom.rv_dom_html_area_element_set_alt (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.coords
             with get () : string =
                 if this.Session.Intercepting then
@@ -24385,11 +26004,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_coords" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.coords" (NativeDom.rv_dom_html_area_element_set_coords (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.coords" (NativeDom.rv_dom_html_area_element_set_coords (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.coords" (NativeDom.rv_dom_html_area_element_set_coords (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.coords" (NativeDom.rv_dom_html_area_element_set_coords (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.noHref
             with get () : bool =
                 if this.Session.Intercepting then
@@ -24429,11 +26052,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_rel" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.rel" (NativeDom.rv_dom_html_area_element_set_rel (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.rel" (NativeDom.rv_dom_html_area_element_set_rel (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.rel" (NativeDom.rv_dom_html_area_element_set_rel (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.rel" (NativeDom.rv_dom_html_area_element_set_rel (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.shape
             with get () : string =
                 if this.Session.Intercepting then
@@ -24449,11 +26076,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_shape" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.shape" (NativeDom.rv_dom_html_area_element_set_shape (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.shape" (NativeDom.rv_dom_html_area_element_set_shape (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.shape" (NativeDom.rv_dom_html_area_element_set_shape (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.shape" (NativeDom.rv_dom_html_area_element_set_shape (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.download
             with get () : string =
                 if this.Session.Intercepting then
@@ -24469,11 +26100,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_download" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.download" (NativeDom.rv_dom_html_area_element_set_download (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.download" (NativeDom.rv_dom_html_area_element_set_download (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.download" (NativeDom.rv_dom_html_area_element_set_download (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.download" (NativeDom.rv_dom_html_area_element_set_download (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.referrerPolicy
             with get () : string =
                 if this.Session.Intercepting then
@@ -24489,11 +26124,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_referrerPolicy" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.referrerPolicy" (NativeDom.rv_dom_html_area_element_set_referrer_policy (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.referrerPolicy" (NativeDom.rv_dom_html_area_element_set_referrer_policy (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.referrerPolicy" (NativeDom.rv_dom_html_area_element_set_referrer_policy (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.referrerPolicy" (NativeDom.rv_dom_html_area_element_set_referrer_policy (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.relList
             with get () : Ranvier.Dom.DOMTokenList =
                 if this.Session.Intercepting then
@@ -24533,11 +26172,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_protocol" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.protocol" (NativeDom.rv_dom_html_area_element_set_protocol (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.protocol" (NativeDom.rv_dom_html_area_element_set_protocol (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.protocol" (NativeDom.rv_dom_html_area_element_set_protocol (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.protocol" (NativeDom.rv_dom_html_area_element_set_protocol (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.username
             with get () : string =
                 if this.Session.Intercepting then
@@ -24553,11 +26196,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_username" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.username" (NativeDom.rv_dom_html_area_element_set_username (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.username" (NativeDom.rv_dom_html_area_element_set_username (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.username" (NativeDom.rv_dom_html_area_element_set_username (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.username" (NativeDom.rv_dom_html_area_element_set_username (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.password
             with get () : string =
                 if this.Session.Intercepting then
@@ -24573,11 +26220,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_password" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.password" (NativeDom.rv_dom_html_area_element_set_password (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.password" (NativeDom.rv_dom_html_area_element_set_password (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.password" (NativeDom.rv_dom_html_area_element_set_password (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.password" (NativeDom.rv_dom_html_area_element_set_password (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.host
             with get () : string =
                 if this.Session.Intercepting then
@@ -24593,11 +26244,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_host" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.host" (NativeDom.rv_dom_html_area_element_set_host (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.host" (NativeDom.rv_dom_html_area_element_set_host (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.host" (NativeDom.rv_dom_html_area_element_set_host (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.host" (NativeDom.rv_dom_html_area_element_set_host (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.hostname
             with get () : string =
                 if this.Session.Intercepting then
@@ -24613,11 +26268,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_hostname" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.hostname" (NativeDom.rv_dom_html_area_element_set_hostname (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.hostname" (NativeDom.rv_dom_html_area_element_set_hostname (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.hostname" (NativeDom.rv_dom_html_area_element_set_hostname (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.hostname" (NativeDom.rv_dom_html_area_element_set_hostname (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.port
             with get () : string =
                 if this.Session.Intercepting then
@@ -24633,11 +26292,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_port" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.port" (NativeDom.rv_dom_html_area_element_set_port (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.port" (NativeDom.rv_dom_html_area_element_set_port (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.port" (NativeDom.rv_dom_html_area_element_set_port (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.port" (NativeDom.rv_dom_html_area_element_set_port (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.pathname
             with get () : string =
                 if this.Session.Intercepting then
@@ -24653,11 +26316,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_pathname" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.pathname" (NativeDom.rv_dom_html_area_element_set_pathname (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.pathname" (NativeDom.rv_dom_html_area_element_set_pathname (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.pathname" (NativeDom.rv_dom_html_area_element_set_pathname (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.pathname" (NativeDom.rv_dom_html_area_element_set_pathname (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.search
             with get () : string =
                 if this.Session.Intercepting then
@@ -24673,11 +26340,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_search" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.search" (NativeDom.rv_dom_html_area_element_set_search (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.search" (NativeDom.rv_dom_html_area_element_set_search (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.search" (NativeDom.rv_dom_html_area_element_set_search (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.search" (NativeDom.rv_dom_html_area_element_set_search (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.hash
             with get () : string =
                 if this.Session.Intercepting then
@@ -24693,11 +26364,15 @@ and internal HTMLAreaElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_hash" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLAreaElement.hash" (NativeDom.rv_dom_html_area_element_set_hash (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLAreaElement.hash" (NativeDom.rv_dom_html_area_element_set_hash (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLAreaElement.hash" (NativeDom.rv_dom_html_area_element_set_hash (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLAreaElement.hash" (NativeDom.rv_dom_html_area_element_set_hash (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLAudioElementObject(session: Session, handle: nativeint) =
     inherit HTMLMediaElementObject(session, handle)
@@ -24745,11 +26420,15 @@ and internal HTMLButtonElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_popoverTargetAction" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "PopoverTargetAttributes.popoverTargetAction" (NativeDom.rv_dom_html_button_element_set_popover_target_action (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "PopoverTargetAttributes.popoverTargetAction" (NativeDom.rv_dom_html_button_element_set_popover_target_action (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "PopoverTargetAttributes.popoverTargetAction" (NativeDom.rv_dom_html_button_element_set_popover_target_action (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "PopoverTargetAttributes.popoverTargetAction" (NativeDom.rv_dom_html_button_element_set_popover_target_action (Interop.handle (box this), nativeString0, nativeString0.Length))
     interface Ranvier.Dom.HTMLButtonElement with
         member this.disabled
             with get () : bool =
@@ -24804,11 +26483,15 @@ and internal HTMLButtonElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_formAction" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLButtonElement.formAction" (NativeDom.rv_dom_html_button_element_set_form_action (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLButtonElement.formAction" (NativeDom.rv_dom_html_button_element_set_form_action (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLButtonElement.formAction" (NativeDom.rv_dom_html_button_element_set_form_action (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLButtonElement.formAction" (NativeDom.rv_dom_html_button_element_set_form_action (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.formEnctype
             with get () : string =
                 if this.Session.Intercepting then
@@ -24824,11 +26507,15 @@ and internal HTMLButtonElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_formEnctype" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLButtonElement.formEnctype" (NativeDom.rv_dom_html_button_element_set_form_enctype (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLButtonElement.formEnctype" (NativeDom.rv_dom_html_button_element_set_form_enctype (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLButtonElement.formEnctype" (NativeDom.rv_dom_html_button_element_set_form_enctype (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLButtonElement.formEnctype" (NativeDom.rv_dom_html_button_element_set_form_enctype (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.formMethod
             with get () : string =
                 if this.Session.Intercepting then
@@ -24844,11 +26531,15 @@ and internal HTMLButtonElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_formMethod" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLButtonElement.formMethod" (NativeDom.rv_dom_html_button_element_set_form_method (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLButtonElement.formMethod" (NativeDom.rv_dom_html_button_element_set_form_method (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLButtonElement.formMethod" (NativeDom.rv_dom_html_button_element_set_form_method (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLButtonElement.formMethod" (NativeDom.rv_dom_html_button_element_set_form_method (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``type``
             with get () : string =
                 if this.Session.Intercepting then
@@ -24864,11 +26555,15 @@ and internal HTMLButtonElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_type" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLButtonElement.type" (NativeDom.rv_dom_html_button_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLButtonElement.type" (NativeDom.rv_dom_html_button_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLButtonElement.type" (NativeDom.rv_dom_html_button_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLButtonElement.type" (NativeDom.rv_dom_html_button_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.formNoValidate
             with get () : bool =
                 if this.Session.Intercepting then
@@ -24908,11 +26603,15 @@ and internal HTMLButtonElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_formTarget" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLButtonElement.formTarget" (NativeDom.rv_dom_html_button_element_set_form_target (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLButtonElement.formTarget" (NativeDom.rv_dom_html_button_element_set_form_target (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLButtonElement.formTarget" (NativeDom.rv_dom_html_button_element_set_form_target (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLButtonElement.formTarget" (NativeDom.rv_dom_html_button_element_set_form_target (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.name
             with get () : string =
                 if this.Session.Intercepting then
@@ -24928,11 +26627,15 @@ and internal HTMLButtonElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_name" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLButtonElement.name" (NativeDom.rv_dom_html_button_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLButtonElement.name" (NativeDom.rv_dom_html_button_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLButtonElement.name" (NativeDom.rv_dom_html_button_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLButtonElement.name" (NativeDom.rv_dom_html_button_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.value
             with get () : string =
                 if this.Session.Intercepting then
@@ -24948,11 +26651,15 @@ and internal HTMLButtonElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_value" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLButtonElement.value" (NativeDom.rv_dom_html_button_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLButtonElement.value" (NativeDom.rv_dom_html_button_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLButtonElement.value" (NativeDom.rv_dom_html_button_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLButtonElement.value" (NativeDom.rv_dom_html_button_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.commandForElement
             with get () : Ranvier.Dom.Element =
                 if this.Session.Intercepting then
@@ -24992,11 +26699,15 @@ and internal HTMLButtonElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_command" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLButtonElement.command" (NativeDom.rv_dom_html_button_element_set_command (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLButtonElement.command" (NativeDom.rv_dom_html_button_element_set_command (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLButtonElement.command" (NativeDom.rv_dom_html_button_element_set_command (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLButtonElement.command" (NativeDom.rv_dom_html_button_element_set_command (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.willValidate
             with get () : bool =
                 if this.Session.Intercepting then
@@ -25080,11 +26791,15 @@ and internal HTMLButtonElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "setCustomValidity" [| box error |] (fun args ->
                     let error: string = unbox args[0]
                     let result =
-                        Interop.check "HTMLButtonElement.setCustomValidity" (NativeDom.rv_dom_html_button_element_set_custom_validity (Interop.handle (box this), (if isNull error then "" else error)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(error)
+                        Interop.check "HTMLButtonElement.setCustomValidity" (NativeDom.rv_dom_html_button_element_set_custom_validity (Interop.handle (box this), nativeString0, nativeString0.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "HTMLButtonElement.setCustomValidity" (NativeDom.rv_dom_html_button_element_set_custom_validity (Interop.handle (box this), (if isNull error then "" else error)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(error)
+                Interop.check "HTMLButtonElement.setCustomValidity" (NativeDom.rv_dom_html_button_element_set_custom_validity (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLInputElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -25128,11 +26843,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_popoverTargetAction" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "PopoverTargetAttributes.popoverTargetAction" (NativeDom.rv_dom_html_input_element_set_popover_target_action (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "PopoverTargetAttributes.popoverTargetAction" (NativeDom.rv_dom_html_input_element_set_popover_target_action (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "PopoverTargetAttributes.popoverTargetAction" (NativeDom.rv_dom_html_input_element_set_popover_target_action (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "PopoverTargetAttributes.popoverTargetAction" (NativeDom.rv_dom_html_input_element_set_popover_target_action (Interop.handle (box this), nativeString0, nativeString0.Length))
     interface Ranvier.Dom.HTMLInputElement with
         member this.accept
             with get () : string =
@@ -25149,11 +26868,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_accept" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.accept" (NativeDom.rv_dom_html_input_element_set_accept (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.accept" (NativeDom.rv_dom_html_input_element_set_accept (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.accept" (NativeDom.rv_dom_html_input_element_set_accept (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.accept" (NativeDom.rv_dom_html_input_element_set_accept (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.alpha
             with get () : bool =
                 if this.Session.Intercepting then
@@ -25193,11 +26916,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_alt" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.alt" (NativeDom.rv_dom_html_input_element_set_alt (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.alt" (NativeDom.rv_dom_html_input_element_set_alt (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.alt" (NativeDom.rv_dom_html_input_element_set_alt (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.alt" (NativeDom.rv_dom_html_input_element_set_alt (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.autocomplete
             with get () : string =
                 if this.Session.Intercepting then
@@ -25213,11 +26940,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_autocomplete" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.autocomplete" (NativeDom.rv_dom_html_input_element_set_autocomplete (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.autocomplete" (NativeDom.rv_dom_html_input_element_set_autocomplete (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.autocomplete" (NativeDom.rv_dom_html_input_element_set_autocomplete (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.autocomplete" (NativeDom.rv_dom_html_input_element_set_autocomplete (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.defaultChecked
             with get () : bool =
                 if this.Session.Intercepting then
@@ -25281,11 +27012,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_colorSpace" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.colorSpace" (NativeDom.rv_dom_html_input_element_set_color_space (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.colorSpace" (NativeDom.rv_dom_html_input_element_set_color_space (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.colorSpace" (NativeDom.rv_dom_html_input_element_set_color_space (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.colorSpace" (NativeDom.rv_dom_html_input_element_set_color_space (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.dirName
             with get () : string =
                 if this.Session.Intercepting then
@@ -25301,11 +27036,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_dirName" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.dirName" (NativeDom.rv_dom_html_input_element_set_dir_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.dirName" (NativeDom.rv_dom_html_input_element_set_dir_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.dirName" (NativeDom.rv_dom_html_input_element_set_dir_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.dirName" (NativeDom.rv_dom_html_input_element_set_dir_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.disabled
             with get () : bool =
                 if this.Session.Intercepting then
@@ -25383,11 +27122,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_formAction" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.formAction" (NativeDom.rv_dom_html_input_element_set_form_action (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.formAction" (NativeDom.rv_dom_html_input_element_set_form_action (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.formAction" (NativeDom.rv_dom_html_input_element_set_form_action (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.formAction" (NativeDom.rv_dom_html_input_element_set_form_action (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.formEnctype
             with get () : string =
                 if this.Session.Intercepting then
@@ -25403,11 +27146,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_formEnctype" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.formEnctype" (NativeDom.rv_dom_html_input_element_set_form_enctype (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.formEnctype" (NativeDom.rv_dom_html_input_element_set_form_enctype (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.formEnctype" (NativeDom.rv_dom_html_input_element_set_form_enctype (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.formEnctype" (NativeDom.rv_dom_html_input_element_set_form_enctype (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.formMethod
             with get () : string =
                 if this.Session.Intercepting then
@@ -25423,11 +27170,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_formMethod" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.formMethod" (NativeDom.rv_dom_html_input_element_set_form_method (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.formMethod" (NativeDom.rv_dom_html_input_element_set_form_method (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.formMethod" (NativeDom.rv_dom_html_input_element_set_form_method (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.formMethod" (NativeDom.rv_dom_html_input_element_set_form_method (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.formNoValidate
             with get () : bool =
                 if this.Session.Intercepting then
@@ -25467,11 +27218,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_formTarget" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.formTarget" (NativeDom.rv_dom_html_input_element_set_form_target (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.formTarget" (NativeDom.rv_dom_html_input_element_set_form_target (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.formTarget" (NativeDom.rv_dom_html_input_element_set_form_target (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.formTarget" (NativeDom.rv_dom_html_input_element_set_form_target (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.height
             with get () : uint32 =
                 if this.Session.Intercepting then
@@ -25549,11 +27304,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_max" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.max" (NativeDom.rv_dom_html_input_element_set_max (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.max" (NativeDom.rv_dom_html_input_element_set_max (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.max" (NativeDom.rv_dom_html_input_element_set_max (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.max" (NativeDom.rv_dom_html_input_element_set_max (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.minLength
             with get () : int =
                 if this.Session.Intercepting then
@@ -25617,11 +27376,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_min" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.min" (NativeDom.rv_dom_html_input_element_set_min (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.min" (NativeDom.rv_dom_html_input_element_set_min (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.min" (NativeDom.rv_dom_html_input_element_set_min (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.min" (NativeDom.rv_dom_html_input_element_set_min (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.multiple
             with get () : bool =
                 if this.Session.Intercepting then
@@ -25661,11 +27424,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_name" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.name" (NativeDom.rv_dom_html_input_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.name" (NativeDom.rv_dom_html_input_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.name" (NativeDom.rv_dom_html_input_element_set_name (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.name" (NativeDom.rv_dom_html_input_element_set_name (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.pattern
             with get () : string =
                 if this.Session.Intercepting then
@@ -25681,11 +27448,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_pattern" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.pattern" (NativeDom.rv_dom_html_input_element_set_pattern (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.pattern" (NativeDom.rv_dom_html_input_element_set_pattern (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.pattern" (NativeDom.rv_dom_html_input_element_set_pattern (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.pattern" (NativeDom.rv_dom_html_input_element_set_pattern (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.placeholder
             with get () : string =
                 if this.Session.Intercepting then
@@ -25701,11 +27472,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_placeholder" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.placeholder" (NativeDom.rv_dom_html_input_element_set_placeholder (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.placeholder" (NativeDom.rv_dom_html_input_element_set_placeholder (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.placeholder" (NativeDom.rv_dom_html_input_element_set_placeholder (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.placeholder" (NativeDom.rv_dom_html_input_element_set_placeholder (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.readOnly
             with get () : bool =
                 if this.Session.Intercepting then
@@ -25793,11 +27568,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_src" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.src" (NativeDom.rv_dom_html_input_element_set_src (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.src" (NativeDom.rv_dom_html_input_element_set_src (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.src" (NativeDom.rv_dom_html_input_element_set_src (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.src" (NativeDom.rv_dom_html_input_element_set_src (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.step
             with get () : string =
                 if this.Session.Intercepting then
@@ -25813,11 +27592,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_step" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.step" (NativeDom.rv_dom_html_input_element_set_step (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.step" (NativeDom.rv_dom_html_input_element_set_step (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.step" (NativeDom.rv_dom_html_input_element_set_step (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.step" (NativeDom.rv_dom_html_input_element_set_step (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.switch
             with get () : bool =
                 if this.Session.Intercepting then
@@ -25857,11 +27640,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_type" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.type" (NativeDom.rv_dom_html_input_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.type" (NativeDom.rv_dom_html_input_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.type" (NativeDom.rv_dom_html_input_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.type" (NativeDom.rv_dom_html_input_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.defaultValue
             with get () : string =
                 if this.Session.Intercepting then
@@ -25877,11 +27664,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_defaultValue" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.defaultValue" (NativeDom.rv_dom_html_input_element_set_default_value (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.defaultValue" (NativeDom.rv_dom_html_input_element_set_default_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.defaultValue" (NativeDom.rv_dom_html_input_element_set_default_value (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.defaultValue" (NativeDom.rv_dom_html_input_element_set_default_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.value
             with get () : string =
                 if this.Session.Intercepting then
@@ -25897,11 +27688,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_value" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.value" (NativeDom.rv_dom_html_input_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                            Interop.check "HTMLInputElement.value" (NativeDom.rv_dom_html_input_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.value" (NativeDom.rv_dom_html_input_element_set_value (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
+                    Interop.check "HTMLInputElement.value" (NativeDom.rv_dom_html_input_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.valueAsNumber
             with get () : float =
                 if this.Session.Intercepting then
@@ -26069,11 +27864,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_selectionDirection" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.selectionDirection" (NativeDom.rv_dom_html_input_element_set_selection_direction (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "HTMLInputElement.selectionDirection" (NativeDom.rv_dom_html_input_element_set_selection_direction (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.selectionDirection" (NativeDom.rv_dom_html_input_element_set_selection_direction (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "HTMLInputElement.selectionDirection" (NativeDom.rv_dom_html_input_element_set_selection_direction (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.align
             with get () : string =
                 if this.Session.Intercepting then
@@ -26089,11 +27888,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_align" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.align" (NativeDom.rv_dom_html_input_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.align" (NativeDom.rv_dom_html_input_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.align" (NativeDom.rv_dom_html_input_element_set_align (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.align" (NativeDom.rv_dom_html_input_element_set_align (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.useMap
             with get () : string =
                 if this.Session.Intercepting then
@@ -26109,11 +27912,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_useMap" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.useMap" (NativeDom.rv_dom_html_input_element_set_use_map (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.useMap" (NativeDom.rv_dom_html_input_element_set_use_map (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.useMap" (NativeDom.rv_dom_html_input_element_set_use_map (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.useMap" (NativeDom.rv_dom_html_input_element_set_use_map (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.capture
             with get () : string =
                 if this.Session.Intercepting then
@@ -26129,11 +27936,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_capture" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLInputElement.capture" (NativeDom.rv_dom_html_input_element_set_capture (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLInputElement.capture" (NativeDom.rv_dom_html_input_element_set_capture (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLInputElement.capture" (NativeDom.rv_dom_html_input_element_set_capture (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLInputElement.capture" (NativeDom.rv_dom_html_input_element_set_capture (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.stepUp(?n: int) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "stepUp" [| box n |] (fun args ->
@@ -26185,11 +27996,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "setCustomValidity" [| box error |] (fun args ->
                     let error: string = unbox args[0]
                     let result =
-                        Interop.check "HTMLInputElement.setCustomValidity" (NativeDom.rv_dom_html_input_element_set_custom_validity (Interop.handle (box this), (if isNull error then "" else error)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(error)
+                        Interop.check "HTMLInputElement.setCustomValidity" (NativeDom.rv_dom_html_input_element_set_custom_validity (Interop.handle (box this), nativeString0, nativeString0.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "HTMLInputElement.setCustomValidity" (NativeDom.rv_dom_html_input_element_set_custom_validity (Interop.handle (box this), (if isNull error then "" else error)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(error)
+                Interop.check "HTMLInputElement.setCustomValidity" (NativeDom.rv_dom_html_input_element_set_custom_validity (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``select``() : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "select" [|  |] (fun args ->
@@ -26204,11 +28019,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                 Interop.intercept this "setRangeText" [| box replacement |] (fun args ->
                     let replacement: string = unbox args[0]
                     let result =
-                        Interop.check "HTMLInputElement.setRangeText" (NativeDom.rv_dom_html_input_element_set_range_text_1 (Interop.handle (box this), (if isNull replacement then "" else replacement)))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(replacement)
+                        Interop.check "HTMLInputElement.setRangeText" (NativeDom.rv_dom_html_input_element_set_range_text_1 (Interop.handle (box this), nativeString0, nativeString0.Length))
                     box result)
                 |> ignore
             else
-                Interop.check "HTMLInputElement.setRangeText" (NativeDom.rv_dom_html_input_element_set_range_text_1 (Interop.handle (box this), (if isNull replacement then "" else replacement)))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(replacement)
+                Interop.check "HTMLInputElement.setRangeText" (NativeDom.rv_dom_html_input_element_set_range_text_1 (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.setRangeText(replacement: string, start: uint32, ``end``: uint32, ?selectionMode: string) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "setRangeText" [| box replacement; box start; box ``end``; box selectionMode |] (fun args ->
@@ -26217,11 +28036,17 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     let ``end``: uint32 = unbox args[2]
                     let selectionMode: string option = unbox args[3]
                     let result =
-                        Interop.check "HTMLInputElement.setRangeText" (NativeDom.rv_dom_html_input_element_set_range_text_4 (Interop.handle (box this), (if isNull replacement then "" else replacement), uint32 start, uint32 ``end``, Option.toObj selectionMode))
+                        use scope = new InputScope()
+                        let nativeString0 = scope.Bytes(replacement)
+                        let nativeString3 = (match selectionMode with Some x -> scope.Bytes(x) | None -> null)
+                        Interop.check "HTMLInputElement.setRangeText" (NativeDom.rv_dom_html_input_element_set_range_text_4 (Interop.handle (box this), nativeString0, nativeString0.Length, uint32 start, uint32 ``end``, nativeString3, (if isNull nativeString3 then -1 else nativeString3.Length)))
                     box result)
                 |> ignore
             else
-                Interop.check "HTMLInputElement.setRangeText" (NativeDom.rv_dom_html_input_element_set_range_text_4 (Interop.handle (box this), (if isNull replacement then "" else replacement), uint32 start, uint32 ``end``, Option.toObj selectionMode))
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(replacement)
+                let nativeString3 = (match selectionMode with Some x -> scope.Bytes(x) | None -> null)
+                Interop.check "HTMLInputElement.setRangeText" (NativeDom.rv_dom_html_input_element_set_range_text_4 (Interop.handle (box this), nativeString0, nativeString0.Length, uint32 start, uint32 ``end``, nativeString3, (if isNull nativeString3 then -1 else nativeString3.Length)))
         member this.setSelectionRange(start: uint32, ``end``: uint32, ?direction: string) : unit =
             if this.Session.Intercepting then
                 Interop.intercept this "setSelectionRange" [| box start; box ``end``; box direction |] (fun args ->
@@ -26229,11 +28054,15 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                     let ``end``: uint32 = unbox args[1]
                     let direction: string option = unbox args[2]
                     let result =
-                        Interop.check "HTMLInputElement.setSelectionRange" (NativeDom.rv_dom_html_input_element_set_selection_range (Interop.handle (box this), uint32 start, uint32 ``end``, Option.toObj direction))
+                        use scope = new InputScope()
+                        let nativeString2 = (match direction with Some x -> scope.Bytes(x) | None -> null)
+                        Interop.check "HTMLInputElement.setSelectionRange" (NativeDom.rv_dom_html_input_element_set_selection_range (Interop.handle (box this), uint32 start, uint32 ``end``, nativeString2, (if isNull nativeString2 then -1 else nativeString2.Length)))
                     box result)
                 |> ignore
             else
-                Interop.check "HTMLInputElement.setSelectionRange" (NativeDom.rv_dom_html_input_element_set_selection_range (Interop.handle (box this), uint32 start, uint32 ``end``, Option.toObj direction))
+                use scope = new InputScope()
+                let nativeString2 = (match direction with Some x -> scope.Bytes(x) | None -> null)
+                Interop.check "HTMLInputElement.setSelectionRange" (NativeDom.rv_dom_html_input_element_set_selection_range (Interop.handle (box this), uint32 start, uint32 ``end``, nativeString2, (if isNull nativeString2 then -1 else nativeString2.Length)))
 
 and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -26268,11 +28097,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_href" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.href" (NativeDom.rv_dom_html_link_element_set_href (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLinkElement.href" (NativeDom.rv_dom_html_link_element_set_href (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.href" (NativeDom.rv_dom_html_link_element_set_href (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLinkElement.href" (NativeDom.rv_dom_html_link_element_set_href (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.crossOrigin
             with get () : string =
                 if this.Session.Intercepting then
@@ -26288,11 +28121,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_crossOrigin" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.crossOrigin" (NativeDom.rv_dom_html_link_element_set_cross_origin (Interop.handle (box this), value))
+                            use scope = new InputScope()
+                            let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                            Interop.check "HTMLLinkElement.crossOrigin" (NativeDom.rv_dom_html_link_element_set_cross_origin (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.crossOrigin" (NativeDom.rv_dom_html_link_element_set_cross_origin (Interop.handle (box this), value))
+                    use scope = new InputScope()
+                    let nativeString0 = (if isNull value then null else scope.Bytes(value))
+                    Interop.check "HTMLLinkElement.crossOrigin" (NativeDom.rv_dom_html_link_element_set_cross_origin (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
         member this.rel
             with get () : string =
                 if this.Session.Intercepting then
@@ -26308,11 +28145,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_rel" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.rel" (NativeDom.rv_dom_html_link_element_set_rel (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLinkElement.rel" (NativeDom.rv_dom_html_link_element_set_rel (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.rel" (NativeDom.rv_dom_html_link_element_set_rel (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLinkElement.rel" (NativeDom.rv_dom_html_link_element_set_rel (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``as``
             with get () : string =
                 if this.Session.Intercepting then
@@ -26328,11 +28169,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_as" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.as" (NativeDom.rv_dom_html_link_element_set_as (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLinkElement.as" (NativeDom.rv_dom_html_link_element_set_as (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.as" (NativeDom.rv_dom_html_link_element_set_as (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLinkElement.as" (NativeDom.rv_dom_html_link_element_set_as (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.relList
             with get () : Ranvier.Dom.DOMTokenList =
                 if this.Session.Intercepting then
@@ -26362,11 +28207,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_media" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.media" (NativeDom.rv_dom_html_link_element_set_media (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLinkElement.media" (NativeDom.rv_dom_html_link_element_set_media (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.media" (NativeDom.rv_dom_html_link_element_set_media (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLinkElement.media" (NativeDom.rv_dom_html_link_element_set_media (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.integrity
             with get () : string =
                 if this.Session.Intercepting then
@@ -26382,11 +28231,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_integrity" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.integrity" (NativeDom.rv_dom_html_link_element_set_integrity (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLinkElement.integrity" (NativeDom.rv_dom_html_link_element_set_integrity (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.integrity" (NativeDom.rv_dom_html_link_element_set_integrity (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLinkElement.integrity" (NativeDom.rv_dom_html_link_element_set_integrity (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.hreflang
             with get () : string =
                 if this.Session.Intercepting then
@@ -26402,11 +28255,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_hreflang" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.hreflang" (NativeDom.rv_dom_html_link_element_set_hreflang (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLinkElement.hreflang" (NativeDom.rv_dom_html_link_element_set_hreflang (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.hreflang" (NativeDom.rv_dom_html_link_element_set_hreflang (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLinkElement.hreflang" (NativeDom.rv_dom_html_link_element_set_hreflang (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``type``
             with get () : string =
                 if this.Session.Intercepting then
@@ -26422,11 +28279,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_type" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.type" (NativeDom.rv_dom_html_link_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLinkElement.type" (NativeDom.rv_dom_html_link_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.type" (NativeDom.rv_dom_html_link_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLinkElement.type" (NativeDom.rv_dom_html_link_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.sizes
             with get () : Ranvier.Dom.DOMTokenList =
                 if this.Session.Intercepting then
@@ -26456,11 +28317,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_imageSrcset" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.imageSrcset" (NativeDom.rv_dom_html_link_element_set_image_srcset (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLinkElement.imageSrcset" (NativeDom.rv_dom_html_link_element_set_image_srcset (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.imageSrcset" (NativeDom.rv_dom_html_link_element_set_image_srcset (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLinkElement.imageSrcset" (NativeDom.rv_dom_html_link_element_set_image_srcset (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.imageSizes
             with get () : string =
                 if this.Session.Intercepting then
@@ -26476,11 +28341,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_imageSizes" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.imageSizes" (NativeDom.rv_dom_html_link_element_set_image_sizes (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLinkElement.imageSizes" (NativeDom.rv_dom_html_link_element_set_image_sizes (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.imageSizes" (NativeDom.rv_dom_html_link_element_set_image_sizes (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLinkElement.imageSizes" (NativeDom.rv_dom_html_link_element_set_image_sizes (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.referrerPolicy
             with get () : string =
                 if this.Session.Intercepting then
@@ -26496,11 +28365,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_referrerPolicy" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.referrerPolicy" (NativeDom.rv_dom_html_link_element_set_referrer_policy (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLinkElement.referrerPolicy" (NativeDom.rv_dom_html_link_element_set_referrer_policy (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.referrerPolicy" (NativeDom.rv_dom_html_link_element_set_referrer_policy (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLinkElement.referrerPolicy" (NativeDom.rv_dom_html_link_element_set_referrer_policy (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.blocking
             with get () : Ranvier.Dom.DOMTokenList =
                 if this.Session.Intercepting then
@@ -26554,11 +28427,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_fetchPriority" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.fetchPriority" (NativeDom.rv_dom_html_link_element_set_fetch_priority (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLinkElement.fetchPriority" (NativeDom.rv_dom_html_link_element_set_fetch_priority (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.fetchPriority" (NativeDom.rv_dom_html_link_element_set_fetch_priority (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLinkElement.fetchPriority" (NativeDom.rv_dom_html_link_element_set_fetch_priority (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.charset
             with get () : string =
                 if this.Session.Intercepting then
@@ -26574,11 +28451,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_charset" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.charset" (NativeDom.rv_dom_html_link_element_set_charset (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLinkElement.charset" (NativeDom.rv_dom_html_link_element_set_charset (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.charset" (NativeDom.rv_dom_html_link_element_set_charset (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLinkElement.charset" (NativeDom.rv_dom_html_link_element_set_charset (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.rev
             with get () : string =
                 if this.Session.Intercepting then
@@ -26594,11 +28475,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_rev" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.rev" (NativeDom.rv_dom_html_link_element_set_rev (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLinkElement.rev" (NativeDom.rv_dom_html_link_element_set_rev (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.rev" (NativeDom.rv_dom_html_link_element_set_rev (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLinkElement.rev" (NativeDom.rv_dom_html_link_element_set_rev (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.target
             with get () : string =
                 if this.Session.Intercepting then
@@ -26614,11 +28499,15 @@ and internal HTMLLinkElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_target" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLLinkElement.target" (NativeDom.rv_dom_html_link_element_set_target (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLLinkElement.target" (NativeDom.rv_dom_html_link_element_set_target (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLLinkElement.target" (NativeDom.rv_dom_html_link_element_set_target (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLLinkElement.target" (NativeDom.rv_dom_html_link_element_set_target (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLStyleElementObject(session: Session, handle: nativeint) =
     inherit HTMLElementObject(session, handle)
@@ -26677,11 +28566,15 @@ and internal HTMLStyleElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_media" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLStyleElement.media" (NativeDom.rv_dom_html_style_element_set_media (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLStyleElement.media" (NativeDom.rv_dom_html_style_element_set_media (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLStyleElement.media" (NativeDom.rv_dom_html_style_element_set_media (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLStyleElement.media" (NativeDom.rv_dom_html_style_element_set_media (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``type``
             with get () : string =
                 if this.Session.Intercepting then
@@ -26697,11 +28590,15 @@ and internal HTMLStyleElementObject(session: Session, handle: nativeint) =
                     Interop.intercept this "set_type" [| box value |] (fun args ->
                         let value: string = unbox args[0]
                         let result =
-                            Interop.check "HTMLStyleElement.type" (NativeDom.rv_dom_html_style_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                            use scope = new InputScope()
+                            let nativeString0 = scope.Bytes(value)
+                            Interop.check "HTMLStyleElement.type" (NativeDom.rv_dom_html_style_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
-                    Interop.check "HTMLStyleElement.type" (NativeDom.rv_dom_html_style_element_set_type (Interop.handle (box this), (if isNull value then "" else value)))
+                    use scope = new InputScope()
+                    let nativeString0 = scope.Bytes(value)
+                    Interop.check "HTMLStyleElement.type" (NativeDom.rv_dom_html_style_element_set_type (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.blocking
             with get () : Ranvier.Dom.DOMTokenList =
                 if this.Session.Intercepting then
