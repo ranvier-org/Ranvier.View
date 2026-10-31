@@ -29,6 +29,11 @@
     <Compile Include="SvgText.fs" />
     <Compile Include="SvgViewSelection.fs" />
     <Compile Include="SvgAnimations.fs" />
+    <Compile Include="SvgChecks.fs" />
+    <Compile Include="SvgPaintServers.fs" />
+    <Compile Include="SvgFilters.fs" />
+    <Compile Include="SvgClipping.fs" />
+    <Compile Include="SvgResources.fs" />
     <Compile Include="TypedStyles.fs" />
     <Compile Include="FragmentRectangles.fs" />
     <Compile Include="FontTransitionRules.fs" />
