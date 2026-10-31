@@ -1,4 +1,4 @@
-237 classes; 2607 members: 2587 mapped to 2507 of 2586 rv_dom_* functions, 20 hand-written, 0 unmapped
+238 classes; 2623 members: 2594 mapped to 2514 of 2594 rv_dom_* functions, 29 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_blob_create: Blob.constructor (op)
@@ -74,6 +74,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_window_get_computed_style: DOMWindow.getComputedStyle (op)
   rv_dom_window_get_scroll_x: DOMWindow.scrollX (op)
   rv_dom_window_get_scroll_y: DOMWindow.scrollY (op)
+  rv_dom_window_get_visual_viewport: DOMWindow.visualViewport (op)
   rv_dom_window_scroll_1: DOMWindow.scroll (op)
   rv_dom_window_scroll_2: DOMWindow.scroll (op)
   rv_dom_window_scroll_by_1: DOMWindow.scrollBy (op)
@@ -320,6 +321,7 @@ Members by class (mapped / hand-written / unmapped):
   URLPatternObject: 12 / 0 / 0
   URLSearchParamsObject: 9 / 0 / 0
   ValidityStateObject: 11 / 0 / 0
+  VisualViewportObject: 7 / 9 / 0
   WheelEventObject: 7 / 0 / 0
 
 Unmapped members:
