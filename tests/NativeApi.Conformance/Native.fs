@@ -297,6 +297,94 @@ let private runViewport () =
     System.Console.WriteLine $"NATIVE_API G02/G12 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared form fixture with native thread, collection, FormData and event teardown checks.</summary>
+[<Literal>]
+let private FormChecksCount = 67
+
+let private runForms () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                FormChecks.run host.Document (fun () -> Ranvier.View.WebCore.FormData.forHost host) errorName
+
+            use service = Ranvier.View.WebCore.FormData.forHost host
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.Create () |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "FormData rejects another thread"
+            let document = host.Document
+            let form = unbox<Ranvier.Dom.HTMLFormElement> (document.createElement "form")
+            let input = document.createElement "input"
+            input.setAttribute ("name", "kept")
+            input.setAttribute ("value", "v")
+            form.appendChild input |> ignore
+            document.body.appendChild form |> ignore
+            let data = service.FromForm (form, null)
+            let elements = form.elements
+            let submit = service.CreateSubmitEvent ("submit", Ranvier.Dom.EventOptions.Default, null)
+            let event = service.CreateFormDataEvent ("formdata", Ranvier.Dom.EventOptions.Default, data)
+            System.GC.Collect ()
+            System.GC.WaitForPendingFinalizers ()
+            host.Cycle ()
+            RanvierWebCoreAbi.Native.rv_collect_garbage ()
+            expect (service.Entries data = [| { Name = "kept"; Value = Ranvier.Dom.FormDataEntryValue.String "v" } |]) "FormData survives collection"
+            expect (elements.length = 1u) "Form controls collection survives collection"
+            expect (service.Entries event.formData = service.Entries data) "FormDataEvent keeps its FormData"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            expect (service.Get (data, "kept") = Some (Ranvier.Dom.FormDataEntryValue.String "v")) "FormData survives document replacement"
+            held <- Some (data, elements, submit)
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Form fixture leaves no live native objects"
+    let data, elements, submit = held.Value
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    expect (rejected (fun () -> data.append ("k", "v"))) "A held FormData rejects use after host disposal"
+    expect (rejected (fun () -> elements.length |> ignore)) "A held collection rejects use after host disposal"
+    expect (rejected (fun () -> submit.submitter |> ignore)) "A held SubmitEvent rejects use after host disposal"
+
+    if shared <> FormChecksCount then
+        failwith $"Form shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API D13 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API D13 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared custom event fixture with native standalone-target lifetime checks.</summary>
 let private runCustomEvents () =
     let host = WebCoreHost.Create (320, 240)
@@ -649,6 +737,7 @@ let private runAll () =
     runCustomEvents () |> ignore
     runInputState () |> ignore
     runViewport () |> ignore
+    runForms () |> ignore
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
@@ -1618,6 +1707,9 @@ let main args =
         0
     elif Array.contains "--viewport-only" args then
         runViewport () |> ignore
+        0
+    elif Array.contains "--forms-only" args then
+        runForms () |> ignore
         0
     elif Array.contains "--cancellation-only" args then
         runCancellation () |> ignore

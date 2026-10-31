@@ -861,6 +861,15 @@ let runViewport () =
     }
     |> Async.StartAsPromise
 
+/// <summary>Runs the shared form collection, FormData and form event assertions.</summary>
+let runForms () =
+    let document = document ()
+
+    let count =
+        FormChecks.run document (fun () -> BrowserForms.forDocument document) errorName
+
+    {| forms = count |}
+
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {

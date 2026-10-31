@@ -1,4 +1,4 @@
-223 classes; 2514 members: 2494 mapped to 2424 of 2477 rv_dom_* functions, 20 hand-written, 0 unmapped
+228 classes; 2541 members: 2521 mapped to 2443 of 2502 rv_dom_* functions, 20 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
@@ -25,6 +25,10 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_document_create_tree_walker: Document.createTreeWalker (op)
   rv_dom_document_get_adopted_style_sheets: Document.adoptedStyleSheets (get)
   rv_dom_document_set_adopted_style_sheets: Document.adoptedStyleSheets (set)
+  rv_dom_dom_form_data_create: DOMFormData.constructor (op)
+  rv_dom_dom_form_data_entries: DOMFormData.entries (op)
+  rv_dom_dom_form_data_get: DOMFormData.get (op)
+  rv_dom_dom_form_data_get_all: DOMFormData.getAll (op)
   rv_dom_dom_matrix_create: DOMMatrix.constructor (op)
   rv_dom_dom_matrix_from_matrix: DOMMatrix.fromMatrix (op)
   rv_dom_dom_matrix_read_only_create: DOMMatrixReadOnly.constructor (op)
@@ -43,6 +47,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_event_get_current_target: Event.currentTarget (get)
   rv_dom_event_get_target: Event.target (get)
   rv_dom_focus_event_get_related_target: FocusEvent.relatedTarget (get)
+  rv_dom_form_data_event_create: FormDataEvent.constructor (op)
   rv_dom_html_select_element_remove_0: HTMLSelectElement.remove (op)
   rv_dom_input_event_get_data: InputEvent.data (get)
   rv_dom_input_event_get_input_type: InputEvent.inputType (get)
@@ -52,6 +57,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_shadow_root_get_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (get)
   rv_dom_shadow_root_set_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (set)
   rv_dom_style_property_map_read_only_entries: StylePropertyMapReadOnly.entries (op)
+  rv_dom_submit_event_create: SubmitEvent.constructor (op)
   rv_dom_tree_walker_get_filter: TreeWalker.filter (get)
   rv_dom_window_get_computed_style: DOMWindow.getComputedStyle (op)
 
@@ -104,6 +110,7 @@ Members by class (mapped / hand-written / unmapped):
   CSSViewTransitionRuleObject: 2 / 0 / 0
   CharacterDataObject: 14 / 0 / 0
   CompositionEventObject: 1 / 0 / 0
+  DOMFormDataObject: 4 / 0 / 0
   DOMImplementationObject: 2 / 0 / 0
   DOMMatrixObject: 95 / 0 / 0
   DOMMatrixReadOnlyObject: 39 / 0 / 0
@@ -122,6 +129,7 @@ Members by class (mapped / hand-written / unmapped):
   EventObject: 16 / 2 / 0
   EventTargetObject: 0 / 9 / 0
   FocusEventObject: 0 / 1 / 0
+  FormDataEventObject: 1 / 0 / 0
   HTMLAnchorElementObject: 46 / 0 / 0
   HTMLAreaElementObject: 38 / 0 / 0
   HTMLBRElementObject: 2 / 0 / 0
@@ -139,7 +147,8 @@ Members by class (mapped / hand-written / unmapped):
   HTMLElementObject: 68 / 0 / 0
   HTMLFieldSetElementObject: 13 / 0 / 0
   HTMLFontElementObject: 6 / 0 / 0
-  HTMLFormElementObject: 28 / 0 / 0
+  HTMLFormControlsCollectionObject: 2 / 0 / 0
+  HTMLFormElementObject: 30 / 0 / 0
   HTMLHRElementObject: 10 / 0 / 0
   HTMLHeadingElementObject: 2 / 0 / 0
   HTMLHtmlElementObject: 2 / 0 / 0
@@ -158,6 +167,7 @@ Members by class (mapped / hand-written / unmapped):
   HTMLOListElementObject: 8 / 0 / 0
   HTMLOptGroupElementObject: 4 / 0 / 0
   HTMLOptionElementObject: 14 / 0 / 0
+  HTMLOptionsCollectionObject: 17 / 0 / 0
   HTMLOutputElementObject: 16 / 0 / 0
   HTMLParagraphElementObject: 2 / 0 / 0
   HTMLParamElementObject: 8 / 0 / 0
@@ -276,6 +286,7 @@ Members by class (mapped / hand-written / unmapped):
   StylePropertyMapReadOnlyObject: 4 / 0 / 0
   StyleSheetListObject: 3 / 0 / 0
   StyleSheetObject: 8 / 0 / 0
+  SubmitEventObject: 1 / 0 / 0
   TextObject: 3 / 0 / 0
   TreeWalkerObject: 11 / 1 / 0
   UIEventObject: 6 / 0 / 0

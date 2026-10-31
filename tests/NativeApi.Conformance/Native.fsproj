@@ -62,6 +62,7 @@
     <Compile Include="CustomEvents.fs" />
     <Compile Include="InputStateChecks.fs" />
     <Compile Include="ViewportChecks.fs" />
+    <Compile Include="FormChecks.fs" />
     <Compile Include="../UserTiming/Native.fs" Link="UserTimingNative.fs" />
     <Compile Include="Native.fs" />
     <ProjectReference Include="../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />

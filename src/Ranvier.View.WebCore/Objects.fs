@@ -174,6 +174,9 @@ module internal Kind =
     [<Literal>]
     let TreeWalker = 54
 
+    [<Literal>]
+    let FormData = 55
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -342,6 +345,7 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.EventTarget -> Native.rv_event_target_release handle
         | Kind.NodeIterator -> NativeDom.rv_dom_node_iterator_release handle
         | Kind.TreeWalker -> NativeDom.rv_dom_tree_walker_release handle
+        | Kind.FormData -> NativeDom.rv_dom_dom_form_data_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =

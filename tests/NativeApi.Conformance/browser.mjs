@@ -20,6 +20,7 @@ const resourcesOnly = process.argv.includes('--resources-only');
 const svgPaintOnly = process.argv.includes('--svg-paint-only');
 const inputStateOnly = process.argv.includes('--input-state-only');
 const viewportOnly = process.argv.includes('--viewport-only');
+const formsOnly = process.argv.includes('--forms-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
 const server = createServer(async (request, response) => {
@@ -106,10 +107,25 @@ const runViewport = async () => {
   }
 };
 const VIEWPORT_ASSERTIONS = 44;
+// D13 runs in its own page: the fixture forms submit into a sink frame of that page.
+const runForms = async () => {
+  const formsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await formsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runForms(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.forms !== FORMS_ASSERTIONS) throw new Error(`Form assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API D13 PASS assertions=${result.forms} engine=chromium`);
+  } finally {
+    await formsBrowser.close();
+  }
+};
+const FORMS_ASSERTIONS = 67;
 let browser;
 try {
   if (inputStateOnly) { await runInputState(); process.exitCode = 0; }
   else if (viewportOnly) { await runViewport(); process.exitCode = 0; }
+  else if (formsOnly) { await runForms(); process.exitCode = 0; }
   else {
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
@@ -325,6 +341,7 @@ try {
   }
   await runInputState();
   await runViewport();
+  await runForms();
   }
 } finally {
   if (browser) await browser.close();
