@@ -130,6 +130,8 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
                 match p.FSharp with
                 | "uint32" -> value + "u"
                 | "uint16" -> value + "us"
+                | "int64" -> value + "L"
+                | "uint64" -> value + "UL"
                 | "float" when not (value.Contains ".") -> value + ".0"
                 | "float32" ->
                     (if value.Contains "." then value else value + ".0")
@@ -156,7 +158,12 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
         inner = typeof<string>
         && Metadata.hasText "stringInputs" "utf8-lengths" fn.Descriptor
         ->
-        Ok $"scope.Bytes({v})"
+        if not nullable then
+            Ok $"scope.Bytes({v})"
+        else
+            match fn.Defaults.TryFind p.Name |> Option.bind literal with
+            | Some fallback -> Ok $"scope.Bytes(defaultArg {v} {fallback})"
+            | None -> Ok $"(match {v} with Some x -> scope.Bytes(x) | None -> null)"
     | "int" when mappingKind = "enum" ->
         Input.encode ctx.Input.Model mapping inner (if nullable then "item" else v)
         |> Result.bind (fun expression ->
@@ -339,6 +346,8 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                     "DOMRectReadOnly"
                     "DOMQuad"
                     "CSSOMVariableReferenceValue"
+                    "Blob"
+                    "FileList"
                 ]
         then
             let kind = ctx.Input.Kinds[publicRoot]
@@ -530,7 +539,14 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
                     && Metadata.hasText "stringInputs" "utf8-lengths" fn.Descriptor
                 then
                     let local = $"nativeString{index}"
-                    [ $"let {local} = {expression}" ], [ local; local + ".Length" ]
+
+                    let length =
+                        if expression.EndsWith "| None -> null)" then
+                            $"(if isNull {local} then -1 else {local}.Length)"
+                        else
+                            local + ".Length"
+
+                    [ $"let {local} = {expression}" ], [ local; length ]
                 else
                     [], [ expression ])
 
