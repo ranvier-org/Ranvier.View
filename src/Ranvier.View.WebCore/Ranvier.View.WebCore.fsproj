@@ -83,6 +83,7 @@
         <Compile Include="Crypto.fs" />
         <Compile Include="Screen.fs" />
         <Compile Include="Highlights.fs" />
+        <Compile Include="Diagnostics.fs" />
         <Compile Include="Viewport.fs" />
         <Compile Include="ViewportScroll.fs" />
         <Compile Include="VisualViewport.fs" />
