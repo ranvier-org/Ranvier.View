@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "status": "release-requested",
+  "cohort": "Views 0.1.7 / WebCore and SDL alpha.7",
+  "implementationCommit": "0b56d261163d1b076187ab45fcbec2d6707e1aa9",
+  "implementationPullRequest": "https://github.com/ranvier-org/Ranvier.View/pull/18",
+  "implementationSourceHead": "280db59b8ac49598f94fa92bbcf5b8c0a23e7d9e",
+  "implementationSourceAndSquashTreesEqual": false,
+  "implementationTreeNote": "#34 merged between the reviewed head and the squash, so the squash tree differs; main CI on the squash is the source proof.",
+  "sourceCi": 41180261702,
+  "sourceCiEvent": "push (main, 0b56d261)",
+  "sourcePullRequestCi": 41162870456,
+  "sourceContribution": 41162870477,
+  "sourceCiStatus": "success",
+  "core": {
+    "version": "0.1.0-alpha.17",
+    "source": "d2f24d8c634f9f8b96aba43ece3b13c3ec090c30",
+    "verification": "Fresh official-only normal/traced restore, package-only graph, .NET 8/10 execution, Fable Node and Chromium named lookup (121 each)."
+  },
+  "native": {
+    "version": "0.1.0-preview.17",
+    "abi": 25,
+    "source": "44fe3b4885e60a228abedbfa2afa859fc1ade44a",
+    "verification": "Seven fresh official-only packages, five verified runtime payloads, 14 packaged probes and 5452 Windows packaged API assertions."
+  },
+  "packageAbsence": {
+    "Ranvier.View": "0.1.7 absent on nuget.org",
+    "Ranvier.View.WebCore": "0.1.0-alpha.7 absent on nuget.org",
+    "Ranvier.View.WebCore.Sdl": "0.1.0-alpha.7 absent on nuget.org",
+    "matchingTags": 0
+  },
+  "sourceAndVersionChangesInThisDeclaration": false,
+  "publisherPolicy": "A successful trusted main push whose commit message starts with chore: release publishes its exact CI package artifact using NuGet OIDC.",
+  "remaining": [
+    "Trusted release-declaration main CI and publication.",
+    "Fresh normal/traced package-only JIT, real NativeAOT and Chromium execution of the published cohort.",
+    "Independent full-scope acceptance; the groups remain open."
+  ]
+}
