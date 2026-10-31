@@ -1330,6 +1330,38 @@ let runAnimations () =
 
     {| animations = count |}
 
+[<Emit("$0.constructor.name")>]
+let private eventConstructorName (value: obj) : string = jsNative
+
+/// <summary>Runs the shared animation lifecycle assertions on the browser's promises.</summary>
+let runAnimationLifecycle () =
+    async {
+        let document = document ()
+
+        let! count =
+            AnimationLifecycleChecks.run document (fun () -> BrowserAnimations.forDocument document) { Settle = fun () -> Async.Sleep 16 }
+
+        return {| lifecycle = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared typed animation and transition event assertions.</summary>
+let runAnimationEvents () =
+    async {
+        let document = document ()
+
+        let! count =
+            AnimationEventChecks.run
+                document
+                {
+                    Settle = fun () -> Async.Sleep 16
+                    InterfaceName = fun event -> eventConstructorName (box event)
+                }
+
+        return {| events = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared coordinate assertions, with an iframe's element as the foreign one.</summary>
 let runCoordinates () =
     let document = document ()

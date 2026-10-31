@@ -352,6 +352,23 @@ const runAnimations = async () => {
   }
 };
 const ANIMATION_ASSERTIONS = 110;
+// A03 and A10 run the animation lifecycle and event fixtures in their own pages.
+const runAnimationFixture = async (exportName, key, group, expected) => {
+  const fixtureBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await fixtureBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async (name) => { try { return await (await import('/Browser.js'))[name](); } catch (error) { return { error: String(error?.message ?? error) }; } }, exportName);
+    if (result[key] !== expected) throw new Error(`${group} assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API ${group} PASS assertions=${result[key]} engine=chromium`);
+  } finally {
+    await fixtureBrowser.close();
+  }
+};
+const ANIMATION_LIFECYCLE_ASSERTIONS = 29;
+const ANIMATION_EVENT_ASSERTIONS = 9;
+const runAnimationLifecycle = () => runAnimationFixture('runAnimationLifecycle', 'lifecycle', 'A03', ANIMATION_LIFECYCLE_ASSERTIONS);
+const runAnimationEvents = () => runAnimationFixture('runAnimationEvents', 'events', 'A10', ANIMATION_EVENT_ASSERTIONS);
 // G14 runs the coordinate fixture in its own page.
 const runCoordinates = async () => {
   const coordinatesBrowser = await chromium.launch({ headless: true });
@@ -458,6 +475,8 @@ try {
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
   else if (process.argv.includes('--animations-only')) { await runAnimations(); process.exitCode = 0; }
+  else if (process.argv.includes('--animation-lifecycle-only')) { await runAnimationLifecycle(); process.exitCode = 0; }
+  else if (process.argv.includes('--animation-events-only')) { await runAnimationEvents(); process.exitCode = 0; }
   else if (process.argv.includes('--coordinates-only')) { await runCoordinates(); process.exitCode = 0; }
   else if (screenOnly) { await runScreen(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
@@ -703,6 +722,8 @@ try {
   await runCascade();
   await runCoordinates();
   await runAnimations();
+  await runAnimationLifecycle();
+  await runAnimationEvents();
   await runBlobUrls();
   await runScreen();
   await runEventDetails();

@@ -1,6 +1,7 @@
 namespace Ranvier.View.WebCore
 
 open System
+open System.Collections.Generic
 open System.Runtime.InteropServices
 open Ranvier.Dom
 open RanvierWebCoreAbi
@@ -106,6 +107,39 @@ module Animations =
         value.pseudo_element <- scope.TextInput (Option.ofObj options.pseudoElement)
         value
 
+    /// <summary>Completions of native animation promise operations by context key; the delegate lives with the process.</summary>
+    type private Completions() =
+        let gate = obj ()
+        let handlers = Dictionary<int64, int -> unit>()
+        let mutable next = 0L
+
+        let callback =
+            Native.ResourceCompletion (fun context outcome _ _ ->
+                let handler =
+                    lock gate (fun () ->
+                        match handlers.TryGetValue (int64 context) with
+                        | true, handler ->
+                            handlers.Remove (int64 context) |> ignore
+                            Some handler
+                        | _ -> None)
+
+                handler
+                |> Option.iter (fun handler -> handler outcome))
+
+        member _.Pointer =
+            Marshal.GetFunctionPointerForDelegate<Native.ResourceCompletion> callback
+
+        member _.Add(handler: int -> unit) =
+            lock gate (fun () ->
+                next <- next + 1L
+                handlers[next] <- handler
+                next)
+
+        member _.Remove(key: int64) =
+            lock gate (fun () -> handlers.Remove key |> ignore)
+
+    let private completions = Completions ()
+
     /// <summary>The Web Animations constructors of a native document.</summary>
     let forDocument (document: Document) : AnimationService =
         if isNull (box document) then
@@ -150,6 +184,79 @@ module Animations =
 
         let animation handle =
             session.Track (WebAnimationObject (session, handle)) :> WebAnimation
+
+        // Pending Ready and Finished operations; their completions arrive on the owning thread from rv_run_loop_cycle,
+        // or from rv_resource_release, rv_host_destroy and a new document.
+        let live = HashSet<IDisposable>(HashIdentity.Reference)
+
+        let failure (outcome: int) =
+            match outcome with
+            | 3 -> ResourceFailure.Cancelled
+            | 4 -> ResourceFailure.Invalidated "The animation's document was replaced or destroyed"
+            | 5 -> ResourceFailure.Aborted "AbortError"
+            | other ->
+                ResourceFailure.Invalidated (
+                    "The animation promise ended with outcome "
+                    + string other
+                )
+
+        let observe (target: WebAnimation) (finished: bool) (terminal: ResourceOutcome<WebAnimation> -> unit) : ResourceOperation<WebAnimation> =
+            active () |> ignore
+
+            if isNull (box target) then
+                nullArg "animation"
+
+            let handle = Interop.handle (box target)
+            let mutable operation = 0UL
+
+            let release () =
+                if operation <> 0UL then
+                    let current = operation
+                    operation <- 0UL
+                    Native.rv_resource_release current |> ignore
+
+            let mutable arbiter = Unchecked.defaultof<ResourceArbiter<WebAnimation>>
+
+            arbiter <-
+                new ResourceArbiter<WebAnimation> (
+                    (fun action -> action ()),
+                    (fun outcome ->
+                        live.Remove arbiter |> ignore
+                        release ()
+                        terminal outcome),
+                    release,
+                    ignore
+                )
+
+            let key =
+                completions.Add (fun outcome ->
+                    if outcome = 0 then
+                        arbiter.Settle (ResourceOutcome.Succeeded target)
+                        |> ignore
+                    else
+                        arbiter.Settle (ResourceOutcome.Failed (failure outcome))
+                        |> ignore)
+
+            let pointer = completions.Pointer
+            let mutable token = 0UL
+
+            let status =
+                if finished then
+                    Native.rv_animation_finished (session.Host, handle, pointer, nativeint key, &token)
+                else
+                    Native.rv_animation_ready (session.Host, handle, pointer, nativeint key, &token)
+
+            if status <> 0 then
+                completions.Remove key
+
+                if status = -12 then
+                    invalidArg "animation" "The animation belongs to another document"
+
+                Interop.check (if finished then "Animation.finished" else "Animation.ready") status
+
+            operation <- token
+            live.Add arbiter |> ignore
+            arbiter :> ResourceOperation<_>
 
         let create target frames (options: NativeDom.RvDomUnionUnrestrictedDoubleOrKeyframeEffectOptions) (scope: InputScope) =
             let documentHandle = active ()
@@ -221,8 +328,22 @@ module Animations =
                 session.Object (handle, Kind.AnimationTimeline, owner, Func<Session, nativeint, NativeObject>(fun s h -> Classes.AnimationTimeline (s, h)))
                 |> unbox<DocumentTimeline>
 
+            member _.Ready(target, terminal) =
+                observe target false terminal
+
+            member _.Finished(target, terminal) =
+                observe target true terminal
+
           interface IDisposable with
-              member _.Dispose() = disposed <- true }
+              member _.Dispose() =
+                  if not disposed then
+                      disposed <- true
+
+                      for operation in List.ofSeq live do
+                          operation.Dispose ()
+
+                      live.Clear ()
+        }
 
     /// <summary>Creates a borrowed animation provider bound to the live host's document.</summary>
     let forHost (host: WebCoreHost) : AnimationService =

@@ -50,6 +50,7 @@ module BlobUrls =
         match outcome with
         | 3 -> ResourceFailure.Cancelled
         | 4 -> ResourceFailure.Invalidated "The blob read's document was replaced or destroyed"
+        | 5 -> ResourceFailure.Aborted "AbortError"
         | _ -> ResourceFailure.LoadFailed (if isNull error then "The blob read failed" else error)
 
     let private result (operation: uint64) =

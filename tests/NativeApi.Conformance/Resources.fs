@@ -43,6 +43,7 @@ let rec private describe (value: obj) : string =
         | ResourceFailure.DecodeFailed message -> "DecodeFailed " + message
         | ResourceFailure.Cancelled -> "Cancelled"
         | ResourceFailure.Invalidated reason -> "Invalidated " + reason
+        | ResourceFailure.Aborted name -> "Aborted " + name
     | :? ResourceFont as font -> "Font " + font.Family
     | :? ResourceImage as image ->
         "Image "

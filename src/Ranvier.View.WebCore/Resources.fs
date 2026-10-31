@@ -15,6 +15,7 @@ module Resources =
         | 1 -> ResourceFailure.LoadFailed (kind + " load failed")
         | 2 -> ResourceFailure.DecodeFailed (kind + " decode failed")
         | 3 -> ResourceFailure.Cancelled
+        | 5 -> ResourceFailure.Aborted "AbortError"
         | _ -> ResourceFailure.Invalidated (kind + " source, target or document changed")
 
     let private copy (response: ResourceResponse) =

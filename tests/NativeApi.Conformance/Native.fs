@@ -2158,6 +2158,132 @@ let private runAnimations () =
     System.Console.WriteLine $"NATIVE_API A01 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Drives a shared async fixture on the host until it completes.</summary>
+let private drive (host: WebCoreHost) (work: Async<int>) =
+    let task = work |> Async.StartImmediateAsTask
+    let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+    while not task.IsCompleted
+          && timeout.ElapsedMilliseconds < 120000L do
+        host.Cycle () |> ignore
+
+    task.GetAwaiter().GetResult()
+
+let private settleFrame (host: WebCoreHost) () =
+    async {
+        host.Cycle () |> ignore
+        host.Frame ()
+        host.Cycle () |> ignore
+        System.Threading.Thread.Sleep 2
+    }
+
+/// <summary>Runs the shared animation lifecycle fixture with native host, thread and invalidation checks.</summary>
+[<Literal>]
+let private AnimationLifecycleChecksCount = 29
+
+let private runAnimationLifecycle () =
+    let host = WebCoreHost.Create (320, 240)
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let shared =
+        try
+            AnimationLifecycleChecks.run host.Document (fun () -> Ranvier.View.WebCore.Animations.forHost host) { Settle = settleFrame host }
+            |> drive host
+        with error ->
+            (host :> System.IDisposable).Dispose()
+            raise error
+
+    let service = Ranvier.View.WebCore.Animations.forHost host
+    let animation = host.Document.body.animate ([||], 100000.0)
+
+    let wrongThread =
+        System.Threading.Tasks.Task
+            .Run(fun () ->
+                try
+                    service.Ready (animation, ignore) |> ignore
+                    false
+                with :? System.InvalidOperationException ->
+                    true)
+            .GetAwaiter()
+            .GetResult()
+
+    expect wrongThread "Animation.ready rejects another thread"
+    let other = WebCoreHost.Create (64, 64)
+    let foreign = other.Document.body.animate ([||], 1000.0)
+
+    let wrongHost =
+        try
+            service.Finished (foreign, ignore) |> ignore
+            false
+        with :? System.ArgumentException ->
+            true
+
+    expect wrongHost "Animation.finished rejects an animation of another document"
+    (other :> System.IDisposable).Dispose()
+    let outcomes = System.Collections.Generic.List<string>()
+
+    let pending =
+        service.Finished (
+            animation,
+            fun outcome ->
+                outcomes.Add (
+                    match outcome with
+                    | Ranvier.Dom.ResourceOutcome.Failed (Ranvier.Dom.ResourceFailure.Invalidated _) -> "invalidated"
+                    | other -> string other
+                )
+        )
+
+    (host :> System.IDisposable).Dispose()
+    expect (List.ofSeq outcomes = [ "invalidated" ]) "Host disposal invalidates a pending Animation.finished"
+    pending.Dispose ()
+    expect (outcomes.Count = 1) "Disposing an invalidated operation delivers nothing more"
+    service.Dispose ()
+
+    if shared <> AnimationLifecycleChecksCount then
+        failwith $"Animation lifecycle shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API A03 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API A03 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared typed animation and transition event fixture.</summary>
+[<Literal>]
+let private AnimationEventChecksCount = 9
+
+let private runAnimationEvents () =
+    let host = WebCoreHost.Create (320, 240)
+
+    let interfaceName (event: Ranvier.Dom.Event) =
+        match box event with
+        | :? Ranvier.Dom.AnimationPlaybackEvent -> "AnimationPlaybackEvent"
+        | :? Ranvier.Dom.AnimationEvent -> "AnimationEvent"
+        | :? Ranvier.Dom.TransitionEvent -> "TransitionEvent"
+        | value -> value.GetType().Name
+
+    let shared =
+        try
+            AnimationEventChecks.run
+                host.Document
+                {
+                    Settle = settleFrame host
+                    InterfaceName = interfaceName
+                }
+            |> drive host
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    if shared <> AnimationEventChecksCount then
+        failwith $"Animation event shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API A10 PASS assertions={shared}"
+    shared
+
 /// <summary>Runs the shared cascade fixture with native thread, snapshot release and teardown checks.</summary>
 [<Literal>]
 let private CascadeChecksCount = 609
@@ -2874,6 +3000,8 @@ let private runAll () =
     runCascade () |> ignore
     runCoordinates () |> ignore
     runAnimations () |> ignore
+    runAnimationLifecycle () |> ignore
+    runAnimationEvents () |> ignore
     runBlobUrls () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
@@ -3889,6 +4017,12 @@ let main args =
         0
     elif Array.contains "--animations-only" args then
         runAnimations () |> ignore
+        0
+    elif Array.contains "--animation-lifecycle-only" args then
+        runAnimationLifecycle () |> ignore
+        0
+    elif Array.contains "--animation-events-only" args then
+        runAnimationEvents () |> ignore
         0
     elif Array.contains "--coordinates-only" args then
         runCoordinates () |> ignore
