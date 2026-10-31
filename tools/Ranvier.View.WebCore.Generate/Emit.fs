@@ -222,8 +222,19 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
                     "CSSMatrixComponent"
                 ]
 
+        let svgInput = fn.Interface.StartsWith ("SVG", System.StringComparison.Ordinal)
+
         let reference value =
-            if transformInput then
+            if svgInput then
+                let kind =
+                    if mappingKind = "node" then
+                        "Kind.Node"
+                    else
+                        ctx.Input.Kinds[Metadata.publicInterfaceName ctx.Input.Model (Metadata.text "root" mapping)]
+
+                let allowNull = mapping.GetProperty("nullable").GetBoolean()
+                $"Interop.svgHandle this.Session {kind} {allowNull.ToString().ToLowerInvariant()} (box ({value}))"
+            elif transformInput then
                 match Metadata.text "root" mapping with
                 | "CSSStyleValue" -> $"Interop.valueHandle this.Session (box ({value}))"
                 | "CSSTransformComponent" -> $"Interop.transformHandle this.Session Kind.TransformComponent (box ({value}))"
@@ -234,12 +245,12 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
 
         Ok (
             if nullable then
-                if transformInput then
+                if transformInput || svgInput then
                     let expression = reference "value"
                     $"(match {v} with None -> 0n | Some value -> {expression})"
                 else
                     $"Interop.handleOr {v}"
-            else if transformInput then
+            else if transformInput || svgInput then
                 reference v
             else
                 $"Interop.handle (box {v})"
@@ -254,7 +265,15 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
         ->
         Input.encode ctx.Input.Model mapping inner (if nullable then "item" else v)
         |> Result.map (fun expression ->
-            if nullable then
+            if
+                fn.Interface.StartsWith ("SVG", System.StringComparison.Ordinal)
+                && mappingKind = "dict"
+            then
+                if nullable then
+                    $"(match {v} with None -> null | Some item when isNull (box item) -> null | Some item -> [| {expression} |])"
+                else
+                    $"(if isNull (box {v}) then null else [| {expression} |])"
+            elif nullable then
                 $"(match {v} with None -> null | Some item -> [| {expression} |])"
             else
                 $"[| {expression} |]")
@@ -306,6 +325,8 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
 
         if
             query.IsSome
+            || (root.StartsWith ("SVG", System.StringComparison.Ordinal)
+                && ctx.Input.Kinds.ContainsKey publicRoot)
             || List.contains
                 root
                 [
@@ -631,7 +652,10 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
             let lines = preparation @ lines
 
             if
-                List.contains
+                (fn.Interface.StartsWith ("SVG", System.StringComparison.Ordinal)
+                 && fn.Interface <> "SVGElement"
+                 && fn.Interface <> "SVGStyleElement")
+                || List.contains
                     fn.Interface
                     [
                         "CSSTransformValue"
