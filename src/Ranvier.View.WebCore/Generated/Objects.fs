@@ -7325,7 +7325,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                             let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable>
                             try
                                 Interop.check "ARIAMixin.ariaActionsElements" (NativeDom.rv_dom_element_get_aria_actions_elements (Interop.handle (box this), &result))
-                                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))))
+                                (if result.present = 0 then null else (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle)))))
                             finally
                                 NativeDom.rv_dom_sequence_element_nullable_release(&result)
                         box result)
@@ -7334,7 +7334,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable>
                     try
                         Interop.check "ARIAMixin.ariaActionsElements" (NativeDom.rv_dom_element_get_aria_actions_elements (Interop.handle (box this), &result))
-                        (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))))
+                        (if result.present = 0 then null else (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle)))))
                     finally
                         NativeDom.rv_dom_sequence_element_nullable_release(&result)
             and set (value: Ranvier.Dom.Element array) =
@@ -7343,12 +7343,12 @@ and internal ElementObject(session: Session, handle: nativeint) =
                         let value: Ranvier.Dom.Element array = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            Interop.check "ARIAMixin.ariaActionsElements" (NativeDom.rv_dom_element_set_aria_actions_elements (Interop.handle (box this), [| (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                            Interop.check "ARIAMixin.ariaActionsElements" (NativeDom.rv_dom_element_set_aria_actions_elements (Interop.handle (box this), [| (if isNull (value) then Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> else (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)) |]))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    Interop.check "ARIAMixin.ariaActionsElements" (NativeDom.rv_dom_element_set_aria_actions_elements (Interop.handle (box this), [| (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                    Interop.check "ARIAMixin.ariaActionsElements" (NativeDom.rv_dom_element_set_aria_actions_elements (Interop.handle (box this), [| (if isNull (value) then Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> else (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)) |]))
         member this.ariaAtomic
             with get () : string =
                 if this.Session.Intercepting then
@@ -7557,7 +7557,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                             let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable>
                             try
                                 Interop.check "ARIAMixin.ariaControlsElements" (NativeDom.rv_dom_element_get_aria_controls_elements (Interop.handle (box this), &result))
-                                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))))
+                                (if result.present = 0 then null else (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle)))))
                             finally
                                 NativeDom.rv_dom_sequence_element_nullable_release(&result)
                         box result)
@@ -7566,7 +7566,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable>
                     try
                         Interop.check "ARIAMixin.ariaControlsElements" (NativeDom.rv_dom_element_get_aria_controls_elements (Interop.handle (box this), &result))
-                        (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))))
+                        (if result.present = 0 then null else (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle)))))
                     finally
                         NativeDom.rv_dom_sequence_element_nullable_release(&result)
             and set (value: Ranvier.Dom.Element array) =
@@ -7575,12 +7575,12 @@ and internal ElementObject(session: Session, handle: nativeint) =
                         let value: Ranvier.Dom.Element array = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            Interop.check "ARIAMixin.ariaControlsElements" (NativeDom.rv_dom_element_set_aria_controls_elements (Interop.handle (box this), [| (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                            Interop.check "ARIAMixin.ariaControlsElements" (NativeDom.rv_dom_element_set_aria_controls_elements (Interop.handle (box this), [| (if isNull (value) then Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> else (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)) |]))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    Interop.check "ARIAMixin.ariaControlsElements" (NativeDom.rv_dom_element_set_aria_controls_elements (Interop.handle (box this), [| (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                    Interop.check "ARIAMixin.ariaControlsElements" (NativeDom.rv_dom_element_set_aria_controls_elements (Interop.handle (box this), [| (if isNull (value) then Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> else (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)) |]))
         member this.ariaCurrent
             with get () : string =
                 if this.Session.Intercepting then
@@ -7609,7 +7609,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                             let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable>
                             try
                                 Interop.check "ARIAMixin.ariaDescribedByElements" (NativeDom.rv_dom_element_get_aria_described_by_elements (Interop.handle (box this), &result))
-                                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))))
+                                (if result.present = 0 then null else (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle)))))
                             finally
                                 NativeDom.rv_dom_sequence_element_nullable_release(&result)
                         box result)
@@ -7618,7 +7618,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable>
                     try
                         Interop.check "ARIAMixin.ariaDescribedByElements" (NativeDom.rv_dom_element_get_aria_described_by_elements (Interop.handle (box this), &result))
-                        (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))))
+                        (if result.present = 0 then null else (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle)))))
                     finally
                         NativeDom.rv_dom_sequence_element_nullable_release(&result)
             and set (value: Ranvier.Dom.Element array) =
@@ -7627,12 +7627,12 @@ and internal ElementObject(session: Session, handle: nativeint) =
                         let value: Ranvier.Dom.Element array = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            Interop.check "ARIAMixin.ariaDescribedByElements" (NativeDom.rv_dom_element_set_aria_described_by_elements (Interop.handle (box this), [| (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                            Interop.check "ARIAMixin.ariaDescribedByElements" (NativeDom.rv_dom_element_set_aria_described_by_elements (Interop.handle (box this), [| (if isNull (value) then Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> else (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)) |]))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    Interop.check "ARIAMixin.ariaDescribedByElements" (NativeDom.rv_dom_element_set_aria_described_by_elements (Interop.handle (box this), [| (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                    Interop.check "ARIAMixin.ariaDescribedByElements" (NativeDom.rv_dom_element_set_aria_described_by_elements (Interop.handle (box this), [| (if isNull (value) then Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> else (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)) |]))
         member this.ariaDescription
             with get () : string =
                 if this.Session.Intercepting then
@@ -7661,7 +7661,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                             let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable>
                             try
                                 Interop.check "ARIAMixin.ariaDetailsElements" (NativeDom.rv_dom_element_get_aria_details_elements (Interop.handle (box this), &result))
-                                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))))
+                                (if result.present = 0 then null else (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle)))))
                             finally
                                 NativeDom.rv_dom_sequence_element_nullable_release(&result)
                         box result)
@@ -7670,7 +7670,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable>
                     try
                         Interop.check "ARIAMixin.ariaDetailsElements" (NativeDom.rv_dom_element_get_aria_details_elements (Interop.handle (box this), &result))
-                        (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))))
+                        (if result.present = 0 then null else (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle)))))
                     finally
                         NativeDom.rv_dom_sequence_element_nullable_release(&result)
             and set (value: Ranvier.Dom.Element array) =
@@ -7679,12 +7679,12 @@ and internal ElementObject(session: Session, handle: nativeint) =
                         let value: Ranvier.Dom.Element array = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            Interop.check "ARIAMixin.ariaDetailsElements" (NativeDom.rv_dom_element_set_aria_details_elements (Interop.handle (box this), [| (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                            Interop.check "ARIAMixin.ariaDetailsElements" (NativeDom.rv_dom_element_set_aria_details_elements (Interop.handle (box this), [| (if isNull (value) then Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> else (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)) |]))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    Interop.check "ARIAMixin.ariaDetailsElements" (NativeDom.rv_dom_element_set_aria_details_elements (Interop.handle (box this), [| (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                    Interop.check "ARIAMixin.ariaDetailsElements" (NativeDom.rv_dom_element_set_aria_details_elements (Interop.handle (box this), [| (if isNull (value) then Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> else (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)) |]))
         member this.ariaDisabled
             with get () : string =
                 if this.Session.Intercepting then
@@ -7713,7 +7713,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                             let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable>
                             try
                                 Interop.check "ARIAMixin.ariaErrorMessageElements" (NativeDom.rv_dom_element_get_aria_error_message_elements (Interop.handle (box this), &result))
-                                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))))
+                                (if result.present = 0 then null else (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle)))))
                             finally
                                 NativeDom.rv_dom_sequence_element_nullable_release(&result)
                         box result)
@@ -7722,7 +7722,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable>
                     try
                         Interop.check "ARIAMixin.ariaErrorMessageElements" (NativeDom.rv_dom_element_get_aria_error_message_elements (Interop.handle (box this), &result))
-                        (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))))
+                        (if result.present = 0 then null else (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle)))))
                     finally
                         NativeDom.rv_dom_sequence_element_nullable_release(&result)
             and set (value: Ranvier.Dom.Element array) =
@@ -7731,12 +7731,12 @@ and internal ElementObject(session: Session, handle: nativeint) =
                         let value: Ranvier.Dom.Element array = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            Interop.check "ARIAMixin.ariaErrorMessageElements" (NativeDom.rv_dom_element_set_aria_error_message_elements (Interop.handle (box this), [| (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                            Interop.check "ARIAMixin.ariaErrorMessageElements" (NativeDom.rv_dom_element_set_aria_error_message_elements (Interop.handle (box this), [| (if isNull (value) then Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> else (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)) |]))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    Interop.check "ARIAMixin.ariaErrorMessageElements" (NativeDom.rv_dom_element_set_aria_error_message_elements (Interop.handle (box this), [| (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                    Interop.check "ARIAMixin.ariaErrorMessageElements" (NativeDom.rv_dom_element_set_aria_error_message_elements (Interop.handle (box this), [| (if isNull (value) then Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> else (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)) |]))
         member this.ariaExpanded
             with get () : string =
                 if this.Session.Intercepting then
@@ -7765,7 +7765,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                             let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable>
                             try
                                 Interop.check "ARIAMixin.ariaFlowToElements" (NativeDom.rv_dom_element_get_aria_flow_to_elements (Interop.handle (box this), &result))
-                                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))))
+                                (if result.present = 0 then null else (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle)))))
                             finally
                                 NativeDom.rv_dom_sequence_element_nullable_release(&result)
                         box result)
@@ -7774,7 +7774,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable>
                     try
                         Interop.check "ARIAMixin.ariaFlowToElements" (NativeDom.rv_dom_element_get_aria_flow_to_elements (Interop.handle (box this), &result))
-                        (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))))
+                        (if result.present = 0 then null else (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle)))))
                     finally
                         NativeDom.rv_dom_sequence_element_nullable_release(&result)
             and set (value: Ranvier.Dom.Element array) =
@@ -7783,12 +7783,12 @@ and internal ElementObject(session: Session, handle: nativeint) =
                         let value: Ranvier.Dom.Element array = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            Interop.check "ARIAMixin.ariaFlowToElements" (NativeDom.rv_dom_element_set_aria_flow_to_elements (Interop.handle (box this), [| (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                            Interop.check "ARIAMixin.ariaFlowToElements" (NativeDom.rv_dom_element_set_aria_flow_to_elements (Interop.handle (box this), [| (if isNull (value) then Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> else (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)) |]))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    Interop.check "ARIAMixin.ariaFlowToElements" (NativeDom.rv_dom_element_set_aria_flow_to_elements (Interop.handle (box this), [| (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                    Interop.check "ARIAMixin.ariaFlowToElements" (NativeDom.rv_dom_element_set_aria_flow_to_elements (Interop.handle (box this), [| (if isNull (value) then Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> else (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)) |]))
         member this.ariaHasPopup
             with get () : string =
                 if this.Session.Intercepting then
@@ -7897,7 +7897,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                             let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable>
                             try
                                 Interop.check "ARIAMixin.ariaLabelledByElements" (NativeDom.rv_dom_element_get_aria_labelled_by_elements (Interop.handle (box this), &result))
-                                (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))))
+                                (if result.present = 0 then null else (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle)))))
                             finally
                                 NativeDom.rv_dom_sequence_element_nullable_release(&result)
                         box result)
@@ -7906,7 +7906,7 @@ and internal ElementObject(session: Session, handle: nativeint) =
                     let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable>
                     try
                         Interop.check "ARIAMixin.ariaLabelledByElements" (NativeDom.rv_dom_element_get_aria_labelled_by_elements (Interop.handle (box this), &result))
-                        (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle))))
+                        (if result.present = 0 then null else (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<nativeint>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<nativeint>())) in (let handle = item in Native.rv_node_retain handle |> ignore; unbox<Ranvier.Dom.Element> (this.Session.Node handle)))))
                     finally
                         NativeDom.rv_dom_sequence_element_nullable_release(&result)
             and set (value: Ranvier.Dom.Element array) =
@@ -7915,12 +7915,12 @@ and internal ElementObject(session: Session, handle: nativeint) =
                         let value: Ranvier.Dom.Element array = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            Interop.check "ARIAMixin.ariaLabelledByElements" (NativeDom.rv_dom_element_set_aria_labelled_by_elements (Interop.handle (box this), [| (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                            Interop.check "ARIAMixin.ariaLabelledByElements" (NativeDom.rv_dom_element_set_aria_labelled_by_elements (Interop.handle (box this), [| (if isNull (value) then Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> else (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)) |]))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    Interop.check "ARIAMixin.ariaLabelledByElements" (NativeDom.rv_dom_element_set_aria_labelled_by_elements (Interop.handle (box this), [| (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |]))
+                    Interop.check "ARIAMixin.ariaLabelledByElements" (NativeDom.rv_dom_element_set_aria_labelled_by_elements (Interop.handle (box this), [| (if isNull (value) then Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> else (let values = (value) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceElementNullable> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)) |]))
         member this.ariaLevel
             with get () : string =
                 if this.Session.Intercepting then

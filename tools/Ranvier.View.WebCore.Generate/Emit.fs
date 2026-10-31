@@ -438,6 +438,7 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
                 expression)
     | "sequence" when plain.IsArray ->
         let element = plain.GetElementType ()
+        let nullableSequence = mapping.GetProperty("nullable").GetBoolean()
         let mapping = (Metadata.items "subtypes" mapping)[0]
 
         let nativeType =
@@ -463,7 +464,14 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
 
         decoded ctx mapping element "item" owner
         |> Result.map (fun expression ->
-            $"(Array.init {value}.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<{nativeType}>({value}.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<{nativeType}>())) in {expression}))")
+            let items =
+                $"(Array.init {value}.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<{nativeType}>({value}.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<{nativeType}>())) in {expression}))"
+
+            // present 0 is the IDL null of a nullable sequence.
+            if nullableSequence then
+                $"(if {value}.present = 0 then null else {items})"
+            else
+                items)
     | "union" when FSharpType.IsUnion plain ->
         let cases = FSharpType.GetUnionCases plain
         let arms = Metadata.items "subtypes" mapping
