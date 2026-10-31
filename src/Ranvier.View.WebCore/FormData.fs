@@ -25,7 +25,7 @@ module FormData =
         | NativeDom.RV_DOM_UNION_FILE_OR_USV_STRING_FILE -> FormDataEntryValue.File FormDataFile.Opaque
         | other -> invalidOp $"WebCore returned the unknown FormData entry tag {other}"
 
-    let private sequence<'T, 'U when 'T: struct> (items: nativeint) (count: int) (read: 'T -> 'U) =
+    let inline private sequence<'T, 'U when 'T: struct> (items: nativeint) (count: int) ([<InlineIfLambda>] read: 'T -> 'U) =
         if count < 0 || (count > 0 && items = 0n) then
             invalidOp "WebCore returned an invalid FormData sequence"
 
