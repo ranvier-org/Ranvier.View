@@ -1027,6 +1027,20 @@ let runBinary () =
     }
     |> Async.StartAsPromise
 
+/// <summary>Runs the shared form submission assertions.</summary>
+let runSubmissions () =
+    async {
+        let document = document ()
+
+        let driver: SubmissionChecks.Driver = { Settle = fun () -> Async.Sleep 20 }
+
+        let! count =
+            SubmissionChecks.run document (fun () -> BrowserFormSubmission.forDocument document) driver
+
+        return {| submissions = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared caret hit-testing assertions under device-metrics emulation.</summary>
 let runCaret () =
     async {
@@ -1084,6 +1098,13 @@ let runUrls () =
         UrlChecks.run (fun () -> BrowserUrls.forDocument document) errorName UrlChecks.Chromium
 
     {| urls = count |}
+
+/// <summary>Runs the shared text segmentation assertions.</summary>
+let runSegments () =
+    let count =
+        TextSegmentationChecks.run (fun () -> BrowserTextSegmentation.create ()) errorName TextSegmentationChecks.Chromium
+
+    {| segments = count |}
 
 /// <summary>Runs the shared crypto assertions in a secure context.</summary>
 let runCrypto () =

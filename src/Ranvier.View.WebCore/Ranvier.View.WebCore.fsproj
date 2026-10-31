@@ -74,9 +74,11 @@
         <Compile Include="EventConstruction.fs" />
         <Compile Include="InputState.fs" />
         <Compile Include="FormData.fs" />
+        <Compile Include="FormSubmissions.fs" />
         <Compile Include="ToggleEvents.fs" />
         <Compile Include="BinaryValues.fs" />
         <Compile Include="Urls.fs" />
+        <Compile Include="TextSegmentation.fs" />
         <Compile Include="Crypto.fs" />
         <Compile Include="Viewport.fs" />
         <Compile Include="ViewportScroll.fs" />

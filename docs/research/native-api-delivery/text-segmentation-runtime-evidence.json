@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "group": "T06 text segmentation",
+  "status": "green (private integration; not accepted)",
+  "route": "Engine (Native35 / ABI43)",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/76",
+  "coreSourceCommit": "2e58628af858114cd587ce88d47d09e2e80b3fe7",
+  "viewsSourceCommit": "a5d6b077d05b53f4c5d9c31115e40166094d2232",
+  "stackedOn": {
+    "core": "D14 522a7fa6 (DOM alpha.37; includes H13 d246756e)",
+    "views": "D14 fc88949 (Views 0.1.27; includes H13 8a5def2)"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-text-segmentation",
+    "head": "901ced520ffd7a00e95755d2f41532e767246dc6",
+    "abi": 43,
+    "runtime": "native-segment artifacts/native35-frozen-2",
+    "evidence": "Ranvier.WebCore docs/text-segmentation-evidence/final-evidence.json"
+  },
+  "versions": {
+    "native": "0.1.0-preview.35",
+    "dom": "0.1.0-alpha.38",
+    "views": "0.1.28",
+    "webcoreBackend": "0.1.0-alpha.28"
+  },
+  "allocationReceipt": "Ranvier docs/research/native-api-delivery/t06-managed38-allocation.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.38.nupkg": "83ce59c0e29bb4b41c3c8a11e34dbea62773685a03cb957faf2e741cccc767f8",
+    "Ranvier.Dom.0.1.0-alpha.38.nupkg": "f188971d54a1847f2da6e87e4ef56a9bdb86cd79285eb00c43c783427305498a",
+    "Ranvier.WebCore.0.1.0-preview.35.nupkg": "70e3bca4fd792a2273ec69f708d2faaee3c2acd3ed00993621fe31e711e53c64"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "11fd3eaf6c3744bab34d7f1eb68f44dbe1c2ff8a16e508a18498c60f23826f77",
+    "WebCore.dll": "5a2d53c5203a8a7c083b20bd8e361227fe14d2e5a5066c205fe48841d9ad172d",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\t06-artifacts\\managed\\aot\\Native.exe",
+    "sha256": "5f4a8debc661d185e5595fd4211a387cdb343619631d189af9dfb99f0a268036",
+    "clrDirectory": [
+      0,
+      0
+    ]
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "0a64d1fb694dbd11dd6803901671260373f8447550eb3ab692fbab8a1c617465",
+      "passLines": 97,
+      "failLines": [],
+      "t06": [
+        "NATIVE_API T06 LIFETIME PASS assertions=2",
+        "NATIVE_API T06 PASS assertions=219"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "882f70a1ead43f92f1017f2bd3439629110f7e163733d8f6e282bc9634950b79",
+      "passLines": 97,
+      "failLines": [],
+      "t06": [
+        "NATIVE_API T06 LIFETIME PASS assertions=2",
+        "NATIVE_API T06 PASS assertions=219"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "2489e4885af311e6d5757e3e41fea9aa6afffc60a58bfbb1928f862b256b6f6d",
+      "passLines": 73,
+      "failLines": [],
+      "t06": [
+        "BROWSER_API T06 PASS assertions=219 engine=chromium"
+      ]
+    },
+    "d14BaselinePassLines": {
+      "jitAot": 95,
+      "chromium": 72
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "nativeProbeRepeats": {
+    "aotSegmentsOnly": "30 NATIVE_API T06 PASS assertions=219",
+    "nativeTextSegmentation": "30/30 text_segmentation 812 on native35-frozen-2"
+  },
+  "wrapperRegeneration": {
+    "objectsFs": "240911d085056cd014c15822004b6ba1d0cd0d4881c4bc22fe2ffb520d0b5249",
+    "reportTxt": "999dcf0678606685077736a715f3084c252c1645bc76ad30fee51cfbc4997ce1",
+    "inputs": "restored Ranvier.WebCore preview.33 model + interop and Ranvier.Dom alpha.36 from the private feed"
+  },
+  "fixture": {
+    "shared": "tests/NativeApi.Conformance/TextSegmentationChecks.fs",
+    "sharedChecks": 219,
+    "nativeLifetimeChecks": 2
+  },
+  "qualifications": [
+    "Chromium breaks words at a full stop between letters (p.m, Z.B); WebKit keeps one word (UAX #29 MidNumLet).",
+    "Unknown locale tags resolve to ICU root natively and to the browser default in Chromium; the fixture checks segmentation, not the resolved name.",
+    "Both providers join a segment that starts inside a grapheme cluster (the Hangul jamo case), so no segment splits a grapheme.",
+    "Linux and macOS segment with the system ICU; exact Windows results are measured on ICU 77.1."
+  ]
+}
