@@ -140,10 +140,10 @@ module Snapshots =
             let options = SnapshotContract.options subject options
 
             if not (supportsColorSpace options.ColorSpace) then
-                raise (NotSupportedException $"The native library has no {options.ColorSpace} snapshots")
+                raise (NotSupportedException "The native library has no snapshots in the color space")
 
             if not (supportsEncoding options.Encoding) then
-                raise (NotSupportedException $"The native library has no {options.Encoding} encoder")
+                raise (NotSupportedException "The native library has no encoder for the encoding")
 
             let element =
                 match subject with

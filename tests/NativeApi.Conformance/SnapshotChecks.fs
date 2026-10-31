@@ -80,7 +80,7 @@ let run (create: unit -> SnapshotService) (driver: Driver) =
 
                     match outcome with
                     | Some (ResourceOutcome.Succeeded image) -> return image
-                    | other -> return failwith $"{label}: {other}"
+                    | _ -> return failwith (label + ": no successful capture")
                 }
 
             let solid (image: SnapshotImage) =
