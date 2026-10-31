@@ -220,14 +220,9 @@ let run (document: Document) (create: unit -> FormDataService) (errorName: exn -
             | Some (FormDataEntryValue.File file) -> file
             | other -> failwith $"upload: expected a File entry, got %A{other}"
 
-        let unsupported =
-            try
-                FormDataContract.readFile file |> ignore
-                false
-            with :? NotSupportedException ->
-                true
-
-        equal "File contents are unsupported" true unsupported
+        equal "File entry name" "" file.name
+        equal "File entry type" "application/octet-stream" file.``type``
+        equal "File entry size" 0.0 (float file.size)
 
         fromForm.append ("upload", "text")
         equal "getAll mixed" [ "<file>"; "text" ] (service.GetAll (fromForm, "upload") |> Array.map text |> List.ofArray)

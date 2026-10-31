@@ -195,6 +195,7 @@ let private validateUnionTags (nativeDom: Type) (model: JsonElement) =
                     | "bool" -> "BOOL"
                     | "number" -> "NUMBER"
                     | "string" -> "STRING"
+                    | "bytes" -> Metadata.text "label" arm |> constantName
                     | "sequence" -> constantName ((Metadata.text "ctype" arm).Substring("RvDom".Length))
                     | _ -> Metadata.text "interface" arm |> constantName
 
