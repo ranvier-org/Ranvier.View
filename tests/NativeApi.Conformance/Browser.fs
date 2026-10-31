@@ -1350,7 +1350,14 @@ let runTimelines () =
                 (fun () -> Ranvier.Dom.ComputedStyles.forDocument document)
                 settle
 
-        return {| timelines = timelines; scrollTimelines = scroll |}
+        let name (error: exn) =
+            match error with
+            | AnimationException (name, _) -> name
+            | error -> errorName error
+
+        let! view = TimelineChecks.runViewTimelines document (fun () -> BrowserTimelines.forDocument document) settle name
+
+        return {| timelines = timelines; scrollTimelines = scroll; viewTimelines = view |}
     }
     |> Async.StartAsPromise
 

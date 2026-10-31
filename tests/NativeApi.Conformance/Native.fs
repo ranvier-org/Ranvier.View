@@ -2165,6 +2165,9 @@ let private TimelineChecksCount = 24
 [<Literal>]
 let private ScrollTimelineChecksCount = 38
 
+[<Literal>]
+let private ViewTimelineChecksCount = 54
+
 let private runTimelines () =
     let host = WebCoreHost.Create (320, 240)
     let mutable lifetime = 0
@@ -2181,7 +2184,13 @@ let private runTimelines () =
             host.Frame ()
         }
 
-    let shared, scroll =
+    let errorName =
+        function
+        | Ranvier.Dom.AnimationException (name, _) -> name
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let shared, scroll, view =
         try
             let shared = TimelineChecks.runDocumentTimelines host.Document (fun () -> Ranvier.View.WebCore.Animations.forHost host)
 
@@ -2193,7 +2202,15 @@ let private runTimelines () =
                     settle
                 |> fun work -> (Async.StartImmediateAsTask work).GetAwaiter().GetResult()
 
-            shared, scroll
+            let view =
+                TimelineChecks.runViewTimelines
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.Timelines.forHost host)
+                    settle
+                    errorName
+                |> fun work -> (Async.StartImmediateAsTask work).GetAwaiter().GetResult()
+
+            shared, scroll, view
         with error ->
             (host :> System.IDisposable).Dispose ()
             raise error
@@ -2236,8 +2253,12 @@ let private runTimelines () =
         failwith $"Scroll timeline shared assertions did not run: {scroll}"
 
     System.Console.WriteLine $"NATIVE_API A06 LIFETIME PASS assertions={lifetime}"
+    if ViewTimelineChecksCount <> 0 && view <> ViewTimelineChecksCount then
+        failwith $"View timeline shared assertions did not run: {view}"
+
     System.Console.WriteLine $"NATIVE_API A07 PASS assertions={scroll}"
-    shared + scroll
+    System.Console.WriteLine $"NATIVE_API A08 PASS assertions={view}"
+    shared + scroll + view
 
 /// <summary>Runs the shared cascade fixture with native thread, snapshot release and teardown checks.</summary>
 [<Literal>]
