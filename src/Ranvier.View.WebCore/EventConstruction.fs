@@ -151,7 +151,7 @@ module EventConstruction =
                 init.relatedTarget <- relatedHandle
 
                 try
-                    let handle = Native.rv_host_construct_event (session.Host, kind, eventType, &init)
+                    let handle = Native.rv_host_construct_event (session.Host, kind, Native.utf8 eventType, Native.utf8Length eventType, &init)
 
                     if handle = 0n then
                         raise (ArgumentException $"The engine rejected the {eventType} event construction")
