@@ -51,6 +51,7 @@
     <Compile Include="Notifications.fs" />
     <Compile Include="Resources.fs" />
     <Compile Include="Fonts.fs" />
+    <Compile Include="FontConstruction.fs" />
     <Compile Include="CustomEvents.fs" />
     <Compile Include="InputStateChecks.fs" />
     <Compile Include="PointerInputChecks.fs" />

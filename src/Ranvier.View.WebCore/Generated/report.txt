@@ -73,6 +73,8 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_file_create: File.constructor (op)
   rv_dom_file_reader_create: FileReader.constructor (op)
   rv_dom_focus_event_get_related_target: FocusEvent.relatedTarget (get)
+  rv_dom_font_face_create: FontFace.constructor (op)
+  rv_dom_font_face_set_values: FontFaceSet.entries (op)
   rv_dom_form_data_event_create: FormDataEvent.constructor (op)
   rv_dom_hash_change_event_create: HashChangeEvent.constructor (op)
   rv_dom_highlight_add: Highlight.add (op)
@@ -225,6 +227,8 @@ Members by class (mapped / hand-written / unmapped):
   FileObject: 2 / 0 / 0
   FileReaderObject: 6 / 9 / 0
   FocusEventObject: 0 / 1 / 0
+  FontFaceObject: 25 / 0 / 0
+  FontFaceSetObject: 7 / 9 / 0
   FormDataEventObject: 1 / 0 / 0
   HTMLAnchorElementObject: 46 / 0 / 0
   HTMLAreaElementObject: 38 / 0 / 0

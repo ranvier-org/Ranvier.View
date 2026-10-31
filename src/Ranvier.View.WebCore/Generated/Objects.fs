@@ -1106,6 +1106,99 @@ and internal FileListObject(session: Session, handle: nativeint) =
             Interop.check "FileList.item" (NativeDom.rv_dom_file_list_item (Interop.handle (box this), uint32 index, &result))
             (if result = 0n then Unchecked.defaultof<Ranvier.Dom.File> else (unbox<Ranvier.Dom.File> (this.Session.Object(result, Kind.Blob, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (FileObject(session, handle) :> NativeObject))))))
 
+and internal FontFaceObject(session: Session, handle: nativeint) =
+    inherit NativeObject(session, handle, Kind.FontFace)
+    interface Ranvier.Dom.FontFace with
+        member this.family
+            with get () : string =
+                Interop.nonNull (Interop.text "FontFace.family" (fun buffer capacity length -> NativeDom.rv_dom_font_face_get_family (Interop.handle (box this), buffer, capacity, length)))
+            and set (value: string) =
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "FontFace.family" (NativeDom.rv_dom_font_face_set_family (Interop.handle (box this), nativeString0, nativeString0.Length))
+        member this.style
+            with get () : string =
+                Interop.nonNull (Interop.text "FontFace.style" (fun buffer capacity length -> NativeDom.rv_dom_font_face_get_style (Interop.handle (box this), buffer, capacity, length)))
+            and set (value: string) =
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "FontFace.style" (NativeDom.rv_dom_font_face_set_style (Interop.handle (box this), nativeString0, nativeString0.Length))
+        member this.weight
+            with get () : string =
+                Interop.nonNull (Interop.text "FontFace.weight" (fun buffer capacity length -> NativeDom.rv_dom_font_face_get_weight (Interop.handle (box this), buffer, capacity, length)))
+            and set (value: string) =
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "FontFace.weight" (NativeDom.rv_dom_font_face_set_weight (Interop.handle (box this), nativeString0, nativeString0.Length))
+        member this.width
+            with get () : string =
+                Interop.nonNull (Interop.text "FontFace.width" (fun buffer capacity length -> NativeDom.rv_dom_font_face_get_width (Interop.handle (box this), buffer, capacity, length)))
+            and set (value: string) =
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "FontFace.width" (NativeDom.rv_dom_font_face_set_width (Interop.handle (box this), nativeString0, nativeString0.Length))
+        member this.stretch
+            with get () : string =
+                Interop.nonNull (Interop.text "FontFace.stretch" (fun buffer capacity length -> NativeDom.rv_dom_font_face_get_stretch (Interop.handle (box this), buffer, capacity, length)))
+            and set (value: string) =
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "FontFace.stretch" (NativeDom.rv_dom_font_face_set_stretch (Interop.handle (box this), nativeString0, nativeString0.Length))
+        member this.unicodeRange
+            with get () : string =
+                Interop.nonNull (Interop.text "FontFace.unicodeRange" (fun buffer capacity length -> NativeDom.rv_dom_font_face_get_unicode_range (Interop.handle (box this), buffer, capacity, length)))
+            and set (value: string) =
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "FontFace.unicodeRange" (NativeDom.rv_dom_font_face_set_unicode_range (Interop.handle (box this), nativeString0, nativeString0.Length))
+        member this.featureSettings
+            with get () : string =
+                Interop.nonNull (Interop.text "FontFace.featureSettings" (fun buffer capacity length -> NativeDom.rv_dom_font_face_get_feature_settings (Interop.handle (box this), buffer, capacity, length)))
+            and set (value: string) =
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "FontFace.featureSettings" (NativeDom.rv_dom_font_face_set_feature_settings (Interop.handle (box this), nativeString0, nativeString0.Length))
+        member this.display
+            with get () : string =
+                Interop.nonNull (Interop.text "FontFace.display" (fun buffer capacity length -> NativeDom.rv_dom_font_face_get_display (Interop.handle (box this), buffer, capacity, length)))
+            and set (value: string) =
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "FontFace.display" (NativeDom.rv_dom_font_face_set_display (Interop.handle (box this), nativeString0, nativeString0.Length))
+        member this.ascentOverride
+            with get () : string =
+                Interop.nonNull (Interop.text "FontFace.ascentOverride" (fun buffer capacity length -> NativeDom.rv_dom_font_face_get_ascent_override (Interop.handle (box this), buffer, capacity, length)))
+            and set (value: string) =
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "FontFace.ascentOverride" (NativeDom.rv_dom_font_face_set_ascent_override (Interop.handle (box this), nativeString0, nativeString0.Length))
+        member this.descentOverride
+            with get () : string =
+                Interop.nonNull (Interop.text "FontFace.descentOverride" (fun buffer capacity length -> NativeDom.rv_dom_font_face_get_descent_override (Interop.handle (box this), buffer, capacity, length)))
+            and set (value: string) =
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "FontFace.descentOverride" (NativeDom.rv_dom_font_face_set_descent_override (Interop.handle (box this), nativeString0, nativeString0.Length))
+        member this.lineGapOverride
+            with get () : string =
+                Interop.nonNull (Interop.text "FontFace.lineGapOverride" (fun buffer capacity length -> NativeDom.rv_dom_font_face_get_line_gap_override (Interop.handle (box this), buffer, capacity, length)))
+            and set (value: string) =
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "FontFace.lineGapOverride" (NativeDom.rv_dom_font_face_set_line_gap_override (Interop.handle (box this), nativeString0, nativeString0.Length))
+        member this.sizeAdjust
+            with get () : string =
+                Interop.nonNull (Interop.text "FontFace.sizeAdjust" (fun buffer capacity length -> NativeDom.rv_dom_font_face_get_size_adjust (Interop.handle (box this), buffer, capacity, length)))
+            and set (value: string) =
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "FontFace.sizeAdjust" (NativeDom.rv_dom_font_face_set_size_adjust (Interop.handle (box this), nativeString0, nativeString0.Length))
+        member this.status
+            with get () : Ranvier.Dom.FontFaceLoadStatus =
+                let mutable result = 0
+                Interop.check "FontFace.status" (NativeDom.rv_dom_font_face_get_status (Interop.handle (box this), &result))
+                (match int (result) with | 0 -> Ranvier.Dom.FontFaceLoadStatus.Unloaded | 1 -> Ranvier.Dom.FontFaceLoadStatus.Loading | 2 -> Ranvier.Dom.FontFaceLoadStatus.Loaded | 3 -> Ranvier.Dom.FontFaceLoadStatus.Error | _ -> invalidOp "Unknown FontFaceLoadStatus value from WebCore")
+
 and internal HTMLCollectionObject(session: Session, handle: nativeint) =
     inherit NativeObject(session, handle, Kind.Collection)
     interface Ranvier.Dom.HTMLCollection with
@@ -5066,6 +5159,60 @@ and internal FileReaderObject(session: Session, handle: nativeint) =
             Interop.check "FileReader.readAsDataURL" (NativeDom.rv_dom_file_reader_read_as_data_url (Interop.handle (box this), Interop.handle (box blob)))
         member this.abort() : unit =
             Interop.check "FileReader.abort" (NativeDom.rv_dom_file_reader_abort (Interop.handle (box this)))
+
+and internal FontFaceSetObject(session: Session, handle: nativeint) =
+    inherit NativeObject(session, handle, Kind.FontFaceSet)
+    interface Ranvier.Dom.EventTarget with
+        member this.addEventListener(eventType: string, listener: (Ranvier.Dom.Event -> unit), ?capture: bool) : unit =
+            Events.Add(this, eventType, listener, capture)
+        member this.addEventListener(eventType: string, listener: Ranvier.Dom.EventListenerObject, ?capture: bool) : unit =
+            Events.Add(this, eventType, listener, capture)
+        member this.addEventListener(eventType: string, listener: (Ranvier.Dom.Event -> unit), options: Ranvier.Dom.AddEventListenerOptions) : unit =
+            Events.Add(this, eventType, listener, options)
+        member this.addEventListener(eventType: string, listener: Ranvier.Dom.EventListenerObject, options: Ranvier.Dom.AddEventListenerOptions) : unit =
+            Events.Add(this, eventType, listener, options)
+        member this.removeEventListener(eventType: string, listener: (Ranvier.Dom.Event -> unit), ?capture: bool) : unit =
+            Events.Remove(this, eventType, listener, capture)
+        member this.removeEventListener(eventType: string, listener: Ranvier.Dom.EventListenerObject, ?capture: bool) : unit =
+            Events.Remove(this, eventType, listener, capture)
+        member this.removeEventListener(eventType: string, listener: (Ranvier.Dom.Event -> unit), options: Ranvier.Dom.EventListenerOptions) : unit =
+            Events.Remove(this, eventType, listener, options)
+        member this.removeEventListener(eventType: string, listener: Ranvier.Dom.EventListenerObject, options: Ranvier.Dom.EventListenerOptions) : unit =
+            Events.Remove(this, eventType, listener, options)
+        member this.dispatchEvent(``event``: Ranvier.Dom.Event) : bool =
+            Events.Dispatch(this, ``event``)
+    interface Ranvier.Dom.FontFaceSet with
+        member this.size
+            with get () : int =
+                let mutable result = 0
+                Interop.check "FontFaceSet.size" (NativeDom.rv_dom_font_face_set_get_size (Interop.handle (box this), &result))
+                int result
+        member this.status
+            with get () : Ranvier.Dom.FontFaceSetLoadStatus =
+                let mutable result = 0
+                Interop.check "FontFaceSet.status" (NativeDom.rv_dom_font_face_set_get_status (Interop.handle (box this), &result))
+                (match int (result) with | 0 -> Ranvier.Dom.FontFaceSetLoadStatus.Loading | 1 -> Ranvier.Dom.FontFaceSetLoadStatus.Loaded | _ -> invalidOp "Unknown FontFaceSetLoadStatus value from WebCore")
+        member this.has(font: Ranvier.Dom.FontFace) : bool =
+            let mutable result = 0
+            Interop.check "FontFaceSet.has" (NativeDom.rv_dom_font_face_set_has (Interop.handle (box this), Interop.handle (box font), &result))
+            result <> 0
+        member this.add(font: Ranvier.Dom.FontFace) : Ranvier.Dom.FontFaceSet =
+            let mutable result = 0n
+            Interop.check "FontFaceSet.add" (NativeDom.rv_dom_font_face_set_add (Interop.handle (box this), Interop.handle (box font), &result))
+            (this.Session.Track (FontFaceSetObject(this.Session, result)) :> Ranvier.Dom.FontFaceSet)
+        member this.delete(font: Ranvier.Dom.FontFace) : bool =
+            let mutable result = 0
+            Interop.check "FontFaceSet.delete" (NativeDom.rv_dom_font_face_set_delete (Interop.handle (box this), Interop.handle (box font), &result))
+            result <> 0
+        member this.clear() : unit =
+            Interop.check "FontFaceSet.clear" (NativeDom.rv_dom_font_face_set_clear (Interop.handle (box this)))
+        member this.check(font: string, ?text: string) : bool =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(font)
+            let nativeString1 = (match text with Some x -> scope.Bytes(x) | None -> null)
+            let mutable result = 0
+            Interop.check "FontFaceSet.check" (NativeDom.rv_dom_font_face_set_check (Interop.handle (box this), nativeString0, nativeString0.Length, nativeString1, (if isNull nativeString1 then -1 else nativeString1.Length), &result))
+            result <> 0
 
 and internal FormDataEventObject(session: Session, handle: nativeint) =
     inherit EventObject(session, handle)

@@ -137,6 +137,8 @@ let private kinds =
             "WebAnimation", "Kind.WebAnimation"
             "AnimationEffect", "Kind.AnimationEffect"
             "AnimationTimeline", "Kind.AnimationTimeline"
+            "FontFace", "Kind.FontFace"
+            "FontFaceSet", "Kind.FontFaceSet"
         ]
 
 [<EntryPoint>]

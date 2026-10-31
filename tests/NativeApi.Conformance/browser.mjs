@@ -18,6 +18,8 @@ const svgOnly = process.argv.includes('--svg-only');
 const svgSurfacesOnly = process.argv.includes('--svg-surfaces-only');
 const resourcesOnly = process.argv.includes('--resources-only');
 const fontsOnly = process.argv.includes('--fonts-only');
+// T02: the shared font construction fixture's assertion count.
+const T02_CHECKS = 35;
 // T01: held font requests, answered by the fixture through /fixtures/answer/<name>/<font|broken|missing>.
 const heldFonts = new Map();
 const svgPaintOnly = process.argv.includes('--svg-paint-only');
@@ -709,6 +711,8 @@ try {
   } else if (fontsOnly) {
     if (checks.fonts !== 25) throw new Error(`Font set shared assertions did not run: ${JSON.stringify(checks)}`);
     console.log(`BROWSER_API T01 PASS assertions=${checks.fonts} engine=chromium`);
+    if (checks.fontConstruction !== T02_CHECKS) throw new Error(`Font construction shared assertions did not run: ${JSON.stringify(checks)}`);
+    console.log(`BROWSER_API T02 PASS assertions=${checks.fontConstruction} engine=chromium`);
   } else if (resourcesOnly) {
     if (checks.resources !== 29) throw new Error(`Resource shared assertions did not run: ${JSON.stringify(checks)}`);
     console.log(`BROWSER_API H05 PASS assertions=${checks.resources} engine=chromium`);
@@ -784,6 +788,8 @@ try {
   console.log(`BROWSER_API H05 PASS assertions=${checks.resources} engine=chromium`);
   if (checks.fonts !== 25) throw new Error(`Font set shared assertions did not run: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API T01 PASS assertions=${checks.fonts} engine=chromium`);
+  if (checks.fontConstruction !== T02_CHECKS) throw new Error(`Font construction shared assertions did not run: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API T02 PASS assertions=${checks.fontConstruction} engine=chromium`);
   if(checks.transformValues!==471 || checks.transformContext!==3) throw new Error(`Typed transform shared/context assertions did not run: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API C16 PASS assertions=${checks.transformValues} engine=chromium`);
   console.log(`BROWSER_API C16 CONTEXT PASS assertions=${checks.transformContext} engine=chromium`);

@@ -807,7 +807,18 @@ let runFonts () =
         let! count =
             Fonts.run document server (fun () -> BrowserFonts.forDocument document) signals wait
 
-        return {| fonts = count |}
+        let! ahem =
+            fixtureBytes "/fixtures/Ahem.ttf"
+            |> Async.AwaitPromise
+
+        let! construction =
+            FontConstruction.run document server (fun () -> BrowserFonts.forDocument document) ahem wait
+
+        return
+            {|
+                fonts = count
+                fontConstruction = construction
+            |}
     }
     |> Async.StartAsPromise
 

@@ -95,6 +95,12 @@ module Fonts =
         if WebCoreHost.Has "font-readiness" <> true then
             raise (NotSupportedException "The native host lacks font-readiness.")
 
+        if
+            WebCoreHost.Has "font-face-load" <> true
+            || WebCoreHost.Has "dom:FontFace" <> true
+        then
+            raise (NotSupportedException "The native host lacks font-face-load.")
+
         let live = HashSet<IDisposable>(HashIdentity.Reference)
         let handlers = List<FontSetEvent -> unit>()
         let mutable watch = 0n
@@ -181,6 +187,9 @@ module Fonts =
                     | 1 ->
                         arbiter.Settle (ResourceOutcome.Failed (ResourceFailure.LoadFailed "NetworkError"))
                         |> ignore
+                    | 2 ->
+                        arbiter.Settle (ResourceOutcome.Failed (ResourceFailure.DecodeFailed "SyntaxError"))
+                        |> ignore
                     | 3 ->
                         arbiter.Settle (ResourceOutcome.Failed ResourceFailure.Cancelled)
                         |> ignore
@@ -198,6 +207,41 @@ module Fonts =
                 |> ignore
 
             arbiter :> ResourceOperation<'T>
+
+        let session = host.Session
+
+        let faceObject (handle: nativeint) : FontFace =
+            session.Object (
+                handle,
+                Kind.FontFace,
+                unbox<NativeObject>(box host.Document),
+                Func<Session, nativeint, NativeObject>(fun s h -> FontFaceObject (s, h))
+            )
+            |> unbox<FontFace>
+
+        let nativeFace (face: FontFace) =
+            match box face with
+            | null -> nullArg "face"
+            | :? NativeObject as target when obj.ReferenceEquals (target.Session, session) -> Interop.handle (box face)
+            | _ -> invalidArg "face" "The face belongs to another provider"
+
+        let faceOperation name (face: FontFace) terminal =
+            ensure ()
+            let handle = nativeFace face
+
+            start
+                terminal
+                (fun context ->
+                    let mutable operation = 0UL
+
+                    let status =
+                        if name = "rv_font_face_load" then
+                            Native.rv_font_face_load (host.Handle, handle, callbacks.Completion, context, &operation)
+                        else
+                            Native.rv_font_face_loaded (host.Handle, handle, callbacks.Completion, context, &operation)
+
+                    struct (status, operation))
+                (fun _ -> face)
 
         let disposeAll () =
             if not disposed then
@@ -290,6 +334,93 @@ module Fonts =
                             if not disposed then
                                 rewatch ()
                 }
+
+            member _.Faces =
+                ensure ()
+                host.Document.fonts
+
+            member _.Values() =
+                ensure ()
+                let mutable result = NativeDom.RvDomSequenceFontFace ()
+
+                NativeDom.rv_dom_font_face_set_values (Interop.handle (box host.Document.fonts), &result)
+                |> Interop.check "FontFaceSet.values"
+
+                try
+                    if
+                        result.count < 0
+                        || (result.count > 0 && result.items = 0n)
+                    then
+                        invalidOp "WebCore returned an invalid font face sequence"
+
+                    [
+                        for index in 0 .. result.count - 1 ->
+                            faceObject (NativeDom.rv_dom_font_face_retain (Marshal.ReadIntPtr (result.items, index * IntPtr.Size)))
+                    ]
+                finally
+                    NativeDom.rv_dom_sequence_font_face_release &result
+
+            member _.Create(family, source, descriptors) =
+                ensure ()
+                FontSetContract.validateFace family source
+                let pins = List<GCHandle>()
+
+                let pin (bytes: byte array) =
+                    let handle = GCHandle.Alloc (bytes, GCHandleType.Pinned)
+                    pins.Add handle
+                    handle.AddrOfPinnedObject ()
+
+                try
+                    let family = utf8 family
+                    let mutable union = NativeDom.RvDomUnionDOMStringOrArrayBufferOrArrayBufferView ()
+                    union.present <- 1
+
+                    match source with
+                    | FontFaceSource.Css src ->
+                        let bytes = utf8 src
+                        union.tag <- 1
+                        union.arm0.data <- pin bytes
+                        union.arm0.length <- bytes.Length
+                    | FontFaceSource.Bytes data ->
+                        union.tag <- 2
+                        union.arm1.data <- (if data.Length = 0 then 0n else pin data)
+                        union.arm1.length <- data.Length
+
+                    let field (value: string) =
+                        let mutable input = NativeDom.RvDomUtf8StringInput ()
+
+                        if not (isNull value) then
+                            let bytes = utf8 value
+                            input.present <- 1
+                            input.data <- pin bytes
+                            input.length <- bytes.Length
+
+                        input
+
+                    let mutable given = NativeDom.RvDomFontFaceDescriptors ()
+                    given.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomFontFaceDescriptors>())
+                    given.style <- field descriptors.Style
+                    given.weight <- field descriptors.Weight
+                    given.stretch <- field descriptors.Stretch
+                    given.unicode_range <- field descriptors.UnicodeRange
+                    given.feature_settings <- field descriptors.FeatureSettings
+                    given.display <- field descriptors.Display
+                    given.size_adjust <- field descriptors.SizeAdjust
+                    let mutable face = 0n
+
+                    NativeDom.rv_dom_font_face_create (Interop.handle (box host.Document), family, family.Length, [| union |], [| given |], &face)
+                    |> Interop.check "FontFace.constructor"
+
+                    faceObject face
+                finally
+                    for handle in pins do
+                        handle.Free ()
+
+            member _.LoadFace(face, terminal) =
+                faceOperation "rv_font_face_load" face terminal
+
+            member _.FaceLoaded(face, terminal) =
+                faceOperation "rv_font_face_loaded" face terminal
 
           interface IDisposable with
               member _.Dispose() =

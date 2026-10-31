@@ -240,6 +240,12 @@ module internal Kind =
     [<Literal>]
     let AnimationTimeline = 109
 
+    [<Literal>]
+    let FontFace = 110
+
+    [<Literal>]
+    let FontFaceSet = 111
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -425,6 +431,8 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.WebAnimation -> Native.rv_event_target_release handle
         | Kind.AnimationEffect -> NativeDom.rv_dom_animation_effect_release handle
         | Kind.AnimationTimeline -> NativeDom.rv_dom_animation_timeline_release handle
+        | Kind.FontFace -> NativeDom.rv_dom_font_face_release handle
+        | Kind.FontFaceSet -> Native.rv_event_target_release handle
         | Kind.Highlight -> NativeDom.rv_dom_highlight_release handle
         | Kind.HighlightRegistry -> NativeDom.rv_dom_highlight_registry_release handle
         | Kind.CanvasRenderingContext2D -> NativeDom.rv_dom_canvas_rendering_context2_d_release handle
