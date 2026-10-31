@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "group": "#145 hand-written native string inputs with byte lengths",
+  "status": "green (private integration; not accepted)",
+  "route": "Every free-text input of the hand-written native header and RvClipboardWrite data carry a UTF-8 byte count (Native47 / ABI55 placeholders; root renumbers at batch integration)",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/145",
+  "coreSourceCommit": "526ec1fbabc77292e553586efd7b9c97a519c945",
+  "viewsSourceCommit": "52a06fe45f73922b3c478fb0731e7b327c7e2b9e",
+  "stackedOn": {
+    "core": "C25 Core e2cd14b8 (G14 237c4c9c, #144 6b44bfac, #142 5bab74fb)",
+    "views": "C25 Views f06cb30 (G14 827b00d, #144 0a6f671, #142 9f22896)"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-host-string-inputs",
+    "head": "a9ba842e4728e40a4f0a3ca434ccb99d2ebc17f3",
+    "abi": 55,
+    "runtime": "native-strings2 artifacts/native47-candidate-4-frozen",
+    "evidence": "Ranvier.WebCore docs/host-string-input-evidence/final-evidence.json",
+    "runtimeSourceHead": "6bc72058153f749f291ec19b6c5a04f40e49e335"
+  },
+  "versions": {
+    "native": "0.1.0-preview.47",
+    "dom": "0.1.0-alpha.50",
+    "views": "0.1.40",
+    "webcoreBackend": "0.1.0-alpha.40",
+    "note": "placeholders under pipeline v2"
+  },
+  "allocationReceipt": "Ranvier docs/research/native-api-delivery/str2-managed50-allocation.json (released reservation)",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.50.nupkg": "55f1907beebd6a6107392ea0138074c2428136803535e069544cbd85489c472f",
+    "Ranvier.Dom.0.1.0-alpha.50.nupkg": "97abf894a5f34e8b8e55b4be8882baca42ac2f2cb118e38c3a659ce7e41e70b2",
+    "Ranvier.WebCore.0.1.0-preview.47.nupkg": "026d8f4b5ffeed0ec82a5fda9b287b48f330c97371782f0c53bd4b93f0577ae3"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "60cfd84d2c768f128315445c94d7c714f15261d66c288de2d17f689530735748",
+    "WebCore.dll": "ee8a85a5a3df8b3828993849ade58aaba5f002c90860e006c81966ef1c51a22d",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\str2-artifacts\\managed\\final-1\\aot\\Native.exe",
+    "sha256": "cde8261e4486f68e06ab42488b8245802e54c4189655cd5cd26800100134cbbb"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "30fd0dee8006fdf66efd5795fb86b669bea344b2a999024e17e4d4cc2cd51910",
+      "passLines": 122,
+      "failLines": [],
+      "wc145": [
+        "NATIVE_API WC145 HOST PASS assertions=5",
+        "NATIVE_API WC145 LIFETIME PASS assertions=1",
+        "NATIVE_API WC145 PASS assertions=5"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "164858d4d4e395a406c80879c74c107091f9c8f50b5a0f02e86b0fbf2e8fb8a1",
+      "passLines": 122,
+      "failLines": [],
+      "wc145": [
+        "NATIVE_API WC145 HOST PASS assertions=5",
+        "NATIVE_API WC145 LIFETIME PASS assertions=1",
+        "NATIVE_API WC145 PASS assertions=5"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "fc318e9f160b6b102f6154d381e07c33a4570e67b9ea0db95be4cc63ff962016",
+      "passLines": 87,
+      "failLines": [],
+      "wc145": [
+        "BROWSER_API WC145 PASS assertions=5 engine=chromium"
+      ]
+    }
+  },
+  "baseline": {
+    "run": "C:/wk/cascade-artifacts/managed-c25/final-1 (C25 f06cb30)",
+    "jit": 119,
+    "aot": 119,
+    "chromium": 86,
+    "superset": {
+      "jit.log": {
+        "baseline": 119,
+        "run": 122,
+        "missing": [],
+        "added": [
+          "NATIVE_API WC145 HOST PASS assertions=5",
+          "NATIVE_API WC145 LIFETIME PASS assertions=1",
+          "NATIVE_API WC145 PASS assertions=5"
+        ]
+      },
+      "aot.log": {
+        "baseline": 119,
+        "run": 122,
+        "missing": [],
+        "added": [
+          "NATIVE_API WC145 HOST PASS assertions=5",
+          "NATIVE_API WC145 LIFETIME PASS assertions=1",
+          "NATIVE_API WC145 PASS assertions=5"
+        ]
+      },
+      "chromium.log": {
+        "baseline": 86,
+        "run": 87,
+        "missing": [],
+        "added": [
+          "BROWSER_API WC145 PASS assertions=5 engine=chromium"
+        ]
+      }
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "repeats": {
+    "jitHostStringsOnly": "30 NATIVE_API WC145 HOST PASS assertions=5\n     30 NATIVE_API WC145 LIFETIME PASS assertions=1\n     30 NATIVE_API WC145 PASS assertions=5",
+    "aotHostStringsOnly": "30 NATIVE_API WC145 HOST PASS assertions=5\n     30 NATIVE_API WC145 LIFETIME PASS assertions=1\n     30 NATIVE_API WC145 PASS assertions=5",
+    "chromiumHostStringsOnly": "30 BROWSER_API WC145 PASS assertions=5 engine=chromium"
+  },
+  "wrapperRegeneration": {
+    "objectsFs": "1d2db922e892a0949139e3e337b7e11a359e3fb762e8fdddaf4d85a03e21aa2c",
+    "result": "not regenerated: the native generated DOM (gen/, RanvierWebCoreDom.h) equals C25 f13cdbb"
+  },
+  "fixture": {
+    "shared": "tests/NativeApi.Conformance/HostStringChecks.fs",
+    "nativeChecks": 5,
+    "chromiumChecks": 5,
+    "nativeHostChecks": 5,
+    "nativeLifetimeChecks": 1
+  },
+  "qualifications": [
+    "Key text, composition commit, clipboard paste and copy, and SVG markup are native host inputs without a browser equivalent (WC145 HOST).",
+    "Copied data carries no U+0000: WebKit drops it from the selected text and markup, and page-supplied data needs ClipboardEvent.clipboardData and DataTransfer from the clipboard and drag groups; the copy check uses multi-byte text."
+  ]
+}
