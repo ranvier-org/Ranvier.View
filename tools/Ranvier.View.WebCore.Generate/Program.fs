@@ -126,6 +126,9 @@ let private kinds =
             "Highlight", "Kind.Highlight"
             "HighlightRegistry", "Kind.HighlightRegistry"
             "FileReader", "Kind.FileReader"
+            "WebAnimation", "Kind.WebAnimation"
+            "AnimationEffect", "Kind.AnimationEffect"
+            "AnimationTimeline", "Kind.AnimationTimeline"
         ]
 
 [<EntryPoint>]

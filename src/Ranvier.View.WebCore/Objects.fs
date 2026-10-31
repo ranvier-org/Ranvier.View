@@ -207,6 +207,18 @@ module internal Kind =
     [<Literal>]
     let FileReader = 98
 
+    // Placeholder kind: root assigns the number at integration.
+    [<Literal>]
+    let WebAnimation = 900
+
+    // Placeholder kind: root assigns the number at integration.
+    [<Literal>]
+    let AnimationEffect = 901
+
+    // Placeholder kind: root assigns the number at integration.
+    [<Literal>]
+    let AnimationTimeline = 902
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -384,6 +396,9 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.UrlPattern -> NativeDom.rv_dom_url_pattern_release handle
         | Kind.VisualViewport -> Native.rv_event_target_release handle
         | Kind.FileReader -> Native.rv_event_target_release handle
+        | Kind.WebAnimation -> Native.rv_event_target_release handle
+        | Kind.AnimationEffect -> NativeDom.rv_dom_animation_effect_release handle
+        | Kind.AnimationTimeline -> NativeDom.rv_dom_animation_timeline_release handle
         | Kind.Highlight -> NativeDom.rv_dom_highlight_release handle
         | Kind.HighlightRegistry -> NativeDom.rv_dom_highlight_registry_release handle
         | _ -> ()

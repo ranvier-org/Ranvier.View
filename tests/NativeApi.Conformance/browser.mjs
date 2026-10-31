@@ -337,6 +337,21 @@ const runCascade = async () => {
   }
 };
 const CASCADE_ASSERTIONS = 51;
+// A01 runs the Web Animations fixture in its own page.
+const runAnimations = async () => {
+  const animationsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await animationsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runAnimations(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.animations !== ANIMATION_ASSERTIONS) throw new Error(`Web Animations assertions did not run: ${JSON.stringify(result)}`);
+    if (typeof result.animations !== 'number') throw new Error(`Web Animations fixture failed: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API A01 PASS assertions=${result.animations} engine=chromium`);
+  } finally {
+    await animationsBrowser.close();
+  }
+};
+const ANIMATION_ASSERTIONS = 110;
 // G14 runs the coordinate fixture in its own page.
 const runCoordinates = async () => {
   const coordinatesBrowser = await chromium.launch({ headless: true });
@@ -442,6 +457,7 @@ try {
   else if (stringsOnly) { await runStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
+  else if (process.argv.includes('--animations-only')) { await runAnimations(); process.exitCode = 0; }
   else if (process.argv.includes('--coordinates-only')) { await runCoordinates(); process.exitCode = 0; }
   else if (screenOnly) { await runScreen(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
@@ -686,6 +702,7 @@ try {
   await runDiagnostics();
   await runCascade();
   await runCoordinates();
+  await runAnimations();
   await runBlobUrls();
   await runScreen();
   await runEventDetails();
