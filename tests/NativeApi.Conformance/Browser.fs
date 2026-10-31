@@ -1099,6 +1099,13 @@ let runUrls () =
 
     {| urls = count |}
 
+/// <summary>Runs the shared text segmentation assertions.</summary>
+let runSegments () =
+    let count =
+        TextSegmentationChecks.run (fun () -> BrowserTextSegmentation.create ()) errorName TextSegmentationChecks.Chromium
+
+    {| segments = count |}
+
 /// <summary>Runs the shared crypto assertions in a secure context.</summary>
 let runCrypto () =
     async {
