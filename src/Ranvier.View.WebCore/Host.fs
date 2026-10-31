@@ -88,6 +88,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let context = HostContext (posted, thread)
     let disposedEvent = Event<unit>()
     let screenEvent = Event<unit>()
+    let documentEvent = Event<unit>()
     let previousContext = SynchronizationContext.Current
     let mutable nextId = 1
     let mutable inInput = 0
@@ -304,6 +305,9 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// <summary>Runs after <c>SetScreen</c> or <c>Resize</c>, which can change the screen the document reports.</summary>
     member internal _.ScreenMayHaveChanged = screenEvent.Publish
 
+    /// <summary>Runs after <c>LoadSvg</c> replaced the page document.</summary>
+    member internal _.DocumentReplaced = documentEvent.Publish
+
     /// <summary>The current page document; creation starts with an empty HTML head and body.</summary>
     member _.Document = document
 
@@ -329,6 +333,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         |> Interop.check "rv_host_load_svg"
 
         document <- unbox<Document>(session.Node (Native.rv_host_document handle))
+        documentEvent.Trigger ()
 
     /// <summary>Selects a view in the current main SVG document without changing its URL, history or <c>:target</c>.</summary>
     /// <param name="fragment">SVG fragment text, not a full URL; an empty value resets the current view.</param>

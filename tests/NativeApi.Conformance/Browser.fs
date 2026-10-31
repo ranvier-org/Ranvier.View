@@ -776,6 +776,41 @@ let runResources () =
     }
     |> Async.StartAsPromise
 
+[<Emit("fetch('/fixtures/requested/' + $0).then(r => r.text()).then(t => t === '1')")>]
+let private fontRequested (name: string) : JS.Promise<bool> = jsNative
+
+[<Emit("fetch('/fixtures/answer/' + $0 + '/' + $1).then(() => undefined)")>]
+let private fontAnswer (name: string) (mode: string) : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared T01 font set assertions over document.fonts with held fixture-server fonts.</summary>
+let runFonts () =
+    async {
+        let document = document ()
+
+        let server: Fonts.FontServer =
+            {
+                Url = fun name -> "/fixtures/held/" + name
+                Requested = fun name -> fontRequested name |> Async.AwaitPromise
+                Respond =
+                    fun name response ->
+                        let mode =
+                            match response with
+                            | Fonts.FontResponse.Font -> "font"
+                            | Fonts.FontResponse.Broken -> "broken"
+                            | Fonts.FontResponse.Missing -> "missing"
+
+                        fontAnswer name mode |> Async.AwaitPromise
+            }
+
+        use signals = BrowserCancellation.forDocument document
+
+        let! count =
+            Fonts.run document server (fun () -> BrowserFonts.forDocument document) signals wait
+
+        return {| fonts = count |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("globalThis.__nativeApiSetActive($0)")>]
 let private setActive (active: bool) : JS.Promise<unit> = jsNative
 
@@ -1136,6 +1171,41 @@ let runBinary () =
     }
     |> Async.StartAsPromise
 
+[<Emit("$0.dispatchEvent(new DragEvent('drop', { dataTransfer: $1, bubbles: true, cancelable: true }))")>]
+let private dispatchDrop (element: Element) (transfer: DataTransfer) : unit = jsNative
+
+[<Emit("$0.dispatchEvent(new ClipboardEvent('paste', { clipboardData: $1, bubbles: true, cancelable: true }))")>]
+let private dispatchPaste (element: Element) (transfer: DataTransfer) : unit = jsNative
+
+/// <summary>Runs the shared DataTransfer assertions over synthetic drop and paste events.</summary>
+let runDataTransfer () =
+    let document = document ()
+    use transfers = BrowserDataTransfers.forDocument document
+    use binary = BrowserBinaryValues.forDocument document
+
+    let transfer (strings: struct (string * string) array) (files: File array) =
+        let value = transfers.Create ()
+
+        for struct (kind, text) in strings do
+            value.setData (kind, text)
+
+        for file in files do
+            value.items.add file |> ignore
+
+        value
+
+    let driver: DataTransferChecks.Driver =
+        {
+            Create = fun () -> transfers.Create ()
+            File = fun name kind text -> binary.CreateFile ([| BlobPart.Text text |], name, { FileOptions.Default with Type = kind })
+            Drop = fun element strings files -> dispatchDrop element (transfer strings files)
+            Paste = fun element strings files -> dispatchPaste element (transfer strings files)
+        }
+
+    {|
+        dataTransfer = DataTransferChecks.run document driver
+    |}
+
 /// <summary>Runs the shared blob URL and FileReader assertions.</summary>
 let runBlobUrls () =
     async {
@@ -1180,6 +1250,18 @@ let runEventDetails () =
             EventDetailChecks.run document (fun () -> BrowserEventDetails.forDocument document) driver
 
         return {| eventDetails = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared value factory assertions.</summary>
+let runValueFactories () =
+    async {
+        let document = document ()
+
+        let count =
+            ValueFactoryChecks.run document (fun () -> BrowserValueFactories.forDocument document)
+
+        return {| valueFactories = count |}
     }
     |> Async.StartAsPromise
 
@@ -1348,6 +1430,12 @@ let runHighlights () =
 
     {| highlights = count |}
 
+/// <summary>Runs the shared canvas context assertions.</summary>
+let runCanvas () =
+    let document = document ()
+    let count = CanvasChecks.run (fun () -> BrowserCanvas.forDocument document) document
+    {| canvas = count |}
+
 /// <summary>Runs the shared U+0000 round-trip assertions (WebCore #142).</summary>
 let runStrings () =
     let document = document ()
@@ -1360,7 +1448,10 @@ let runStrings () =
 /// <summary>Runs the shared U+0000 event-type assertions (WebCore #145).</summary>
 let runHostStrings () =
     let document = document ()
-    let count = HostStringChecks.run document (fun () -> BrowserEvents.forDocument document)
+
+    let count =
+        HostStringChecks.run document (fun () -> BrowserEvents.forDocument document)
+
     {| hostStrings = count |}
 
 /// <summary>Runs the shared diagnostics assertions.</summary>
@@ -1509,6 +1600,34 @@ let runDomModel () =
     async { return domModel (document ()) }
     |> Async.StartAsPromise
 
+[<Emit("new Promise(resolve => { const f = document.createElement('iframe'); f.allow = \"screen-wake-lock 'none'\"; f.src = location.href; f.onload = () => resolve(f.contentDocument); document.body.append(f); })")>]
+let private deniedFrame () : JS.Promise<Document> = jsNative
+
+/// <summary>Runs the shared wake lock fixture: the page holds the screen-wake-lock permission, and a frame whose policy disables the feature is denied.</summary>
+let private wakeLocks (document: Document) =
+    async {
+        let! frame = deniedFrame () |> Async.AwaitPromise
+        use granted = BrowserWakeLocks.forDocument document
+        use denied = BrowserWakeLocks.forDocument frame
+        use cancellation = BrowserCancellation.forDocument document
+
+        return!
+            WakeLocks.run granted denied cancellation
+            |> Async.AwaitTask
+    }
+
+/// <summary>Runs the shared notification fixture; the page holds the notifications permission.</summary>
+let private notifications (document: Document) =
+    async {
+        use service = BrowserNotifications.forDocument document
+        use badges = BrowserNotifications.badgeForDocument document
+        use cancellation = BrowserCancellation.forDocument document
+
+        return!
+            Notifications.run service badges cancellation
+            |> Async.AwaitTask
+    }
+
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {
@@ -1533,6 +1652,8 @@ let run () =
             |> Async.AwaitTask
 
         let! cancellationInterop = cancellationInterop document
+        let! wakeLocks = wakeLocks document
+        let! notifications = notifications document
 
         let domModelResult = domModel document
 
@@ -1713,10 +1834,12 @@ let run () =
                 capabilities = capabilities
                 cancellation = cancellation
                 cancellationInterop = cancellationInterop
+                notifications = notifications
                 customEvents = customEvents
                 traversal = domModelResult.traversal
                 traversalReentry = domModelResult.traversalReentry
                 mathml = domModelResult.mathml
+                wakeLocks = wakeLocks
                 scopeRules = scopeRules
                 nestedDeclarations = nestedDeclarations
                 importContentsReadable = importContentsReadable
