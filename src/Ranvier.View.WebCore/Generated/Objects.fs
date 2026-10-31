@@ -131,7 +131,7 @@ and internal CSSStyleDeclarationObject(session: Session, handle: nativeint) =
         member this.setProperty(property: string, value: string, ?priority: string) : unit =
             use scope = new InputScope()
             let nativeString0 = scope.Bytes(property)
-            let nativeString1 = scope.Bytes(value)
+            let nativeString1 = scope.Bytes(if isNull value then "" else value)
             let nativeString2 = scope.Bytes(defaultArg priority "")
             Interop.check "CSSStyleDeclaration.setProperty" (NativeDom.rv_dom_css_style_declaration_set_property (Interop.handle (box this), nativeString0, nativeString0.Length, nativeString1, nativeString1.Length, nativeString2, nativeString2.Length))
         member this.removeProperty(property: string) : string =
@@ -1006,7 +1006,7 @@ and internal MediaListObject(session: Session, handle: nativeint) =
                 Interop.nonNull (Interop.text "MediaList.mediaText" (fun buffer capacity length -> NativeDom.rv_dom_media_list_get_media_text (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "MediaList.mediaText" (NativeDom.rv_dom_media_list_set_media_text (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.length
             with get () : uint32 =
@@ -2917,175 +2917,175 @@ and internal CSSFontFaceDescriptorsObject(session: Session, handle: nativeint) =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.src" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_src (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.src" (NativeDom.rv_dom_css_font_face_descriptors_set_src (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fontFamily
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.fontFamily" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_family (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.fontFamily" (NativeDom.rv_dom_css_font_face_descriptors_set_font_family (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``font-family``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.font-family" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_family_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.font-family" (NativeDom.rv_dom_css_font_face_descriptors_set_font_family_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fontStyle
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.fontStyle" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_style (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.fontStyle" (NativeDom.rv_dom_css_font_face_descriptors_set_font_style (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``font-style``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.font-style" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_style_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.font-style" (NativeDom.rv_dom_css_font_face_descriptors_set_font_style_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fontWeight
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.fontWeight" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_weight (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.fontWeight" (NativeDom.rv_dom_css_font_face_descriptors_set_font_weight (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``font-weight``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.font-weight" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_weight_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.font-weight" (NativeDom.rv_dom_css_font_face_descriptors_set_font_weight_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fontStretch
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.fontStretch" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_stretch (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.fontStretch" (NativeDom.rv_dom_css_font_face_descriptors_set_font_stretch (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``font-stretch``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.font-stretch" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_stretch_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.font-stretch" (NativeDom.rv_dom_css_font_face_descriptors_set_font_stretch_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fontWidth
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.fontWidth" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_width (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.fontWidth" (NativeDom.rv_dom_css_font_face_descriptors_set_font_width (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``font-width``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.font-width" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_width_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.font-width" (NativeDom.rv_dom_css_font_face_descriptors_set_font_width_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.sizeAdjust
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.sizeAdjust" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_size_adjust (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.sizeAdjust" (NativeDom.rv_dom_css_font_face_descriptors_set_size_adjust (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``size-adjust``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.size-adjust" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_size_adjust_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.size-adjust" (NativeDom.rv_dom_css_font_face_descriptors_set_size_adjust_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.unicodeRange
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.unicodeRange" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_unicode_range (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.unicodeRange" (NativeDom.rv_dom_css_font_face_descriptors_set_unicode_range (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``unicode-range``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.unicode-range" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_unicode_range_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.unicode-range" (NativeDom.rv_dom_css_font_face_descriptors_set_unicode_range_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fontFeatureSettings
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.fontFeatureSettings" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_feature_settings (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.fontFeatureSettings" (NativeDom.rv_dom_css_font_face_descriptors_set_font_feature_settings (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``font-feature-settings``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.font-feature-settings" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_feature_settings_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.font-feature-settings" (NativeDom.rv_dom_css_font_face_descriptors_set_font_feature_settings_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fontDisplay
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.fontDisplay" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_display (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.fontDisplay" (NativeDom.rv_dom_css_font_face_descriptors_set_font_display (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``font-display``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.font-display" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_font_display_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.font-display" (NativeDom.rv_dom_css_font_face_descriptors_set_font_display_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.ascentOverride
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.ascentOverride" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_ascent_override (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.ascentOverride" (NativeDom.rv_dom_css_font_face_descriptors_set_ascent_override (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``ascent-override``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.ascent-override" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_ascent_override_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.ascent-override" (NativeDom.rv_dom_css_font_face_descriptors_set_ascent_override_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.descentOverride
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.descentOverride" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_descent_override (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.descentOverride" (NativeDom.rv_dom_css_font_face_descriptors_set_descent_override (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``descent-override``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.descent-override" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_descent_override_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.descent-override" (NativeDom.rv_dom_css_font_face_descriptors_set_descent_override_css (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.lineGapOverride
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.lineGapOverride" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_line_gap_override (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.lineGapOverride" (NativeDom.rv_dom_css_font_face_descriptors_set_line_gap_override (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.``line-gap-override``
             with get () : string =
                 Interop.nonNull (Interop.text "CSSFontFaceDescriptors.line-gap-override" (fun buffer capacity length -> NativeDom.rv_dom_css_font_face_descriptors_get_line_gap_override_css (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSFontFaceDescriptors.line-gap-override" (NativeDom.rv_dom_css_font_face_descriptors_set_line_gap_override_css (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal CSSFontFaceRuleObject(session: Session, handle: nativeint) =
@@ -4033,7 +4033,7 @@ and internal CSSStylePropertiesObject(session: Session, handle: nativeint) =
                 Interop.nonNull (Interop.text "CSSStyleProperties.cssFloat" (fun buffer capacity length -> NativeDom.rv_dom_css_style_properties_get_css_float (Interop.handle (box this), buffer, capacity, length)))
             and set (value: string) =
                 use scope = new InputScope()
-                let nativeString0 = scope.Bytes(value)
+                let nativeString0 = scope.Bytes(if isNull value then "" else value)
                 Interop.check "CSSStyleProperties.cssFloat" (NativeDom.rv_dom_css_style_properties_set_css_float (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal CSSStyleRuleObject(session: Session, handle: nativeint) =
@@ -6417,13 +6417,13 @@ and internal CharacterDataObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "CharacterData.data" (NativeDom.rv_dom_character_data_set_data (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "CharacterData.data" (NativeDom.rv_dom_character_data_set_data (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.length
             with get () : uint32 =
@@ -11363,13 +11363,13 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLElement.innerText" (NativeDom.rv_dom_html_element_set_inner_text (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLElement.innerText" (NativeDom.rv_dom_html_element_set_inner_text (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.inert
             with get () : bool =
@@ -11483,13 +11483,13 @@ and internal HTMLElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLElement.outerText" (NativeDom.rv_dom_html_element_set_outer_text (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLElement.outerText" (NativeDom.rv_dom_html_element_set_outer_text (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.autocorrect
             with get () : bool =
@@ -16863,13 +16863,13 @@ and internal HTMLBodyElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLBodyElement.aLink" (NativeDom.rv_dom_html_body_element_set_a_link (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLBodyElement.aLink" (NativeDom.rv_dom_html_body_element_set_a_link (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.background
             with get () : string =
@@ -16911,13 +16911,13 @@ and internal HTMLBodyElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLBodyElement.bgColor" (NativeDom.rv_dom_html_body_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLBodyElement.bgColor" (NativeDom.rv_dom_html_body_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.link
             with get () : string =
@@ -16935,13 +16935,13 @@ and internal HTMLBodyElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLBodyElement.link" (NativeDom.rv_dom_html_body_element_set_link (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLBodyElement.link" (NativeDom.rv_dom_html_body_element_set_link (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.text
             with get () : string =
@@ -16959,13 +16959,13 @@ and internal HTMLBodyElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLBodyElement.text" (NativeDom.rv_dom_html_body_element_set_text (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLBodyElement.text" (NativeDom.rv_dom_html_body_element_set_text (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.vLink
             with get () : string =
@@ -16983,13 +16983,13 @@ and internal HTMLBodyElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLBodyElement.vLink" (NativeDom.rv_dom_html_body_element_set_v_link (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLBodyElement.vLink" (NativeDom.rv_dom_html_body_element_set_v_link (Interop.handle (box this), nativeString0, nativeString0.Length))
 
 and internal HTMLCanvasElementObject(session: Session, handle: nativeint) =
@@ -17491,13 +17491,13 @@ and internal HTMLFontElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLFontElement.color" (NativeDom.rv_dom_html_font_element_set_color (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLFontElement.color" (NativeDom.rv_dom_html_font_element_set_color (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.face
             with get () : string =
@@ -18649,13 +18649,13 @@ and internal HTMLImageElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLImageElement.border" (NativeDom.rv_dom_html_image_element_set_border (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLImageElement.border" (NativeDom.rv_dom_html_image_element_set_border (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.fetchPriority
             with get () : string =
@@ -21242,13 +21242,13 @@ and internal HTMLTableCellElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLTableCellElement.bgColor" (NativeDom.rv_dom_html_table_cell_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLTableCellElement.bgColor" (NativeDom.rv_dom_html_table_cell_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.ch
             with get () : string =
@@ -21926,13 +21926,13 @@ and internal HTMLTableElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLTableElement.bgColor" (NativeDom.rv_dom_html_table_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLTableElement.bgColor" (NativeDom.rv_dom_html_table_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.cellPadding
             with get () : string =
@@ -21950,13 +21950,13 @@ and internal HTMLTableElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLTableElement.cellPadding" (NativeDom.rv_dom_html_table_element_set_cell_padding (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLTableElement.cellPadding" (NativeDom.rv_dom_html_table_element_set_cell_padding (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.cellSpacing
             with get () : string =
@@ -21974,13 +21974,13 @@ and internal HTMLTableElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLTableElement.cellSpacing" (NativeDom.rv_dom_html_table_element_set_cell_spacing (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLTableElement.cellSpacing" (NativeDom.rv_dom_html_table_element_set_cell_spacing (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.createCaption() : Ranvier.Dom.HTMLTableCaptionElement =
             if this.Session.Intercepting then
@@ -22171,13 +22171,13 @@ and internal HTMLTableRowElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLTableRowElement.bgColor" (NativeDom.rv_dom_html_table_row_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLTableRowElement.bgColor" (NativeDom.rv_dom_html_table_row_element_set_bg_color (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.ch
             with get () : string =
@@ -22931,13 +22931,13 @@ and internal HTMLTextAreaElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLTextAreaElement.value" (NativeDom.rv_dom_html_text_area_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLTextAreaElement.value" (NativeDom.rv_dom_html_text_area_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.textLength
             with get () : uint32 =
@@ -27649,13 +27649,13 @@ and internal HTMLInputElementObject(session: Session, handle: nativeint) =
                         let value: string = unbox args[0]
                         let result =
                             use scope = new InputScope()
-                            let nativeString0 = scope.Bytes(value)
+                            let nativeString0 = scope.Bytes(if isNull value then "" else value)
                             Interop.check "HTMLInputElement.value" (NativeDom.rv_dom_html_input_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
                         box result)
                     |> ignore
                 else
                     use scope = new InputScope()
-                    let nativeString0 = scope.Bytes(value)
+                    let nativeString0 = scope.Bytes(if isNull value then "" else value)
                     Interop.check "HTMLInputElement.value" (NativeDom.rv_dom_html_input_element_set_value (Interop.handle (box this), nativeString0, nativeString0.Length))
         member this.valueAsNumber
             with get () : float =
