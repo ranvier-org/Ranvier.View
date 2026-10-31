@@ -62,6 +62,156 @@ let private runTransforms (host: WebCoreHost) =
 
     shared + effects
 
+/// <summary>Drives a task on the host owner thread: continuations run between host cycles.</summary>
+type private OwnerLoop() =
+    inherit System.Threading.SynchronizationContext()
+
+    let queue =
+        System.Collections.Concurrent.ConcurrentQueue<struct (System.Threading.SendOrPostCallback * obj)>()
+
+    override _.Post(callback, state) =
+        queue.Enqueue (struct (callback, state))
+
+    override this.Send(callback, state) =
+        callback.Invoke state
+
+    member _.Drain() =
+        let mutable item = Unchecked.defaultof<_>
+
+        while queue.TryDequeue (&item) do
+            let struct (callback, state) = item
+            callback.Invoke state
+
+/// <summary>Runs the shared cancellation fixture and native thread, error, timer and teardown checks.</summary>
+let private runCancellation () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+    let mutable survivor: Ranvier.Dom.AbortSignal option = None
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let shared =
+        try
+            let turn () =
+                host.Cycle ()
+                System.Threading.Tasks.Task.FromResult ()
+
+            let pending =
+                Cancellation.run host.Document (fun () -> Ranvier.View.WebCore.Cancellation.forHost host) turn
+
+            if not pending.IsCompleted then
+                failwith "Cancellation fixture did not complete on the owner thread"
+
+            let count = pending.GetAwaiter().GetResult()
+            use service = Ranvier.View.WebCore.Cancellation.forHost host
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.CreateController () |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Cancellation rejects another thread"
+            let failing = service.CreateController ()
+            let errors = host.Errors.Count
+            let mutable after = 0
+            use _failing = failing.Signal.OnAbort (fun _ -> failwith "abort callback failure")
+            use _after = failing.Signal.OnAbort (fun _ -> after <- after + 1)
+            failing.Abort ()
+            expect (host.Errors.Count = errors + 1) "Abort callback failure is reported to the host"
+            expect (after = 1) "Later abort callbacks run after a failure"
+            use source = new System.Threading.CancellationTokenSource ()
+            let remote = service.FromCancellationToken source.Token
+            System.Threading.Tasks.Task.Run(fun () -> source.Cancel ()).GetAwaiter().GetResult()
+            expect (not remote.Aborted) "Off-thread token cancellation waits for the owner"
+            host.Cycle ()
+            expect remote.Aborted "Owner Cycle applies off-thread token cancellation"
+            expect host.NextTimerDelay.IsNone "No host timer before the timeout"
+            let distant = service.Timeout 1.0e9
+            expect host.NextTimerDelay.IsSome "Timeout uses a host timer"
+            service.Dispose ()
+            expect host.NextTimerDelay.IsNone "Service disposal clears its host timer"
+
+            let disposedRead =
+                try
+                    distant.Aborted |> ignore
+                    false
+                with :? System.ObjectDisposedException ->
+                    true
+
+            expect disposedRead "Signals of a disposed service reject reads"
+            survivor <- Some ((Ranvier.View.WebCore.Cancellation.forHost host).Timeout 1.0e9)
+            expect host.NextTimerDelay.IsSome "Survivor timeout pending before host disposal"
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Cancellation fixture leaves no live native objects"
+
+    let hostDisposedRead =
+        try
+            survivor.Value.Aborted |> ignore
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect hostDisposedRead "Host disposal invalidates its cancellation domains"
+
+    if shared <> 56 then
+        failwith $"Cancellation shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API I01 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API I01 LIFETIME PASS assertions={lifetime}"
+    shared
+
+let private runCapabilities () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let previous = System.Threading.SynchronizationContext.Current
+    let loop = OwnerLoop ()
+    System.Threading.SynchronizationContext.SetSynchronizationContext loop
+
+    let count =
+        try
+            let pending =
+                Capabilities.run (fun () -> Ranvier.View.WebCore.Capabilities.forHost host)
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not pending.IsCompleted
+                  && timeout.ElapsedMilliseconds < 10000L do
+                loop.Drain ()
+                host.Cycle ()
+                System.Threading.Thread.Sleep 1
+
+            if not pending.IsCompleted then
+                failwith "Capability fixture did not complete on the owner loop"
+
+            pending.GetAwaiter().GetResult()
+        finally
+            System.Threading.SynchronizationContext.SetSynchronizationContext previous
+            (host :> System.IDisposable).Dispose()
+
+    if count <> 42 then
+        failwith "Capability shared assertions did not run"
+
+    if session.LiveObjects <> 0 then
+        failwith $"Capability fixture leaked {session.LiveObjects} managed native objects"
+
+    System.Console.WriteLine $"NATIVE_API H07 PASS assertions={count}"
+    System.Console.WriteLine "NATIVE_API H07 TEARDOWN PASS"
+    count
+
 let private runAll () =
     runLocales () |> ignore
     let svgLifecycle = SvgLifecycle.run ()
@@ -71,6 +221,8 @@ let private runAll () =
 
     System.Console.WriteLine $"NATIVE_API SVG LIFETIME PASS assertions={svgLifecycle}"
     UserTimingNative.run ()
+    runCapabilities () |> ignore
+    runCancellation () |> ignore
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
@@ -1031,6 +1183,12 @@ let main args =
 
         System.Console.WriteLine "NATIVE_API C14 TEARDOWN PASS"
 
+        0
+    elif Array.contains "--cancellation-only" args then
+        runCancellation () |> ignore
+        0
+    elif Array.contains "--capabilities-only" args then
+        runCapabilities () |> ignore
         0
     elif Array.contains "--custom-properties-only" args then
         let lifecycle = CustomPropertyLifecycle.run ()

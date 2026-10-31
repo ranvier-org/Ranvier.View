@@ -13,7 +13,7 @@
         <PackageTags>reactive;signals;view;dom;webcore;native;fsharp</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>Experimental. The API may change.</PackageReleaseNotes>
-        <Version>0.1.0-alpha.11</Version>
+        <Version>0.1.0-alpha.13</Version>
         <IsAotCompatible>true</IsAotCompatible>
         <IsPackable>true</IsPackable>
         <!-- Generated wrapper implementation members inherit their contracts' documentation. -->
@@ -66,6 +66,8 @@
         <Compile Include="ComputedStyles.fs" />
         <Compile Include="Locales.fs" />
         <Compile Include="Timing.fs" />
+        <Compile Include="Capabilities.fs" />
+        <Compile Include="Cancellation.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />

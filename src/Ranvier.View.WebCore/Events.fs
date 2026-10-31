@@ -88,26 +88,31 @@ type internal Events private () =
 
     static member private AddCore
         (target: NativeObject, eventType: string, identity: obj, invoke: obj -> unit, capture: bool, once: bool, passive: bool option)
-        =
-        if not (isNull identity) then
-            if (Events.Find (target, eventType, capture, identity)).IsNone then
-                if once then
-                    let registration: Registration ref = ref null
+        : Registration option =
+        if
+            not (isNull identity)
+            && (Events.Find (target, eventType, capture, identity)).IsNone
+        then
+            if once then
+                let registration: Registration ref = ref null
 
-                    registration.Value <-
-                        Events.Listen (
-                            target,
-                            eventType,
-                            capture,
-                            identity,
-                            (fun e ->
-                                Events.Unlisten (target.Session, registration.Value)
-                                invoke e),
-                            ?passive = passive
-                        )
-                else
-                    Events.Listen (target, eventType, capture, identity, invoke, ?passive = passive)
-                    |> ignore
+                registration.Value <-
+                    Events.Listen (
+                        target,
+                        eventType,
+                        capture,
+                        identity,
+                        (fun e ->
+                            Events.Unlisten (target.Session, registration.Value)
+                            invoke e),
+                        ?passive = passive
+                    )
+
+                Some registration.Value
+            else
+                Some (Events.Listen (target, eventType, capture, identity, invoke, ?passive = passive))
+        else
+            None
 
     static member private Options(options: AddEventListenerOptions) =
         if obj.ReferenceEquals (options, null) then
@@ -115,9 +120,15 @@ type internal Events private () =
         else
             options.capture, options.once, options.passive
 
+    /// <summary>Registers a function listener and returns its registration, or None for a duplicate.</summary>
+    static member internal AddRegistered(target: NativeObject, eventType: string, listener: EventListener, options: AddEventListenerOptions) =
+        let capture, once, passive = Events.Options options
+        Events.AddCore (target, eventType, box listener, (fun event -> listener (unbox<Event> event)), capture, once, passive)
+
     /// <summary>Registers a function listener, ignoring repeated callback/type/capture registrations.</summary>
     static member Add(target: NativeObject, eventType: string, listener: EventListener, capture: bool option) =
         Events.AddCore (target, eventType, box listener, (fun event -> listener (unbox<Event> event)), defaultArg capture false, false, None)
+        |> ignore
 
     /// <summary>Registers an object listener, preserving the object's removal identity.</summary>
     static member Add(target: NativeObject, eventType: string, listener: EventListenerObject, capture: bool option) =
@@ -130,18 +141,23 @@ type internal Events private () =
             false,
             None
         )
+        |> ignore
 
     /// <summary>Registers a function listener with capture, once and optional passive behavior.</summary>
     static member Add(target: NativeObject, eventType: string, listener: EventListener, options: AddEventListenerOptions) =
         let capture, once, passive = Events.Options options
+
         Events.AddCore (target, eventType, box listener, (fun event -> listener (unbox<Event> event)), capture, once, passive)
+        |> ignore
 
     /// <summary>Registers an object listener with capture, once and optional passive behavior.</summary>
     static member Add(target: NativeObject, eventType: string, listener: EventListenerObject, options: AddEventListenerOptions) =
         let capture, once, passive = Events.Options options
-        Events.AddCore (target, eventType, box listener, (fun event -> listener.handleEvent (unbox<Event> event)), capture, once, passive)
 
-    static member private RemoveCore(target: NativeObject, eventType: string, identity: obj, capture: bool) =
+        Events.AddCore (target, eventType, box listener, (fun event -> listener.handleEvent (unbox<Event> event)), capture, once, passive)
+        |> ignore
+
+    static member internal RemoveCore(target: NativeObject, eventType: string, identity: obj, capture: bool) =
         if not (isNull identity) then
             match Events.Find (target, eventType, capture, identity) with
             | Some registration -> Events.Unlisten (target.Session, registration)
