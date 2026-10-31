@@ -1,4 +1,4 @@
-254 classes; 2731 members: 2684 mapped to 2602 of 2725 rv_dom_* functions, 47 hand-written, 0 unmapped
+255 classes; 2734 members: 2684 mapped to 2602 of 2727 rv_dom_* functions, 47 hand-written, 3 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_animation_playback_event_create: AnimationPlaybackEvent.constructor (op)
@@ -31,10 +31,12 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_css_unparsed_value_create: CSSUnparsedValue.constructor (op)
   rv_dom_cssom_keyword_value_create: CSSOMKeywordValue.constructor (op)
   rv_dom_cssom_variable_reference_value_create: CSSOMVariableReferenceValue.constructor (op)
+  rv_dom_custom_effect_create: CustomEffect.constructor (op)
   rv_dom_document_create_node_iterator: Document.createNodeIterator (op)
   rv_dom_document_create_tree_walker: Document.createTreeWalker (op)
   rv_dom_document_get_adopted_style_sheets: Document.adoptedStyleSheets (get)
   rv_dom_document_set_adopted_style_sheets: Document.adoptedStyleSheets (set)
+  rv_dom_document_timeline_animate: DocumentTimeline.animate (op)
   rv_dom_document_timeline_create: DocumentTimeline.constructor (op)
   rv_dom_dom_form_data_create: DOMFormData.constructor (op)
   rv_dom_dom_form_data_entries: DOMFormData.entries (op)
@@ -126,6 +128,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_window_scroll_to_2: DOMWindow.scrollTo (op)
 
 Unmapped members by reason:
+      3  argument: (float -> unit) as RvCustomEffectCallback*
 
 Members by class (mapped / hand-written / unmapped):
   AbstractRangeObject: 5 / 0 / 0
@@ -197,6 +200,7 @@ Members by class (mapped / hand-written / unmapped):
   DOMTokenListObject: 10 / 0 / 0
   DocumentFragmentObject: 11 / 0 / 0
   DocumentObject: 74 / 2 / 0
+  DocumentTimelineObject: 0 / 0 / 3
   ElementObject: 199 / 0 / 0
   ErrorEventObject: 4 / 0 / 0
   EventObject: 16 / 2 / 0
@@ -384,3 +388,6 @@ Members by class (mapped / hand-written / unmapped):
   WheelEventObject: 7 / 0 / 0
 
 Unmapped members:
+  DocumentTimelineObject DocumentTimeline.animate: argument callback: (float -> unit) as RvCustomEffectCallback*
+  DocumentTimelineObject DocumentTimeline.animate: argument callback: (float -> unit) as RvCustomEffectCallback*
+  DocumentTimelineObject DocumentTimeline.animate: argument callback: (float -> unit) as RvCustomEffectCallback*

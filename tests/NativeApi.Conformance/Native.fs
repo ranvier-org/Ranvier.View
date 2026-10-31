@@ -2094,6 +2094,105 @@ let private runCoordinates () =
 [<Literal>]
 let private AnimationChecksCount = 110
 
+/// <summary>Runs the shared custom effect fixture on the host's frames, with the provider's native lifetime checks.</summary>
+[<Literal>]
+let private CustomEffectChecksCount = 23
+
+let private runCustomEffects () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let errorName =
+        function
+        | Ranvier.Dom.AnimationException (name, _) -> name
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let driver: CustomEffectChecks.Driver =
+        {
+            NextFrame =
+                fun () ->
+                    async {
+                        host.Frame ()
+                        host.Cycle ()
+                        host.Cycle ()
+                    }
+            RoutedErrors = fun () -> session.ListenerErrors.Count
+        }
+
+    let shared =
+        try
+            (CustomEffectChecks.run
+                host.Document
+                (fun () -> Ranvier.View.WebCore.CustomEffects.forHost host)
+                (fun () -> Ranvier.View.WebCore.Animations.forHost host)
+                (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost host)
+                errorName
+                driver
+             |> Async.StartImmediateAsTask)
+                .GetAwaiter()
+                .GetResult()
+        with error ->
+            (host :> System.IDisposable).Dispose()
+            raise error
+
+    session.ListenerErrors.Clear ()
+    let service = Ranvier.View.WebCore.CustomEffects.forHost host
+
+    let wrongThread =
+        System.Threading.Tasks.Task
+            .Run(fun () ->
+                try
+                    service.CreateCustomEffectFor (ignore, 100.0)
+                    |> ignore
+
+                    false
+                with :? System.InvalidOperationException ->
+                    true)
+            .GetAwaiter()
+            .GetResult()
+
+    expect wrongThread "A custom effect service rejects another thread"
+    let mutable ticks = 0
+
+    let held =
+        service.Animate ((fun _ -> ticks <- ticks + 1), Ranvier.Dom.CustomAnimationOptions ())
+
+    host.Frame ()
+    let atDisposal = ticks
+    (host :> System.IDisposable).Dispose()
+    expect (ticks = atDisposal) "No tick runs after host disposal"
+    held.Dispose ()
+    service.Dispose ()
+
+    let rejected =
+        try
+            service.CreateCustomEffectFor (ignore, 100.0)
+            |> ignore
+
+            false
+        with _ ->
+            true
+
+    expect rejected "A disposed custom effect service rejects construction"
+
+    if
+        CustomEffectChecksCount <> 0
+        && shared <> CustomEffectChecksCount
+    then
+        failwith $"Custom effect shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API A09 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API A09 LIFETIME PASS assertions={lifetime}"
+    shared
+
 let private runAnimations () =
     let host = WebCoreHost.Create (320, 240)
     let mutable lifetime = 0
@@ -2118,7 +2217,7 @@ let private runAnimations () =
                 (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost host)
                 errorName
         with error ->
-            (host :> System.IDisposable).Dispose ()
+            (host :> System.IDisposable).Dispose()
             raise error
 
     let service = Ranvier.View.WebCore.Animations.forHost host
@@ -2139,7 +2238,7 @@ let private runAnimations () =
     let held = body.animate ([||], 1000.0)
     let effect = service.CreateKeyframeEffectFor (body, [||], 1000.0)
     expect (held.playState = Ranvier.Dom.AnimationPlayState.Running) "An animation held across host disposal runs"
-    (host :> System.IDisposable).Dispose ()
+    (host :> System.IDisposable).Dispose()
 
     let rejected =
         try
@@ -2874,6 +2973,7 @@ let private runAll () =
     runCascade () |> ignore
     runCoordinates () |> ignore
     runAnimations () |> ignore
+    runCustomEffects () |> ignore
     runBlobUrls () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
@@ -3886,6 +3986,9 @@ let main args =
         0
     elif Array.contains "--cascade-only" args then
         runCascade () |> ignore
+        0
+    elif Array.contains "--custom-effects-only" args then
+        runCustomEffects () |> ignore
         0
     elif Array.contains "--animations-only" args then
         runAnimations () |> ignore

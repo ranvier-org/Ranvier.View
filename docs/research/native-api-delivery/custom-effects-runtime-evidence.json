@@ -1,0 +1,51 @@
+{
+ "group": "A09 custom animation effects (managed)",
+ "native": "native-waapi-fx 018185a (fx-candidate-1, runtime WebCore f1fe4a1b, Host 1f85ee7f, JSC 95149cdc)",
+ "core": "rv-waapi-fx-core 63ef3db5 (packed locally as Ranvier.Dom/Fable.Ranvier.Dom 0.1.0-alpha.49 placeholder)",
+ "fullRuns": {
+  "jitPassLines": 123,
+  "aotPassLines": 123,
+  "chromiumPassLines": 88,
+  "baselineA01": {
+   "jit": 121,
+   "aot": 121,
+   "chromium": 87
+  },
+  "A09": {
+   "jit": 23,
+   "aot": 23,
+   "chromium": 23,
+   "nativeLifetime": 3
+  }
+ },
+ "repeat30": {
+  "aot": "AOT: 30/30",
+  "chromium": "CHROMIUM: 30/30"
+ },
+ "facadeCapability": [
+  "No",
+  "Yes",
+  "Unknown",
+  "Unknown",
+  "Unknown",
+  "Ranvier facade emulation"
+ ],
+ "logs": {
+  "jit": {
+   "path": "C:\\wk\\waapi-fx-artifacts\\managed\\full-1\\jit.log",
+   "sha256": "b628e5fad001dcbf015e8aeed25c8bd753c40bedc04a5ee784f2dd5209c62fc1"
+  },
+  "aot": {
+   "path": "C:\\wk\\waapi-fx-artifacts\\managed\\full-1\\aot.log",
+   "sha256": "57495ceeb865672aa7a102b31a102e841eb1607c47419da8bf2811b7bcb86610"
+  },
+  "chromium": {
+   "path": "C:\\wk\\waapi-fx-artifacts\\managed\\full-1\\chromium.log",
+   "sha256": "bd7e45c59e8d52554be1b6bfe2100338b4202f66181443202f5f088f8229fa5a"
+  }
+ },
+ "notes": [
+  "Formatting by fantomas after the runs; no semantic change.",
+  "DocumentTimeline.animate wrappers unmapped (NotSupported), as in Chromium; CustomEffectService is the shared contract."
+ ]
+}
