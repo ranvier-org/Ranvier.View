@@ -112,12 +112,19 @@ const runViewport = async () => {
     const scroll = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runViewportScroll(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (scroll.scroll !== SCROLL_ASSERTIONS) throw new Error(`Viewport scrolling assertions did not run: ${JSON.stringify(scroll)}`);
     console.log(`BROWSER_API G05 PASS assertions=${scroll.scroll} engine=chromium`);
+    // G03 drives the page scale with Emulation.setPageScaleFactor and pans with a trusted wheel.
+    await page.exposeFunction('__nativeApiPageScale', async pageScaleFactor => { await cdp.send('Emulation.setPageScaleFactor', { pageScaleFactor }); });
+    await page.exposeFunction('__nativeApiWheel', async (x, y, deltaX, deltaY) => { await page.mouse.move(x, y); await page.mouse.wheel(deltaX, deltaY); });
+    const visual = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runVisualViewport(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (visual.visualViewport !== VISUAL_VIEWPORT_ASSERTIONS) throw new Error(`Visual viewport assertions did not run: ${JSON.stringify(visual)}`);
+    console.log(`BROWSER_API G03 PASS assertions=${visual.visualViewport} engine=chromium`);
   } finally {
     await viewportBrowser.close();
   }
 };
 const VIEWPORT_ASSERTIONS = 44;
 const SCROLL_ASSERTIONS = 278;
+const VISUAL_VIEWPORT_ASSERTIONS = 66;
 // D13 runs in its own page: the fixture forms submit into a sink frame of that page.
 const runForms = async () => {
   const formsBrowser = await chromium.launch({ headless: true });

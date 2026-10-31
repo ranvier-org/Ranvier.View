@@ -40,8 +40,7 @@ module VisualViewport =
         |> Interop.check "Window.visualViewport"
 
         let viewport =
-            host.Session.Object (handle, Kind.VisualViewport, document, Func<_, _, _> (fun s h -> VisualViewportObject (s, h)))
-            :?> NativeObject
+            host.Session.Object (handle, Kind.VisualViewport, document, Func<_, _, _>(fun s h -> VisualViewportObject (s, h))) :?> NativeObject
 
         let read () =
             if viewport.Handle = 0n then
@@ -64,7 +63,8 @@ module VisualViewport =
                 if Array.contains Detached statuses then
                     Error VisualViewportUnavailable.Detached
                 else
-                    statuses |> Array.iter (Interop.check "VisualViewport")
+                    statuses
+                    |> Array.iter (Interop.check "VisualViewport")
 
                     Ok
                         {
@@ -78,7 +78,7 @@ module VisualViewport =
                         }
 
         {
-            Viewport = unbox<Ranvier.Dom.VisualViewport> (box viewport)
+            Viewport = unbox<Ranvier.Dom.VisualViewport>(box viewport)
             Read = read
             SetPageScale =
                 fun (scale, originX, originY) ->

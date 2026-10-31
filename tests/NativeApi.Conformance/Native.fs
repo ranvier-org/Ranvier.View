@@ -588,6 +588,163 @@ let private runViewportScroll () =
     System.Console.WriteLine $"NATIVE_API G05 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared visual viewport fixture with native page replacement, thread and host-disposal checks.</summary>
+[<Literal>]
+let private VisualViewportChecksCount = 66
+
+let private runVisualViewport () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let settle () =
+        async {
+            for _ in 1..4 do
+                host.Frame ()
+                host.Cycle 20 |> ignore
+
+            host.Frame ()
+        }
+
+    let driver: VisualViewportChecks.Driver =
+        {
+            Resize =
+                fun width height ->
+                    async {
+                        host.Resize (width, height)
+                        do! settle ()
+                    }
+            SetDeviceScale =
+                fun scale ->
+                    async {
+                        host.SetDeviceScale (float32 scale)
+                        do! settle ()
+                    }
+            SetPageScale =
+                fun service scale x y ->
+                    async {
+                        if service.SetPageScale (scale, x, y) <> Ok () then
+                            failwith $"rv_host_set_page_scale {scale}"
+
+                        do! settle ()
+                    }
+            Wheel =
+                fun x y dx dy ->
+                    async {
+                        host.Wheel (x, y, float32 dx, float32 dy, 0)
+                        |> ignore
+
+                        do! settle ()
+                    }
+            Settle = settle
+            Engine = VisualViewportChecks.WebKit
+            HostInsets = true
+        }
+
+    let mutable kept = None
+
+    let shared =
+        try
+            let window () =
+                box host.Document :?> Ranvier.View.WebCore.NativeObject
+
+            let scrollTo x y =
+                RanvierWebCoreAbi.NativeDom.rv_dom_window_scroll_to_2 ((window ()).Handle, x, y)
+                |> ignore
+
+            let count =
+                VisualViewportChecks.run host.Document scrollTo (fun () -> Ranvier.View.WebCore.VisualViewport.forHost host) driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 60000L do
+                host.Cycle ()
+
+            let count = count.GetAwaiter().GetResult()
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            Ranvier.View.WebCore.VisualViewport.forHost host
+                            |> ignore
+
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "The visual viewport rejects another thread"
+            let service = Ranvier.View.WebCore.VisualViewport.forHost host
+
+            let crossThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.Current () |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect crossThread "A service read on another thread raises"
+            expect (service.SetPageScale (2.0, 0, 0) = Ok ()) "page scale 2"
+            settle () |> Async.StartImmediate
+
+            expect
+                (match service.Current () with
+                 | Ok state -> state.Width = 160.0 && state.Scale = 2.0
+                 | Error _ -> false)
+                "page scale 2 halves the visual viewport"
+
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            // The engine keeps the frame's window for the replacement document, and with it the visual viewport.
+            let replacement = Ranvier.View.WebCore.VisualViewport.forHost host
+            expect (service.Current () = replacement.Current ()) "The replacement document keeps the window's visual viewport"
+
+            expect
+                (match replacement.Current () with
+                 | Ok state -> state.Scale = 2.0
+                 | Error _ -> false)
+                "The page scale outlives the page replacement"
+
+            expect (replacement.SetPageScale (1.0, 0, 0) = Ok ()) "page scale reset"
+            service.Dispose ()
+            kept <- Some replacement
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (kept.Value.Current () = Error Ranvier.Dom.VisualViewportUnavailable.Detached) "Current after host dispose is Detached"
+
+    let raises (action: unit -> unit) =
+        try
+            action ()
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect (raises (fun () -> kept.Value.SetPageScale (2.0, 0, 0) |> ignore)) "SetPageScale after host dispose raises"
+    kept.Value.Dispose ()
+    expect (session.LiveObjects = 0) "The visual viewport fixture leaves no live native objects"
+
+    if shared <> VisualViewportChecksCount then
+        failwith $"Visual viewport shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API G03 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G03 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared caret hit-testing fixture with native thread and host-disposal checks.</summary>
 [<Literal>]
 let private CaretChecksCount = 1537
@@ -1546,6 +1703,7 @@ let private runAll () =
     runInputState () |> ignore
     runViewport () |> ignore
     runViewportScroll () |> ignore
+    runVisualViewport () |> ignore
     runCaret () |> ignore
     runForms () |> ignore
     runDialogs () |> ignore
@@ -2529,6 +2687,9 @@ let main args =
         0
     elif Array.contains "--scroll-only" args then
         runViewportScroll () |> ignore
+        0
+    elif Array.contains "--visual-viewport-only" args then
+        runVisualViewport () |> ignore
         0
     elif Array.contains "--caret-only" args then
         runCaret () |> ignore

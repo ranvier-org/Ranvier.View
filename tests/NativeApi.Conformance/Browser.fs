@@ -980,6 +980,75 @@ let runViewportScroll () =
     }
     |> Async.StartAsPromise
 
+[<Emit("globalThis.__nativeApiPageScale($0)")>]
+let private emulatePageScale (scale: float) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiWheel($0, $1, $2, $3)")>]
+let private wheel (x: int) (y: int) (deltaX: float) (deltaY: float) : JS.Promise<unit> = jsNative
+
+[<Emit("$0.defaultView.scrollTo($1, $2)")>]
+let private windowScrollTo (document: Document) (x: float) (y: float) : unit = jsNative
+
+/// <summary>Runs the shared visual viewport assertions under device-metrics and page-scale emulation.</summary>
+let runVisualViewport () =
+    async {
+        let document = document ()
+        let mutable size = 320, 240
+        let mutable deviceScale = 1.0
+
+        let settle () =
+            async {
+                for _ in 1..3 do
+                    do! viewportFrames () |> Async.AwaitPromise
+            }
+
+        let emulate () =
+            async {
+                do!
+                    emulateViewport (fst size) (snd size) deviceScale
+                    |> Async.AwaitPromise
+
+                do! settle ()
+            }
+
+        let driver: VisualViewportChecks.Driver =
+            {
+                Resize =
+                    fun width height ->
+                        size <- width, height
+                        emulate ()
+                SetDeviceScale =
+                    fun scale ->
+                        deviceScale <- scale
+                        emulate ()
+                SetPageScale =
+                    fun service scale _ _ ->
+                        async {
+                            match service.SetPageScale (scale, 0, 0) with
+                            | Error (VisualViewportUnavailable.Unsupported _) -> ()
+                            | other -> failwith $"The browser page scale input: {other}"
+
+                            do! emulatePageScale scale |> Async.AwaitPromise
+                            do! settle ()
+                        }
+                Wheel =
+                    fun x y dx dy ->
+                        async {
+                            do! wheel x y dx dy |> Async.AwaitPromise
+                            do! settle ()
+                        }
+                Settle = settle
+                Engine = VisualViewportChecks.Chromium
+                HostInsets = false
+            }
+
+        let! count =
+            VisualViewportChecks.run document (windowScrollTo document) (fun () -> BrowserVisualViewport.forDocument document) driver
+
+        return {| visualViewport = count |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("globalThis.__nativeApiKey($0)")>]
 let private key (name: string) : JS.Promise<unit> = jsNative
 
