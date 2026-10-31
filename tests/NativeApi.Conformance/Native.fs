@@ -2555,8 +2555,8 @@ let private runCancellation () =
     System.Console.WriteLine $"NATIVE_API I01 LIFETIME PASS assertions={lifetime}"
     shared
 
-/// <summary>Runs a task on the host thread, cycling the host until it completes; a hang guard raises.</summary>
-let private drive (host: WebCoreHost) (pending: System.Threading.Tasks.Task<'T>) =
+/// <summary>Runs a task on the hosts' thread, cycling every host until it completes; a hang guard raises.</summary>
+let private driveAll (hosts: WebCoreHost list) (pending: System.Threading.Tasks.Task<'T>) =
     let mutable turns = 0
 
     while not pending.IsCompleted do
@@ -2565,9 +2565,14 @@ let private drive (host: WebCoreHost) (pending: System.Threading.Tasks.Task<'T>)
         if turns > 10000 then
             failwith "Task did not complete on the host thread"
 
-        host.Cycle ()
+        for host in hosts do
+            host.Cycle ()
 
     pending.GetAwaiter().GetResult()
+
+/// <summary>Runs a task on the host thread, cycling the host until it completes; a hang guard raises.</summary>
+let private drive (host: WebCoreHost) (pending: System.Threading.Tasks.Task<'T>) =
+    driveAll [ host ] pending
 
 /// <summary>Runs the shared wake lock fixture and native policy, visibility, display, thread and teardown checks.</summary>
 let private runWakeLocks () =
@@ -2605,7 +2610,9 @@ let private runWakeLocks () =
 
             let denied = WakeLock.forHost deniedHost None
             let cancellation = Ranvier.View.WebCore.Cancellation.forHost host
-            let count = drive host (WakeLocks.run granted denied cancellation)
+
+            let count =
+                driveAll [ host; deniedHost ] (WakeLocks.run granted denied cancellation)
 
             expect
                 (kinds.Count > 0
@@ -2692,8 +2699,8 @@ let private runWakeLocks () =
             ignore kept
             count
         finally
-            (host :> System.IDisposable).Dispose()
             (deniedHost :> System.IDisposable).Dispose()
+            (host :> System.IDisposable).Dispose()
 
     expect (not (WakeLock.displayHeld ())) "Host disposal frees the display"
     expect (session.LiveObjects = 0) "Wake lock fixture leaves no live native objects"
