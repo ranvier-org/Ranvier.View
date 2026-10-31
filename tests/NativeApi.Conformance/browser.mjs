@@ -24,6 +24,7 @@ const idleOnly = process.argv.includes('--idle-only');
 const viewportOnly = process.argv.includes('--viewport-only');
 const formsOnly = process.argv.includes('--forms-only');
 const dialogsOnly = process.argv.includes('--dialogs-only');
+const binaryOnly = process.argv.includes('--binary-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
@@ -128,7 +129,7 @@ const runForms = async () => {
     await formsBrowser.close();
   }
 };
-const FORMS_ASSERTIONS = 67;
+const FORMS_ASSERTIONS = 69;
 // D16 runs the dialog fixture at 800x600 with trusted Playwright keyboard and mouse input.
 const runDialogs = async () => {
   const dialogsBrowser = await chromium.launch({ headless: true });
@@ -145,6 +146,20 @@ const runDialogs = async () => {
   }
 };
 const DIALOG_ASSERTIONS = 143;
+// H11 runs the binary value fixture in its own page.
+const runBinary = async () => {
+  const binaryBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await binaryBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runBinary(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.binary !== BINARY_ASSERTIONS) throw new Error(`Binary value assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API H11 PASS assertions=${result.binary} engine=chromium`);
+  } finally {
+    await binaryBrowser.close();
+  }
+};
+const BINARY_ASSERTIONS = 102;
 // A12 runs the frame fixture on the manual scheduler and on the Window's frames, timers and microtasks.
 const runFrames = async () => {
   const framesBrowser = await chromium.launch({ headless: true });
@@ -178,6 +193,7 @@ try {
   else if (viewportOnly) { await runViewport(); process.exitCode = 0; }
   else if (formsOnly) { await runForms(); process.exitCode = 0; }
   else if (dialogsOnly) { await runDialogs(); process.exitCode = 0; }
+  else if (binaryOnly) { await runBinary(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
   else if (idleOnly) { await runIdle(); process.exitCode = 0; }
   else {
@@ -406,6 +422,7 @@ try {
   await runViewport();
   await runForms();
   await runDialogs();
+  await runBinary();
   await runFrames();
   await runIdle();
   }
