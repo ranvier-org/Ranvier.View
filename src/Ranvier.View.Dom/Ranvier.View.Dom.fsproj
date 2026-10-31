@@ -24,6 +24,7 @@
     <Compile Include="Scheduling.fs" />
     <Compile Include="Binding.fs" />
     <Compile Include="Microtask.fs" />
+    <Compile Include="Frames.fs" />
     <Compile Include="Generated/Html.fs" />
     <Compile Include="Prepared.fs" />
     <Compile Include="Placement.fs" />
