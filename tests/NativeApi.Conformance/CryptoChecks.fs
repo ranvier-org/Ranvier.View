@@ -200,7 +200,7 @@ let run (create: unit -> CryptoService) =
               SubtleOperation.ExportKey, "Ed25519"
               SubtleOperation.DeriveBits, "PBKDF2"
               SubtleOperation.Digest, "MD5" ] do
-            truth $"{operation} {algorithm} Unsupported" (
+            truth $"{CryptoContract.operationName operation} {algorithm} Unsupported" (
                 match service.Availability (operation, algorithm) with
                 | CryptoOutcome.Unsupported _ -> true
                 | CryptoOutcome.Value _ -> false
