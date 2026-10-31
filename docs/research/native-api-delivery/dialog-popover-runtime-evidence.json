@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "group": "D16",
+  "status": "green (private integration; not accepted)",
+  "route": "Native30/ABI38 additive exports plus managed contracts",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/24",
+  "coreSourceCommit": "106ee5b755e60fce00ddef307abe37a380c835fd",
+  "viewsSourceCommit": "8b629527899b0f88331381b8a51ad2911f8ecdf6",
+  "stackedOn": {
+    "core": "H01 60b0fa69 (DOM alpha.32)",
+    "views": "H01 bf1f59d (Views 0.1.22)"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-dialog-popover",
+    "head": "42c48107f668e5268f26150b2b104e3febe9fd02",
+    "abi": 38,
+    "runtime": "native30-frozen (built at 923fdcd; later commits are CI, docs and tests)",
+    "evidence": "Ranvier.WebCore docs/dialog-popover-evidence/final-evidence.json"
+  },
+  "versions": {
+    "native": "0.1.0-preview.30",
+    "dom": "0.1.0-alpha.33",
+    "views": "0.1.23",
+    "webcoreBackend": "0.1.0-alpha.23"
+  },
+  "allocationReceipt": "Ranvier: docs/research/native-api-delivery/d16-managed33-allocation.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.33.nupkg": "67162eba2f580339a72162eddf7e723627b9953032722aef2ae05c2d9adadb6b",
+    "Ranvier.Dom.0.1.0-alpha.33.nupkg": "8d559b7fa7e9a549aac91a9cd44f5be91ea09c93cfde89aac65254818c6d5257",
+    "Ranvier.WebCore.0.1.0-preview.30.nupkg": "bff67f9de311bcdb5336c56cd06d8402f56ad37451a8d19389e6687e347465fc"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "8d7355dee11a899278ef24bc628bc24804884bbaa314203653ef4365a3939f24",
+    "WebCore.dll": "cabd329e283e9797296b8736edd659ea059011212fae5fe2a708d286de661d8e",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "stageMatchesAot": true,
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\d16-private\\aot-api\\Native.exe",
+    "sha256": "7f9cd5abdbf4429ba36542dda7c65a3c8b18bde048def8ae017452a3885e58c7"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "917178f09bb1389ceba539bdf6c676abac2ea918c30be54110014a8529a65d7a",
+      "passLines": 87,
+      "h01BaselinePassLines": 85,
+      "h01PassLinesMissing": [],
+      "failLines": [],
+      "d16": [
+        "NATIVE_API D16 LIFETIME PASS assertions=8",
+        "NATIVE_API D16 PASS assertions=143"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "917178f09bb1389ceba539bdf6c676abac2ea918c30be54110014a8529a65d7a",
+      "passLines": 87,
+      "h01BaselinePassLines": 85,
+      "h01PassLinesMissing": [],
+      "failLines": [],
+      "d16": [
+        "NATIVE_API D16 LIFETIME PASS assertions=8",
+        "NATIVE_API D16 PASS assertions=143"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "145d830216f5080ff80864ef784247f66454689e08fb322ce44ecbd4a872d908",
+      "passLines": 68,
+      "h01BaselinePassLines": 67,
+      "h01PassLinesMissing": [],
+      "failLines": [],
+      "d16": [
+        "BROWSER_API D16 PASS assertions=143 engine=chromium"
+      ]
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "repeats": {
+    "runs": 30,
+    "result": "REPEAT managed runs=30 nativeJit pass=30 fail=0 chromium pass=30 fail=0",
+    "scope": "Native.fsproj --dialogs-only (JIT) and browser.mjs --dialogs-only (Chromium)"
+  },
+  "wrapperRegeneration": {
+    "objectsFs": "7f633c789845e30487d45840df50c50aa749b4fe00ff52c18b0e07db74c5eebf",
+    "reportTxt": "c5147fbc93fecca82095541f2eb0aa1a58bf1574f9629b386bf794643c9af79b",
+    "committed": "Views cd458a2; regenerated again by build-all.sh: identical"
+  },
+  "fcs": {
+    "Ranvier.Dom": {
+      "verdict": "clean",
+      "errors": 0,
+      "warnings": 0,
+      "diagnostics": []
+    },
+    "Fable.Ranvier.Dom": {
+      "verdict": "clean",
+      "errors": 0,
+      "warnings": 0,
+      "diagnostics": []
+    },
+    "Ranvier.View.WebCore": {
+      "verdict": "clean",
+      "errors": 0,
+      "warnings": 1,
+      "diagnostics": []
+    }
+  },
+  "contract": {
+    "service": "Ranvier.Dom.ToggleEventService (CreateToggleEvent with ToggleFields, CreateCommandEvent with CommandFields)",
+    "interfaces": "Ranvier.Dom.ToggleEvent (oldState, newState, source) and CommandEvent (command, source) from the native generated model",
+    "browserProvider": "Ranvier.Dom.BrowserToggleEvents.forDocument",
+    "nativeProvider": "Ranvier.View.WebCore.ToggleEvents.forHost",
+    "members": "dialog, popover, popovertarget and command members are generated element members (already in ABI37)"
+  },
+  "fixture": "tests/NativeApi.Conformance/DialogChecks.fs (143 shared checks) + 8 native lifetime checks in Native.fs runDialogs",
+  "qualifications": [
+    "hint-light-dismiss-order: light dismiss of an open auto popover and hint popover fires beforetoggle on the auto popover first natively and on the hint first in Chromium; the fixture asserts each backend order.",
+    "close-watcher-activation: a close request cancel is cancelable only with history-action user activation; the fixture gives both engines a trusted click first, and both report the Escape cancel cancelable.",
+    "toggle-before-close: on the close-request path native fires toggle before close and Chromium close before toggle; the fixture compares queued events per element without order.",
+    "coalesced-toggles (unordered): a pending toggle task absorbs the next toggle, so queued toggles compare by per-element close count, last newState and an oldState chain, never by count.",
+    "A popover of a replaced document stays :popover-open in that document (native lifetime check).",
+    "Win-x64 only; Linux and macOS not run locally."
+  ]
+}
