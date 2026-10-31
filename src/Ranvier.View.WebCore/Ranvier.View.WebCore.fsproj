@@ -71,6 +71,7 @@
         <Compile Include="Capabilities.fs" />
         <Compile Include="Cancellation.fs" />
         <Compile Include="Resources.fs" />
+        <Compile Include="Fonts.fs" />
         <Compile Include="EventConstruction.fs" />
         <Compile Include="InputState.fs" />
         <Compile Include="FormData.fs" />
