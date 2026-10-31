@@ -483,7 +483,7 @@ const runCanvasExport = async () => {
     await exportBrowser.close();
   }
 };
-const CANVAS_EXPORT_ASSERTIONS = 39;
+const CANVAS_EXPORT_ASSERTIONS = 40;
 // WebCore #142 runs the U+0000 round-trip fixture in its own page.
 const runStrings = async () => {
   const stringsBrowser = await chromium.launch({ headless: true });

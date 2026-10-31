@@ -2607,7 +2607,7 @@ let private runCanvasPixels () =
 
 /// <summary>Runs the shared canvas export fixture with native teardown checks.</summary>
 [<Literal>]
-let private CanvasExportChecksCount = 39
+let private CanvasExportChecksCount = 40
 
 let private runCanvasExport () =
     let host = WebCoreHost.Create (320, 240)

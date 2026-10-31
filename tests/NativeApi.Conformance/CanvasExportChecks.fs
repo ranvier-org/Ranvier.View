@@ -249,6 +249,7 @@ let run
             | None -> failwith "bitmaprenderer"
 
         expect "the same bitmaprenderer context" (obj.ReferenceEquals ((export.BitmapRendererContext renderer).Value, bctx))
+        expect "the bitmaprenderer context names its canvas" (obj.ReferenceEquals (bctx.canvas, renderer))
         expect "a 2D canvas has no bitmaprenderer context" (export.BitmapRendererContext source).IsNone
 
         match contexts.GetContext (renderer, CanvasContextType.TwoD, Canvas2DSettings.Default) with
