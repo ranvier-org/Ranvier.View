@@ -7,6 +7,9 @@ open Ranvier.Dom
 [<Emit("document")>]
 let private document () : Document = jsNative
 
+[<Emit("location.origin")>]
+let private origin () : string = jsNative
+
 [<Emit("queueMicrotask($0)")>]
 let private post (action: unit -> unit) : unit = jsNative
 
@@ -1130,6 +1133,25 @@ let runBinary () =
             BinaryChecks.run document (fun () -> BrowserBinaryValues.forDocument document) (fun () -> BrowserForms.forDocument document) driver
 
         return {| binary = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared blob URL and FileReader assertions.</summary>
+let runBlobUrls () =
+    async {
+        let document = document ()
+
+        let driver: BlobUrlChecks.Driver =
+            {
+                Settle = fun () -> Async.Sleep 1
+                CharsetFromType = false
+                Origin = origin ()
+            }
+
+        let! count =
+            BlobUrlChecks.run (fun () -> BrowserBlobUrls.forDocument document) (fun () -> BrowserBinaryValues.forDocument document) driver
+
+        return {| blobUrls = count |}
     }
     |> Async.StartAsPromise
 

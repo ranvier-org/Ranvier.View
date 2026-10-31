@@ -125,6 +125,7 @@ let private kinds =
             "VisualViewport", "Kind.VisualViewport"
             "Highlight", "Kind.Highlight"
             "HighlightRegistry", "Kind.HighlightRegistry"
+            "FileReader", "Kind.FileReader"
         ]
 
 [<EntryPoint>]
