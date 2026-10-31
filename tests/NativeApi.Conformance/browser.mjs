@@ -662,7 +662,7 @@ try {
   console.log(`BROWSER_API D12 PASS assertions=${checks.sheetElements} engine=chromium`);
   if (checks.sheetElements !== 109 || checks.failedLinkSheet !== 'replacement') throw new Error('Stylesheet/link element assertions did not run');
   console.log(`BROWSER_API D12 CAPABILITY failedLinkSheet=${checks.failedLinkSheet} engine=chromium`);
-  if (checks.construction !== 78) throw new Error('Constructed stylesheet preservation assertions did not run');
+  if (checks.construction !== 79) throw new Error('Constructed stylesheet preservation assertions did not run');
   await page.locator('#native-api-svg').focus();
   await page.keyboard.press('Tab');
   if (!await page.locator('#native-api-math').evaluate(element => element === element.ownerDocument.activeElement)) {

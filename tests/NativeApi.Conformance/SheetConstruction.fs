@@ -138,6 +138,17 @@ let run
 
                 equal "unsupported explicit base URL is rejected" true rejected
 
+            let nullBase =
+                service.Create
+                    { StyleSheetOptions.Default with
+                        BaseUrl = Some null
+                    }
+
+            nullBase.replaceSync ".c07-probe { width: 43px !important; background-image: url(third.png); }"
+            service.SetAdopted (document, [| nullBase |])
+            equal "Some null base URL is the document base URL" "url(\"https://example.test/default/third.png\")" (computed probe "background-image")
+            service.SetAdopted (document, [| other |])
+
             let mutable invalidBase = false
 
             try

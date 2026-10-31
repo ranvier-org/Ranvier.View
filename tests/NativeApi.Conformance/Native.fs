@@ -3170,7 +3170,7 @@ let private runAll () =
 
         match construction with
         | Some (Ok checks) ->
-            if checks <> 78 then
+            if checks <> 79 then
                 failwith "Constructed stylesheet preservation assertions did not run"
 
             System.Console.WriteLine $"NATIVE_API C07 PASS assertions={checks}"
