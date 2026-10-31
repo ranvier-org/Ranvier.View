@@ -162,6 +162,9 @@ module internal Kind =
     [<Literal>]
     let SVGAnimatedAngle = 50
 
+    [<Literal>]
+    let SVGAnimatedInteger = 51
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -326,6 +329,7 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.SVGStringList -> NativeDom.rv_dom_svg_string_list_release handle
         | Kind.SVGViewSpec -> NativeDom.rv_dom_svg_view_spec_release handle
         | Kind.SVGAnimatedAngle -> NativeDom.rv_dom_svg_animated_angle_release handle
+        | Kind.SVGAnimatedInteger -> NativeDom.rv_dom_svg_animated_integer_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =
