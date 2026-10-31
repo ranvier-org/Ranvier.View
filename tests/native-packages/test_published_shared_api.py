@@ -228,6 +228,19 @@ class PublishedSharedApiTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             gate.compile_names('<Project><Compile Include="../private.fs" /></Project>')
 
+    def test_linked_sibling_test_files_keep_their_link_name(self):
+        project = ('<Project><Compile Include="UserTiming.fs" />'
+                   '<Compile Include="../UserTiming/Native.fs" Link="UserTimingNative.fs" /><Compile Include="Native.fs" /></Project>')
+        self.assertEqual(gate.compile_items(project), [('tests/NativeApi.Conformance/UserTiming.fs', 'UserTiming.fs'),
+                                                       ('tests/UserTiming/Native.fs', 'UserTimingNative.fs'),
+                                                       ('tests/NativeApi.Conformance/Native.fs', 'Native.fs')])
+        for include in ['<Compile Include="../UserTiming/Native.fs" />',
+                        '<Compile Include="../../src/Secret.fs" Link="Secret.fs" />',
+                        '<Compile Include="../UserTiming/Native.fs" Link="../Native.fs" />',
+                        '<Compile Include="../UserTiming/Native.fs" Link="Native.fs" /><Compile Include="Native.fs" />']:
+            with self.assertRaises(ValueError):
+                gate.compile_items('<Project>' + include + '</Project>')
+
     def test_package_commit_must_match_fixture_revision(self):
         valid = ('<package><metadata><repository url="https://github.com/ranvier-org/Ranvier.View" commit="'
                  + 'a' * 40 + '" /></metadata></package>')
