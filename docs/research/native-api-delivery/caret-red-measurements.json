@@ -1,0 +1,21 @@
+{
+  "measuredAtUtc": "2026-10-31T07:45:27.900243+00:00",
+  "group": "G09 #54",
+  "core": {
+    "revision": "766e425c (DOM alpha.33, D16 merged)",
+    "caretPositionFromPoint": 0,
+    "caretPositionMembers": 0,
+    "caretPositionInterface": false
+  },
+  "views": {
+    "revision": "fb50c23 (Views 0.1.23)",
+    "caretPositionFromPointWrapper": 0,
+    "caretPositionReleaseKind": false
+  },
+  "native": "Native29/30/31 export no rv_dom_document_caret_position_from_point (Ranvier.WebCore docs/caret-hit-evidence/red-measure.json)",
+  "chromium": {
+    "browser": "156.0.8078.4",
+    "oracle": "Ranvier.WebCore tests/fixtures/caret-hit-oracle.json"
+  },
+  "conclusion": "No managed member to call: CaretChecks.fs does not compile against DOM alpha.33."
+}

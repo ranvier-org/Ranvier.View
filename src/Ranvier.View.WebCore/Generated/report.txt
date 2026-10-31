@@ -1,4 +1,4 @@
-233 classes; 2559 members: 2539 mapped to 2461 of 2530 rv_dom_* functions, 20 hand-written, 0 unmapped
+234 classes; 2563 members: 2543 mapped to 2465 of 2534 rv_dom_* functions, 20 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_blob_create: Blob.constructor (op)
@@ -119,6 +119,7 @@ Members by class (mapped / hand-written / unmapped):
   CSSUnparsedValueObject: 4 / 0 / 0
   CSSVariableReferenceValueObject: 3 / 0 / 0
   CSSViewTransitionRuleObject: 2 / 0 / 0
+  CaretPositionObject: 3 / 0 / 0
   CharacterDataObject: 14 / 0 / 0
   CommandEventObject: 2 / 0 / 0
   CompositionEventObject: 1 / 0 / 0
@@ -136,7 +137,7 @@ Members by class (mapped / hand-written / unmapped):
   DOMStringMapObject: 3 / 0 / 0
   DOMTokenListObject: 10 / 0 / 0
   DocumentFragmentObject: 11 / 0 / 0
-  DocumentObject: 71 / 2 / 0
+  DocumentObject: 72 / 2 / 0
   ElementObject: 181 / 0 / 0
   EventObject: 16 / 2 / 0
   EventTargetObject: 0 / 9 / 0
