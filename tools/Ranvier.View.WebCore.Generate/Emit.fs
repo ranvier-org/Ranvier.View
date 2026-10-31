@@ -96,6 +96,7 @@ let private literal (value: string) =
     | "false" -> Some "0"
     | "true" -> Some "1"
     | "\"\"" -> Some "\"\""
+    | _ when value.StartsWith "0x" -> Some (string (Convert.ToUInt64 (value, 16)))
     | _ when fst (Double.TryParse value) -> Some value
     | _ -> None
 

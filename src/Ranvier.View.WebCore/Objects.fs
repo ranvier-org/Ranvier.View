@@ -168,6 +168,12 @@ module internal Kind =
     [<Literal>]
     let EventTarget = 52
 
+    [<Literal>]
+    let NodeIterator = 53
+
+    [<Literal>]
+    let TreeWalker = 54
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -334,6 +340,8 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.SVGAnimatedAngle -> NativeDom.rv_dom_svg_animated_angle_release handle
         | Kind.SVGAnimatedInteger -> NativeDom.rv_dom_svg_animated_integer_release handle
         | Kind.EventTarget -> Native.rv_event_target_release handle
+        | Kind.NodeIterator -> NativeDom.rv_dom_node_iterator_release handle
+        | Kind.TreeWalker -> NativeDom.rv_dom_tree_walker_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =
@@ -632,9 +640,34 @@ module internal Interop =
         | -1 -> ArgumentNullException (name, $"{name} received a null argument")
         | other -> InvalidOperationException $"{name} returned status {other}"
 
+    [<Sealed; AbstractClass>]
+    type private Callbacks =
+        [<ThreadStatic; DefaultValue>]
+        static val mutable private pending: exn
+
+        static member Pending
+            with get () = Callbacks.pending
+            and set (value: exn) = Callbacks.pending <- value
+
+    /// <summary>
+    /// Records the exception a host callback raised. The next failed call that reports
+    /// <c>ExistingExceptionError</c> on the thread rethrows it with its original stack.
+    /// </summary>
+    let callbackFailed (error: exn) = Callbacks.Pending <- error
+
     /// <summary>Raises the status's exception unless it is <c>RV_OK</c>.</summary>
     let check (name: string) (status: int) =
         if status <> 0 then
+            let pending = Callbacks.Pending
+            Callbacks.Pending <- null
+
+            if
+                status = -3
+                && not (isNull pending)
+                && lastException 0 = "ExistingExceptionError"
+            then
+                Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(pending).Throw ()
+
             raise (failure name status)
 
     /// <summary>The string a getter copies out, or null for a null string.</summary>

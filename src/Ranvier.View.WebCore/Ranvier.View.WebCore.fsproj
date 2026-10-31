@@ -52,6 +52,7 @@
     <ItemGroup>
         <Compile Include="Objects.fs" />
         <Compile Include="Events.fs" />
+        <Compile Include="Traversal.fs" />
         <Compile Include="Marshalling.fs" />
         <Compile Include="Generated/Objects.fs" />
         <Compile Include="EventTargets.fs" />

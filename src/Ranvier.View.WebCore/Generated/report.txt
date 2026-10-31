@@ -1,4 +1,4 @@
-221 classes; 2492 members: 2476 mapped to 2406 of 2477 rv_dom_* functions, 16 hand-written, 0 unmapped
+223 classes; 2514 members: 2494 mapped to 2424 of 2477 rv_dom_* functions, 20 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
@@ -48,29 +48,11 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_input_event_get_input_type: InputEvent.inputType (get)
   rv_dom_keyboard_event_get_key: KeyboardEvent.key (get)
   rv_dom_mouse_event_get_related_target: MouseEvent.relatedTarget (get)
-  rv_dom_node_iterator_detach: NodeIterator.detach (op)
   rv_dom_node_iterator_get_filter: NodeIterator.filter (get)
-  rv_dom_node_iterator_get_pointer_before_reference_node: NodeIterator.pointerBeforeReferenceNode (get)
-  rv_dom_node_iterator_get_reference_node: NodeIterator.referenceNode (get)
-  rv_dom_node_iterator_get_root: NodeIterator.root (get)
-  rv_dom_node_iterator_get_what_to_show: NodeIterator.whatToShow (get)
-  rv_dom_node_iterator_next_node: NodeIterator.nextNode (op)
-  rv_dom_node_iterator_previous_node: NodeIterator.previousNode (op)
   rv_dom_shadow_root_get_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (get)
   rv_dom_shadow_root_set_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (set)
   rv_dom_style_property_map_read_only_entries: StylePropertyMapReadOnly.entries (op)
-  rv_dom_tree_walker_first_child: TreeWalker.firstChild (op)
-  rv_dom_tree_walker_get_current_node: TreeWalker.currentNode (get)
   rv_dom_tree_walker_get_filter: TreeWalker.filter (get)
-  rv_dom_tree_walker_get_root: TreeWalker.root (get)
-  rv_dom_tree_walker_get_what_to_show: TreeWalker.whatToShow (get)
-  rv_dom_tree_walker_last_child: TreeWalker.lastChild (op)
-  rv_dom_tree_walker_next_node: TreeWalker.nextNode (op)
-  rv_dom_tree_walker_next_sibling: TreeWalker.nextSibling (op)
-  rv_dom_tree_walker_parent_node: TreeWalker.parentNode (op)
-  rv_dom_tree_walker_previous_node: TreeWalker.previousNode (op)
-  rv_dom_tree_walker_previous_sibling: TreeWalker.previousSibling (op)
-  rv_dom_tree_walker_set_current_node: TreeWalker.currentNode (set)
   rv_dom_window_get_computed_style: DOMWindow.getComputedStyle (op)
 
 Unmapped members by reason:
@@ -135,7 +117,7 @@ Members by class (mapped / hand-written / unmapped):
   DOMStringMapObject: 3 / 0 / 0
   DOMTokenListObject: 10 / 0 / 0
   DocumentFragmentObject: 11 / 0 / 0
-  DocumentObject: 71 / 0 / 0
+  DocumentObject: 71 / 2 / 0
   ElementObject: 181 / 0 / 0
   EventObject: 16 / 2 / 0
   EventTargetObject: 0 / 9 / 0
@@ -203,6 +185,7 @@ Members by class (mapped / hand-written / unmapped):
   MediaListObject: 6 / 0 / 0
   MouseEventObject: 19 / 1 / 0
   NamedNodeMapObject: 8 / 0 / 0
+  NodeIteratorObject: 7 / 1 / 0
   NodeListObject: 2 / 0 / 0
   NodeObject: 31 / 0 / 0
   PointerEventObject: 14 / 0 / 0
@@ -294,6 +277,7 @@ Members by class (mapped / hand-written / unmapped):
   StyleSheetListObject: 3 / 0 / 0
   StyleSheetObject: 8 / 0 / 0
   TextObject: 3 / 0 / 0
+  TreeWalkerObject: 11 / 1 / 0
   UIEventObject: 6 / 0 / 0
   ValidityStateObject: 11 / 0 / 0
   WheelEventObject: 7 / 0 / 0
