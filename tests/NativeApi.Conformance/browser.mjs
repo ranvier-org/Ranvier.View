@@ -6,6 +6,7 @@ import { createRequire } from 'node:module';
 import { inflateSync } from 'node:zlib';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), 'generated');
+const assets = { '/Ahem.ttf': resolve(dirname(fileURLToPath(import.meta.url)), 'Assets', 'Ahem.ttf') };
 const customPropertiesOnly = process.argv.includes('--custom-properties-only');
 const styleValuesOnly = process.argv.includes('--style-values-only');
 const localesOnly = process.argv.includes('--locales-only');
@@ -25,8 +26,8 @@ const server = createServer(async (request, response) => {
       response.end('<!doctype html><html><body></body></html>');
       return;
     }
-    const file = resolve(root, '.' + name);
-    if (!file.startsWith(root + sep)) throw new Error('Outside fixture output');
+    const file = assets[name] ?? resolve(root, '.' + name);
+    if (!assets[name] && !file.startsWith(root + sep)) throw new Error('Outside fixture output');
     response.setHeader('Content-Type', extname(file) === '.js' ? 'text/javascript' : extname(file) === '.ttf' ? 'font/ttf' : 'text/plain');
     response.end(await readFile(file));
   } catch {

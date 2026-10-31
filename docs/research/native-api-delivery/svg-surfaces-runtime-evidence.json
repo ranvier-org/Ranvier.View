@@ -121,8 +121,8 @@
     "Native currentView/useCurrentView are Available; Chromium reports NotExposed.",
     "WebCoreHost.SelectSvgView takes fragment text without # (\"#half\" selects nothing); Chromium location.hash accepts both forms. Browser requests update URL/history/:target; native selection does not.",
     "WebKit currentScale changes page zoom and leaves the content CSS size unchanged (currentTranslate then divides by the zoom); Chromium zooms SVG content.",
-    "A new begin on a frozen SMIL animation takes effect during a paused seek in Chromium; WebCore keeps the frozen value. Fresh delayed begins/ends agree.",
-    "Fable erases Some null to None; the browser treats it as attribute removal, and nullArg surfaces as Error rather than ArgumentNullException."
+    "Fable erases Some null to None; the browser treats it as attribute removal, and nullArg surfaces as Error rather than ArgumentNullException.",
+    "A new begin on a frozen SMIL animation without an end attribute takes effect during a paused seek in Chromium; Native20 WebCore keeps the frozen value. Cause: SVGSMILElement::resolveInterval fails the interval when any end instance time exists, contrary to SMIL 3 getNextInterval (no end attribute: no end constraint). Fixed upstream of this cohort by Native21 patch 0032; RED/oracle in artifacts/smil-red (SmilRed.fs d13570f7, oracle.log bc08a04b, native log 6883365a)."
   ],
   "initialFailures": [
     "Async.RunSynchronously ran fixtures on a pool thread: InvalidOperationException off host thread; fixed by StartImmediateAsTask on the host thread.",
@@ -552,5 +552,24 @@
       "modulesUnchangedDuringRun": null
     }
   },
-  "scope": "Private Windows x64 JIT, NativeAOT and packaged Fable/Chromium only. Official packages, other RIDs/profiles, CI and group acceptance remain separate; no acceptance claimed."
+  "scope": "Private Windows x64 JIT, NativeAOT and packaged Fable/Chromium only. Official packages, other RIDs/profiles, CI and group acceptance remain separate; no acceptance claimed.",
+  "browserFontServing": {
+    "qualification": "The earlier Chromium GREEN runs relied on a local-only copy of Assets/Ahem.ttf into generated/; CI had no such step. browser.mjs now serves /Ahem.ttf directly from Assets.",
+    "redFromCleanGenerated": {
+      "log": "artifacts/svg-surfaces-browser-no-ahem-red.log",
+      "sha256": "e3890f6da8090c841991b889f0c69f32dd84d3c07ab4f4874c5eed2c047dc7e1",
+      "failure": "actual Ahem font readiness: expected 60, got 41.125"
+    },
+    "greenSurfaces": {
+      "log": "artifacts/svg-surfaces-browser-ahem-served-green.log",
+      "sha256": "e41c9519b0979c0e403a3d7b5dce8478dc5e8d6becdff3ea37a9b9bbb169da67"
+    },
+    "greenFull": {
+      "log": "artifacts/svg-surfaces-browser-ahem-served-full.log",
+      "sha256": "8668ff916ecd538f0b5ade89e8cb06eba1aa4f42067fa02457b52c27b4d4f6d8",
+      "passLines": 51
+    },
+    "browserScriptSha256": "a503fa19c632202a2afb11792a9114d784a86fca9abac06d21be5067b3c857ab",
+    "generatedContainsFont": false
+  }
 }
