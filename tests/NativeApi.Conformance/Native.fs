@@ -1666,6 +1666,73 @@ let private runStrings () =
     System.Console.WriteLine $"NATIVE_API WC142 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>
+/// Runs the shared U+0000 event-type fixture (WebCore #145), then the host inputs that have no browser equivalent:
+/// key text, input-method composition and commit, clipboard data in and out, and SVG markup.
+/// </summary>
+[<Literal>]
+let private HostStringChecksCount = 5
+
+let private runHostStrings () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+    let mutable inputs = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let equal label (expected: string) (actual: string) =
+        inputs <- inputs + 1
+
+        if actual <> expected then
+            failwith $"U+0000 host input {label}: expected %A{expected}, got %A{actual}"
+
+    let shared =
+        try
+            let count =
+                HostStringChecks.run host.Document (fun () -> Ranvier.View.WebCore.EventConstruction.forHost host)
+
+            let document = host.Document
+            let area = unbox<Ranvier.Dom.HTMLTextAreaElement> (document.createElement "textarea")
+            document.body.appendChild area |> ignore
+            host.SetFocused true
+            area.focus ()
+            host.Key (2, "a", "KeyA", "a\u0000b", 0, false) |> ignore
+            equal "key text" "a\u0000b" area.value
+            area.value <- ""
+            host.SetComposition ("c\u0000d", 3, 3)
+            host.CommitComposition "c\u0000d"
+            equal "composition commit" "c\u0000d" area.value
+            let written = ResizeArray<struct (string * string)>()
+            host.SetClipboard ((fun kind data _ -> written.Add (struct (kind, data))), (fun () -> [ struct ("text/plain", "p\u0000q") ]))
+            area.value <- ""
+            host.Key (0, "v", "KeyV", null, 2, false) |> ignore
+            equal "clipboard paste" "p\u0000q" area.value
+            area.value <- "aé中\U0001F600b"
+            host.Key (0, "a", "KeyA", null, 2, false) |> ignore
+            host.Key (0, "c", "KeyC", null, 2, false) |> ignore
+            let plain = [ for struct (kind, data) in written do if kind = "text/plain" then data ]
+            equal "clipboard copy" "aé中\U0001F600b" (String.concat "|" plain)
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"><text>a</text></svg>\u0000<!--tail-->"
+            equal "SVG markup after U+0000" "parsererror" (match host.Document.querySelector "parsererror" with null -> "none" | _ -> "parsererror")
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "U+0000 host input fixture leaves no live native objects"
+
+    if shared <> HostStringChecksCount then
+        failwith $"U+0000 event-type shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API WC145 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API WC145 HOST PASS assertions={inputs}"
+    System.Console.WriteLine $"NATIVE_API WC145 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared custom highlight fixture with native thread, document replacement and teardown checks.</summary>
 [<Literal>]
 let private HighlightChecksCount = 35
@@ -2696,6 +2763,7 @@ let private runAll () =
     runEventDetails () |> ignore
     runHighlights () |> ignore
     runStrings () |> ignore
+    runHostStrings () |> ignore
     runDiagnostics () |> ignore
     runCoordinates () |> ignore
     runBlobUrls () |> ignore
@@ -3704,6 +3772,9 @@ let main args =
         0
     elif Array.contains "--strings-only" args then
         runStrings () |> ignore
+        0
+    elif Array.contains "--host-strings-only" args then
+        runHostStrings () |> ignore
         0
     elif Array.contains "--diagnostics-only" args then
         runDiagnostics () |> ignore

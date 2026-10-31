@@ -1299,6 +1299,12 @@ let runStrings () =
         StringChecks.run document (fun () -> BrowserEventDetails.forDocument document) (fun () -> BrowserBinaryValues.forDocument document)
 
     {| strings = count |}
+
+/// <summary>Runs the shared U+0000 event-type assertions (WebCore #145).</summary>
+let runHostStrings () =
+    let document = document ()
+    let count = HostStringChecks.run document (fun () -> BrowserEvents.forDocument document)
+    {| hostStrings = count |}
 /// <summary>Runs the shared diagnostics assertions.</summary>
 let runDiagnostics () =
     let document = document ()

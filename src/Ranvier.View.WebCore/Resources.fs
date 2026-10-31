@@ -314,7 +314,7 @@ module Resources =
                                 transport[url] <- response
                                 image <- Native.rv_document_create_element (host.Handle, "img")
 
-                                Native.rv_element_set_attribute (image, "src", url)
+                                Native.rv_element_set_attribute (image, "src", Native.utf8 url, Native.utf8Length url)
                                 |> Interop.check "rv_element_set_attribute"
 
                                 let transportUrl = url
