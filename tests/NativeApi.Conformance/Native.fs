@@ -520,6 +520,46 @@ let private runResources () =
     System.Console.WriteLine "NATIVE_API H05 TEARDOWN PASS"
     count
 
+/// <summary>Runs the shared tree traversal and MathML fixtures with native traversal lifetime checks.</summary>
+let private runDomModel () =
+    let lifetime = TraversalLifecycle.run ()
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let interfaceOf (element: Ranvier.Dom.Element) =
+        let name = element.GetType().Name
+        name.Substring (0, name.Length - "Object".Length)
+
+    let traversal, reentry, mathml =
+        try
+            let traversal, reentry = TreeTraversal.run host.Document errorName true
+            let mathml = MathMLElements.run host.Document interfaceOf "MathMLMathElement"
+            traversal, reentry, mathml
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith $"DOM model fixture leaked {session.LiveObjects} managed native objects"
+
+    if traversal <> 62 || lifetime <> 15 || mathml <> 116 then
+        failwith $"DOM model assertions did not run: {traversal}/{lifetime}/{mathml}"
+
+    // Qualification: the engine leaves the re-entered iterator's referenceNode null.
+    if reentry <> { TreeTraversal.Iterator = "InvalidStateError"; TreeTraversal.Walker = "InvalidStateError"; TreeTraversal.Reference = "null" } then
+        failwith $"Unexpected traversal re-entry outcome: {reentry}"
+
+    System.Console.WriteLine $"NATIVE_API D01 PASS assertions={traversal}"
+    System.Console.WriteLine $"NATIVE_API D01 REENTRY iterator={reentry.Iterator} walker={reentry.Walker} reference={reentry.Reference}"
+    System.Console.WriteLine $"NATIVE_API D01 LIFETIME PASS assertions={lifetime}"
+    System.Console.WriteLine $"NATIVE_API S13 PASS assertions={mathml}"
+    System.Console.WriteLine "NATIVE_API D01 S13 TEARDOWN PASS"
+    traversal + mathml
+
 let private runAll () =
     runLocales () |> ignore
     let svgLifecycle = SvgLifecycle.run ()
@@ -534,6 +574,7 @@ let private runAll () =
     runResources () |> ignore
     runCustomEvents () |> ignore
     runInputState () |> ignore
+    runDomModel () |> ignore
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
@@ -1497,6 +1538,9 @@ let main args =
         0
     elif Array.contains "--custom-events-only" args then
         runCustomEvents () |> ignore
+        0
+    elif Array.contains "--dom-model-only" args then
+        runDomModel () |> ignore
         0
     elif Array.contains "--input-state-only" args then
         runInputState () |> ignore
