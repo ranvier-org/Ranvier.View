@@ -31,6 +31,8 @@ module Capabilities =
             | CapabilityCategory.RendererSetting -> "Current Page settings and host fields."
             | CapabilityCategory.ImageFormat -> "MIMETypeRegistry image/video/SVG support query; arbitrary decode/render is unverified."
             | CapabilityCategory.FontFormat -> "Current native document CSS font-format support query; actual font loading is unverified."
+            | CapabilityCategory.PlatformFacility when Array.contains key.Name [| "clipboard"; "drop"; "tooltip"; "input"; "ime"; "scroll" |] ->
+                "Explicit host DOM/input machinery implementation; external OS callbacks, policy and readiness remain unverified."
             | CapabilityCategory.PlatformFacility ->
                 "Loaded compiled feature/stub flags or current callback wiring; external readiness and policy are unverified."
 
@@ -159,6 +161,9 @@ module Capabilities =
                 service.Register provider
 
             member _.Observe(key, token) =
+                if isNull (box key) then
+                    nullArg "key"
+
                 let key = Ranvier.Dom.Capabilities.key key.Category key.Name
 
                 if token.IsCancellationRequested then
