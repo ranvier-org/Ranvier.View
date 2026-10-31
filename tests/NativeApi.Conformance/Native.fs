@@ -1733,6 +1733,87 @@ let private runHighlights () =
     System.Console.WriteLine $"NATIVE_API T03 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared canvas context fixture with native paint, thread and teardown checks.</summary>
+[<Literal>]
+let private CanvasChecksCount = 41
+
+let private runCanvas () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count = CanvasChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document
+            let service = Ranvier.View.WebCore.Canvas.forHost host
+            let document = host.Document
+            document.body.innerHTML <- ""
+            document.body.setAttribute ("style", "margin:0;background:#fff")
+            let canvas = unbox<Ranvier.Dom.HTMLCanvasElement> (document.createElement "canvas")
+            canvas.setAttribute ("width", "40")
+            canvas.setAttribute ("height", "20")
+            canvas.setAttribute ("style", "display:block;width:40px;height:20px")
+            document.body.appendChild canvas |> ignore
+            let struct (width, height) = host.PaintSize
+            let rgba = Array.zeroCreate<byte> (width * height * 4)
+
+            let pixel x y =
+                host.Paint rgba
+                let at = (y * width + x) * 4
+                (int rgba[at], int rgba[at + 1], int rgba[at + 2], int rgba[at + 3])
+
+            expect (pixel 5 5 = (255, 255, 255, 255)) "A canvas without a context paints its fallback"
+
+            match service.GetContext (canvas, Ranvier.Dom.CanvasContextType.TwoD, Ranvier.Dom.Canvas2DSettings.Default) with
+            | Ranvier.Dom.CanvasContextOutcome.Context ctx ->
+                ctx.fillStyle <- Ranvier.Dom.DOMStringOrCanvasGradientOrCanvasPattern.DOMString "#ff0000"
+                ctx.fillRect (0.0, 0.0, 20.0, 20.0)
+                ctx.fillStyle <- Ranvier.Dom.DOMStringOrCanvasGradientOrCanvasPattern.DOMString "rgb(0, 0, 255)"
+                ctx.fillRect (20.0, 0.0, 20.0, 20.0)
+                expect (pixel 5 5 = (255, 0, 0, 255)) "The host paints the canvas bitmap's red half"
+                expect (pixel 30 5 = (0, 0, 255, 255)) "The host paints the canvas bitmap's blue half"
+                canvas.width <- canvas.width
+                expect (pixel 5 5 = (255, 255, 255, 255)) "A width assignment clears the painted bitmap"
+
+                let wrongThread =
+                    System.Threading.Tasks.Task.Run(fun () -> rejected (fun () -> service.Attributes ctx |> ignore)).GetAwaiter().GetResult()
+
+                expect wrongThread "getContextAttributes rejects another thread"
+            | _ -> failwith "The paint canvas has no 2D context"
+
+            held <- Some service
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Canvas fixture leaves no live native objects"
+    let service = held.Value
+    expect (rejected (fun () -> service.Attributes null |> ignore)) "A held canvas service rejects calls after host disposal"
+    service.Dispose ()
+
+    if shared <> CanvasChecksCount then
+        failwith $"Canvas shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API R01 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API R01 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared diagnostics fixture with native thread, snapshot release and teardown checks.</summary>
 [<Literal>]
 let private DiagnosticsChecksCount = 73
@@ -2771,6 +2852,7 @@ let private runAll () =
     runScreen () |> ignore
     runEventDetails () |> ignore
     runHighlights () |> ignore
+    runCanvas () |> ignore
     runStrings () |> ignore
     runDiagnostics () |> ignore
     runCascade () |> ignore
@@ -3778,6 +3860,9 @@ let main args =
         0
     elif Array.contains "--highlights-only" args then
         runHighlights () |> ignore
+        0
+    elif Array.contains "--canvas-only" args then
+        runCanvas () |> ignore
         0
     elif Array.contains "--strings-only" args then
         runStrings () |> ignore
