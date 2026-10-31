@@ -5,7 +5,7 @@
   "route": "Engine (Native35 / ABI43)",
   "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/76",
   "coreSourceCommit": "2e58628af858114cd587ce88d47d09e2e80b3fe7",
-  "viewsSourceCommit": "68e2ed3a7d574a49f5d131f51bedcd006ddd7b32",
+  "viewsSourceCommit": "a5d6b077d05b53f4c5d9c31115e40166094d2232",
   "stackedOn": {
     "core": "D14 522a7fa6 (DOM alpha.37; includes H13 d246756e)",
     "views": "D14 fc88949 (Views 0.1.27; includes H13 8a5def2)"
@@ -14,7 +14,7 @@
     "branch": "codex/native-api-text-segmentation",
     "head": "901ced520ffd7a00e95755d2f41532e767246dc6",
     "abi": 43,
-    "runtime": "native-url artifacts/native35-frozen-2",
+    "runtime": "native-segment artifacts/native35-frozen-2",
     "evidence": "Ranvier.WebCore docs/text-segmentation-evidence/final-evidence.json"
   },
   "versions": {
