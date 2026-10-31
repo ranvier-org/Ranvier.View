@@ -1306,6 +1306,24 @@ let runCanvasPixels () =
 
     {| canvasPixels = count |}
 
+/// <summary>Runs the shared canvas export assertions.</summary>
+let runCanvasExport () =
+    async {
+        let document = document ()
+        let driver: CanvasExportChecks.Driver = { Settle = fun () -> Async.Sleep 1 }
+
+        let! count =
+            CanvasExportChecks.run
+                (fun () -> BrowserCanvas.forDocument document)
+                (fun () -> BrowserCanvasPixels.forDocument document)
+                (fun () -> BrowserCanvasExport.forDocument document)
+                document
+                driver
+
+        return {| canvasExport = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared U+0000 round-trip assertions (WebCore #142).</summary>
 let runStrings () =
     let document = document ()

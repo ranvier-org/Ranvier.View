@@ -224,6 +224,10 @@ module internal Kind =
     [<Literal>]
     let ImageBitmap = 103
 
+    // R07 placeholder kind; root assigns the integrated number.
+    [<Literal>]
+    let ImageBitmapRenderingContext = 121
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -408,6 +412,7 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.CanvasPattern -> NativeDom.rv_dom_canvas_pattern_release handle
         | Kind.ImageData -> NativeDom.rv_dom_image_data_release handle
         | Kind.ImageBitmap -> NativeDom.rv_dom_image_bitmap_release handle
+        | Kind.ImageBitmapRenderingContext -> NativeDom.rv_dom_image_bitmap_rendering_context_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =

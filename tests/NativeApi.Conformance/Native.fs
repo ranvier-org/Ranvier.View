@@ -1877,6 +1877,46 @@ let private runCanvasPixels () =
     System.Console.WriteLine $"NATIVE_API R06 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared canvas export fixture with native teardown checks.</summary>
+[<Literal>]
+let private CanvasExportChecksCount = 39
+
+let private runCanvasExport () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+
+    let shared =
+        try
+            let driver: CanvasExportChecks.Driver = { Settle = fun () -> async { host.Cycle () |> ignore } }
+
+            let count =
+                CanvasExportChecks.run
+                    (fun () -> Ranvier.View.WebCore.Canvas.forHost host)
+                    (fun () -> Ranvier.View.WebCore.CanvasPixels.forHost host)
+                    (fun () -> Ranvier.View.WebCore.CanvasExport.forHost host)
+                    host.Document
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 120000L do
+                host.Cycle () |> ignore
+
+            count.GetAwaiter().GetResult()
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith "Canvas export fixture leaves live native objects"
+
+    if shared <> CanvasExportChecksCount then
+        failwith $"Canvas export shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API R07 PASS assertions={shared}"
+    shared
+
 /// <summary>Runs the shared diagnostics fixture with native thread, snapshot release and teardown checks.</summary>
 [<Literal>]
 let private DiagnosticsChecksCount = 73
@@ -2917,6 +2957,7 @@ let private runAll () =
     runHighlights () |> ignore
     runCanvas () |> ignore
     runCanvasPixels () |> ignore
+    runCanvasExport () |> ignore
     runStrings () |> ignore
     runDiagnostics () |> ignore
     runCascade () |> ignore
@@ -3930,6 +3971,9 @@ let main args =
         0
     elif Array.contains "--canvas-pixels-only" args then
         runCanvasPixels () |> ignore
+        0
+    elif Array.contains "--canvas-export-only" args then
+        runCanvasExport () |> ignore
         0
     elif Array.contains "--strings-only" args then
         runStrings () |> ignore

@@ -69,6 +69,7 @@
     <Compile Include="HighlightChecks.fs" />
     <Compile Include="CanvasChecks.fs" />
     <Compile Include="CanvasPixelChecks.fs" />
+    <Compile Include="CanvasExportChecks.fs" />
     <Compile Include="StringChecks.fs" />
     <Compile Include="DiagnosticsChecks.fs" />
     <Compile Include="CascadeChecks.fs" />

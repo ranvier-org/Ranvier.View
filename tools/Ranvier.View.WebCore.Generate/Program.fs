@@ -131,6 +131,7 @@ let private kinds =
             "CanvasPattern", "Kind.CanvasPattern"
             "ImageData", "Kind.ImageData"
             "ImageBitmap", "Kind.ImageBitmap"
+            "ImageBitmapRenderingContext", "Kind.ImageBitmapRenderingContext"
         ]
 
 [<EntryPoint>]

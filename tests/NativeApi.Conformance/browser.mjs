@@ -324,6 +324,20 @@ const runCanvasPixels = async () => {
   }
 };
 const CANVAS_PIXEL_ASSERTIONS = 36;
+// R07 runs the canvas export fixture in its own page.
+const runCanvasExport = async () => {
+  const exportBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await exportBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runCanvasExport(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.canvasExport !== CANVAS_EXPORT_ASSERTIONS) throw new Error(`Canvas export assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R07 PASS assertions=${result.canvasExport} engine=chromium`);
+  } finally {
+    await exportBrowser.close();
+  }
+};
+const CANVAS_EXPORT_ASSERTIONS = 39;
 // WebCore #142 runs the U+0000 round-trip fixture in its own page.
 const runStrings = async () => {
   const stringsBrowser = await chromium.launch({ headless: true });
@@ -469,6 +483,7 @@ try {
   else if (highlightsOnly) { await runHighlights(); process.exitCode = 0; }
   else if (canvasOnly) { await runCanvas(); process.exitCode = 0; }
   else if (process.argv.includes('--canvas-pixels-only')) { await runCanvasPixels(); process.exitCode = 0; }
+  else if (process.argv.includes('--canvas-export-only')) { await runCanvasExport(); process.exitCode = 0; }
   else if (blobUrlsOnly) { await runBlobUrls(); process.exitCode = 0; }
   else if (stringsOnly) { await runStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
@@ -715,6 +730,7 @@ try {
   await runHighlights();
   await runCanvas();
   await runCanvasPixels();
+  await runCanvasExport();
   await runStrings();
   await runDiagnostics();
   await runCascade();
