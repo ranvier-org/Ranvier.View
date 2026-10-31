@@ -33,6 +33,7 @@ const highlightsOnly = process.argv.includes('--highlights-only');
 const blobUrlsOnly = process.argv.includes('--blob-urls-only');
 const stringsOnly = process.argv.includes('--strings-only');
 const diagnosticsOnly = process.argv.includes('--diagnostics-only');
+const cascadeOnly = process.argv.includes('--cascade-only');
 const screenOnly = process.argv.includes('--screen-only');
 const submissionsOnly = process.argv.includes('--submissions-only');
 const eventDetailsOnly = process.argv.includes('--event-details-only');
@@ -322,6 +323,20 @@ const runDiagnostics = async () => {
   }
 };
 const DIAGNOSTICS_ASSERTIONS = 46;
+// C25 runs the cascade fixture in its own page.
+const runCascade = async () => {
+  const cascadeBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await cascadeBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runCascade(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.cascade !== CASCADE_ASSERTIONS) throw new Error(`Cascade assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API C25 PASS assertions=${result.cascade} engine=chromium`);
+  } finally {
+    await cascadeBrowser.close();
+  }
+};
+const CASCADE_ASSERTIONS = 51;
 // D14 runs the form submission fixture in its own page; the provider keeps the page in place.
 const runSubmissions = async () => {
   const submissionsBrowser = await chromium.launch({ headless: true });
@@ -412,6 +427,7 @@ try {
   else if (blobUrlsOnly) { await runBlobUrls(); process.exitCode = 0; }
   else if (stringsOnly) { await runStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
+  else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
   else if (screenOnly) { await runScreen(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
   else if (eventDetailsOnly) { await runEventDetails(); process.exitCode = 0; }
@@ -653,6 +669,7 @@ try {
   await runHighlights();
   await runStrings();
   await runDiagnostics();
+  await runCascade();
   await runBlobUrls();
   await runScreen();
   await runEventDetails();
