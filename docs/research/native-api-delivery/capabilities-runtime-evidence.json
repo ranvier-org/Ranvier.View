@@ -1,32 +1,43 @@
 {
  "schemaVersion": 1,
  "group": "H07",
- "status": "private-integrated-win-x64-verification; stack parent surfaces21 pending",
+ "status": "private-integrated-win-x64-verification on surfaces21 parents",
  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/112",
- "coreSourceCommit": "00b613ba29116d56d1865b0f6371f64682c8d096",
- "viewsSourceCommit": "9fd21672282883ba51fd093649b36403f096fb7d",
+ "coreSourceCommit": "ce3c169ea640fd7168427116ee35c6190b1f1d3c",
+ "viewsSourceCommit": "24d29497fcef5c4ffa741c19ec8a2f2c04244e69",
  "nativeProducer": {
   "pr": "https://github.com/ranvier-org/Ranvier.WebCore/pull/130",
   "frozenProofCommit": "5f2e9c5c86e92e3f82c4e4bb744a448ab6af6c5a",
   "receipt": "docs/capabilities-evidence/final-evidence.json",
   "receiptSha256": "c2ea65b347cd09d24562b9eb664f10ddf0b02dc78705f38c1820ea924403fe55"
  },
- "intendedStack": {
-  "core": "Core22 stacks on SVG surfaces Core21 (not yet pushed); forward-merge when its head is published",
-  "views": "Views12 stacks on SVG surfaces Views11 (not yet pushed)",
-  "currentLocalParents": {
-   "core": "H02 89838820",
-   "views": "9583101/1e20f0b H02 line"
+ "stack": {
+  "core": {
+   "parent": "ranvier-org/Ranvier#272 codex/native-api-svg-surfaces",
+   "parentHead": "48495413c4fd821544885d776bb5e1d0adc909ad"
+  },
+  "views": {
+   "parent": "ranvier-org/Ranvier.View#26 codex/native-api-svg-surfaces",
+   "parentHead": "517b555a174c5abdf11b9cb24dae40214e61de96"
   }
  },
+ "deviations": [
+  {
+   "what": "Chromium full conformance ran with tests/NativeApi.Conformance/Assets/Ahem.ttf copied by hand into the gitignored generated/ directory",
+   "why": "Parent Views 517b555 serves /Ahem.ttf from generated/ but no build step stages it; the parent defect is routed to the SVG surfaces lane",
+   "red": "artifacts/h07/managed22/chromium-full-no-ahem-red.log",
+   "redSha256": "4c5c2bc9477bc34e892799b6360b75b724bec521c960185018f1f67bbb500ad0",
+   "resolution": "Drop after forward-merging the surfaces fix and rerunning Chromium capabilities from a clean generated/ directory"
+  }
+ ],
  "versions": {
   "coreDom": "0.1.0-alpha.22",
   "native": "0.1.0-preview.20",
   "abi": 28
  },
  "privatePackages": {
-  "Fable.Ranvier.Dom.0.1.0-alpha.22.nupkg": "101e7ff4c268b545833936ae4c0c4dceca75244ce2769ed4c22aa9e51fdb2858",
-  "Ranvier.Dom.0.1.0-alpha.22.nupkg": "e9932d0b4677518bebb36510699c407520cd88dc0c226a59a1d31f221e75353e",
+  "Fable.Ranvier.Dom.0.1.0-alpha.22.nupkg": "cd23a91439b9e023bbb03de0ccb7fc213eec5a422949a0f2b1ca297848ddc60d",
+  "Ranvier.Dom.0.1.0-alpha.22.nupkg": "d434434b83921d5cc3a1f78573252eb0f9085501a00687f34b1f3f493e1ac3cc",
   "Ranvier.WebCore.0.1.0-preview.20.nupkg": "392e18e9ee3edd10c4b0b0b0c56dd50c25f8f26f56a9e02e08cf6d95aaf0b6dc",
   "Ranvier.WebCore.Native.win-x64.0.1.0-preview.20.nupkg": "01eb0d9bc7c26bc71e6680ff12795b277468a2e23aef8f0d5ad0374e3397064b"
  },
@@ -45,12 +56,12 @@
   "jit-full": {
    "exitCode": 0,
    "log": "artifacts/h07/managed22/jit-full.log",
-   "logSha256": "277b14008bf70e4a3ef5cf918e50189571dfa0d060513edeaeeb1f0d56fb3e7a",
+   "logSha256": "12b297c93dab0d222b9a09932ba14c7ce9454b28c64a7b41f6a9a4942aac6e82",
    "h07": [
     "NATIVE_API H07 PASS assertions=42",
     "NATIVE_API H07 TEARDOWN PASS"
    ],
-   "passLines": 47,
+   "passLines": 59,
    "frozenNative20Matched": {
     "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
     "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
@@ -75,12 +86,12 @@
   "aot-full": {
    "exitCode": 0,
    "log": "artifacts/h07/managed22/aot-full.log",
-   "logSha256": "277b14008bf70e4a3ef5cf918e50189571dfa0d060513edeaeeb1f0d56fb3e7a",
+   "logSha256": "12b297c93dab0d222b9a09932ba14c7ce9454b28c64a7b41f6a9a4942aac6e82",
    "h07": [
     "NATIVE_API H07 PASS assertions=42",
     "NATIVE_API H07 TEARDOWN PASS"
    ],
-   "passLines": 47,
+   "passLines": 59,
    "frozenNative20Matched": {
     "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
     "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
@@ -163,7 +174,7 @@
  },
  "chromium": {
   "log": "artifacts/h07/managed22/chromium-full.log",
-  "logSha256": "1ed5ab1439ef664974521b0df65ae637fb518293dc02424105d80a5a36ddf82b",
+  "logSha256": "619d2ed4e25596a9857252b8e29b0d379c16b61b32a67e97b58fbddb75e040e6",
   "h07": [
    "BROWSER_API H07 PASS assertions=42 engine=chromium"
   ],
@@ -184,8 +195,8 @@
  "nativeAotExecutables": [
   {
    "path": "C:/wk/h07-aot-native/Native.exe",
-   "bytes": 13337600,
-   "sha256": "cd81fbb2a646b6212c392939246313bcac41fabc1f987fe8d9cce0523cbed72d",
+   "bytes": 14263296,
+   "sha256": "cb320a5ad4019702fe92d99ab133a51f4593ee549684cd0e41f438657beb9cf8",
    "machine": "0x8664",
    "clrDirectory": [
     0,
@@ -194,8 +205,8 @@
   },
   {
    "path": "C:/wk/h07-aot-lifecycle/Native.exe",
-   "bytes": 4921344,
-   "sha256": "a3627a2e7fdc4d4974dc0e7bec177b9f43df3cda7b7263cccba60d3dc771658d",
+   "bytes": 4962304,
+   "sha256": "2ed56727ae68d8ca5eb0fbb04fc5fda81a3a41c7de61a7bdc497afbea68757a7",
    "machine": "0x8664",
    "clrDirectory": [
     0,
@@ -259,7 +270,7 @@
   "Only win-x64 is exercised; official packages, other RIDs and traced builds remain acceptance gates."
  ],
  "remaining": [
-  "Forward-merge surfaces21 Core/Views heads and rerun the affected batch",
+  "Forward-merge the surfaces Ahem staging fix and rerun Chromium capabilities",
   "Hosted Core/Views CI",
   "Official Native20/Core22/Views12 packages and normal/traced consumer acceptance"
  ]
