@@ -237,20 +237,27 @@ let run (document: Document) (create: unit -> EventService) (cancellation: unit 
     // Standalone target dispatch.
     let order = ResizeArray<string>()
 
+    let flag value =
+        if value then "yes" else "no"
+
     let listener name (action: Event -> unit) : Event -> unit =
         fun event ->
-            order.Add $"{name}:{event.eventPhase}:{obj.ReferenceEquals (event.currentTarget, target)}:{obj.ReferenceEquals (event.target, target)}"
+            order.Add
+                $"{name}:{event.eventPhase}:{flag (obj.ReferenceEquals (event.currentTarget, target))}:{flag (obj.ReferenceEquals (event.target, target))}"
+
             action event
 
-    target.addEventListener ("custom", listener "first" (fun event -> event.preventDefault ()))
+    // Capture is registered first: at the target, WebKit runs capture listeners first and the measured Chromium runs
+    // registration order, so this order is the same on both.
     target.addEventListener ("custom", listener "capture" ignore, true)
+    target.addEventListener ("custom", listener "first" (fun event -> event.preventDefault ()))
     target.addEventListener ("custom", listener "stop" (fun event -> event.stopImmediatePropagation ()))
     target.addEventListener ("custom", listener "after" ignore)
     equal "cancelled dispatch returns false" false (target.dispatchEvent custom)
 
     equal
         "capture first at target, registration order, stopImmediatePropagation"
-        [ "capture:2:True:True"; "first:2:True:True"; "stop:2:True:True" ]
+        [ "capture:2:yes:yes"; "first:2:yes:yes"; "stop:2:yes:yes" ]
         (List.ofSeq order)
 
     equal "defaultPrevented" true custom.defaultPrevented
@@ -269,7 +276,7 @@ let run (document: Document) (create: unit -> EventService) (cancellation: unit 
     let path = ResizeArray<string>()
 
     let record (name: string) : Event -> unit =
-        fun event -> path.Add $"{name}:{event.eventPhase}:{obj.ReferenceEquals (event.target, child)}"
+        fun event -> path.Add $"{name}:{event.eventPhase}:{flag (obj.ReferenceEquals (event.target, child))}"
 
     host.addEventListener ("tree", record "host-capture", true)
     host.addEventListener ("tree", record "host-bubble")
@@ -285,7 +292,7 @@ let run (document: Document) (create: unit -> EventService) (cancellation: unit 
         )
 
     equal "tree dispatch result" true (child.dispatchEvent tree)
-    equal "capture, target, bubble" [ "host-capture:1:True"; "child:2:True"; "host-bubble:3:True" ] (List.ofSeq path)
+    equal "capture, target, bubble" [ "host-capture:1:yes"; "child:2:yes"; "host-bubble:3:yes" ] (List.ofSeq path)
     path.Clear ()
     child.addEventListener ("stopped", fun event -> event.stopPropagation ())
     host.addEventListener ("stopped", record "host-bubble")
@@ -310,7 +317,7 @@ let run (document: Document) (create: unit -> EventService) (cancellation: unit 
         service.Create ("tree", EventConstruction.Event EventOptions.Default)
 
     child.dispatchEvent nonBubbling |> ignore
-    equal "non-bubbling skips the bubble phase" [ "host-capture:1:True"; "child:2:True" ] (List.ofSeq path)
+    equal "non-bubbling skips the bubble phase" [ "host-capture:1:yes"; "child:2:yes" ] (List.ofSeq path)
 
     // Standalone targets with I01 signals.
     use signals = cancellation ()
