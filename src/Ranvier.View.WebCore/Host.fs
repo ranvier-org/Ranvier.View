@@ -571,6 +571,12 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         Native.rv_host_set_focused (handle, (if focused then 1 else 0))
         |> Interop.check "rv_host_set_focused"
 
+    /// <summary>Sets whether the page is visible, as the app's window is shown, or minimized, hidden or occluded.</summary>
+    /// <remarks>A page starts visible. A change queues <c>visibilitychange</c>; a hidden page defers <c>resize</c>.</remarks>
+    member _.SetVisible(visible: bool) =
+        Native.rv_host_set_visible (handle, (if visible then 1 else 0))
+        |> Interop.check "rv_host_set_visible"
+
     /// <summary>The <c>RV_CURSOR_*</c> value for the mouse's position.</summary>
     member _.Cursor = Native.rv_host_cursor handle
 

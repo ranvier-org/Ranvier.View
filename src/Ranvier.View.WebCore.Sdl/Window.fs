@@ -179,7 +179,14 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         | SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED when event.window.windowID = id -> closed <- true
         | SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED
         | SDL_EventType.SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED when event.window.windowID = id -> resize ()
-        | SDL_EventType.SDL_EVENT_WINDOW_EXPOSED when event.window.windowID = id -> exposed <- true
+        | SDL_EventType.SDL_EVENT_WINDOW_EXPOSED when event.window.windowID = id ->
+            exposed <- true
+            host.SetVisible true
+        | SDL_EventType.SDL_EVENT_WINDOW_MINIMIZED
+        | SDL_EventType.SDL_EVENT_WINDOW_HIDDEN
+        | SDL_EventType.SDL_EVENT_WINDOW_OCCLUDED when event.window.windowID = id -> host.SetVisible false
+        | SDL_EventType.SDL_EVENT_WINDOW_RESTORED
+        | SDL_EventType.SDL_EVENT_WINDOW_SHOWN when event.window.windowID = id -> host.SetVisible true
         | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_GAINED when event.window.windowID = id -> host.SetFocused true
         | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST when event.window.windowID = id ->
             if composing then
