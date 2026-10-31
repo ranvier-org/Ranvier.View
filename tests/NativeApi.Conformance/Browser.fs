@@ -1278,6 +1278,37 @@ let runDiagnostics () =
 
     {| diagnostics = count |}
 
+[<Emit("devicePixelRatio")>]
+let private devicePixelRatio () : float = jsNative
+
+[<Emit("$0.contentDocument")>]
+let private frameDocument (frame: Element) : Document = jsNative
+
+/// <summary>Runs the shared coordinate assertions, with an iframe's element as the foreign one.</summary>
+let runCoordinates () =
+    let document = document ()
+    let frame = document.createElement "iframe"
+    document.body.appendChild frame |> ignore
+
+    let foreign () =
+        let inner = frameDocument frame
+        let value = inner.createElement "div"
+        inner.body.appendChild value |> ignore
+        value
+
+    let count =
+        try
+            CoordinateChecks.run
+                (fun () -> BrowserCoordinates.forDocument document)
+                document
+                foreign
+                (fun () -> devicePixelRatio ())
+                CoordinateChecks.Chromium
+        finally
+            frame.remove ()
+
+    {| coordinates = count |}
+
 /// <summary>Runs the shared crypto assertions in a secure context.</summary>
 let runCrypto () =
     async {
