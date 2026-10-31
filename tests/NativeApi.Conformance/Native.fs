@@ -183,6 +183,120 @@ let private runInputState () =
     System.Console.WriteLine $"NATIVE_API I12 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared viewport fixture with native visibility and host-disposal checks.</summary>
+let private runViewport () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let settle () =
+        async {
+            for _ in 1..3 do
+                host.Frame ()
+                host.Cycle 20 |> ignore
+
+            host.Frame ()
+        }
+
+    let driver: ViewportChecks.Driver =
+        {
+            Resize =
+                fun width height scale ->
+                    async {
+                        host.Resize (width, height)
+                        host.SetDeviceScale (float32 scale)
+                        do! settle ()
+                    }
+            Settle = settle
+            SetActive =
+                fun active ->
+                    async {
+                        host.SetFocused active
+                        do! settle ()
+                    }
+            SetVisible =
+                Some (fun visible ->
+                    async {
+                        host.SetVisible visible
+                        do! settle ()
+                    })
+            PaintSize =
+                fun () ->
+                    async {
+                        let struct (width, height) = host.PaintSize
+                        return width, height
+                    }
+            PaintRounds = false
+            OuterIsViewport = true
+        }
+
+    let mutable kept = None
+
+    let shared =
+        try
+            host.SetFocused true
+
+            let count =
+                ViewportChecks.run host.Document (fun () -> Ranvier.View.WebCore.Viewport.forHost host) driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 20000L do
+                host.Cycle ()
+
+            let count = count.GetAwaiter().GetResult()
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            Ranvier.View.WebCore.Viewport.forHost host
+                            |> ignore
+
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Viewport rejects another thread"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            let service = Ranvier.View.WebCore.Viewport.forHost host
+            let changes = System.Collections.Generic.List<Ranvier.Dom.ViewportChange>()
+            service.Subscribe changes.Add |> ignore
+            host.Resize (300, 200)
+            host.Frame ()
+
+            // The replacement document starts unscrolled, so the update also reports its scroll.
+            expect
+                (changes.Count > 0
+                 && changes[0] = Ranvier.Dom.ViewportChange.Resized (service.Current ()))
+                $"Service on the replacement document observes the window: %A{List.ofSeq changes}"
+
+            kept <- Some service
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    kept.Value.Dispose ()
+    kept.Value.Dispose ()
+    expect (session.LiveObjects = 0) "Viewport fixture leaves no live native objects"
+
+    if shared <> 61 then
+        failwith $"Viewport shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API G02/G12 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G02/G12 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared custom event fixture with native standalone-target lifetime checks.</summary>
 let private runCustomEvents () =
     let host = WebCoreHost.Create (320, 240)
@@ -534,6 +648,7 @@ let private runAll () =
     runResources () |> ignore
     runCustomEvents () |> ignore
     runInputState () |> ignore
+    runViewport () |> ignore
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
@@ -1500,6 +1615,9 @@ let main args =
         0
     elif Array.contains "--input-state-only" args then
         runInputState () |> ignore
+        0
+    elif Array.contains "--viewport-only" args then
+        runViewport () |> ignore
         0
     elif Array.contains "--cancellation-only" args then
         runCancellation () |> ignore

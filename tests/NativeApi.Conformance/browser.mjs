@@ -19,6 +19,7 @@ const svgSurfacesOnly = process.argv.includes('--svg-surfaces-only');
 const resourcesOnly = process.argv.includes('--resources-only');
 const svgPaintOnly = process.argv.includes('--svg-paint-only');
 const inputStateOnly = process.argv.includes('--input-state-only');
+const viewportOnly = process.argv.includes('--viewport-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
 const server = createServer(async (request, response) => {
@@ -72,9 +73,42 @@ const runInputState = async () => {
     await inputBrowser.close();
   }
 };
+// G02/G12 drive the viewport with device-metrics emulation, read paint size from a device-scale screenshot and
+// change activation by minimizing and restoring the window, which blurs and focuses it under emulated metrics.
+const runViewport = async () => {
+  const viewportBrowser = await chromium.launch({ headless: true });
+  try {
+    const context = await viewportBrowser.newContext();
+    const page = await context.newPage();
+    const cdp = await context.newCDPSession(page);
+    const { windowId } = await cdp.send('Browser.getWindowForTarget');
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width: 320, height: 240, deviceScaleFactor: 1, mobile: false });
+    await page.exposeFunction('__nativeApiSetActive', async active => {
+      await cdp.send('Emulation.setFocusEmulationEnabled', { enabled: false });
+      await cdp.send('Browser.setWindowBounds', { windowId, bounds: { windowState: active ? 'normal' : 'minimized' } });
+      await page.waitForFunction(value => document.hasFocus() === value, active, { polling: 50 });
+    });
+    await page.exposeFunction('__nativeApiViewport', async (width, height, deviceScaleFactor) => {
+      await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor, mobile: false });
+    });
+    await page.exposeFunction('__nativeApiPaintSize', async () => {
+      const png = Buffer.from((await cdp.send('Page.captureScreenshot', { format: 'png' })).data, 'base64');
+      return [png.readUInt32BE(16), png.readUInt32BE(20)];
+    });
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    await page.bringToFront();
+    const result = await page.evaluate(async () => (await import('/Browser.js')).runViewport());
+    if (result.viewport !== VIEWPORT_ASSERTIONS) throw new Error(`Viewport assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API G02/G12 PASS assertions=${result.viewport} engine=chromium`);
+  } finally {
+    await viewportBrowser.close();
+  }
+};
+const VIEWPORT_ASSERTIONS = 44;
 let browser;
 try {
   if (inputStateOnly) { await runInputState(); process.exitCode = 0; }
+  else if (viewportOnly) { await runViewport(); process.exitCode = 0; }
   else {
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
@@ -289,6 +323,7 @@ try {
   }
   }
   await runInputState();
+  await runViewport();
   }
 } finally {
   if (browser) await browser.close();
