@@ -1,0 +1,61 @@
+{
+  "group": "G10",
+  "issue": "ranvier-org/Ranvier.WebCore#55",
+  "heads": {
+    "native": "75e2d3d (C:/wk/native-resize)",
+    "core": "e6c4947d (C:/wk/rv-resize-core)",
+    "views": "af10d3b (C:/wk/rv-resize)"
+  },
+  "runtime": "C:/wk/native-resize/artifacts/native48-candidate-3 (private, G14 base, placeholder ABI53)",
+  "packages": "local-only private feed C:/wk/resize-local-feed; versions are placeholders root assigns at batch integration",
+  "fixture": {
+    "jit": 35,
+    "aot": 35,
+    "chromium": 34,
+    "nativeLifetime": 11,
+    "repeat30": {
+      "aot": [
+        "NATIVE_API G10 LIFETIME PASS assertions=11",
+        "NATIVE_API G10 PASS assertions=35"
+      ],
+      "chromium": [
+        "BROWSER_API G10 PASS assertions=34 engine=chromium"
+      ]
+    },
+    "repeatCounts": {
+      "aot": 60,
+      "chromium": 30
+    }
+  },
+  "fullRuns": {
+    "jit": {
+      "passLines": 119,
+      "baseline": 117,
+      "missingFromBaseline": [],
+      "added": [
+        "NATIVE_API G10 PASS assertions=35",
+        "NATIVE_API G10 LIFETIME PASS assertions=11"
+      ],
+      "logSha256": "382957b68bbc8916a7b6b683b497b945bacfa24937b6b49cf73768ddb7b48e6f"
+    },
+    "aot": {
+      "passLines": 119,
+      "baseline": 117,
+      "missingFromBaseline": [],
+      "added": [
+        "NATIVE_API G10 PASS assertions=35",
+        "NATIVE_API G10 LIFETIME PASS assertions=11"
+      ],
+      "logSha256": "d94c786f3571845e142f900336adbc0378a255d6677afc2f13e180752c282b0d"
+    },
+    "chromium": {
+      "passLines": 86,
+      "baseline": 85,
+      "missingFromBaseline": [],
+      "added": [
+        "BROWSER_API G10 PASS assertions=34 engine=chromium"
+      ],
+      "logSha256": "e34d4c614575f1004e6a14fe8962ea21a9b55a7821990d2e66c4b8b8026fa41e"
+    }
+  }
+}

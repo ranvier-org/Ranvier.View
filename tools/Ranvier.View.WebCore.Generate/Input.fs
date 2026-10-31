@@ -104,7 +104,7 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
                         match optionOf fieldType with
                         | Some inner ->
                             let encoded = build model fieldMapping inner "item"
-                            $"(match {source} with None -> 0n | Some item -> {encoded})"
+                            matchOption inner source encoded "0n"
                         | None -> build model fieldMapping fieldType source
                     elif ctype = "RvDomUtf8StringInput" then
                         match optionOf fieldType with
@@ -114,7 +114,7 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
                         match optionOf fieldType with
                         | Some inner ->
                             let encoded = build model fieldMapping inner "item"
-                            $"(match {source} with None -> 0n | Some item -> scope.Pin([| {encoded} |]))"
+                            matchOption inner source $"scope.Pin([| {encoded} |])" "0n"
                         | None -> $"scope.Pin([| {build model fieldMapping fieldType source} |])"
                     else
                         build model fieldMapping fieldType source

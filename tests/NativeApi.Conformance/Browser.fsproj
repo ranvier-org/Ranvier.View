@@ -68,10 +68,14 @@
     <Compile Include="CryptoChecks.fs" />
     <Compile Include="HighlightChecks.fs" />
     <Compile Include="StringChecks.fs" />
+    <Compile Include="HostStringChecks.fs" />
     <Compile Include="DiagnosticsChecks.fs" />
     <Compile Include="CascadeChecks.fs" />
     <Compile Include="CoordinateChecks.fs" />
+    <Compile Include="ResizeObservationChecks.fs" />
+    <Compile Include="IntersectionObservationChecks.fs" />
     <Compile Include="ScreenChecks.fs" />
+    <Compile Include="MediaQueryChecks.fs" />
     <Compile Include="TreeTraversal.fs" />
     <Compile Include="MathMLElements.fs" />
     <Compile Include="FrameChecks.fs" />

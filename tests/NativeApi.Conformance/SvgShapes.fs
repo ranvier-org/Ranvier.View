@@ -13,8 +13,7 @@ let private create<'T> (document: Document) name attributes : 'T =
 
 /// <summary>Checks live shape attributes, authored path parsing and real Boolean/Integer value providers.</summary>
 /// <param name="nullError">The provider's error name for a rejected null argument.</param>
-/// <param name="presentNullDistinct">True when <c>Some null</c> remains distinct from <c>None</c> at runtime.</param>
-let run (document: Document) (errorName: exn -> string) (nullError: string) (presentNullDistinct: bool) =
+let run (document: Document) (errorName: exn -> string) (nullError: string) =
     let mutable checks = 0
 
     let equal label expected actual =
@@ -176,8 +175,10 @@ let run (document: Document) (errorName: exn -> string) (nullError: string) (pre
         equal "removed authored path" None (SvgPaths.getData path)
         failure "null path read" nullError (fun () -> SvgPaths.getData null |> ignore)
         failure "null path write" nullError (fun () -> SvgPaths.setData null None)
-        failure "present null authored string" (if presentNullDistinct then nullError else "accepted") (fun () -> SvgPaths.setData path (Some null))
-        equal "null rejection preserves missing value" None (SvgPaths.getData path)
+        SvgPaths.setData path (Some "M0 0 L1 1")
+        equal "authored path before Some null" (Some "M0 0 L1 1") (SvgPaths.getData path)
+        SvgPaths.setData path (Some null)
+        equal "Some null removes the authored path as None does" None (SvgPaths.getData path)
 
         let defs = create<Element> document "defs" []
         let filter = create<Element> document "filter" []

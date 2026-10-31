@@ -180,7 +180,7 @@ const runUrls = async () => {
     await urlsBrowser.close();
   }
 };
-const URL_ASSERTIONS = 189;
+const URL_ASSERTIONS = 190;
 // I11 runs the ARIA element reflection fixture in its own page.
 const runAria = async () => {
   const ariaBrowser = await chromium.launch({ headless: true });
@@ -208,7 +208,7 @@ const runSegments = async () => {
     await segmentsBrowser.close();
   }
 };
-const SEGMENT_ASSERTIONS = 219;
+const SEGMENT_ASSERTIONS = 220;
 // H11 runs the binary value fixture in its own page.
 const runBinary = async () => {
   const binaryBrowser = await chromium.launch({ headless: true });
@@ -280,6 +280,30 @@ const runScreen = async () => {
   }
 };
 const SCREEN_ASSERTIONS = 30;
+// G01/G15 applies each media step through CDP: device metrics, emulated media features and touch emulation for a
+// coarse pointer without hover.
+const runMediaQueries = async () => {
+  const mediaBrowser = await chromium.launch({ headless: true });
+  try {
+    const context = await mediaBrowser.newContext({ viewport: { width: 320, height: 240 } });
+    const page = await context.newPage();
+    const cdp = await context.newCDPSession(page);
+    await page.exposeFunction('__rvMediaStep', async (width, height, deviceScaleFactor, colorScheme, reducedMotion, contrast, touch) => {
+      await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor, mobile: false });
+      await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: colorScheme },
+        { name: 'prefers-reduced-motion', value: reducedMotion }, { name: 'prefers-contrast', value: contrast }] });
+      await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: touch, maxTouchPoints: 5 });
+    });
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runMediaQueries(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.media !== MEDIA_ASSERTIONS) throw new Error(`Media query assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API G01 PASS assertions=${result.media} engine=chromium`);
+    console.log(`BROWSER_API G15 PASS assertions=${result.media} engine=chromium`);
+  } finally {
+    await mediaBrowser.close();
+  }
+};
+const MEDIA_ASSERTIONS = 30;
 const CRYPTO_INSECURE_ASSERTIONS = 4;
 // T03 runs the custom highlight fixture in its own page.
 const runHighlights = async () => {
@@ -309,6 +333,20 @@ const runStrings = async () => {
   }
 };
 const STRING_ASSERTIONS = 18;
+// WebCore #145 runs the U+0000 event-type fixture in its own page.
+const runHostStrings = async () => {
+  const hostStringsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await hostStringsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runHostStrings(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.hostStrings !== HOST_STRING_ASSERTIONS) throw new Error(`U+0000 event-type assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API WC145 PASS assertions=${result.hostStrings} engine=chromium`);
+  } finally {
+    await hostStringsBrowser.close();
+  }
+};
+const HOST_STRING_ASSERTIONS = 5;
 // H08 runs the diagnostics fixture in its own page.
 const runDiagnostics = async () => {
   const diagnosticsBrowser = await chromium.launch({ headless: true });
@@ -351,6 +389,34 @@ const runCoordinates = async () => {
   }
 };
 const COORDINATE_ASSERTIONS = 304;
+// G10 runs the resize observation fixture in its own page.
+const runResizeObservation = async () => {
+  const resizeBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await resizeBrowser.newPage({ viewport: { width: 800, height: 600 } });
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runResizeObservation(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.resize !== RESIZE_ASSERTIONS) throw new Error(`Resize observation assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API G10 PASS assertions=${result.resize} engine=chromium`);
+  } finally {
+    await resizeBrowser.close();
+  }
+};
+const RESIZE_ASSERTIONS = 34;
+// G11 runs the intersection observation fixture in its own 320x240 page.
+const runIntersectionObservation = async () => {
+  const intersectionBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await intersectionBrowser.newPage({ viewport: { width: 320, height: 240 } });
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runIntersectionObservation(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.intersection !== INTERSECTION_ASSERTIONS) throw new Error(`Intersection observation assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API G11 PASS assertions=${result.intersection} engine=chromium`);
+  } finally {
+    await intersectionBrowser.close();
+  }
+};
+const INTERSECTION_ASSERTIONS = 40;
 // D14 runs the form submission fixture in its own page; the provider keeps the page in place.
 const runSubmissions = async () => {
   const submissionsBrowser = await chromium.launch({ headless: true });
@@ -440,10 +506,14 @@ try {
   else if (highlightsOnly) { await runHighlights(); process.exitCode = 0; }
   else if (blobUrlsOnly) { await runBlobUrls(); process.exitCode = 0; }
   else if (stringsOnly) { await runStrings(); process.exitCode = 0; }
+  else if (process.argv.includes('--host-strings-only')) { await runHostStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
   else if (process.argv.includes('--coordinates-only')) { await runCoordinates(); process.exitCode = 0; }
+  else if (process.argv.includes('--resize-only')) { await runResizeObservation(); process.exitCode = 0; }
+  else if (process.argv.includes('--intersection-only')) { await runIntersectionObservation(); process.exitCode = 0; }
   else if (screenOnly) { await runScreen(); process.exitCode = 0; }
+  else if (process.argv.includes('--media-only')) { await runMediaQueries(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
   else if (eventDetailsOnly) { await runEventDetails(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
@@ -662,7 +732,7 @@ try {
   console.log(`BROWSER_API D12 PASS assertions=${checks.sheetElements} engine=chromium`);
   if (checks.sheetElements !== 109 || checks.failedLinkSheet !== 'replacement') throw new Error('Stylesheet/link element assertions did not run');
   console.log(`BROWSER_API D12 CAPABILITY failedLinkSheet=${checks.failedLinkSheet} engine=chromium`);
-  if (checks.construction !== 78) throw new Error('Constructed stylesheet preservation assertions did not run');
+  if (checks.construction !== 79) throw new Error('Constructed stylesheet preservation assertions did not run');
   await page.locator('#native-api-svg').focus();
   await page.keyboard.press('Tab');
   if (!await page.locator('#native-api-math').evaluate(element => element === element.ownerDocument.activeElement)) {
@@ -683,11 +753,15 @@ try {
   await runCrypto();
   await runHighlights();
   await runStrings();
+  await runHostStrings();
   await runDiagnostics();
   await runCascade();
   await runCoordinates();
+  await runResizeObservation();
+  await runIntersectionObservation();
   await runBlobUrls();
   await runScreen();
+  await runMediaQueries();
   await runEventDetails();
   await runFrames();
   await runIdle();

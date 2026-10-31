@@ -355,15 +355,18 @@ let run (create: unit -> UrlService) (errorName: exn -> string) (parser: Parser)
 
     // Arguments.
     throws "a null URL" (fun () -> service.Create (null, None) |> ignore)
-    // Fable erases Some null to None, so the browser parses "x" without a base.
-    match parser with
-    | WebKit -> throws "a null base" (fun () -> service.Parse ("x", Some null) |> ignore)
-    | Chromium ->
-        equal
-            "Some null erases to None"
-            None
-            (service.Parse ("x", Some null)
-             |> Option.map (fun url -> url.href))
+
+    equal
+        "a Some null base parses as None does"
+        (service.Parse ("x", None)
+         |> Option.map (fun url -> url.href))
+        (service.Parse ("x", Some null)
+         |> Option.map (fun url -> url.href))
+
+    equal
+        "a Some null base creates as None does"
+        (service.Create ("https://a.test/p", None)).href
+        (service.Create ("https://a.test/p", Some null)).href
 
     throws "a null pair" (fun () ->
         service.CreateSearchParams (UrlSearchParamsInit.Pairs [| "a", null |])

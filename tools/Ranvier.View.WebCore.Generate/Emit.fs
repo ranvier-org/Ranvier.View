@@ -199,14 +199,14 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
                 | None -> Error $"Optional enum {p.Name} has no IDL default")
     | "int[]" when mappingKind = "enum" && nullable ->
         Input.encode ctx.Input.Model mapping inner "item"
-        |> Result.map (fun expression -> $"(match {v} with None -> null | Some item -> [| {expression} |])")
+        |> Result.map (fun expression -> matchOption inner v $"[| {expression} |]" "null")
     | "string" when inner = typeof<string> ->
         Ok (
             if nullable then
                 match fn.Defaults.TryFind p.Name with
                 | Some raw when raw.StartsWith "\"" ->
                     let fallback = sprintf "%A" (JsonSerializer.Deserialize<string> raw)
-                    $"Option.defaultValue {fallback} {v}"
+                    matchOption inner v "item" fallback
                 | _ -> $"Option.toObj {v}"
             elif mapping.GetProperty("nullable").GetBoolean() then
                 v
@@ -267,8 +267,7 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
         Ok (
             if nullable then
                 if transformInput || svgInput then
-                    let expression = reference "value"
-                    $"(match {v} with None -> 0n | Some value -> {expression})"
+                    matchOption inner v (reference "item") "0n"
                 else
                     $"Interop.handleOr {v}"
             else if transformInput || svgInput then
@@ -289,13 +288,11 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
             if
                 fn.Interface.StartsWith ("SVG", System.StringComparison.Ordinal)
                 && mappingKind = "dict"
+                && not nullable
             then
-                if nullable then
-                    $"(match {v} with None -> null | Some item when isNull (box item) -> null | Some item -> [| {expression} |])"
-                else
-                    $"(if isNull (box {v}) then null else [| {expression} |])"
+                $"(if isNull (box {v}) then null else [| {expression} |])"
             elif nullable then
-                $"(match {v} with None -> null | Some item -> [| {expression} |])"
+                matchOption inner v $"[| {expression} |]" "null"
             else
                 $"[| {expression} |]")
     | _ -> Error $"argument {p.Name}: {name ts} as {p.C}"

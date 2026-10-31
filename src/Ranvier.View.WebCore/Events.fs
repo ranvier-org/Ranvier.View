@@ -53,9 +53,9 @@ type internal Events private () =
 
         let listener =
             if target.Kind = Kind.EventTarget then
-                Native.rv_event_target_add_listener (registration.Target, eventType, flags, Events.Pointer, GCHandle.ToIntPtr context)
+                Native.rv_event_target_add_listener (registration.Target, Native.utf8 eventType, Native.utf8Length eventType, flags, Events.Pointer, GCHandle.ToIntPtr context)
             else
-                Native.rv_node_add_event_listener (registration.Target, eventType, flags, Events.Pointer, GCHandle.ToIntPtr context)
+                Native.rv_node_add_event_listener (registration.Target, Native.utf8 eventType, Native.utf8Length eventType, flags, Events.Pointer, GCHandle.ToIntPtr context)
 
         if listener = 0n then
             context.Free ()

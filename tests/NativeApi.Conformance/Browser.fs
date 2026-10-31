@@ -119,7 +119,7 @@ let private wait (milliseconds: int) =
 let runSvgSurfaces () =
     async {
         let target = document ()
-        let shapes = SvgShapes.run target errorName "Error" false
+        let shapes = SvgShapes.run target errorName "Error"
         let! fontData = ahem () |> Async.AwaitPromise
 
         let! text =
@@ -1282,6 +1282,63 @@ let runScreen () =
     }
     |> Async.StartAsPromise
 
+[<Emit("window.__rvMediaStep($0, $1, $2, $3, $4, $5, $6)")>]
+let private mediaStep
+    (width: int)
+    (height: int)
+    (scale: float)
+    (colorScheme: string)
+    (reducedMotion: string)
+    (contrast: string)
+    (touch: bool)
+    : JS.Promise<unit> =
+    jsNative
+
+/// <summary>Runs the shared media query assertions (G01/G15); browser.mjs applies each step through CDP.</summary>
+let runMediaQueries () =
+    async {
+        let document = document ()
+
+        let driver: MediaQueryChecks.Driver =
+            {
+                Apply =
+                    fun step ->
+                        let p = step.Preferences
+
+                        let scheme =
+                            match p.ColorScheme with
+                            | Some ColorSchemePreference.Dark -> "dark"
+                            | Some ColorSchemePreference.Light -> "light"
+                            | None -> ""
+
+                        let motion =
+                            match p.ReducedMotion with
+                            | Some MotionPreference.Reduce -> "reduce"
+                            | Some MotionPreference.NoPreference -> "no-preference"
+                            | None -> ""
+
+                        let contrast =
+                            match p.Contrast with
+                            | Some ContrastPreference.More -> "more"
+                            | Some ContrastPreference.NoPreference -> "no-preference"
+                            | None -> ""
+
+                        mediaStep step.Width step.Height step.Scale scheme motion contrast (p.Pointer = Some PointerAccuracy.Coarse)
+                        |> Async.AwaitPromise
+                Settle =
+                    fun () ->
+                        async {
+                            for _ in 1..2 do
+                                do! viewportFrames () |> Async.AwaitPromise
+                        }
+                Native = false
+            }
+
+        let! count = MediaQueryChecks.run (fun () -> BrowserMediaQueries.forDocument document) driver
+        return {| media = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared custom highlight assertions.</summary>
 let runHighlights () =
     let document = document ()
@@ -1299,6 +1356,12 @@ let runStrings () =
         StringChecks.run document (fun () -> BrowserEventDetails.forDocument document) (fun () -> BrowserBinaryValues.forDocument document)
 
     {| strings = count |}
+
+/// <summary>Runs the shared U+0000 event-type assertions (WebCore #145).</summary>
+let runHostStrings () =
+    let document = document ()
+    let count = HostStringChecks.run document (fun () -> BrowserEvents.forDocument document)
+    {| hostStrings = count |}
 
 /// <summary>Runs the shared diagnostics assertions.</summary>
 let runDiagnostics () =
@@ -1349,6 +1412,66 @@ let runCascade () =
             CascadeChecks.Chromium
 
     {| cascade = count |}
+
+[<Emit("new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)))")>]
+let private resizeFrame () : JS.Promise<unit> = jsNative
+
+// Counts the window's error events and prevents their default report; returns the count reader.
+[<Emit("(() => { let n = 0; window.addEventListener('error', e => { n++; e.preventDefault(); }); return () => n; })()")>]
+let private countErrors () : unit -> int = jsNative
+
+/// <summary>Runs the shared resize observation assertions; callback exceptions reach the window's error event.</summary>
+let runResizeObservation () =
+    async {
+        let document = document ()
+        let errors = countErrors ()
+
+        let driver: ResizeObservationChecks.Driver =
+            {
+                Update = fun () -> resizeFrame () |> Async.AwaitPromise
+                Errors = errors
+                Engine = ResizeObservationChecks.Chromium
+            }
+
+        let! count =
+            ResizeObservationChecks.run
+                document
+                (fun () -> BrowserResizeObservation.forDocument document)
+                (fun () -> BrowserCancellation.forDocument document)
+                driver
+
+        return {| resize = count |}
+    }
+    |> Async.StartAsPromise
+
+[<Emit("new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(resolve, 0))))")>]
+let private intersectionFrame () : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared intersection observation assertions; Chromium delivers entries in a task after the frame
+/// that computes them.</summary>
+let runIntersectionObservation () =
+    async {
+        let document = document ()
+        let errors = countErrors ()
+
+        let driver: IntersectionObservationChecks.Driver =
+            {
+                Update = fun () -> intersectionFrame () |> Async.AwaitPromise
+                Errors = errors
+                Engine = IntersectionObservationChecks.Chromium
+            }
+
+        let! count =
+            IntersectionObservationChecks.run
+                document
+                (fun () -> BrowserIntersectionObservation.forDocument document)
+                (fun () -> Timing.forDocument document)
+                (fun () -> BrowserCancellation.forDocument document)
+                driver
+
+        return {| intersection = count |}
+    }
+    |> Async.StartAsPromise
 
 /// <summary>Runs the shared crypto assertions in a secure context.</summary>
 let runCrypto () =

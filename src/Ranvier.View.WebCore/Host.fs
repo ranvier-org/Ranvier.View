@@ -70,9 +70,19 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let frames = Dictionary<int, float -> unit>()
     let idles = List<struct (int * (IdleDeadline -> unit))>()
     let idleTimeouts = Dictionary<int, struct (float * int)>()
-    let timeOrigin = float (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds ())
+    // The document's performance.now() when the host is constructed: the clock continues the engine's, so frame
+    // times, user timing and intersection entry times share one origin.
+    let engineNow =
+        let mutable value = 0.0
+
+        if Native.rv_abi_has "intersection-entries" = 1 && Native.rv_host_now (handle, &value) = 0 then
+            value
+        else
+            0.0
+
+    let timeOrigin = float (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds ()) - engineNow
     let clock = Stopwatch.StartNew ()
-    let mutable advanced = 0.0
+    let mutable advanced = engineNow
     let mutable manual = false
 
     let context = HostContext (posted, thread)
@@ -226,7 +236,9 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         if handle = 0n then
             raise (InvalidOperationException "rv_host_create returned NULL")
 
-        Native.rv_host_load_html (handle, "<!DOCTYPE html><html><head></head><body></body></html>")
+        let initial = "<!DOCTYPE html><html><head></head><body></body></html>"
+
+        Native.rv_host_load_html (handle, Native.utf8 initial, Native.utf8Length initial)
         |> Interop.check "rv_host_load_html"
 
         let session = new Session (handle)
@@ -313,7 +325,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         if not (WebCoreHost.Has "svg-document") then
             Interop.unsupported<unit> "svg-document"
 
-        Native.rv_host_load_svg (handle, svg)
+        Native.rv_host_load_svg (handle, Native.utf8 svg, Native.utf8Length svg)
         |> Interop.check "rv_host_load_svg"
 
         document <- unbox<Document>(session.Node (Native.rv_host_document handle))
@@ -678,7 +690,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     /// <summary>Native key input: an <c>RV_KEY_*</c> action with <c>KeyboardEvent.key</c> and <c>code</c> values.</summary>
     member this.Key(action: int, key: string, code: string, text: string, modifiers: int, repeat: bool) =
-        this.Input ("rv_host_key", fun () -> Native.rv_host_key (handle, action, key, code, text, modifiers, (if repeat then 1 else 0)))
+        this.Input ("rv_host_key", fun () -> Native.rv_host_key (handle, action, key, code, Native.utf8 text, Native.utf8Length text, modifiers, (if repeat then 1 else 0)))
 
     /// <summary>Presses and releases a key that types <c>text</c>.</summary>
     member this.Type(key: string, code: string, text: string) =
@@ -719,12 +731,12 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// within it in UTF-16 offsets. Empty text removes it.
     /// </summary>
     member this.SetComposition(text: string, selectionStart: int, selectionEnd: int) =
-        this.Input ("rv_host_ime_set_composition", fun () -> Native.rv_host_ime_set_composition (handle, text, selectionStart, selectionEnd))
+        this.Input ("rv_host_ime_set_composition", fun () -> Native.rv_host_ime_set_composition (handle, Native.utf8 text, Native.utf8Length text, selectionStart, selectionEnd))
         |> ignore
 
     /// <summary>Replaces the composition, or the selection when there is none, with <c>text</c>, as typed text.</summary>
     member this.CommitComposition(text: string) =
-        this.Input ("rv_host_ime_commit", fun () -> Native.rv_host_ime_commit (handle, text))
+        this.Input ("rv_host_ime_commit", fun () -> Native.rv_host_ime_commit (handle, Native.utf8 text, Native.utf8Length text))
         |> ignore
 
     /// <summary>Removes the composition without committing it.</summary>
@@ -755,9 +767,9 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// </summary>
     member _.SetClipboard(write: string -> string -> bool -> unit, read: unit -> struct (string * string) seq) =
         clipboardWrite <-
-            Native.ClipboardWrite (fun _ kind data first ->
+            Native.ClipboardWrite (fun _ kind data dataLength first ->
                 try
-                    write (Marshal.PtrToStringUTF8 kind) (Marshal.PtrToStringUTF8 data) (first <> 0)
+                    write (Marshal.PtrToStringUTF8 kind) (Marshal.PtrToStringUTF8 (data, dataLength)) (first <> 0)
                 with error ->
                     record error)
 
@@ -765,7 +777,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             Native.ClipboardRead (fun _ request ->
                 try
                     for struct (kind, data) in read () do
-                        Native.rv_clipboard_offer (request, kind, data)
+                        Native.rv_clipboard_offer (request, kind, Native.utf8 data, Native.utf8Length data)
                         |> Interop.check "rv_clipboard_offer"
                 with error ->
                     record error)

@@ -1128,7 +1128,7 @@ let private runBinary () =
 
 /// <summary>Runs the shared URL fixture with native thread and teardown checks.</summary>
 [<Literal>]
-let private UrlChecksCount = 189
+let private UrlChecksCount = 190
 
 let private runUrls () =
     let host = WebCoreHost.Create (320, 240)
@@ -1458,7 +1458,7 @@ let private runSubmissions () =
 
 /// <summary>Runs the shared text segmentation fixture with native thread and teardown checks.</summary>
 [<Literal>]
-let private SegmentChecksCount = 219
+let private SegmentChecksCount = 220
 
 let private runSegments () =
     let host = WebCoreHost.Create (320, 240)
@@ -1662,6 +1662,73 @@ let private runStrings () =
 
     System.Console.WriteLine $"NATIVE_API WC142 PASS assertions={shared}"
     System.Console.WriteLine $"NATIVE_API WC142 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>
+/// Runs the shared U+0000 event-type fixture (WebCore #145), then the host inputs that have no browser equivalent:
+/// key text, input-method composition and commit, clipboard data in and out, and SVG markup.
+/// </summary>
+[<Literal>]
+let private HostStringChecksCount = 5
+
+let private runHostStrings () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+    let mutable inputs = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let equal label (expected: string) (actual: string) =
+        inputs <- inputs + 1
+
+        if actual <> expected then
+            failwith $"U+0000 host input {label}: expected %A{expected}, got %A{actual}"
+
+    let shared =
+        try
+            let count =
+                HostStringChecks.run host.Document (fun () -> Ranvier.View.WebCore.EventConstruction.forHost host)
+
+            let document = host.Document
+            let area = unbox<Ranvier.Dom.HTMLTextAreaElement> (document.createElement "textarea")
+            document.body.appendChild area |> ignore
+            host.SetFocused true
+            area.focus ()
+            host.Key (2, "a", "KeyA", "a\u0000b", 0, false) |> ignore
+            equal "key text" "a\u0000b" area.value
+            area.value <- ""
+            host.SetComposition ("c\u0000d", 3, 3)
+            host.CommitComposition "c\u0000d"
+            equal "composition commit" "c\u0000d" area.value
+            let written = ResizeArray<struct (string * string)>()
+            host.SetClipboard ((fun kind data _ -> written.Add (struct (kind, data))), (fun () -> [ struct ("text/plain", "p\u0000q") ]))
+            area.value <- ""
+            host.Key (0, "v", "KeyV", null, 2, false) |> ignore
+            equal "clipboard paste" "p\u0000q" area.value
+            area.value <- "aé中\U0001F600b"
+            host.Key (0, "a", "KeyA", null, 2, false) |> ignore
+            host.Key (0, "c", "KeyC", null, 2, false) |> ignore
+            let plain = [ for struct (kind, data) in written do if kind = "text/plain" then data ]
+            equal "clipboard copy" "aé中\U0001F600b" (String.concat "|" plain)
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"><text>a</text></svg>\u0000<!--tail-->"
+            equal "SVG markup after U+0000" "parsererror" (match host.Document.querySelector "parsererror" with null -> "none" | _ -> "parsererror")
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "U+0000 host input fixture leaves no live native objects"
+
+    if shared <> HostStringChecksCount then
+        failwith $"U+0000 event-type shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API WC145 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API WC145 HOST PASS assertions={inputs}"
+    System.Console.WriteLine $"NATIVE_API WC145 LIFETIME PASS assertions={lifetime}"
     shared
 
 /// <summary>Runs the shared custom highlight fixture with native thread, document replacement and teardown checks.</summary>
@@ -2168,6 +2235,387 @@ let private runCascade () =
 
     System.Console.WriteLine $"NATIVE_API C25 PASS assertions={shared}"
     System.Console.WriteLine $"NATIVE_API C25 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared resize observation fixture with thread, document replacement and teardown checks.</summary>
+[<Literal>]
+let private ResizeObservationChecksCount = 35
+
+let private runResizeObservation () =
+    let host = WebCoreHost.Create (800, 600)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let mutable held = None
+    let mutable heldEntry = None
+
+    let shared =
+        try
+            let driver: ResizeObservationChecks.Driver =
+                {
+                    Update = fun () -> async { host.Frame () }
+                    Errors = fun () -> host.Errors.Count
+                    Engine = ResizeObservationChecks.Native
+                }
+
+            let count =
+                ResizeObservationChecks.run
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.ResizeObservation.forHost host)
+                    (fun () -> Ranvier.View.WebCore.Cancellation.forHost host)
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted && timeout.ElapsedMilliseconds < 20000L do
+                host.Cycle ()
+
+            let count = count.GetAwaiter().GetResult()
+            let service = Ranvier.View.WebCore.ResizeObservation.forHost host
+            let body = host.Document.body
+            let delivered = System.Collections.Generic.List<string>()
+
+            let observer =
+                service.Create (fun entries ->
+                    for entry in entries do
+                        delivered.Add (entry.Target.nodeName + " " + string entry.ContentRect.Width)
+
+                    heldEntry <- Some entries[0])
+
+            observer.Observe body
+            host.Frame ()
+            expect (List.ofSeq delivered = [ "BODY 784" ]) ("The body is observed inside its 8px margins: " + System.String.Join (",", delivered))
+
+            let wrongThread (action: unit -> unit) =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            action ()
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect (wrongThread (fun () -> observer.Observe body)) "Observe rejects another thread"
+            expect (wrongThread (fun () -> observer.Disconnect ())) "Disconnect rejects another thread"
+            expect (wrongThread (fun () -> Ranvier.View.WebCore.ResizeObservation.forHost host |> ignore)) "forHost rejects another thread"
+            let other = WebCoreHost.Create (100, 80)
+
+            let foreign =
+                try
+                    observer.Observe other.Document.body
+                    false
+                with :? System.ArgumentException ->
+                    true
+
+            (other :> System.IDisposable).Dispose ()
+            expect foreign "An element of another host is rejected"
+
+            // The replaced document's observer delivers nothing; a new observer observes the replacing document.
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"30\" height=\"20\"/>"
+            host.Resize (700, 600)
+            host.Frame ()
+            expect (delivered.Count = 1) "The replaced document's observer delivers nothing"
+            let replacing = service.Create (fun entries -> delivered.Add (string entries.Length))
+            replacing.Observe host.Document.documentElement
+            host.Frame ()
+            expect (List.ofSeq delivered = [ "BODY 784"; "1" ]) ("The replacing document is observed: " + System.String.Join (",", delivered))
+            held <- Some (service, observer)
+            count
+        finally
+            (host :> System.IDisposable).Dispose ()
+
+    expect (session.LiveObjects = 0) "Resize observation leaves no live native objects"
+    let service, observer = held.Value
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect (rejected (fun () -> observer.Observe Unchecked.defaultof<Ranvier.Dom.Element>)) "A held observer rejects Observe after host disposal"
+    expect (rejected (fun () -> service.Create ignore |> ignore)) "A held service rejects Create after host disposal"
+    observer.Dispose ()
+    service.Dispose ()
+    let entry = heldEntry.Value
+    expect (entry.ContentRect.Width = 784.0 && entry.BorderBoxSize.Length = 1) "An entry held past host disposal keeps its copied values"
+
+    if shared <> ResizeObservationChecksCount then
+        failwith $"Resize observation shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API G10 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G10 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared intersection observation fixture with thread, root, document replacement and teardown
+/// checks.</summary>
+[<Literal>]
+let private IntersectionObservationChecksCount = 40
+
+let private runIntersectionObservation () =
+    let width, height = IntersectionObservationChecks.Viewport
+    let host = WebCoreHost.Create (width, height)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let mutable held = None
+    let mutable heldEntry = None
+
+    let shared =
+        try
+            let driver: IntersectionObservationChecks.Driver =
+                {
+                    Update = fun () -> async { host.Frame () }
+                    Errors = fun () -> host.Errors.Count
+                    Engine = IntersectionObservationChecks.Native
+                }
+
+            let count =
+                IntersectionObservationChecks.run
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.IntersectionObservation.forHost host)
+                    (fun () -> Ranvier.View.WebCore.Timing.forHost host)
+                    (fun () -> Ranvier.View.WebCore.Cancellation.forHost host)
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted && timeout.ElapsedMilliseconds < 20000L do
+                host.Cycle ()
+
+            let count = count.GetAwaiter().GetResult()
+            let service = Ranvier.View.WebCore.IntersectionObservation.forHost host
+            let body = host.Document.body
+            let delivered = System.Collections.Generic.List<string>()
+
+            let observer =
+                service.Create (
+                    (fun entries ->
+                        for entry in entries do
+                            delivered.Add (entry.Target.nodeName + " " + string entry.IsIntersecting)
+
+                        heldEntry <- Some entries[0]),
+                    Ranvier.Dom.IntersectionObserverInit.Default
+                )
+
+            observer.Observe body
+            host.Frame ()
+            expect (List.ofSeq delivered = [ "BODY True" ]) ("The body intersects the viewport: " + System.String.Join (",", delivered))
+
+            let wrongThread (action: unit -> unit) =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            action ()
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect (wrongThread (fun () -> observer.Observe body)) "Observe rejects another thread"
+            expect (wrongThread (fun () -> observer.TakeRecords () |> ignore)) "TakeRecords rejects another thread"
+            expect (wrongThread (fun () -> service.Now () |> ignore)) "Now rejects another thread"
+            expect (wrongThread (fun () -> Ranvier.View.WebCore.IntersectionObservation.forHost host |> ignore)) "forHost rejects another thread"
+            let other = WebCoreHost.Create (100, 80)
+
+            let rejected (action: unit -> unit) =
+                try
+                    action ()
+                    false
+                with :? System.ArgumentException ->
+                    true
+
+            let foreignTarget = rejected (fun () -> observer.Observe other.Document.body)
+
+            let foreignRoot =
+                rejected (fun () ->
+                    service.Create (
+                        ignore,
+                        { Ranvier.Dom.IntersectionObserverInit.Default with Root = Ranvier.Dom.IntersectionObserverRoot.Element other.Document.body }
+                    )
+                    |> ignore)
+
+            (other :> System.IDisposable).Dispose ()
+            expect foreignTarget "A target of another host is rejected"
+            expect foreignRoot "A root of another host is rejected"
+            let before = service.Now ()
+
+            // The replaced document's observer delivers nothing; a new observer observes the replacing document.
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"30\" height=\"20\"/>"
+            host.Frame ()
+            expect (delivered.Count = 1) "The replaced document's observer delivers nothing"
+            expect (observer.TakeRecords().Length = 0) "The replaced document's observer has no records"
+            expect (service.Now () >= before) "The replacing document keeps the time origin"
+            let replacing = service.Create ((fun entries -> delivered.Add (string entries.Length)), Ranvier.Dom.IntersectionObserverInit.Default)
+            replacing.Observe host.Document.documentElement
+            host.Frame ()
+            expect (List.ofSeq delivered = [ "BODY True"; "1" ]) ("The replacing document is observed: " + System.String.Join (",", delivered))
+            held <- Some (service, observer)
+            count
+        finally
+            (host :> System.IDisposable).Dispose ()
+
+    expect (session.LiveObjects = 0) "Intersection observation leaves no live native objects"
+    let service, observer = held.Value
+
+    let disposed (action: unit -> unit) =
+        try
+            action ()
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect (disposed (fun () -> observer.Observe Unchecked.defaultof<Ranvier.Dom.Element>)) "A held observer rejects Observe after host disposal"
+    expect (observer.TakeRecords().Length = 0) "A held observer has no records after host disposal"
+    expect (disposed (fun () -> service.Create (ignore, Ranvier.Dom.IntersectionObserverInit.Default) |> ignore)) "A held service rejects Create after host disposal"
+    observer.Dispose ()
+    service.Dispose ()
+    let entry = heldEntry.Value
+    expect (entry.IsIntersecting && entry.RootBounds.IsSome) "An entry held past host disposal keeps its copied values"
+
+    if shared <> IntersectionObservationChecksCount then
+        failwith ("Intersection observation shared assertions did not run: " + string shared)
+
+    System.Console.WriteLine ("NATIVE_API G11 PASS assertions=" + string shared)
+    System.Console.WriteLine ("NATIVE_API G11 LIFETIME PASS assertions=" + string lifetime)
+    shared
+
+/// <summary>Runs the shared media query fixture (G01/G15) with native supply, thread and teardown checks.</summary>
+[<Literal>]
+let private MediaQueryChecksCount = 41
+
+let private runMediaQueries () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let settle () =
+        async {
+            for _ in 1..3 do
+                host.Frame ()
+                host.Cycle 20 |> ignore
+
+            host.Frame ()
+        }
+
+    let mutable held = None
+
+    let shared =
+        try
+            let supplier = Ranvier.View.WebCore.MediaQueries.forHost host
+
+            let driver: MediaQueryChecks.Driver =
+                {
+                    Apply =
+                        fun step ->
+                            async {
+                                host.Resize (step.Width, step.Height)
+                                host.SetDeviceScale (float32 step.Scale)
+                                supplier.Supply step.Preferences
+                                do! settle ()
+                            }
+                    Settle = settle
+                    Native = true
+                }
+
+            let count =
+                MediaQueryChecks.run (fun () -> Ranvier.View.WebCore.MediaQueries.forHost host) driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 60000L do
+                host.Cycle () |> ignore
+
+            let count = count.GetAwaiter().GetResult()
+
+            let service = Ranvier.View.WebCore.MediaQueries.forHost host
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.Supply Ranvier.Dom.MediaPreferences.Default
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Supply rejects another thread"
+            let dark = service.Match "(prefers-color-scheme: dark)"
+            let changes = ResizeArray<bool>()
+            use _ = dark.Subscribe changes.Add
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+
+            service.Supply
+                { Ranvier.Dom.MediaPreferences.Default with
+                    ColorScheme = Some Ranvier.Dom.ColorSchemePreference.Dark
+                }
+
+            settle () |> Async.StartImmediateAsTask |> ignore
+            expect (changes.Count = 0) "A query of a replaced document receives no change"
+            let fresh = service.Match "(prefers-color-scheme: dark)"
+            expect fresh.Matches "The replacing document sees the supplied preferences"
+            held <- Some (service, fresh)
+            supplier.Dispose ()
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Media query fixture leaves no live native objects"
+    let service, fresh = held.Value
+
+    let rejected =
+        try
+            service.Supply Ranvier.Dom.MediaPreferences.Default
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    expect rejected "A held media query service rejects Supply after host disposal"
+    service.Dispose ()
+    let closed =
+        try
+            fresh.Matches |> ignore
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect closed "Disposing the service after host disposal disposes its queries"
+
+    if shared <> MediaQueryChecksCount then
+        failwith $"Media query shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API G01 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G15 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G01/G15 LIFETIME PASS assertions={lifetime}"
     shared
 
 /// <summary>Runs the shared crypto fixture with native thread and teardown checks.</summary>
@@ -2799,12 +3247,16 @@ let private runAll () =
     runSegments () |> ignore
     runCrypto () |> ignore
     runScreen () |> ignore
+    runMediaQueries () |> ignore
     runEventDetails () |> ignore
     runHighlights () |> ignore
     runStrings () |> ignore
+    runHostStrings () |> ignore
     runDiagnostics () |> ignore
     runCascade () |> ignore
     runCoordinates () |> ignore
+    runResizeObservation () |> ignore
+    runIntersectionObservation () |> ignore
     runBlobUrls () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
@@ -3200,7 +3652,7 @@ let private runAll () =
 
         match construction with
         | Some (Ok checks) ->
-            if checks <> 78 then
+            if checks <> 79 then
                 failwith "Constructed stylesheet preservation assertions did not run"
 
             System.Console.WriteLine $"NATIVE_API C07 PASS assertions={checks}"
@@ -3557,7 +4009,7 @@ let private runSurfaces () =
 
     try
         let shapes =
-            SvgShapes.run host.Document surfaceErrorName "ArgumentNullException" true
+            SvgShapes.run host.Document surfaceErrorName "ArgumentNullException"
 
         let fontData =
             System.Convert.ToBase64String (
@@ -3812,14 +4264,26 @@ let main args =
     elif Array.contains "--strings-only" args then
         runStrings () |> ignore
         0
+    elif Array.contains "--host-strings-only" args then
+        runHostStrings () |> ignore
+        0
     elif Array.contains "--diagnostics-only" args then
         runDiagnostics () |> ignore
         0
     elif Array.contains "--cascade-only" args then
         runCascade () |> ignore
         0
+    elif Array.contains "--media-only" args then
+        runMediaQueries () |> ignore
+        0
     elif Array.contains "--coordinates-only" args then
         runCoordinates () |> ignore
+        0
+    elif Array.contains "--resize-only" args then
+        runResizeObservation () |> ignore
+        0
+    elif Array.contains "--intersection-only" args then
+        runIntersectionObservation () |> ignore
         0
     elif Array.contains "--crypto-only" args then
         runCrypto () |> ignore
