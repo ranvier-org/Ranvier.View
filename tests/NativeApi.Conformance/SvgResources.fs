@@ -71,8 +71,7 @@ let run (document: Document) (pixel: Pixel) (wait: int -> Async<unit>) (errorNam
         let link =
             create<SVGAElement> document "a" [ "href", "#target"; "target", "_blank"; "rel", "noopener" ]
 
-        let style =
-            create<SVGStyleElement> document "style" [ "media", "all" ]
+        let style = create<SVGStyleElement> document "style" [ "media", "all" ]
 
         style.textContent <- ".resource-styled{fill:lime}"
 
