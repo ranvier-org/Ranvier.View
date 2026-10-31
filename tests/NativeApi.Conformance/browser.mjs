@@ -22,6 +22,7 @@ const fontsOnly = process.argv.includes('--fonts-only');
 const heldFonts = new Map();
 const svgPaintOnly = process.argv.includes('--svg-paint-only');
 const inputStateOnly = process.argv.includes('--input-state-only');
+const pointerInputOnly = process.argv.includes('--pointer-input-only');
 const framesOnly = process.argv.includes('--frames-only');
 const idleOnly = process.argv.includes('--idle-only');
 const caretOnly = process.argv.includes('--caret-only');
@@ -120,6 +121,41 @@ const runInputState = async () => {
     await inputBrowser.close();
   }
 };
+// I03/I04/I06 inject touch frames, pen samples and relative mouse moves through CDP.
+const runPointerInput = async () => {
+  const pointerBrowser = await chromium.launch({ headless: true });
+  try {
+    const context = await pointerBrowser.newContext({ viewport: { width: 320, height: 240 }, hasTouch: true });
+    const page = await context.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const cdp = await context.newCDPSession(page);
+    let mouse = { x: 0, y: 0 };
+    await page.exposeFunction('__nativeApiTouch', async contacts => {
+      const points = contacts.map(c => ({ x: c.X, y: c.Y, id: c.Id, radiusX: c.RadiusX, radiusY: c.RadiusY, rotationAngle: c.Angle, force: c.Force }));
+      const changed = contacts.filter(c => c.Action !== 4);
+      const type = changed.some(c => c.Action === 3) ? 'touchCancel' : changed.some(c => c.Action === 1) ? 'touchStart'
+        : changed.some(c => c.Action === 2) ? 'touchEnd' : 'touchMove';
+      const touchPoints = type === 'touchCancel' ? [] : type === 'touchEnd' ? points.filter((_, i) => contacts[i].Action === 2) : points;
+      await cdp.send('Input.dispatchTouchEvent', { type, touchPoints });
+    });
+    await page.exposeFunction('__nativeApiPen', async p => {
+      const type = p.Action === 1 ? 'mousePressed' : p.Action === 2 ? 'mouseReleased' : 'mouseMoved';
+      const button = p.Action === 1 || p.Action === 2 ? 'left' : 'none';
+      await cdp.send('Input.dispatchMouseEvent', { type, x: p.X, y: p.Y, pointerType: 'pen', button, buttons: p.Buttons,
+        clickCount: button === 'left' ? 1 : 0, force: p.Pressure, tangentialPressure: p.Tangential, tiltX: p.TiltX, tiltY: p.TiltY, twist: p.Twist });
+      mouse = { x: p.X, y: p.Y };
+    });
+    await page.exposeFunction('__nativeApiClickAt', async (x, y) => { await page.mouse.click(x, y); mouse = { x, y }; });
+    // Chromium reports a locked move's movement from the position change; the move starts at the last position.
+    await page.exposeFunction('__nativeApiMoveBy', async (x, y, dx, dy) => { await page.mouse.move(mouse.x + dx, mouse.y + dy); mouse = { x: mouse.x + dx, y: mouse.y + dy }; });
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runPointerInput(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.pointerInput !== POINTER_INPUT_ASSERTIONS) throw new Error(`Pointer-input assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API I03_I04_I06 PASS assertions=${result.pointerInput} engine=chromium`);
+  } finally {
+    await pointerBrowser.close();
+  }
+};
+const POINTER_INPUT_ASSERTIONS = 61;
 // G02/G12 drive the viewport with device-metrics emulation, read paint size from a device-scale screenshot and
 // change activation by minimizing and restoring the window, which blurs and focuses it under emulated metrics.
 const runViewport = async () => {
@@ -565,6 +601,7 @@ const runValueFactories = async () => {
 const VALUE_FACTORY_ASSERTIONS = 112;
 try {
   if (inputStateOnly) { await runInputState(); process.exitCode = 0; }
+  else if (pointerInputOnly) { await runPointerInput(); process.exitCode = 0; }
   else if (viewportOnly) { await runViewport(); process.exitCode = 0; }
   else if (formsOnly) { await runForms(); process.exitCode = 0; }
   else if (dialogsOnly) { await runDialogs(); process.exitCode = 0; }
@@ -826,6 +863,7 @@ try {
   }
   if (!fontsOnly) {
   await runInputState();
+  await runPointerInput();
   await runViewport();
   await runForms();
   await runDialogs();

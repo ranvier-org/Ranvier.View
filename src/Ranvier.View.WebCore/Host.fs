@@ -10,6 +10,50 @@ open Ranvier.Dom
 open Ranvier.View
 open RanvierWebCoreAbi
 
+/// <summary>One sample of a mouse, pen or touch contact, laid out as <c>RvPointerSample</c>.</summary>
+/// <remarks>
+/// <c>PointerType</c> is 0 for a mouse, 1 for a pen and 2 for touch; <c>Action</c> is 0 move, 1 down, 2 up, 3 cancel
+/// (pen and touch) and 4 stationary (touch). A NaN <c>Pressure</c> takes the engine's value for a device without
+/// pressure. <c>PointerSample.Create</c> fills <c>Size</c>.
+/// </remarks>
+[<Struct; StructLayout(LayoutKind.Sequential)>]
+type PointerSample =
+    val mutable Size: int
+    val mutable PointerType: int
+    val mutable Id: int
+    val mutable Action: int
+    val mutable X: float
+    val mutable Y: float
+    val mutable Button: int
+    val mutable Buttons: int
+    val mutable Modifiers: int
+    val mutable ClickCount: int
+    val mutable Pressure: float32
+    val mutable TangentialPressure: float32
+    val mutable TiltX: int
+    val mutable TiltY: int
+    val mutable Twist: int
+    val mutable Width: float32
+    val mutable Height: float32
+    val mutable MovementX: float
+    val mutable MovementY: float
+
+    /// <summary>A sample at <c>x</c>, <c>y</c> CSS pixels with no button, the engine's pressure and a 1-pixel
+    /// contact.</summary>
+    static member Create(pointerType: int, id: int, action: int, x: float, y: float) =
+        let mutable sample = PointerSample ()
+        sample.Size <- Marshal.SizeOf<PointerSample>()
+        sample.PointerType <- pointerType
+        sample.Id <- id
+        sample.Action <- action
+        sample.X <- x
+        sample.Y <- y
+        sample.Button <- -1
+        sample.Pressure <- Single.NaN
+        sample.Width <- 1.0f
+        sample.Height <- 1.0f
+        sample
+
 /// <summary>The wrapper classes of new node and event handles.</summary>
 module internal Factories =
     let node (session: Session) (handle: nativeint) : NativeObject =
@@ -702,6 +746,26 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         this.Key (0, key, code, null, 0, false) |> ignore
         this.Key (2, key, code, text, 0, false) |> ignore
         this.Key (1, key, code, null, 0, false) |> ignore
+
+    /// <summary>
+    /// Native pointer input: one mouse or pen sample, or one sample per active contact of a touch frame, handled as the
+    /// user's. Returns whether the page or WebCore handled it.
+    /// </summary>
+    member this.Pointer(samples: PointerSample array) =
+        if isNull samples then
+            nullArg (nameof samples)
+
+        this.Input (
+            "rv_host_pointer",
+            fun () ->
+                use pinned = fixed samples
+                Native.rv_host_pointer (handle, NativeInterop.NativePtr.toNativeInt pinned, samples.Length)
+        )
+
+    /// <summary>Sets <c>Navigator.maxTouchPoints</c> of the host's documents, 0 for no touch screen.</summary>
+    member _.SetMaxTouchPoints(value: int) =
+        Native.rv_host_set_max_touch_points (handle, value)
+        |> Interop.check "rv_host_set_max_touch_points"
 
     /// <summary>Sets whether the app's window has keyboard focus; a page starts unfocused.</summary>
     member _.SetFocused(focused: bool) =

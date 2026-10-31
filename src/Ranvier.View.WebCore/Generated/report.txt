@@ -388,6 +388,9 @@ Members by class (mapped / hand-written / unmapped):
   SubmitEventObject: 1 / 0 / 0
   TextObject: 3 / 0 / 0
   ToggleEventObject: 3 / 0 / 0
+  TouchEventObject: 7 / 0 / 0
+  TouchListObject: 2 / 0 / 0
+  TouchObject: 8 / 0 / 0
   TransitionEventObject: 3 / 0 / 0
   TreeWalkerObject: 11 / 1 / 0
   UIEventObject: 6 / 0 / 0

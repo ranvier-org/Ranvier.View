@@ -225,6 +225,12 @@ module internal Kind =
     [<Literal>]
     let DataTransferItem = 104
 
+    [<Literal>]
+    let Touch = 105
+
+    [<Literal>]
+    let TouchList = 106
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -405,6 +411,8 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.DataTransfer -> NativeDom.rv_dom_data_transfer_release handle
         | Kind.DataTransferItemList -> NativeDom.rv_dom_data_transfer_item_list_release handle
         | Kind.DataTransferItem -> NativeDom.rv_dom_data_transfer_item_release handle
+        | Kind.Touch -> NativeDom.rv_dom_touch_release handle
+        | Kind.TouchList -> NativeDom.rv_dom_touch_list_release handle
         | Kind.Highlight -> NativeDom.rv_dom_highlight_release handle
         | Kind.HighlightRegistry -> NativeDom.rv_dom_highlight_registry_release handle
         | Kind.CanvasRenderingContext2D -> NativeDom.rv_dom_canvas_rendering_context2_d_release handle

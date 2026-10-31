@@ -74,6 +74,7 @@
         <Compile Include="Fonts.fs" />
         <Compile Include="EventConstruction.fs" />
         <Compile Include="InputState.fs" />
+        <Compile Include="PointerInput.fs" />
         <Compile Include="FormData.fs" />
         <Compile Include="FormSubmissions.fs" />
         <Compile Include="ToggleEvents.fs" />

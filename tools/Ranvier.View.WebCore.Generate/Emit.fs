@@ -364,6 +364,8 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                     "DataTransfer"
                     "DataTransferItemList"
                     "DataTransferItem"
+                    "Touch"
+                    "TouchList"
                 ]
         then
             let kind = ctx.Input.Kinds[publicRoot]

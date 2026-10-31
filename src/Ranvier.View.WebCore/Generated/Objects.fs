@@ -2614,6 +2614,63 @@ and internal StyleSheetListObject(session: Session, handle: nativeint) =
             Interop.check "StyleSheetList.namedItem" (NativeDom.rv_dom_style_sheet_list_named_item (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
             (unbox<Ranvier.Dom.CSSStyleSheet> (this.Session.Object(result, Kind.StyleSheet, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> Classes.StyleSheet(session, handle)))))
 
+and internal TouchObject(session: Session, handle: nativeint) =
+    inherit NativeObject(session, handle, Kind.Touch)
+    interface Ranvier.Dom.Touch with
+        member this.clientX
+            with get () : float =
+                let mutable result = 0.0
+                Interop.check "Touch.clientX" (NativeDom.rv_dom_touch_get_client_x (Interop.handle (box this), &result))
+                float result
+        member this.clientY
+            with get () : float =
+                let mutable result = 0.0
+                Interop.check "Touch.clientY" (NativeDom.rv_dom_touch_get_client_y (Interop.handle (box this), &result))
+                float result
+        member this.screenX
+            with get () : float =
+                let mutable result = 0.0
+                Interop.check "Touch.screenX" (NativeDom.rv_dom_touch_get_screen_x (Interop.handle (box this), &result))
+                float result
+        member this.screenY
+            with get () : float =
+                let mutable result = 0.0
+                Interop.check "Touch.screenY" (NativeDom.rv_dom_touch_get_screen_y (Interop.handle (box this), &result))
+                float result
+        member this.pageX
+            with get () : float =
+                let mutable result = 0.0
+                Interop.check "Touch.pageX" (NativeDom.rv_dom_touch_get_page_x (Interop.handle (box this), &result))
+                float result
+        member this.pageY
+            with get () : float =
+                let mutable result = 0.0
+                Interop.check "Touch.pageY" (NativeDom.rv_dom_touch_get_page_y (Interop.handle (box this), &result))
+                float result
+        member this.target
+            with get () : Ranvier.Dom.EventTarget =
+                let mutable result = 0n
+                Interop.check "Touch.target" (NativeDom.rv_dom_touch_get_target (Interop.handle (box this), &result))
+                unbox<Ranvier.Dom.EventTarget> (this.Session.Node result)
+        member this.identifier
+            with get () : int =
+                let mutable result = 0
+                Interop.check "Touch.identifier" (NativeDom.rv_dom_touch_get_identifier (Interop.handle (box this), &result))
+                int result
+
+and internal TouchListObject(session: Session, handle: nativeint) =
+    inherit NativeObject(session, handle, Kind.TouchList)
+    interface Ranvier.Dom.TouchList with
+        member this.length
+            with get () : uint32 =
+                let mutable result = 0u
+                Interop.check "TouchList.length" (NativeDom.rv_dom_touch_list_get_length (Interop.handle (box this), &result))
+                uint32 result
+        member this.item(index: uint32) : Ranvier.Dom.Touch =
+            let mutable result = 0n
+            Interop.check "TouchList.item" (NativeDom.rv_dom_touch_list_item (Interop.handle (box this), uint32 index, &result))
+            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.Touch> else (unbox<Ranvier.Dom.Touch> (this.Session.Object(result, Kind.Touch, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (TouchObject(session, handle) :> NativeObject))))))
+
 and internal TreeWalkerObject(session: Session, handle: nativeint) =
     inherit NativeObject(session, handle, Kind.TreeWalker)
     interface Ranvier.Dom.TreeWalker with
@@ -6192,7 +6249,42 @@ and internal MouseEventObject(session: Session, handle: nativeint) =
 
 and internal TouchEventObject(session: Session, handle: nativeint) =
     inherit UIEventObject(session, handle)
-    interface Ranvier.Dom.TouchEvent
+    interface Ranvier.Dom.TouchEvent with
+        member this.touches
+            with get () : Ranvier.Dom.TouchList =
+                let mutable result = 0n
+                Interop.check "TouchEvent.touches" (NativeDom.rv_dom_touch_event_get_touches (Interop.handle (box this), &result))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.TouchList> else (unbox<Ranvier.Dom.TouchList> (this.Session.Object(result, Kind.TouchList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (TouchListObject(session, handle) :> NativeObject))))))
+        member this.targetTouches
+            with get () : Ranvier.Dom.TouchList =
+                let mutable result = 0n
+                Interop.check "TouchEvent.targetTouches" (NativeDom.rv_dom_touch_event_get_target_touches (Interop.handle (box this), &result))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.TouchList> else (unbox<Ranvier.Dom.TouchList> (this.Session.Object(result, Kind.TouchList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (TouchListObject(session, handle) :> NativeObject))))))
+        member this.changedTouches
+            with get () : Ranvier.Dom.TouchList =
+                let mutable result = 0n
+                Interop.check "TouchEvent.changedTouches" (NativeDom.rv_dom_touch_event_get_changed_touches (Interop.handle (box this), &result))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.TouchList> else (unbox<Ranvier.Dom.TouchList> (this.Session.Object(result, Kind.TouchList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (TouchListObject(session, handle) :> NativeObject))))))
+        member this.ctrlKey
+            with get () : bool =
+                let mutable result = 0
+                Interop.check "TouchEvent.ctrlKey" (NativeDom.rv_dom_touch_event_get_ctrl_key (Interop.handle (box this), &result))
+                result <> 0
+        member this.shiftKey
+            with get () : bool =
+                let mutable result = 0
+                Interop.check "TouchEvent.shiftKey" (NativeDom.rv_dom_touch_event_get_shift_key (Interop.handle (box this), &result))
+                result <> 0
+        member this.altKey
+            with get () : bool =
+                let mutable result = 0
+                Interop.check "TouchEvent.altKey" (NativeDom.rv_dom_touch_event_get_alt_key (Interop.handle (box this), &result))
+                result <> 0
+        member this.metaKey
+            with get () : bool =
+                let mutable result = 0
+                Interop.check "TouchEvent.metaKey" (NativeDom.rv_dom_touch_event_get_meta_key (Interop.handle (box this), &result))
+                result <> 0
 
 and internal CSSContainerRuleObject(session: Session, handle: nativeint) =
     inherit CSSConditionRuleObject(session, handle)
@@ -7167,6 +7259,20 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                     let mutable result = 0n
                     Interop.check "Document.styleSheets" (NativeDom.rv_dom_document_get_style_sheets (Interop.handle (box this), &result))
                     (unbox<Ranvier.Dom.StyleSheetList> (this.Session.Object(result, Kind.StyleSheetList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (StyleSheetListObject(session, handle) :> NativeObject)))))
+        member this.pointerLockElement
+            with get () : Ranvier.Dom.Element =
+                if this.Session.Intercepting then
+                    Interop.intercept this "get_pointerLockElement" [|  |] (fun args ->
+                        let result =
+                            let mutable result = 0n
+                            Interop.check "Document.pointerLockElement" (NativeDom.rv_dom_document_get_pointer_lock_element (Interop.handle (box this), &result))
+                            unbox<Ranvier.Dom.Element> (this.Session.Node result)
+                        box result)
+                    |> unbox<Ranvier.Dom.Element>
+                else
+                    let mutable result = 0n
+                    Interop.check "Document.pointerLockElement" (NativeDom.rv_dom_document_get_pointer_lock_element (Interop.handle (box this), &result))
+                    unbox<Ranvier.Dom.Element> (this.Session.Node result)
         member this.createElement(localName: string) : Ranvier.Dom.Element =
             if this.Session.Intercepting then
                 Interop.intercept this "createElement" [| box localName |] (fun args ->
@@ -7762,6 +7868,22 @@ and internal DocumentObject(session: Session, handle: nativeint) =
                 let mutable result = 0n
                 Interop.check "Document.getSelection" (NativeDom.rv_dom_document_get_selection (Interop.handle (box this), &result))
                 (if result = 0n then Unchecked.defaultof<Ranvier.Dom.DOMSelection> else (this.Session.Track (DOMSelectionObject(this.Session, result)) :> Ranvier.Dom.DOMSelection))
+        member this.createTouchList([<System.ParamArray>] touches: Ranvier.Dom.Touch array) : Ranvier.Dom.TouchList =
+            if this.Session.Intercepting then
+                Interop.intercept this "createTouchList" [| box touches |] (fun args ->
+                    let touches: Ranvier.Dom.Touch array = unbox args[0]
+                    let result =
+                        use scope = new InputScope()
+                        let mutable result = 0n
+                        Interop.check "Document.createTouchList" (NativeDom.rv_dom_document_create_touch_list (Interop.handle (box this), [| (let values = (touches) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceTouch> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |], &result))
+                        (unbox<Ranvier.Dom.TouchList> (this.Session.Object(result, Kind.TouchList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (TouchListObject(session, handle) :> NativeObject)))))
+                    box result)
+                |> unbox<Ranvier.Dom.TouchList>
+            else
+                use scope = new InputScope()
+                let mutable result = 0n
+                Interop.check "Document.createTouchList" (NativeDom.rv_dom_document_create_touch_list (Interop.handle (box this), [| (let values = (touches) |> Array.map (fun item -> Interop.handle (box (item))) in let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceTouch> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result) |], &result))
+                (unbox<Ranvier.Dom.TouchList> (this.Session.Object(result, Kind.TouchList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (TouchListObject(session, handle) :> NativeObject)))))
         member this.getElementById(elementId: string) : Ranvier.Dom.Element =
             if this.Session.Intercepting then
                 Interop.intercept this "getElementById" [| box elementId |] (fun args ->
@@ -29594,6 +29716,7 @@ and [<AbstractClass; Sealed>] internal Classes =
             | "InputEvent" -> InputEventObject(session, handle)
             | "KeyboardEvent" -> KeyboardEventObject(session, handle)
             | "MouseEvent" -> MouseEventObject(session, handle)
+            | "TouchEvent" -> TouchEventObject(session, handle)
             | "AnimationPlaybackEvent" -> AnimationPlaybackEventObject(session, handle)
             | "BeforeUnloadEvent" -> BeforeUnloadEventObject(session, handle)
             | "AnimationEvent" -> AnimationEventObject(session, handle)

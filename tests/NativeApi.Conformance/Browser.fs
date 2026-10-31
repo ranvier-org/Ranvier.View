@@ -814,6 +814,44 @@ let runFonts () =
 [<Emit("globalThis.__nativeApiSetActive($0)")>]
 let private setActive (active: bool) : JS.Promise<unit> = jsNative
 
+[<Emit("globalThis.__nativeApiTouch($0)")>]
+let private touchFrame (contacts: PointerInputChecks.Contact array) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiPen($0)")>]
+let private penSample (pen: PointerInputChecks.Pen) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiClickAt($0, $1)")>]
+let private clickAt (x: int) (y: int) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiMoveBy($0, $1, $2, $3)")>]
+let private moveBy (x: int) (y: int) (dx: int) (dy: int) : JS.Promise<unit> = jsNative
+
+[<Emit("new Promise(resolve => setTimeout(resolve, 150))")>]
+let private settleTasks () : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared pointer-input assertions with CDP touch, pen and mouse input.</summary>
+/// <remarks>Headless Chromium grants a pointer-lock request without asking, so granting is a no-op.</remarks>
+let runPointerInput () =
+    async {
+        let document = document ()
+
+        let driver: PointerInputChecks.Driver =
+            {
+                Touch = fun contacts -> touchFrame contacts |> Async.AwaitPromise
+                Pen = fun pen -> penSample pen |> Async.AwaitPromise
+                Click = fun x y -> clickAt x y |> Async.AwaitPromise
+                MoveBy = fun x y dx dy -> moveBy x y dx dy |> Async.AwaitPromise
+                GrantLock = fun () -> settleTasks () |> Async.AwaitPromise
+                Settle = fun () -> settleTasks () |> Async.AwaitPromise
+            }
+
+        let! count =
+            PointerInputChecks.run document (BrowserPointerInput.provider document) (BrowserPointerInput.capabilities ()) CapabilityState.Yes driver
+
+        return {| pointerInput = count |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("globalThis.__nativeApiMouse($0, $1, $2)")>]
 let private mouse (action: string) (x: int) (y: int) : JS.Promise<unit> = jsNative
 

@@ -132,6 +132,8 @@ let private kinds =
             "DataTransfer", "Kind.DataTransfer"
             "DataTransferItemList", "Kind.DataTransferItemList"
             "DataTransferItem", "Kind.DataTransferItem"
+            "Touch", "Kind.Touch"
+            "TouchList", "Kind.TouchList"
         ]
 
 [<EntryPoint>]
