@@ -909,7 +909,7 @@ let private runBinary () =
 
 /// <summary>Runs the shared URL fixture with native thread and teardown checks.</summary>
 [<Literal>]
-let private UrlChecksCount = 185
+let private UrlChecksCount = 189
 
 let private runUrls () =
     let host = WebCoreHost.Create (320, 240)
