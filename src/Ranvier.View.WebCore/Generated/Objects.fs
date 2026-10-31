@@ -26818,5 +26818,6 @@ and [<AbstractClass; Sealed>] internal Classes =
         | "http://www.w3.org/2000/svg", "vkern" -> SVGElementObject (session, handle)
         | "http://www.w3.org/1999/xhtml", _ -> HTMLElementObject (session, handle)
         | "http://www.w3.org/2000/svg", _ -> SVGElementObject (session, handle)
+        | "http://www.w3.org/1998/Math/MathML", "math" -> MathMLMathElementObject (session, handle)
         | "http://www.w3.org/1998/Math/MathML", _ -> MathMLElementObject (session, handle)
         | _ -> ElementObject (session, handle)
