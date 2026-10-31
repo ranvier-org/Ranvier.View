@@ -336,6 +336,20 @@ const runCoordinates = async () => {
   }
 };
 const COORDINATE_ASSERTIONS = 304;
+// G10 runs the resize observation fixture in its own page.
+const runResizeObservation = async () => {
+  const resizeBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await resizeBrowser.newPage({ viewport: { width: 800, height: 600 } });
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runResizeObservation(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.resize !== RESIZE_ASSERTIONS) throw new Error(`Resize observation assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API G10 PASS assertions=${result.resize} engine=chromium`);
+  } finally {
+    await resizeBrowser.close();
+  }
+};
+const RESIZE_ASSERTIONS = 34;
 // D14 runs the form submission fixture in its own page; the provider keeps the page in place.
 const runSubmissions = async () => {
   const submissionsBrowser = await chromium.launch({ headless: true });
@@ -427,6 +441,7 @@ try {
   else if (stringsOnly) { await runStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (process.argv.includes('--coordinates-only')) { await runCoordinates(); process.exitCode = 0; }
+  else if (process.argv.includes('--resize-only')) { await runResizeObservation(); process.exitCode = 0; }
   else if (screenOnly) { await runScreen(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
   else if (eventDetailsOnly) { await runEventDetails(); process.exitCode = 0; }
@@ -669,6 +684,7 @@ try {
   await runStrings();
   await runDiagnostics();
   await runCoordinates();
+  await runResizeObservation();
   await runBlobUrls();
   await runScreen();
   await runEventDetails();
