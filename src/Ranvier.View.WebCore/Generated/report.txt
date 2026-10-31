@@ -1,10 +1,14 @@
-239 classes; 2627 members: 2598 mapped to 2518 of 2623 rv_dom_* functions, 29 hand-written, 0 unmapped
+250 classes; 2651 members: 2622 mapped to 2542 of 2658 rv_dom_* functions, 29 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
+  rv_dom_animation_playback_event_create: AnimationPlaybackEvent.constructor (op)
   rv_dom_blob_create: Blob.constructor (op)
   rv_dom_command_event_create: CommandEvent.constructor (op)
+  rv_dom_composition_event_create: CompositionEvent.constructor (op)
+  rv_dom_content_visibility_auto_state_change_event_create: ContentVisibilityAutoStateChangeEvent.constructor (op)
   rv_dom_crypto_get_random_values: Crypto.getRandomValues (op)
   rv_dom_crypto_random_uuid: Crypto.randomUUID (op)
+  rv_dom_css_animation_event_create: CSSAnimationEvent.constructor (op)
   rv_dom_css_get_highlights: DOMCSSNamespace.highlights (op)
   rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
   rv_dom_css_perspective_create: CSSPerspective.constructor (op)
@@ -21,6 +25,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_css_supports_1: DOMCSSNamespace.supports (op)
   rv_dom_css_supports_2: DOMCSSNamespace.supports (op)
   rv_dom_css_transform_value_create: CSSTransformValue.constructor (op)
+  rv_dom_css_transition_event_create: CSSTransitionEvent.constructor (op)
   rv_dom_css_translate_create: CSSTranslate.constructor (op)
   rv_dom_css_unit_value_create: CSSUnitValue.constructor (op)
   rv_dom_css_unparsed_value_create: CSSUnparsedValue.constructor (op)
@@ -50,11 +55,13 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_domurl_can_parse: DOMURL.canParse (op)
   rv_dom_domurl_create: DOMURL.constructor (op)
   rv_dom_domurl_parse: DOMURL.parse (op)
+  rv_dom_error_event_create: ErrorEvent.constructor (op)
   rv_dom_event_get_current_target: Event.currentTarget (get)
   rv_dom_event_get_target: Event.target (get)
   rv_dom_file_create: File.constructor (op)
   rv_dom_focus_event_get_related_target: FocusEvent.relatedTarget (get)
   rv_dom_form_data_event_create: FormDataEvent.constructor (op)
+  rv_dom_hash_change_event_create: HashChangeEvent.constructor (op)
   rv_dom_highlight_add: Highlight.add (op)
   rv_dom_highlight_clear: Highlight.clear (op)
   rv_dom_highlight_create: Highlight.constructor (op)
@@ -73,8 +80,12 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_input_event_get_data: InputEvent.data (get)
   rv_dom_input_event_get_input_type: InputEvent.inputType (get)
   rv_dom_keyboard_event_get_key: KeyboardEvent.key (get)
+  rv_dom_media_query_list_event_create: MediaQueryListEvent.constructor (op)
   rv_dom_mouse_event_get_related_target: MouseEvent.relatedTarget (get)
   rv_dom_node_iterator_get_filter: NodeIterator.filter (get)
+  rv_dom_page_transition_event_create: PageTransitionEvent.constructor (op)
+  rv_dom_pop_state_event_create: PopStateEvent.constructor (op)
+  rv_dom_progress_event_create: ProgressEvent.constructor (op)
   rv_dom_screen_get_avail_height: Screen.availHeight (op)
   rv_dom_screen_get_avail_left: Screen.availLeft (op)
   rv_dom_screen_get_avail_top: Screen.availTop (op)
@@ -111,7 +122,10 @@ Unmapped members by reason:
 
 Members by class (mapped / hand-written / unmapped):
   AbstractRangeObject: 5 / 0 / 0
+  AnimationEventObject: 3 / 0 / 0
+  AnimationPlaybackEventObject: 2 / 0 / 0
   AttrObject: 9 / 0 / 0
+  BeforeUnloadEventObject: 2 / 0 / 0
   BlobObject: 3 / 0 / 0
   CSSConditionRuleObject: 1 / 0 / 0
   CSSContainerRuleObject: 2 / 0 / 0
@@ -159,6 +173,7 @@ Members by class (mapped / hand-written / unmapped):
   CharacterDataObject: 14 / 0 / 0
   CommandEventObject: 2 / 0 / 0
   CompositionEventObject: 1 / 0 / 0
+  ContentVisibilityAutoStateChangeEventObject: 1 / 0 / 0
   DOMFormDataObject: 8 / 0 / 0
   DOMImplementationObject: 2 / 0 / 0
   DOMMatrixObject: 95 / 0 / 0
@@ -175,6 +190,7 @@ Members by class (mapped / hand-written / unmapped):
   DocumentFragmentObject: 11 / 0 / 0
   DocumentObject: 72 / 2 / 0
   ElementObject: 181 / 0 / 0
+  ErrorEventObject: 4 / 0 / 0
   EventObject: 16 / 2 / 0
   EventTargetObject: 0 / 9 / 0
   FileListObject: 2 / 0 / 0
@@ -240,17 +256,22 @@ Members by class (mapped / hand-written / unmapped):
   HTMLTimeElementObject: 2 / 0 / 0
   HTMLTitleElementObject: 2 / 0 / 0
   HTMLUListElementObject: 4 / 0 / 0
+  HashChangeEventObject: 2 / 0 / 0
   HighlightObject: 4 / 0 / 0
   InputEventObject: 2 / 2 / 0
   KeyboardEventObject: 12 / 1 / 0
   MathMLElementObject: 11 / 0 / 0
   MediaListObject: 6 / 0 / 0
+  MediaQueryListEventObject: 2 / 0 / 0
   MouseEventObject: 19 / 1 / 0
   NamedNodeMapObject: 8 / 0 / 0
   NodeIteratorObject: 7 / 1 / 0
   NodeListObject: 2 / 0 / 0
   NodeObject: 31 / 0 / 0
+  PageTransitionEventObject: 1 / 0 / 0
   PointerEventObject: 14 / 0 / 0
+  PopStateEventObject: 1 / 0 / 0
+  ProgressEventObject: 3 / 0 / 0
   RadioNodeListObject: 2 / 0 / 0
   RangeObject: 26 / 0 / 0
   SVGAElementObject: 9 / 0 / 0
@@ -341,6 +362,7 @@ Members by class (mapped / hand-written / unmapped):
   SubmitEventObject: 1 / 0 / 0
   TextObject: 3 / 0 / 0
   ToggleEventObject: 3 / 0 / 0
+  TransitionEventObject: 3 / 0 / 0
   TreeWalkerObject: 11 / 1 / 0
   UIEventObject: 6 / 0 / 0
   URLObject: 23 / 0 / 0
