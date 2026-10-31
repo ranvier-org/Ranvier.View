@@ -116,6 +116,7 @@ let private kinds =
             "StylePropertyMapReadOnly", "Kind.StyleMap"
             "NodeIterator", "Kind.NodeIterator"
             "TreeWalker", "Kind.TreeWalker"
+            "CaretPosition", "Kind.CaretPosition"
         ]
 
 [<EntryPoint>]
