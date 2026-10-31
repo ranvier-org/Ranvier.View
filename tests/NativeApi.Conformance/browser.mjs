@@ -174,6 +174,20 @@ const runUrls = async () => {
   }
 };
 const URL_ASSERTIONS = 189;
+// I11 runs the ARIA element reflection fixture in its own page.
+const runAria = async () => {
+  const ariaBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await ariaBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runAria(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.aria !== ARIA_ASSERTIONS) throw new Error(`ARIA assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API I11 PASS assertions=${result.aria} engine=chromium`);
+  } finally {
+    await ariaBrowser.close();
+  }
+};
+const ARIA_ASSERTIONS = 18;
 // T06 runs the text segmentation fixture in its own page.
 const runSegments = async () => {
   const segmentsBrowser = await chromium.launch({ headless: true });
@@ -293,6 +307,7 @@ try {
   else if (formsOnly) { await runForms(); process.exitCode = 0; }
   else if (dialogsOnly) { await runDialogs(); process.exitCode = 0; }
   else if (urlsOnly) { await runUrls(); process.exitCode = 0; }
+  else if (process.argv.includes('--aria-only')) { await runAria(); process.exitCode = 0; }
   else if (segmentsOnly) { await runSegments(); process.exitCode = 0; }
   else if (binaryOnly) { await runBinary(); process.exitCode = 0; }
   else if (cryptoOnly) { await runCrypto(); process.exitCode = 0; }
@@ -528,6 +543,7 @@ try {
   await runDialogs();
   await runBinary();
   await runUrls();
+  await runAria();
   await runSegments();
   await runSubmissions();
   await runCrypto();
