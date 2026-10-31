@@ -32,6 +32,7 @@ const cryptoOnly = process.argv.includes('--crypto-only');
 const highlightsOnly = process.argv.includes('--highlights-only');
 const blobUrlsOnly = process.argv.includes('--blob-urls-only');
 const mediaCapabilitiesOnly = process.argv.includes('--media-capabilities-only');
+const snapshotsOnly = process.argv.includes('--snapshots-only');
 const stringsOnly = process.argv.includes('--strings-only');
 const diagnosticsOnly = process.argv.includes('--diagnostics-only');
 const cascadeOnly = process.argv.includes('--cascade-only');
@@ -252,6 +253,20 @@ const runMediaCapabilities = async () => {
   }
 };
 const MEDIA_CAPABILITY_ASSERTIONS = 107;
+// R12 runs the snapshot fixture in its own page; a browser page has no DOM capture.
+const runSnapshots = async () => {
+  const snapshotBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await snapshotBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runSnapshots(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.snapshots !== SNAPSHOT_ASSERTIONS) throw new Error(`Snapshot assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R12 PASS assertions=${result.snapshots} engine=chromium capture=unavailable`);
+  } finally {
+    await snapshotBrowser.close();
+  }
+};
+const SNAPSHOT_ASSERTIONS = 6;
 // B22 runs the crypto fixture on http://127.0.0.1 (a secure context) and on http://insecure.test, which the browser
 // resolves to the same server but treats as insecure.
 const runCrypto = async () => {
@@ -455,6 +470,7 @@ try {
   else if (highlightsOnly) { await runHighlights(); process.exitCode = 0; }
   else if (blobUrlsOnly) { await runBlobUrls(); process.exitCode = 0; }
   else if (mediaCapabilitiesOnly) { await runMediaCapabilities(); process.exitCode = 0; }
+  else if (snapshotsOnly) { await runSnapshots(); process.exitCode = 0; }
   else if (stringsOnly) { await runStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
@@ -704,6 +720,7 @@ try {
   await runCoordinates();
   await runBlobUrls();
   await runMediaCapabilities();
+  await runSnapshots();
   await runScreen();
   await runEventDetails();
   await runFrames();

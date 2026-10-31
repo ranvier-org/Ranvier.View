@@ -2056,6 +2056,45 @@ let private runMediaCapabilities () =
     System.Console.WriteLine $"NATIVE_API B06 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared snapshot fixture on a host with a 20 by 10 red element.</summary>
+[<Literal>]
+let private SnapshotChecksCount = 23
+
+let private runSnapshots () =
+    let host = WebCoreHost.Create (40, 30)
+
+    try
+        let red = host.Document.createElement "div"
+        red.setAttribute ("style", "position:absolute;left:5px;top:4px;width:20px;height:10px;background:rgb(255,0,0)")
+        host.Document.body.appendChild red |> ignore
+
+        let driver: SnapshotChecks.Driver =
+            {
+                Settle = fun () -> async { host.Cycle () |> ignore }
+                Red = red
+                DeviceScale = 1.0
+            }
+
+        let count =
+            SnapshotChecks.run (fun () -> Ranvier.View.WebCore.Snapshots.forHost host) driver
+            |> Async.StartImmediateAsTask
+
+        let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+        while not count.IsCompleted
+              && timeout.ElapsedMilliseconds < 120000L do
+            host.Cycle () |> ignore
+
+        let shared = count.GetAwaiter().GetResult()
+
+        if shared <> SnapshotChecksCount then
+            failwith $"Snapshot shared assertions did not run: {shared}"
+
+        System.Console.WriteLine $"NATIVE_API R12 PASS assertions={shared}"
+        shared
+    finally
+        (host :> System.IDisposable).Dispose()
+
 /// <summary>Runs the shared coordinate fixture with page scale, thread and teardown checks.</summary>
 [<Literal>]
 let private CoordinateChecksCount = 304
@@ -2897,6 +2936,7 @@ let private runAll () =
     runCoordinates () |> ignore
     runBlobUrls () |> ignore
     runMediaCapabilities () |> ignore
+    runSnapshots () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
@@ -3899,6 +3939,9 @@ let main args =
         0
     elif Array.contains "--media-capabilities-only" args then
         runMediaCapabilities () |> ignore
+        0
+    elif Array.contains "--snapshots-only" args then
+        runSnapshots () |> ignore
         0
     elif Array.contains "--highlights-only" args then
         runHighlights () |> ignore

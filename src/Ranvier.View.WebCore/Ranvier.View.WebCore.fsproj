@@ -80,6 +80,7 @@
         <Compile Include="BinaryValues.fs" />
         <Compile Include="BlobUrls.fs" />
         <Compile Include="MediaCapabilities.fs" />
+        <Compile Include="Snapshots.fs" />
         <Compile Include="Urls.fs" />
         <Compile Include="TextSegmentation.fs" />
         <Compile Include="Crypto.fs" />
