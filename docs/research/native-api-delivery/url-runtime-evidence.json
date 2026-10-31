@@ -4,17 +4,17 @@
   "status": "green (private integration; not accepted)",
   "route": "Engine (Native33 / ABI41)",
   "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/115",
-  "coreSourceCommit": "2e5b52ecb8e0d58a0782b85dfdbeb0c99e85a83a",
-  "viewsSourceCommit": "460717f2be0902f29ed7af7bf338ea78476c0664",
+  "coreSourceCommit": "d246756ed40ac83f06bf3371bb1010620cd861fa",
+  "viewsSourceCommit": "0f3a2a70ac1614b15da44a64259744c1f51e3a56",
   "stackedOn": {
     "core": "G09 dcaf0ad8 (DOM alpha.35; includes H11 b1048a5f, D16 106ee5b7, H01 60b0fa69)",
     "views": "G09 5fe038b (Views 0.1.25; includes H11 6b48817 and a367441, D16 9d7710b, H01 bf1f59d)"
   },
   "nativeProducer": {
     "branch": "codex/native-api-url",
-    "head": "6db1e2f809cd616637a8298b6fb2e736aa3a8474",
+    "head": "3c7e8d4252e92afed871b562a497e1de155fbd74",
     "abi": 41,
-    "runtime": "native-url artifacts/native33-frozen",
+    "runtime": "native-url artifacts/native33-frozen-2",
     "evidence": "Ranvier.WebCore docs/url-evidence/final-evidence.json"
   },
   "versions": {
@@ -25,9 +25,9 @@
   },
   "allocationReceipt": "Ranvier docs/research/native-api-delivery/h13-managed36-allocation.json",
   "privatePackages": {
-    "Fable.Ranvier.Dom.0.1.0-alpha.36.nupkg": "5187e4cc53ae9921c4273ca13579887c95755178c19763c45ebb3c91e1314ba0",
-    "Ranvier.Dom.0.1.0-alpha.36.nupkg": "4b7150602da481bd7703a4d0f41220aff2d3f81695d222894bc2e6bbed48c4b6",
-    "Ranvier.WebCore.0.1.0-preview.33.nupkg": "adc4a221610b93493cc78589046e32c88d4e2946eb8910cd77a8ae52bf0bbd23"
+    "Fable.Ranvier.Dom.0.1.0-alpha.36.nupkg": "afff0c962e041651f49654ff69d0a5ebadd56f43dd41a94e8b645f15b10f0261",
+    "Ranvier.Dom.0.1.0-alpha.36.nupkg": "e9bb999ee7c69cf48c2d2c9ee574f5c9fd8f24239dbdbc905ec75ae6b97008a7",
+    "Ranvier.WebCore.0.1.0-preview.33.nupkg": "5cb30be29dcc18404f51adc7ec9dc10d53991a3487a7d070e1f311b27328946c"
   },
   "executedNative": {
     "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
@@ -45,13 +45,13 @@
     "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
     "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
     "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
-    "RanvierWebCoreHost.dll": "295ee1d544b772fb8341703dddb766dd209f2a19b29b60e78e23abea50704c43",
-    "WebCore.dll": "6f7e85e4e50fc6a6cf05b9800437d665c21c0618016fc7087d076e5e5e0bb6c3",
+    "RanvierWebCoreHost.dll": "de84b58c538ed8b26e09f6d052739318015a77cf13012469f5ec23d934beca27",
+    "WebCore.dll": "95d2a0ee2e5944c55639bda96d9b9457bfd2603d57df6b8ffaf1a163f2953a24",
     "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
   },
   "nativeAotExecutable": {
-    "path": "C:\\wk\\h13-artifacts\\managed\\aot\\Native.exe",
-    "sha256": "8a2bbc22b53c8f09e295367a15cb96b6a7367174d5e10ab9e424486e039b7afc",
+    "path": "C:\\wk\\h13-artifacts\\managed2\\aot\\Native.exe",
+    "sha256": "08ebe2745d11a44ceffb21468aa454ebdeff2ea802429d554961b0c610465258",
     "clrDirectory": [
       0,
       0
@@ -60,31 +60,31 @@
   "runs": {
     "native-jit-full": {
       "exitCode": 0,
-      "logSha256": "2320611bc7e83ac548779ce2c3a0e2ea956e0e936848ec26c461a8623ae45df1",
+      "logSha256": "7819b607a297add05d85e42b0c9229ca72c3b9c9178004e27840fa3def62fe6c",
       "passLines": 93,
       "failLines": [],
       "h13": [
         "NATIVE_API H13 LIFETIME PASS assertions=9",
-        "NATIVE_API H13 PASS assertions=185"
+        "NATIVE_API H13 PASS assertions=189"
       ]
     },
     "native-aot-full": {
       "exitCode": 0,
-      "logSha256": "a0c3b530f879617b6144e90666d8e332e781937f858b7a37fc84fcc54492aaea",
+      "logSha256": "eb432734adad2160181acd55f055535c38f5c8ec1f346b18297741ac09befd6a",
       "passLines": 93,
       "failLines": [],
       "h13": [
         "NATIVE_API H13 LIFETIME PASS assertions=9",
-        "NATIVE_API H13 PASS assertions=185"
+        "NATIVE_API H13 PASS assertions=189"
       ]
     },
     "chromium-full": {
       "exitCode": 0,
-      "logSha256": "78973b550f350ec0c32a71762ce44de3f9c514c0ded15c9cac2d8a3ac3c89fe9",
+      "logSha256": "0d220cb0f6042f6b1adedf6916d33d19208212f26b5a39d77ecfa42eab095fc9",
       "passLines": 71,
       "failLines": [],
       "h13": [
-        "BROWSER_API H13 PASS assertions=185 engine=chromium"
+        "BROWSER_API H13 PASS assertions=189 engine=chromium"
       ]
     },
     "g09BaselinePassLines": {
@@ -94,23 +94,26 @@
   },
   "jitAotPassLinesIdentical": true,
   "nativeProbeRepeats": {
-    "aotUrlsOnly": "30 NATIVE_API H13 PASS assertions=185",
-    "nativeUrlValues": "30/30 url_values 3522 on native33-frozen (Ranvier.WebCore docs/url-evidence/url-values-repeat30.txt)"
+    "aotUrlsOnly": "30 NATIVE_API H13 PASS assertions=189",
+    "nativeUrlValues": "30/30 url_values 3538 on native33-frozen-2 (Ranvier.WebCore docs/url-evidence/url-values-repeat30.txt)"
   },
   "wrapperRegeneration": {
-    "objectsFs": "7591e6512c317b59d2e6932423dae4179d4d4dd33c82a31368a774b86ac05b4c",
+    "objectsFs": "240911d085056cd014c15822004b6ba1d0cd0d4881c4bc22fe2ffb520d0b5249",
     "reportTxt": "999dcf0678606685077736a715f3084c252c1645bc76ad30fee51cfbc4997ce1",
     "inputs": "restored Ranvier.WebCore preview.33 model + interop and Ranvier.Dom alpha.36 from the private feed"
   },
   "fixture": {
     "shared": "tests/NativeApi.Conformance/UrlChecks.fs",
-    "sharedChecks": 185,
+    "sharedChecks": 189,
     "nativeLifetimeChecks": 9
+  },
+  "nulRed": {
+    "log": "C:\\wk\\h13-artifacts\\managed\\red-nul-urls.log",
+    "case": "getAll keeps U+0000 failed on the previous head (strings cut at U+0000)"
   },
   "qualifications": [
     "Four URL parse cases and two setters follow the WHATWG URL standard on WebKit and differ on Chromium 156 (space in a host, \"|\" in a path, file:c: drive case, file://localhost, the mailto protocol setter, search = \"?\").",
     "URLPattern groups come in engine (pattern) order on WebKit, and in JavaScript object order (integer-like keys first) on Chromium, for /:name/(\\d+).",
-    "Fable erases Some null to None, so a null base parses without a base in the browser and raises ArgumentNullException natively.",
-    "URLSearchParams.getAll and the sequence<sequence<USVString>> init arm are NUL-terminated natively; the provider sends pairs through the record arm."
+    "Fable erases Some null to None, so a null base parses without a base in the browser and raises ArgumentNullException natively."
   ]
 }

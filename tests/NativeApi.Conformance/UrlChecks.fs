@@ -222,6 +222,17 @@ let run (create: unit -> UrlService) (errorName: exn -> string) (parser: Parser)
     equal "pairs sort by code units, stably" [| "a", "x y"; "z", "1"; "z", "0"; "\U0001F600", "e"; "\uFFFF", "f" |] (service.Entries pairs)
     equal "pairs serialize" "a=x+y&z=1&z=0&%F0%9F%98%80=e&%EF%BF%BF=f" (pairs.toString ())
 
+    // U+0000 survives every string transport.
+    let nul = service.CreateSearchParams (UrlSearchParamsInit.Query "a=x%00y&a=%00")
+    equal "get keeps U+0000" "x\u0000y" (nul.get "a")
+    equal "getAll keeps U+0000" [| "x\u0000y"; "\u0000" |] (nul.getAll "a")
+
+    let nulPairs =
+        service.CreateSearchParams (UrlSearchParamsInit.Pairs [| "k\u0000", "v\u0000w" |])
+
+    equal "pairs keep U+0000" [| "k\u0000", "v\u0000w" |] (service.Entries nulPairs)
+    equal "U+0000 serializes" "k%00=v%00w" (nulPairs.toString ())
+
     let linked = service.Create ("http://a.test/p?x=1&y=2#f", None)
     let parameters = linked.searchParams
     let again = linked.searchParams
