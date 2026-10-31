@@ -980,6 +980,112 @@ let runViewportScroll () =
     }
     |> Async.StartAsPromise
 
+[<Emit("globalThis.__nativeApiPageScale($0)")>]
+let private emulatePageScale (scale: float) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiWheel($0, $1, $2, $3)")>]
+let private wheel (x: int) (y: int) (deltaX: float) (deltaY: float) : JS.Promise<unit> = jsNative
+
+[<Emit("$0.defaultView.scrollTo($1, $2)")>]
+let private windowScrollTo (document: Document) (x: float) (y: float) : unit = jsNative
+
+[<Emit("new Promise(resolve => { const frame = document.createElement('iframe'); frame.onload = () => resolve(frame); frame.srcdoc = '<body>first'; document.body.append(frame) })")>]
+let private createFrame () : JS.Promise<obj> = jsNative
+
+[<Emit("$0.contentDocument")>]
+let private frameDocument (frame: obj) : Document = jsNative
+
+[<Emit("new Promise(resolve => { $0.onload = () => resolve(); $0.srcdoc = '<body>second' })")>]
+let private navigateFrame (frame: obj) : JS.Promise<unit> = jsNative
+
+[<Emit("$0.remove()")>]
+let private removeFrame (frame: obj) : unit = jsNative
+
+/// <summary>Runs the shared visual viewport assertions under device-metrics and page-scale emulation.</summary>
+let runVisualViewport () =
+    async {
+        let document = document ()
+        let mutable size = 320, 240
+        let mutable deviceScale = 1.0
+
+        let settle () =
+            async {
+                for _ in 1..3 do
+                    do! viewportFrames () |> Async.AwaitPromise
+            }
+
+        let emulate () =
+            async {
+                do!
+                    emulateViewport (fst size) (snd size) deviceScale
+                    |> Async.AwaitPromise
+
+                do! settle ()
+            }
+
+        let driver: VisualViewportChecks.Driver =
+            {
+                Resize =
+                    fun width height ->
+                        size <- width, height
+                        emulate ()
+                SetDeviceScale =
+                    fun scale ->
+                        deviceScale <- scale
+                        emulate ()
+                SetPageScale =
+                    fun service scale _ _ ->
+                        async {
+                            match service.SetPageScale (scale, 0, 0) with
+                            | Error (VisualViewportUnavailable.Unsupported _) -> ()
+                            | other -> failwith $"The browser page scale input: {other}"
+
+                            do! emulatePageScale scale |> Async.AwaitPromise
+                            do! settle ()
+                        }
+                Wheel =
+                    fun x y dx dy ->
+                        async {
+                            do! wheel x y dx dy |> Async.AwaitPromise
+                            do! settle ()
+                        }
+                Settle = settle
+                Engine = VisualViewportChecks.Chromium
+                HostInsets = false
+            }
+
+        let! count =
+            VisualViewportChecks.run document (windowScrollTo document) (fun () -> BrowserVisualViewport.forDocument document) driver
+
+        // A navigation gives the frame a new Window: the held visual viewport reads zeros, which the provider reports
+        // as Detached, and a provider for the new document reads it.
+        let! frame = createFrame () |> Async.AwaitPromise
+        let held = BrowserVisualViewport.forDocument (frameDocument frame)
+        let mutable navigation = 0
+
+        let expect condition message =
+            navigation <- navigation + 1
+
+            if not condition then
+                failwith message
+
+        expect (Result.isOk (held.Current ())) "the frame's visual viewport reads before navigation"
+        do! navigateFrame frame |> Async.AwaitPromise
+        expect (held.Current () = Error VisualViewportUnavailable.Detached) "the held visual viewport is detached after navigation"
+        let next = BrowserVisualViewport.forDocument (frameDocument frame)
+        expect (Result.isOk (next.Current ())) "the navigated document's visual viewport reads"
+        held.Dispose ()
+        next.Dispose ()
+        removeFrame frame
+
+        return
+            {|
+                visualViewport = count
+                navigation = navigation
+            |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("globalThis.__nativeApiKey($0)")>]
 let private key (name: string) : JS.Promise<unit> = jsNative
 
@@ -1112,6 +1218,31 @@ let runUrls () =
         UrlChecks.run (fun () -> BrowserUrls.forDocument document) errorName UrlChecks.Chromium
 
     {| urls = count |}
+
+/// <summary>Runs the shared text segmentation assertions.</summary>
+let runSegments () =
+    let count =
+        TextSegmentationChecks.run (fun () -> BrowserTextSegmentation.create ()) errorName TextSegmentationChecks.Chromium
+
+    {| segments = count |}
+
+/// <summary>Runs the shared crypto assertions in a secure context.</summary>
+let runCrypto () =
+    async {
+        let document = document ()
+        let! count = CryptoChecks.run (fun () -> BrowserCrypto.forDocument document)
+        return {| crypto = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the insecure-context crypto assertions.</summary>
+let runCryptoInsecure () =
+    async {
+        let document = document ()
+        let! count = CryptoChecks.insecure (fun () -> BrowserCrypto.forDocument document)
+        return {| crypto = count |}
+    }
+    |> Async.StartAsPromise
 
 [<Emit("$0.constructor.name")>]
 let private constructorName (element: Element) : string = jsNative

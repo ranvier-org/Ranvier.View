@@ -122,6 +122,7 @@ let private kinds =
             "NodeIterator", "Kind.NodeIterator"
             "TreeWalker", "Kind.TreeWalker"
             "CaretPosition", "Kind.CaretPosition"
+            "VisualViewport", "Kind.VisualViewport"
         ]
 
 [<EntryPoint>]

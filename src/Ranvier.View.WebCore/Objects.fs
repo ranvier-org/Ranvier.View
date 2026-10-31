@@ -195,6 +195,9 @@ module internal Kind =
     [<Literal>]
     let UrlPattern = 61
 
+    [<Literal>]
+    let VisualViewport = 74
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -370,6 +373,7 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.Url -> NativeDom.rv_dom_domurl_release handle
         | Kind.UrlSearchParams -> NativeDom.rv_dom_url_search_params_release handle
         | Kind.UrlPattern -> NativeDom.rv_dom_url_pattern_release handle
+        | Kind.VisualViewport -> Native.rv_event_target_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =

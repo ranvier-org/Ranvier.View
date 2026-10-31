@@ -588,6 +588,164 @@ let private runViewportScroll () =
     System.Console.WriteLine $"NATIVE_API G05 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared visual viewport fixture with native page replacement, thread and host-disposal checks.</summary>
+[<Literal>]
+let private VisualViewportChecksCount = 66
+
+let private runVisualViewport () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let settle () =
+        async {
+            for _ in 1..4 do
+                host.Frame ()
+                host.Cycle 20 |> ignore
+
+            host.Frame ()
+        }
+
+    let driver: VisualViewportChecks.Driver =
+        {
+            Resize =
+                fun width height ->
+                    async {
+                        host.Resize (width, height)
+                        do! settle ()
+                    }
+            SetDeviceScale =
+                fun scale ->
+                    async {
+                        host.SetDeviceScale (float32 scale)
+                        do! settle ()
+                    }
+            SetPageScale =
+                fun service scale x y ->
+                    async {
+                        if service.SetPageScale (scale, x, y) <> Ok () then
+                            failwith $"rv_host_set_page_scale {scale}"
+
+                        do! settle ()
+                    }
+            Wheel =
+                fun x y dx dy ->
+                    async {
+                        host.Wheel (x, y, float32 dx, float32 dy, 0)
+                        |> ignore
+
+                        do! settle ()
+                    }
+            Settle = settle
+            Engine = VisualViewportChecks.WebKit
+            HostInsets = true
+        }
+
+    let mutable kept = None
+
+    let shared =
+        try
+            let window () =
+                box host.Document :?> Ranvier.View.WebCore.NativeObject
+
+            let scrollTo x y =
+                RanvierWebCoreAbi.NativeDom.rv_dom_window_scroll_to_2 ((window ()).Handle, x, y)
+                |> ignore
+
+            let count =
+                VisualViewportChecks.run host.Document scrollTo (fun () -> Ranvier.View.WebCore.VisualViewport.forHost host) driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 60000L do
+                host.Cycle ()
+
+            let count = count.GetAwaiter().GetResult()
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            Ranvier.View.WebCore.VisualViewport.forHost host
+                            |> ignore
+
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "The visual viewport rejects another thread"
+            let service = Ranvier.View.WebCore.VisualViewport.forHost host
+
+            let crossThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.Current () |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect crossThread "A service read on another thread raises"
+            expect (service.SetPageScale (2.0, 0, 0) = Ok ()) "page scale 2"
+            settle () |> Async.StartImmediate
+
+            expect
+                (match service.Current () with
+                 | Ok state -> state.Width = 160.0 && state.Scale = 2.0
+                 | Error _ -> false)
+                "page scale 2 halves the visual viewport"
+
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            // The engine keeps the frame's window for the replacement document; the earlier provider reports Detached,
+            // as a browser's VisualViewport does after its frame navigates.
+            expect (service.Current () = Error Ranvier.Dom.VisualViewportUnavailable.Detached) "The replaced document's visual viewport is detached"
+            let replacement = Ranvier.View.WebCore.VisualViewport.forHost host
+
+            expect
+                (match replacement.Current () with
+                 | Ok state -> state.Scale = 2.0
+                 | Error _ -> false)
+                "The page scale outlives the page replacement"
+
+            expect (replacement.SetPageScale (1.0, 0, 0) = Ok ()) "page scale reset"
+            service.Dispose ()
+            kept <- Some replacement
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (kept.Value.Current () = Error Ranvier.Dom.VisualViewportUnavailable.Detached) "Current after host dispose is Detached"
+
+    let raises (action: unit -> unit) =
+        try
+            action ()
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect (raises (fun () -> kept.Value.SetPageScale (2.0, 0, 0) |> ignore)) "SetPageScale after host dispose raises"
+    kept.Value.Dispose ()
+    expect (session.LiveObjects = 0) "The visual viewport fixture leaves no live native objects"
+
+    if shared <> VisualViewportChecksCount then
+        failwith $"Visual viewport shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API G03 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G03 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared caret hit-testing fixture with native thread and host-disposal checks.</summary>
 [<Literal>]
 let private CaretChecksCount = 1537
@@ -1237,6 +1395,148 @@ let private runSubmissions () =
     System.Console.WriteLine $"NATIVE_API D14 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared text segmentation fixture with native thread and teardown checks.</summary>
+[<Literal>]
+let private SegmentChecksCount = 219
+
+let private runSegments () =
+    let host = WebCoreHost.Create (320, 240)
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let shared =
+        try
+            let count =
+                TextSegmentationChecks.run
+                    (fun () -> Ranvier.View.WebCore.TextSegmentation.forHost host)
+                    errorName
+                    TextSegmentationChecks.WebKit
+
+            use segmenter = Ranvier.View.WebCore.TextSegmentation.forHost host
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            segmenter.Segment ("a b", Ranvier.Dom.SegmentGranularity.Word, None) |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Text segmentation rejects another thread"
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    // Segmentation needs no live host: it keeps working after the host is destroyed.
+    let after = WebCoreHost.Create (320, 240)
+    let segmenter = Ranvier.View.WebCore.TextSegmentation.forHost after
+    (after :> System.IDisposable).Dispose()
+
+    let segments =
+        match segmenter.Segment ("e\u0301x", Ranvier.Dom.SegmentGranularity.Grapheme, None) with
+        | Ranvier.Dom.SegmentationResult.Segmented result -> result.Segments |> Array.map (fun s -> s.Segment)
+        | _ -> [||]
+
+    expect (segments = [| "e\u0301"; "x" |]) "A segmenter keeps working after its host is destroyed"
+
+    if shared <> SegmentChecksCount then
+        failwith $"Text segmentation shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API T06 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API T06 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared crypto fixture with native thread and teardown checks.</summary>
+[<Literal>]
+let private CryptoChecksCount = 155
+
+let private runCrypto () =
+    let host = WebCoreHost.Create (320, 200)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                CryptoChecks.run (fun () -> Ranvier.View.WebCore.Crypto.forHost host)
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted && timeout.ElapsedMilliseconds < 60000L do
+                host.Cycle () |> ignore
+
+            let count = count.GetAwaiter().GetResult()
+            let service = Ranvier.View.WebCore.Crypto.forHost host
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.GetRandomValues (Ranvier.Dom.RandomValuesKind.Uint8, Array.zeroCreate 8, 0, 8)
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "getRandomValues rejects another thread"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            let bytes = Array.zeroCreate<byte> 16
+            service.GetRandomValues (Ranvier.Dom.RandomValuesKind.Uint8, bytes, 0, 16)
+            expect (Array.exists (fun b -> b <> 0uy) bytes) "getRandomValues fills after document replacement"
+            held <- Some service
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Crypto fixture leaves no live native objects"
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    let service = held.Value
+
+    expect
+        (rejected (fun () -> service.GetRandomValues (Ranvier.Dom.RandomValuesKind.Uint8, Array.zeroCreate 8, 0, 8)))
+        "A held crypto service rejects getRandomValues after host disposal"
+
+    expect (rejected (fun () -> service.RandomUUID () |> ignore)) "A held crypto service rejects randomUUID after host disposal"
+    service.Dispose ()
+
+    if shared <> CryptoChecksCount then
+        failwith $"Crypto shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API B22 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API B22 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared dialog, popover and command invoker fixture with native thread and teardown checks.</summary>
 [<Literal>]
 let private DialogChecksCount = 143
@@ -1776,12 +2076,15 @@ let private runAll () =
     runInputState () |> ignore
     runViewport () |> ignore
     runViewportScroll () |> ignore
+    runVisualViewport () |> ignore
     runCaret () |> ignore
     runForms () |> ignore
     runDialogs () |> ignore
     runBinary () |> ignore
     runUrls () |> ignore
     runSubmissions () |> ignore
+    runSegments () |> ignore
+    runCrypto () |> ignore
     runEventDetails () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
@@ -2762,14 +3065,23 @@ let main args =
     elif Array.contains "--scroll-only" args then
         runViewportScroll () |> ignore
         0
+    elif Array.contains "--visual-viewport-only" args then
+        runVisualViewport () |> ignore
+        0
     elif Array.contains "--caret-only" args then
         runCaret () |> ignore
         0
     elif Array.contains "--forms-only" args then
         runForms () |> ignore
         0
+    elif Array.contains "--segments-only" args then
+        runSegments () |> ignore
+        0
     elif Array.contains "--urls-only" args then
         runUrls () |> ignore
+        0
+    elif Array.contains "--crypto-only" args then
+        runCrypto () |> ignore
         0
     elif Array.contains "--submissions-only" args then
         runSubmissions () |> ignore

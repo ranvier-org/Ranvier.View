@@ -26,7 +26,9 @@ const viewportOnly = process.argv.includes('--viewport-only');
 const formsOnly = process.argv.includes('--forms-only');
 const dialogsOnly = process.argv.includes('--dialogs-only');
 const urlsOnly = process.argv.includes('--urls-only');
+const segmentsOnly = process.argv.includes('--segments-only');
 const binaryOnly = process.argv.includes('--binary-only');
+const cryptoOnly = process.argv.includes('--crypto-only');
 const submissionsOnly = process.argv.includes('--submissions-only');
 const eventDetailsOnly = process.argv.includes('--event-details-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
@@ -114,12 +116,21 @@ const runViewport = async () => {
     const scroll = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runViewportScroll(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (scroll.scroll !== SCROLL_ASSERTIONS) throw new Error(`Viewport scrolling assertions did not run: ${JSON.stringify(scroll)}`);
     console.log(`BROWSER_API G05 PASS assertions=${scroll.scroll} engine=chromium`);
+    // G03 drives the page scale with Emulation.setPageScaleFactor and pans with a trusted wheel.
+    await page.exposeFunction('__nativeApiPageScale', async pageScaleFactor => { await cdp.send('Emulation.setPageScaleFactor', { pageScaleFactor }); });
+    await page.exposeFunction('__nativeApiWheel', async (x, y, deltaX, deltaY) => { await page.mouse.move(x, y); await page.mouse.wheel(deltaX, deltaY); });
+    const visual = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runVisualViewport(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (visual.visualViewport !== VISUAL_VIEWPORT_ASSERTIONS) throw new Error(`Visual viewport assertions did not run: ${JSON.stringify(visual)}`);
+    if (visual.navigation !== 3) throw new Error(`Visual viewport navigation assertions did not run: ${JSON.stringify(visual)}`);
+    console.log(`BROWSER_API G03 PASS assertions=${visual.visualViewport} engine=chromium`);
+    console.log(`BROWSER_API G03 NAVIGATION PASS assertions=${visual.navigation} engine=chromium`);
   } finally {
     await viewportBrowser.close();
   }
 };
 const VIEWPORT_ASSERTIONS = 44;
 const SCROLL_ASSERTIONS = 278;
+const VISUAL_VIEWPORT_ASSERTIONS = 66;
 // D13 runs in its own page: the fixture forms submit into a sink frame of that page.
 const runForms = async () => {
   const formsBrowser = await chromium.launch({ headless: true });
@@ -164,6 +175,20 @@ const runUrls = async () => {
   }
 };
 const URL_ASSERTIONS = 189;
+// T06 runs the text segmentation fixture in its own page.
+const runSegments = async () => {
+  const segmentsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await segmentsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runSegments(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.segments !== SEGMENT_ASSERTIONS) throw new Error(`Text segmentation assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API T06 PASS assertions=${result.segments} engine=chromium`);
+  } finally {
+    await segmentsBrowser.close();
+  }
+};
+const SEGMENT_ASSERTIONS = 219;
 // H11 runs the binary value fixture in its own page.
 const runBinary = async () => {
   const binaryBrowser = await chromium.launch({ headless: true });
@@ -178,6 +203,29 @@ const runBinary = async () => {
   }
 };
 const BINARY_ASSERTIONS = 102;
+// B22 runs the crypto fixture on http://127.0.0.1 (a secure context) and on http://insecure.test, which the browser
+// resolves to the same server but treats as insecure.
+const runCrypto = async () => {
+  const cryptoBrowser = await chromium.launch({ headless: true, args: ['--host-resolver-rules=MAP insecure.test 127.0.0.1'] });
+  try {
+    const page = await cryptoBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runCrypto(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.crypto !== CRYPTO_ASSERTIONS) throw new Error(`Crypto assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API B22 PASS assertions=${result.crypto} engine=chromium`);
+    const insecure = await cryptoBrowser.newPage();
+    await insecure.goto(`http://insecure.test:${server.address().port}/`);
+    const secure = await insecure.evaluate(() => isSecureContext);
+    if (secure) throw new Error('http://insecure.test is a secure context');
+    const plain = await insecure.evaluate(async () => { try { return await (await import('/Browser.js')).runCryptoInsecure(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (plain.crypto !== CRYPTO_INSECURE_ASSERTIONS) throw new Error(`Insecure crypto assertions did not run: ${JSON.stringify(plain)}`);
+    console.log(`BROWSER_API B22 INSECURE PASS assertions=${plain.crypto} engine=chromium`);
+  } finally {
+    await cryptoBrowser.close();
+  }
+};
+const CRYPTO_ASSERTIONS = 155;
+const CRYPTO_INSECURE_ASSERTIONS = 4;
 // D14 runs the form submission fixture in its own page; the provider keeps the page in place.
 const runSubmissions = async () => {
   const submissionsBrowser = await chromium.launch({ headless: true });
@@ -260,7 +308,9 @@ try {
   else if (formsOnly) { await runForms(); process.exitCode = 0; }
   else if (dialogsOnly) { await runDialogs(); process.exitCode = 0; }
   else if (urlsOnly) { await runUrls(); process.exitCode = 0; }
+  else if (segmentsOnly) { await runSegments(); process.exitCode = 0; }
   else if (binaryOnly) { await runBinary(); process.exitCode = 0; }
+  else if (cryptoOnly) { await runCrypto(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
   else if (eventDetailsOnly) { await runEventDetails(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
@@ -494,7 +544,9 @@ try {
   await runDialogs();
   await runBinary();
   await runUrls();
+  await runSegments();
   await runSubmissions();
+  await runCrypto();
   await runEventDetails();
   await runFrames();
   await runIdle();

@@ -63,14 +63,17 @@
     <Compile Include="InputStateChecks.fs" />
     <Compile Include="ViewportChecks.fs" />
     <Compile Include="ScrollChecks.fs" />
+    <Compile Include="VisualViewportChecks.fs" />
     <Compile Include="CaretOracle.fs" />
     <Compile Include="CaretChecks.fs" />
     <Compile Include="FormChecks.fs" />
     <Compile Include="UrlChecks.fs" />
     <Compile Include="SubmissionChecks.fs" />
+    <Compile Include="TextSegmentationChecks.fs" />
     <Compile Include="EventDetailChecks.fs" />
     <Compile Include="DialogChecks.fs" />
     <Compile Include="BinaryChecks.fs" />
+    <Compile Include="CryptoChecks.fs" />
     <Compile Include="TreeTraversal.fs" />
     <Compile Include="MathMLElements.fs" />
     <Compile Include="TraversalLifecycle.fs" />
