@@ -102,6 +102,8 @@ let private kinds =
             "NodeList", "Kind.NodeList"
             "HTMLCollection", "Kind.Collection"
             "DOMFormData", "Kind.FormData"
+            "Blob", "Kind.Blob"
+            "FileList", "Kind.FileList"
             "HTMLCollectionOf`1", "Kind.Collection"
             "ValidityState", "Kind.Validity"
             "DOMImplementation", "Kind.DOMImplementation"
