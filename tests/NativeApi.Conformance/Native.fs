@@ -1459,6 +1459,109 @@ let private runSegments () =
     System.Console.WriteLine $"NATIVE_API T06 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared screen fixture with native default, work area, thread and teardown checks.</summary>
+[<Literal>]
+let private ScreenChecksCount = 30
+
+let private runScreen () =
+    let host = WebCoreHost.Create (320, 200)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let mutable held = None
+
+    let shared =
+        try
+            let service = Ranvier.View.WebCore.Screen.forHost host
+            let first = service.Read ()
+            expect ((first.Width, first.Height, first.AvailWidth, first.ColorDepth) = (320, 200, 320, 24)) "The default screen is the viewport"
+            expect (first.Orientation = Ranvier.Dom.ScreenOrientationType.LandscapePrimary && first.Angle = 0) "The default orientation"
+            let resized = ref None
+            use _ = service.Subscribe (fun info -> resized.Value <- Some info)
+            host.Resize (200, 320)
+            expect (resized.Value |> Option.map (fun info -> info.Width, info.Height, info.Angle) = Some (200, 320, 90)) "Resize changes the default screen"
+            host.Resize (320, 200)
+            service.Dispose ()
+
+            let driver: ScreenChecks.Driver =
+                {
+                    Set =
+                        fun (width, height, orientation) ->
+                            async { host.SetScreen (width, height, 0, 0, width, height, 24, orientation) }
+                    Settle = fun () -> async { host.Cycle () |> ignore }
+                    LockResolves = false
+                }
+
+            let count =
+                ScreenChecks.run (fun () -> Ranvier.View.WebCore.Screen.forHost host) driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted && timeout.ElapsedMilliseconds < 60000L do
+                host.Cycle () |> ignore
+
+            let count = count.GetAwaiter().GetResult()
+            let service = Ranvier.View.WebCore.Screen.forHost host
+            host.SetScreen (1920, 1080, 0, 40, 1920, 1000, 30, Ranvier.Dom.ScreenOrientationType.LandscapePrimary)
+            let area = service.Read ()
+            expect ((area.AvailTop, area.AvailHeight, area.ColorDepth, area.PixelDepth) = (40, 1000, 30, 30)) "A set work area and depth"
+            host.Resize (640, 480)
+            expect (service.Read () = area) "A set screen does not follow Resize"
+
+            let rejected =
+                try
+                    host.SetScreen (0, 1080, 0, 0, 0, 1080, 24, Ranvier.Dom.ScreenOrientationType.LandscapePrimary)
+                    false
+                with :? System.NotSupportedException ->
+                    true
+
+            expect rejected "SetScreen rejects a zero width"
+            expect (service.Read () = area) "A rejected screen changes nothing"
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.Read () |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Read rejects another thread"
+            held <- Some service
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Screen fixture leaves no live native objects"
+
+    let rejected =
+        try
+            held.Value.Read () |> ignore
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    expect rejected "A held screen service rejects Read after host disposal"
+    held.Value.Dispose ()
+
+    if shared <> ScreenChecksCount then
+        failwith $"Screen shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API G04 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G04 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared crypto fixture with native thread and teardown checks.</summary>
 [<Literal>]
 let private CryptoChecksCount = 155
@@ -2085,6 +2188,7 @@ let private runAll () =
     runSubmissions () |> ignore
     runSegments () |> ignore
     runCrypto () |> ignore
+    runScreen () |> ignore
     runEventDetails () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
@@ -3082,6 +3186,9 @@ let main args =
         0
     elif Array.contains "--crypto-only" args then
         runCrypto () |> ignore
+        0
+    elif Array.contains "--screen-only" args then
+        runScreen () |> ignore
         0
     elif Array.contains "--submissions-only" args then
         runSubmissions () |> ignore

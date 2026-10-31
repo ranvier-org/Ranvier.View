@@ -81,6 +81,7 @@
         <Compile Include="Urls.fs" />
         <Compile Include="TextSegmentation.fs" />
         <Compile Include="Crypto.fs" />
+        <Compile Include="Screen.fs" />
         <Compile Include="Viewport.fs" />
         <Compile Include="ViewportScroll.fs" />
         <Compile Include="VisualViewport.fs" />

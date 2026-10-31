@@ -77,6 +77,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     let context = HostContext (posted, thread)
     let disposedEvent = Event<unit>()
+    let screenEvent = Event<unit>()
     let previousContext = SynchronizationContext.Current
     let mutable nextId = 1
     let mutable inInput = 0
@@ -287,6 +288,9 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     /// <summary>Runs after owned DOM references have been detached at host disposal.</summary>
     member internal _.Disposed = disposedEvent.Publish
+
+    /// <summary>Runs after <c>SetScreen</c> or <c>Resize</c>, which can change the screen the document reports.</summary>
+    member internal _.ScreenMayHaveChanged = screenEvent.Publish
 
     /// <summary>The current page document; creation starts with an empty HTML head and body.</summary>
     member _.Document = document
@@ -545,6 +549,39 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
         viewportWidth <- width
         viewportHeight <- height
+        screenEvent.Trigger ()
+
+    /// <summary>
+    /// Sets the screen the document reports, from the app's display integration, in CSS pixels: its size, its
+    /// available work area, its color depth and its orientation.
+    /// </summary>
+    /// <remarks>
+    /// Until the first call the screen is the viewport, all of it available, 24 bits deep, landscape-primary unless
+    /// taller than wide. The orientation angle follows from the orientation on the natural landscape orientation.
+    /// Raises NotSupportedException for values outside the native contract.
+    /// </remarks>
+    member _.SetScreen
+        (
+            width: int,
+            height: int,
+            availLeft: int,
+            availTop: int,
+            availWidth: int,
+            availHeight: int,
+            colorDepth: int,
+            orientation: ScreenOrientationType
+        ) =
+        let values = [| 36; width; height; availLeft; availTop; availWidth; availHeight; colorDepth; int orientation |]
+        let metrics = Marshal.AllocHGlobal (values.Length * 4)
+
+        try
+            Marshal.Copy (values, 0, metrics, values.Length)
+            Native.rv_host_set_screen (handle, metrics)
+            |> Interop.check "rv_host_set_screen"
+        finally
+            Marshal.FreeHGlobal metrics
+
+        screenEvent.Trigger ()
 
     /// <summary>Sets the device pixels per CSS pixel, from 0.25 to 8; <c>PaintSize</c> scales with it.</summary>
     member _.SetDeviceScale(scale: float32) =

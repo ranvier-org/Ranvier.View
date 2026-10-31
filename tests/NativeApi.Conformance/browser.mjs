@@ -29,6 +29,7 @@ const urlsOnly = process.argv.includes('--urls-only');
 const segmentsOnly = process.argv.includes('--segments-only');
 const binaryOnly = process.argv.includes('--binary-only');
 const cryptoOnly = process.argv.includes('--crypto-only');
+const screenOnly = process.argv.includes('--screen-only');
 const submissionsOnly = process.argv.includes('--submissions-only');
 const eventDetailsOnly = process.argv.includes('--event-details-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
@@ -225,6 +226,27 @@ const runCrypto = async () => {
   }
 };
 const CRYPTO_ASSERTIONS = 155;
+// G04 drives the screen through CDP Emulation.setDeviceMetricsOverride from the page's __rvSetScreen.
+const runScreen = async () => {
+  const screenBrowser = await chromium.launch({ headless: true });
+  try {
+    const context = await screenBrowser.newContext({ viewport: { width: 320, height: 200 } });
+    const page = await context.newPage();
+    const cdp = await context.newCDPSession(page);
+    const types = ['portraitPrimary', 'portraitSecondary', 'landscapePrimary', 'landscapeSecondary'];
+    const angles = [90, 270, 0, 180];
+    await page.exposeFunction('__rvSetScreen', (width, height, orientation) => cdp.send('Emulation.setDeviceMetricsOverride', {
+      width: 320, height: 200, deviceScaleFactor: 1, mobile: false, screenWidth: width, screenHeight: height,
+      screenOrientation: { type: types[orientation], angle: angles[orientation] } }).then(() => undefined));
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runScreen(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.screen !== SCREEN_ASSERTIONS) throw new Error(`Screen assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API G04 PASS assertions=${result.screen} engine=chromium`);
+  } finally {
+    await screenBrowser.close();
+  }
+};
+const SCREEN_ASSERTIONS = 30;
 const CRYPTO_INSECURE_ASSERTIONS = 4;
 // D14 runs the form submission fixture in its own page; the provider keeps the page in place.
 const runSubmissions = async () => {
@@ -311,6 +333,7 @@ try {
   else if (segmentsOnly) { await runSegments(); process.exitCode = 0; }
   else if (binaryOnly) { await runBinary(); process.exitCode = 0; }
   else if (cryptoOnly) { await runCrypto(); process.exitCode = 0; }
+  else if (screenOnly) { await runScreen(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
   else if (eventDetailsOnly) { await runEventDetails(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
@@ -547,6 +570,7 @@ try {
   await runSegments();
   await runSubmissions();
   await runCrypto();
+  await runScreen();
   await runEventDetails();
   await runFrames();
   await runIdle();
