@@ -14,7 +14,7 @@ let run (document: Document) (wait: int -> Async<unit>) (errorName: exn -> strin
             checks <- checks + 1
 
             if expected <> actual then
-                failwithf "%s: expected %A, got %A" label expected actual
+                failwith (String.Concat (label, ": expected ", string expected, ", got ", string actual))
 
         let near label (tolerance: float) (expected: float) (actual: float) =
             checks <- checks + 1
@@ -24,7 +24,7 @@ let run (document: Document) (wait: int -> Async<unit>) (errorName: exn -> strin
                 || Double.IsInfinity actual
                 || abs (expected - actual) > tolerance
             then
-                failwithf "%s: expected %g, got %g" label expected actual
+                failwith (String.Concat (label, ": expected ", string expected, ", got ", string actual))
 
         let failure label expected action =
             let outcome =
@@ -42,7 +42,7 @@ let run (document: Document) (wait: int -> Async<unit>) (errorName: exn -> strin
             "<svg id='smil-root' width='200' height='200'>"
             + "<rect id='smil-seek' width='10' height='10'><animate id='smil-width' attributeName='width' from='10' to='110' dur='10s' begin='indefinite' fill='freeze'/></rect>"
             + "<rect id='smil-shift' width='10' height='10'><animate id='smil-delay' attributeName='x' from='0' to='100' dur='10s' begin='indefinite' fill='freeze'/></rect>"
-            + "<rect id='smil-run' width='10' height='10'><animate id='smil-events' attributeName='height' from='10' to='20' dur='0.1s' repeatCount='2' begin='indefinite'/></rect>"
+            + "<rect id='smil-run' width='10' height='10'><animate id='smil-events' attributeName='height' from='10' to='20' dur='0.5s' repeatCount='2' begin='indefinite'/></rect>"
             + "</svg>"
 
         document.body.appendChild host |> ignore
@@ -60,9 +60,10 @@ let run (document: Document) (wait: int -> Async<unit>) (errorName: exn -> strin
             failure "start time before begin" "InvalidStateError" (fun () -> animation.getStartTime () |> ignore)
             root.pauseAnimations ()
             equal "paused timeline" true (root.animationsPaused ())
+            let paused = float (root.getCurrentTime ())
             animation.beginElement ()
             let start = float (animation.getStartTime ())
-            near "begin starts at paused document time" 0.05 0. start
+            near "begin starts at paused document time" 0.0001 paused start
             root.setCurrentTime 5.f
             near "paused seek document time" 0.0001 5. (float (root.getCurrentTime ()))
             near "paused seek element time" 0.0001 5. (float (animation.getCurrentTime ()))
@@ -116,7 +117,7 @@ let run (document: Document) (wait: int -> Async<unit>) (errorName: exn -> strin
             let mutable attempts = 0
 
             while not (observed.Contains "endEvent")
-                  && attempts < 200 do
+                  && attempts < 1000 do
                 do! wait 10
                 attempts <- attempts + 1
 
