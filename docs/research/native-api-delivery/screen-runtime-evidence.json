@@ -5,10 +5,10 @@
   "route": "Engine Screen and ScreenOrientation (Native38 / ABI46, patch 0038) set by the app display integration",
   "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/49",
   "coreSourceCommit": "b59d5c5661d64681f323c85b76e5f5842a059a0b",
-  "viewsSourceCommit": "d29f09f42a219cb0ff496c0e21d41ca0c08e2b70",
+  "viewsSourceCommit": "438917b153c685685243a223f6fe16e5b28e6e68",
   "stackedOn": {
     "core": "G03 b9c943d1 (DOM alpha.40; includes B22 ec5f369c, T06, D14, H13, G09, H11) + G04 Screen.fs; pins native ed56af2",
-    "views": "G03 102ab61 (Views 0.1.30; includes B22 dcd8cc7) + G04 provider, SetScreen and fixture"
+    "views": "G03 102ab61 (Views 0.1.30; includes B22 dcd8cc7) + G04 provider, SetScreen, SDL display feed and fixture"
   },
   "nativeProducer": {
     "branch": "codex/native-api-screen",
@@ -50,8 +50,8 @@
     "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
   },
   "nativeAotExecutable": {
-    "path": "C:\\wk\\crypto-artifacts\\managed-g04\\evidence-1\\aot\\Native.exe",
-    "sha256": "27b45109ab028a762705fef873e82bea187e739e687eeca375fda6964a1a0b59"
+    "path": "C:\\wk\\crypto-artifacts\\managed-g04\\evidence-2\\aot\\Native.exe",
+    "sha256": "9ab6d0296677af32cc934225d35af5f2e680322f83d07c46e1e36c6b9fda37b0"
   },
   "runs": {
     "native-jit-full": {
