@@ -27,6 +27,10 @@ let private markup =
 
 let private eventTypes = [ "beforetoggle"; "toggle"; "cancel"; "close"; "command" ]
 
+// The settle rounds a marker toggle may take before the fixture reports its tasks as undelivered.
+[<Literal>]
+let private SettleLimit = 10000
+
 /// <summary>
 /// Checks dialogs, popovers, popover and command invokers, trusted close requests and light dismiss, top-layer hit
 /// testing and modal focus, and constructed ToggleEvents and CommandEvents on one provider; the result is the
@@ -79,6 +83,14 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
         let isOpen (id: string) =
             (element id).matches ":popover-open"
 
+        // A manual popover outside the viewport. Its toggle task runs after every task queued before it.
+        let marker = unbox<HTMLElement>(document.createElement "div")
+        marker.setAttribute ("id", "d16-marker")
+        marker.setAttribute ("style", "position:fixed;inset:auto;left:-100px;top:-100px;width:1px;height:1px")
+        marker.popover <- "manual"
+        container.appendChild marker |> ignore
+        let mutable markerToggles = 0
+
         let log = List<string>()
         let prevent = HashSet<string>()
 
@@ -100,29 +112,35 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
         let states = Dictionary<string, string>()
         let broken = List<string>()
 
+        let record (event: Event) =
+            let line = describe event
+
+            if event.``type`` = "toggle" then
+                let toggle = unbox<ToggleEvent> event
+                let target = label (unbox<Element> event.target)
+
+                let current =
+                    match states.TryGetValue target with
+                    | true, value -> value
+                    | _ -> "closed"
+
+                if toggle.oldState <> current then
+                    broken.Add line
+
+                states[target] <- toggle.newState
+
+            if prevent.Remove event.``type`` then
+                event.preventDefault ()
+                log.Add (line + " X")
+            else
+                log.Add line
+
         let listener: EventListener =
             fun event ->
-                let line = describe event
-
-                if event.``type`` = "toggle" then
-                    let toggle = unbox<ToggleEvent> event
-                    let target = label (unbox<Element> event.target)
-
-                    let current =
-                        match states.TryGetValue target with
-                        | true, value -> value
-                        | _ -> "closed"
-
-                    if toggle.oldState <> current then
-                        broken.Add line
-
-                    states[target] <- toggle.newState
-
-                if prevent.Remove event.``type`` then
-                    event.preventDefault ()
-                    log.Add (line + " X")
-                else
-                    log.Add line
+                if label (unbox<Element> event.target) <> "d16-marker" then
+                    record event
+                elif event.``type`` = "toggle" then
+                    markerToggles <- markerToggles + 1
 
         for kind in eventTypes do
             document.addEventListener (kind, listener, true)
@@ -131,6 +149,26 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
             let items = List.ofSeq log
             log.Clear ()
             items
+
+        // Settles until every task queued before the call has run.
+        let settle () =
+            async {
+                let target = markerToggles + 1
+
+                if marker.matches ":popover-open" then
+                    marker.hidePopover ()
+                else
+                    marker.showPopover ()
+
+                let mutable rounds = 0
+
+                while markerToggles < target do
+                    if rounds = SettleLimit then
+                        failwith $"Queued tasks undelivered after {SettleLimit} settle rounds"
+
+                    rounds <- rounds + 1
+                    do! driver.Settle ()
+            }
 
         // Events dispatched during a call, in order; queued toggle and close events, as a set after Settle.
 
@@ -175,17 +213,18 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
                     |> List.tryLast
                     |> Option.map snd
 
-                target, closes, last)
+                let last = last |> Option.defaultValue "-"
+                $"{target} closes={closes} last={last}")
             |> List.sort
 
         let queued label (expected: string list) =
             async {
-                do! driver.Settle ()
+                do! settle ()
                 let actual = drain () |> List.filter isQueued
                 equal label (summary expected) (summary actual)
             }
 
-        do! driver.Settle ()
+        do! settle ()
 
         // Dialog show, close and returnValue.
         let d = dialog "d"
@@ -227,7 +266,7 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
         equal "focus restores" "before" (label document.activeElement)
         dispatchedNow "modal close beforetoggle" [ "beforetoggle:m[open>closed -]" ]
         do! queued "modal close events" [ "toggle:m[open>closed -]"; "close:m" ]
-        do! driver.Settle ()
+        do! settle ()
         equal "hit after close" "before" (label (document.elementFromPoint (20.0, 10.0)))
 
         // requestClose and a cancelled cancel.
@@ -313,7 +352,7 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
         p.hidePopover ()
         p.hidePopover ()
         equal "hidePopover closes" false (isOpen "p")
-        do! driver.Settle ()
+        do! settle ()
         drain () |> ignore
         fails "showPopover without popover" "NotSupportedError" (fun () -> (html "plain").showPopover())
         fails "hidePopover without popover" "NotSupportedError" (fun () -> (html "plain").hidePopover())
@@ -322,7 +361,7 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
         dispatchedNow "showPopover source" [ "beforetogglec:p[closed>open tog]" ]
         do! queued "showPopover source toggle" [ "toggle:p[closed>open tog]" ]
         p.hidePopover ()
-        do! driver.Settle ()
+        do! settle ()
         drain () |> ignore
         let plain = html "plain"
         plain.popover <- "manual"
@@ -340,14 +379,14 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
         (html "p2").showPopover()
         equal "a second auto popover closes the first" false (isOpen "p")
         (html "pm").showPopover()
-        do! driver.Settle ()
+        do! settle ()
         drain () |> ignore
         equal "popover top layer hit" "p2" (label (document.elementFromPoint (650.0, 520.0)))
         do! driver.Click 400 300
         equal "light dismiss closes the auto popover" false (isOpen "p2")
         equal "light dismiss keeps the manual popover" true (isOpen "pm")
         p.showPopover ()
-        do! driver.Settle ()
+        do! settle ()
         drain () |> ignore
         do! driver.Press "Escape"
         equal "Escape closes the auto popover" false (isOpen "p")
@@ -362,7 +401,7 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
         equal "an auto popover closes the hint" false (isOpen "ph2")
         equal "an auto popover closes its sibling" false (isOpen "p")
         (html "ph").showPopover()
-        do! driver.Settle ()
+        do! settle ()
         drain () |> ignore
         do! driver.Click 400 300
         equal "light dismiss closes the hint" false (isOpen "ph")
@@ -376,13 +415,13 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
         dispatchedNow "light dismiss order (qualified hint-light-dismiss-order)" dismissOrder
         p.showPopover ()
         (html "ph").showPopover()
-        do! driver.Settle ()
+        do! settle ()
         drain () |> ignore
         do! driver.Press "Escape"
         equal "Escape closes the hint first" (false, true) (isOpen "ph", isOpen "p")
         do! driver.Press "Escape"
         equal "a second Escape closes the auto popover" false (isOpen "p")
-        do! driver.Settle ()
+        do! settle ()
         drain () |> ignore
 
         // popovertarget invokers.
@@ -401,7 +440,7 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
         equal "popovertargetaction show" true (isOpen "p")
         (button "hide").click()
         equal "popovertargetaction hide" false (isOpen "p")
-        do! driver.Settle ()
+        do! settle ()
         drain () |> ignore
         do! driver.Click 20 50
         equal "a trusted click on an invoker opens" true (isOpen "p")
@@ -413,7 +452,7 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
         toggle.popoverTargetElement <- null
         equal "popoverTargetElement cleared" "-" (label toggle.popoverTargetElement)
         p.hidePopover ()
-        do! driver.Settle ()
+        do! settle ()
         drain () |> ignore
 
         // Command invokers.
@@ -432,7 +471,7 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
         dispatchedNow "close command events" [ "commandc:m[close cclose]"; "beforetoggle:m[open>closed cclose]" ]
         do! queued "close command queued" [ "toggle:m[open>closed cclose]"; "close:m" ]
         modal.click ()
-        do! driver.Settle ()
+        do! settle ()
         drain () |> ignore
         (button "creq").click()
         equal "request-close command" false m.``open``
@@ -451,7 +490,7 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
         equal "toggle-popover command" true (isOpen "p")
         dispatchedNow "toggle-popover events" [ "commandc:p[toggle-popover ctoggle]"; "beforetogglec:p[closed>open ctoggle]" ]
         p.hidePopover ()
-        do! driver.Settle ()
+        do! settle ()
         drain () |> ignore
         (button "ccustom").click()
         dispatchedNow "custom command" [ "commandc:plain[--spin ccustom]" ]
