@@ -86,6 +86,7 @@
         <Compile Include="Highlights.fs" />
         <Compile Include="Diagnostics.fs" />
         <Compile Include="Coordinates.fs" />
+        <Compile Include="ResizeObservation.fs" />
         <Compile Include="Viewport.fs" />
         <Compile Include="ViewportScroll.fs" />
         <Compile Include="VisualViewport.fs" />
