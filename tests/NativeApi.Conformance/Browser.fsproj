@@ -51,6 +51,7 @@
     <Compile Include="Resources.fs" />
     <Compile Include="CustomEvents.fs" />
     <Compile Include="InputStateChecks.fs" />
+    <Compile Include="PointerInputChecks.fs" />
     <Compile Include="ViewportChecks.fs" />
     <Compile Include="ScrollChecks.fs" />
     <Compile Include="VisualViewportChecks.fs" />

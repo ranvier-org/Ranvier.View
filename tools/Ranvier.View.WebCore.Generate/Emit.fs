@@ -364,6 +364,8 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                     "DOMURL"
                     "URLSearchParams"
                     "URLPattern"
+                    "Touch"
+                    "TouchList"
                 ]
         then
             let kind = ctx.Input.Kinds[publicRoot]

@@ -126,6 +126,8 @@ let private kinds =
             "Highlight", "Kind.Highlight"
             "HighlightRegistry", "Kind.HighlightRegistry"
             "FileReader", "Kind.FileReader"
+            "Touch", "Kind.Touch"
+            "TouchList", "Kind.TouchList"
         ]
 
 [<EntryPoint>]

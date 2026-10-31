@@ -207,6 +207,12 @@ module internal Kind =
     [<Literal>]
     let FileReader = 98
 
+    [<Literal>]
+    let Touch = 140
+
+    [<Literal>]
+    let TouchList = 141
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -384,6 +390,8 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.UrlPattern -> NativeDom.rv_dom_url_pattern_release handle
         | Kind.VisualViewport -> Native.rv_event_target_release handle
         | Kind.FileReader -> Native.rv_event_target_release handle
+        | Kind.Touch -> NativeDom.rv_dom_touch_release handle
+        | Kind.TouchList -> NativeDom.rv_dom_touch_list_release handle
         | Kind.Highlight -> NativeDom.rv_dom_highlight_release handle
         | Kind.HighlightRegistry -> NativeDom.rv_dom_highlight_registry_release handle
         | _ -> ()

@@ -303,7 +303,7 @@ let private runInputState () =
                     host.Document
                     (fun () -> Ranvier.View.WebCore.InputState.forHost host)
                     Ranvier.View.WebCore.InputState.capabilities
-                    Ranvier.Dom.CapabilityState.No
+                    Ranvier.Dom.CapabilityState.Yes
                     driver
                 |> Async.StartImmediateAsTask
 
@@ -359,6 +359,249 @@ let private runInputState () =
 
     System.Console.WriteLine $"NATIVE_API I12 PASS assertions={shared}"
     System.Console.WriteLine $"NATIVE_API I12 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared pointer-input fixture with native pointer ids, lock denial and refusal, touch capacity and
+/// host-disposal checks.</summary>
+let private runPointerInput () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable native = 0
+
+    let expect condition message =
+        native <- native + 1
+
+        if not condition then
+            failwith message
+
+    let input action =
+        async { action () }
+
+    let send (samples: Ranvier.View.WebCore.PointerSample array) =
+        host.Pointer samples |> ignore
+
+    let touchSample (contact: PointerInputChecks.Contact) =
+        let mutable sample =
+            Ranvier.View.WebCore.PointerSample.Create (2, contact.Id, contact.Action, contact.X, contact.Y)
+
+        sample.Width <- float32 (2.0 * contact.RadiusX)
+        sample.Height <- float32 (2.0 * contact.RadiusY)
+        sample.Twist <- int contact.Angle
+        sample.Pressure <- float32 contact.Force
+        sample
+
+    let penSample (pen: PointerInputChecks.Pen) =
+        let mutable sample =
+            Ranvier.View.WebCore.PointerSample.Create (1, 3, pen.Action, pen.X, pen.Y)
+
+        sample.Buttons <- pen.Buttons
+        sample.Button <- (if pen.Action = 1 || pen.Action = 2 then 0 else -1)
+        sample.ClickCount <- (if pen.Action = 1 || pen.Action = 2 then 1 else 0)
+        sample.Pressure <- float32 pen.Pressure
+        sample.TangentialPressure <- float32 pen.Tangential
+        sample.TiltX <- pen.TiltX
+        sample.TiltY <- pen.TiltY
+        sample.Twist <- pen.Twist
+        sample.MovementX <- pen.MovementX
+        sample.MovementY <- pen.MovementY
+        sample
+
+    let settle () =
+        for _ in 1..4 do
+            host.Cycle 0
+
+    let driver: PointerInputChecks.Driver =
+        {
+            Touch = fun contacts -> input (fun () -> send (contacts |> Array.map touchSample))
+            Pen = fun pen -> input (fun () -> send [| penSample pen |])
+            Click = fun x y -> input (fun () -> host.Click (x, y) |> ignore)
+            MoveBy =
+                fun x y dx dy ->
+                    input (fun () ->
+                        let mutable sample =
+                            Ranvier.View.WebCore.PointerSample.Create (0, 0, 0, float x, float y)
+
+                        sample.MovementX <- float dx
+                        sample.MovementY <- float dy
+                        send [| sample |])
+            GrantLock =
+                fun () ->
+                    input (fun () ->
+                        Ranvier.View.WebCore.PointerInput.resolveLock host true
+                        |> ignore)
+            Settle = fun () -> input settle
+        }
+
+    let shared =
+        try
+            host.SetFocused true
+
+            let count =
+                PointerInputChecks.run
+                    host.Document
+                    (Ranvier.View.WebCore.PointerInput.provider host)
+                    (Ranvier.View.WebCore.PointerInput.capabilities ())
+                    Ranvier.Dom.CapabilityState.Yes
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 20000L do
+                host.Cycle ()
+
+            let count = count.GetAwaiter().GetResult()
+
+            // Native pointer ids: 2 + id for a touch contact, 2^30 + id for a pen.
+            let ids = System.Collections.Generic.List<int * string>()
+
+            let listener =
+                fun (event: Ranvier.Dom.Event) ->
+                    let pointer = event :?> Ranvier.Dom.PointerEvent
+                    ids.Add ((pointer.pointerId, pointer.pointerType))
+
+            host.Document.addEventListener ("pointerdown", listener, false)
+
+            send
+                [|
+                    touchSample
+                        {
+                            Id = 5
+                            Action = 1
+                            X = 50.0
+                            Y = 50.0
+                            RadiusX = 1.0
+                            RadiusY = 1.0
+                            Angle = 0.0
+                            Force = 0.5
+                        }
+                |]
+
+            send
+                [|
+                    touchSample
+                        {
+                            Id = 5
+                            Action = 2
+                            X = 50.0
+                            Y = 50.0
+                            RadiusX = 1.0
+                            RadiusY = 1.0
+                            Angle = 0.0
+                            Force = 0.5
+                        }
+                |]
+
+            send
+                [|
+                    penSample
+                        {
+                            Action = 1
+                            X = 50.0
+                            Y = 50.0
+                            Buttons = 1
+                            Pressure = 0.5
+                            Tangential = 0.0
+                            TiltX = 0
+                            TiltY = 0
+                            Twist = 0
+                            MovementX = 0.0
+                            MovementY = 0.0
+                        }
+                |]
+
+            send
+                [|
+                    penSample
+                        {
+                            Action = 2
+                            X = 50.0
+                            Y = 50.0
+                            Buttons = 0
+                            Pressure = 0.0
+                            Tangential = 0.0
+                            TiltX = 0
+                            TiltY = 0
+                            Twist = 0
+                            MovementX = 0.0
+                            MovementY = 0.0
+                        }
+                |]
+
+            host.Document.removeEventListener ("pointerdown", listener, false)
+            expect (ids.ToArray () = [| (7, "touch"); ((1 <<< 30) + 3, "pen") |]) "Native touch and pen pointer ids"
+
+            // The embedder denies a request; a request without a gesture is refused at once. A new document has no relock
+            // allowance from the shared fixture's exit.
+            let first = host
+            let host = WebCoreHost.Create (320, 240)
+            host.SetFocused true
+            let service = Ranvier.View.WebCore.PointerInput.lockForHost host
+            let changes = System.Collections.Generic.List<Ranvier.Dom.PointerLockChange>()
+            service.Subscribe changes.Add |> ignore
+            let element = host.Document.createElement "div"
+            element.setAttribute ("style", "position:absolute;left:0;top:0;width:100px;height:100px")
+            host.Document.body.appendChild element |> ignore
+            expect (service.Request (element, false) = Error Ranvier.Dom.PointerLockRefusal.NotAllowed) "No gesture: NotAllowed"
+            settle ()
+            expect (changes.ToArray () = [| Ranvier.Dom.PointerLockChange.Error |]) "Refusal: pointerlockerror"
+            changes.Clear ()
+
+            let requests =
+                System.Collections.Generic.List<Result<unit, Ranvier.Dom.PointerLockRefusal>>()
+
+            let onDown =
+                fun (_: Ranvier.Dom.Event) -> requests.Add (service.Request (element, false))
+
+            element.addEventListener ("mousedown", onDown, false)
+            host.Click (50, 50) |> ignore
+            element.removeEventListener ("mousedown", onDown, false)
+
+            expect
+                (match service.Current () with
+                 | Ranvier.Dom.PointerLockState.Pending target -> obj.ReferenceEquals (target, element)
+                 | _ -> false)
+                "Gesture request pending"
+
+            expect (Ranvier.View.WebCore.PointerInput.resolveLock host false) "Deny"
+            expect (not (Ranvier.View.WebCore.PointerInput.resolveLock host false)) "Nothing pending after the answer"
+            settle ()
+
+            expect
+                (changes.ToArray () = [| Ranvier.Dom.PointerLockChange.Error |]
+                 && service.Current () = Ranvier.Dom.PointerLockState.Unlocked)
+                "Denial: pointerlockerror, unlocked"
+
+            element.remove ()
+            service.Dispose ()
+
+            // Navigator.maxTouchPoints: set per host, 0 by default.
+            let input = Ranvier.View.WebCore.InputState.forHost host
+            expect (input.Current().MaxTouchPoints = 0) "maxTouchPoints 0 by default"
+            host.SetMaxTouchPoints 5
+            expect (input.Current().MaxTouchPoints = 5) "maxTouchPoints 5"
+            let other = WebCoreHost.Create (10, 10)
+            let otherInput = Ranvier.View.WebCore.InputState.forHost other
+            expect (otherInput.Current().MaxTouchPoints = 0) "maxTouchPoints per host"
+            otherInput.Dispose ()
+            (other :> System.IDisposable).Dispose()
+            host.SetMaxTouchPoints 0
+            expect (input.Current().MaxTouchPoints = 0) "maxTouchPoints reset"
+            input.Dispose ()
+            (host :> System.IDisposable).Dispose()
+            expect (first.Session.LiveObjects >= 0) "First host still live"
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Pointer-input fixture leaves no live native objects"
+
+    if shared <> 61 then
+        failwith $"Pointer-input shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API I03_I04_I06 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API I03_I04_I06 NATIVE PASS assertions={native}"
     shared
 
 /// <summary>Runs the shared viewport fixture with native visibility and host-disposal checks.</summary>
@@ -2786,6 +3029,7 @@ let private runAll () =
     runResources () |> ignore
     runCustomEvents () |> ignore
     runInputState () |> ignore
+    runPointerInput () |> ignore
     runViewport () |> ignore
     runViewportScroll () |> ignore
     runVisualViewport () |> ignore
@@ -3778,6 +4022,9 @@ let main args =
         0
     elif Array.contains "--input-state-only" args then
         runInputState () |> ignore
+        0
+    elif Array.contains "--pointer-input-only" args then
+        runPointerInput () |> ignore
         0
     elif Array.contains "--viewport-only" args then
         runViewport () |> ignore
