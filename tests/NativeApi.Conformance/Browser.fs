@@ -1328,7 +1328,10 @@ let runAnimations () =
             (fun () -> Ranvier.Dom.ComputedStyles.forDocument document)
             name
 
-    {| animations = count |}
+    let effects =
+        AnimationEffectChecks.run document (fun () -> Ranvier.Dom.ComputedStyles.forDocument document) name
+
+    {| animations = count; effects = effects |}
 
 /// <summary>Runs the shared coordinate assertions, with an iframe's element as the foreign one.</summary>
 let runCoordinates () =

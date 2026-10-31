@@ -39,6 +39,9 @@ let private hand (dom: Type) (header: string) : Map<string, string> =
             "unbox<Ranvier.Dom.TreeWalker> (Traversal.Create(this, {0}, {1}, {2}, (fun target root show filter -> let mutable result = 0n in Interop.check \"Document.createTreeWalker\" (NativeDom.rv_dom_document_create_tree_walker (target, root, show, filter, &result)); result), (fun session handle -> TreeWalkerObject(session, handle) :> NativeObject)))"
             "NodeIterator.filter.get",
             "Traversal.FilterOf(fun () -> let mutable result = 0n in Interop.check \"NodeIterator.filter\" (NativeDom.rv_dom_node_iterator_get_filter (Interop.handle (box this), &result)); result)"
+            "AnimationEffect.getTiming", "AnimationResults.timing this"
+            "AnimationEffect.getComputedTiming", "AnimationResults.computed this"
+            "KeyframeEffect.getKeyframes", "AnimationResults.keyframes this"
             "TreeWalker.filter.get",
             "Traversal.FilterOf(fun () -> let mutable result = 0n in Interop.check \"TreeWalker.filter\" (NativeDom.rv_dom_tree_walker_get_filter (Interop.handle (box this), &result)); result)"
         ]

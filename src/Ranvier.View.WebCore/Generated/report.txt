@@ -1,6 +1,8 @@
-254 classes; 2731 members: 2684 mapped to 2602 of 2725 rv_dom_* functions, 47 hand-written, 0 unmapped
+255 classes; 2735 members: 2685 mapped to 2603 of 2729 rv_dom_* functions, 50 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
+  rv_dom_animation_effect_get_computed_timing: AnimationEffect.getComputedTiming (op)
+  rv_dom_animation_effect_get_timing: AnimationEffect.getTiming (op)
   rv_dom_animation_playback_event_create: AnimationPlaybackEvent.constructor (op)
   rv_dom_blob_create: Blob.constructor (op)
   rv_dom_command_event_create: CommandEvent.constructor (op)
@@ -86,6 +88,7 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_keyboard_event_get_key: KeyboardEvent.key (get)
   rv_dom_keyframe_effect_create_1: KeyframeEffect.constructor (op)
   rv_dom_keyframe_effect_create_3: KeyframeEffect.constructor (op)
+  rv_dom_keyframe_effect_get_keyframes: KeyframeEffect.getKeyframes (op)
   rv_dom_media_query_list_event_create: MediaQueryListEvent.constructor (op)
   rv_dom_mouse_event_get_related_target: MouseEvent.relatedTarget (get)
   rv_dom_node_iterator_get_filter: NodeIterator.filter (get)
@@ -129,6 +132,7 @@ Unmapped members by reason:
 
 Members by class (mapped / hand-written / unmapped):
   AbstractRangeObject: 5 / 0 / 0
+  AnimationEffectObject: 1 / 2 / 0
   AnimationEventObject: 3 / 0 / 0
   AnimationPlaybackEventObject: 2 / 0 / 0
   AnimationTimelineObject: 2 / 0 / 0
@@ -269,7 +273,7 @@ Members by class (mapped / hand-written / unmapped):
   HighlightObject: 4 / 0 / 0
   InputEventObject: 2 / 2 / 0
   KeyboardEventObject: 12 / 1 / 0
-  KeyframeEffectObject: 9 / 0 / 0
+  KeyframeEffectObject: 9 / 1 / 0
   MathMLElementObject: 11 / 0 / 0
   MediaListObject: 6 / 0 / 0
   MediaQueryListEventObject: 2 / 0 / 0

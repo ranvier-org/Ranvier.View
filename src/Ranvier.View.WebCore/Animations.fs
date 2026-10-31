@@ -149,7 +149,8 @@ module Animations =
             |> unbox<KeyframeEffect>
 
         let animation handle =
-            session.Track (WebAnimationObject (session, handle)) :> WebAnimation
+            session.Object (handle, Kind.WebAnimation, owner, Func<Session, nativeint, NativeObject>(fun s h -> WebAnimationObject (s, h)))
+            |> unbox<WebAnimation>
 
         let create target frames (options: NativeDom.RvDomUnionUnrestrictedDoubleOrKeyframeEffectOptions) (scope: InputScope) =
             let documentHandle = active ()
