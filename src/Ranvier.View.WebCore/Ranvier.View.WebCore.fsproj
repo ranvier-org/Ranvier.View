@@ -65,6 +65,7 @@
         <Compile Include="ComputedStyles.fs" />
         <Compile Include="Timing.fs" />
         <Compile Include="Capabilities.fs" />
+        <Compile Include="Resources.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />

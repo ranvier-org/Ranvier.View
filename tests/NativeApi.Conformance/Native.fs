@@ -89,9 +89,125 @@ let private runCapabilities () =
     System.Console.WriteLine "NATIVE_API H07 TEARDOWN PASS"
     count
 
+let private crc32 (data: byte array) =
+    let mutable crc = 0xFFFFFFFFu
+
+    for value in data do
+        crc <- crc ^^^ uint32 value
+
+        for _ in 1..8 do
+            crc <-
+                if crc &&& 1u <> 0u then
+                    (crc >>> 1) ^^^ 0xEDB88320u
+                else
+                    crc >>> 1
+
+    crc ^^^ 0xFFFFFFFFu
+
+let private resourceFixture () : Resources.Fixture =
+    let chunk (kind: string) (data: byte array) =
+        let name = System.Text.Encoding.ASCII.GetBytes kind
+
+        let length =
+            System.BitConverter.GetBytes (uint32 data.Length)
+            |> Array.rev
+
+        let crc = crc32 (Array.append name data)
+        Array.concat [ length; name; data; System.BitConverter.GetBytes crc |> Array.rev ]
+
+    let png corrupt =
+        let rows =
+            Array.concat
+                [
+                    for _ in 1..2 -> Array.append [| 0uy |] (Array.concat [ for _ in 1..3 -> [| 255uy; 0uy; 0uy; 255uy |] ])
+                ]
+
+        let body =
+            if corrupt then
+                Array.append [| 0x78uy; 0x9cuy |] [| 1uy .. 39uy |]
+            else
+                use output = new System.IO.MemoryStream ()
+
+                do
+                    use zlib =
+                        new System.IO.Compression.ZLibStream (output, System.IO.Compression.CompressionLevel.Optimal)
+
+                    zlib.Write (rows, 0, rows.Length)
+
+                output.ToArray ()
+
+        let header =
+            Array.concat
+                [
+                    System.BitConverter.GetBytes 3u |> Array.rev
+                    System.BitConverter.GetBytes 2u |> Array.rev
+                    [| 8uy; 6uy; 0uy; 0uy; 0uy |]
+                ]
+
+        Array.concat
+            [
+                [| 0x89uy; 0x50uy; 0x4Euy; 0x47uy; 0x0Duy; 0x0Auy; 0x1Auy; 0x0Auy |]
+                chunk "IHDR" header
+                chunk "IDAT" body
+                chunk "IEND" [||]
+            ]
+
+    let source =
+        match System.Environment.GetEnvironmentVariable "RANVIER_WEBKIT_SOURCE" with
+        | null
+        | "" -> "C:/wk/src"
+        | value -> value
+
+    {
+        Png = png false
+        CorruptPng = png true
+        Font = System.IO.File.ReadAllBytes (System.IO.Path.Combine (source, "Tools/TestWebKitAPI/Resources/cocoa/Ahem.ttf"))
+    }
+
+let private runResources () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let previous = System.Threading.SynchronizationContext.Current
+    let loop = OwnerLoop ()
+    System.Threading.SynchronizationContext.SetSynchronizationContext loop
+
+    let count =
+        try
+            let image (url: string) =
+                let element = host.Document.createElement "img"
+                element.setAttribute ("src", url)
+                element
+
+            let pending =
+                Resources.run (resourceFixture ()) (fun provider -> Ranvier.View.WebCore.Resources.forHost host provider) image
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not pending.IsCompleted
+                  && timeout.ElapsedMilliseconds < 20000L do
+                loop.Drain ()
+                host.Cycle ()
+                System.Threading.Thread.Sleep 1
+
+            if not pending.IsCompleted then
+                failwith "Resource fixture did not complete on the owner loop"
+
+            pending.GetAwaiter().GetResult()
+        finally
+            System.Threading.SynchronizationContext.SetSynchronizationContext previous
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith $"Resource fixture leaked {session.LiveObjects} managed native objects"
+
+    System.Console.WriteLine $"NATIVE_API H05 PASS assertions={count}"
+    System.Console.WriteLine "NATIVE_API H05 TEARDOWN PASS"
+    count
+
 let private runAll () =
     UserTimingNative.run ()
     runCapabilities () |> ignore
+    runResources () |> ignore
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
@@ -836,6 +952,9 @@ let main args =
         0
     elif Array.contains "--capabilities-only" args then
         runCapabilities () |> ignore
+        0
+    elif Array.contains "--resources-only" args then
+        runResources () |> ignore
         0
     elif Array.contains "--custom-properties-only" args then
         let lifecycle = CustomPropertyLifecycle.run ()
