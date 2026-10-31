@@ -701,6 +701,7 @@ try {
   console.log('BROWSER_API D09 TAB PASS engine=chromium');
   }
   }
+  if (!fontsOnly) {
   await runInputState();
   await runViewport();
   await runForms();
@@ -722,6 +723,7 @@ try {
   await runFrames();
   await runIdle();
   await runCaret();
+  }
   }
 } finally {
   if (browser) await browser.close();
