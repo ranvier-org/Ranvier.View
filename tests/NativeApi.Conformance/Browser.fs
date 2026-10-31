@@ -1274,6 +1274,48 @@ let runBlobUrls () =
     }
     |> Async.StartAsPromise
 
+/// <summary>Runs the shared media capability assertions against navigator.mediaCapabilities.</summary>
+let runMediaCapabilities () =
+    async {
+        let document = document ()
+
+        let driver: MediaCapabilityChecks.Driver =
+            {
+                Settle = fun () -> Async.Sleep 1
+                Rejected = MediaCapabilityChecks.chromiumRejected
+                Answer = None
+            }
+
+        let! count =
+            MediaCapabilityChecks.run (fun () -> BrowserMediaCapabilities.forDocument document) driver
+
+        return {| mediaCapabilities = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared snapshot assertions: an ordinary browser context has no DOM capture.</summary>
+let runSnapshots () =
+    async {
+        let document = document ()
+        let red = document.createElement "div"
+        red.setAttribute ("style", "position:absolute;left:5px;top:4px;width:20px;height:10px;background:rgb(255,0,0)")
+        document.body.appendChild red |> ignore
+
+        let driver: SnapshotChecks.Driver =
+            {
+                Settle = fun () -> Async.Sleep 1
+                Red = red
+                DeviceScale = 1.0
+            }
+
+        let! count =
+            SnapshotChecks.run (fun () -> BrowserSnapshots.forDocument document) driver
+
+        red.remove ()
+        return {| snapshots = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared form submission assertions.</summary>
 let runSubmissions () =
     async {

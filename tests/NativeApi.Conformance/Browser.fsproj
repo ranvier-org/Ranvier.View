@@ -71,6 +71,8 @@
     <Compile Include="BinaryChecks.fs" />
     <Compile Include="DataTransferChecks.fs" />
     <Compile Include="BlobUrlChecks.fs" />
+    <Compile Include="MediaCapabilityChecks.fs" />
+    <Compile Include="SnapshotChecks.fs" />
     <Compile Include="CryptoChecks.fs" />
     <Compile Include="HighlightChecks.fs" />
     <Compile Include="CanvasChecks.fs" />

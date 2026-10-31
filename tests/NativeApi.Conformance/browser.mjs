@@ -39,6 +39,8 @@ const cryptoOnly = process.argv.includes('--crypto-only');
 const highlightsOnly = process.argv.includes('--highlights-only');
 const canvasOnly = process.argv.includes('--canvas-only');
 const blobUrlsOnly = process.argv.includes('--blob-urls-only');
+const mediaCapabilitiesOnly = process.argv.includes('--media-capabilities-only');
+const snapshotsOnly = process.argv.includes('--snapshots-only');
 const stringsOnly = process.argv.includes('--strings-only');
 const diagnosticsOnly = process.argv.includes('--diagnostics-only');
 const cascadeOnly = process.argv.includes('--cascade-only');
@@ -317,6 +319,34 @@ const runBlobUrls = async () => {
   }
 };
 const BLOB_URL_ASSERTIONS = 42;
+// B06 runs the media capability fixture in its own page.
+const runMediaCapabilities = async () => {
+  const mediaBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await mediaBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runMediaCapabilities(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.mediaCapabilities !== MEDIA_CAPABILITY_ASSERTIONS) throw new Error(`Media capability assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API B06 PASS assertions=${result.mediaCapabilities} engine=chromium`);
+  } finally {
+    await mediaBrowser.close();
+  }
+};
+const MEDIA_CAPABILITY_ASSERTIONS = 107;
+// R12 runs the snapshot fixture in its own page; a browser page has no DOM capture.
+const runSnapshots = async () => {
+  const snapshotBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await snapshotBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runSnapshots(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.snapshots !== SNAPSHOT_ASSERTIONS) throw new Error(`Snapshot assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R12 PASS assertions=${result.snapshots} engine=chromium capture=unavailable`);
+  } finally {
+    await snapshotBrowser.close();
+  }
+};
+const SNAPSHOT_ASSERTIONS = 6;
 // B22 runs the crypto fixture on http://127.0.0.1 (a secure context) and on http://insecure.test, which the browser
 // resolves to the same server but treats as insecure.
 const runCrypto = async () => {
@@ -631,6 +661,8 @@ try {
   else if (highlightsOnly) { await runHighlights(); process.exitCode = 0; }
   else if (canvasOnly) { await runCanvas(); process.exitCode = 0; }
   else if (blobUrlsOnly) { await runBlobUrls(); process.exitCode = 0; }
+  else if (mediaCapabilitiesOnly) { await runMediaCapabilities(); process.exitCode = 0; }
+  else if (snapshotsOnly) { await runSnapshots(); process.exitCode = 0; }
   else if (stringsOnly) { await runStrings(); process.exitCode = 0; }
   else if (process.argv.includes('--host-strings-only')) { await runHostStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
@@ -907,6 +939,8 @@ try {
   await runIntersectionObservation();
   await runAnimations();
   await runBlobUrls();
+  await runMediaCapabilities();
+  await runSnapshots();
   await runScreen();
   await runMediaQueries();
   await runEventDetails();
