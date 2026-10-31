@@ -121,8 +121,8 @@
     "Native currentView/useCurrentView are Available; Chromium reports NotExposed.",
     "WebCoreHost.SelectSvgView takes fragment text without # (\"#half\" selects nothing); Chromium location.hash accepts both forms. Browser requests update URL/history/:target; native selection does not.",
     "WebKit currentScale changes page zoom and leaves the content CSS size unchanged (currentTranslate then divides by the zoom); Chromium zooms SVG content.",
-    "A new begin on a frozen SMIL animation takes effect during a paused seek in Chromium; WebCore keeps the frozen value. Fresh delayed begins/ends agree.",
-    "Fable erases Some null to None; the browser treats it as attribute removal, and nullArg surfaces as Error rather than ArgumentNullException."
+    "Fable erases Some null to None; the browser treats it as attribute removal, and nullArg surfaces as Error rather than ArgumentNullException.",
+    "A new begin on a frozen SMIL animation without an end attribute takes effect during a paused seek in Chromium; Native20 WebCore keeps the frozen value. Cause: SVGSMILElement::resolveInterval fails the interval when any end instance time exists, contrary to SMIL 3 getNextInterval (no end attribute: no end constraint). Fixed upstream of this cohort by Native21 patch 0032; RED/oracle in artifacts/smil-red (SmilRed.fs d13570f7, oracle.log bc08a04b, native log 6883365a)."
   ],
   "initialFailures": [
     "Async.RunSynchronously ran fixtures on a pool thread: InvalidOperationException off host thread; fixed by StartImmediateAsTask on the host thread.",
