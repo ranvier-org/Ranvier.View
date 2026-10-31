@@ -58,12 +58,12 @@ jobs:
           key: nuget-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('**/*.fsproj', '**/Directory.Build.*', 'nuget.config', '.config/dotnet-tools.json') }}
           restore-keys: nuget-${{ runner.os }}-${{ matrix.group }}-
       # The counters suites compile core with RanvierCounters=true, which the published Ranvier package omits.
-      - name: Check out the Core revision matching DOM alpha.50
+      - name: Check out the drag/drop Core revision (DOM alpha.50 cohort)
         if: matrix.group == 'view' || matrix.group == 'arms'
         uses: actions/checkout@v7
         with:
           repository: ranvier-org/Ranvier
-          ref: 526ec1fbabc77292e553586efd7b9c97a519c945
+          ref: 21687035db50f69664c2ebeb99eeb0e157779060
           path: .ci/ranvier
           persist-credentials: false
       - name: Reference the core source for the counters suites
