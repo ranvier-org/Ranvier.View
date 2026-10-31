@@ -1966,6 +1966,96 @@ let private runBlobUrls () =
     System.Console.WriteLine $"NATIVE_API B144 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared media capability fixture and the host-disposal check.</summary>
+[<Literal>]
+let private MediaCapabilityChecksCount = 107
+
+let private runMediaCapabilities () =
+    let host = WebCoreHost.Create (320, 200)
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let driver: MediaCapabilityChecks.Driver =
+        {
+            Settle = fun () -> async { host.Cycle () |> ignore }
+            Rejected = MediaCapabilityChecks.webkitRejected
+            // No flavor has a media engine configuration provider (the media-decoding-provider capability).
+            Answer =
+                Some
+                    {
+                        Supported = false
+                        Smooth = false
+                        PowerEfficient = false
+                    }
+        }
+
+    let shared =
+        let count =
+            MediaCapabilityChecks.run (fun () -> Ranvier.View.WebCore.MediaCapabilities.forHost host) driver
+            |> Async.StartImmediateAsTask
+
+        let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+        while not count.IsCompleted
+              && timeout.ElapsedMilliseconds < 120000L do
+            host.Cycle () |> ignore
+
+        count.GetAwaiter().GetResult()
+
+    // Host disposal ends a query not yet delivered and rejects later queries.
+    let service = Ranvier.View.WebCore.MediaCapabilities.forHost host
+    let mutable outcome = None
+
+    let pending =
+        service.DecodingInfo (
+            Ranvier.Dom.MediaDecodingType.File,
+            Some
+                {
+                    ContentType = "video/webm;codecs=\"vp8\""
+                    Width = 640u
+                    Height = 360u
+                    Bitrate = 1000000UL
+                    Framerate = 30.0
+                    AlphaChannel = None
+                    HdrMetadataType = None
+                    ColorGamut = None
+                    TransferFunction = None
+                },
+            None,
+            fun value -> outcome <- Some value
+        )
+
+    expect outcome.IsNone "A query is not delivered inside the starting call"
+    (host :> System.IDisposable).Dispose()
+
+    expect (outcome = Some (Ranvier.Dom.ResourceOutcome.Failed Ranvier.Dom.ResourceFailure.Cancelled)) "Host disposal ends a query in flight"
+
+    let rejected =
+        try
+            service.DecodingInfo (Ranvier.Dom.MediaDecodingType.File, None, None, ignore)
+            |> ignore
+
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    expect rejected "A held media capability service rejects queries after host disposal"
+    pending.Dispose ()
+    service.Dispose ()
+
+    if shared <> MediaCapabilityChecksCount then
+        failwith $"Media capability shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API B06 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API B06 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared coordinate fixture with page scale, thread and teardown checks.</summary>
 [<Literal>]
 let private CoordinateChecksCount = 304
@@ -2806,6 +2896,7 @@ let private runAll () =
     runCascade () |> ignore
     runCoordinates () |> ignore
     runBlobUrls () |> ignore
+    runMediaCapabilities () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
@@ -3805,6 +3896,9 @@ let main args =
         0
     elif Array.contains "--blob-urls-only" args then
         runBlobUrls () |> ignore
+        0
+    elif Array.contains "--media-capabilities-only" args then
+        runMediaCapabilities () |> ignore
         0
     elif Array.contains "--highlights-only" args then
         runHighlights () |> ignore

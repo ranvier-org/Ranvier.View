@@ -1155,6 +1155,25 @@ let runBlobUrls () =
     }
     |> Async.StartAsPromise
 
+/// <summary>Runs the shared media capability assertions against navigator.mediaCapabilities.</summary>
+let runMediaCapabilities () =
+    async {
+        let document = document ()
+
+        let driver: MediaCapabilityChecks.Driver =
+            {
+                Settle = fun () -> Async.Sleep 1
+                Rejected = MediaCapabilityChecks.chromiumRejected
+                Answer = None
+            }
+
+        let! count =
+            MediaCapabilityChecks.run (fun () -> BrowserMediaCapabilities.forDocument document) driver
+
+        return {| mediaCapabilities = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared form submission assertions.</summary>
 let runSubmissions () =
     async {
