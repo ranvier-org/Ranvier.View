@@ -90,6 +90,8 @@
     <Compile Include="CanvasStateChecks.fs" />
     <Compile Include="CanvasPaintChecks.fs" />
     <Compile Include="CanvasTextChecks.fs" />
+    <Compile Include="CanvasPixelChecks.fs" />
+    <Compile Include="CanvasExportChecks.fs" />
     <Compile Include="StringChecks.fs" />
     <Compile Include="HostStringChecks.fs" />
     <Compile Include="DiagnosticsChecks.fs" />

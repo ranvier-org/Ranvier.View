@@ -2542,6 +2542,109 @@ let private runCanvas () =
     System.Console.WriteLine $"NATIVE_API R01 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared canvas pixel fixture with native thread and teardown checks.</summary>
+[<Literal>]
+let private CanvasPixelChecksCount = 36
+
+let private runCanvasPixels () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                CanvasPixelChecks.run
+                    (fun () -> Ranvier.View.WebCore.Canvas.forHost host)
+                    (fun () -> Ranvier.View.WebCore.CanvasPixels.forHost host)
+                    host.Document
+                    errorName
+
+            let service = Ranvier.View.WebCore.CanvasPixels.forHost host
+            let image = service.Create (1, 1)
+
+            let wrongThread =
+                System.Threading.Tasks.Task.Run(fun () -> rejected (fun () -> service.Layout image |> ignore)).GetAwaiter().GetResult()
+
+            expect wrongThread "ImageData layout rejects another thread"
+            held <- Some (service, image)
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Canvas pixel fixture leaves no live native objects"
+    let service, image = held.Value
+    expect (rejected (fun () -> service.Read (image, 0, 4) |> ignore)) "A held ImageData service rejects calls after host disposal"
+    service.Dispose ()
+
+    if shared <> CanvasPixelChecksCount then
+        failwith $"Canvas pixel shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API R06 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API R06 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared canvas export fixture with native teardown checks.</summary>
+[<Literal>]
+let private CanvasExportChecksCount = 39
+
+let private runCanvasExport () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+
+    let shared =
+        try
+            let driver: CanvasExportChecks.Driver = { Settle = fun () -> async { host.Cycle () |> ignore } }
+
+            let count =
+                CanvasExportChecks.run
+                    (fun () -> Ranvier.View.WebCore.Canvas.forHost host)
+                    (fun () -> Ranvier.View.WebCore.CanvasPixels.forHost host)
+                    (fun () -> Ranvier.View.WebCore.CanvasExport.forHost host)
+                    host.Document
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 120000L do
+                host.Cycle () |> ignore
+
+            count.GetAwaiter().GetResult()
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith "Canvas export fixture leaves live native objects"
+
+    if shared <> CanvasExportChecksCount then
+        failwith $"Canvas export shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API R07 PASS assertions={shared}"
+    shared
+
 /// <summary>Runs the shared diagnostics fixture with native thread, snapshot release and teardown checks.</summary>
 [<Literal>]
 let private DiagnosticsChecksCount = 73
@@ -4770,6 +4873,8 @@ let private runAll () =
     runHighlights () |> ignore
     runCanvas () |> ignore
     runCanvasText () |> ignore
+    runCanvasPixels () |> ignore
+    runCanvasExport () |> ignore
     runStrings () |> ignore
     runHostStrings () |> ignore
     runDiagnostics () |> ignore
@@ -5797,6 +5902,12 @@ let main args =
     elif Array.contains "--canvas-only" args then
         runCanvas () |> ignore
         runCanvasText () |> ignore
+        0
+    elif Array.contains "--canvas-pixels-only" args then
+        runCanvasPixels () |> ignore
+        0
+    elif Array.contains "--canvas-export-only" args then
+        runCanvasExport () |> ignore
         0
     elif Array.contains "--strings-only" args then
         runStrings () |> ignore

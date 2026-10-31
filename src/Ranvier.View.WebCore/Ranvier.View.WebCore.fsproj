@@ -90,6 +90,8 @@
         <Compile Include="Screen.fs" />
         <Compile Include="Highlights.fs" />
         <Compile Include="Canvas.fs" />
+        <Compile Include="CanvasPixels.fs" />
+        <Compile Include="CanvasExport.fs" />
         <Compile Include="Diagnostics.fs" />
         <Compile Include="Coordinates.fs" />
         <Compile Include="ResizeObservation.fs" />
