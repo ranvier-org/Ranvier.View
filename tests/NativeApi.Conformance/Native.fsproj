@@ -72,6 +72,7 @@
     <Compile Include="SubmissionChecks.fs" />
     <Compile Include="TextSegmentationChecks.fs" />
     <Compile Include="EventDetailChecks.fs" />
+    <Compile Include="ValueFactoryChecks.fs" />
     <Compile Include="DialogChecks.fs" />
     <Compile Include="BinaryChecks.fs" />
     <Compile Include="BlobUrlChecks.fs" />
