@@ -679,10 +679,151 @@ let private runAll () =
     System.Console.WriteLine "NATIVE_API TEARDOWN PASS groups=D09,D10,D11,CSSOM"
     0
 
+let private runOnHostThread (work: Async<int>) =
+    (Async.StartImmediateAsTask work).GetAwaiter().GetResult()
+
+let private surfaceErrorName =
+    function
+    | WebCoreDomException (name, _) -> name
+    | error -> error.GetType().Name
+
+let private nativeWait (host: WebCoreHost) (milliseconds: int) =
+    async {
+        let clock = System.Diagnostics.Stopwatch.StartNew ()
+
+        while clock.ElapsedMilliseconds < int64 milliseconds do
+            host.Cycle 5
+            System.Threading.Thread.Sleep 1
+    }
+
+let private nativePaint (host: WebCoreHost) (x: float, y: float) =
+    async {
+        let struct (width, height) = host.PaintSize
+        let rgba = Array.zeroCreate<byte>(width * height * 4)
+        host.Paint rgba
+        let offset = ((int y * width) + int x) * 4
+
+        return
+            rgba[offset] < 64uy
+            && rgba[offset + 1] < 64uy
+            && rgba[offset + 2] < 64uy
+            && rgba[offset + 3] > 200uy
+    }
+
+let private viewSelectionArguments (host: WebCoreHost) =
+    let outcome action =
+        try
+            action () |> ignore
+            "accepted"
+        with error ->
+            surfaceErrorName error
+
+    let mutable checks = 0
+
+    let equal label expected actual =
+        checks <- checks + 1
+
+        if expected <> actual then
+            failwithf "%s: expected %A, got %A" label expected actual
+
+    equal "HTML document selection rejects" "NotSupportedException" (outcome (fun () -> host.SelectSvgView "half"))
+    host.LoadSvg SvgViewSelection.markup
+    equal "null fragment rejects" "ArgumentNullException" (outcome (fun () -> host.SelectSvgView null))
+    equal "URL hash is literal fragment text" false (host.SelectSvgView "#half")
+    let mutable worker = "not run"
+
+    let thread =
+        System.Threading.Thread (fun () -> worker <- outcome (fun () -> host.SelectSvgView "half"))
+
+    thread.Start ()
+    thread.Join ()
+    equal "selection requires host thread" "InvalidOperationException" worker
+
+    equal
+        "repeat selection"
+        true
+        (host.SelectSvgView "half"
+         && host.SelectSvgView "half")
+
+    equal "repeat clear" false (host.SelectSvgView "" || host.SelectSvgView "")
+    host.LoadSvg SvgViewSelection.markup
+
+    equal
+        "replacement document starts unselected"
+        false
+        (match SvgViews.inspect (host.Document.documentElement :?> Ranvier.Dom.SVGSVGElement) with
+         | {
+               UseCurrentView = Ranvier.Dom.SvgViewAvailability.Available active
+           } -> active
+         | _ -> true)
+
+    checks
+
+let private runSurfaces () =
+    let documentLifetime = SvgDocumentLifecycle.run ()
+    let host = WebCoreHost.Create (640, 480)
+    let session = host.Session
+
+    try
+        let shapes =
+            SvgShapes.run host.Document surfaceErrorName "ArgumentNullException" true
+
+        let fontData =
+            System.Convert.ToBase64String (
+                System.IO.File.ReadAllBytes (System.IO.Path.Combine (System.AppContext.BaseDirectory, "Assets", "Ahem.ttf"))
+            )
+
+        let text =
+            SvgText.run host.Document fontData (nativeWait host) (nativePaint host) surfaceErrorName true
+            |> runOnHostThread
+
+        let animations =
+            SvgAnimations.run host.Document (nativeWait host) surfaceErrorName false
+            |> runOnHostThread
+
+        let arguments = viewSelectionArguments host
+        host.LoadSvg SvgViewSelection.markup
+
+        let views =
+            SvgViewSelection.run
+                host.Document
+                (fun fragment -> async { return Some (host.SelectSvgView fragment) })
+                (fun () -> async { host.Frame () |> ignore })
+                SvgViews.inspect
+                true
+                false
+            |> runOnHostThread
+
+        if
+            shapes <> 194
+            || text <> 210
+            || views <> 126
+            || arguments <> 7
+            || animations <> 31
+            || documentLifetime <> 49
+        then
+            failwith "SVG surfaces assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API S03 PASS assertions={shapes}"
+        System.Console.WriteLine $"NATIVE_API S05 PASS assertions={text}"
+        System.Console.WriteLine $"NATIVE_API S06 PASS assertions={views} arguments={arguments}"
+        System.Console.WriteLine $"NATIVE_API S07 PASS assertions={animations}"
+        System.Console.WriteLine $"NATIVE_API SVG_DOCUMENT LIFETIME PASS assertions={documentLifetime}"
+    finally
+        (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith "SVG surfaces fixture leaked native wrappers"
+
+    System.Console.WriteLine "NATIVE_API SVG_SURFACES TEARDOWN PASS"
+    0
+
 [<EntryPoint>]
 let main args =
     if Array.contains "--locales-only" args then
         runLocales ()
+    elif Array.contains "--svg-surfaces-only" args then
+        runSurfaces ()
     elif Array.contains "--svg-only" args then
         let lifecycle = SvgLifecycle.run ()
 
@@ -864,4 +1005,5 @@ let main args =
         System.Console.WriteLine "NATIVE_API C12 TEARDOWN PASS"
         0
     else
+        runSurfaces () |> ignore
         runAll ()

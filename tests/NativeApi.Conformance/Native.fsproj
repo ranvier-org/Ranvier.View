@@ -27,6 +27,11 @@
     <Compile Include="SvgGeometry.fs" />
     <Compile Include="SvgValues.fs" />
     <Compile Include="SvgLifecycle.fs" />
+    <Compile Include="SvgShapes.fs" />
+    <Compile Include="SvgText.fs" />
+    <Compile Include="SvgViewSelection.fs" />
+    <Compile Include="SvgAnimations.fs" />
+    <Compile Include="SvgDocumentLifecycle.fs" />
     <Compile Include="TransformLifecycle.fs" />
     <Compile Include="MatrixLifecycle.fs" />
     <Compile Include="GeometryLifecycle.fs" />
@@ -49,6 +54,7 @@
     <Compile Include="../UserTiming/Native.fs" Link="UserTimingNative.fs" />
     <Compile Include="Native.fs" />
     <ProjectReference Include="../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />
+    <None Include="Assets/Ahem.ttf" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="Ranvier.Css.Dom$(RanvierPackageSuffix)" Version="0.1.0-alpha.1" />
     <PackageReference Include="Ranvier.Css.Bindings$(RanvierPackageSuffix)" Version="0.1.1-alpha.1" />
   </ItemGroup>
