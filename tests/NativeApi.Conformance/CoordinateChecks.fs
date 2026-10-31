@@ -53,6 +53,25 @@ let private rotate degrees =
 let private level (ox, oy) (originX, originY) (transform: Affine) =
     compose (translate (ox + originX) (oy + originY)) (compose transform (translate -originX -originY))
 
+/// <summary>Labels without generic formatting, which NativeAOT cannot print.</summary>
+let private show (p: CoordinatePoint) =
+    string p.X + ", " + string p.Y
+
+let private spaceName (space: CoordinateSpace) =
+    match space with
+    | CoordinateSpace.Element _ -> "element"
+    | CoordinateSpace.Page -> "page"
+    | CoordinateSpace.Client -> "client"
+    | CoordinateSpace.Host -> "host"
+    | CoordinateSpace.Device -> "device"
+
+let private boxName (cssBox: CoordinateBox) =
+    match cssBox with
+    | CoordinateBox.Border -> "border"
+    | CoordinateBox.Padding -> "padding"
+    | CoordinateBox.Content -> "content"
+    | CoordinateBox.Margin -> "margin"
+
 /// <summary>
 /// Checks element-to-page maps under nested 2D and flattened 3D transforms and a scroller against maps composed from
 /// the fixture's CSS, round trips through every ordered pair of spaces, client rectangles, the device ratio, box quads,
@@ -75,7 +94,13 @@ let run (create: unit -> CoordinateService) (document: Document) (foreign: unit 
             abs (expected.X - actual.X) > 1.0 / 64.0
             || abs (expected.Y - actual.Y) > 1.0 / 64.0
         then
-            failwith $"{label}: expected {expected}, got {actual}"
+            failwith (
+                label
+                + ": expected "
+                + show expected
+                + ", got "
+                + show actual
+            )
 
     // Services raise ArgumentNullException, ArgumentException and ObjectDisposedException; Fable erases the types.
     let raises label (action: unit -> unit) =
@@ -168,7 +193,7 @@ let run (create: unit -> CoordinateService) (document: Document) (foreign: unit 
                 "r", r, rMap, 80.0, 50.0
             ] do
             for local in corners w h do
-                near $"{name} {local} to page" (apply map local) (convert $"{name} to page" local (element value) CoordinateSpace.Page)
+                near (name + " " + show local + " to page") (apply map local) (convert (name + " to page") local (element value) CoordinateSpace.Page)
 
         // Every ordered pair of spaces round-trips.
         let spaces (value: Element) =
@@ -188,14 +213,34 @@ let run (create: unit -> CoordinateService) (document: Document) (foreign: unit 
 
                         let there =
                             service.ConvertPoints (sample, from, target)
-                            |> ok $"{name} {from} to {target}"
+                            |> ok (
+                                name
+                                + " "
+                                + spaceName from
+                                + " to "
+                                + spaceName target
+                            )
 
                         let back =
                             service.ConvertPoints (there, target, from)
-                            |> ok $"{name} {target} back to {from}"
+                            |> ok (
+                                name
+                                + " "
+                                + spaceName target
+                                + " back to "
+                                + spaceName from
+                            )
 
                         for index in 0..1 do
-                            near $"{name} {from} -> {target} -> back" sample[index] back[index]
+                            near
+                                (name
+                                 + " "
+                                 + spaceName from
+                                 + " -> "
+                                 + spaceName target
+                                 + " -> back")
+                                sample[index]
+                                back[index]
 
         // Client is getBoundingClientRect's space; at page scale 1 Host is Client, and Device is Host times the ratio.
         let bounds = b.getBoundingClientRect ()
@@ -231,12 +276,12 @@ let run (create: unit -> CoordinateService) (document: Document) (foreign: unit 
             ] do
             let quad =
                 service.BoxQuad (m, cssBox, CoordinateSpace.Page)
-                |> ok $"m {cssBox}"
+                |> ok ("m " + boxName cssBox)
 
-            near $"m {cssBox} p1" (point (mx + x) (my + y)) quad.P1
-            near $"m {cssBox} p2" (point (mx + x + w) (my + y)) quad.P2
-            near $"m {cssBox} p3" (point (mx + x + w) (my + y + h)) quad.P3
-            near $"m {cssBox} p4" (point (mx + x) (my + y + h)) quad.P4
+            near ("m " + boxName cssBox + " p1") (point (mx + x) (my + y)) quad.P1
+            near ("m " + boxName cssBox + " p2") (point (mx + x + w) (my + y)) quad.P2
+            near ("m " + boxName cssBox + " p3") (point (mx + x + w) (my + y + h)) quad.P3
+            near ("m " + boxName cssBox + " p4") (point (mx + x) (my + y + h)) quad.P4
 
         let border =
             service.BoxQuad (o, CoordinateBox.Border, CoordinateSpace.Client)
