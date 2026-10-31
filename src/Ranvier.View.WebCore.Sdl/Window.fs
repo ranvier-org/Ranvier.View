@@ -6,6 +6,8 @@ open System.Runtime.InteropServices
 open System.Text
 open Microsoft.FSharp.NativeInterop
 open SDL
+open Ranvier
+open Ranvier.Dom
 open Ranvier.View.WebCore
 
 module internal Sdl =
@@ -98,6 +100,61 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let mutable cursor = -1
     let mutable disposed = false
 
+    // The window's display, which the host's screen follows through a core effect on the window's own graph.
+    let readDisplay () =
+        let display = SDL3.SDL_GetDisplayForWindow window
+
+        if display = LanguagePrimitives.EnumOfValue 0u then
+            ValueNone
+        else
+            let mutable bounds = SDL_Rect ()
+            let mutable usable = SDL_Rect ()
+
+            if
+                not (Sdl.ok (SDL3.SDL_GetDisplayBounds (display, &&bounds)))
+                || not (Sdl.ok (SDL3.SDL_GetDisplayUsableBounds (display, &&usable)))
+                || bounds.w <= 0
+                || bounds.h <= 0
+            then
+                ValueNone
+            else
+                let mode = SDL3.SDL_GetCurrentDisplayMode display
+
+                let bits =
+                    if NativePtr.isNullPtr mode then
+                        24
+                    else
+                        match SDL3.SDL_BITSPERPIXEL (NativePtr.read mode).format with
+                        | 32
+                        | 0 -> 24
+                        | bits -> bits
+
+                let orientation =
+                    match SDL3.SDL_GetCurrentDisplayOrientation display with
+                    | SDL_DisplayOrientation.SDL_ORIENTATION_LANDSCAPE -> ScreenOrientationType.LandscapePrimary
+                    | SDL_DisplayOrientation.SDL_ORIENTATION_LANDSCAPE_FLIPPED -> ScreenOrientationType.LandscapeSecondary
+                    | SDL_DisplayOrientation.SDL_ORIENTATION_PORTRAIT -> ScreenOrientationType.PortraitPrimary
+                    | SDL_DisplayOrientation.SDL_ORIENTATION_PORTRAIT_FLIPPED -> ScreenOrientationType.PortraitSecondary
+                    | _ when bounds.h > bounds.w -> ScreenOrientationType.PortraitPrimary
+                    | _ -> ScreenOrientationType.LandscapePrimary
+
+                ValueSome
+                    {
+                        Width = bounds.w
+                        Height = bounds.h
+                        UsableLeft = usable.x - bounds.x
+                        UsableTop = usable.y - bounds.y
+                        UsableWidth = max 0 usable.w
+                        UsableHeight = max 0 usable.h
+                        ColorDepth = bits
+                        Orientation = orientation
+                    }
+
+    let mutable displayReader = readDisplay
+    let graph = new Graph ()
+    let mutable displayFeed: IDisposable = null
+    let mutable displaySignal: Signal<DisplayScreen voption> = Unchecked.defaultof<_>
+
     let resize () =
         let mutable width = 0
         let mutable height = 0
@@ -175,6 +232,17 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     let dispatch (event: SDL_Event) =
         match enum<SDL_EventType>(int event.``type``) with
+        | SDL_EventType.SDL_EVENT_DISPLAY_ORIENTATION
+        | SDL_EventType.SDL_EVENT_DISPLAY_ADDED
+        | SDL_EventType.SDL_EVENT_DISPLAY_REMOVED
+        | SDL_EventType.SDL_EVENT_DISPLAY_MOVED
+        | SDL_EventType.SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED
+        | SDL_EventType.SDL_EVENT_DISPLAY_USABLE_BOUNDS_CHANGED when not (isNull (box displaySignal)) -> displaySignal.Value <- displayReader ()
+        | SDL_EventType.SDL_EVENT_WINDOW_DISPLAY_CHANGED when
+            event.window.windowID = id
+            && not (isNull (box displaySignal))
+            ->
+            displaySignal.Value <- displayReader ()
         | SDL_EventType.SDL_EVENT_QUIT -> closed <- true
         | SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED when event.window.windowID = id -> closed <- true
         | SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED
@@ -286,6 +354,18 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     do
         resize ()
+
+        if WebCoreHost.Has "screen" then
+            use _ = graph.Activate ()
+
+            let owner =
+                createRoot (fun owner ->
+                    displaySignal <- createSignal (readDisplay ())
+                    ScreenFeed.follow host displaySignal
+                    owner)
+
+            displayFeed <- owner :> IDisposable
+
         accessibilityAttached <- WindowAccessibility.attach host window
         SDL3.SDL_StartTextInput window |> ignore
 
@@ -468,6 +548,13 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// <summary>Whether Windows UI Automation is attached to the window.</summary>
     member internal _.AccessibilityAttached = accessibilityAttached
 
+    /// <summary>The display the host's screen follows, as the window last read it.</summary>
+    member internal _.Display = displaySignal.Value
+
+    /// <summary>Replaces how the window reads its display on a display event; tests stand in for SDL's displays.</summary>
+    member internal _.SetDisplayReader(reader: unit -> DisplayScreen voption) =
+        displayReader <- reader
+
     interface IDisposable with
         member _.Dispose() =
             if not disposed then
@@ -477,6 +564,10 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                     WindowAccessibility.detach host
                     accessibilityAttached <- false
 
+                if not (isNull displayFeed) then
+                    displayFeed.Dispose ()
+
+                (graph :> IDisposable).Dispose()
                 (presenter :> IDisposable).Dispose()
                 (host :> IDisposable).Dispose()
 
