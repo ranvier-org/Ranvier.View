@@ -104,11 +104,15 @@ const runViewport = async () => {
     const result = await page.evaluate(async () => (await import('/Browser.js')).runViewport());
     if (result.viewport !== VIEWPORT_ASSERTIONS) throw new Error(`Viewport assertions did not run: ${JSON.stringify(result)}`);
     console.log(`BROWSER_API G02/G12 PASS assertions=${result.viewport} engine=chromium`);
+    const scroll = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runViewportScroll(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (scroll.scroll !== SCROLL_ASSERTIONS) throw new Error(`Viewport scrolling assertions did not run: ${JSON.stringify(scroll)}`);
+    console.log(`BROWSER_API G05 PASS assertions=${scroll.scroll} engine=chromium`);
   } finally {
     await viewportBrowser.close();
   }
 };
 const VIEWPORT_ASSERTIONS = 44;
+const SCROLL_ASSERTIONS = 278;
 // D13 runs in its own page: the fixture forms submit into a sink frame of that page.
 const runForms = async () => {
   const formsBrowser = await chromium.launch({ headless: true });

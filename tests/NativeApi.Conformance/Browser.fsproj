@@ -52,6 +52,7 @@
     <Compile Include="CustomEvents.fs" />
     <Compile Include="InputStateChecks.fs" />
     <Compile Include="ViewportChecks.fs" />
+    <Compile Include="ScrollChecks.fs" />
     <Compile Include="FormChecks.fs" />
     <Compile Include="TreeTraversal.fs" />
     <Compile Include="MathMLElements.fs" />

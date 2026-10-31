@@ -903,6 +903,40 @@ let runViewport () =
     }
     |> Async.StartAsPromise
 
+/// <summary>Runs the shared fractional scrolling assertions under device-metrics emulation.</summary>
+let runViewportScroll () =
+    async {
+        let document = document ()
+
+        let settle () =
+            async {
+                for _ in 1..3 do
+                    do! viewportFrames () |> Async.AwaitPromise
+            }
+
+        let driver: ScrollChecks.Driver =
+            {
+                SetScale =
+                    fun scale ->
+                        async {
+                            do! emulateViewport 320 240 scale |> Async.AwaitPromise
+                            do! settle ()
+                        }
+                Settle = settle
+                Snapping = ScrollChecks.RoundHalfUp
+            }
+
+        let! count =
+            ScrollChecks.run
+                document
+                (fun () -> BrowserViewportScroll.forDocument document)
+                (fun () -> BrowserViewport.forDocument document)
+                driver
+
+        return {| scroll = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared form collection, FormData and form event assertions.</summary>
 let runForms () =
     let document = document ()
