@@ -55,7 +55,7 @@ module Highlights =
             | :? NativeObject as target when obj.ReferenceEquals (target.Session, session) -> Interop.handle value
             | _ -> invalidArg name $"The {name} belongs to another provider"
 
-        let owner = unbox<NativeObject> (box document)
+        let owner = unbox<NativeObject>(box document)
 
         let highlight (handle: nativeint) : Highlight =
             session.Object (handle, Kind.Highlight, owner, Func<Session, nativeint, NativeObject>(fun s h -> HighlightObject (s, h)))
@@ -64,11 +64,13 @@ module Highlights =
         // A range enters a highlight through Create or Add, which remembers its wrapper; a range whose wrapper was
         // collected comes back as a new Range or StaticRange.
         let remember (range: AbstractRange) =
-            session.Remember (unbox<NativeObject> (box range))
+            session.Remember (unbox<NativeObject>(box range))
 
         let range (handle: nativeint) : AbstractRange =
             let mutable common = 0n
-            let isRange = NativeDom.rv_dom_range_get_common_ancestor_container (handle, &common) = 0
+
+            let isRange =
+                NativeDom.rv_dom_range_get_common_ancestor_container (handle, &common) = 0
 
             if common <> 0n then
                 Native.rv_node_release common
@@ -78,7 +80,10 @@ module Highlights =
                 Kind.Range,
                 owner,
                 Func<Session, nativeint, NativeObject>(fun s h ->
-                    if isRange then RangeObject (s, h) :> NativeObject else StaticRangeObject (s, h) :> NativeObject)
+                    if isRange then
+                        RangeObject (s, h) :> NativeObject
+                    else
+                        StaticRangeObject (s, h) :> NativeObject)
             )
             |> unbox<AbstractRange>
 
@@ -118,7 +123,13 @@ module Highlights =
                     let mutable sequence = NativeDom.RvDomSequenceAbstractRange ()
                     sequence.present <- 1
                     sequence.count <- handles.Length
-                    sequence.items <- if handles.Length = 0 then 0n else pinned.AddrOfPinnedObject ()
+
+                    sequence.items <-
+                        if handles.Length = 0 then
+                            0n
+                        else
+                            pinned.AddrOfPinnedObject ()
+
                     let mutable result = 0n
 
                     NativeDom.rv_dom_highlight_create (Interop.handle (box document), [| sequence |], &result)

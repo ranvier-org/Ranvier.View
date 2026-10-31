@@ -109,14 +109,14 @@ let run () =
                 with :? InvalidOperationException ->
                     true)
             .GetAwaiter()
-            .GetResult ()
+            .GetResult()
 
     expect wrongThread "a traversal off the host thread raises InvalidOperationException"
 
     // Host disposal releases live walkers and their filters.
     let weakLive, live = walkerWith document root NodeFilterResult.Accept
     let iterator = document.createNodeIterator root
-    (host :> IDisposable).Dispose ()
+    (host :> IDisposable).Dispose()
     expect ((box live :?> NativeObject).Handle = 0n) "host disposal detaches the walker"
     expect ((box iterator :?> NativeObject).Handle = 0n) "host disposal detaches the iterator"
 

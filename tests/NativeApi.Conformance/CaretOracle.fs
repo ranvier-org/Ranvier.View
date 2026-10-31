@@ -71,20 +71,27 @@ let expected =
             "0,0",
             Map.ofList
                 [
-                    "wrap line 1 glyph 0 left half", ("text:wrap#0@document:0 [0,0,0,20]", "text:wrap#0@document:0 [0,0,0,20]", "text:wrap#0@document:0")
-                    "wrap line 1 glyph 0 right half", ("text:wrap#0@document:1 [20,0,0,20]", "text:wrap#0@document:1 [20,0,0,20]", "text:wrap#0@document:1")
-                    "wrap line 1 glyph 1 boundary", ("text:wrap#0@document:1 [20,0,0,20]", "text:wrap#0@document:1 [20,0,0,20]", "text:wrap#0@document:1")
-                    "wrap line 1 last glyph right half", ("text:wrap#0@document:4 [80,0,0,20]", "text:wrap#0@document:4 [80,0,0,20]", "text:wrap#0@document:4")
-                    "wrap line 1 past end inside box", ("text:wrap#0@document:4 [80,0,0,20]", "text:wrap#0@document:4 [80,0,0,20]", "text:wrap#0@document:4")
+                    "wrap line 1 glyph 0 left half",
+                    ("text:wrap#0@document:0 [0,0,0,20]", "text:wrap#0@document:0 [0,0,0,20]", "text:wrap#0@document:0")
+                    "wrap line 1 glyph 0 right half",
+                    ("text:wrap#0@document:1 [20,0,0,20]", "text:wrap#0@document:1 [20,0,0,20]", "text:wrap#0@document:1")
+                    "wrap line 1 glyph 1 boundary",
+                    ("text:wrap#0@document:1 [20,0,0,20]", "text:wrap#0@document:1 [20,0,0,20]", "text:wrap#0@document:1")
+                    "wrap line 1 last glyph right half",
+                    ("text:wrap#0@document:4 [80,0,0,20]", "text:wrap#0@document:4 [80,0,0,20]", "text:wrap#0@document:4")
+                    "wrap line 1 past end inside box",
+                    ("text:wrap#0@document:4 [80,0,0,20]", "text:wrap#0@document:4 [80,0,0,20]", "text:wrap#0@document:4")
                     "wrap line 1 past box", ("BODY#@document:0 [0,0,0,0]", "BODY#@document:0 [0,0,0,0]", "BODY#@document:0")
                     "wrap line 2 start", ("text:wrap#0@document:5 [0,20,0,20]", "text:wrap#0@document:5 [0,20,0,20]", "text:wrap#0@document:5")
                     "wrap line 2 middle", ("text:wrap#0@document:7 [40,20,0,20]", "text:wrap#0@document:7 [40,20,0,20]", "text:wrap#0@document:7")
                     "wrap line 3 end", ("text:wrap#0@document:14 [80,40,0,20]", "text:wrap#0@document:14 [80,40,0,20]", "text:wrap#0@document:14")
                     "wrap below last line", ("BODY#@document:0 [0,0,0,0]", "BODY#@document:0 [0,0,0,0]", "BODY#@document:0")
-                    "wrap fractional 10.5, 10.25", ("text:wrap#0@document:1 [20,0,0,20]", "text:wrap#0@document:1 [20,0,0,20]", "text:wrap#0@document:0")
+                    "wrap fractional 10.5, 10.25",
+                    ("text:wrap#0@document:1 [20,0,0,20]", "text:wrap#0@document:1 [20,0,0,20]", "text:wrap#0@document:0")
                     "wrap fractional 9.99", ("text:wrap#0@document:0 [0,0,0,20]", "text:wrap#0@document:0 [0,0,0,20]", "text:wrap#0@document:0")
                     "wrap fractional 10.01", ("text:wrap#0@document:0 [0,0,0,20]", "text:wrap#0@document:0 [0,0,0,20]", "text:wrap#0@document:0")
-                    "inline AA|BB left", ("text:inline#0@document:2 [40,80,0,20]", "text:inline#0@document:2 [40,80,0,20]", "text:inline#0@document:2")
+                    "inline AA|BB left",
+                    ("text:inline#0@document:2 [40,80,0,20]", "text:inline#0@document:2 [40,80,0,20]", "text:inline#0@document:2")
                     "inline AA|BB right", ("text:b#0@document:0 [40,80,0,20]", "text:b#0@document:0 [40,80,0,20]", "text:b#0@document:0")
                     "inline BB|CC", ("text:i#0@document:0 [80,80,0,20]", "text:i#0@document:0 [80,80,0,20]", "text:i#0@document:0")
                     "inline CC|DD", ("text:i#0@document:2 [120,80,0,20]", "text:i#0@document:2 [120,80,0,20]", "text:i#0@document:2")
@@ -116,9 +123,12 @@ let expected =
             "50,590",
             Map.ofList
                 [
-                    "wrap line 1 glyph 0 left half", ("text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3")
-                    "wrap line 1 glyph 0 right half", ("text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3")
-                    "wrap line 1 glyph 1 boundary", ("text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3")
+                    "wrap line 1 glyph 0 left half",
+                    ("text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3")
+                    "wrap line 1 glyph 0 right half",
+                    ("text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3")
+                    "wrap line 1 glyph 1 boundary",
+                    ("text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3")
                     "wrap line 1 last glyph right half", ("BODY#@document:0 [0,0,0,0]", "BODY#@document:0 [0,0,0,0]", "BODY#@document:0")
                     "wrap line 1 past end inside box", ("BODY#@document:0 [0,0,0,0]", "BODY#@document:0 [0,0,0,0]", "BODY#@document:0")
                     "wrap line 1 past box", ("BODY#@document:0 [0,0,0,0]", "BODY#@document:0 [0,0,0,0]", "BODY#@document:0")
@@ -126,7 +136,8 @@ let expected =
                     "wrap line 2 middle", ("BODY#@document:0 [0,0,0,0]", "BODY#@document:0 [0,0,0,0]", "BODY#@document:0")
                     "wrap line 3 end", ("BODY#@document:0 [0,0,0,0]", "BODY#@document:0 [0,0,0,0]", "BODY#@document:0")
                     "wrap below last line", ("BODY#@document:0 [0,0,0,0]", "BODY#@document:0 [0,0,0,0]", "BODY#@document:0")
-                    "wrap fractional 10.5, 10.25", ("text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3")
+                    "wrap fractional 10.5, 10.25",
+                    ("text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3")
                     "wrap fractional 9.99", ("text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3")
                     "wrap fractional 10.01", ("text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3 [10,10,0,20]", "text:far#0@document:3")
                     "inline AA|BB left", ("BODY#@document:0 [0,0,0,0]", "BODY#@document:0 [0,0,0,0]", "BODY#@document:0")
@@ -161,17 +172,24 @@ let expected =
             "1,21",
             Map.ofList
                 [
-                    "wrap line 1 glyph 0 left half", ("text:wrap#0@document:5 [-1,-1,0,20]", "text:wrap#0@document:5 [-1,-1,0,20]", "text:wrap#0@document:5")
-                    "wrap line 1 glyph 0 right half", ("text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6")
-                    "wrap line 1 glyph 1 boundary", ("text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6")
-                    "wrap line 1 last glyph right half", ("text:wrap#0@document:9 [79,-1,0,20]", "text:wrap#0@document:9 [79,-1,0,20]", "text:wrap#0@document:9")
-                    "wrap line 1 past end inside box", ("text:wrap#0@document:9 [79,-1,0,20]", "text:wrap#0@document:9 [79,-1,0,20]", "text:wrap#0@document:9")
+                    "wrap line 1 glyph 0 left half",
+                    ("text:wrap#0@document:5 [-1,-1,0,20]", "text:wrap#0@document:5 [-1,-1,0,20]", "text:wrap#0@document:5")
+                    "wrap line 1 glyph 0 right half",
+                    ("text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6")
+                    "wrap line 1 glyph 1 boundary",
+                    ("text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6")
+                    "wrap line 1 last glyph right half",
+                    ("text:wrap#0@document:9 [79,-1,0,20]", "text:wrap#0@document:9 [79,-1,0,20]", "text:wrap#0@document:9")
+                    "wrap line 1 past end inside box",
+                    ("text:wrap#0@document:9 [79,-1,0,20]", "text:wrap#0@document:9 [79,-1,0,20]", "text:wrap#0@document:9")
                     "wrap line 1 past box", ("BODY#@document:0 [0,0,0,0]", "BODY#@document:0 [0,0,0,0]", "BODY#@document:0")
                     "wrap line 2 start", ("text:wrap#0@document:10 [-1,19,0,20]", "text:wrap#0@document:10 [-1,19,0,20]", "text:wrap#0@document:10")
                     "wrap line 2 middle", ("text:wrap#0@document:12 [39,19,0,20]", "text:wrap#0@document:12 [39,19,0,20]", "text:wrap#0@document:12")
                     "wrap line 3 end", ("BODY#@document:0 [0,0,0,0]", "BODY#@document:0 [0,0,0,0]", "BODY#@document:0")
-                    "wrap below last line", ("text:inline#0@document:1 [19,59,0,20]", "text:inline#0@document:1 [19,59,0,20]", "text:inline#0@document:1")
-                    "wrap fractional 10.5, 10.25", ("text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6")
+                    "wrap below last line",
+                    ("text:inline#0@document:1 [19,59,0,20]", "text:inline#0@document:1 [19,59,0,20]", "text:inline#0@document:1")
+                    "wrap fractional 10.5, 10.25",
+                    ("text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6")
                     "wrap fractional 9.99", ("text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:5")
                     "wrap fractional 10.01", ("text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6 [19,-1,0,20]", "text:wrap#0@document:6")
                     "inline AA|BB left", ("text:bdo#0@document:0 [119,89,0,20]", "text:bdo#0@document:0 [119,89,0,20]", "text:bdo#0@document:0")
@@ -206,17 +224,24 @@ let expected =
             "0,20",
             Map.ofList
                 [
-                    "wrap line 1 glyph 0 left half", ("text:wrap#0@document:5 [0,0,0,20]", "text:wrap#0@document:5 [0,0,0,20]", "text:wrap#0@document:5")
-                    "wrap line 1 glyph 0 right half", ("text:wrap#0@document:6 [20,0,0,20]", "text:wrap#0@document:6 [20,0,0,20]", "text:wrap#0@document:6")
-                    "wrap line 1 glyph 1 boundary", ("text:wrap#0@document:6 [20,0,0,20]", "text:wrap#0@document:6 [20,0,0,20]", "text:wrap#0@document:6")
-                    "wrap line 1 last glyph right half", ("text:wrap#0@document:9 [80,0,0,20]", "text:wrap#0@document:9 [80,0,0,20]", "text:wrap#0@document:9")
-                    "wrap line 1 past end inside box", ("text:wrap#0@document:9 [80,0,0,20]", "text:wrap#0@document:9 [80,0,0,20]", "text:wrap#0@document:9")
+                    "wrap line 1 glyph 0 left half",
+                    ("text:wrap#0@document:5 [0,0,0,20]", "text:wrap#0@document:5 [0,0,0,20]", "text:wrap#0@document:5")
+                    "wrap line 1 glyph 0 right half",
+                    ("text:wrap#0@document:6 [20,0,0,20]", "text:wrap#0@document:6 [20,0,0,20]", "text:wrap#0@document:6")
+                    "wrap line 1 glyph 1 boundary",
+                    ("text:wrap#0@document:6 [20,0,0,20]", "text:wrap#0@document:6 [20,0,0,20]", "text:wrap#0@document:6")
+                    "wrap line 1 last glyph right half",
+                    ("text:wrap#0@document:9 [80,0,0,20]", "text:wrap#0@document:9 [80,0,0,20]", "text:wrap#0@document:9")
+                    "wrap line 1 past end inside box",
+                    ("text:wrap#0@document:9 [80,0,0,20]", "text:wrap#0@document:9 [80,0,0,20]", "text:wrap#0@document:9")
                     "wrap line 1 past box", ("BODY#@document:0 [0,0,0,0]", "BODY#@document:0 [0,0,0,0]", "BODY#@document:0")
                     "wrap line 2 start", ("text:wrap#0@document:10 [0,20,0,20]", "text:wrap#0@document:10 [0,20,0,20]", "text:wrap#0@document:10")
                     "wrap line 2 middle", ("text:wrap#0@document:12 [40,20,0,20]", "text:wrap#0@document:12 [40,20,0,20]", "text:wrap#0@document:12")
                     "wrap line 3 end", ("BODY#@document:0 [0,0,0,0]", "BODY#@document:0 [0,0,0,0]", "BODY#@document:0")
-                    "wrap below last line", ("text:inline#0@document:0 [0,60,0,20]", "text:inline#0@document:0 [0,60,0,20]", "text:inline#0@document:0")
-                    "wrap fractional 10.5, 10.25", ("text:wrap#0@document:6 [20,0,0,20]", "text:wrap#0@document:6 [20,0,0,20]", "text:wrap#0@document:5")
+                    "wrap below last line",
+                    ("text:inline#0@document:0 [0,60,0,20]", "text:inline#0@document:0 [0,60,0,20]", "text:inline#0@document:0")
+                    "wrap fractional 10.5, 10.25",
+                    ("text:wrap#0@document:6 [20,0,0,20]", "text:wrap#0@document:6 [20,0,0,20]", "text:wrap#0@document:5")
                     "wrap fractional 9.99", ("text:wrap#0@document:5 [0,0,0,20]", "text:wrap#0@document:5 [0,0,0,20]", "text:wrap#0@document:5")
                     "wrap fractional 10.01", ("text:wrap#0@document:5 [0,0,0,20]", "text:wrap#0@document:5 [0,0,0,20]", "text:wrap#0@document:5")
                     "inline AA|BB left", ("text:bidi#0@document:2 [40,90,0,20]", "text:bidi#0@document:2 [40,90,0,20]", "text:bidi#0@document:2")

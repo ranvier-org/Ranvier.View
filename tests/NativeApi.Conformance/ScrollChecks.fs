@@ -134,11 +134,7 @@ let run (document: Document) (create: unit -> ViewportScrollService) (viewport: 
                 events.Clear ()
                 let label = $"{kind}@{scale}"
 
-                let element =
-                    if kind = "viewport" then
-                        document.scrollingElement
-                    else
-                        box
+                let element = if kind = "viewport" then document.scrollingElement else box
 
                 let maximum =
                     element.scrollWidth - element.clientWidth, element.scrollHeight - element.clientHeight
@@ -148,7 +144,12 @@ let run (document: Document) (create: unit -> ViewportScrollService) (viewport: 
                 let read () =
                     if kind = "viewport" then
                         let position = scroller.Position ()
-                        equal (label + " scrollingElement agrees") (position.X, position.Y) (float document.scrollingElement.scrollLeft, float document.scrollingElement.scrollTop)
+
+                        equal
+                            (label + " scrollingElement agrees")
+                            (position.X, position.Y)
+                            (float document.scrollingElement.scrollLeft, float document.scrollingElement.scrollTop)
+
                         position.X, position.Y
                     else
                         float box.scrollLeft, float box.scrollTop
@@ -186,7 +187,8 @@ let run (document: Document) (create: unit -> ViewportScrollService) (viewport: 
                     let mutable settles = 0
 
                     let finished () =
-                        step.Behavior <> ScrollBehavior.Smooth || events.Contains (source + ":scrollend")
+                        step.Behavior <> ScrollBehavior.Smooth
+                        || events.Contains (source + ":scrollend")
 
                     do! driver.Settle ()
 
@@ -198,7 +200,10 @@ let run (document: Document) (create: unit -> ViewportScrollService) (viewport: 
                     equal $"{label} {step.Name} position" target after
 
                     if step.Behavior = ScrollBehavior.Smooth then
-                        let scrolls = events |> Seq.filter (fun item -> item = source + ":scroll") |> Seq.length
+                        let scrolls =
+                            events
+                            |> Seq.filter (fun item -> item = source + ":scroll")
+                            |> Seq.length
 
                         equal
                             $"{label} {step.Name} scroll events then one scrollend"
@@ -211,7 +216,10 @@ let run (document: Document) (create: unit -> ViewportScrollService) (viewport: 
 
                         equal
                             $"{label} {step.Name} events"
-                            (if moved then [ source + ":scroll"; source + ":scrollend" ] else [])
+                            (if moved then
+                                 [ source + ":scroll"; source + ":scrollend" ]
+                             else
+                                 [])
                             (List.ofSeq events)
 
                     events.Clear ()

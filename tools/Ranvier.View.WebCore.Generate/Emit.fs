@@ -160,8 +160,8 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
         ->
         // A null reference for a nullable string, or an optional one without a default, passes length -1.
         let absentAllowed =
-            mapping.GetProperty("nullable").GetBoolean ()
-            || (argument.GetProperty("optional").GetBoolean ()
+            mapping.GetProperty("nullable").GetBoolean()
+            || (argument.GetProperty("optional").GetBoolean()
                 && argument.GetProperty("default").ValueKind = System.Text.Json.JsonValueKind.Null)
 
         // [LegacyNullToEmptyString] converts null to the empty string; any other string argument converts it to "null".
@@ -567,7 +567,10 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
                     let length =
                         if expression = "null" then
                             "-1"
-                        elif expression.EndsWith "| None -> null)" || expression.StartsWith "(if isNull " then
+                        elif
+                            expression.EndsWith "| None -> null)"
+                            || expression.StartsWith "(if isNull "
+                        then
                             $"(if isNull {local} then -1 else {local}.Length)"
                         else
                             local + ".Length"

@@ -9,7 +9,17 @@ let private markup =
     "<form id=\"f\" name=\"main\" action=\"about:blank\" target=\"forms-sink\"><input id=\"a1\" name=\"a\" value=\"1\"><input id=\"a2\" name=\"a\" value=\"2\"><input id=\"idonly\" value=\"i\"><input id=\"x\" name=\"y\" value=\"xy\"><input id=\"y\" name=\"z\" value=\"yz\"><fieldset id=\"fs\"><input id=\"inner\" name=\"inner\" value=\"in\"><output id=\"out\" name=\"out\">o</output></fieldset><input id=\"dis\" name=\"dis\" value=\"d\" disabled><input id=\"cb\" type=\"checkbox\" name=\"cb\" value=\"on\" checked><input id=\"cb2\" type=\"checkbox\" name=\"cb2\" value=\"off\"><input id=\"file\" type=\"file\" name=\"upload\"><input id=\"img\" type=\"image\" name=\"img\"><select id=\"s\" name=\"s\"><option id=\"o1\" value=\"v1\">One</option><optgroup id=\"g\" label=\"G\"><option id=\"o2\" name=\"two\">Two</option></optgroup><option id=\"o3\" value=\"v3\" selected>Three</option></select><textarea id=\"ta\" name=\"ta\">text</textarea><button id=\"b1\" name=\"go\" value=\"one\">Go</button><button id=\"b2\" type=\"button\" name=\"nb\">No</button><button id=\"b3\" type=\"reset\" name=\"rb\">Reset</button><input id=\"sub\" type=\"submit\" name=\"s2\" value=\"Send\"></form><input id=\"outside\" name=\"a\" value=\"3\" form=\"f\"><form id=\"f2\" action=\"about:blank\" target=\"forms-sink\"><button id=\"other\" name=\"other\">Other</button></form><p id=\"p\"></p><iframe name=\"forms-sink\"></iframe>"
 
 let private initial =
-    [ "a", "1"; "a", "2"; "y", "xy"; "z", "yz"; "inner", "in"; "cb", "on"; "upload", "<file>"; "s", "v3"; "ta", "text" ]
+    [
+        "a", "1"
+        "a", "2"
+        "y", "xy"
+        "z", "yz"
+        "inner", "in"
+        "cb", "on"
+        "upload", "<file>"
+        "s", "v3"
+        "ta", "text"
+    ]
 
 /// <summary>The entry list of the fixture form, with the submitter's entry when it is given.</summary>
 let private formEntries (submitter: (string * string) option) =
@@ -52,18 +62,29 @@ let run (document: Document) (create: unit -> FormDataService) (errorName: exn -
     document.body.appendChild host |> ignore
     host.innerHTML <- markup
 
-    let node (id: string) = document.getElementById id
-    let idOf (element: Element) = if isNull element then null else element.id
-    let label (element: Element) = if isNull element then "-" else element.id
-    let flag value = if value then "T" else "F"
+    let node (id: string) =
+        document.getElementById id
+
+    let idOf (element: Element) =
+        if isNull element then null else element.id
+
+    let label (element: Element) =
+        if isNull element then "-" else element.id
+
+    let flag value =
+        if value then "T" else "F"
 
     let ids (collection: HTMLCollection) =
-        [ for index in 0 .. int collection.length - 1 -> (collection.item (uint32 index)).id ]
+        [
+            for index in 0 .. int collection.length - 1 -> (collection.item (uint32 index)).id
+        ]
 
-    let form = unbox<HTMLFormElement> (node "f")
-    let form2 = unbox<HTMLFormElement> (node "f2")
-    let select = unbox<HTMLSelectElement> (node "s")
-    let element (id: string) = unbox<HTMLElement> (node id)
+    let form = unbox<HTMLFormElement>(node "f")
+    let form2 = unbox<HTMLFormElement>(node "f2")
+    let select = unbox<HTMLSelectElement>(node "s")
+
+    let element (id: string) =
+        unbox<HTMLElement>(node id)
 
     let named (name: string) =
         match form.elements.namedItem name with
@@ -71,7 +92,12 @@ let run (document: Document) (create: unit -> FormDataService) (errorName: exn -
         | Some (RadioNodeListOrElement.Element value) -> "element " + value.id
         | Some (RadioNodeListOrElement.RadioNodeList list) ->
             "list "
-            + String.Join (",", [ for index in 0 .. int list.length - 1 -> (unbox<Element> (list.item (uint32 index))).id ])
+            + String.Join (
+                ",",
+                [
+                    for index in 0 .. int list.length - 1 -> (unbox<Element>(list.item (uint32 index))).id
+                ]
+            )
 
     let service = create ()
 
@@ -84,7 +110,27 @@ let run (document: Document) (create: unit -> FormDataService) (errorName: exn -
         // Form controls collection: tree order, form-attribute association, indexed and named lookup.
         equal
             "elements"
-            [ "a1"; "a2"; "idonly"; "x"; "y"; "fs"; "inner"; "out"; "dis"; "cb"; "cb2"; "file"; "s"; "ta"; "b1"; "b2"; "b3"; "sub"; "outside" ]
+            [
+                "a1"
+                "a2"
+                "idonly"
+                "x"
+                "y"
+                "fs"
+                "inner"
+                "out"
+                "dis"
+                "cb"
+                "cb2"
+                "file"
+                "s"
+                "ta"
+                "b1"
+                "b2"
+                "b3"
+                "sub"
+                "outside"
+            ]
             (ids form.elements)
 
         equal "elements.length" 19u form.elements.length
@@ -113,12 +159,15 @@ let run (document: Document) (create: unit -> FormDataService) (errorName: exn -
         equal "options named v1" null (idOf (listed.namedItem "v1"))
 
         let edit = document.createElement "select"
-        edit.innerHTML <- "<option id=\"e1\" value=\"v1\">One</option><optgroup><option id=\"e2\">Two</option></optgroup><option id=\"e3\" selected>Three</option>"
+
+        edit.innerHTML <-
+            "<option id=\"e1\" value=\"v1\">One</option><optgroup><option id=\"e2\">Two</option></optgroup><option id=\"e3\" selected>Three</option>"
+
         (node "p").appendChild edit |> ignore
         let options = (unbox<HTMLSelectElement> edit).options
 
         let option (id: string) =
-            let value = unbox<HTMLOptionElement> (document.createElement "option")
+            let value = unbox<HTMLOptionElement>(document.createElement "option")
             value.id <- id
             value.textContent <- id
             value
@@ -157,11 +206,19 @@ let run (document: Document) (create: unit -> FormDataService) (errorName: exn -
         let onFormData: EventListener =
             fun event ->
                 let data = (unbox<FormDataEvent> event).formData
-                let list = entries data |> List.map (fun (name, value) -> $"{name}={value}")
+
+                let list =
+                    entries data
+                    |> List.map (fun (name, value) -> $"{name}={value}")
+
                 events.Add $"""formdata {flag event.isTrusted}{flag event.bubbles}{flag event.cancelable} {String.Join (";", list)}"""
 
         let line (entries: (string * string) list) =
-            String.Join (";", entries |> List.map (fun (name, value) -> $"{name}={value}"))
+            String.Join (
+                ";",
+                entries
+                |> List.map (fun (name, value) -> $"{name}={value}")
+            )
 
         form.addEventListener ("submit", onSubmit)
         form.addEventListener ("formdata", onFormData)
@@ -173,23 +230,26 @@ let run (document: Document) (create: unit -> FormDataService) (errorName: exn -
 
         form.requestSubmit ()
 
-        equal
-            "requestSubmit()"
-            [ "submit TTT -"; $"formdata TTF {line (formEntries None)}" ]
-            (drain ())
+        equal "requestSubmit()" [ "submit TTT -"; $"formdata TTF {line (formEntries None)}" ] (drain ())
 
         form.requestSubmit (element "b1")
 
         equal
             "requestSubmit(b1)"
-            [ "submit TTT b1"; $"""formdata TTF {line (formEntries (Some ("go", "one")))}""" ]
+            [
+                "submit TTT b1"
+                $"""formdata TTF {line (formEntries (Some ("go", "one")))}"""
+            ]
             (drain ())
 
         form.requestSubmit (element "sub")
 
         equal
             "requestSubmit(sub)"
-            [ "submit TTT sub"; $"""formdata TTF {line (formEntries (Some ("s2", "Send")))}""" ]
+            [
+                "submit TTT sub"
+                $"""formdata TTF {line (formEntries (Some ("s2", "Send")))}"""
+            ]
             (drain ())
 
         prevent <- true
@@ -225,7 +285,13 @@ let run (document: Document) (create: unit -> FormDataService) (errorName: exn -
         equal "File entry size" 0.0 (float file.size)
 
         fromForm.append ("upload", "text")
-        equal "getAll mixed" [ "<file>"; "text" ] (service.GetAll (fromForm, "upload") |> Array.map text |> List.ofArray)
+
+        equal
+            "getAll mixed"
+            [ "<file>"; "text" ]
+            (service.GetAll (fromForm, "upload")
+             |> Array.map text
+             |> List.ofArray)
 
         let data = service.Create ()
         equal "empty entries" [] (entries data)
@@ -258,7 +324,17 @@ let run (document: Document) (create: unit -> FormDataService) (errorName: exn -
 
         equal
             "listener edits"
-            [ "y", "xy"; "z", "yz"; "inner", "in"; "cb", "on"; "upload", "<file>"; "s", "v3"; "ta", "T"; "s2", "Send"; "extra", "e" ]
+            [
+                "y", "xy"
+                "z", "yz"
+                "inner", "in"
+                "cb", "on"
+                "upload", "<file>"
+                "s", "v3"
+                "ta", "T"
+                "s2", "Send"
+                "extra", "e"
+            ]
             (entries edited)
 
         form.removeEventListener ("formdata", onEdit)
@@ -266,20 +342,50 @@ let run (document: Document) (create: unit -> FormDataService) (errorName: exn -
 
         // Constructed events are untrusted and carry their init members.
         let submit =
-            service.CreateSubmitEvent ("submit", { EventOptions.Default with Cancelable = true }, element "b1")
+            service.CreateSubmitEvent (
+                "submit",
+                { EventOptions.Default with
+                    Cancelable = true
+                },
+                element "b1"
+            )
 
-        equal "SubmitEvent" ("submit", false, false, true, "b1") (submit.``type``, submit.isTrusted, submit.bubbles, submit.cancelable, idOf submit.submitter)
-        let custom = service.CreateSubmitEvent ("custom", { EventOptions.Default with Bubbles = true }, null)
+        equal
+            "SubmitEvent"
+            ("submit", false, false, true, "b1")
+            (submit.``type``, submit.isTrusted, submit.bubbles, submit.cancelable, idOf submit.submitter)
+
+        let custom =
+            service.CreateSubmitEvent (
+                "custom",
+                { EventOptions.Default with
+                    Bubbles = true
+                },
+                null
+            )
+
         equal "SubmitEvent without submitter" ("custom", true, null) (custom.``type``, custom.bubbles, idOf custom.submitter)
         let held = service.Create ()
         held.append ("k", "v")
-        let constructed = service.CreateFormDataEvent ("formdata", { EventOptions.Default with Bubbles = true }, held)
+
+        let constructed =
+            service.CreateFormDataEvent (
+                "formdata",
+                { EventOptions.Default with
+                    Bubbles = true
+                },
+                held
+            )
+
         equal "FormDataEvent" ("formdata", false, true) (constructed.``type``, constructed.isTrusted, constructed.bubbles)
         equal "FormDataEvent.formData" [ ("k", "v") ] (entries constructed.formData)
         held.append ("k2", "w")
         equal "FormDataEvent shares its FormData" [ "k", "v"; "k2", "w" ] (entries constructed.formData)
         let mutable seen = []
-        let onConstructed: EventListener = fun event -> seen <- entries (unbox<FormDataEvent> event).formData
+
+        let onConstructed: EventListener =
+            fun event -> seen <- entries (unbox<FormDataEvent> event).formData
+
         form.addEventListener ("formdata", onConstructed)
         equal "dispatch constructed FormDataEvent" true (form.dispatchEvent constructed)
         equal "dispatched FormDataEvent entries" [ "k", "v"; "k2", "w" ] seen
@@ -288,7 +394,9 @@ let run (document: Document) (create: unit -> FormDataService) (errorName: exn -
         checks <- checks + 1
 
         try
-            service.CreateFormDataEvent ("formdata", EventOptions.Default, null) |> ignore
+            service.CreateFormDataEvent ("formdata", EventOptions.Default, null)
+            |> ignore
+
             failwith "CreateFormDataEvent accepted a null FormData"
         with :? ArgumentNullException ->
             ()

@@ -80,7 +80,7 @@ module EventDetails =
                 let memory =
                     Marshal.AllocHGlobal (Marshal.SizeOf<NativeDom.RvDomUnionDoubleOrCSSNumericValueNullable>())
 
-                Marshal.StructureToPtr<NativeDom.RvDomUnionDoubleOrCSSNumericValueNullable> (union, memory, false)
+                Marshal.StructureToPtr<NativeDom.RvDomUnionDoubleOrCSSNumericValueNullable>(union, memory, false)
                 memory
 
         let free (memory: nativeint) =

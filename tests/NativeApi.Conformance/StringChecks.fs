@@ -49,7 +49,7 @@ let run (document: Document) (createEvents: unit -> EventDetailService) (createB
     tokens.setAttribute ("class", "a\u0000b a")
     tokens.classList.remove "a\u0000b"
     equal "classList.remove" "a" (tokens.getAttribute "class")
-    let hidden = unbox<HTMLElement> (element ())
+    let hidden = unbox<HTMLElement>(element ())
     hidden.hidden <- Some (BooleanOrUnrestrictedDoubleOrDOMString.DOMString "until-found\u0000x")
     equal "hidden with a suffix after U+0000" "" (hidden.getAttribute "hidden")
     hidden.hidden <- Some (BooleanOrUnrestrictedDoubleOrDOMString.DOMString "until-found")
@@ -64,11 +64,36 @@ let run (document: Document) (createEvents: unit -> EventDetailService) (createB
 
     // Dictionary string fields.
     use events = createEvents ()
-    let error = events.CreateErrorEvent ("error", EventOptions.Default, { ErrorFields.Default with Message = "m\u0000sg" })
+
+    let error =
+        events.CreateErrorEvent (
+            "error",
+            EventOptions.Default,
+            { ErrorFields.Default with
+                Message = "m\u0000sg"
+            }
+        )
+
     equal "ErrorEventInit.message" "m\u0000sg" error.message
     use binary = createBinary ()
-    let blob = binary.CreateBlob ([||], { BlobOptions.Default with Type = "text/plain\u0000x" })
+
+    let blob =
+        binary.CreateBlob (
+            [||],
+            { BlobOptions.Default with
+                Type = "text/plain\u0000x"
+            }
+        )
+
     equal "BlobPropertyBag.type with U+0000" "" blob.``type``
-    let plain = binary.CreateBlob ([||], { BlobOptions.Default with Type = "Text/Plain" })
+
+    let plain =
+        binary.CreateBlob (
+            [||],
+            { BlobOptions.Default with
+                Type = "Text/Plain"
+            }
+        )
+
     equal "BlobPropertyBag.type" "text/plain" plain.``type``
     checks

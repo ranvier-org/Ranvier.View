@@ -1299,6 +1299,7 @@ let runStrings () =
         StringChecks.run document (fun () -> BrowserEventDetails.forDocument document) (fun () -> BrowserBinaryValues.forDocument document)
 
     {| strings = count |}
+
 /// <summary>Runs the shared diagnostics assertions.</summary>
 let runDiagnostics () =
     let document = document ()

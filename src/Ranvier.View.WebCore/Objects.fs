@@ -544,7 +544,11 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         let mutable existing = null
 
         match objectTable.TryGetValue key with
-        | true, weak when weak.TryGetTarget (&existing) && existing.Handle = target.Handle -> ()
+        | true, weak when
+            weak.TryGetTarget (&existing)
+            && existing.Handle = target.Handle
+            ->
+            ()
         | _ -> objectTable[key] <- WeakReference<NativeObject>(target)
 
     /// <summary>Consumes an owned reference, reusing a live wrapper or creating one anchored to its owner.</summary>

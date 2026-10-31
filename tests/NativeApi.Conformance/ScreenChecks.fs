@@ -17,10 +17,12 @@ type Driver =
 // The Chromium 156 oracle of Ranvier.WebCore tests/fixtures/screen-oracle.json: type and angle pairs of the natural
 // landscape orientation.
 let private cases =
-    [ 1920, 1080, ScreenOrientationType.LandscapePrimary, 0
-      1080, 1920, ScreenOrientationType.PortraitPrimary, 90
-      2560, 1440, ScreenOrientationType.LandscapeSecondary, 180
-      768, 1024, ScreenOrientationType.PortraitSecondary, 270 ]
+    [
+        1920, 1080, ScreenOrientationType.LandscapePrimary, 0
+        1080, 1920, ScreenOrientationType.PortraitPrimary, 90
+        2560, 1440, ScreenOrientationType.LandscapeSecondary, 180
+        768, 1024, ScreenOrientationType.PortraitSecondary, 270
+    ]
 
 /// <summary>
 /// Checks Screen and ScreenOrientation values, change delivery and orientation locking on one provider; the result is
@@ -82,16 +84,27 @@ let run (create: unit -> ScreenService) (driver: Driver) =
         do! driver.Set (first, firstHeight, firstOrientation)
         do! driver.Settle ()
         equal "a disposed subscription receives nothing" count delivered.Count
-        raises "a null handler" (fun () -> service.Subscribe (Unchecked.defaultof<_>) |> ignore)
+
+        raises "a null handler" (fun () ->
+            service.Subscribe (Unchecked.defaultof<_>)
+            |> ignore)
+
         let! locked = service.Lock "portrait"
 
-        equal "lock(portrait)" driver.LockResolves (
-            match locked with
-            | ScreenLockOutcome.Locked -> true
-            | _ -> false
-        )
+        equal
+            "lock(portrait)"
+            driver.LockResolves
+            (match locked with
+             | ScreenLockOutcome.Locked -> true
+             | _ -> false)
 
-        equal "lock outcome" (if driver.LockResolves then ScreenLockOutcome.Locked else ScreenContract.unsupportedLock) locked
+        equal
+            "lock outcome"
+            (if driver.LockResolves then
+                 ScreenLockOutcome.Locked
+             else
+                 ScreenContract.unsupportedLock)
+            locked
 
         service.Unlock ()
         raises "an unknown lock type" (fun () -> service.Lock "sideways" |> ignore)

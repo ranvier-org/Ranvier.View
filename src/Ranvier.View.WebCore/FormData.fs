@@ -8,7 +8,8 @@ open RanvierWebCoreAbi
 
 /// <summary>FormData objects, SubmitEvents and FormDataEvents of a native host.</summary>
 module FormData =
-    let private bytes (value: string) = Encoding.UTF8.GetBytes value
+    let private bytes (value: string) =
+        Encoding.UTF8.GetBytes value
 
     let private entryValue (file: nativeint -> File) (union: NativeDom.RvDomUnionFileOrUSVString) =
         if union.present <> 1 then
@@ -29,8 +30,7 @@ module FormData =
         if count < 0 || (count > 0 && items = 0n) then
             invalidOp "WebCore returned an invalid FormData sequence"
 
-        Array.init count (fun index ->
-            read (Marshal.PtrToStructure<'T>(items + nativeint (index * Marshal.SizeOf<'T>()))))
+        Array.init count (fun index -> read (Marshal.PtrToStructure<'T>(items + nativeint (index * Marshal.SizeOf<'T>()))))
 
     /// <summary>A FormData service for <c>host</c>'s current document.</summary>
     /// <remarks>Raises NotSupportedException when the native library lacks the DOMFormData constructor.</remarks>
@@ -41,7 +41,12 @@ module FormData =
 
         host.EnsureActive ()
 
-        if not (WebCoreHost.Has "dom-constructor:DOMFormData" && WebCoreHost.Has "dom-form-data-entries") then
+        if
+            not (
+                WebCoreHost.Has "dom-constructor:DOMFormData"
+                && WebCoreHost.Has "dom-form-data-entries"
+            )
+        then
             raise (NotSupportedException "The native library has no FormData functions")
 
         let session = host.Session
@@ -67,7 +72,7 @@ module FormData =
             session.Object (
                 handle,
                 Kind.FormData,
-                unbox<NativeObject> (box document),
+                unbox<NativeObject>(box document),
                 Func<Session, nativeint, NativeObject>(fun s h -> DOMFormDataObject (s, h))
             )
             |> unbox<DOMFormData>
@@ -82,7 +87,7 @@ module FormData =
                 session.Object (
                     handle,
                     Kind.Blob,
-                    unbox<NativeObject> (box document),
+                    unbox<NativeObject>(box document),
                     Func<Session, nativeint, NativeObject>(fun s h -> FileObject (s, h))
                 )
                 |> unbox<File>)
@@ -159,16 +164,16 @@ module FormData =
                     if result.present <> 1 then
                         invalidOp "WebCore returned an absent FormData entry snapshot"
 
-                    sequence
-                        result.items
-                        result.count
-                        (fun (entry: NativeDom.RvDomPairUSVStringAndUnionFileOrUSVString) ->
-                            let name = Interop.spanText entry.key
+                    sequence result.items result.count (fun (entry: NativeDom.RvDomPairUSVStringAndUnionFileOrUSVString) ->
+                        let name = Interop.spanText entry.key
 
-                            if entry.present <> 1 || isNull name then
-                                invalidOp "WebCore returned an invalid FormData entry"
+                        if entry.present <> 1 || isNull name then
+                            invalidOp "WebCore returned an invalid FormData entry"
 
-                            { Name = name; Value = value entry.value })
+                        {
+                            Name = name
+                            Value = value entry.value
+                        })
                 finally
                     NativeDom.rv_dom_sequence_pair_usv_string_and_union_file_or_usv_string_release &result
 
@@ -187,7 +192,7 @@ module FormData =
                 NativeDom.rv_dom_submit_event_create (Interop.handle (box document), eventType, eventType.Length, [| dictionary |], &result)
                 |> Interop.check "SubmitEvent constructor"
 
-                unbox<SubmitEvent> (session.Event result)
+                unbox<SubmitEvent>(session.Event result)
 
             member _.CreateFormDataEvent(eventType, options, data) =
                 check ()
@@ -204,7 +209,8 @@ module FormData =
                 NativeDom.rv_dom_form_data_event_create (Interop.handle (box document), eventType, eventType.Length, [| dictionary |], &result)
                 |> Interop.check "FormDataEvent constructor"
 
-                unbox<FormDataEvent> (session.Event result)
+                unbox<FormDataEvent>(session.Event result)
 
-            member _.Dispose() = disposed.Value <- true
+            member _.Dispose() =
+                disposed.Value <- true
         }
