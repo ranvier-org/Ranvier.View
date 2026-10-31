@@ -1951,6 +1951,119 @@ let private runBlobUrls () =
     System.Console.WriteLine $"NATIVE_API B144 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared coordinate fixture with page scale, thread and teardown checks.</summary>
+[<Literal>]
+let private CoordinateChecksCount = 304
+
+let private runCoordinates () =
+    let host = WebCoreHost.Create (320, 240)
+    let other = WebCoreHost.Create (100, 80)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let point x y : Ranvier.Dom.CoordinatePoint = { X = x; Y = y }
+    let client = Ranvier.Dom.CoordinateSpace.Client
+    let hostSpace = Ranvier.Dom.CoordinateSpace.Host
+    let page = Ranvier.Dom.CoordinateSpace.Page
+    let mutable held = None
+
+    let shared =
+        try
+            let foreign () =
+                let value = other.Document.createElement "div"
+                other.Document.body.appendChild value |> ignore
+                value
+
+            host.SetDeviceScale 2.0f
+
+            let count =
+                CoordinateChecks.run
+                    (fun () -> Ranvier.View.WebCore.Coordinates.forHost host)
+                    host.Document
+                    foreign
+                    (fun () -> 2.0)
+                    CoordinateChecks.Native
+
+            let service = Ranvier.View.WebCore.Coordinates.forHost host
+
+            // While page-scaled, HOST is CLIENT times the page scale in both directions.
+            RanvierWebCoreAbi.Native.rv_host_set_page_scale (host.Handle, 2.0, 40, 60)
+            |> fun status -> if status <> 0 then failwith $"rv_host_set_page_scale {status}"
+
+            expect (service.Convert (point 10.0 20.0, client, hostSpace) = Ok (point 20.0 40.0)) "Client to host doubles at page scale 2"
+            expect (service.Convert (point 10.0 20.0, hostSpace, client) = Ok (point 5.0 10.0)) "Host to client halves at page scale 2"
+            expect (service.Convert (point 10.0 20.0, client, page) = Ok (point 30.0 50.0)) "Page is client plus the scaled origin"
+
+            expect
+                (service.Convert (point 5.0 10.0, hostSpace, Ranvier.Dom.CoordinateSpace.Device) = Ok (point 10.0 20.0))
+                "Device is host times the device scale"
+
+            RanvierWebCoreAbi.Native.rv_host_set_page_scale (host.Handle, 1.0, 0, 0)
+            |> fun status -> if status <> 0 then failwith $"rv_host_set_page_scale {status}"
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.Convert (point 0.0 0.0, client, hostSpace) |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "A conversion rejects another thread"
+            let body = host.Document.body
+            let stranger = other.Document.body
+            (other :> System.IDisposable).Dispose ()
+
+            expect
+                (service.Convert (point 0.0 0.0, Ranvier.Dom.CoordinateSpace.Element stranger, client) = Error Ranvier.Dom.CoordinateUnavailable.Detached)
+                "An element of a disposed host is detached"
+
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+
+            expect
+                (service.Convert (point 0.0 0.0, Ranvier.Dom.CoordinateSpace.Element body, client) = Error Ranvier.Dom.CoordinateUnavailable.Detached)
+                "An element of a replaced document is detached"
+
+            expect
+                (service.Convert (point 0.0 0.0, client, Ranvier.Dom.CoordinateSpace.Element body) = Error Ranvier.Dom.CoordinateUnavailable.Detached)
+                "A conversion into an element of a replaced document is detached"
+
+            expect (service.Convert (point 1.0 2.0, client, page) = Ok (point 1.0 2.0)) "The replacing document converts"
+            held <- Some service
+            count
+        finally
+            (other :> System.IDisposable).Dispose ()
+            (host :> System.IDisposable).Dispose ()
+
+    expect (session.LiveObjects = 0) "Coordinate fixture leaves no live native objects"
+    let service = held.Value
+
+    let rejected =
+        try
+            service.Convert (point 0.0 0.0, page, client) |> ignore
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect rejected "A held coordinate service rejects conversions after host disposal"
+    service.Dispose ()
+
+    if shared <> CoordinateChecksCount then
+        failwith $"Coordinate shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API G14 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G14 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared cascade fixture with native thread, snapshot release and teardown checks.</summary>
 [<Literal>]
 let private CascadeChecksCount = 609
@@ -2661,6 +2774,7 @@ let private runAll () =
     runStrings () |> ignore
     runDiagnostics () |> ignore
     runCascade () |> ignore
+    runCoordinates () |> ignore
     runBlobUrls () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
@@ -3673,6 +3787,9 @@ let main args =
         0
     elif Array.contains "--cascade-only" args then
         runCascade () |> ignore
+        0
+    elif Array.contains "--coordinates-only" args then
+        runCoordinates () |> ignore
         0
     elif Array.contains "--crypto-only" args then
         runCrypto () |> ignore

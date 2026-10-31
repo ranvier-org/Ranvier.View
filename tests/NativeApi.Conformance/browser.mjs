@@ -337,6 +337,20 @@ const runCascade = async () => {
   }
 };
 const CASCADE_ASSERTIONS = 51;
+// G14 runs the coordinate fixture in its own page.
+const runCoordinates = async () => {
+  const coordinatesBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await coordinatesBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runCoordinates(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.coordinates !== COORDINATE_ASSERTIONS) throw new Error(`Coordinate assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API G14 PASS assertions=${result.coordinates} engine=chromium`);
+  } finally {
+    await coordinatesBrowser.close();
+  }
+};
+const COORDINATE_ASSERTIONS = 304;
 // D14 runs the form submission fixture in its own page; the provider keeps the page in place.
 const runSubmissions = async () => {
   const submissionsBrowser = await chromium.launch({ headless: true });
@@ -428,6 +442,7 @@ try {
   else if (stringsOnly) { await runStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
+  else if (process.argv.includes('--coordinates-only')) { await runCoordinates(); process.exitCode = 0; }
   else if (screenOnly) { await runScreen(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
   else if (eventDetailsOnly) { await runEventDetails(); process.exitCode = 0; }
@@ -670,6 +685,7 @@ try {
   await runStrings();
   await runDiagnostics();
   await runCascade();
+  await runCoordinates();
   await runBlobUrls();
   await runScreen();
   await runEventDetails();
