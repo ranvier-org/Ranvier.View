@@ -58,6 +58,7 @@
     <Compile Include="FormChecks.fs" />
     <Compile Include="UrlChecks.fs" />
     <Compile Include="SubmissionChecks.fs" />
+    <Compile Include="EventDetailChecks.fs" />
     <Compile Include="DialogChecks.fs" />
     <Compile Include="BinaryChecks.fs" />
     <Compile Include="TreeTraversal.fs" />

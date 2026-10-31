@@ -1007,6 +1007,132 @@ let private runUrls () =
     System.Console.WriteLine $"NATIVE_API H13 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared event detail fixture with native type, thread and teardown checks.</summary>
+[<Literal>]
+let private EventDetailChecksCount = 91
+
+let private runEventDetails () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let raisesType (accept: exn -> bool) (action: unit -> unit) =
+        try
+            action ()
+            false
+        with error ->
+            accept error
+
+    let driver: EventDetailChecks.Driver =
+        {
+            Settle =
+                fun () ->
+                    async {
+                        host.Cycle 16 |> ignore
+                        host.Frame ()
+                    }
+        }
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                EventDetailChecks.run host.Document (fun () -> Ranvier.View.WebCore.EventDetails.forHost host) driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 60000L do
+                host.Cycle () |> ignore
+                host.Frame ()
+
+            let count = count.GetAwaiter().GetResult()
+            let service = Ranvier.View.WebCore.EventDetails.forHost host
+            let options = Ranvier.Dom.EventOptions.Default
+
+            let error =
+                service.CreateErrorEvent ("error", options, Ranvier.Dom.ErrorFields.Default)
+
+            expect (box error :? Ranvier.Dom.ErrorEvent) "An ErrorEvent wraps as ErrorEvent"
+
+            let animation =
+                service.CreateAnimationEvent ("animationend", options, Ranvier.Dom.AnimationFields.Default)
+
+            expect (box animation :? Ranvier.Dom.AnimationEvent) "An AnimationEvent wraps as AnimationEvent"
+
+            expect
+                (raisesType (fun error -> error :? System.ArgumentNullException) (fun () ->
+                    service.CreateErrorEvent (null, options, Ranvier.Dom.ErrorFields.Default)
+                    |> ignore))
+                "A null event type raises ArgumentNullException"
+
+            expect
+                (raisesType (fun error -> error :? System.ArgumentException) (fun () ->
+                    service.CreateProgressEvent (
+                        "progress",
+                        options,
+                        { Ranvier.Dom.ProgressFields.Default with
+                            Loaded = nan
+                        }
+                    )
+                    |> ignore))
+                "A NaN loaded raises ArgumentException"
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        raisesType (fun error -> error :? System.InvalidOperationException) (fun () ->
+                            service.CreateProgressEvent ("progress", options, Ranvier.Dom.ProgressFields.Default)
+                            |> ignore))
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "A constructor rejects another thread"
+            held <- Some (service, error)
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    let service, error = held.Value
+
+    expect
+        (raisesType (fun error -> error :? System.ObjectDisposedException) (fun () -> error.message |> ignore))
+        "A constructed ErrorEvent raises ObjectDisposedException after host disposal"
+
+    expect
+        (raisesType
+            (fun error ->
+                error :? System.ObjectDisposedException
+                || error :? System.InvalidOperationException)
+            (fun () ->
+                service.CreateErrorEvent ("error", Ranvier.Dom.EventOptions.Default, Ranvier.Dom.ErrorFields.Default)
+                |> ignore))
+        "A constructor after host disposal raises"
+
+    expect (session.LiveObjects = 0) "Event detail fixture leaves no live native objects"
+    service.Dispose ()
+
+    expect
+        (raisesType (fun error -> error :? System.ObjectDisposedException) (fun () ->
+            service.CreatePopStateEvent ("popstate", Ranvier.Dom.EventOptions.Default, false)
+            |> ignore))
+        "A constructor after disposal raises ObjectDisposedException"
+
+    if shared <> EventDetailChecksCount then
+        failwith $"Event detail shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API I08 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API I08 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared form submission fixture with native exception, thread and teardown checks.</summary>
 [<Literal>]
 let private SubmissionChecksCount = 26
@@ -1656,6 +1782,7 @@ let private runAll () =
     runBinary () |> ignore
     runUrls () |> ignore
     runSubmissions () |> ignore
+    runEventDetails () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
@@ -2646,6 +2773,9 @@ let main args =
         0
     elif Array.contains "--submissions-only" args then
         runSubmissions () |> ignore
+        0
+    elif Array.contains "--event-details-only" args then
+        runEventDetails () |> ignore
         0
     elif Array.contains "--dialogs-only" args then
         runDialogs () |> ignore

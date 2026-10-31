@@ -1041,6 +1041,20 @@ let runSubmissions () =
     }
     |> Async.StartAsPromise
 
+/// <summary>Runs the shared event detail assertions.</summary>
+let runEventDetails () =
+    async {
+        let document = document ()
+
+        let driver: EventDetailChecks.Driver = { Settle = fun () -> Async.Sleep 16 }
+
+        let! count =
+            EventDetailChecks.run document (fun () -> BrowserEventDetails.forDocument document) driver
+
+        return {| eventDetails = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared caret hit-testing assertions under device-metrics emulation.</summary>
 let runCaret () =
     async {

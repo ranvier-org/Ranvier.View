@@ -31,46 +31,9 @@ module internal Factories =
         | 2 -> AttrObject (session, handle)
         | _ -> NodeObject (session, handle)
 
+    /// <summary>The wrapper of the event's exposed interface, from the native Event type query.</summary>
     let event (session: Session) (handle: nativeint) : NativeObject =
-        match Native.rv_event_interface handle with
-        | 1 -> UIEventObject (session, handle)
-        | 2 ->
-            let mutable mode = 0u
-
-            if NativeDom.rv_dom_wheel_event_get_delta_mode (handle, &mode) = 0 then
-                WheelEventObject (session, handle)
-            else
-                MouseEventObject (session, handle)
-        | 3 -> PointerEventObject (session, handle)
-        | 4 -> KeyboardEventObject (session, handle)
-        | 5 -> InputEventObject (session, handle)
-        | 6 -> FocusEventObject (session, handle)
-        | 7 ->
-            let mutable probe = 0n
-
-            if NativeDom.rv_dom_submit_event_get_submitter (handle, &probe) = 0 then
-                if probe <> 0n then
-                    Native.rv_node_release probe
-
-                SubmitEventObject (session, handle)
-            elif NativeDom.rv_dom_form_data_event_get_form_data (handle, &probe) = 0 then
-                if probe <> 0n then
-                    NativeDom.rv_dom_dom_form_data_release probe
-
-                FormDataEventObject (session, handle)
-            elif NativeDom.rv_dom_toggle_event_get_source (handle, &probe) = 0 then
-                if probe <> 0n then
-                    Native.rv_node_release probe
-
-                ToggleEventObject (session, handle)
-            elif NativeDom.rv_dom_command_event_get_source (handle, &probe) = 0 then
-                if probe <> 0n then
-                    Native.rv_node_release probe
-
-                CommandEventObject (session, handle)
-            else
-                EventObject (session, handle)
-        | _ -> EventObject (session, handle)
+        Classes.Event (session, handle)
 
 /// <summary>Posts work to a host's loop, which runs it on the host thread during <c>WebCoreHost.Cycle</c>.</summary>
 [<Sealed>]
