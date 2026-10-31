@@ -1,4 +1,4 @@
-238 classes; 2623 members: 2594 mapped to 2514 of 2592 rv_dom_* functions, 29 hand-written, 0 unmapped
+238 classes; 2623 members: 2594 mapped to 2514 of 2594 rv_dom_* functions, 29 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_blob_create: Blob.constructor (op)
