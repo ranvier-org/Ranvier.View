@@ -20,8 +20,9 @@ module VisualViewport =
 
     /// <summary>The provider over the visual viewport of <c>host</c>'s current document.</summary>
     /// <remarks>
-    /// Operations run on the host's creating thread. Reads report <c>Detached</c> once the document's window has no
-    /// frame, as after the host loads another page, and after the host is disposed.
+    /// Operations run on the host's creating thread. Reads report <c>Detached</c> once the host shows another document
+    /// or is disposed, and when the engine reports that the window has no frame. A browser navigation likewise
+    /// detaches the previous Window's visual viewport.
     /// </remarks>
     /// <exception cref="T:System.NotSupportedException">The native library has no visual-viewport functions.</exception>
     let provider (host: WebCoreHost) : VisualViewportProvider =
@@ -43,7 +44,11 @@ module VisualViewport =
             host.Session.Object (handle, Kind.VisualViewport, document, Func<_, _, _>(fun s h -> VisualViewportObject (s, h))) :?> NativeObject
 
         let read () =
-            if viewport.Handle = 0n then
+            // The engine reuses the frame's window for a replacement document; the provider stays with its document.
+            if
+                viewport.Handle = 0n
+                || not (obj.ReferenceEquals (host.Document, box document))
+            then
                 Error VisualViewportUnavailable.Detached
             else
                 host.EnsureActive ()

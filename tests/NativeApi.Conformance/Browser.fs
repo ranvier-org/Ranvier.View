@@ -989,6 +989,18 @@ let private wheel (x: int) (y: int) (deltaX: float) (deltaY: float) : JS.Promise
 [<Emit("$0.defaultView.scrollTo($1, $2)")>]
 let private windowScrollTo (document: Document) (x: float) (y: float) : unit = jsNative
 
+[<Emit("new Promise(resolve => { const frame = document.createElement('iframe'); frame.onload = () => resolve(frame); frame.srcdoc = '<body>first'; document.body.append(frame) })")>]
+let private createFrame () : JS.Promise<obj> = jsNative
+
+[<Emit("$0.contentDocument")>]
+let private frameDocument (frame: obj) : Document = jsNative
+
+[<Emit("new Promise(resolve => { $0.onload = () => resolve(); $0.srcdoc = '<body>second' })")>]
+let private navigateFrame (frame: obj) : JS.Promise<unit> = jsNative
+
+[<Emit("$0.remove()")>]
+let private removeFrame (frame: obj) : unit = jsNative
+
 /// <summary>Runs the shared visual viewport assertions under device-metrics and page-scale emulation.</summary>
 let runVisualViewport () =
     async {
@@ -1045,7 +1057,32 @@ let runVisualViewport () =
         let! count =
             VisualViewportChecks.run document (windowScrollTo document) (fun () -> BrowserVisualViewport.forDocument document) driver
 
-        return {| visualViewport = count |}
+        // A navigation gives the frame a new Window: the held visual viewport reads zeros, which the provider reports
+        // as Detached, and a provider for the new document reads it.
+        let! frame = createFrame () |> Async.AwaitPromise
+        let held = BrowserVisualViewport.forDocument (frameDocument frame)
+        let mutable navigation = 0
+
+        let expect condition message =
+            navigation <- navigation + 1
+
+            if not condition then
+                failwith message
+
+        expect (Result.isOk (held.Current ())) "the frame's visual viewport reads before navigation"
+        do! navigateFrame frame |> Async.AwaitPromise
+        expect (held.Current () = Error VisualViewportUnavailable.Detached) "the held visual viewport is detached after navigation"
+        let next = BrowserVisualViewport.forDocument (frameDocument frame)
+        expect (Result.isOk (next.Current ())) "the navigated document's visual viewport reads"
+        held.Dispose ()
+        next.Dispose ()
+        removeFrame frame
+
+        return
+            {|
+                visualViewport = count
+                navigation = navigation
+            |}
     }
     |> Async.StartAsPromise
 

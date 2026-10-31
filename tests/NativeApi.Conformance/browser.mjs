@@ -117,7 +117,9 @@ const runViewport = async () => {
     await page.exposeFunction('__nativeApiWheel', async (x, y, deltaX, deltaY) => { await page.mouse.move(x, y); await page.mouse.wheel(deltaX, deltaY); });
     const visual = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runVisualViewport(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (visual.visualViewport !== VISUAL_VIEWPORT_ASSERTIONS) throw new Error(`Visual viewport assertions did not run: ${JSON.stringify(visual)}`);
+    if (visual.navigation !== 3) throw new Error(`Visual viewport navigation assertions did not run: ${JSON.stringify(visual)}`);
     console.log(`BROWSER_API G03 PASS assertions=${visual.visualViewport} engine=chromium`);
+    console.log(`BROWSER_API G03 NAVIGATION PASS assertions=${visual.navigation} engine=chromium`);
   } finally {
     await viewportBrowser.close();
   }

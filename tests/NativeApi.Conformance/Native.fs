@@ -708,9 +708,10 @@ let private runVisualViewport () =
                 "page scale 2 halves the visual viewport"
 
             host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
-            // The engine keeps the frame's window for the replacement document, and with it the visual viewport.
+            // The engine keeps the frame's window for the replacement document; the earlier provider reports Detached,
+            // as a browser's VisualViewport does after its frame navigates.
+            expect (service.Current () = Error Ranvier.Dom.VisualViewportUnavailable.Detached) "The replaced document's visual viewport is detached"
             let replacement = Ranvier.View.WebCore.VisualViewport.forHost host
-            expect (service.Current () = replacement.Current ()) "The replacement document keeps the window's visual viewport"
 
             expect
                 (match replacement.Current () with
