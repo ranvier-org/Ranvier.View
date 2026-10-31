@@ -112,7 +112,7 @@ module StyleSheets =
                         nullArg "options.Media"
 
                     media.tag <- NativeDom.RV_DOM_UNION_MEDIA_LIST_OR_DOM_STRING_STRING
-                    media.arm1 <- inputs.Text text
+                    media.arm1 <- inputs.TextSpan text
                 | MediaList list ->
                     media.tag <- NativeDom.RV_DOM_UNION_MEDIA_LIST_OR_DOM_STRING_MEDIA_LIST
                     media.arm0 <- (native "options.Media" (box list)).Handle
@@ -128,7 +128,7 @@ module StyleSheets =
 
                 let mutable init = NativeDom.RvDomCSSStyleSheetInit ()
                 init.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomCSSStyleSheetInit>())
-                init.base_url <- baseUrl
+                init.base_url <- inputs.TextInput (Option.ofObj baseUrl)
                 init.media <- inputs.Pin [| media |]
                 init.disabled <- if options.Disabled then 1 else 0
 

@@ -7,6 +7,9 @@ open Ranvier.Dom
 [<Emit("document")>]
 let private document () : Document = jsNative
 
+[<Emit("location.origin")>]
+let private origin () : string = jsNative
+
 [<Emit("queueMicrotask($0)")>]
 let private post (action: unit -> unit) : unit = jsNative
 
@@ -18,6 +21,188 @@ let private windowlessDocument () : Document = jsNative
 
 [<Emit("$0.name || 'Error'")>]
 let private errorName (error: exn) : string = jsNative
+
+let private svgRealmTargets (target: Document) =
+    let root =
+        target.createElementNS ("http://www.w3.org/2000/svg", "svg") :?> SVGSVGElement
+
+    root.id <- "native-api-svg-realm"
+    target.body.appendChild root |> ignore
+
+    let dictionary =
+        DOMMatrix2DInit (m11 = Some 2., m12 = Some 3., m21 = Some 4., m22 = Some 5., m41 = Some 6., m42 = Some 7.)
+
+    let setter = root.createSVGTransform ()
+    setter.setMatrix dictionary
+
+    [|
+        root.createSVGTransformFromMatrix dictionary
+        root.transform.baseVal.createSVGTransformFromMatrix dictionary
+        setter
+    |]
+
+[<Emit("""(async () => {
+    const frame=document.createElement('iframe');
+    let checks=0;
+    const check=(value,label)=>{checks++;if(!value)throw new Error(label);};
+    try {
+        const loaded=new Promise(resolve=>frame.addEventListener('load',resolve,{once:true}));
+        frame.srcdoc='<!doctype html><body></body>';document.body.append(frame);await loaded;
+        for(const target of [document,frame.contentDocument]) {
+            const values=$0(target),realm=target.defaultView,fields=['a','b','c','d','e','f'],expected=[2,3,4,5,6,7];
+            for(const value of values) {
+                check(Object.getPrototypeOf(value)===realm.SVGTransform.prototype,'SVG transform realm');
+                check(Object.getPrototypeOf(value.matrix)===realm.SVGMatrix.prototype,'SVG matrix realm');
+                for(let i=0;i<fields.length;i++)check(value.matrix[fields[i]]===expected[i],'SVG alias coefficient');
+            }
+            for(let i=0;i<values.length;i++)for(let j=i+1;j<values.length;j++)check(values[i].matrix!==values[j].matrix,'SVG independent matrix results');
+        }
+        return checks;
+    } finally {document.getElementById('native-api-svg-realm')?.remove();frame.remove();}
+})()""")>]
+let private svgRealmProof (create: Document -> SVGTransform array) : JS.Promise<int> = jsNative
+
+/// <summary>Runs shared SVG geometry/values and compiled matrix-dictionary adapters in two browser realms.</summary>
+let runSvg () =
+    async {
+        let target = document ()
+        let geometry = SvgGeometry.run target errorName
+        let values = SvgValues.run target errorName true false
+
+        let! context =
+            svgRealmProof svgRealmTargets
+            |> Async.AwaitPromise
+
+        if geometry <> 126 || values <> 361 || context <> 54 then
+            failwith "SVG shared/realm assertions did not run"
+
+        return
+            {|
+                svgGeometry = geometry
+                svgValues = values
+                svgContext = context
+            |}
+    }
+    |> Async.StartAsPromise
+
+[<Emit("new Promise(resolve => setTimeout(resolve, $0))")>]
+let private delay (milliseconds: int) : JS.Promise<unit> = jsNative
+
+[<Emit("fetch('/Ahem.ttf').then(r => r.arrayBuffer()).then(b => { let s = ''; for (const v of new Uint8Array(b)) s += String.fromCharCode(v); return btoa(s); })")>]
+let private ahem () : JS.Promise<string> = jsNative
+
+[<Emit("globalThis.__nativeApiPaintAt($0, $1)")>]
+let private paintAt (x: float) (y: float) : JS.Promise<bool> = jsNative
+
+[<Emit("""(async () => {
+    const frame = document.createElement('iframe');
+    frame.id = 'native-api-svg-view';
+    frame.style.cssText = 'width:300px;height:300px;border:0';
+    const loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+    frame.src = URL.createObjectURL(new Blob([$0], {type:'image/svg+xml'}));
+    document.body.append(frame);
+    await loaded;
+    return frame.contentDocument;
+})()""")>]
+let private svgDocument (markup: string) : JS.Promise<Document> = jsNative
+
+[<Emit("new Promise(resolve => $0.defaultView.requestAnimationFrame(() => $0.defaultView.requestAnimationFrame(() => resolve())))")>]
+let private frames (target: Document) : JS.Promise<unit> = jsNative
+
+[<Emit("document.getElementById('native-api-svg-view')?.remove()")>]
+let private removeViewFrame () : unit = jsNative
+
+let private wait (milliseconds: int) =
+    delay milliseconds |> Async.AwaitPromise
+
+/// <summary>Runs shared SVG shapes, text, standalone views and SMIL controls in Chromium.</summary>
+let runSvgSurfaces () =
+    async {
+        let target = document ()
+        let shapes = SvgShapes.run target errorName "Error" false
+        let! fontData = ahem () |> Async.AwaitPromise
+
+        let! text =
+            SvgText.run target fontData wait (fun (x, y) -> paintAt x y |> Async.AwaitPromise) errorName false
+
+        let! animations = SvgAnimations.run target wait errorName true
+
+        let! standalone =
+            svgDocument SvgViewSelection.markup
+            |> Async.AwaitPromise
+
+        let mutable arguments = 0
+
+        let outcome action =
+            try
+                action ()
+                "accepted"
+            with error ->
+                error.Message
+
+        let expect label (expected: string) (actual: string) =
+            arguments <- arguments + 1
+
+            if not (actual.Contains expected) then
+                failwithf "%s: expected %s, got %s" label expected actual
+
+        expect "null fragment rejects" "fragment" (outcome (fun () -> SvgViews.requestView standalone null))
+        expect "HTML document rejects" "SVG XML document" (outcome (fun () -> SvgViews.requestView target "half"))
+
+        let! views =
+            SvgViewSelection.run
+                standalone
+                (fun fragment ->
+                    async {
+                        SvgViews.requestView standalone fragment
+                        return None
+                    })
+                (fun () -> frames standalone |> Async.AwaitPromise)
+                SvgViews.inspect
+                false
+                true
+
+        removeViewFrame ()
+        expect "inactive document rejects" "no longer active" (outcome (fun () -> SvgViews.requestView standalone "half"))
+
+        return
+            {|
+                svgShapes = shapes
+                svgText = text
+                svgViews = views
+                svgViewArguments = arguments
+                svgAnimations = animations
+            |}
+    }
+    |> Async.StartAsPromise
+
+[<Emit("globalThis.__nativeApiPixelAt($0, $1)")>]
+let private pixelAt (x: float) (y: float) : JS.Promise<int array> = jsNative
+
+let private pixel (x: float, y: float) =
+    async {
+        let! value = pixelAt x y |> Async.AwaitPromise
+        return value[0], value[1], value[2]
+    }
+
+/// <summary>Runs shared SVG paint servers, filters, clipping and resources in Chromium.</summary>
+let runSvgPaint () =
+    async {
+        let target = document ()
+        let! paint = SvgPaintServers.run target pixel errorName
+        let! filters = SvgFilters.run target pixel errorName
+        let! clipping = SvgClipping.run target pixel errorName
+        let! resources = SvgResources.run target pixel wait errorName
+
+        return
+            {|
+                svgPaint = paint
+                svgFilters = filters
+                svgClipping = clipping
+                svgResources = resources
+            |}
+    }
+    |> Async.StartAsPromise
 
 [<Emit("$0.constructor.name + ':' + $0.message")>]
 let private disposalError (error: exn) : string = jsNative
@@ -284,6 +469,81 @@ let private resizeViewport (width: int) (height: int) : JS.Promise<unit> = jsNat
 })()""")>]
 let private cssEscapeOracle (escape: string -> string) : int = jsNative
 
+[<Emit("""(async () => {
+    const frame = document.createElement('iframe');
+    try {
+        frame.srcdoc = '<body>locale first</body>';
+        let loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        document.body.append(frame); await loaded;
+        const oldDocument = frame.contentDocument;
+        const call = $0(oldDocument);
+        if (!call()) throw new Error('Live locale context rejected');
+        loaded = new Promise(resolve => frame.addEventListener('load', resolve, {once:true}));
+        frame.srcdoc = '<body>locale replacement</body>'; await loaded;
+        if (oldDocument === frame.contentDocument) throw new Error('Locale document identity did not change');
+        if (call()) throw new Error('Old locale context stayed active');
+        if (!$0(frame.contentDocument)()) throw new Error('Replacement locale context rejected');
+        return 4;
+    } finally { frame.remove(); }
+})()""")>]
+let private localeDocumentLifetime (createCall: Document -> System.Func<bool>) : JS.Promise<int> = jsNative
+
+let private localeCall document =
+    let service = Ranvier.Dom.Locales.forDocument document
+
+    System.Func<bool>(fun () ->
+        try
+            service.Current |> ignore
+            true
+        with _ ->
+            false)
+
+let runLocales () =
+    async {
+        let create () =
+            Ranvier.Dom.Locales.forDocument (document ())
+
+        let service = create ()
+        let mutable nullRejected = false
+
+        try
+            Ranvier.Dom.Locales.forDocument Unchecked.defaultof<Document>
+            |> ignore
+        with :? System.ArgumentNullException ->
+            nullRejected <- true
+
+        if not nullRejected then
+            failwith "Locale provider accepted a null document"
+
+        let mutable windowlessRejected = false
+
+        try
+            Ranvier.Dom.Locales.forDocument (windowlessDocument ())
+            |> ignore
+        with :? System.NotSupportedException ->
+            windowlessRejected <- true
+
+        if not windowlessRejected then
+            failwith "Locale provider fabricated windowless preferences"
+
+        let! context =
+            localeDocumentLifetime localeCall
+            |> Async.AwaitPromise
+
+        return
+            {|
+                locales = LocalePreferences.run create
+                localeDeterministic = LocalePreferences.deterministic ()
+                localeContext = context + 2
+                localeProvider = service.ProviderName
+                localePolicy = service.LocaleCanonicalization
+                timeZonePolicy = service.TimeZoneCanonicalization
+                localeAlias = service.CanonicalizeLocale "iw-IL"
+                timeZoneAlias = service.CanonicalizeTimeZone "US/Eastern"
+            |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the focused registration fixture and document-navigation ownership proof.</summary>
 let runCustomProperties () =
     async {
@@ -400,15 +660,761 @@ let runStyleValues () =
     }
     |> Async.StartAsPromise
 
+[<Emit("new Promise(resolve => setTimeout(resolve, 0))")>]
+let private macrotask () : JS.Promise<unit> = jsNative
+
+[<Emit("$0.reason")>]
+let private rawReason (signal: obj) : obj = jsNative
+
+[<Emit("$0 === $1")>]
+let private identical (left: obj) (right: obj) : bool = jsNative
+
+/// <summary>Checks raw realm reason identity, capability facts and the active-window requirement.</summary>
+let private cancellationInterop (document: Document) =
+    async {
+        let mutable checks = 0
+
+        let expect condition message =
+            checks <- checks + 1
+
+            if not condition then
+                failwith message
+
+        use service = BrowserCancellation.forDocument document
+        let source = service.CreateController ()
+        let composite = service.Any [| source.Signal |]
+        source.Abort (AbortReason.Custom (TimingDetail.Object [| "code", TimingDetail.Number 3.0 |]))
+        let raw = BrowserCancellation.rawSignal source.Signal
+        expect (identical (rawReason raw) (rawReason raw)) "Raw reason keeps its identity"
+        expect (identical (rawReason raw) (rawReason (BrowserCancellation.rawSignal composite))) "AbortSignal.any keeps the raw reason object"
+        expect (unbox<float>((rawReason raw)?code) = 3.0) "Raw reason carries the portable payload"
+        let timeout = service.Abort AbortReason.Timeout
+        expect (unbox<string>((rawReason (BrowserCancellation.rawSignal timeout))?name) = "TimeoutError") "Timeout reason is a realm TimeoutError"
+        let defaulted = service.Abort AbortReason.Abort
+        expect (unbox<string>((rawReason (BrowserCancellation.rawSignal defaulted))?name) = "AbortError") "Default reason is a realm AbortError"
+        use registry = Ranvier.Dom.Capabilities.create ()
+
+        use _registration =
+            registry.Register (BrowserCancellation.capabilityProvider document)
+
+        for name in [ "abort"; "timeout"; "any" ] do
+            let! report =
+                registry.Observe (
+                    Ranvier.Dom.Capabilities.key CapabilityCategory.PlatformFacility ("abort-signal-" + name),
+                    System.Threading.CancellationToken.None
+                )
+                |> Async.AwaitTask
+
+            expect (report.Exported.State = CapabilityState.Yes) $"Realm defines AbortSignal.{name}"
+            expect (report.Available.State = CapabilityState.Unknown) $"AbortSignal.{name} availability stays unknown"
+
+        try
+            BrowserCancellation.forDocument (windowlessDocument ())
+            |> ignore
+
+            failwith "Cancellation accepted a document without a Window"
+        with :? System.NotSupportedException ->
+            checks <- checks + 1
+
+        return checks
+    }
+
+[<Emit("fetch($0).then(r => r.arrayBuffer()).then(b => new Uint8Array(b))")>]
+let private fixtureBytes (url: string) : JS.Promise<byte array> = jsNative
+
+[<Emit("Uint8Array.from(atob($0), c => c.charCodeAt(0))")>]
+let private base64 (text: string) : byte array = jsNative
+
+[<Literal>]
+let private ResourcePng =
+    "iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAYAAACddGYaAAAAEUlEQVR4nGP4z8DwH4YZkDkAm34L9XKwuTwAAAAASUVORK5CYII="
+
+/// <summary>Runs the shared resource-service assertions over Image.decode, FontFace and document.fonts.</summary>
+/// <remarks>Chromium resolves decode for a PNG with corrupt image data, and a revoked object URL reaches no provider.</remarks>
+let runResources () =
+    async {
+        let document = document ()
+
+        let! font =
+            fixtureBytes "/fixtures/Ahem.ttf"
+            |> Async.AwaitPromise
+
+        let fixture: Resources.Fixture =
+            {
+                Png = base64 ResourcePng
+                CorruptPng =
+                    base64
+                        "iVBORw0KGgoAAAANSUhEUgAAAAMAAAACCAYAAACddGYaAAAAKUlEQVR4nAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJ4rAmh4AAAAASUVORK5CYII="
+                Font = font
+            }
+
+        let image (url: string) =
+            let element = document.createElement "img"
+
+            let source =
+                if url.EndsWith "/element.png" then
+                    "data:image/png;base64,"
+                    + ResourcePng
+                    + "#/element.png"
+                else
+                    url
+
+            element.setAttribute ("src", source)
+            element
+
+        let engine: Resources.Engine =
+            {
+                CorruptImageDecodes = true
+                TransportReleaseRequests = 0
+                ReleaseEngineCaches = ignore
+            }
+
+        let! count =
+            Resources.run engine fixture (fun provider -> BrowserResources.forDocument document provider) image
+
+        return {| resources = count |}
+    }
+    |> Async.StartAsPromise
+
+[<Emit("globalThis.__nativeApiSetActive($0)")>]
+let private setActive (active: bool) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiMouse($0, $1, $2)")>]
+let private mouse (action: string) (x: int) (y: int) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiTab()")>]
+let private tab () : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared input state assertions with Playwright input and page activation.</summary>
+/// <remarks>The page runs in new headless Chromium, where bringing another page to the front deactivates it.</remarks>
+let runInputState () =
+    async {
+        let document = document ()
+
+        let driver: InputStateChecks.Driver =
+            {
+                SetActive = fun active -> setActive active |> Async.AwaitPromise
+                Move = fun x y -> mouse "move" x y |> Async.AwaitPromise
+                Press = fun x y -> mouse "down" x y |> Async.AwaitPromise
+                Release = fun x y -> mouse "up" x y |> Async.AwaitPromise
+                Tab = fun () -> tab () |> Async.AwaitPromise
+            }
+
+        let! count =
+            InputStateChecks.run document (fun () -> BrowserInput.forDocument document) BrowserInput.capabilities CapabilityState.Yes driver
+
+        return {| inputState = count |}
+    }
+    |> Async.StartAsPromise
+
+[<Emit("globalThis.__nativeApiViewport($0, $1, $2)")>]
+let private emulateViewport (width: int) (height: int) (scale: float) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiPaintSize()")>]
+let private paintSize () : JS.Promise<int array> = jsNative
+
+[<Emit("new Promise(resolve => { let done = false; const finish = () => { if (!done) { done = true; setTimeout(resolve, 100) } }; requestAnimationFrame(() => requestAnimationFrame(finish)); setTimeout(finish, 400) })")>]
+let private viewportFrames () : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared viewport assertions with Chromium device-metrics emulation and page activation.</summary>
+/// <remarks>Headless Chromium keeps the page visible, so the visibility steps are native-only.</remarks>
+[<Emit("new Promise(resolve => setTimeout(resolve, $0))")>]
+let private sleep (milliseconds: float) : JS.Promise<unit> = jsNative
+
+[<Emit("new Promise(resolve => requestAnimationFrame(() => resolve()))")>]
+let private animationFrame () : JS.Promise<unit> = jsNative
+
+[<Emit("Promise.resolve()")>]
+let private resolved () : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared frame fixture on the manual scheduler and on the document Window.</summary>
+let runFrames () =
+    async {
+        let manual = ManualFrameScheduler ()
+
+        let! manualCount =
+            FrameChecks.run
+                (fun () -> manual :> FrameScheduler)
+                {
+                    Checkpoint = fun () -> async { manual.RunMicrotasks () }
+                    Elapse = fun milliseconds -> async { manual.Advance milliseconds }
+                    NextFrame = fun () -> async { manual.RunFrame () }
+                }
+
+        let document = document ()
+
+        let! count =
+            FrameChecks.run
+                (fun () -> BrowserFrames.forDocument document)
+                {
+                    Checkpoint = fun () -> resolved () |> Async.AwaitPromise
+                    Elapse = fun milliseconds -> sleep (milliseconds + 5.0) |> Async.AwaitPromise
+                    NextFrame = fun () -> animationFrame () |> Async.AwaitPromise
+                }
+
+        return
+            {|
+                frames = count
+                manualFrames = manualCount
+            |}
+    }
+    |> Async.StartAsPromise
+
+[<Emit("new Promise(resolve => requestIdleCallback(() => resolve()))")>]
+let private idlePeriod () : JS.Promise<unit> = jsNative
+
+[<Emit("new Promise(resolve => { const end = performance.now() + $0; const spin = setInterval(() => { const s = performance.now(); while (performance.now() - s < 15) {} if (performance.now() >= end) { clearInterval(spin); setTimeout(resolve, 0); } }, 0); })")>]
+let private starve (milliseconds: float) : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared idle fixture on the manual scheduler and on the document Window.</summary>
+let runIdle () =
+    async {
+        let manual = ManualFrameScheduler ()
+
+        let! manualCount =
+            IdleChecks.run
+                (fun () -> manual :> IdleScheduler, manual :> FrameScheduler)
+                {
+                    Idle = fun () -> async { manual.RunIdle 50.0 }
+                    NextFrame = fun () -> async { manual.RunFrame () }
+                    Starve = fun milliseconds -> async { manual.Advance milliseconds }
+                }
+
+        let document = document ()
+
+        let! count =
+            IdleChecks.run
+                (fun () -> (BrowserIdle.forDocument document).Value, BrowserFrames.forDocument document)
+                {
+                    Idle = fun () -> idlePeriod () |> Async.AwaitPromise
+                    NextFrame = fun () -> animationFrame () |> Async.AwaitPromise
+                    Starve = fun milliseconds -> starve milliseconds |> Async.AwaitPromise
+                }
+
+        let! observation =
+            (BrowserIdle.capabilities document).Observe IdleCapabilities.key System.Threading.CancellationToken.None
+            |> Async.AwaitTask
+
+        return
+            {|
+                idle = count
+                manualIdle = manualCount
+                available = (observation.Value.Available.State = CapabilityState.Yes)
+            |}
+    }
+    |> Async.StartAsPromise
+
+let runViewport () =
+    async {
+        let document = document ()
+
+        let settle () =
+            async {
+                for _ in 1..3 do
+                    do! viewportFrames () |> Async.AwaitPromise
+            }
+
+        let driver: ViewportChecks.Driver =
+            {
+                Resize =
+                    fun width height scale ->
+                        async {
+                            do!
+                                emulateViewport width height scale
+                                |> Async.AwaitPromise
+
+                            do! settle ()
+                        }
+                Settle = settle
+                SetActive =
+                    fun active ->
+                        async {
+                            do! setActive active |> Async.AwaitPromise
+                            do! settle ()
+                        }
+                SetVisible = None
+                PaintSize =
+                    fun () ->
+                        async {
+                            let! size = paintSize () |> Async.AwaitPromise
+                            return size[0], size[1]
+                        }
+                PaintRounds = true
+                OuterIsViewport = false
+            }
+
+        let! count =
+            ViewportChecks.run document (fun () -> BrowserViewport.forDocument document) driver
+
+        return {| viewport = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared fractional scrolling assertions under device-metrics emulation.</summary>
+let runViewportScroll () =
+    async {
+        let document = document ()
+
+        let settle () =
+            async {
+                for _ in 1..3 do
+                    do! viewportFrames () |> Async.AwaitPromise
+            }
+
+        let driver: ScrollChecks.Driver =
+            {
+                SetScale =
+                    fun scale ->
+                        async {
+                            do!
+                                emulateViewport 320 240 scale
+                                |> Async.AwaitPromise
+
+                            do! settle ()
+                        }
+                Settle = settle
+                Snapping = ScrollChecks.RoundHalfUp
+            }
+
+        let! count =
+            ScrollChecks.run document (fun () -> BrowserViewportScroll.forDocument document) (fun () -> BrowserViewport.forDocument document) driver
+
+        return {| scroll = count |}
+    }
+    |> Async.StartAsPromise
+
+[<Emit("globalThis.__nativeApiPageScale($0)")>]
+let private emulatePageScale (scale: float) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiWheel($0, $1, $2, $3)")>]
+let private wheel (x: int) (y: int) (deltaX: float) (deltaY: float) : JS.Promise<unit> = jsNative
+
+[<Emit("$0.defaultView.scrollTo($1, $2)")>]
+let private windowScrollTo (document: Document) (x: float) (y: float) : unit = jsNative
+
+[<Emit("new Promise(resolve => { const frame = document.createElement('iframe'); frame.onload = () => resolve(frame); frame.srcdoc = '<body>first'; document.body.append(frame) })")>]
+let private createFrame () : JS.Promise<obj> = jsNative
+
+[<Emit("$0.contentDocument")>]
+let private frameDocument (frame: obj) : Document = jsNative
+
+[<Emit("new Promise(resolve => { $0.onload = () => resolve(); $0.srcdoc = '<body>second' })")>]
+let private navigateFrame (frame: obj) : JS.Promise<unit> = jsNative
+
+[<Emit("$0.remove()")>]
+let private removeFrame (frame: obj) : unit = jsNative
+
+/// <summary>Runs the shared visual viewport assertions under device-metrics and page-scale emulation.</summary>
+let runVisualViewport () =
+    async {
+        let document = document ()
+        let mutable size = 320, 240
+        let mutable deviceScale = 1.0
+
+        let settle () =
+            async {
+                for _ in 1..3 do
+                    do! viewportFrames () |> Async.AwaitPromise
+            }
+
+        let emulate () =
+            async {
+                do!
+                    emulateViewport (fst size) (snd size) deviceScale
+                    |> Async.AwaitPromise
+
+                do! settle ()
+            }
+
+        let driver: VisualViewportChecks.Driver =
+            {
+                Resize =
+                    fun width height ->
+                        size <- width, height
+                        emulate ()
+                SetDeviceScale =
+                    fun scale ->
+                        deviceScale <- scale
+                        emulate ()
+                SetPageScale =
+                    fun service scale _ _ ->
+                        async {
+                            match service.SetPageScale (scale, 0, 0) with
+                            | Error (VisualViewportUnavailable.Unsupported _) -> ()
+                            | other -> failwith $"The browser page scale input: {other}"
+
+                            do! emulatePageScale scale |> Async.AwaitPromise
+                            do! settle ()
+                        }
+                Wheel =
+                    fun x y dx dy ->
+                        async {
+                            do! wheel x y dx dy |> Async.AwaitPromise
+                            do! settle ()
+                        }
+                Settle = settle
+                Engine = VisualViewportChecks.Chromium
+                HostInsets = false
+            }
+
+        let! count =
+            VisualViewportChecks.run document (windowScrollTo document) (fun () -> BrowserVisualViewport.forDocument document) driver
+
+        // A navigation gives the frame a new Window: the held visual viewport reads zeros, which the provider reports
+        // as Detached, and a provider for the new document reads it.
+        let! frame = createFrame () |> Async.AwaitPromise
+        let held = BrowserVisualViewport.forDocument (frameDocument frame)
+        let mutable navigation = 0
+
+        let expect condition message =
+            navigation <- navigation + 1
+
+            if not condition then
+                failwith message
+
+        expect (Result.isOk (held.Current ())) "the frame's visual viewport reads before navigation"
+        do! navigateFrame frame |> Async.AwaitPromise
+        expect (held.Current () = Error VisualViewportUnavailable.Detached) "the held visual viewport is detached after navigation"
+        let next = BrowserVisualViewport.forDocument (frameDocument frame)
+        expect (Result.isOk (next.Current ())) "the navigated document's visual viewport reads"
+        held.Dispose ()
+        next.Dispose ()
+        removeFrame frame
+
+        return
+            {|
+                visualViewport = count
+                navigation = navigation
+            |}
+    }
+    |> Async.StartAsPromise
+
+[<Emit("globalThis.__nativeApiKey($0)")>]
+let private key (name: string) : JS.Promise<unit> = jsNative
+
+[<Emit("navigator.userAgent.includes('Windows')")>]
+let private crlfLineEndings () : bool = jsNative
+
+[<Emit("globalThis.__nativeApiClick($0, $1)")>]
+let private click (x: int) (y: int) : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared dialog, popover and command invoker assertions with Playwright keyboard and mouse input.</summary>
+let runDialogs () =
+    async {
+        let document = document ()
+
+        let driver: DialogChecks.Driver =
+            {
+                Settle = fun () -> viewportFrames () |> Async.AwaitPromise
+                Press = fun name -> key name |> Async.AwaitPromise
+                Click = fun x y -> click x y |> Async.AwaitPromise
+                Backend = DialogChecks.Chromium
+            }
+
+        let! count =
+            DialogChecks.run document (fun () -> BrowserToggleEvents.forDocument document) driver errorName
+
+        return {| dialogs = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared Blob, File, FileList and FormData File assertions.</summary>
+let runBinary () =
+    async {
+        let document = document ()
+
+        let driver: BinaryChecks.Driver =
+            {
+                Settle = fun () -> Async.Sleep 1
+                CrlfLineEndings = crlfLineEndings ()
+            }
+
+        let! count =
+            BinaryChecks.run document (fun () -> BrowserBinaryValues.forDocument document) (fun () -> BrowserForms.forDocument document) driver
+
+        return {| binary = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared blob URL and FileReader assertions.</summary>
+let runBlobUrls () =
+    async {
+        let document = document ()
+
+        let driver: BlobUrlChecks.Driver =
+            {
+                Settle = fun () -> Async.Sleep 1
+                CharsetFromType = false
+                Origin = origin ()
+            }
+
+        let! count =
+            BlobUrlChecks.run (fun () -> BrowserBlobUrls.forDocument document) (fun () -> BrowserBinaryValues.forDocument document) driver
+
+        return {| blobUrls = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared form submission assertions.</summary>
+let runSubmissions () =
+    async {
+        let document = document ()
+
+        let driver: SubmissionChecks.Driver = { Settle = fun () -> Async.Sleep 20 }
+
+        let! count =
+            SubmissionChecks.run document (fun () -> BrowserFormSubmission.forDocument document) driver
+
+        return {| submissions = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared event detail assertions.</summary>
+let runEventDetails () =
+    async {
+        let document = document ()
+
+        let driver: EventDetailChecks.Driver = { Settle = fun () -> Async.Sleep 16 }
+
+        let! count =
+            EventDetailChecks.run document (fun () -> BrowserEventDetails.forDocument document) driver
+
+        return {| eventDetails = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared caret hit-testing assertions under device-metrics emulation.</summary>
+let runCaret () =
+    async {
+        let document = document ()
+
+        let settle () =
+            async {
+                for _ in 1..3 do
+                    do! viewportFrames () |> Async.AwaitPromise
+            }
+
+        let! font = ahem () |> Async.AwaitPromise
+
+        let driver: CaretChecks.Driver =
+            {
+                SetScale =
+                    fun scale ->
+                        async {
+                            do!
+                                emulateViewport 320 240 scale
+                                |> Async.AwaitPromise
+
+                            do! settle ()
+                        }
+                Settle = settle
+                Font = font
+                Qualified = Map.empty
+            }
+
+        let! count =
+            CaretChecks.run document (BrowserViewportScroll.forDocument document) errorName driver
+
+        return
+            {|
+                caret = count
+                browser = CaretOracle.browser
+            |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared form collection, FormData and form event assertions.</summary>
+let runForms () =
+    let document = document ()
+
+    let count =
+        FormChecks.run document (fun () -> BrowserForms.forDocument document) errorName
+
+    {| forms = count |}
+
+/// <summary>Runs the shared URL, URLSearchParams and URLPattern assertions.</summary>
+let runUrls () =
+    let document = document ()
+
+    let count =
+        UrlChecks.run (fun () -> BrowserUrls.forDocument document) errorName UrlChecks.Chromium
+
+    {| urls = count |}
+
+/// <summary>Runs the shared ARIA element reflection assertions.</summary>
+let runAria () =
+    {|
+        aria = AriaChecks.run (document ()) AriaChecks.Chromium
+    |}
+
+/// <summary>Runs the shared text segmentation assertions.</summary>
+let runSegments () =
+    let count =
+        TextSegmentationChecks.run (fun () -> BrowserTextSegmentation.create ()) errorName TextSegmentationChecks.Chromium
+
+    {| segments = count |}
+
+[<Emit("window.__rvSetScreen($0, $1, $2)")>]
+let private setScreen (width: int) (height: int) (orientation: int) : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared screen assertions; browser.mjs drives the screen through CDP.</summary>
+let runScreen () =
+    async {
+        let document = document ()
+
+        let driver: ScreenChecks.Driver =
+            {
+                Set =
+                    fun (width, height, orientation) ->
+                        setScreen width height (int orientation)
+                        |> Async.AwaitPromise
+                Settle =
+                    fun () ->
+                        async {
+                            for _ in 1..2 do
+                                do! viewportFrames () |> Async.AwaitPromise
+                        }
+                LockResolves = true
+            }
+
+        let! count = ScreenChecks.run (fun () -> BrowserScreen.forDocument document) driver
+        return {| screen = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared custom highlight assertions.</summary>
+let runHighlights () =
+    let document = document ()
+
+    let count =
+        HighlightChecks.run (fun () -> BrowserHighlights.forDocument document) document HighlightChecks.Chromium
+
+    {| highlights = count |}
+
+/// <summary>Runs the shared U+0000 round-trip assertions (WebCore #142).</summary>
+let runStrings () =
+    let document = document ()
+
+    let count =
+        StringChecks.run document (fun () -> BrowserEventDetails.forDocument document) (fun () -> BrowserBinaryValues.forDocument document)
+
+    {| strings = count |}
+
+/// <summary>Runs the shared diagnostics assertions.</summary>
+let runDiagnostics () =
+    let document = document ()
+
+    let count =
+        DiagnosticsChecks.run (fun () -> BrowserDiagnostics.forDocument document) document DiagnosticsChecks.Chromium
+
+    {| diagnostics = count |}
+
+[<Emit("devicePixelRatio")>]
+let private devicePixelRatio () : float = jsNative
+
+/// <summary>Runs the shared coordinate assertions, with an iframe's element as the foreign one.</summary>
+let runCoordinates () =
+    let document = document ()
+    let frame = document.createElement "iframe"
+    document.body.appendChild frame |> ignore
+
+    let foreign () =
+        let inner = frameDocument frame
+        let value = inner.createElement "div"
+        inner.body.appendChild value |> ignore
+        value
+
+    let count =
+        try
+            CoordinateChecks.run
+                (fun () -> BrowserCoordinates.forDocument document)
+                document
+                foreign
+                (fun () -> devicePixelRatio ())
+                CoordinateChecks.Chromium
+        finally
+            frame.remove ()
+
+    {| coordinates = count |}
+
+/// <summary>Runs the shared cascade assertions: computed values, and provenance as Unsupported.</summary>
+let runCascade () =
+    let document = document ()
+
+    let count =
+        CascadeChecks.run
+            (fun () -> BrowserDiagnostics.forDocument document)
+            (Ranvier.Dom.ComputedStyles.forDocument document)
+            document
+            CascadeChecks.Chromium
+
+    {| cascade = count |}
+
+/// <summary>Runs the shared crypto assertions in a secure context.</summary>
+let runCrypto () =
+    async {
+        let document = document ()
+        let! count = CryptoChecks.run (fun () -> BrowserCrypto.forDocument document)
+        return {| crypto = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the insecure-context crypto assertions.</summary>
+let runCryptoInsecure () =
+    async {
+        let document = document ()
+        let! count = CryptoChecks.insecure (fun () -> BrowserCrypto.forDocument document)
+        return {| crypto = count |}
+    }
+    |> Async.StartAsPromise
+
+[<Emit("$0.constructor.name")>]
+let private constructorName (element: Element) : string = jsNative
+
+let private domModel (document: Document) =
+    let traversal, reentry = TreeTraversal.run document errorName false
+    let mathml = MathMLElements.run document constructorName "MathMLElement"
+
+    {|
+        traversal = traversal
+        traversalReentry = $"{reentry.Iterator}/{reentry.Walker}/{reentry.Reference}"
+        mathml = mathml
+    |}
+
+/// <summary>Runs the shared tree traversal and MathML fixtures against the browser document.</summary>
+let runDomModel () =
+    async { return domModel (document ()) }
+    |> Async.StartAsPromise
+
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {
+        let! localeResult = runLocales () |> Async.AwaitPromise
         let document = document ()
+        let! svgProof = runSvg () |> Async.AwaitPromise
         let timing = UserTiming.run (fun () -> Ranvier.Dom.Timing.forDocument document)
         let timingDeterministic = UserTiming.deterministic ()
 
         if timing <> 180 || timingDeterministic <> 181 then
             failwith "User timing assertions did not run"
+
+        let! capabilities =
+            Capabilities.run (fun () -> BrowserCapabilities.forDocument document)
+            |> Async.AwaitTask
+
+        let! cancellation =
+            Cancellation.run document (fun () -> BrowserCancellation.forDocument document) (fun () ->
+                macrotask ()
+                |> Async.AwaitPromise
+                |> Async.StartAsTask)
+            |> Async.AwaitTask
+
+        let! cancellationInterop = cancellationInterop document
+
+        let domModelResult = domModel document
+
+        let customEvents =
+            CustomEvents.run document (fun () -> BrowserEvents.forDocument document) (fun () -> BrowserCancellation.forDocument document)
 
         let! geometryProof = runGeometry () |> Async.AwaitPromise
         let! matrixProof = runMatrix () |> Async.AwaitPromise
@@ -566,6 +1572,9 @@ let run () =
 
         return
             {|
+                svgGeometry = svgProof.svgGeometry
+                svgValues = svgProof.svgValues
+                svgContext = svgProof.svgContext
                 geometry = geometryProof.geometry
                 geometryContext = geometryProof.geometryContext
                 matrices = matrixProof.matrices
@@ -573,8 +1582,18 @@ let run () =
                 transformValues = transformProof.transformValues
                 transformContext = transformProof.transformContext
                 cascadeRules = cascadeRules
+                locales = localeResult.locales
+                localeDeterministic = localeResult.localeDeterministic
+                localeContext = localeResult.localeContext
                 timing = timing
                 timingDeterministic = timingDeterministic
+                capabilities = capabilities
+                cancellation = cancellation
+                cancellationInterop = cancellationInterop
+                customEvents = customEvents
+                traversal = domModelResult.traversal
+                traversalReentry = domModelResult.traversalReentry
+                mathml = domModelResult.mathml
                 scopeRules = scopeRules
                 nestedDeclarations = nestedDeclarations
                 importContentsReadable = importContentsReadable

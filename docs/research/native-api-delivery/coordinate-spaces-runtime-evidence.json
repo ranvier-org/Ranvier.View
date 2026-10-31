@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "group": "G14 coordinate-space conversion",
+  "status": "green (private integration; not accepted)",
+  "route": "rv_node_convert_points and rv_node_box_quad (Native45 / ABI53): WebCore localToAbsolute/absoluteToLocal, scroll, page scale and device scale; browser: computed transforms placed by getBoundingClientRect",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/58",
+  "coreSourceCommit": "237c4c9cee8beb6bac1e520c15dd0b2ad8990b41",
+  "corePackedCommit": "e400739c5c9498e2833dc68510c4e7e5b5fda955",
+  "viewsSourceCommit": "841493e176fb3b31c33be181ff2ead61112060c4",
+  "viewsRunCommit": "1457594 (the run tree; 841493e changes .github/workflows/ci.yml only)",
+  "stackedOn": "#144 final managed heads (Core 6b44bfac, Views 0a6f671) over #142, H08 and I11",
+  "nativeProducer": {
+    "branch": "codex/native-api-coordinate-conversion",
+    "head": "0d367876de82c22ce1972120ecbf5c4de5235c8b",
+    "abi": 53,
+    "runtime": "native-coords artifacts/coords-candidate-5",
+    "evidence": "Ranvier.WebCore docs/coordinate-evidence/final-evidence.json"
+  },
+  "versions": {
+    "native": "0.1.0-preview.45",
+    "dom": "0.1.0-alpha.48",
+    "views": "0.1.38",
+    "webcoreBackend": "0.1.0-alpha.38"
+  },
+  "allocationReceipt": "Ranvier.WebCore docs/coordinate-evidence/allocation-absence.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.48.nupkg": "7cfde188bc8d4a4464a7ffd9ed90065edd60e42a95a4ad76b9577229169e3a37",
+    "Ranvier.Dom.0.1.0-alpha.48.nupkg": "67af9ea2aba0f0f982dc26e51dbf0bf6dac6045648937a3fa2a86a6841742af0",
+    "Ranvier.WebCore.0.1.0-preview.45.nupkg": "c9e329f7b3b4b1ccb44ecfd65220f850875b22a89645e9cfd4694c7100ab4cf8"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "b5a64c7a5dcd8c2e56042d0b55f6951da05fcf51e273d8c6d4b9ebd8c82902be",
+    "RanvierWebCoreHost.lib": "875c14548809c710ff8f01ce19ee79966e79e6070d6dc46e23b9b766f0dbbec9",
+    "RanvierWebCoreHost.pdb": "d0631658f02612cb6a4caedf8b40ffda581ef84b9703fc98525d0d25dbf42369",
+    "WebCore.dll": "1273e7c2b55618c3ebf6e463937fe99a6be22f14d4b9a69fe5eb3e8015a46b1d",
+    "WebCore.lib": "d776660e5351b3133ac744cd7673799080f68bf8f6393c9d03758dd31e2c3648",
+    "WebCore.pdb": "1322438ee0ad33731ff5be29344e3ce70fc7cf3ca264ebc3d248db8ece35bf76",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\coords-artifacts\\managed\\final-1\\aot\\Native.exe",
+    "sha256": "9975e4c7a17c202780d0880d81ec67da85207c4766079b8f7b08bfd0d1d03073"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "aa29e500992d02b54174d09efce90d8bab34e14da76f8e0688fe471367e083cf",
+      "passLines": 117,
+      "failLines": [],
+      "baselinePassLines": 115,
+      "missingFromBaseline": [],
+      "added": [
+        "NATIVE_API G14 PASS assertions=304",
+        "NATIVE_API G14 LIFETIME PASS assertions=11"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "1554ff7501349d06c61b0f0bb22245749e045cade92e5c175ba30a8d9f5a2a31",
+      "passLines": 117,
+      "failLines": [],
+      "baselinePassLines": 115,
+      "missingFromBaseline": [],
+      "added": [
+        "NATIVE_API G14 PASS assertions=304",
+        "NATIVE_API G14 LIFETIME PASS assertions=11"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "2c76bc6921f74f21b2c6d8dadbeb586f0c6955e886d78868fb3c3fdb5991733e",
+      "passLines": 85,
+      "failLines": [],
+      "baselinePassLines": 84,
+      "missingFromBaseline": [],
+      "added": [
+        "BROWSER_API G14 PASS assertions=304 engine=chromium"
+      ]
+    },
+    "baseline": "#144 final managed run C:/wk/blob-artifacts/managed/final-1 (JIT/AOT 115, Chromium 84)"
+  },
+  "jitAotPassLinesIdentical": true,
+  "repeats": {
+    "aotCoordinatesOnly": {
+      "runs": 30,
+      "distinct": [
+        "NATIVE_API G14 PASS assertions=304"
+      ]
+    },
+    "chromiumCoordinatesOnly": {
+      "runs": 30,
+      "distinct": [
+        "BROWSER_API G14 PASS assertions=304 engine=chromium"
+      ]
+    }
+  },
+  "wrapperRegeneration": {
+    "objectsFs": "1d2db922e892a0949139e3e337b7e11a359e3fb762e8fdddaf4d85a03e21aa2c",
+    "reportTxt": "c0562a7f72e30ae4fa5ed04ff27530935a27fe0eb8547eedc23b3e6a23b14d32",
+    "result": "identical: preview.45 adds no generated DOM members"
+  },
+  "fixture": {
+    "shared": "tests/NativeApi.Conformance/CoordinateChecks.fs",
+    "nativeChecks": 304,
+    "chromiumChecks": 304,
+    "nativeLifetimeChecks": 11
+  },
+  "coreAndViewState": "docs/superpowers/plans/2026-10-31-coordinate-spaces.md: no core primitives; no view-owned state",
+  "qualifications": [
+    "Chromium element spaces are the affine product of the computed transforms placed by getBoundingClientRect; perspective, perspective() and preserve-3d chains, the translate/rotate/scale properties and CSS zoom read Unsupported.",
+    "The native slim software path paints without 3D compositing: perspective chains convert as the engine paints and hit-tests them, 2.3 to 26.5 px from Chromium (native evidence).",
+    "Host is the page-scaled surface space: a page cannot set its page scale in Chromium, so Host equals Client there; the native runner asserts Host = Client x 2 at page scale 2, origin 40, 60, in both directions."
+  ]
+}

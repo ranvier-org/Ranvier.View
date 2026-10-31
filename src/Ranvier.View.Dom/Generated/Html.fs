@@ -2177,10 +2177,8 @@ module Properties =
         let disabledReactive<'native when 'native :> Dom.HTMLInputElement> (read: unit -> bool) : Typed.Modifier<'native> =
             Typed.reactiveProperty (fun (node: 'native) value -> node.``disabled`` <- value) read
 
-#if FABLE_COMPILER
         let ``files`` (node: #Dom.HTMLInputElement) : Dom.FileList =
-            Native.expando (box node) "files"
-#endif
+            node.``files``
 
         let ``form`` (node: #Dom.HTMLInputElement) : Dom.HTMLFormElement =
             node.``form``
@@ -7376,10 +7374,8 @@ module Input =
     let disabledReactive (read: unit -> bool) : Typed.Modifier<Dom.HTMLInputElement> =
         Typed.reactiveProperty (fun (node: Dom.HTMLInputElement) value -> node.``disabled`` <- value) read
 
-#if FABLE_COMPILER
     let ``files`` (node: Dom.HTMLInputElement) : Dom.FileList =
-        Native.expando (box node) "files"
-#endif
+        node.``files``
 
     let ``form`` (node: Dom.HTMLInputElement) : Dom.HTMLFormElement =
         node.``form``

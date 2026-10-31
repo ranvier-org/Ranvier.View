@@ -74,6 +74,65 @@ let tests =
                 Expect.equal (pixel image 90 90) (255uy, 0uy, 0uy) "the button's background is on screen"
                 Expect.equal (pixel image 150 120) (255uy, 255uy, 255uy) "the page's background is on screen"
 
+            windowCase "an SDL display event sets the host screen through the window's display feed"
+            <| fun window ->
+                let display event =
+                    let mutable pushed = SDL_Event ()
+                    pushed.``type`` <- uint32 event
+                    pushed.display.displayID <- SDL3.SDL_GetPrimaryDisplay ()
+
+                    if not (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&pushed): bool) then
+                        failwithf "SDL_PushEvent failed: %s" (SDL3.SDL_GetError ())
+
+                    steps window 1
+
+                use service = Screen.forHost window.Host
+                let changes = ResizeArray<ScreenInfo>()
+                use _ = service.Subscribe changes.Add
+
+                let portrait =
+                    {
+                        Width = 1080
+                        Height = 1920
+                        UsableLeft = 0
+                        UsableTop = 40
+                        UsableWidth = 1080
+                        UsableHeight = 1880
+                        ColorDepth = 30
+                        Orientation = ScreenOrientationType.PortraitPrimary
+                    }
+
+                window.SetDisplayReader (fun () -> ValueSome portrait)
+                display SDL_EventType.SDL_EVENT_DISPLAY_ORIENTATION
+                let screen = service.Read ()
+
+                Expect.equal
+                    (screen.Width, screen.Height, screen.AvailTop, screen.AvailHeight)
+                    (1080, 1920, 40, 1880)
+                    "the display's bounds and usable bounds"
+
+                Expect.equal
+                    (screen.ColorDepth, screen.Orientation, screen.Angle)
+                    (30, ScreenOrientationType.PortraitPrimary, 90)
+                    "the display's depth and orientation"
+
+                Expect.equal changes.Count 1 "one change delivered"
+                display SDL_EventType.SDL_EVENT_DISPLAY_USABLE_BOUNDS_CHANGED
+                Expect.equal changes.Count 1 "the same display sets nothing"
+
+                window.SetDisplayReader (fun () ->
+                    ValueSome
+                        { portrait with
+                            UsableTop = 0
+                            UsableHeight = 1920
+                        })
+
+                display SDL_EventType.SDL_EVENT_DISPLAY_USABLE_BOUNDS_CHANGED
+                Expect.equal (service.Read ()).AvailHeight 1920 "a usable-bounds change reaches the screen"
+                window.SetDisplayReader (fun () -> ValueNone)
+                display SDL_EventType.SDL_EVENT_DISPLAY_REMOVED
+                Expect.equal (service.Read ()).Width 1080 "a window on no display keeps its screen"
+
             windowCase "SDL mouse events reach the page as a click"
             <| fun window ->
                 use graph = new Graph ()

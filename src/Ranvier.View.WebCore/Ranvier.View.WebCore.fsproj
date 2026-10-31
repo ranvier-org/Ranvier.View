@@ -13,7 +13,7 @@
         <PackageTags>reactive;signals;view;dom;webcore;native;fsharp</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>Experimental. The API may change.</PackageReleaseNotes>
-        <Version>0.1.0-alpha.8</Version>
+        <Version>0.1.0-alpha.39</Version>
         <IsAotCompatible>true</IsAotCompatible>
         <IsPackable>true</IsPackable>
         <!-- Generated wrapper implementation members inherit their contracts' documentation. -->
@@ -22,7 +22,7 @@
 
     <!-- RanvierWebCoreNativeDir holds runtimes/<rid>/native for local native runtime checks. -->
     <PropertyGroup>
-        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.0-preview.17</RanvierWebCoreNativeVersion>
+        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.0-preview.46</RanvierWebCoreNativeVersion>
         <UseLocalRanvierWebCore Condition="'$(UseLocalRanvierWebCore)' == ''">false</UseLocalRanvierWebCore>
         <RanvierWebCoreRoot Condition="'$(RanvierWebCoreRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../Ranvier.WebCore'))</RanvierWebCoreRoot>
         <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</RanvierWebCoreNativeRid>
@@ -52,9 +52,12 @@
     <ItemGroup>
         <Compile Include="Objects.fs" />
         <Compile Include="Events.fs" />
+        <Compile Include="Traversal.fs" />
         <Compile Include="Marshalling.fs" />
         <Compile Include="Generated/Objects.fs" />
+        <Compile Include="EventTargets.fs" />
         <Compile Include="Host.fs" />
+        <Compile Include="SvgViews.fs" />
         <Compile Include="StyleSheets.fs" />
         <Compile Include="CssQueries.fs" />
         <Compile Include="CustomProperties.fs" />
@@ -63,7 +66,30 @@
         <Compile Include="Geometry.fs" />
         <Compile Include="TransformValues.fs" />
         <Compile Include="ComputedStyles.fs" />
+        <Compile Include="Locales.fs" />
         <Compile Include="Timing.fs" />
+        <Compile Include="Capabilities.fs" />
+        <Compile Include="Cancellation.fs" />
+        <Compile Include="Resources.fs" />
+        <Compile Include="EventConstruction.fs" />
+        <Compile Include="InputState.fs" />
+        <Compile Include="FormData.fs" />
+        <Compile Include="FormSubmissions.fs" />
+        <Compile Include="ToggleEvents.fs" />
+        <Compile Include="EventDetails.fs" />
+        <Compile Include="BinaryValues.fs" />
+        <Compile Include="BlobUrls.fs" />
+        <Compile Include="Urls.fs" />
+        <Compile Include="TextSegmentation.fs" />
+        <Compile Include="Crypto.fs" />
+        <Compile Include="Screen.fs" />
+        <Compile Include="Highlights.fs" />
+        <Compile Include="Diagnostics.fs" />
+        <Compile Include="Coordinates.fs" />
+        <Compile Include="Viewport.fs" />
+        <Compile Include="ViewportScroll.fs" />
+        <Compile Include="VisualViewport.fs" />
+        <Compile Include="Frames.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />

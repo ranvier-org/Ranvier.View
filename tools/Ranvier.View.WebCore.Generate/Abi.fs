@@ -195,8 +195,16 @@ let private validateUnionTags (nativeDom: Type) (model: JsonElement) =
                     | "bool" -> "BOOL"
                     | "number" -> "NUMBER"
                     | "string" -> "STRING"
+                    | "bytes" -> Metadata.text "label" arm |> constantName
                     | "sequence" -> constantName ((Metadata.text "ctype" arm).Substring("RvDom".Length))
-                    | _ -> Metadata.text "interface" arm |> constantName
+                    | _ ->
+                        // The native header names an arm by its interface, enumeration or label (domtypes.union_arm_name).
+                        [ "interface"; "enum"; "label"; "kind" ]
+                        |> List.pick (fun name ->
+                            match arm.TryGetProperty name with
+                            | true, value when value.ValueKind = JsonValueKind.String -> Some (value.GetString ())
+                            | _ -> None)
+                        |> constantName
 
                 let fieldName = prefix + "_" + suffix
                 let field = nativeDom.GetField fieldName
@@ -239,13 +247,32 @@ let readModel (nativeDom: Type) (model: JsonElement) : Function list =
                         }
                 ]
 
+            // The parameter of each IDL argument: after target, without a checked context and the byte length that
+            // follows each UTF-8 string.
+            let contextParameter =
+                if Metadata.hasText "contextReceiver" "Document" fn then
+                    Some (Metadata.text "contextParameter" fn)
+                else
+                    None
+
+            let argumentParameters =
+                parameters
+                |> List.pairwise
+                |> List.filter (fun (previous, parameter) ->
+                    Some parameter.Name <> contextParameter
+                    && not (
+                        previous.C = "const uint8_t*"
+                        && parameter.Name = previous.Name + "_length"
+                    ))
+                |> List.map snd
+
             let defaults =
                 [
                     for index, argument in Metadata.items "arguments" fn |> Array.indexed do
                         let fallback = argument.GetProperty "default"
 
                         if fallback.ValueKind <> JsonValueKind.Null then
-                            parameters[index + 1].Name, fallback.GetString ()
+                            argumentParameters[index].Name, fallback.GetString ()
                 ]
                 |> Map.ofList
 

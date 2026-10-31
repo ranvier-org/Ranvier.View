@@ -106,6 +106,10 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
                             let encoded = build model fieldMapping inner "item"
                             $"(match {source} with None -> 0n | Some item -> {encoded})"
                         | None -> build model fieldMapping fieldType source
+                    elif ctype = "RvDomUtf8StringInput" then
+                        match optionOf fieldType with
+                        | Some _ -> $"scope.TextInput({source})"
+                        | None -> $"scope.TextInput(Some ({source}))"
                     elif ctype.EndsWith "*" && ctype <> "const char*" then
                         match optionOf fieldType with
                         | Some inner ->
@@ -132,7 +136,15 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
         let native = "NativeDom." + Metadata.text "ctype" mapping
         let element = (Metadata.items "subtypes" mapping)[0]
         let converted = build model element (t.GetElementType ()) "item"
-        $"(let values = ({value}) |> Array.map (fun item -> {converted}) in let mutable result = Unchecked.defaultof<{native}> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)"
+
+        let present =
+            $"(let values = ({value}) |> Array.map (fun item -> {converted}) in let mutable result = Unchecked.defaultof<{native}> in result.present <- 1; result.count <- values.Length; result.items <- scope.Pin(values); result)"
+
+        // A null array is the IDL null of a nullable sequence: present 0.
+        if mapping.GetProperty("nullable").GetBoolean() then
+            $"(if isNull ({value}) then Unchecked.defaultof<{native}> else {present})"
+        else
+            present
     | "union" ->
         let native = "NativeDom." + Metadata.text "ctype" mapping
         let arms = Metadata.items "subtypes" mapping
