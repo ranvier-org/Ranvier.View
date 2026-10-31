@@ -8,8 +8,7 @@ let private png =
 
 /// <summary>Checks use, image, foreignObject, link, style, switch and metadata elements, URI references and resource errors.</summary>
 /// <param name="wait">Waits the given milliseconds while the provider loads resources.</param>
-/// <param name="removedConditionEmpties">True when removing a conditional attribute empties its string list.</param>
-let run (document: Document) (pixel: Pixel) (wait: int -> Async<unit>) (errorName: exn -> string) (removedConditionEmpties: bool) =
+let run (document: Document) (pixel: Pixel) (wait: int -> Async<unit>) (errorName: exn -> string) =
     async {
         let checks = Checks errorName
 
@@ -169,7 +168,7 @@ let run (document: Document) (pixel: Pixel) (wait: int -> Async<unit>) (errorNam
             checks.Equal "switch skipped extension" "urn:ranvier:unsupported" (skipped.requiredExtensions.getItem 0u)
             do! color "switch renders supported child" lime (320., 20.)
             skipped.removeAttribute "requiredExtensions"
-            checks.Equal "removed condition list length" (if removedConditionEmpties then 0u else 1u) skipped.requiredExtensions.numberOfItems
+            checks.Equal "removed condition list length" 0u skipped.requiredExtensions.numberOfItems
             do! color "inserted switch keeps its selection" lime (320., 20.)
             let fresh = create<SVGSwitchElement> document "switch" []
 
