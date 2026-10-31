@@ -158,7 +158,20 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
         inner = typeof<string>
         && Metadata.hasText "stringInputs" "utf8-lengths" fn.Descriptor
         ->
-        if not nullable then
+        // A null reference for a nullable string, or an optional one without a default, passes length -1.
+        let absentAllowed =
+            mapping.GetProperty("nullable").GetBoolean ()
+            || (argument.GetProperty("optional").GetBoolean ()
+                && argument.GetProperty("default").ValueKind = System.Text.Json.JsonValueKind.Null)
+
+        // [LegacyNullToEmptyString] converts null to the empty string; any other string argument converts it to "null".
+        let nullToEmpty = Metadata.hasBool "legacyNullToEmptyString" argument
+
+        if not nullable && absentAllowed then
+            Ok $"(if isNull {v} then null else scope.Bytes({v}))"
+        elif not nullable && nullToEmpty then
+            Ok $"scope.Bytes(if isNull {v} then \"\" else {v})"
+        elif not nullable then
             Ok $"scope.Bytes({v})"
         else
             match fn.Defaults.TryFind p.Name |> Option.bind literal with
@@ -554,7 +567,7 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
                     let length =
                         if expression = "null" then
                             "-1"
-                        elif expression.EndsWith "| None -> null)" then
+                        elif expression.EndsWith "| None -> null)" || expression.StartsWith "(if isNull " then
                             $"(if isNull {local} then -1 else {local}.Length)"
                         else
                             local + ".Length"

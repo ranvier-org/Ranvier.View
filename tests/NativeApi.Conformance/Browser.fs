@@ -1269,6 +1269,14 @@ let runHighlights () =
 
     {| highlights = count |}
 
+/// <summary>Runs the shared U+0000 round-trip assertions (WebCore #142).</summary>
+let runStrings () =
+    let document = document ()
+
+    let count =
+        StringChecks.run document (fun () -> BrowserEventDetails.forDocument document) (fun () -> BrowserBinaryValues.forDocument document)
+
+    {| strings = count |}
 /// <summary>Runs the shared diagnostics assertions.</summary>
 let runDiagnostics () =
     let document = document ()
