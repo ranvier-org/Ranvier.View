@@ -130,6 +130,7 @@ let private kinds =
             "CanvasGradient", "Kind.CanvasGradient"
             "CanvasPattern", "Kind.CanvasPattern"
             "Path2D", "Kind.Path2D"
+            "ImageBitmap", "Kind.ImageBitmap"
         ]
 
 [<EntryPoint>]

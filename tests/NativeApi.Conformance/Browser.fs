@@ -1297,7 +1297,8 @@ let runCanvas () =
     let count = CanvasChecks.run (fun () -> BrowserCanvas.forDocument document) document
     let paths = CanvasPathChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
     let state = CanvasStateChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
-    {| canvas = count; canvasPaths = paths; canvasState = state |}
+    let paints = CanvasPaintChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
+    {| canvas = count; canvasPaths = paths; canvasState = state; canvasPaints = paints |}
 
 /// <summary>Runs the shared U+0000 round-trip assertions (WebCore #142).</summary>
 let runStrings () =

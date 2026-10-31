@@ -1743,6 +1743,9 @@ let private CanvasPathChecksCount = 43
 [<Literal>]
 let private CanvasStateChecksCount = 26
 
+[<Literal>]
+let private CanvasPaintChecksCount = 35
+
 let private runCanvas () =
     let host = WebCoreHost.Create (320, 240)
     let session = host.Session
@@ -1765,6 +1768,7 @@ let private runCanvas () =
     let mutable held = None
     let mutable paths = 0
     let mutable state = 0
+    let mutable paints = 0
 
     let errorName =
         function
@@ -1776,6 +1780,7 @@ let private runCanvas () =
             let count = CanvasChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document
             paths <- CanvasPathChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
             state <- CanvasStateChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
+            paints <- CanvasPaintChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
             let service = Ranvier.View.WebCore.Canvas.forHost host
             let document = host.Document
             document.body.innerHTML <- ""
@@ -1836,6 +1841,11 @@ let private runCanvas () =
         failwith $"Canvas state shared assertions did not run: {state}"
 
     System.Console.WriteLine $"NATIVE_API R03 PASS assertions={state}"
+
+    if paints <> CanvasPaintChecksCount then
+        failwith $"Canvas paint shared assertions did not run: {paints}"
+
+    System.Console.WriteLine $"NATIVE_API R04 PASS assertions={paints}"
     System.Console.WriteLine $"NATIVE_API R01 LIFETIME PASS assertions={lifetime}"
     shared
 
