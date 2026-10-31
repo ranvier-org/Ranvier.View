@@ -18,6 +18,7 @@ const svgOnly = process.argv.includes('--svg-only');
 const svgSurfacesOnly = process.argv.includes('--svg-surfaces-only');
 const resourcesOnly = process.argv.includes('--resources-only');
 const svgPaintOnly = process.argv.includes('--svg-paint-only');
+const inputStateOnly = process.argv.includes('--input-state-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
 const server = createServer(async (request, response) => {
@@ -43,8 +44,38 @@ const server = createServer(async (request, response) => {
   }
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+// I12 needs page activation changes, which only new headless Chromium (channel 'chromium') delivers.
+const runInputState = async () => {
+  const inputBrowser = await chromium.launch({ headless: true, channel: 'chromium' });
+  try {
+    const context = await inputBrowser.newContext();
+    const page = await context.newPage();
+    const other = await context.newPage();
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Emulation.setFocusEmulationEnabled', { enabled: false });
+    await page.exposeFunction('__nativeApiSetActive', async active => {
+      await (active ? page : other).bringToFront();
+      await page.waitForFunction(value => document.hasFocus() === value, active);
+    });
+    await page.exposeFunction('__nativeApiMouse', async (action, x, y) => {
+      if (action === 'move') await page.mouse.move(x, y);
+      else if (action === 'down') await page.mouse.down();
+      else await page.mouse.up();
+    });
+    await page.exposeFunction('__nativeApiTab', async () => { await page.keyboard.press('Tab'); });
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    await page.bringToFront();
+    const result = await page.evaluate(async () => (await import('/Browser.js')).runInputState());
+    if (result.inputState !== 39) throw new Error(`Input state assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API I12 PASS assertions=${result.inputState} engine=chromium headless=new`);
+  } finally {
+    await inputBrowser.close();
+  }
+};
 let browser;
 try {
+  if (inputStateOnly) { await runInputState(); process.exitCode = 0; }
+  else {
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   const originalViewport = page.viewportSize();
@@ -256,6 +287,8 @@ try {
   }
   console.log('BROWSER_API D09 TAB PASS engine=chromium');
   }
+  }
+  await runInputState();
   }
 } finally {
   if (browser) await browser.close();

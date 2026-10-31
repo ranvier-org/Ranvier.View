@@ -87,18 +87,14 @@ module Viewport =
             member _.Dispose() = ()
         }
 
-    /// <summary>The provider over <c>host</c>'s window, which the host keeps across document replacement.</summary>
+    /// <summary>The provider over <c>host</c>'s window (<c>InputState.window</c>).</summary>
     /// <remarks>Raises NotSupportedException when the native library lacks the "viewport" functions.</remarks>
     /// <param name="host">The live host whose creating thread runs every operation.</param>
     let provider (host: WebCoreHost) : ViewportProvider =
         require host
-        let handle = Native.rv_host_window_event_target host.Session.Host
-
-        if handle = 0n then
-            raise (InvalidOperationException "rv_host_window_event_target returned NULL")
 
         {
-            Window = unbox<EventTarget>(host.Session.Target handle)
+            Window = InputState.window host
             Document = host.Document
             Metrics = metrics host
             MatchMedia = matchMedia host

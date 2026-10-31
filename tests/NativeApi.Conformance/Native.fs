@@ -85,6 +85,104 @@ type private OwnerLoop() =
 let mutable private survivor: (Ranvier.Dom.EventTarget * Ranvier.Dom.Event) option =
     None
 
+/// <summary>Runs the shared input state fixture with native window identity and host-disposal checks.</summary>
+let private runInputState () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let input action =
+        async { action () }
+
+    let driver: InputStateChecks.Driver =
+        {
+            SetActive = fun active -> input (fun () -> host.SetFocused active)
+            Move = fun x y -> input (fun () -> host.Mouse (0, x, y, -1, 0, 0) |> ignore)
+            Press = fun x y -> input (fun () -> host.Mouse (1, x, y, 0, 1, 0) |> ignore)
+            Release = fun x y -> input (fun () -> host.Mouse (2, x, y, 0, 1, 0) |> ignore)
+            Tab =
+                fun () ->
+                    input (fun () ->
+                        host.Key (0, "Tab", "Tab", null, 0, false)
+                        |> ignore
+
+                        host.Key (1, "Tab", "Tab", null, 0, false)
+                        |> ignore)
+        }
+
+    let mutable kept = None
+
+    let shared =
+        try
+            let count =
+                InputStateChecks.run
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.InputState.forHost host)
+                    Ranvier.View.WebCore.InputState.capabilities
+                    Ranvier.Dom.CapabilityState.No
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 20000L do
+                host.Cycle ()
+
+            let count = count.GetAwaiter().GetResult()
+
+            let window = Ranvier.View.WebCore.InputState.window host
+            expect (obj.ReferenceEquals (window, Ranvier.View.WebCore.InputState.window host)) "One window wrapper per host"
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            Ranvier.View.WebCore.InputState.forHost host
+                            |> ignore
+
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Input state rejects another thread"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            expect (obj.ReferenceEquals (window, Ranvier.View.WebCore.InputState.window host)) "Document replacement keeps the window"
+            let service = Ranvier.View.WebCore.InputState.forHost host
+            let changes = System.Collections.Generic.List<Ranvier.Dom.InputChange>()
+            service.Subscribe changes.Add |> ignore
+            host.SetFocused false
+
+            expect
+                (changes.Count = 1
+                 && changes[0] = Ranvier.Dom.InputChange.Activation false)
+                "Service on the replacement document observes the window"
+
+            kept <- Some service
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    kept.Value.Dispose ()
+    kept.Value.Dispose ()
+    expect (session.LiveObjects = 0) "Input state fixture leaves no live native objects"
+    System.Console.WriteLine $"NATIVE_API I12 COUNT {shared}"
+
+    if shared <> 39 then
+        failwith $"Input state shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API I12 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API I12 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared custom event fixture with native standalone-target lifetime checks.</summary>
 let private runCustomEvents () =
     let host = WebCoreHost.Create (320, 240)
@@ -435,6 +533,7 @@ let private runAll () =
     runCancellation () |> ignore
     runResources () |> ignore
     runCustomEvents () |> ignore
+    runInputState () |> ignore
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
@@ -1398,6 +1497,9 @@ let main args =
         0
     elif Array.contains "--custom-events-only" args then
         runCustomEvents () |> ignore
+        0
+    elif Array.contains "--input-state-only" args then
+        runInputState () |> ignore
         0
     elif Array.contains "--cancellation-only" args then
         runCancellation () |> ignore

@@ -773,6 +773,37 @@ let runResources () =
     }
     |> Async.StartAsPromise
 
+[<Emit("globalThis.__nativeApiSetActive($0)")>]
+let private setActive (active: bool) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiMouse($0, $1, $2)")>]
+let private mouse (action: string) (x: int) (y: int) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiTab()")>]
+let private tab () : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared input state assertions with Playwright input and page activation.</summary>
+/// <remarks>The page runs in new headless Chromium, where bringing another page to the front deactivates it.</remarks>
+let runInputState () =
+    async {
+        let document = document ()
+
+        let driver: InputStateChecks.Driver =
+            {
+                SetActive = fun active -> setActive active |> Async.AwaitPromise
+                Move = fun x y -> mouse "move" x y |> Async.AwaitPromise
+                Press = fun x y -> mouse "down" x y |> Async.AwaitPromise
+                Release = fun x y -> mouse "up" x y |> Async.AwaitPromise
+                Tab = fun () -> tab () |> Async.AwaitPromise
+            }
+
+        let! count =
+            InputStateChecks.run document (fun () -> BrowserInput.forDocument document) BrowserInput.capabilities CapabilityState.Yes driver
+
+        return {| inputState = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {
