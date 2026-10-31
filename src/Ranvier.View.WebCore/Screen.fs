@@ -1,8 +1,23 @@
 namespace Ranvier.View.WebCore
 
 open System
+open System.Collections.Generic
+open Ranvier
 open Ranvier.Dom
 open RanvierWebCoreAbi
+
+/// <summary>A display as the app's windowing layer reports it, in CSS pixels; the work area is relative to the display.</summary>
+type DisplayScreen =
+    {
+        Width: int
+        Height: int
+        UsableLeft: int
+        UsableTop: int
+        UsableWidth: int
+        UsableHeight: int
+        ColorDepth: int
+        Orientation: ScreenOrientationType
+    }
 
 /// <summary>Screen and ScreenOrientation of a native host's document.</summary>
 module Screen =
@@ -18,16 +33,36 @@ module Screen =
         let mutable pixelDepth = 0u
         let mutable orientation = 0
         let mutable angle = 0us
-        NativeDom.rv_dom_screen_get_width (document, &width) |> Interop.check "Screen.width"
-        NativeDom.rv_dom_screen_get_height (document, &height) |> Interop.check "Screen.height"
-        NativeDom.rv_dom_screen_get_avail_left (document, &availLeft) |> Interop.check "Screen.availLeft"
-        NativeDom.rv_dom_screen_get_avail_top (document, &availTop) |> Interop.check "Screen.availTop"
-        NativeDom.rv_dom_screen_get_avail_width (document, &availWidth) |> Interop.check "Screen.availWidth"
-        NativeDom.rv_dom_screen_get_avail_height (document, &availHeight) |> Interop.check "Screen.availHeight"
-        NativeDom.rv_dom_screen_get_color_depth (document, &colorDepth) |> Interop.check "Screen.colorDepth"
-        NativeDom.rv_dom_screen_get_pixel_depth (document, &pixelDepth) |> Interop.check "Screen.pixelDepth"
-        NativeDom.rv_dom_screen_orientation_get_type (document, &orientation) |> Interop.check "ScreenOrientation.type"
-        NativeDom.rv_dom_screen_orientation_get_angle (document, &angle) |> Interop.check "ScreenOrientation.angle"
+
+        NativeDom.rv_dom_screen_get_width (document, &width)
+        |> Interop.check "Screen.width"
+
+        NativeDom.rv_dom_screen_get_height (document, &height)
+        |> Interop.check "Screen.height"
+
+        NativeDom.rv_dom_screen_get_avail_left (document, &availLeft)
+        |> Interop.check "Screen.availLeft"
+
+        NativeDom.rv_dom_screen_get_avail_top (document, &availTop)
+        |> Interop.check "Screen.availTop"
+
+        NativeDom.rv_dom_screen_get_avail_width (document, &availWidth)
+        |> Interop.check "Screen.availWidth"
+
+        NativeDom.rv_dom_screen_get_avail_height (document, &availHeight)
+        |> Interop.check "Screen.availHeight"
+
+        NativeDom.rv_dom_screen_get_color_depth (document, &colorDepth)
+        |> Interop.check "Screen.colorDepth"
+
+        NativeDom.rv_dom_screen_get_pixel_depth (document, &pixelDepth)
+        |> Interop.check "Screen.pixelDepth"
+
+        NativeDom.rv_dom_screen_orientation_get_type (document, &orientation)
+        |> Interop.check "ScreenOrientation.type"
+
+        NativeDom.rv_dom_screen_orientation_get_angle (document, &angle)
+        |> Interop.check "ScreenOrientation.angle"
 
         {
             Width = width
@@ -55,7 +90,13 @@ module Screen =
 
         host.EnsureActive ()
 
-        if not (WebCoreHost.Has "screen" && WebCoreHost.Has "dom-screen" && WebCoreHost.Has "dom-screen-orientation") then
+        if
+            not (
+                WebCoreHost.Has "screen"
+                && WebCoreHost.Has "dom-screen"
+                && WebCoreHost.Has "dom-screen-orientation"
+            )
+        then
             raise (NotSupportedException "The native library has no screen functions")
 
         let disposed = ref false
@@ -108,3 +149,27 @@ module Screen =
 
                 subscriptions.Clear ()
         }
+
+/// <summary>Feeds a host's screen from the app's display integration.</summary>
+module ScreenFeed =
+    /// <summary>Sets <c>host</c>'s screen to <c>display</c>.</summary>
+    let apply (host: WebCoreHost) (display: DisplayScreen) =
+        host.SetScreen (
+            display.Width,
+            display.Height,
+            display.UsableLeft,
+            display.UsableTop,
+            display.UsableWidth,
+            display.UsableHeight,
+            display.ColorDepth,
+            display.Orientation
+        )
+
+    /// <summary>
+    /// Sets <c>host</c>'s screen to the display <c>display</c> holds, now and after each change to a different display,
+    /// until the enclosing owner is disposed. ValueNone, a window on no display, leaves the screen as it is.
+    /// </summary>
+    let follow (host: WebCoreHost) (display: Signal<DisplayScreen voption>) =
+        createEffectOnWithComparer EqualityComparer<DisplayScreen voption>.Default (fun () -> display.Value) (function
+            | ValueSome screen -> apply host screen
+            | ValueNone -> ())
