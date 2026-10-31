@@ -1,4 +1,4 @@
-228 classes; 2541 members: 2521 mapped to 2443 of 2502 rv_dom_* functions, 20 hand-written, 0 unmapped
+228 classes; 2541 members: 2521 mapped to 2443 of 2510 rv_dom_* functions, 20 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
@@ -60,6 +60,14 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_submit_event_create: SubmitEvent.constructor (op)
   rv_dom_tree_walker_get_filter: TreeWalker.filter (get)
   rv_dom_window_get_computed_style: DOMWindow.getComputedStyle (op)
+  rv_dom_window_get_scroll_x: DOMWindow.scrollX (op)
+  rv_dom_window_get_scroll_y: DOMWindow.scrollY (op)
+  rv_dom_window_scroll_1: DOMWindow.scroll (op)
+  rv_dom_window_scroll_2: DOMWindow.scroll (op)
+  rv_dom_window_scroll_by_1: DOMWindow.scrollBy (op)
+  rv_dom_window_scroll_by_2: DOMWindow.scrollBy (op)
+  rv_dom_window_scroll_to_1: DOMWindow.scrollTo (op)
+  rv_dom_window_scroll_to_2: DOMWindow.scrollTo (op)
 
 Unmapped members by reason:
 
