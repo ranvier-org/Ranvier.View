@@ -135,9 +135,10 @@ module BinaryValues =
                 use parts =
                     new Parts (BinaryValueContract.parts parts, (fun value -> native value "parts"))
 
+                use inputs = new InputScope ()
                 let mutable dictionary = NativeDom.RvDomBlobPropertyBag ()
                 dictionary.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomBlobPropertyBag>())
-                dictionary.``type`` <- options.Type
+                dictionary.``type`` <- inputs.TextInput (Option.ofObj (options.Type))
                 dictionary.endings <- endings options.Endings
                 let mutable result = 0n
 
@@ -158,9 +159,10 @@ module BinaryValues =
                 let pinned = GCHandle.Alloc (modified, GCHandleType.Pinned)
 
                 try
+                    use inputs = new InputScope ()
                     let mutable dictionary = NativeDom.RvDomFilePropertyBag ()
                     dictionary.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomFilePropertyBag>())
-                    dictionary.``type`` <- options.Type
+                    dictionary.``type`` <- inputs.TextInput (Option.ofObj (options.Type))
                     dictionary.endings <- endings options.Endings
 
                     match options.LastModified with

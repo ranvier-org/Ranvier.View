@@ -247,13 +247,29 @@ let readModel (nativeDom: Type) (model: JsonElement) : Function list =
                         }
                 ]
 
+            // The parameter of each IDL argument: after target, without a checked context and the byte length that
+            // follows each UTF-8 string.
+            let contextParameter =
+                if Metadata.hasText "contextReceiver" "Document" fn then
+                    Some (Metadata.text "contextParameter" fn)
+                else
+                    None
+
+            let argumentParameters =
+                parameters
+                |> List.pairwise
+                |> List.filter (fun (previous, parameter) ->
+                    Some parameter.Name <> contextParameter
+                    && not (previous.C = "const uint8_t*" && parameter.Name = previous.Name + "_length"))
+                |> List.map snd
+
             let defaults =
                 [
                     for index, argument in Metadata.items "arguments" fn |> Array.indexed do
                         let fallback = argument.GetProperty "default"
 
                         if fallback.ValueKind <> JsonValueKind.Null then
-                            parameters[index + 1].Name, fallback.GetString ()
+                            argumentParameters[index].Name, fallback.GetString ()
                 ]
                 |> Map.ofList
 

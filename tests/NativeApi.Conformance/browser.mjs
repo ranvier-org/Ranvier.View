@@ -30,6 +30,7 @@ const segmentsOnly = process.argv.includes('--segments-only');
 const binaryOnly = process.argv.includes('--binary-only');
 const cryptoOnly = process.argv.includes('--crypto-only');
 const highlightsOnly = process.argv.includes('--highlights-only');
+const stringsOnly = process.argv.includes('--strings-only');
 const diagnosticsOnly = process.argv.includes('--diagnostics-only');
 const screenOnly = process.argv.includes('--screen-only');
 const submissionsOnly = process.argv.includes('--submissions-only');
@@ -278,6 +279,20 @@ const runHighlights = async () => {
   }
 };
 const HIGHLIGHT_ASSERTIONS = 35;
+// WebCore #142 runs the U+0000 round-trip fixture in its own page.
+const runStrings = async () => {
+  const stringsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await stringsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runStrings(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.strings !== STRING_ASSERTIONS) throw new Error(`U+0000 round-trip assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API WC142 PASS assertions=${result.strings} engine=chromium`);
+  } finally {
+    await stringsBrowser.close();
+  }
+};
+const STRING_ASSERTIONS = 18;
 // H08 runs the diagnostics fixture in its own page.
 const runDiagnostics = async () => {
   const diagnosticsBrowser = await chromium.launch({ headless: true });
@@ -379,6 +394,7 @@ try {
   else if (binaryOnly) { await runBinary(); process.exitCode = 0; }
   else if (cryptoOnly) { await runCrypto(); process.exitCode = 0; }
   else if (highlightsOnly) { await runHighlights(); process.exitCode = 0; }
+  else if (stringsOnly) { await runStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (screenOnly) { await runScreen(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
@@ -619,6 +635,7 @@ try {
   await runSubmissions();
   await runCrypto();
   await runHighlights();
+  await runStrings();
   await runDiagnostics();
   await runScreen();
   await runEventDetails();
