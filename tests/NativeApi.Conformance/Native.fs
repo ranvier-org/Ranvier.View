@@ -1650,10 +1650,8 @@ let private runStrings () =
 
     let shared =
         try
-            StringChecks.run
-                host.Document
-                (fun () -> Ranvier.View.WebCore.EventDetails.forHost host)
-                (fun () -> Ranvier.View.WebCore.BinaryValues.forHost host)
+            StringChecks.run host.Document (fun () -> Ranvier.View.WebCore.EventDetails.forHost host) (fun () ->
+                Ranvier.View.WebCore.BinaryValues.forHost host)
         finally
             (host :> System.IDisposable).Dispose()
 
@@ -1952,7 +1950,8 @@ let private runBlobUrls () =
     let wait (result: 'T option ref) =
         let timeout = System.Diagnostics.Stopwatch.StartNew ()
 
-        while result.Value.IsNone && timeout.ElapsedMilliseconds < 60000L do
+        while result.Value.IsNone
+              && timeout.ElapsedMilliseconds < 60000L do
             host.Cycle () |> ignore
 
         result.Value.Value
@@ -1977,19 +1976,19 @@ let private runBlobUrls () =
 
             let timeout = System.Diagnostics.Stopwatch.StartNew ()
 
-            while not count.IsCompleted && timeout.ElapsedMilliseconds < 120000L do
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 120000L do
                 host.Cycle () |> ignore
 
             let count = count.GetAwaiter().GetResult()
             let service = Ranvier.View.WebCore.BlobUrls.forHost host
             use values = Ranvier.View.WebCore.BinaryValues.forHost host
-            let blob = values.CreateBlob ([| Ranvier.Dom.BlobPart.Text "kept" |], Ranvier.Dom.BlobOptions.Default)
+
+            let blob =
+                values.CreateBlob ([| Ranvier.Dom.BlobPart.Text "kept" |], Ranvier.Dom.BlobOptions.Default)
 
             let wrongThread =
-                System.Threading.Tasks.Task
-                    .Run(fun () -> rejected (fun () -> service.CreateObjectUrl blob |> ignore))
-                    .GetAwaiter()
-                    .GetResult()
+                System.Threading.Tasks.Task.Run(fun () -> rejected (fun () -> service.CreateObjectUrl blob |> ignore)).GetAwaiter().GetResult()
 
             expect wrongThread "URL.createObjectURL rejects another thread"
 
@@ -1998,7 +1997,13 @@ let private runBlobUrls () =
             let path = System.IO.Path.Combine (directory.FullName, "data.txt")
             System.IO.File.WriteAllText (path, "file-bytes")
             let file = Ranvier.View.WebCore.BlobUrls.createFile host path
-            expect (file.name = "data.txt" && file.size = 10UL && file.``type`` = "text/plain") "A file-backed File takes its name, size and type from the path"
+
+            expect
+                (file.name = "data.txt"
+                 && file.size = 10UL
+                 && file.``type`` = "text/plain")
+                "A file-backed File takes its name, size and type from the path"
+
             let text = ref None
             use _ = service.ReadText (file, fun outcome -> text.Value <- Some outcome)
             expect (wait text = Ranvier.Dom.ResourceOutcome.Succeeded "file-bytes") "A file-backed File reads its bytes"
@@ -2014,7 +2019,9 @@ let private runBlobUrls () =
 
             expect
                 (try
-                    Ranvier.View.WebCore.BlobUrls.createFile host "relative.txt" |> ignore
+                    Ranvier.View.WebCore.BlobUrls.createFile host "relative.txt"
+                    |> ignore
+
                     false
                  with :? System.ArgumentException ->
                      true)
@@ -2022,7 +2029,10 @@ let private runBlobUrls () =
 
             // Document replacement revokes the document's URLs and invalidates a read in flight.
             let url = service.CreateObjectUrl blob
-            let big = values.CreateBlob ([| Ranvier.Dom.BlobPart.Bytes (Array.zeroCreate (1 <<< 20)) |], Ranvier.Dom.BlobOptions.Default)
+
+            let big =
+                values.CreateBlob ([| Ranvier.Dom.BlobPart.Bytes (Array.zeroCreate (1 <<< 20)) |], Ranvier.Dom.BlobOptions.Default)
+
             let replaced = ref None
             use _ = service.ReadBytes (big, fun outcome -> replaced.Value <- Some outcome)
             host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
@@ -2055,7 +2065,12 @@ let private runBlobUrls () =
 
     expect (session.LiveObjects = 0) "Blob URL fixture leaves no live native objects"
     let service, _, pending = held.Value
-    expect (pending.Snapshot <> Ranvier.Dom.ResourceState.Pending) "Host disposal ends a read in flight"
+
+    expect
+        (pending.Snapshot
+         <> Ranvier.Dom.ResourceState.Pending)
+        "Host disposal ends a read in flight"
+
     expect (rejected (fun () -> service.CreateFileReader () |> ignore)) "A held blob URL service rejects calls after host disposal"
     pending.Dispose ()
     service.Dispose ()
@@ -2083,7 +2098,9 @@ let private runCoordinates () =
         if not condition then
             failwith message
 
-    let point x y : Ranvier.Dom.CoordinatePoint = { X = x; Y = y }
+    let point x y : Ranvier.Dom.CoordinatePoint =
+        { X = x; Y = y }
+
     let client = Ranvier.Dom.CoordinateSpace.Client
     let hostSpace = Ranvier.Dom.CoordinateSpace.Host
     let page = Ranvier.Dom.CoordinateSpace.Page
@@ -2110,7 +2127,9 @@ let private runCoordinates () =
 
             // While page-scaled, HOST is CLIENT times the page scale in both directions.
             RanvierWebCoreAbi.Native.rv_host_set_page_scale (host.Handle, 2.0, 40, 60)
-            |> fun status -> if status <> 0 then failwith $"rv_host_set_page_scale {status}"
+            |> fun status ->
+                if status <> 0 then
+                    failwith $"rv_host_set_page_scale {status}"
 
             expect (service.Convert (point 10.0 20.0, client, hostSpace) = Ok (point 20.0 40.0)) "Client to host doubles at page scale 2"
             expect (service.Convert (point 10.0 20.0, hostSpace, client) = Ok (point 5.0 10.0)) "Host to client halves at page scale 2"
@@ -2121,13 +2140,17 @@ let private runCoordinates () =
                 "Device is host times the device scale"
 
             RanvierWebCoreAbi.Native.rv_host_set_page_scale (host.Handle, 1.0, 0, 0)
-            |> fun status -> if status <> 0 then failwith $"rv_host_set_page_scale {status}"
+            |> fun status ->
+                if status <> 0 then
+                    failwith $"rv_host_set_page_scale {status}"
 
             let wrongThread =
                 System.Threading.Tasks.Task
                     .Run(fun () ->
                         try
-                            service.Convert (point 0.0 0.0, client, hostSpace) |> ignore
+                            service.Convert (point 0.0 0.0, client, hostSpace)
+                            |> ignore
+
                             false
                         with :? System.InvalidOperationException ->
                             true)
@@ -2137,10 +2160,11 @@ let private runCoordinates () =
             expect wrongThread "A conversion rejects another thread"
             let body = host.Document.body
             let stranger = other.Document.body
-            (other :> System.IDisposable).Dispose ()
+            (other :> System.IDisposable).Dispose()
 
             expect
-                (service.Convert (point 0.0 0.0, Ranvier.Dom.CoordinateSpace.Element stranger, client) = Error Ranvier.Dom.CoordinateUnavailable.Detached)
+                (service.Convert (point 0.0 0.0, Ranvier.Dom.CoordinateSpace.Element stranger, client) =
+                    Error Ranvier.Dom.CoordinateUnavailable.Detached)
                 "An element of a disposed host is detached"
 
             host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
@@ -2157,15 +2181,17 @@ let private runCoordinates () =
             held <- Some service
             count
         finally
-            (other :> System.IDisposable).Dispose ()
-            (host :> System.IDisposable).Dispose ()
+            (other :> System.IDisposable).Dispose()
+            (host :> System.IDisposable).Dispose()
 
     expect (session.LiveObjects = 0) "Coordinate fixture leaves no live native objects"
     let service = held.Value
 
     let rejected =
         try
-            service.Convert (point 0.0 0.0, page, client) |> ignore
+            service.Convert (point 0.0 0.0, page, client)
+            |> ignore
+
             false
         with :? System.ObjectDisposedException ->
             true
@@ -2225,7 +2251,11 @@ let private runCascade () =
 
             expect wrongThread "A cascade read rejects another thread"
             host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
-            expect (service.Cascade (body, "order") = Error Ranvier.Dom.DiagnosticsUnavailable.NotRendered) "An element of a replaced document is not read"
+
+            expect
+                (service.Cascade (body, "order") = Error Ranvier.Dom.DiagnosticsUnavailable.NotRendered)
+                "An element of a replaced document is not read"
+
             held <- Some service
             count
         finally
@@ -2811,6 +2841,100 @@ let private runResources () =
     System.Console.WriteLine "NATIVE_API H05 TEARDOWN PASS"
     count
 
+/// <summary>Runs the shared T01 font set fixture over a held CSS @font-face served through the resource handler.</summary>
+let private runFonts () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let previous = System.Threading.SynchronizationContext.Current
+    let loop = OwnerLoop ()
+    System.Threading.SynchronizationContext.SetSynchronizationContext loop
+    let font = (resourceFixture ()).Font
+
+    let requests =
+        System.Collections.Generic.Dictionary<string, Result<Ranvier.Dom.ResourceResponse, string> -> unit>()
+
+    let provider: Ranvier.Dom.ResourceProvider =
+        fun request complete ->
+            let name = request.Url.Substring (request.Url.LastIndexOf '/' + 1)
+            requests[name] <- complete
+
+            { new System.IDisposable with
+                member _.Dispose() = ()
+            }
+
+    let server: Fonts.FontServer =
+        {
+            Url = fun name -> "https://t01.test/" + name
+            Requested = fun name -> async { return requests.ContainsKey name }
+            Respond =
+                fun name response ->
+                    async {
+                        let complete = requests[name]
+
+                        match response with
+                        | Fonts.FontResponse.Font ->
+                            complete (
+                                Ok
+                                    {
+                                        ContentType = "font/ttf"
+                                        Bytes = font
+                                    }
+                            )
+                        | Fonts.FontResponse.Broken ->
+                            complete (
+                                Ok
+                                    {
+                                        ContentType = "font/ttf"
+                                        Bytes = "not a font"B
+                                    }
+                            )
+                        | Fonts.FontResponse.Missing -> complete (Error "404")
+                    }
+        }
+
+    let count =
+        try
+            use resources = Ranvier.View.WebCore.Resources.forHost host provider
+            use signals = Ranvier.View.WebCore.Cancellation.forHost host
+
+            let pending =
+                Fonts.run host.Document server (fun () -> Ranvier.View.WebCore.Fonts.forHost host) signals (fun milliseconds ->
+                    async {
+                        let clock = System.Diagnostics.Stopwatch.StartNew ()
+
+                        while clock.ElapsedMilliseconds < int64 milliseconds do
+                            loop.Drain ()
+                            host.Cycle 5
+                    })
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not pending.IsCompleted
+                  && timeout.ElapsedMilliseconds < 30000L do
+                loop.Drain ()
+                host.Cycle ()
+                System.Threading.Thread.Sleep 1
+
+            if not pending.IsCompleted then
+                failwith "Font fixture did not complete on the owner loop"
+
+            pending.GetAwaiter().GetResult()
+        finally
+            System.Threading.SynchronizationContext.SetSynchronizationContext previous
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith (
+            "Font fixture leaked "
+            + string session.LiveObjects
+            + " managed native objects"
+        )
+
+    System.Console.WriteLine ("NATIVE_API T01 PASS assertions=" + string count)
+    System.Console.WriteLine "NATIVE_API T01 TEARDOWN PASS"
+    count
+
 /// <summary>Runs the shared tree traversal and MathML fixtures with native traversal lifetime checks.</summary>
 let private runDomModel () =
     let lifetime = TraversalLifecycle.run ()
@@ -2870,6 +2994,7 @@ let private runAll () =
     runCapabilities () |> ignore
     runCancellation () |> ignore
     runResources () |> ignore
+    runFonts () |> ignore
     runCustomEvents () |> ignore
     runInputState () |> ignore
     runViewport () |> ignore
@@ -3943,6 +4068,9 @@ let main args =
         0
     elif Array.contains "--resources-only" args then
         runResources () |> ignore
+        0
+    elif Array.contains "--fonts-only" args then
+        runFonts () |> ignore
         0
     elif Array.contains "--custom-properties-only" args then
         let lifecycle = CustomPropertyLifecycle.run ()
