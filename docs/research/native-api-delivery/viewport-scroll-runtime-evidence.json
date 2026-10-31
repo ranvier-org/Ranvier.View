@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "group": "G05",
+  "status": "green (private integration; not accepted)",
+  "route": "Qualified",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/50",
+  "coreSourceCommit": "135897c2fd5c40c04da90198242dcffc079940a3",
+  "viewsSourceCommit": "4b5085f9dd7a89a8c95e3038c1c306344e960e12",
+  "nativeProducer": {
+    "branch": "codex/native-api-viewport-scroll",
+    "head": "dc0951a2034dc74cb69170ea34055b90cf1573c4",
+    "producerEvidence": "docs/viewport-scroll-evidence/final-evidence.json",
+    "abi": 37,
+    "candidate": "private win-x64 slim native29-candidate-1, frozen native29-frozen"
+  },
+  "versions": {
+    "native": "0.1.0-preview.29",
+    "dom": "0.1.0-alpha.31",
+    "views": "0.1.21",
+    "webcoreBackend": "0.1.0-alpha.21"
+  },
+  "allocationReceipt": "Ranvier: docs/research/native-api-delivery/g05-managed31-allocation.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.31.nupkg": "463c85b7dcbeec6ce39bb3f4ee02cd15ed23457837da67f2b5c9b661f30f8b3b",
+    "Ranvier.Dom.0.1.0-alpha.31.nupkg": "8a2742cdeb9f88a80d913021d6a8f334b80f791653867f310bef4df8a6eb10e1",
+    "Ranvier.WebCore.0.1.0-preview.29.nupkg": "9f486ccac1f29ee94c6034372f9303853351dae26185f3fb8e76753830e20a2a"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "8f47ba7fa3eed0a59484fcd9b6bbe32938cfa8f543a3c7f1e45dd6efbca12499",
+    "WebCore.dll": "a264e234ed27365f2c50b6d0cf6c70e7d01c977ba6bc349fa57669d9e1ade604",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "stageMatchesAot": true,
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "01fa51f2005ae4234881797ebcc6048c702014b6a5bb953b3a2ae3b0fb30b8a5",
+      "passLines": 83,
+      "failLines": [],
+      "g05": [
+        "NATIVE_API G05 PASS assertions=278",
+        "NATIVE_API G05 LIFETIME PASS assertions=7"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "01fa51f2005ae4234881797ebcc6048c702014b6a5bb953b3a2ae3b0fb30b8a5",
+      "passLines": 83,
+      "failLines": [],
+      "g05": [
+        "NATIVE_API G05 PASS assertions=278",
+        "NATIVE_API G05 LIFETIME PASS assertions=7"
+      ]
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\g05-private\\aot-api\\Native.exe",
+    "sha256": "9bf280bcc16c15d714c6cd396d131dc583e764c0427b696e446e7f71111a17e5"
+  },
+  "chromium": {
+    "exitCode": 0,
+    "logSha256": "5ee5f08bc536db1c8174bd9d62ab0563eaff45f1f79923034c89959cffb63cd8",
+    "passLines": 66,
+    "failLines": [],
+    "g05": [
+      "BROWSER_API G05 PASS assertions=278 engine=chromium"
+    ]
+  },
+  "contract": {
+    "service": "Ranvier.Dom.ViewportScrollService (Position, ScrollTo, ScrollBy) over ScrollRequest {Left; Top; Behavior}",
+    "browserProvider": "Ranvier.Dom.BrowserViewportScroll.forDocument",
+    "nativeProvider": "Ranvier.View.WebCore.ViewportScroll.forHost (rv_dom_window_get_scroll_x/_y, rv_dom_window_scroll_to_1/scroll_by_1)",
+    "elementScrolling": "generated Element.scroll/scrollTo/scrollBy (x, y and ScrollToOptions), scrollLeft/scrollTop (int, WebIDL long)"
+  },
+  "fixture": "tests/NativeApi.Conformance/ScrollChecks.fs (278 shared assertions: 15 oracle steps x viewport/box x scales 1, 1.5, 2) + native lifetime checks in Native.fs runViewportScroll (7)",
+  "fixtureQualifications": [
+    "Both backends keep whole-pixel scroll offsets at scales 1, 1.5 and 2.",
+    "The native engine truncates a fractional target toward zero (ScrollChecks.Truncate); Chromium rounds halves up (ScrollChecks.RoundHalfUp). Each backend asserts its own snapped value; the native producer evidence lists the 13 differing oracle steps with numbers.",
+    "Events follow the positions of each backend: a move dispatches scroll then scrollend, no move dispatches nothing, a smooth scroll dispatches scroll events then exactly one scrollend (counts differ: native 3, Chromium 4 at the oracle step).",
+    "Clamping and maxima are asserted equal on both backends (viewport 1680x1761, box 900x901).",
+    "Element.scrollTop/scrollLeft are int in the shared model (WebIDL long in the pinned WebKit); the fractional setter case is native-producer-only.",
+    "A native service raises ObjectDisposedException after its host is disposed and follows document replacement."
+  ],
+  "nativeMerge": "native dc0951a merges D13 cd90d0d (generator-only); gen/Ranvier.Dom.fs blob 508a5d04 equals Core Dom.fs; the native29-candidate-1 runtime is unchanged."
+}
