@@ -72,6 +72,7 @@
     <Compile Include="DiagnosticsChecks.fs" />
     <Compile Include="CascadeChecks.fs" />
     <Compile Include="CoordinateChecks.fs" />
+    <Compile Include="ResizeObservationChecks.fs" />
     <Compile Include="ScreenChecks.fs" />
     <Compile Include="TreeTraversal.fs" />
     <Compile Include="MathMLElements.fs" />

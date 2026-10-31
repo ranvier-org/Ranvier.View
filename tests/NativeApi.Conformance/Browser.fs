@@ -1356,6 +1356,37 @@ let runCascade () =
 
     {| cascade = count |}
 
+[<Emit("new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)))")>]
+let private resizeFrame () : JS.Promise<unit> = jsNative
+
+// Counts the window's error events and prevents their default report; returns the count reader.
+[<Emit("(() => { let n = 0; window.addEventListener('error', e => { n++; e.preventDefault(); }); return () => n; })()")>]
+let private countErrors () : unit -> int = jsNative
+
+/// <summary>Runs the shared resize observation assertions; callback exceptions reach the window's error event.</summary>
+let runResizeObservation () =
+    async {
+        let document = document ()
+        let errors = countErrors ()
+
+        let driver: ResizeObservationChecks.Driver =
+            {
+                Update = fun () -> resizeFrame () |> Async.AwaitPromise
+                Errors = errors
+                Engine = ResizeObservationChecks.Chromium
+            }
+
+        let! count =
+            ResizeObservationChecks.run
+                document
+                (fun () -> BrowserResizeObservation.forDocument document)
+                (fun () -> BrowserCancellation.forDocument document)
+                driver
+
+        return {| resize = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared crypto assertions in a secure context.</summary>
 let runCrypto () =
     async {

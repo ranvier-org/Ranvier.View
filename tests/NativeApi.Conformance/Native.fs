@@ -2237,6 +2237,126 @@ let private runCascade () =
     System.Console.WriteLine $"NATIVE_API C25 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared resize observation fixture with thread, document replacement and teardown checks.</summary>
+[<Literal>]
+let private ResizeObservationChecksCount = 35
+
+let private runResizeObservation () =
+    let host = WebCoreHost.Create (800, 600)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let mutable held = None
+    let mutable heldEntry = None
+
+    let shared =
+        try
+            let driver: ResizeObservationChecks.Driver =
+                {
+                    Update = fun () -> async { host.Frame () }
+                    Errors = fun () -> host.Errors.Count
+                    Engine = ResizeObservationChecks.Native
+                }
+
+            let count =
+                ResizeObservationChecks.run
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.ResizeObservation.forHost host)
+                    (fun () -> Ranvier.View.WebCore.Cancellation.forHost host)
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted && timeout.ElapsedMilliseconds < 20000L do
+                host.Cycle ()
+
+            let count = count.GetAwaiter().GetResult()
+            let service = Ranvier.View.WebCore.ResizeObservation.forHost host
+            let body = host.Document.body
+            let delivered = System.Collections.Generic.List<string>()
+
+            let observer =
+                service.Create (fun entries ->
+                    for entry in entries do
+                        delivered.Add (entry.Target.nodeName + " " + string entry.ContentRect.Width)
+
+                    heldEntry <- Some entries[0])
+
+            observer.Observe body
+            host.Frame ()
+            expect (List.ofSeq delivered = [ "BODY 784" ]) ("The body is observed inside its 8px margins: " + System.String.Join (",", delivered))
+
+            let wrongThread (action: unit -> unit) =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            action ()
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect (wrongThread (fun () -> observer.Observe body)) "Observe rejects another thread"
+            expect (wrongThread (fun () -> observer.Disconnect ())) "Disconnect rejects another thread"
+            expect (wrongThread (fun () -> Ranvier.View.WebCore.ResizeObservation.forHost host |> ignore)) "forHost rejects another thread"
+            let other = WebCoreHost.Create (100, 80)
+
+            let foreign =
+                try
+                    observer.Observe other.Document.body
+                    false
+                with :? System.ArgumentException ->
+                    true
+
+            (other :> System.IDisposable).Dispose ()
+            expect foreign "An element of another host is rejected"
+
+            // The replaced document's observer delivers nothing; a new observer observes the replacing document.
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"30\" height=\"20\"/>"
+            host.Resize (700, 600)
+            host.Frame ()
+            expect (delivered.Count = 1) "The replaced document's observer delivers nothing"
+            let replacing = service.Create (fun entries -> delivered.Add (string entries.Length))
+            replacing.Observe host.Document.documentElement
+            host.Frame ()
+            expect (List.ofSeq delivered = [ "BODY 784"; "1" ]) ("The replacing document is observed: " + System.String.Join (",", delivered))
+            held <- Some (service, observer)
+            count
+        finally
+            (host :> System.IDisposable).Dispose ()
+
+    expect (session.LiveObjects = 0) "Resize observation leaves no live native objects"
+    let service, observer = held.Value
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect (rejected (fun () -> observer.Observe Unchecked.defaultof<Ranvier.Dom.Element>)) "A held observer rejects Observe after host disposal"
+    expect (rejected (fun () -> service.Create ignore |> ignore)) "A held service rejects Create after host disposal"
+    observer.Dispose ()
+    service.Dispose ()
+    let entry = heldEntry.Value
+    expect (entry.ContentRect.Width = 784.0 && entry.BorderBoxSize.Length = 1) "An entry held past host disposal keeps its copied values"
+
+    if shared <> ResizeObservationChecksCount then
+        failwith $"Resize observation shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API G10 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G10 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared crypto fixture with native thread and teardown checks.</summary>
 [<Literal>]
 let private CryptoChecksCount = 155
@@ -2873,6 +2993,7 @@ let private runAll () =
     runDiagnostics () |> ignore
     runCascade () |> ignore
     runCoordinates () |> ignore
+    runResizeObservation () |> ignore
     runBlobUrls () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
@@ -3891,6 +4012,9 @@ let main args =
         0
     elif Array.contains "--coordinates-only" args then
         runCoordinates () |> ignore
+        0
+    elif Array.contains "--resize-only" args then
+        runResizeObservation () |> ignore
         0
     elif Array.contains "--crypto-only" args then
         runCrypto () |> ignore
