@@ -27,6 +27,7 @@ const formsOnly = process.argv.includes('--forms-only');
 const dialogsOnly = process.argv.includes('--dialogs-only');
 const urlsOnly = process.argv.includes('--urls-only');
 const binaryOnly = process.argv.includes('--binary-only');
+const cryptoOnly = process.argv.includes('--crypto-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
@@ -176,6 +177,29 @@ const runBinary = async () => {
   }
 };
 const BINARY_ASSERTIONS = 102;
+// B22 runs the crypto fixture on http://127.0.0.1 (a secure context) and on http://insecure.test, which the browser
+// resolves to the same server but treats as insecure.
+const runCrypto = async () => {
+  const cryptoBrowser = await chromium.launch({ headless: true, args: ['--host-resolver-rules=MAP insecure.test 127.0.0.1'] });
+  try {
+    const page = await cryptoBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runCrypto(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.crypto !== CRYPTO_ASSERTIONS) throw new Error(`Crypto assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API B22 PASS assertions=${result.crypto} engine=chromium`);
+    const insecure = await cryptoBrowser.newPage();
+    await insecure.goto(`http://insecure.test:${server.address().port}/`);
+    const secure = await insecure.evaluate(() => isSecureContext);
+    if (secure) throw new Error('http://insecure.test is a secure context');
+    const plain = await insecure.evaluate(async () => { try { return await (await import('/Browser.js')).runCryptoInsecure(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (plain.crypto !== CRYPTO_INSECURE_ASSERTIONS) throw new Error(`Insecure crypto assertions did not run: ${JSON.stringify(plain)}`);
+    console.log(`BROWSER_API B22 INSECURE PASS assertions=${plain.crypto} engine=chromium`);
+  } finally {
+    await cryptoBrowser.close();
+  }
+};
+const CRYPTO_ASSERTIONS = 155;
+const CRYPTO_INSECURE_ASSERTIONS = 4;
 // A12 runs the frame fixture on the manual scheduler and on the Window's frames, timers and microtasks.
 const runFrames = async () => {
   const framesBrowser = await chromium.launch({ headless: true });
@@ -231,6 +255,7 @@ try {
   else if (dialogsOnly) { await runDialogs(); process.exitCode = 0; }
   else if (urlsOnly) { await runUrls(); process.exitCode = 0; }
   else if (binaryOnly) { await runBinary(); process.exitCode = 0; }
+  else if (cryptoOnly) { await runCrypto(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
   else if (idleOnly) { await runIdle(); process.exitCode = 0; }
   else if (caretOnly) { await runCaret(); process.exitCode = 0; }
@@ -462,6 +487,7 @@ try {
   await runDialogs();
   await runBinary();
   await runUrls();
+  await runCrypto();
   await runFrames();
   await runIdle();
   await runCaret();
