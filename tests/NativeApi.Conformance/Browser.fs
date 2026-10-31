@@ -1106,6 +1106,24 @@ let runSegments () =
 
     {| segments = count |}
 
+/// <summary>Runs the shared crypto assertions in a secure context.</summary>
+let runCrypto () =
+    async {
+        let document = document ()
+        let! count = CryptoChecks.run (fun () -> BrowserCrypto.forDocument document)
+        return {| crypto = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the insecure-context crypto assertions.</summary>
+let runCryptoInsecure () =
+    async {
+        let document = document ()
+        let! count = CryptoChecks.insecure (fun () -> BrowserCrypto.forDocument document)
+        return {| crypto = count |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("$0.constructor.name")>]
 let private constructorName (element: Element) : string = jsNative
 

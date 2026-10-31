@@ -1175,6 +1175,84 @@ let private runSegments () =
     System.Console.WriteLine $"NATIVE_API T06 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared crypto fixture with native thread and teardown checks.</summary>
+[<Literal>]
+let private CryptoChecksCount = 155
+
+let private runCrypto () =
+    let host = WebCoreHost.Create (320, 200)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                CryptoChecks.run (fun () -> Ranvier.View.WebCore.Crypto.forHost host)
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted && timeout.ElapsedMilliseconds < 60000L do
+                host.Cycle () |> ignore
+
+            let count = count.GetAwaiter().GetResult()
+            let service = Ranvier.View.WebCore.Crypto.forHost host
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.GetRandomValues (Ranvier.Dom.RandomValuesKind.Uint8, Array.zeroCreate 8, 0, 8)
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "getRandomValues rejects another thread"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            let bytes = Array.zeroCreate<byte> 16
+            service.GetRandomValues (Ranvier.Dom.RandomValuesKind.Uint8, bytes, 0, 16)
+            expect (Array.exists (fun b -> b <> 0uy) bytes) "getRandomValues fills after document replacement"
+            held <- Some service
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Crypto fixture leaves no live native objects"
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    let service = held.Value
+
+    expect
+        (rejected (fun () -> service.GetRandomValues (Ranvier.Dom.RandomValuesKind.Uint8, Array.zeroCreate 8, 0, 8)))
+        "A held crypto service rejects getRandomValues after host disposal"
+
+    expect (rejected (fun () -> service.RandomUUID () |> ignore)) "A held crypto service rejects randomUUID after host disposal"
+    service.Dispose ()
+
+    if shared <> CryptoChecksCount then
+        failwith $"Crypto shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API B22 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API B22 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared dialog, popover and command invoker fixture with native thread and teardown checks.</summary>
 [<Literal>]
 let private DialogChecksCount = 143
@@ -1721,6 +1799,7 @@ let private runAll () =
     runUrls () |> ignore
     runSubmissions () |> ignore
     runSegments () |> ignore
+    runCrypto () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
@@ -2711,6 +2790,9 @@ let main args =
         0
     elif Array.contains "--urls-only" args then
         runUrls () |> ignore
+        0
+    elif Array.contains "--crypto-only" args then
+        runCrypto () |> ignore
         0
     elif Array.contains "--submissions-only" args then
         runSubmissions () |> ignore
