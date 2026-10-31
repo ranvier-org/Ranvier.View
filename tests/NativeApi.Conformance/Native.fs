@@ -360,6 +360,119 @@ let private runViewport () =
     System.Console.WriteLine $"NATIVE_API G02/G12 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared fractional scrolling fixture with native thread and host-disposal checks.</summary>
+[<Literal>]
+let private ScrollChecksCount = 278
+
+let private runViewportScroll () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let settle () =
+        async {
+            for _ in 1..3 do
+                host.Frame ()
+                host.Cycle 20 |> ignore
+
+            host.Frame ()
+        }
+
+    let driver: ScrollChecks.Driver =
+        {
+            SetScale =
+                fun scale ->
+                    async {
+                        host.Resize (320, 240)
+                        host.SetDeviceScale (float32 scale)
+                        do! settle ()
+                    }
+            Settle = settle
+            Snapping = ScrollChecks.Truncate
+        }
+
+    let mutable kept = None
+
+    let shared =
+        try
+            let count =
+                ScrollChecks.run
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.ViewportScroll.forHost host)
+                    (fun () -> Ranvier.View.WebCore.Viewport.forHost host)
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 60000L do
+                host.Cycle ()
+
+            let count = count.GetAwaiter().GetResult()
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            Ranvier.View.WebCore.ViewportScroll.forHost host
+                            |> ignore
+
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Viewport scrolling rejects another thread"
+            let service = Ranvier.View.WebCore.ViewportScroll.forHost host
+
+            let crossThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.Position () |> ignore
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect crossThread "A service call on another thread raises"
+            host.Document.body.setAttribute ("style", "height:2000px")
+            service.ScrollTo (Ranvier.Dom.ScrollRequest.point 0.0 10.5)
+            expect ((service.Position ()).Y = 10.0) "The native engine truncates 10.5 to 10"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            expect ((service.Position ()).Y = 0.0) "A replacement document starts unscrolled"
+            kept <- Some service
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    let raises (action: unit -> unit) =
+        try
+            action ()
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect (raises (fun () -> kept.Value.Position () |> ignore)) "Position after host dispose raises"
+    expect (raises (fun () -> kept.Value.ScrollBy (Ranvier.Dom.ScrollRequest.point 1.0 1.0))) "ScrollBy after host dispose raises"
+    expect (session.LiveObjects = 0) "Viewport scrolling fixture leaves no live native objects"
+
+    if shared <> ScrollChecksCount then
+        failwith $"Viewport scrolling shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API G05 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G05 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared form fixture with native thread, collection, FormData and event teardown checks.</summary>
 [<Literal>]
 let private FormChecksCount = 67
@@ -840,6 +953,7 @@ let private runAll () =
     runCustomEvents () |> ignore
     runInputState () |> ignore
     runViewport () |> ignore
+    runViewportScroll () |> ignore
     runForms () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
@@ -1815,6 +1929,9 @@ let main args =
         0
     elif Array.contains "--viewport-only" args then
         runViewport () |> ignore
+        0
+    elif Array.contains "--scroll-only" args then
+        runViewportScroll () |> ignore
         0
     elif Array.contains "--forms-only" args then
         runForms () |> ignore

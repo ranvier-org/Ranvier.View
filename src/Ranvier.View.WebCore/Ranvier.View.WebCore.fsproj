@@ -75,6 +75,7 @@
         <Compile Include="InputState.fs" />
         <Compile Include="FormData.fs" />
         <Compile Include="Viewport.fs" />
+        <Compile Include="ViewportScroll.fs" />
         <Compile Include="Frames.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />
