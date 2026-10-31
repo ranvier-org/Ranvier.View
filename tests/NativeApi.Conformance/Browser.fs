@@ -1562,6 +1562,22 @@ let runDomModel () =
     async { return domModel (document ()) }
     |> Async.StartAsPromise
 
+[<Emit("new Promise(resolve => { const f = document.createElement('iframe'); f.allow = \"screen-wake-lock 'none'\"; f.src = location.href; f.onload = () => resolve(f.contentDocument); document.body.append(f); })")>]
+let private deniedFrame () : JS.Promise<Document> = jsNative
+
+/// <summary>Runs the shared wake lock fixture: the page holds the screen-wake-lock permission, and a frame whose policy disables the feature is denied.</summary>
+let private wakeLocks (document: Document) =
+    async {
+        let! frame = deniedFrame () |> Async.AwaitPromise
+        use granted = BrowserWakeLocks.forDocument document
+        use denied = BrowserWakeLocks.forDocument frame
+        use cancellation = BrowserCancellation.forDocument document
+
+        return!
+            WakeLocks.run granted denied cancellation
+            |> Async.AwaitTask
+    }
+
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {
@@ -1586,6 +1602,7 @@ let run () =
             |> Async.AwaitTask
 
         let! cancellationInterop = cancellationInterop document
+        let! wakeLocks = wakeLocks document
 
         let domModelResult = domModel document
 
@@ -1770,6 +1787,7 @@ let run () =
                 traversal = domModelResult.traversal
                 traversalReentry = domModelResult.traversalReentry
                 mathml = domModelResult.mathml
+                wakeLocks = wakeLocks
                 scopeRules = scopeRules
                 nestedDeclarations = nestedDeclarations
                 importContentsReadable = importContentsReadable

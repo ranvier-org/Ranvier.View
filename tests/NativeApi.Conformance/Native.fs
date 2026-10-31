@@ -3231,6 +3231,171 @@ let private runCancellation () =
     System.Console.WriteLine $"NATIVE_API I01 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs a task on the hosts' thread, cycling every host until it completes; a hang guard raises.</summary>
+let private driveAll (hosts: WebCoreHost list) (pending: System.Threading.Tasks.Task<'T>) =
+    let mutable turns = 0
+
+    while not pending.IsCompleted do
+        turns <- turns + 1
+
+        if turns > 10000 then
+            failwith "Task did not complete on the host thread"
+
+        for host in hosts do
+            host.Cycle ()
+
+    pending.GetAwaiter().GetResult()
+
+/// <summary>Runs a task on the host thread, cycling the host until it completes; a hang guard raises.</summary>
+let private drive (host: WebCoreHost) (pending: System.Threading.Tasks.Task<'T>) =
+    driveAll [ host ] pending
+
+/// <summary>Runs the shared wake lock fixture and native policy, visibility, display, thread and teardown checks.</summary>
+let private runWakeLocks () =
+    let host = WebCoreHost.Create (320, 240)
+    let deniedHost = WebCoreHost.Create (32, 32)
+    let session = host.Session
+    let mutable lifetime = 0
+    let kinds = ResizeArray<Ranvier.Dom.WakeLockType>()
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let rejects (pending: System.Threading.Tasks.Task<Ranvier.Dom.WakeLockSentinel>) (name: string) =
+        try
+            drive host pending |> ignore
+            false
+        with
+        | Ranvier.Dom.WakeLockException (actual, _) -> actual = name
+        | :? System.AggregateException as error ->
+            match error.InnerException with
+            | Ranvier.Dom.WakeLockException (actual, _) -> actual = name
+            | _ -> false
+
+    let shared =
+        try
+            let granted =
+                WakeLock.forHost
+                    host
+                    (Some (fun kind ->
+                        kinds.Add kind
+                        true))
+
+            let denied = WakeLock.forHost deniedHost None
+            let cancellation = Ranvier.View.WebCore.Cancellation.forHost host
+
+            let count =
+                driveAll [ host; deniedHost ] (WakeLocks.run granted denied cancellation)
+
+            expect
+                (kinds.Count > 0
+                 && Seq.forall ((=) Ranvier.Dom.WakeLockType.Screen) kinds)
+                "Policy decides each screen request"
+
+            let pending = granted.Request (Ranvier.Dom.WakeLockType.Screen, None)
+            expect (not pending.IsCompleted) "A request completes after the call returns"
+            let held = drive host pending
+            expect (WakeLock.displayHeld () = System.OperatingSystem.IsWindows ()) "A held lock holds the display on Windows"
+            let mutable hiddenReleases = 0
+            use _hidden = held.OnRelease (fun () -> hiddenReleases <- hiddenReleases + 1)
+
+            RanvierWebCoreAbi.Native.rv_host_set_visible (host.Handle, 0)
+            |> ignore
+
+            host.Cycle ()
+            expect held.Released "Hiding the page releases its locks"
+            expect (hiddenReleases = 1) "A hidden page dispatches release"
+            expect (not (WakeLock.displayHeld ())) "Releasing the last lock frees the display"
+            expect (rejects (granted.Request (Ranvier.Dom.WakeLockType.Screen, None)) "NotAllowedError") "A hidden page rejects requests"
+
+            RanvierWebCoreAbi.Native.rv_host_set_visible (host.Handle, 1)
+            |> ignore
+
+            let visible = drive host (granted.Request (Ranvier.Dom.WakeLockType.Screen, None))
+            expect (not visible.Released) "A visible page grants again"
+            drive host (visible.Release ())
+
+            let errors = host.Errors.Count
+            let throwing = WakeLock.forHost host (Some (fun _ -> failwith "policy failure"))
+            expect (rejects (throwing.Request (Ranvier.Dom.WakeLockType.Screen, None)) "NotAllowedError") "A throwing policy denies"
+            expect (host.Errors.Count = errors + 1) "A throwing policy is reported to the host"
+            throwing.Dispose ()
+            expect (rejects (granted.Request (Ranvier.Dom.WakeLockType.Screen, None)) "NotAllowedError") "A disposed service clears the policy"
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            granted.Request (Ranvier.Dom.WakeLockType.Screen, None)
+                            |> ignore
+
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Wake locks reject another thread"
+
+            let disposedRequest =
+                try
+                    throwing.Request (Ranvier.Dom.WakeLockType.Screen, None)
+                    |> ignore
+
+                    false
+                with :? System.ObjectDisposedException ->
+                    true
+
+            expect disposedRequest "A disposed service rejects requests"
+
+            let survivor = WakeLock.forHost host (Some (fun _ -> true))
+            let kept = drive host (survivor.Request (Ranvier.Dom.WakeLockType.Screen, None))
+            expect (WakeLock.displayHeld () = System.OperatingSystem.IsWindows ()) "Survivor holds the display before host disposal"
+            use registry = Ranvier.Dom.Capabilities.create ()
+            use _provider = registry.Register WakeLock.capabilityProvider
+
+            let report =
+                drive
+                    host
+                    (registry.Observe (
+                        Ranvier.Dom.Capabilities.key Ranvier.Dom.CapabilityCategory.PlatformFacility "display-wake",
+                        System.Threading.CancellationToken.None
+                    ))
+
+            let expected =
+                if System.OperatingSystem.IsWindows () then
+                    Ranvier.Dom.CapabilityState.Yes
+                else
+                    Ranvier.Dom.CapabilityState.No
+
+            expect (report.Available.State = expected) "Display wake availability follows the operating system"
+            ignore kept
+            count
+        finally
+            (deniedHost :> System.IDisposable).Dispose()
+            (host :> System.IDisposable).Dispose()
+
+    expect (not (WakeLock.displayHeld ())) "Host disposal frees the display"
+    expect (session.LiveObjects = 0) "Wake lock fixture leaves no live native objects"
+
+    if shared <> 17 then
+        failwith (
+            "Wake lock shared assertions did not run: "
+            + string shared
+        )
+
+    System.Console.WriteLine ("NATIVE_API B10 PASS assertions=" + string shared)
+
+    System.Console.WriteLine (
+        "NATIVE_API B10 LIFETIME PASS assertions="
+        + string lifetime
+    )
+
+    shared
+
 let private runCapabilities () =
     let host = WebCoreHost.Create (320, 240)
     let session = host.Session
@@ -3586,6 +3751,7 @@ let private runAll () =
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
+    runWakeLocks () |> ignore
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
@@ -4642,6 +4808,9 @@ let main args =
         0
     elif Array.contains "--cancellation-only" args then
         runCancellation () |> ignore
+        0
+    elif Array.contains "--wake-locks-only" args then
+        runWakeLocks () |> ignore
         0
     elif Array.contains "--capabilities-only" args then
         runCapabilities () |> ignore
