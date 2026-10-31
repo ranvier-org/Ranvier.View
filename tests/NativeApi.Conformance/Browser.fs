@@ -1171,6 +1171,41 @@ let runBinary () =
     }
     |> Async.StartAsPromise
 
+[<Emit("$0.dispatchEvent(new DragEvent('drop', { dataTransfer: $1, bubbles: true, cancelable: true }))")>]
+let private dispatchDrop (element: Element) (transfer: DataTransfer) : unit = jsNative
+
+[<Emit("$0.dispatchEvent(new ClipboardEvent('paste', { clipboardData: $1, bubbles: true, cancelable: true }))")>]
+let private dispatchPaste (element: Element) (transfer: DataTransfer) : unit = jsNative
+
+/// <summary>Runs the shared DataTransfer assertions over synthetic drop and paste events.</summary>
+let runDataTransfer () =
+    let document = document ()
+    use transfers = BrowserDataTransfers.forDocument document
+    use binary = BrowserBinaryValues.forDocument document
+
+    let transfer (strings: struct (string * string) array) (files: File array) =
+        let value = transfers.Create ()
+
+        for struct (kind, text) in strings do
+            value.setData (kind, text)
+
+        for file in files do
+            value.items.add file |> ignore
+
+        value
+
+    let driver: DataTransferChecks.Driver =
+        {
+            Create = fun () -> transfers.Create ()
+            File = fun name kind text -> binary.CreateFile ([| BlobPart.Text text |], name, { FileOptions.Default with Type = kind })
+            Drop = fun element strings files -> dispatchDrop element (transfer strings files)
+            Paste = fun element strings files -> dispatchPaste element (transfer strings files)
+        }
+
+    {|
+        dataTransfer = DataTransferChecks.run document driver
+    |}
+
 /// <summary>Runs the shared blob URL and FileReader assertions.</summary>
 let runBlobUrls () =
     async {
@@ -1413,7 +1448,10 @@ let runStrings () =
 /// <summary>Runs the shared U+0000 event-type assertions (WebCore #145).</summary>
 let runHostStrings () =
     let document = document ()
-    let count = HostStringChecks.run document (fun () -> BrowserEvents.forDocument document)
+
+    let count =
+        HostStringChecks.run document (fun () -> BrowserEvents.forDocument document)
+
     {| hostStrings = count |}
 
 /// <summary>Runs the shared diagnostics assertions.</summary>

@@ -794,6 +794,99 @@ and internal DOMTokenListObject(session: Session, handle: nativeint) =
             Interop.check "DOMTokenList.supports" (NativeDom.rv_dom_dom_token_list_supports (Interop.handle (box this), nativeString0, nativeString0.Length, &result))
             result <> 0
 
+and internal DataTransferObject(session: Session, handle: nativeint) =
+    inherit NativeObject(session, handle, Kind.DataTransfer)
+    interface Ranvier.Dom.DataTransfer with
+        member this.dropEffect
+            with get () : string =
+                Interop.nonNull (Interop.text "DataTransfer.dropEffect" (fun buffer capacity length -> NativeDom.rv_dom_data_transfer_get_drop_effect (Interop.handle (box this), buffer, capacity, length)))
+            and set (value: string) =
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "DataTransfer.dropEffect" (NativeDom.rv_dom_data_transfer_set_drop_effect (Interop.handle (box this), nativeString0, nativeString0.Length))
+        member this.effectAllowed
+            with get () : string =
+                Interop.nonNull (Interop.text "DataTransfer.effectAllowed" (fun buffer capacity length -> NativeDom.rv_dom_data_transfer_get_effect_allowed (Interop.handle (box this), buffer, capacity, length)))
+            and set (value: string) =
+                use scope = new InputScope()
+                let nativeString0 = scope.Bytes(value)
+                Interop.check "DataTransfer.effectAllowed" (NativeDom.rv_dom_data_transfer_set_effect_allowed (Interop.handle (box this), nativeString0, nativeString0.Length))
+        member this.items
+            with get () : Ranvier.Dom.DataTransferItemList =
+                let mutable result = 0n
+                Interop.check "DataTransfer.items" (NativeDom.rv_dom_data_transfer_get_items (Interop.handle (box this), Interop.contextHandle this, &result))
+                (unbox<Ranvier.Dom.DataTransferItemList> (this.Session.Object(result, Kind.DataTransferItemList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (let document = Interop.transferDocument this in let target = (DataTransferItemListObject(session, handle) :> NativeObject) in target.BindDocumentContext(document); target)))))
+        member this.types
+            with get () : string array =
+                let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceDOMString>
+                try
+                    Interop.check "DataTransfer.types" (NativeDom.rv_dom_data_transfer_get_types (Interop.handle (box this), Interop.contextHandle this, &result))
+                    (Array.init result.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<NativeDom.RvDomUtf8StringSpan>(result.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<NativeDom.RvDomUtf8StringSpan>())) in Interop.spanText (item)))
+                finally
+                    NativeDom.rv_dom_sequence_dom_string_release(&result)
+        member this.files
+            with get () : Ranvier.Dom.FileList =
+                let mutable result = 0n
+                Interop.check "DataTransfer.files" (NativeDom.rv_dom_data_transfer_get_files (Interop.handle (box this), Interop.contextHandle this, &result))
+                (unbox<Ranvier.Dom.FileList> (this.Session.Object(result, Kind.FileList, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (FileListObject(session, handle) :> NativeObject)))))
+        member this.setDragImage(image: Ranvier.Dom.Element, x: int, y: int) : unit =
+            Interop.check "DataTransfer.setDragImage" (NativeDom.rv_dom_data_transfer_set_drag_image (Interop.handle (box this), Interop.handle (box image), int x, int y))
+        member this.getData(format: string) : string =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(format)
+            Interop.nonNull (Interop.text "DataTransfer.getData" (fun buffer capacity length -> NativeDom.rv_dom_data_transfer_get_data (Interop.handle (box this), Interop.contextHandle this, nativeString0, nativeString0.Length, buffer, capacity, length)))
+        member this.setData(format: string, data: string) : unit =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(format)
+            let nativeString1 = scope.Bytes(data)
+            Interop.check "DataTransfer.setData" (NativeDom.rv_dom_data_transfer_set_data (Interop.handle (box this), Interop.contextHandle this, nativeString0, nativeString0.Length, nativeString1, nativeString1.Length))
+        member this.clearData(?format: string) : unit =
+            use scope = new InputScope()
+            let nativeString0 = (match format with Some x -> scope.Bytes(x) | None -> null)
+            Interop.check "DataTransfer.clearData" (NativeDom.rv_dom_data_transfer_clear_data (Interop.handle (box this), nativeString0, (if isNull nativeString0 then -1 else nativeString0.Length)))
+
+and internal DataTransferItemObject(session: Session, handle: nativeint) =
+    inherit NativeObject(session, handle, Kind.DataTransferItem)
+    interface Ranvier.Dom.DataTransferItem with
+        member this.kind
+            with get () : string =
+                Interop.nonNull (Interop.text "DataTransferItem.kind" (fun buffer capacity length -> NativeDom.rv_dom_data_transfer_item_get_kind (Interop.handle (box this), buffer, capacity, length)))
+        member this.``type``
+            with get () : string =
+                Interop.nonNull (Interop.text "DataTransferItem.type" (fun buffer capacity length -> NativeDom.rv_dom_data_transfer_item_get_type (Interop.handle (box this), buffer, capacity, length)))
+        member this.getAsFile() : Ranvier.Dom.File =
+            let mutable result = 0n
+            Interop.check "DataTransferItem.getAsFile" (NativeDom.rv_dom_data_transfer_item_get_as_file (Interop.handle (box this), &result))
+            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.File> else (unbox<Ranvier.Dom.File> (this.Session.Object(result, Kind.Blob, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (FileObject(session, handle) :> NativeObject))))))
+
+and internal DataTransferItemListObject(session: Session, handle: nativeint) =
+    inherit NativeObject(session, handle, Kind.DataTransferItemList)
+    interface Ranvier.Dom.DataTransferItemList with
+        member this.length
+            with get () : int =
+                let mutable result = 0
+                Interop.check "DataTransferItemList.length" (NativeDom.rv_dom_data_transfer_item_list_get_length (Interop.handle (box this), &result))
+                int result
+        member this.item(index: uint32) : Ranvier.Dom.DataTransferItem =
+            let mutable result = 0n
+            Interop.check "DataTransferItemList.item" (NativeDom.rv_dom_data_transfer_item_list_item (Interop.handle (box this), uint32 index, &result))
+            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.DataTransferItem> else (unbox<Ranvier.Dom.DataTransferItem> (this.Session.Object(result, Kind.DataTransferItem, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (let document = Interop.transferDocument this in let target = (DataTransferItemObject(session, handle) :> NativeObject) in target.BindDocumentContext(document); target))))))
+        member this.add(data: string, ``type``: string) : Ranvier.Dom.DataTransferItem =
+            use scope = new InputScope()
+            let nativeString0 = scope.Bytes(data)
+            let nativeString1 = scope.Bytes(``type``)
+            let mutable result = 0n
+            Interop.check "DataTransferItemList.add" (NativeDom.rv_dom_data_transfer_item_list_add_2 (Interop.handle (box this), Interop.contextHandle this, nativeString0, nativeString0.Length, nativeString1, nativeString1.Length, &result))
+            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.DataTransferItem> else (unbox<Ranvier.Dom.DataTransferItem> (this.Session.Object(result, Kind.DataTransferItem, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (let document = Interop.transferDocument this in let target = (DataTransferItemObject(session, handle) :> NativeObject) in target.BindDocumentContext(document); target))))))
+        member this.add(file: Ranvier.Dom.File) : Ranvier.Dom.DataTransferItem =
+            let mutable result = 0n
+            Interop.check "DataTransferItemList.add" (NativeDom.rv_dom_data_transfer_item_list_add_1 (Interop.handle (box this), Interop.handle (box file), &result))
+            (if result = 0n then Unchecked.defaultof<Ranvier.Dom.DataTransferItem> else (unbox<Ranvier.Dom.DataTransferItem> (this.Session.Object(result, Kind.DataTransferItem, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (let document = Interop.transferDocument this in let target = (DataTransferItemObject(session, handle) :> NativeObject) in target.BindDocumentContext(document); target))))))
+        member this.remove(index: uint32) : unit =
+            Interop.check "DataTransferItemList.remove" (NativeDom.rv_dom_data_transfer_item_list_remove (Interop.handle (box this), uint32 index))
+        member this.clear() : unit =
+            Interop.check "DataTransferItemList.clear" (NativeDom.rv_dom_data_transfer_item_list_clear (Interop.handle (box this)))
+
 and internal EventObject(session: Session, handle: nativeint) =
     inherit NativeObject(session, handle, Kind.Event)
     interface Ranvier.Dom.Event with
@@ -4268,7 +4361,12 @@ and internal CSSViewTransitionRuleObject(session: Session, handle: nativeint) =
 
 and internal ClipboardEventObject(session: Session, handle: nativeint) =
     inherit EventObject(session, handle)
-    interface Ranvier.Dom.ClipboardEvent
+    interface Ranvier.Dom.ClipboardEvent with
+        member this.clipboardData
+            with get () : Ranvier.Dom.DataTransfer =
+                let mutable result = 0n
+                Interop.check "ClipboardEvent.clipboardData" (NativeDom.rv_dom_clipboard_event_get_clipboard_data (Interop.handle (box this), &result))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.DataTransfer> else (unbox<Ranvier.Dom.DataTransfer> (this.Session.Object(result, Kind.DataTransfer, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (let document = Interop.transferDocument this in let target = (DataTransferObject(session, handle) :> NativeObject) in target.BindDocumentContext(document); target))))))
 
 and internal CommandEventObject(session: Session, handle: nativeint) =
     inherit EventObject(session, handle)
@@ -5912,6 +6010,11 @@ and internal InputEventObject(session: Session, handle: nativeint) =
                 let mutable result = 0
                 Interop.check "InputEvent.isComposing" (NativeDom.rv_dom_input_event_get_is_composing (Interop.handle (box this), &result))
                 result <> 0
+        member this.dataTransfer
+            with get () : Ranvier.Dom.DataTransfer =
+                let mutable result = 0n
+                Interop.check "InputEvent.dataTransfer" (NativeDom.rv_dom_input_event_get_data_transfer (Interop.handle (box this), &result))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.DataTransfer> else (unbox<Ranvier.Dom.DataTransfer> (this.Session.Object(result, Kind.DataTransfer, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (let document = Interop.transferDocument this in let target = (DataTransferObject(session, handle) :> NativeObject) in target.BindDocumentContext(document); target))))))
         member this.getTargetRanges() : Ranvier.Dom.StaticRange array =
             let mutable result = Unchecked.defaultof<NativeDom.RvDomSequenceStaticRange>
             try
@@ -6278,7 +6381,12 @@ and internal DocumentFragmentObject(session: Session, handle: nativeint) =
 
 and internal DragEventObject(session: Session, handle: nativeint) =
     inherit MouseEventObject(session, handle)
-    interface Ranvier.Dom.DragEvent
+    interface Ranvier.Dom.DragEvent with
+        member this.dataTransfer
+            with get () : Ranvier.Dom.DataTransfer =
+                let mutable result = 0n
+                Interop.check "DragEvent.dataTransfer" (NativeDom.rv_dom_drag_event_get_data_transfer (Interop.handle (box this), &result))
+                (if result = 0n then Unchecked.defaultof<Ranvier.Dom.DataTransfer> else (unbox<Ranvier.Dom.DataTransfer> (this.Session.Object(result, Kind.DataTransfer, this, System.Func<Session, nativeint, NativeObject>(fun session handle -> (let document = Interop.transferDocument this in let target = (DataTransferObject(session, handle) :> NativeObject) in target.BindDocumentContext(document); target))))))
 
 and internal PointerEventObject(session: Session, handle: nativeint) =
     inherit MouseEventObject(session, handle)
@@ -29478,6 +29586,7 @@ and [<AbstractClass; Sealed>] internal Classes =
         let interfaceName = Interop.text "Event runtime interface" (fun buffer capacity length -> NativeDom.rv_dom_event_get_interface_name(handle, buffer, capacity, length))
         let wrapped: NativeObject =
             match interfaceName with
+            | "DragEvent" -> DragEventObject(session, handle)
             | "PointerEvent" -> PointerEventObject(session, handle)
             | "WheelEvent" -> WheelEventObject(session, handle)
             | "CompositionEvent" -> CompositionEventObject(session, handle)
@@ -29489,6 +29598,7 @@ and [<AbstractClass; Sealed>] internal Classes =
             | "BeforeUnloadEvent" -> BeforeUnloadEventObject(session, handle)
             | "AnimationEvent" -> AnimationEventObject(session, handle)
             | "TransitionEvent" -> TransitionEventObject(session, handle)
+            | "ClipboardEvent" -> ClipboardEventObject(session, handle)
             | "CommandEvent" -> CommandEventObject(session, handle)
             | "ContentVisibilityAutoStateChangeEvent" -> ContentVisibilityAutoStateChangeEventObject(session, handle)
             | "CustomEvent" -> EventObject(session, handle)

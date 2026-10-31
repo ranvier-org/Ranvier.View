@@ -1126,6 +1126,220 @@ let private runBinary () =
     System.Console.WriteLine $"NATIVE_API H11 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>
+/// Runs the shared DataTransfer fixture through native drops and pastes, with the native store-mode lifetime, permission,
+/// copy, reserved-type and range-replacement checks.
+/// </summary>
+[<Literal>]
+let private DataTransferChecksCount = 49
+
+let private runDataTransfer () =
+    let host = WebCoreHost.Create (320, 200)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let shared =
+        try
+            let document = host.Document
+            use binary = Ranvier.View.WebCore.BinaryValues.forHost host
+            use transfers = Ranvier.View.WebCore.DataTransfers.forHost host
+
+            let file name kind (text: string) =
+                binary.CreateFile (
+                    [| Ranvier.Dom.BlobPart.Text text |],
+                    name,
+                    { Ranvier.Dom.FileOptions.Default with
+                        Type = kind
+                    }
+                )
+
+            let center (element: Ranvier.Dom.Element) =
+                let rect = element.getBoundingClientRect ()
+                int (rect.x + rect.width / 2.0), int (rect.y + rect.height / 2.0)
+
+            let payload strings files : Ranvier.View.WebCore.TransferPayload =
+                { Strings = strings; Files = files }
+
+            let driver: DataTransferChecks.Driver =
+                {
+                    Create = fun () -> transfers.Create ()
+                    File = file
+                    Drop =
+                        fun element strings files ->
+                            let x, y = center element
+
+                            Ranvier.View.WebCore.DataTransfers.drop host x y 1 (payload strings files)
+                            |> ignore
+                    Paste =
+                        fun element strings files ->
+                            (unbox<Ranvier.Dom.HTMLElement> element).focus()
+                            Ranvier.View.WebCore.DataTransfers.setClipboard host ignore (fun () -> Some (payload strings files))
+
+                            Ranvier.View.WebCore.DataTransfers.paste host
+                            |> ignore
+                }
+
+            let count = DataTransferChecks.run document driver
+
+            // Store modes: a drop's DataTransfer reads its data during the event and nothing afterwards.
+            let target = document.createElement "div"
+            target.setAttribute ("style", "position:absolute;left:0;top:0;width:200px;height:80px")
+            document.body.appendChild target |> ignore
+            let mutable held: Ranvier.Dom.DataTransfer = null
+            let mutable during = ""
+            let mutable overText = "unset"
+
+            let onOver: Ranvier.Dom.EventListener =
+                fun event ->
+                    event.preventDefault ()
+                    overText <- (unbox<Ranvier.Dom.DragEvent> event).dataTransfer.getData "text/plain"
+
+            let onDrop: Ranvier.Dom.EventListener =
+                fun event ->
+                    event.preventDefault ()
+                    held <- (unbox<Ranvier.Dom.DragEvent> event).dataTransfer
+                    during <- held.getData "text/plain"
+
+            target.addEventListener ("dragover", onOver)
+            target.addEventListener ("drop", onDrop)
+            let kept = file "kept.txt" "text/plain" "kept"
+
+            let operation =
+                Ranvier.View.WebCore.DataTransfers.drop host 20 20 1 (payload [| struct ("text/plain", "D") |] [| kept |])
+
+            expect (operation = 1) "A cancelled dragover accepts the drop as a copy"
+            expect (overText = "") "dragover's DataTransfer is protected: its data reads empty"
+            expect (during = "D") "drop's DataTransfer is read-only: its data reads"
+
+            expect
+                (held.types.Length = 0
+                 && held.getData "text/plain" = "")
+                "The drop's DataTransfer reads nothing after the event"
+
+            expect (held.files.length = 0u) "The drop's DataTransfer lists no File after the event"
+
+            let reserved =
+                try
+                    Ranvier.View.WebCore.DataTransfers.drop host 20 20 1 (payload [| struct ("Files", "x") |] [||])
+                    |> ignore
+
+                    false
+                with _ ->
+                    true
+
+            expect reserved "A Files string type is refused"
+
+            // Permission: the app refuses a paste.
+            let editable = document.createElement "div"
+            editable.setAttribute ("contenteditable", "")
+            editable.textContent <- "ab"
+            document.body.appendChild editable |> ignore
+            (unbox<Ranvier.Dom.HTMLElement> editable).focus()
+            let copied = ResizeArray<Ranvier.View.WebCore.TransferPayload>()
+            Ranvier.View.WebCore.DataTransfers.setClipboard host copied.Add (fun () -> None)
+
+            let denied =
+                try
+                    Ranvier.View.WebCore.DataTransfers.paste host
+                    |> ignore
+
+                    ""
+                with WebCoreDomException (name, _) ->
+                    name
+
+            expect (denied = "NotAllowedError") "A refused paste fails with NotAllowedError"
+            expect (editable.textContent = "ab") "A refused paste inserts nothing"
+
+            // Copy: the page's string, U+0000 included, and File reach the app.
+            let copiedText = "C" + string (char 0) + "1"
+
+            let onCopy: Ranvier.Dom.EventListener =
+                fun event ->
+                    event.preventDefault ()
+                    let data = (unbox<Ranvier.Dom.ClipboardEvent> event).clipboardData
+                    data.setData ("text/plain", copiedText)
+
+                    data.items.add (file "c.txt" "text/plain" "copied")
+                    |> ignore
+
+            editable.addEventListener ("copy", onCopy)
+            expect (Ranvier.View.WebCore.DataTransfers.copy host) "A cancelled copy applies"
+            expect (copied.Count = 1) "The copy reaches the app once"
+            let copy = copied[0]
+            expect (copy.Strings = [| struct ("text/plain", copiedText) |]) "The copy carries the page's string, U+0000 included"
+
+            expect
+                (copy.Files.Length = 1
+                 && copy.Files[0].name = "c.txt"
+                 && copy.Files[0].size = 6UL)
+                "The copy carries the page's File"
+
+            // T04: a replacement edit, cancelled and applied, with its target range and payload.
+            editable.textContent <- "hello world"
+            let text = editable.firstChild
+            let mutable cancel = true
+            let records = ResizeArray<string * string * int>()
+
+            let onBefore: Ranvier.Dom.EventListener =
+                fun event ->
+                    let input = unbox<Ranvier.Dom.InputEvent> event
+                    records.Add (input.inputType, input.dataTransfer.getData "text/plain", input.getTargetRanges().Length)
+
+                    if cancel then
+                        event.preventDefault ()
+
+            editable.addEventListener ("beforeinput", onBefore)
+
+            let replace () =
+                let range = document.createRange ()
+                range.setStart (text, 6u)
+                range.setEnd (text, 11u)
+                Ranvier.View.WebCore.DataTransfers.replaceRange host range "there"
+
+            expect (not (replace ())) "A cancelled beforeinput prevents the replacement"
+            expect (editable.textContent = "hello world") "The cancelled replacement leaves the text"
+            cancel <- false
+            expect (replace ()) "An uncancelled replacement applies"
+            expect (editable.textContent = "hello there") "The replacement replaces the range"
+
+            expect
+                (List.ofSeq records = [ ("insertReplacementText", "there", 1); ("insertReplacementText", "there", 1) ])
+                "beforeinput carries insertReplacementText, its text and one target range"
+
+            editable.removeEventListener ("beforeinput", onBefore)
+            editable.removeEventListener ("copy", onCopy)
+            target.removeEventListener ("dragover", onOver)
+            target.removeEventListener ("drop", onDrop)
+            held <- null
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    System.GC.Collect ()
+    System.GC.WaitForPendingFinalizers ()
+    expect (session.LiveObjects = 0) "DataTransfer fixture leaves no live native objects"
+
+    if shared <> DataTransferChecksCount then
+        failwith (
+            "DataTransfer shared assertions did not run: "
+            + string shared
+        )
+
+    System.Console.WriteLine ("NATIVE_API I07 PASS assertions=" + string shared)
+
+    System.Console.WriteLine (
+        "NATIVE_API I07 LIFETIME PASS assertions="
+        + string lifetime
+    )
+
+    shared
+
 /// <summary>Runs the shared URL fixture with native thread and teardown checks.</summary>
 [<Literal>]
 let private UrlChecksCount = 190
@@ -1842,11 +2056,14 @@ let private runHostStrings () =
                 HostStringChecks.run host.Document (fun () -> Ranvier.View.WebCore.EventConstruction.forHost host)
 
             let document = host.Document
-            let area = unbox<Ranvier.Dom.HTMLTextAreaElement> (document.createElement "textarea")
+            let area = unbox<Ranvier.Dom.HTMLTextAreaElement>(document.createElement "textarea")
             document.body.appendChild area |> ignore
             host.SetFocused true
             area.focus ()
-            host.Key (2, "a", "KeyA", "a\u0000b", 0, false) |> ignore
+
+            host.Key (2, "a", "KeyA", "a\u0000b", 0, false)
+            |> ignore
+
             equal "key text" "a\u0000b" area.value
             area.value <- ""
             host.SetComposition ("c\u0000d", 3, 3)
@@ -1855,15 +2072,36 @@ let private runHostStrings () =
             let written = ResizeArray<struct (string * string)>()
             host.SetClipboard ((fun kind data _ -> written.Add (struct (kind, data))), (fun () -> [ struct ("text/plain", "p\u0000q") ]))
             area.value <- ""
-            host.Key (0, "v", "KeyV", null, 2, false) |> ignore
+
+            host.Key (0, "v", "KeyV", null, 2, false)
+            |> ignore
+
             equal "clipboard paste" "p\u0000q" area.value
             area.value <- "aé中\U0001F600b"
-            host.Key (0, "a", "KeyA", null, 2, false) |> ignore
-            host.Key (0, "c", "KeyC", null, 2, false) |> ignore
-            let plain = [ for struct (kind, data) in written do if kind = "text/plain" then data ]
+
+            host.Key (0, "a", "KeyA", null, 2, false)
+            |> ignore
+
+            host.Key (0, "c", "KeyC", null, 2, false)
+            |> ignore
+
+            let plain =
+                [
+                    for struct (kind, data) in written do
+                        if kind = "text/plain" then
+                            data
+                ]
+
             equal "clipboard copy" "aé中\U0001F600b" (String.concat "|" plain)
             host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"><text>a</text></svg>\u0000<!--tail-->"
-            equal "SVG markup after U+0000" "parsererror" (match host.Document.querySelector "parsererror" with null -> "none" | _ -> "parsererror")
+
+            equal
+                "SVG markup after U+0000"
+                "parsererror"
+                (match host.Document.querySelector "parsererror" with
+                 | null -> "none"
+                 | _ -> "parsererror")
+
             count
         finally
             (host :> System.IDisposable).Dispose()
@@ -3948,6 +4186,7 @@ let private runAll () =
     runForms () |> ignore
     runDialogs () |> ignore
     runBinary () |> ignore
+    runDataTransfer () |> ignore
     runUrls () |> ignore
     runSubmissions () |> ignore
     runSegments () |> ignore
@@ -5017,6 +5256,9 @@ let main args =
         0
     elif Array.contains "--binary-only" args then
         runBinary () |> ignore
+        0
+    elif Array.contains "--data-transfer-only" args then
+        runDataTransfer () |> ignore
         0
     elif Array.contains "--frames-only" args then
         runFrames () |> ignore

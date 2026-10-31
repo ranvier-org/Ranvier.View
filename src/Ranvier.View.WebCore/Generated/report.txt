@@ -189,6 +189,7 @@ Members by class (mapped / hand-written / unmapped):
   CanvasRenderingContext2DObject: 5 / 0 / 0
   CaretPositionObject: 3 / 0 / 0
   CharacterDataObject: 14 / 0 / 0
+  ClipboardEventObject: 1 / 0 / 0
   CommandEventObject: 2 / 0 / 0
   CompositionEventObject: 1 / 0 / 0
   ContentVisibilityAutoStateChangeEventObject: 1 / 0 / 0
@@ -205,8 +206,12 @@ Members by class (mapped / hand-written / unmapped):
   DOMSelectionObject: 31 / 0 / 0
   DOMStringMapObject: 3 / 0 / 0
   DOMTokenListObject: 10 / 0 / 0
+  DataTransferItemListObject: 6 / 0 / 0
+  DataTransferItemObject: 3 / 0 / 0
+  DataTransferObject: 11 / 0 / 0
   DocumentFragmentObject: 11 / 0 / 0
   DocumentObject: 72 / 2 / 0
+  DragEventObject: 1 / 0 / 0
   ElementObject: 195 / 0 / 0
   ErrorEventObject: 4 / 0 / 0
   EventObject: 16 / 2 / 0
@@ -278,7 +283,7 @@ Members by class (mapped / hand-written / unmapped):
   HTMLUListElementObject: 4 / 0 / 0
   HashChangeEventObject: 2 / 0 / 0
   HighlightObject: 4 / 0 / 0
-  InputEventObject: 2 / 2 / 0
+  InputEventObject: 3 / 2 / 0
   KeyboardEventObject: 12 / 1 / 0
   MathMLElementObject: 11 / 0 / 0
   MediaListObject: 6 / 0 / 0

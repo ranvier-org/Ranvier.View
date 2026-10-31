@@ -67,6 +67,7 @@
     <Compile Include="ValueFactoryChecks.fs" />
     <Compile Include="DialogChecks.fs" />
     <Compile Include="BinaryChecks.fs" />
+    <Compile Include="DataTransferChecks.fs" />
     <Compile Include="BlobUrlChecks.fs" />
     <Compile Include="CryptoChecks.fs" />
     <Compile Include="HighlightChecks.fs" />
