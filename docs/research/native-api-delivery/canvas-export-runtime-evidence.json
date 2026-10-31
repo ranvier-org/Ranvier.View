@@ -1,0 +1,49 @@
+{
+  "group": "R07 #96",
+  "status": "green (private Windows x64; not accepted)",
+  "viewsHead": "d439f333d2cb49058042702d5543421c09a41271",
+  "nativeEvidence": {
+    "file": "C:\\wk\\native-canvas-pixels\\docs\\canvas-export-evidence\\final-evidence.json",
+    "sha256": "6ecac3f25dd8b76bc02003ea5772ab10fc9001b516199740e72f4d205ad2fad2"
+  },
+  "jit": {
+    "passLines": 124,
+    "baselinePassLines": 123,
+    "r07": [
+      "NATIVE_API R07 PASS assertions=39"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "8a0676d15619b2a93a049644b97a9f80d0e3dad70d9ab8208260a80c79b64d66"
+  },
+  "aot": {
+    "passLines": 124,
+    "baselinePassLines": 123,
+    "r07": [
+      "NATIVE_API R07 PASS assertions=39"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "3b55ec73448a7faebcb985a2209c68689322b81f02e0a05bcf8e653d495d1c9d"
+  },
+  "chromium": {
+    "passLines": 89,
+    "baselinePassLines": 88,
+    "r07": [
+      "BROWSER_API R07 PASS assertions=39"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "7497fd95a4b531ff8db5aad694246066b425f46cede81e12ace3af12a19fbb48"
+  },
+  "aot-export-repeat30.txt": [
+    "30 NATIVE_API R07 PASS assertions=39"
+  ],
+  "chromium-export-repeat30.txt": [
+    "30 BROWSER_API R07 PASS assertions=39 engine=chromium"
+  ],
+  "qualifications": [
+    "The shared fixture checks export bytes, data URLs, Blobs, RGBA8 and zero-size canvases, createImageBitmap with crop, flipY, resize, a Blob and failure names, close, cancel and the bitmaprenderer transfer; <img>, SVG <image>, WEBP and tainting are asserted by the native canvas_export probe.",
+    "An unsupported encoding raises NotSupportedException on both providers; Chromium itself substitutes PNG.",
+    "Kind 121 (ImageBitmapRenderingContext) is a placeholder; root assigns kinds at integration.",
+    "The first NativeAOT full run stopped in the D16 dialog fixture (\"second showModal: expected [()], got []\", aot-first-run-dialog-flake.log), which runs before R07; --dialogs-only then failed 1 of 5 and 0 of 10 on this runtime and 0 of 10 on the R06 runtime, and the full rerun (aot.log) passed: a timing-dependent dialog check.",
+    "Views is deliberately not merged with R12 (rv-snapshot 40fe831): its snapshot provider needs native R12 exports this native branch lacks; it reaches R07 at batch-5 integration."
+  ]
+}

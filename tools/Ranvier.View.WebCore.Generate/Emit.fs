@@ -185,8 +185,12 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
             else
                 match fn.Defaults.TryFind p.Name with
                 | Some raw ->
+                    // An enumeration entry is [values, attributes, IDL file].
+                    let entry =
+                        ctx.Input.Model.GetProperty("enumerations").GetProperty (Metadata.text "enum" mapping)
+
                     let values =
-                        ctx.Input.Model.GetProperty("enumerations").GetProperty(Metadata.text "enum" mapping).EnumerateArray()
+                        entry[0].EnumerateArray ()
                         |> Seq.map _.GetString()
                         |> Seq.toArray
 
@@ -389,6 +393,10 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
 
             Ok
                 $"(unbox<{name managed}> (this.Session.Object({value}, {kind}, {owner}, System.Func<Session, nativeint, NativeObject>(fun session handle -> {create}))))"
+        elif root = "CanvasGradient" then
+            // addColorStop parses colours against a document: the gradient keeps its creator's document context.
+            Ok
+                $"(let target = this.Session.Track ({cls}(this.Session, {value})) in target.BindDocumentContext(Interop.contextDocument this); target :> {name managed})"
         else
             Ok $"(this.Session.Track ({cls}(this.Session, {value})) :> {name managed})"
 
@@ -525,6 +533,10 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
                     |> String.concat " "
 
                 Ok (wrap $"(match {value}.tag with {branches} | _ -> invalidOp \"Unknown {plain.Name} union tag from WebCore\")")
+    | "union" when (Metadata.items "subtypes" mapping).Length = 1 ->
+        // The model types a single-arm union as its arm.
+        let arm = (Metadata.items "subtypes" mapping)[0]
+        decoded ctx arm plain $"{value}.arm0" owner |> Result.map wrap
     | _ -> Error $"Unsupported owned result {kind} as {name managed}"
 
 /// <summary>The body of a mapped member, or why it cannot be mapped.</summary>

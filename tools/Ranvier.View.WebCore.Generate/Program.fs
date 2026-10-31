@@ -139,6 +139,11 @@ let private kinds =
             "AnimationTimeline", "Kind.AnimationTimeline"
             "FontFace", "Kind.FontFace"
             "FontFaceSet", "Kind.FontFaceSet"
+            "Path2D", "Kind.Path2D"
+            "ImageData", "Kind.ImageData"
+            "ImageBitmap", "Kind.ImageBitmap"
+            "ImageBitmapRenderingContext", "Kind.ImageBitmapRenderingContext"
+            "TextMetrics", "Kind.TextMetrics"
         ]
 
 [<EntryPoint>]

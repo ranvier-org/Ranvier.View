@@ -1525,7 +1525,55 @@ let runHighlights () =
 let runCanvas () =
     let document = document ()
     let count = CanvasChecks.run (fun () -> BrowserCanvas.forDocument document) document
-    {| canvas = count |}
+    let paths = CanvasPathChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
+    let state = CanvasStateChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
+    let paints = CanvasPaintChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
+    {| canvas = count; canvasPaths = paths; canvasState = state; canvasPaints = paints |}
+
+/// <summary>Runs the shared R05 canvas text assertions over the fixture server's Ahem face.</summary>
+let runCanvasText () =
+    async {
+        let document = document ()
+
+        let! count =
+            CanvasTextChecks.run
+                (fun () -> BrowserCanvas.forDocument document)
+                document
+                (fun () -> BrowserFonts.forDocument document)
+                "/fixtures/Ahem.ttf"
+                CanvasTextChecks.TextEngine.Chromium
+                wait
+
+        return {| canvasText = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared canvas pixel assertions.</summary>
+let runCanvasPixels () =
+    let document = document ()
+
+    let count =
+        CanvasPixelChecks.run (fun () -> BrowserCanvas.forDocument document) (fun () -> BrowserCanvasPixels.forDocument document) document errorName
+
+    {| canvasPixels = count |}
+
+/// <summary>Runs the shared canvas export assertions.</summary>
+let runCanvasExport () =
+    async {
+        let document = document ()
+        let driver: CanvasExportChecks.Driver = { Settle = fun () -> Async.Sleep 1 }
+
+        let! count =
+            CanvasExportChecks.run
+                (fun () -> BrowserCanvas.forDocument document)
+                (fun () -> BrowserCanvasPixels.forDocument document)
+                (fun () -> BrowserCanvasExport.forDocument document)
+                document
+                driver
+
+        return {| canvasExport = count |}
+    }
+    |> Async.StartAsPromise
 
 /// <summary>Runs the shared U+0000 round-trip assertions (WebCore #142).</summary>
 let runStrings () =

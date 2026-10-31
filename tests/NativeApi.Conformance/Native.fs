@@ -2430,6 +2430,15 @@ let private runHighlights () =
 [<Literal>]
 let private CanvasChecksCount = 41
 
+[<Literal>]
+let private CanvasPathChecksCount = 43
+
+[<Literal>]
+let private CanvasStateChecksCount = 26
+
+[<Literal>]
+let private CanvasPaintChecksCount = 35
+
 let private runCanvas () =
     let host = WebCoreHost.Create (320, 240)
     let session = host.Session
@@ -2450,10 +2459,21 @@ let private runCanvas () =
         | :? System.InvalidOperationException -> true
 
     let mutable held = None
+    let mutable paths = 0
+    let mutable state = 0
+    let mutable paints = 0
+
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
 
     let shared =
         try
             let count = CanvasChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document
+            paths <- CanvasPathChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
+            state <- CanvasStateChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
+            paints <- CanvasPaintChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
             let service = Ranvier.View.WebCore.Canvas.forHost host
             let document = host.Document
             document.body.innerHTML <- ""
@@ -2504,7 +2524,125 @@ let private runCanvas () =
         failwith $"Canvas shared assertions did not run: {shared}"
 
     System.Console.WriteLine $"NATIVE_API R01 PASS assertions={shared}"
+
+    if paths <> CanvasPathChecksCount then
+        failwith $"Canvas path shared assertions did not run: {paths}"
+
+    System.Console.WriteLine $"NATIVE_API R02 PASS assertions={paths}"
+
+    if state <> CanvasStateChecksCount then
+        failwith $"Canvas state shared assertions did not run: {state}"
+
+    System.Console.WriteLine $"NATIVE_API R03 PASS assertions={state}"
+
+    if paints <> CanvasPaintChecksCount then
+        failwith $"Canvas paint shared assertions did not run: {paints}"
+
+    System.Console.WriteLine $"NATIVE_API R04 PASS assertions={paints}"
     System.Console.WriteLine $"NATIVE_API R01 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared canvas pixel fixture with native thread and teardown checks.</summary>
+[<Literal>]
+let private CanvasPixelChecksCount = 36
+
+let private runCanvasPixels () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                CanvasPixelChecks.run
+                    (fun () -> Ranvier.View.WebCore.Canvas.forHost host)
+                    (fun () -> Ranvier.View.WebCore.CanvasPixels.forHost host)
+                    host.Document
+                    errorName
+
+            let service = Ranvier.View.WebCore.CanvasPixels.forHost host
+            let image = service.Create (1, 1)
+
+            let wrongThread =
+                System.Threading.Tasks.Task.Run(fun () -> rejected (fun () -> service.Layout image |> ignore)).GetAwaiter().GetResult()
+
+            expect wrongThread "ImageData layout rejects another thread"
+            held <- Some (service, image)
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Canvas pixel fixture leaves no live native objects"
+    let service, image = held.Value
+    expect (rejected (fun () -> service.Read (image, 0, 4) |> ignore)) "A held ImageData service rejects calls after host disposal"
+    service.Dispose ()
+
+    if shared <> CanvasPixelChecksCount then
+        failwith $"Canvas pixel shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API R06 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API R06 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared canvas export fixture with native teardown checks.</summary>
+[<Literal>]
+let private CanvasExportChecksCount = 40
+
+let private runCanvasExport () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+
+    let shared =
+        try
+            let driver: CanvasExportChecks.Driver = { Settle = fun () -> async { host.Cycle () |> ignore } }
+
+            let count =
+                CanvasExportChecks.run
+                    (fun () -> Ranvier.View.WebCore.Canvas.forHost host)
+                    (fun () -> Ranvier.View.WebCore.CanvasPixels.forHost host)
+                    (fun () -> Ranvier.View.WebCore.CanvasExport.forHost host)
+                    host.Document
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 120000L do
+                host.Cycle () |> ignore
+
+            count.GetAwaiter().GetResult()
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith "Canvas export fixture leaves live native objects"
+
+    if shared <> CanvasExportChecksCount then
+        failwith $"Canvas export shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API R07 PASS assertions={shared}"
     shared
 
 /// <summary>Runs the shared diagnostics fixture with native thread, snapshot release and teardown checks.</summary>
@@ -4578,6 +4716,79 @@ let private runFonts () =
     System.Console.WriteLine "NATIVE_API T02 TEARDOWN PASS"
     readiness + construction
 
+[<Literal>]
+let private CanvasTextChecksCount = 80
+
+/// <summary>Runs the shared R05 canvas text fixture over an Ahem face served through the host's resource provider.</summary>
+let private runCanvasText () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let previous = System.Threading.SynchronizationContext.Current
+    let loop = OwnerLoop ()
+    System.Threading.SynchronizationContext.SetSynchronizationContext loop
+    let font = (resourceFixture ()).Font
+
+    let provider: Ranvier.Dom.ResourceProvider =
+        fun _ complete ->
+            complete (
+                Ok
+                    {
+                        ContentType = "font/ttf"
+                        Bytes = font
+                    }
+            )
+
+            { new System.IDisposable with
+                member _.Dispose() = ()
+            }
+
+    let count =
+        try
+            use resources = Ranvier.View.WebCore.Resources.forHost host provider
+
+            let pending =
+                CanvasTextChecks.run
+                    (fun () -> Ranvier.View.WebCore.Canvas.forHost host)
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.Fonts.forHost host)
+                    "https://r05.test/ahem"
+                    CanvasTextChecks.TextEngine.WebKit
+                    (fun milliseconds ->
+                        async {
+                            let clock = System.Diagnostics.Stopwatch.StartNew ()
+
+                            while clock.ElapsedMilliseconds < int64 milliseconds do
+                                loop.Drain ()
+                                host.Cycle 5
+                        })
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not pending.IsCompleted
+                  && timeout.ElapsedMilliseconds < 30000L do
+                loop.Drain ()
+                host.Cycle ()
+                System.Threading.Thread.Sleep 1
+
+            if not pending.IsCompleted then
+                failwith "Canvas text fixture did not complete on the owner loop"
+
+            pending.GetAwaiter().GetResult()
+        finally
+            System.Threading.SynchronizationContext.SetSynchronizationContext previous
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith ("Canvas text fixture leaked " + string session.LiveObjects + " managed native objects")
+
+    if count <> CanvasTextChecksCount then
+        failwith ("Canvas text shared assertions did not run: " + string count)
+
+    System.Console.WriteLine ("NATIVE_API R05 PASS assertions=" + string count)
+    System.Console.WriteLine "NATIVE_API R05 TEARDOWN PASS"
+    count
+
 /// <summary>Runs the shared tree traversal and MathML fixtures with native traversal lifetime checks.</summary>
 let private runDomModel () =
     let lifetime = TraversalLifecycle.run ()
@@ -4661,6 +4872,9 @@ let private runAll () =
     runValueFactories () |> ignore
     runHighlights () |> ignore
     runCanvas () |> ignore
+    runCanvasText () |> ignore
+    runCanvasPixels () |> ignore
+    runCanvasExport () |> ignore
     runStrings () |> ignore
     runHostStrings () |> ignore
     runDiagnostics () |> ignore
@@ -5687,6 +5901,13 @@ let main args =
         0
     elif Array.contains "--canvas-only" args then
         runCanvas () |> ignore
+        runCanvasText () |> ignore
+        0
+    elif Array.contains "--canvas-pixels-only" args then
+        runCanvasPixels () |> ignore
+        0
+    elif Array.contains "--canvas-export-only" args then
+        runCanvasExport () |> ignore
         0
     elif Array.contains "--strings-only" args then
         runStrings () |> ignore

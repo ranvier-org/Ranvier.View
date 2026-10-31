@@ -438,11 +438,52 @@ const runCanvas = async () => {
     const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runCanvas(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.canvas !== CANVAS_ASSERTIONS) throw new Error(`Canvas assertions did not run: ${JSON.stringify(result)}`);
     console.log(`BROWSER_API R01 PASS assertions=${result.canvas} engine=chromium`);
+    if (result.canvasPaths !== CANVAS_PATH_ASSERTIONS) throw new Error(`Canvas path assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R02 PASS assertions=${result.canvasPaths} engine=chromium`);
+    if (result.canvasState !== CANVAS_STATE_ASSERTIONS) throw new Error(`Canvas state assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R03 PASS assertions=${result.canvasState} engine=chromium`);
+    if (result.canvasPaints !== CANVAS_PAINT_ASSERTIONS) throw new Error(`Canvas paint assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R04 PASS assertions=${result.canvasPaints} engine=chromium`);
+    const text = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runCanvasText(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (text.canvasText !== CANVAS_TEXT_ASSERTIONS) throw new Error(`Canvas text assertions did not run: ${JSON.stringify(text)}`);
+    console.log(`BROWSER_API R05 PASS assertions=${text.canvasText} engine=chromium`);
   } finally {
     await canvasBrowser.close();
   }
 };
 const CANVAS_ASSERTIONS = 41;
+const CANVAS_PATH_ASSERTIONS = 43;
+const CANVAS_STATE_ASSERTIONS = 26;
+const CANVAS_PAINT_ASSERTIONS = 35;
+const CANVAS_TEXT_ASSERTIONS = 80;
+// R06 runs the canvas pixel fixture in its own page.
+const runCanvasPixels = async () => {
+  const pixelsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await pixelsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runCanvasPixels(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.canvasPixels !== CANVAS_PIXEL_ASSERTIONS) throw new Error(`Canvas pixel assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R06 PASS assertions=${result.canvasPixels} engine=chromium`);
+  } finally {
+    await pixelsBrowser.close();
+  }
+};
+const CANVAS_PIXEL_ASSERTIONS = 36;
+// R07 runs the canvas export fixture in its own page.
+const runCanvasExport = async () => {
+  const exportBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await exportBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runCanvasExport(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.canvasExport !== CANVAS_EXPORT_ASSERTIONS) throw new Error(`Canvas export assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R07 PASS assertions=${result.canvasExport} engine=chromium`);
+  } finally {
+    await exportBrowser.close();
+  }
+};
+const CANVAS_EXPORT_ASSERTIONS = 40;
 // WebCore #142 runs the U+0000 round-trip fixture in its own page.
 const runStrings = async () => {
   const stringsBrowser = await chromium.launch({ headless: true });
@@ -660,6 +701,8 @@ try {
   else if (cryptoOnly) { await runCrypto(); process.exitCode = 0; }
   else if (highlightsOnly) { await runHighlights(); process.exitCode = 0; }
   else if (canvasOnly) { await runCanvas(); process.exitCode = 0; }
+  else if (process.argv.includes('--canvas-pixels-only')) { await runCanvasPixels(); process.exitCode = 0; }
+  else if (process.argv.includes('--canvas-export-only')) { await runCanvasExport(); process.exitCode = 0; }
   else if (blobUrlsOnly) { await runBlobUrls(); process.exitCode = 0; }
   else if (mediaCapabilitiesOnly) { await runMediaCapabilities(); process.exitCode = 0; }
   else if (snapshotsOnly) { await runSnapshots(); process.exitCode = 0; }
@@ -930,6 +973,8 @@ try {
   await runCrypto();
   await runHighlights();
   await runCanvas();
+  await runCanvasPixels();
+  await runCanvasExport();
   await runStrings();
   await runHostStrings();
   await runDiagnostics();
