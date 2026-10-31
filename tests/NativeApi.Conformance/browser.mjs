@@ -309,6 +309,20 @@ const runStrings = async () => {
   }
 };
 const STRING_ASSERTIONS = 18;
+// WebCore #145 runs the U+0000 event-type fixture in its own page.
+const runHostStrings = async () => {
+  const hostStringsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await hostStringsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runHostStrings(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.hostStrings !== HOST_STRING_ASSERTIONS) throw new Error(`U+0000 event-type assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API WC145 PASS assertions=${result.hostStrings} engine=chromium`);
+  } finally {
+    await hostStringsBrowser.close();
+  }
+};
+const HOST_STRING_ASSERTIONS = 5;
 // H08 runs the diagnostics fixture in its own page.
 const runDiagnostics = async () => {
   const diagnosticsBrowser = await chromium.launch({ headless: true });
@@ -440,6 +454,7 @@ try {
   else if (highlightsOnly) { await runHighlights(); process.exitCode = 0; }
   else if (blobUrlsOnly) { await runBlobUrls(); process.exitCode = 0; }
   else if (stringsOnly) { await runStrings(); process.exitCode = 0; }
+  else if (process.argv.includes('--host-strings-only')) { await runHostStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
   else if (process.argv.includes('--coordinates-only')) { await runCoordinates(); process.exitCode = 0; }
@@ -683,6 +698,7 @@ try {
   await runCrypto();
   await runHighlights();
   await runStrings();
+  await runHostStrings();
   await runDiagnostics();
   await runCascade();
   await runCoordinates();
