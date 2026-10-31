@@ -85,3 +85,56 @@ module Frames =
 
                     pending.Clear ()
         }
+
+    /// <summary>Idle callbacks of <c>host</c>, in the idle periods of <c>WebCoreHost.Cycle</c>.</summary>
+    /// <remarks>A period starts in a <c>Cycle</c> with no frame requested; its deadline is the earlier of 50 ms on the
+    /// host's timing clock and the next timer's due time.</remarks>
+    /// <param name="host">The live host whose creating thread runs every operation.</param>
+    let idleForHost (host: WebCoreHost) : IdleScheduler =
+        if isNull (box host) then
+            nullArg (nameof host)
+
+        host.EnsureActive ()
+        let mutable disposed = false
+        let pending = HashSet<int>()
+
+        { new IdleScheduler with
+            member _.Idle(timeout, callback) =
+                host.EnsureActive ()
+
+                if disposed then
+                    raise (ObjectDisposedException (nameof IdleScheduler))
+
+                let id = ref 0
+
+                id.Value <-
+                    match timeout with
+                    | Some milliseconds ->
+                        host.RequestIdleCallback (
+                            (fun deadline ->
+                                pending.Remove id.Value |> ignore
+                                callback deadline),
+                            milliseconds
+                        )
+                    | None ->
+                        host.RequestIdleCallback (fun deadline ->
+                            pending.Remove id.Value |> ignore
+                            callback deadline)
+
+                pending.Add id.Value |> ignore
+
+                { new IDisposable with
+                    member _.Dispose() =
+                        if pending.Remove id.Value then
+                            host.CancelIdleCallback id.Value
+                }
+
+            member _.Dispose() =
+                if not disposed then
+                    disposed <- true
+
+                    for id in Seq.toArray pending do
+                        host.CancelIdleCallback id
+
+                    pending.Clear ()
+        }

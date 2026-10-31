@@ -148,6 +148,121 @@ let private runFrames () =
     System.Console.WriteLine $"NATIVE_API A12 PASS assertions={hostCount} manual={manualCount}"
     hostCount
 
+let private runIdle () =
+    let complete (pending: System.Threading.Tasks.Task<int>) (pump: unit -> unit) =
+        let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+        while not pending.IsCompleted
+              && timeout.ElapsedMilliseconds < 20000L do
+            pump ()
+
+        pending.GetAwaiter().GetResult()
+
+    let manual = Ranvier.Dom.ManualFrameScheduler ()
+
+    let manualCount =
+        complete
+            (IdleChecks.run
+                (fun () -> manual :> Ranvier.Dom.IdleScheduler, manual :> Ranvier.Dom.FrameScheduler)
+                {
+                    Idle = fun () -> async { manual.RunIdle 50.0 }
+                    NextFrame = fun () -> async { manual.RunFrame () }
+                    Starve = fun milliseconds -> async { manual.Advance milliseconds }
+                }
+             |> Async.StartImmediateAsTask)
+            ignore
+
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+
+    let hostCount, lifetime =
+        try
+            let driver: IdleChecks.Driver =
+                {
+                    Idle =
+                        fun () ->
+                            async {
+                                if host.FrameRequested then
+                                    host.Frame () |> ignore
+
+                                host.Cycle ()
+                            }
+                    NextFrame = fun () -> async { host.Frame () |> ignore }
+                    Starve =
+                        fun milliseconds ->
+                            async {
+                                let blocker = host.RequestAnimationFrame ignore
+                                let clock = System.Diagnostics.Stopwatch.StartNew ()
+
+                                while clock.Elapsed.TotalMilliseconds < milliseconds do
+                                    host.Cycle 1
+
+                                host.Cycle ()
+                                host.CancelAnimationFrame blocker
+                                host.Frame () |> ignore
+                            }
+                }
+
+            let count =
+                complete
+                    (IdleChecks.run (fun () -> Ranvier.View.WebCore.Frames.idleForHost host, Ranvier.View.WebCore.Frames.forHost host) driver
+                     |> Async.StartImmediateAsTask)
+                    ignore
+
+            // Host-loop lifetime: a requested frame defers the idle period, and a period is bounded by the next timer.
+            let mutable checks = 0
+            let mutable ran = false
+            let mutable remaining = -1.0
+
+            let check label condition =
+                checks <- checks + 1
+
+                if not condition then
+                    failwith $"Idle lifetime {label} failed"
+
+            host.Frame () |> ignore
+            let frame = host.RequestAnimationFrame ignore
+
+            host.RequestIdleCallback (fun deadline ->
+                ran <- true
+                remaining <- deadline.TimeRemaining ())
+            |> ignore
+
+            host.Cycle ()
+            check "frame defers idle" (not ran)
+            host.CancelAnimationFrame frame
+            host.Frame () |> ignore
+            let timer = host.SetTimeout (ignore, 10.0)
+            host.Cycle ()
+            check "idle runs after the frame" ran
+            check "deadline bounded by the next timer" (remaining <= 10.0)
+            host.ClearTimeout timer
+            let unknown = host.RequestIdleCallback ignore
+            host.CancelIdleCallback unknown
+            host.CancelIdleCallback unknown
+            host.CancelIdleCallback 999999
+            check "cancellation of unknown ids is a no-op" true
+            let pendingIdle = Ranvier.View.WebCore.Frames.idleForHost host
+            pendingIdle.Idle (Some 5.0, ignore) |> ignore
+            pendingIdle.Idle (None, ignore) |> ignore
+            count, checks
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith "Idle fixture leaked native wrappers"
+
+    if
+        manualCount <> 14
+        || hostCount <> 14
+        || lifetime <> 4
+    then
+        failwith $"Idle shared assertions did not run: manual {manualCount}, host {hostCount}, lifetime {lifetime}"
+
+    System.Console.WriteLine $"NATIVE_API H01 PASS assertions={hostCount} manual={manualCount}"
+    System.Console.WriteLine $"NATIVE_API H01 LIFETIME PASS assertions={lifetime}"
+    hostCount
+
 /// <summary>Runs the shared input state fixture with native window identity and host-disposal checks.</summary>
 let private runInputState () =
     let host = WebCoreHost.Create (320, 240)
@@ -515,7 +630,7 @@ let private runForms () =
 
             expect wrongThread "FormData rejects another thread"
             let document = host.Document
-            let form = unbox<Ranvier.Dom.HTMLFormElement> (document.createElement "form")
+            let form = unbox<Ranvier.Dom.HTMLFormElement>(document.createElement "form")
             let input = document.createElement "input"
             input.setAttribute ("name", "kept")
             input.setAttribute ("value", "v")
@@ -523,13 +638,28 @@ let private runForms () =
             document.body.appendChild form |> ignore
             let data = service.FromForm (form, null)
             let elements = form.elements
-            let submit = service.CreateSubmitEvent ("submit", Ranvier.Dom.EventOptions.Default, null)
-            let event = service.CreateFormDataEvent ("formdata", Ranvier.Dom.EventOptions.Default, data)
+
+            let submit =
+                service.CreateSubmitEvent ("submit", Ranvier.Dom.EventOptions.Default, null)
+
+            let event =
+                service.CreateFormDataEvent ("formdata", Ranvier.Dom.EventOptions.Default, data)
+
             System.GC.Collect ()
             System.GC.WaitForPendingFinalizers ()
             host.Cycle ()
             RanvierWebCoreAbi.Native.rv_collect_garbage ()
-            expect (service.Entries data = [| { Name = "kept"; Value = Ranvier.Dom.FormDataEntryValue.String "v" } |]) "FormData survives collection"
+
+            expect
+                (service.Entries data =
+                    [|
+                        {
+                            Name = "kept"
+                            Value = Ranvier.Dom.FormDataEntryValue.String "v"
+                        }
+                    |])
+                "FormData survives collection"
+
             expect (elements.length = 1u) "Form controls collection survives collection"
             expect (service.Entries event.formData = service.Entries data) "FormDataEvent keeps its FormData"
             host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
@@ -928,7 +1058,14 @@ let private runDomModel () =
         failwith $"DOM model assertions did not run: {traversal}/{lifetime}/{mathml}"
 
     // Qualification: the engine leaves the re-entered iterator's referenceNode null.
-    if reentry <> { TreeTraversal.Iterator = "InvalidStateError"; TreeTraversal.Walker = "InvalidStateError"; TreeTraversal.Reference = "null" } then
+    if
+        reentry
+        <> {
+               TreeTraversal.Iterator = "InvalidStateError"
+               TreeTraversal.Walker = "InvalidStateError"
+               TreeTraversal.Reference = "null"
+           }
+    then
         failwith $"Unexpected traversal re-entry outcome: {reentry}"
 
     System.Console.WriteLine $"NATIVE_API D01 PASS assertions={traversal}"
@@ -957,6 +1094,7 @@ let private runAll () =
     runForms () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
+    runIdle () |> ignore
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
@@ -1938,6 +2076,9 @@ let main args =
         0
     elif Array.contains "--frames-only" args then
         runFrames () |> ignore
+        0
+    elif Array.contains "--idle-only" args then
+        runIdle () |> ignore
         0
     elif Array.contains "--cancellation-only" args then
         runCancellation () |> ignore

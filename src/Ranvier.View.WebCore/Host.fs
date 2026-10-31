@@ -95,6 +95,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let timers = SortedDictionary<struct (float * int), unit -> unit>()
     let timerKeys = Dictionary<int, struct (float * int)>()
     let frames = Dictionary<int, float -> unit>()
+    let idles = List<struct (int * (IdleDeadline -> unit))>()
+    let idleTimeouts = Dictionary<int, struct (float * int)>()
     let timeOrigin = float (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds ())
     let clock = Stopwatch.StartNew ()
     let mutable advanced = 0.0
@@ -179,6 +181,50 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 runMicrotasks ()
             else
                 going <- false
+
+    let removeIdle (id: int) =
+        let index = idles.FindIndex (fun struct (entry, _) -> entry = id)
+
+        if index >= 0 then
+            idles.RemoveAt index
+
+        match idleTimeouts.TryGetValue id with
+        | true, key ->
+            timers.Remove key |> ignore
+            idleTimeouts.Remove id |> ignore
+        | _ -> ()
+
+        index >= 0
+
+    let nextTimer () =
+        timers.Keys
+        |> Seq.filter (fun key -> not (idleTimeouts.ContainsValue key))
+        |> Seq.tryHead
+        |> Option.map (fun struct (due, _) -> due)
+        |> Option.defaultValue Double.PositiveInfinity
+
+    let runIdle () =
+        if idles.Count > 0 then
+            let start = now ()
+
+            let period =
+                IdleDeadline.until now (min (start + IdleDeadline.MaxPeriod) (nextTimer ()))
+
+            let pending = idles.ToArray ()
+            let mutable index = 0
+
+            while index < pending.Length
+                  && period.TimeRemaining () > 0.0 do
+                let struct (id, callback) = pending[index]
+                index <- index + 1
+
+                if removeIdle id then
+                    try
+                        callback period
+                    with error ->
+                        record error
+
+                    runMicrotasks ()
 
     // Runs a host operation as the DOM member it stands for, through the member's interceptions.
     let through (target: obj) (name: string) (args: obj array) (original: obj array -> obj) : obj =
@@ -370,12 +416,45 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     member _.CancelAnimationFrame(id: int) =
         frames.Remove id |> ignore
 
+    /// <summary>Runs <c>callback</c> in a later idle period of <c>Cycle</c>; returns its id. With <c>timeout</c>, the
+    /// callback runs no later than the first <c>Cycle</c> after <c>timeout</c> milliseconds, with <c>DidTimeout</c>
+    /// true.</summary>
+    /// <remarks>An idle period starts in a <c>Cycle</c> with no frame requested, after its posted work, timers and
+    /// microtasks. Its deadline is the earlier of 50 ms on the timing clock and the next timer's due time.</remarks>
+    member _.RequestIdleCallback(callback: IdleDeadline -> unit, ?timeout: float) : int =
+        let id = nextId
+        nextId <- nextId + 1
+        idles.Add (struct (id, callback))
+
+        match timeout with
+        | Some milliseconds ->
+            let timer = nextId
+            nextId <- nextId + 1
+            let key = struct (now () + max 0.0 milliseconds, timer)
+
+            timers[key] <-
+                fun () ->
+                    idleTimeouts.Remove id |> ignore
+
+                    if removeIdle id then
+                        callback IdleDeadline.timedOut
+
+            idleTimeouts[id] <- key
+        | None -> ()
+
+        id
+
+    /// <summary>Cancels an idle callback that has not run.</summary>
+    member _.CancelIdleCallback(id: int) =
+        removeIdle id |> ignore
+
     /// <summary>True when the page wants a frame: a rendering update, an invalidation or an animation frame callback.</summary>
     member _.FrameRequested = Volatile.Read &frameRequested = 1
 
     /// <summary>
     /// One turn of the loop: cycles the native run loop for up to <c>milliseconds</c>, releases the references of collected
-    /// objects, runs posted work and due timers, each followed by the microtasks it queued.
+    /// objects, runs posted work and due timers, each followed by the microtasks it queued, then an idle period when
+    /// no frame is requested.
     /// </summary>
     member _.Cycle(?milliseconds: int) =
         Native.rv_run_loop_cycle (defaultArg milliseconds 0)
@@ -396,6 +475,9 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
         runDueTimers ()
         runMicrotasks ()
+
+        if Volatile.Read &frameRequested = 0 then
+            runIdle ()
 
     /// <summary>Moves the timer clock forward by <c>milliseconds</c> and runs the timers then due, as a test clock does.</summary>
     member internal this.AdvanceBy(milliseconds: float) =
@@ -754,6 +836,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                     raise (InvalidOperationException "A WebCore host is disposed on the thread that created it")
 
                 disposed <- true
+                idles.Clear ()
+                idleTimeouts.Clear ()
 
                 for item in installed do
                     item.Dispose ()

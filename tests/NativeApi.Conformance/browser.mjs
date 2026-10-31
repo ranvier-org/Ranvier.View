@@ -20,6 +20,7 @@ const resourcesOnly = process.argv.includes('--resources-only');
 const svgPaintOnly = process.argv.includes('--svg-paint-only');
 const inputStateOnly = process.argv.includes('--input-state-only');
 const framesOnly = process.argv.includes('--frames-only');
+const idleOnly = process.argv.includes('--idle-only');
 const viewportOnly = process.argv.includes('--viewport-only');
 const formsOnly = process.argv.includes('--forms-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
@@ -140,12 +141,27 @@ const runFrames = async () => {
     await framesBrowser.close();
   }
 };
+// H01 runs the idle fixture on the manual scheduler and on the Window's idle callbacks and frames.
+const runIdle = async () => {
+  const idleBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await idleBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runIdle(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.idle !== IDLE_ASSERTIONS || result.manualIdle !== IDLE_ASSERTIONS || result.available !== true) throw new Error(`Idle assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API H01 PASS assertions=${result.idle} manual=${result.manualIdle} capability=available engine=chromium`);
+  } finally {
+    await idleBrowser.close();
+  }
+};
+const IDLE_ASSERTIONS = 14;
 let browser;
 try {
   if (inputStateOnly) { await runInputState(); process.exitCode = 0; }
   else if (viewportOnly) { await runViewport(); process.exitCode = 0; }
   else if (formsOnly) { await runForms(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
+  else if (idleOnly) { await runIdle(); process.exitCode = 0; }
   else {
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
@@ -372,6 +388,7 @@ try {
   await runViewport();
   await runForms();
   await runFrames();
+  await runIdle();
   }
 } finally {
   if (browser) await browser.close();

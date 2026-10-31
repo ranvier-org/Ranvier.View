@@ -71,3 +71,18 @@ let clock (scheduler: FrameScheduler) : TimedClock =
                 member _.Dispose() = disarm ()
             }
     }
+
+/// <summary>Runs <c>callback</c> in a later idle period of <c>scheduler</c>; with <c>timeout</c>, no later than
+/// <c>timeout</c> milliseconds from now.</summary>
+let idle (scheduler: IdleScheduler) (timeout: float option) (callback: IdleDeadline -> unit) : IDisposable =
+    let deadline: IdleDeadline ref = ref Unchecked.defaultof<_>
+
+    owned
+        (fun run ->
+            scheduler.Idle (
+                timeout,
+                fun d ->
+                    deadline.Value <- d
+                    run ()
+            ))
+        (fun () -> callback deadline.Value)

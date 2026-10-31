@@ -857,6 +857,50 @@ let runFrames () =
     }
     |> Async.StartAsPromise
 
+[<Emit("new Promise(resolve => requestIdleCallback(() => resolve()))")>]
+let private idlePeriod () : JS.Promise<unit> = jsNative
+
+[<Emit("new Promise(resolve => { const end = performance.now() + $0; const spin = setInterval(() => { const s = performance.now(); while (performance.now() - s < 15) {} if (performance.now() >= end) { clearInterval(spin); setTimeout(resolve, 0); } }, 0); })")>]
+let private starve (milliseconds: float) : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared idle fixture on the manual scheduler and on the document Window.</summary>
+let runIdle () =
+    async {
+        let manual = ManualFrameScheduler ()
+
+        let! manualCount =
+            IdleChecks.run
+                (fun () -> manual :> IdleScheduler, manual :> FrameScheduler)
+                {
+                    Idle = fun () -> async { manual.RunIdle 50.0 }
+                    NextFrame = fun () -> async { manual.RunFrame () }
+                    Starve = fun milliseconds -> async { manual.Advance milliseconds }
+                }
+
+        let document = document ()
+
+        let! count =
+            IdleChecks.run
+                (fun () -> (BrowserIdle.forDocument document).Value, BrowserFrames.forDocument document)
+                {
+                    Idle = fun () -> idlePeriod () |> Async.AwaitPromise
+                    NextFrame = fun () -> animationFrame () |> Async.AwaitPromise
+                    Starve = fun milliseconds -> starve milliseconds |> Async.AwaitPromise
+                }
+
+        let! observation =
+            (BrowserIdle.capabilities document).Observe IdleCapabilities.key System.Threading.CancellationToken.None
+            |> Async.AwaitTask
+
+        return
+            {|
+                idle = count
+                manualIdle = manualCount
+                available = (observation.Value.Available.State = CapabilityState.Yes)
+            |}
+    }
+    |> Async.StartAsPromise
+
 let runViewport () =
     async {
         let document = document ()
@@ -919,7 +963,10 @@ let runViewportScroll () =
                 SetScale =
                     fun scale ->
                         async {
-                            do! emulateViewport 320 240 scale |> Async.AwaitPromise
+                            do!
+                                emulateViewport 320 240 scale
+                                |> Async.AwaitPromise
+
                             do! settle ()
                         }
                 Settle = settle
@@ -927,11 +974,7 @@ let runViewportScroll () =
             }
 
         let! count =
-            ScrollChecks.run
-                document
-                (fun () -> BrowserViewportScroll.forDocument document)
-                (fun () -> BrowserViewport.forDocument document)
-                driver
+            ScrollChecks.run document (fun () -> BrowserViewportScroll.forDocument document) (fun () -> BrowserViewport.forDocument document) driver
 
         return {| scroll = count |}
     }
@@ -961,7 +1004,8 @@ let private domModel (document: Document) =
 
 /// <summary>Runs the shared tree traversal and MathML fixtures against the browser document.</summary>
 let runDomModel () =
-    async { return domModel (document ()) } |> Async.StartAsPromise
+    async { return domModel (document ()) }
+    |> Async.StartAsPromise
 
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =

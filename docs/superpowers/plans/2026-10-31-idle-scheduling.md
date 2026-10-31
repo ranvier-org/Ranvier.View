@@ -49,7 +49,8 @@ Receipt: `docs/research/native-api-delivery/idle-red-measurements.json`.
   - `BrowserIdle.forDocument`: `Some` scheduler over Window `requestIdleCallback`/`cancelIdleCallback`, `None`
     where the Window lacks them (WebKit with the preference off). `BrowserIdle.capabilities` reports `idle-callbacks`
     with `Implemented` and `Available` set to `No` there. No timer emulation.
-  - `Ranvier.View.WebCore.Frames.forHost` returns a scheduler implementing both interfaces, over the host's run loop:
+  - `Ranvier.View.WebCore.Frames.idleForHost`, next to A12's `Frames.forHost`, over the host's run loop
+    (`WebCoreHost.RequestIdleCallback` / `CancelIdleCallback`):
     `WebCoreHost.Cycle` starts an idle period after it runs posted work, due timers and microtasks, when no frame is
     requested. Deadline source: the host timing clock. Deadline = min(start + 50 ms, the earliest pending timer's due
     time), the 50 ms cap matching Chromium's measured 49.9 ms maximum. A period runs the callbacks requested before
