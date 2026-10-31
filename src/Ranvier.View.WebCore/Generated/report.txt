@@ -1,4 +1,4 @@
-221 classes; 2492 members: 2476 mapped to 2406 of 2455 rv_dom_* functions, 16 hand-written, 0 unmapped
+221 classes; 2492 members: 2476 mapped to 2406 of 2477 rv_dom_* functions, 16 hand-written, 0 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_css_matrix_component_create: CSSMatrixComponent.constructor (op)
@@ -21,6 +21,8 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_css_unparsed_value_create: CSSUnparsedValue.constructor (op)
   rv_dom_cssom_keyword_value_create: CSSOMKeywordValue.constructor (op)
   rv_dom_cssom_variable_reference_value_create: CSSOMVariableReferenceValue.constructor (op)
+  rv_dom_document_create_node_iterator: Document.createNodeIterator (op)
+  rv_dom_document_create_tree_walker: Document.createTreeWalker (op)
   rv_dom_document_get_adopted_style_sheets: Document.adoptedStyleSheets (get)
   rv_dom_document_set_adopted_style_sheets: Document.adoptedStyleSheets (set)
   rv_dom_dom_matrix_create: DOMMatrix.constructor (op)
@@ -46,9 +48,29 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_input_event_get_input_type: InputEvent.inputType (get)
   rv_dom_keyboard_event_get_key: KeyboardEvent.key (get)
   rv_dom_mouse_event_get_related_target: MouseEvent.relatedTarget (get)
+  rv_dom_node_iterator_detach: NodeIterator.detach (op)
+  rv_dom_node_iterator_get_filter: NodeIterator.filter (get)
+  rv_dom_node_iterator_get_pointer_before_reference_node: NodeIterator.pointerBeforeReferenceNode (get)
+  rv_dom_node_iterator_get_reference_node: NodeIterator.referenceNode (get)
+  rv_dom_node_iterator_get_root: NodeIterator.root (get)
+  rv_dom_node_iterator_get_what_to_show: NodeIterator.whatToShow (get)
+  rv_dom_node_iterator_next_node: NodeIterator.nextNode (op)
+  rv_dom_node_iterator_previous_node: NodeIterator.previousNode (op)
   rv_dom_shadow_root_get_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (get)
   rv_dom_shadow_root_set_adopted_style_sheets: ShadowRoot.adoptedStyleSheets (set)
   rv_dom_style_property_map_read_only_entries: StylePropertyMapReadOnly.entries (op)
+  rv_dom_tree_walker_first_child: TreeWalker.firstChild (op)
+  rv_dom_tree_walker_get_current_node: TreeWalker.currentNode (get)
+  rv_dom_tree_walker_get_filter: TreeWalker.filter (get)
+  rv_dom_tree_walker_get_root: TreeWalker.root (get)
+  rv_dom_tree_walker_get_what_to_show: TreeWalker.whatToShow (get)
+  rv_dom_tree_walker_last_child: TreeWalker.lastChild (op)
+  rv_dom_tree_walker_next_node: TreeWalker.nextNode (op)
+  rv_dom_tree_walker_next_sibling: TreeWalker.nextSibling (op)
+  rv_dom_tree_walker_parent_node: TreeWalker.parentNode (op)
+  rv_dom_tree_walker_previous_node: TreeWalker.previousNode (op)
+  rv_dom_tree_walker_previous_sibling: TreeWalker.previousSibling (op)
+  rv_dom_tree_walker_set_current_node: TreeWalker.currentNode (set)
   rv_dom_window_get_computed_style: DOMWindow.getComputedStyle (op)
 
 Unmapped members by reason:
