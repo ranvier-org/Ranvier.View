@@ -1219,6 +1219,12 @@ let runUrls () =
 
     {| urls = count |}
 
+/// <summary>Runs the shared ARIA element reflection assertions.</summary>
+let runAria () =
+    {|
+        aria = AriaChecks.run (document ()) AriaChecks.Chromium
+    |}
+
 /// <summary>Runs the shared text segmentation assertions.</summary>
 let runSegments () =
     let count =
