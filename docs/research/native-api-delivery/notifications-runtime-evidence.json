@@ -5,21 +5,21 @@
   "core": "rv-notify-core 03f4121a",
   "nativeCandidate": "notification-candidate-2",
   "jit": {
-    "passLines": 133,
+    "passLines": 121,
     "group": [
       "NATIVE_API B09 PASS assertions=16",
       "NATIVE_API B09 LIFETIME PASS assertions=17"
     ]
   },
   "aot": {
-    "passLines": 133,
+    "passLines": 121,
     "group": [
       "NATIVE_API B09 PASS assertions=16",
       "NATIVE_API B09 LIFETIME PASS assertions=17"
     ]
   },
   "chromium": {
-    "passLines": 94,
+    "passLines": 87,
     "group": [
       "BROWSER_API B09 PASS assertions=16 engine=chromium"
     ]
