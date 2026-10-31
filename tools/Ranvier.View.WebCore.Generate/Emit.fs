@@ -185,8 +185,12 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
             else
                 match fn.Defaults.TryFind p.Name with
                 | Some raw ->
+                    // An enumeration entry is [values, attributes, IDL file].
+                    let entry =
+                        ctx.Input.Model.GetProperty("enumerations").GetProperty (Metadata.text "enum" mapping)
+
                     let values =
-                        ctx.Input.Model.GetProperty("enumerations").GetProperty(Metadata.text "enum" mapping).EnumerateArray()
+                        entry[0].EnumerateArray ()
                         |> Seq.map _.GetString()
                         |> Seq.toArray
 
@@ -389,6 +393,10 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
 
             Ok
                 $"(unbox<{name managed}> (this.Session.Object({value}, {kind}, {owner}, System.Func<Session, nativeint, NativeObject>(fun session handle -> {create}))))"
+        elif root = "CanvasGradient" then
+            // addColorStop parses colours against a document: the gradient keeps its creator's document context.
+            Ok
+                $"(let target = this.Session.Track ({cls}(this.Session, {value})) in target.BindDocumentContext(Interop.contextDocument this); target :> {name managed})"
         else
             Ok $"(this.Session.Track ({cls}(this.Session, {value})) :> {name managed})"
 

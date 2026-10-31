@@ -18,7 +18,7 @@ type internal NativeCanvas2DSettings =
     val mutable ColorSpace: int
     val mutable ColorType: int
 
-/// <summary>HTMLCanvasElement.getContext and CanvasRenderingContext2D.getContextAttributes of a native host.</summary>
+/// <summary>HTMLCanvasElement.getContext, CanvasRenderingContext2D.getContextAttributes and Path2D construction of a native host.</summary>
 module Canvas =
     [<Literal>]
     let private Unsupported = -9
@@ -54,6 +54,15 @@ module Canvas =
             | :? NativeObject as target when obj.ReferenceEquals (target.Session, session) -> Interop.handle value
             | null -> nullArg name
             | _ -> invalidArg name $"The {name} belongs to another provider"
+
+        let path (handle: nativeint) =
+            session.Object (
+                handle,
+                Kind.Path2D,
+                unbox<NativeObject> (box host.Document),
+                Func<Session, nativeint, NativeObject>(fun s h -> Path2DObject (s, h))
+            )
+            |> unbox<Path2D>
 
         { new CanvasContextService with
             member _.GetContext(canvas, contextType, settings) =
@@ -108,6 +117,39 @@ module Canvas =
                     ColorSpace = enum<CanvasColorSpace> value.ColorSpace
                     ColorType = enum<CanvasColorType> value.ColorType
                 }
+
+            member _.CreatePath() =
+                check ()
+                let mutable result = 0n
+
+                NativeDom.rv_dom_path2_d_create_0 (Interop.handle (box host.Document), &result)
+                |> Interop.check "Path2D constructor"
+
+                path result
+
+            member _.CopyPath source =
+                check ()
+                let sourceHandle = native (box source) "path"
+                let mutable result = 0n
+
+                NativeDom.rv_dom_path2_d_create_1_path (Interop.handle (box host.Document), sourceHandle, &result)
+                |> Interop.check "Path2D constructor"
+
+                path result
+
+            member _.ParsePath data =
+                check ()
+
+                if isNull data then
+                    nullArg (nameof data)
+
+                let text = Text.Encoding.UTF8.GetBytes data
+                let mutable result = 0n
+
+                NativeDom.rv_dom_path2_d_create_1_d (Interop.handle (box host.Document), text, text.Length, &result)
+                |> Interop.check "Path2D constructor"
+
+                path result
 
           interface IDisposable with
               member _.Dispose() = disposed.Value <- true }
