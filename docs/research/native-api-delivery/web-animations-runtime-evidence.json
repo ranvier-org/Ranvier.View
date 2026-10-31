@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "group": "A01 Web Animations creation",
+  "heads": {
+    "native": "b95e555fff1d405ed2367d9bc45b08ea851b9ea7",
+    "core": "75e905668a33f7ec6f79d9191ead2c411e8f1149",
+    "views": "0d7a27918329e79efe5677abeba2b3815db1af29"
+  },
+  "privateFeed": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.49.nupkg": "1adcfb64ea5c64b4dc1ed97d78c4bb9d811e3ef08fd503aaf156034daca0df51",
+    "Ranvier.Dom.0.1.0-alpha.49.nupkg": "0d1846e4e827e4ed2ecc28ae707b149d3cb8608b5164abb48bd836d1d52f05ff",
+    "Ranvier.WebCore.0.1.0-preview.46.nupkg": "b1a2fb77c52b031e23f51e88aa854e4a11beb398d4c8088f3dd0c191d855330a"
+  },
+  "nativeRuntime": "C:/wk/native-waapi/artifacts/waapi-candidate-3/runtime (Ranvier.WebCore docs/web-animations-evidence/final-evidence.json)",
+  "jit": {
+    "exitCode": 0,
+    "logSha256": "94a95a8c3aa69d43113edd5e15640ff80228bb243089a40ad0c4d46e1f989319",
+    "passLines": 121,
+    "a01": [
+      "NATIVE_API A01 PASS assertions=110",
+      "NATIVE_API A01 LIFETIME PASS assertions=3"
+    ]
+  },
+  "aot": {
+    "exitCode": 0,
+    "logSha256": "02ad3060cbc9e7fd8c618d7911a1c07e5133d146e3389ef606bc300971053134",
+    "passLines": 121,
+    "a01": [
+      "NATIVE_API A01 PASS assertions=110",
+      "NATIVE_API A01 LIFETIME PASS assertions=3"
+    ]
+  },
+  "chromium": {
+    "exitCode": 0,
+    "logSha256": "1036e2d8ed10da13fbb43a064cd5941d1da1d387a1e67141aeacc787a50ebcbd",
+    "passLines": 87,
+    "a01": [
+      "BROWSER_API A01 PASS assertions=110 engine=chromium"
+    ]
+  },
+  "repeat30": {
+    "aot": {
+      "runs": 30,
+      "distinct": [
+        "NATIVE_API A01 PASS assertions=110"
+      ]
+    },
+    "chromium": {
+      "runs": 30,
+      "distinct": [
+        "BROWSER_API A01 PASS assertions=110 engine=chromium"
+      ]
+    }
+  },
+  "qualifications": [
+    "Animation wrapper identity per call until A05",
+    "omitted timeline and Some null are the document timeline; CreateAnimationWithoutTimeline is explicit",
+    "keyframe-sequence form only",
+    "Views kinds 900-902 are placeholders",
+    "local private feed (alpha.49/preview.46 rebuilt locally); never pushed"
+  ]
+}
