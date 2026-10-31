@@ -980,6 +980,32 @@ let runViewportScroll () =
     }
     |> Async.StartAsPromise
 
+[<Emit("globalThis.__nativeApiKey($0)")>]
+let private key (name: string) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiClick($0, $1)")>]
+let private click (x: int) (y: int) : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared dialog, popover and command invoker assertions with Playwright keyboard and mouse input.</summary>
+let runDialogs () =
+    async {
+        let document = document ()
+
+        let driver: DialogChecks.Driver =
+            {
+                Settle = fun () -> viewportFrames () |> Async.AwaitPromise
+                Press = fun name -> key name |> Async.AwaitPromise
+                Click = fun x y -> click x y |> Async.AwaitPromise
+                Backend = DialogChecks.Chromium
+            }
+
+        let! count =
+            DialogChecks.run document (fun () -> BrowserToggleEvents.forDocument document) driver errorName
+
+        return {| dialogs = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared form collection, FormData and form event assertions.</summary>
 let runForms () =
     let document = document ()

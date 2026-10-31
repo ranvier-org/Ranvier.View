@@ -23,6 +23,7 @@ const framesOnly = process.argv.includes('--frames-only');
 const idleOnly = process.argv.includes('--idle-only');
 const viewportOnly = process.argv.includes('--viewport-only');
 const formsOnly = process.argv.includes('--forms-only');
+const dialogsOnly = process.argv.includes('--dialogs-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
@@ -128,6 +129,22 @@ const runForms = async () => {
   }
 };
 const FORMS_ASSERTIONS = 67;
+// D16 runs the dialog fixture at 800x600 with trusted Playwright keyboard and mouse input.
+const runDialogs = async () => {
+  const dialogsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await dialogsBrowser.newPage({ viewport: { width: 800, height: 600 } });
+    await page.exposeFunction('__nativeApiKey', async key => { await page.keyboard.press(key); });
+    await page.exposeFunction('__nativeApiClick', async (x, y) => { await page.mouse.click(x, y); });
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runDialogs(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.dialogs !== DIALOG_ASSERTIONS) throw new Error(`Dialog assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API D16 PASS assertions=${result.dialogs} engine=chromium`);
+  } finally {
+    await dialogsBrowser.close();
+  }
+};
+const DIALOG_ASSERTIONS = 143;
 // A12 runs the frame fixture on the manual scheduler and on the Window's frames, timers and microtasks.
 const runFrames = async () => {
   const framesBrowser = await chromium.launch({ headless: true });
@@ -160,6 +177,7 @@ try {
   if (inputStateOnly) { await runInputState(); process.exitCode = 0; }
   else if (viewportOnly) { await runViewport(); process.exitCode = 0; }
   else if (formsOnly) { await runForms(); process.exitCode = 0; }
+  else if (dialogsOnly) { await runDialogs(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
   else if (idleOnly) { await runIdle(); process.exitCode = 0; }
   else {
@@ -387,6 +405,7 @@ try {
   await runInputState();
   await runViewport();
   await runForms();
+  await runDialogs();
   await runFrames();
   await runIdle();
   }

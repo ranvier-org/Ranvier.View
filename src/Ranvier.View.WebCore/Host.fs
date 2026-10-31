@@ -58,6 +58,16 @@ module internal Factories =
                     NativeDom.rv_dom_dom_form_data_release probe
 
                 FormDataEventObject (session, handle)
+            elif NativeDom.rv_dom_toggle_event_get_source (handle, &probe) = 0 then
+                if probe <> 0n then
+                    Native.rv_node_release probe
+
+                ToggleEventObject (session, handle)
+            elif NativeDom.rv_dom_command_event_get_source (handle, &probe) = 0 then
+                if probe <> 0n then
+                    Native.rv_node_release probe
+
+                CommandEventObject (session, handle)
             else
                 EventObject (session, handle)
         | _ -> EventObject (session, handle)
