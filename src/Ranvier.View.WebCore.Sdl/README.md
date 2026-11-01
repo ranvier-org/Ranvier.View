@@ -19,8 +19,8 @@ Slim win-x64 assets in the application project:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="[0.1.0-preview.7]" ExcludeAssets="all" />
-  <PackageReference Include="Ranvier.WebCore.Native.Gpu.win-x64" Version="[0.1.0-preview.7]" />
+  <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="[0.1.1-preview.2]" ExcludeAssets="all" />
+  <PackageReference Include="Ranvier.WebCore.Native.Gpu.win-x64" Version="[0.1.1-preview.2]" />
 </ItemGroup>
 ```
 
