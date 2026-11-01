@@ -1,4 +1,4 @@
-279 classes; 2990 members: 2926 mapped to 2824 of 2976 rv_dom_* functions, 61 hand-written, 3 unmapped
+280 classes; 2995 members: 2931 mapped to 2829 of 2987 rv_dom_* functions, 61 hand-written, 3 unmapped
 
 Native exports without generated member mappings (including hand-written adapters):
   rv_dom_animation_effect_get_computed_timing: AnimationEffect.getComputedTiming (op)
@@ -139,6 +139,12 @@ Native exports without generated member mappings (including hand-written adapter
   rv_dom_url_search_params_create: URLSearchParams.constructor (op)
   rv_dom_url_search_params_entries: URLSearchParams.entries (op)
   rv_dom_view_timeline_create: ViewTimeline.constructor (op)
+  rv_dom_view_transition_type_set_add: ViewTransitionTypeSet.add (op)
+  rv_dom_view_transition_type_set_clear: ViewTransitionTypeSet.clear (op)
+  rv_dom_view_transition_type_set_delete: ViewTransitionTypeSet.delete (op)
+  rv_dom_view_transition_type_set_has: ViewTransitionTypeSet.has (op)
+  rv_dom_view_transition_type_set_size: ViewTransitionTypeSet.size (op)
+  rv_dom_view_transition_type_set_values: ViewTransitionTypeSet.values (op)
   rv_dom_web_animation_create: WebAnimation.constructor (op)
   rv_dom_web_animation_get_range_end: WebAnimation.rangeEnd (get)
   rv_dom_web_animation_get_range_start: WebAnimation.rangeStart (get)
@@ -236,7 +242,7 @@ Members by class (mapped / hand-written / unmapped):
   DataTransferItemObject: 3 / 0 / 0
   DataTransferObject: 11 / 0 / 0
   DocumentFragmentObject: 11 / 0 / 0
-  DocumentObject: 77 / 2 / 0
+  DocumentObject: 79 / 2 / 0
   DocumentTimelineObject: 0 / 0 / 3
   DragEventObject: 1 / 0 / 0
   ElementObject: 199 / 0 / 0
@@ -434,6 +440,7 @@ Members by class (mapped / hand-written / unmapped):
   URLSearchParamsObject: 9 / 0 / 0
   ValidityStateObject: 11 / 0 / 0
   ViewTimelineObject: 3 / 0 / 0
+  ViewTransitionObject: 3 / 0 / 0
   VisualViewportObject: 7 / 9 / 0
   WebAnimationObject: 26 / 11 / 0
   WheelEventObject: 7 / 0 / 0
