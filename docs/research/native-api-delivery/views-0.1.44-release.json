@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "status": "release-requested",
+  "cohort": "Views 0.1.44 / WebCore and SDL alpha.44 (batches 2-6)",
+  "implementationCommit": "b9fef3d63179997faaa715f40d7a74676cf8311a",
+  "implementationPullRequest": "https://github.com/ranvier-org/Ranvier.View/pull/45",
+  "implementationSourceHead": "22acd3ff4d1dce4b81909c3e2886cad108786e8f",
+  "sourceCi": 41325730884,
+  "sourceCiEvent": "push (main, b9fef3d6)",
+  "sourceCiStatus": "success",
+  "core": {
+    "version": "0.1.0-alpha.54",
+    "source": "6c5e44743b537831b1c1b011b7a1d371fc82c6a3",
+    "verification": "Core#283 squash; master CI 41307025039 succeeded; packages served by nuget.org."
+  },
+  "native": {
+    "version": "0.1.1-preview.1",
+    "abi": 59,
+    "source": "91fc950b8edb0709e854d043174bbf76d27059b2",
+    "verification": "WebCore#153 squash; tag v0.1.1-preview.1; tag run 41309386389 green on all five runtimes and published."
+  },
+  "qualifications": [
+    "osx-arm64: native grapheme segmentation splits CR LF (known bug https://github.com/ranvier-org/Ranvier.WebCore/issues/154); asserted as observed on darwin only.",
+    "linux: drops carry no Files (known bug https://github.com/ranvier-org/Ranvier.WebCore/issues/156); asserted as observed on Linux only.",
+    "osx-arm64: touch events are off in macOS builds; InputState expects Implemented No and the touch-frame checks are skipped.",
+    "Platform differences qualified per OS/engine: Linux headless Chromium pointer-lock movement and pointing devices, FreeType Ahem advance (20 - 2^-16), CoreGraphics invalid-path hit, Cocoa media capability answers, no WEBP encoder on macOS, plus the batch 1 differences (drive-letter case, caret offsets, corrupt PNG decoding).",
+    "Removed: the darwin idle-deadline qualification for Ranvier.WebCore#155; native 0.1.1-preview.1 carries the fix."
+  ],
+  "packageAbsence": {
+    "Ranvier.View": "0.1.44 absent on nuget.org",
+    "Ranvier.View.WebCore": "0.1.0-alpha.44 absent on nuget.org",
+    "Ranvier.View.WebCore.Sdl": "0.1.0-alpha.44 absent on nuget.org",
+    "matchingTags": 0
+  },
+  "sourceAndVersionChangesInThisDeclaration": false,
+  "publisherPolicy": "A successful trusted main push whose commit message starts with chore: release publishes its exact CI package artifact using NuGet OIDC.",
+  "remaining": [
+    "Trusted release-declaration main CI and publication.",
+    "Project 1 board: batch 1-6 groups move from Release pending to Accepted/Done."
+  ]
+}
