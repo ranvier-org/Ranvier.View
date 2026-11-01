@@ -45,7 +45,7 @@ const server = createServer(async (request, response) => {
     const name = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
     if (name === '/fixtures/Ahem.ttf') {
       response.setHeader('Content-Type', 'font/ttf');
-      response.end(await readFile(resolve(process.env.RANVIER_WEBKIT_SOURCE || 'C:/wk/src', 'Tools/TestWebKitAPI/Resources/cocoa/Ahem.ttf')));
+      response.end(await readFile(assets['/Ahem.ttf']));
       return;
     }
     if (name === '/') {

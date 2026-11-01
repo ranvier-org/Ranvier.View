@@ -2656,16 +2656,10 @@ let private resourceFixture () : Resources.Fixture =
                 chunk "IEND" [||]
             ]
 
-    let source =
-        match System.Environment.GetEnvironmentVariable "RANVIER_WEBKIT_SOURCE" with
-        | null
-        | "" -> "C:/wk/src"
-        | value -> value
-
     {
         Png = png false
         CorruptPng = png true
-        Font = System.IO.File.ReadAllBytes (System.IO.Path.Combine (source, "Tools/TestWebKitAPI/Resources/cocoa/Ahem.ttf"))
+        Font = System.IO.File.ReadAllBytes (System.IO.Path.Combine (System.AppContext.BaseDirectory, "Assets", "Ahem.ttf"))
     }
 
 let private runResources () =

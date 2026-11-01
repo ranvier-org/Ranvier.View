@@ -137,7 +137,10 @@ let run (document: Document) (create: unit -> ToggleEventService) (driver: Drive
 
         let listener: EventListener =
             fun event ->
-                if label (unbox<Element> event.target) <> "d16-marker" then
+                if
+                    label (unbox<Element> event.target)
+                    <> "d16-marker"
+                then
                     record event
                 elif event.``type`` = "toggle" then
                     markerToggles <- markerToggles + 1
