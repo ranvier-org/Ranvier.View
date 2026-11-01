@@ -27,6 +27,9 @@ VMR source mapping and the developer's cache do not select the producer's depend
 
 The producer records its source manifest, patch, command, SDK and output hash. A fresh output that
 differs from `vendor-spec.json` fails closed and must be reviewed before packaging. The qualification
-workflow retains that output and its diagnostics, then packs and tests the host on Linux and Windows
+pin identifies the Linux CI build; compiler source-path literals and embedded debug data make outputs
+from different checkout roots byte-distinct even with the same source and SDK. A matching assembly
+identity alone does not authorize a different payload.
+The workflow retains that output and its diagnostics, then packs and tests the host on Linux and Windows
 only when the compiler identity matches. These startup/package checks do not replace the full
 analyzer suite, external-consumer tests or documented `build.fsx analyze` acceptance.
