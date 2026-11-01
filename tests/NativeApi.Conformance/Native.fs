@@ -1398,9 +1398,7 @@ let private runBinary () =
 [<Literal>]
 let private DataTransferChecksCount = 49
 
-// KNOWN BUG Ranvier.WebCore#156, not a platform difference: Linux (WPE) drops carry no Files, which asserts five
-// fewer checks. Remove the case when #156 is fixed.
-let private dropKeepsFiles = not (System.OperatingSystem.IsLinux ())
+let private dropKeepsFiles = true
 
 let private runDataTransfer () =
     let host = WebCoreHost.Create (320, 200)
