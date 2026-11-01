@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "status": "release-requested",
+  "cohort": "Views 0.1.39 / WebCore and SDL alpha.39 (batch 1)",
+  "implementationCommit": "51f8390bccebc1f4342ef36b0a1ecef3db5caf66",
+  "implementationPullRequest": "https://github.com/ranvier-org/Ranvier.View/pull/40",
+  "implementationSourceHead": "151a1b7ae90c55e6baeb5fa981088752fcf025cb",
+  "sourceCi": 41267956210,
+  "sourceCiEvent": "push (main, 51f8390b)",
+  "sourceCiStatus": "success",
+  "core": {
+    "version": "0.1.0-alpha.49",
+    "source": "b203b5f2c374e827cd0572d290ec834f0be87508",
+    "verification": "Core#278 squash; master CI 41258011449 and Publish NuGet 41258349022 succeeded; packages served by nuget.org."
+  },
+  "native": {
+    "version": "0.1.0-preview.46",
+    "abi": 54,
+    "source": "e9af8278e111319315e21c77e1aa6a595ac6db6e",
+    "verification": "WebCore#148 squash; release https://github.com/ranvier-org/Ranvier.WebCore/releases/tag/v0.1.0-preview.46; tag run 41250242316 green on all five runtimes and published."
+  },
+  "qualifications": [
+    "osx-arm64: native grapheme segmentation splits CR LF (known bug https://github.com/ranvier-org/Ranvier.WebCore/issues/154); the shared check asserts the observed split on darwin only.",
+    "osx-arm64: the idle deadline ignores a pending timer (known bug https://github.com/ranvier-org/Ranvier.WebCore/issues/155); the shared check asserts 10 < remaining <= 50 on darwin only.",
+    "Platform differences qualified per OS/engine: Chromium file URL drive-letter case (Windows only), FreeType/CoreText caret offsets, ImageIO decoding the corrupt PNG fixture."
+  ],
+  "packageAbsence": {
+    "Ranvier.View": "0.1.39 absent on nuget.org",
+    "Ranvier.View.WebCore": "0.1.0-alpha.39 absent on nuget.org",
+    "Ranvier.View.WebCore.Sdl": "0.1.0-alpha.39 absent on nuget.org",
+    "matchingTags": 0
+  },
+  "sourceAndVersionChangesInThisDeclaration": false,
+  "publisherPolicy": "A successful trusted main push whose commit message starts with chore: release publishes its exact CI package artifact using NuGet OIDC.",
+  "remaining": [
+    "Trusted release-declaration main CI and publication.",
+    "Independent acceptance of the batch-1 groups on the published cohort."
+  ]
+}

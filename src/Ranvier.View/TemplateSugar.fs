@@ -46,10 +46,10 @@ module Builders =
     /// </remarks>
     [<AbstractClass>]
     type Element<'native, 'inst> internal (tag: Tag, parts: Part<'native, 'inst> array) =
-        member _.Yield(view: TemplateView<'inst>) : TemplateView<'inst> array =
+        member inline _.Yield(view: TemplateView<'inst>) : TemplateView<'inst> array =
             [| view |]
 
-        member _.Yield(element: VoidElement<'inst>) : TemplateView<'inst> array =
+        member inline _.Yield(element: VoidElement<'inst>) : TemplateView<'inst> array =
             [| element.View |]
 
         member _.Yield(value: string) : TemplateView<'inst> array =
@@ -64,10 +64,10 @@ module Builders =
         member _.YieldFrom(views: TemplateView<'inst> array) : TemplateView<'inst> array = views
         member _.Zero() : TemplateView<'inst> array = [||]
 
-        member _.Combine(first: TemplateView<'inst> array, rest: TemplateView<'inst> array) : TemplateView<'inst> array =
+        member inline _.Combine(first: TemplateView<'inst> array, rest: TemplateView<'inst> array) : TemplateView<'inst> array =
             Array.append first rest
 
-        member _.Delay(body: unit -> TemplateView<'inst> array) : TemplateView<'inst> array = body ()
+        member inline _.Delay([<InlineIfLambda>] body: unit -> TemplateView<'inst> array) : TemplateView<'inst> array = body ()
 
         /// <summary>Repeats the body for each item while the template is built; the result is static structure.</summary>
         member _.For(items: seq<'item>, body: 'item -> TemplateView<'inst> array) : TemplateView<'inst> array =
