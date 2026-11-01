@@ -96,7 +96,7 @@ def package_manifest(assets, package, version, flavor, abi):
     return manifest
 
 
-def verify_runtime(assets_path, output, *, native_version, view_package, view_version, flavor, abi=21):
+def verify_runtime(assets_path, output, *, native_version, view_package, view_version, flavor, abi):
     if flavor not in {'slim', 'gpu'} or type(abi) is not int or abi <= 0:
         raise ValueError('Expected slim/gpu flavor and a positive ABI.')
     assets = json.loads(Path(assets_path).read_text(encoding='utf-8'))
@@ -163,7 +163,7 @@ def main():
     parser.add_argument('--view-package', required=True)
     parser.add_argument('--view-version', required=True)
     parser.add_argument('--flavor', required=True, choices=['slim', 'gpu'])
-    parser.add_argument('--abi', type=int, default=21)
+    parser.add_argument('--abi', type=int, required=True, help='Expected ABI of the exact published runtime cohort.')
     args = parser.parse_args()
     try:
         result = verify_runtime(args.assets, args.output, native_version=args.native_version,
