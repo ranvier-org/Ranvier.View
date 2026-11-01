@@ -72,7 +72,13 @@ let run (document: Document) (scroller: ViewportScrollService) (errorName: exn -
             checks <- checks + 1
 
             if expected <> actual then
-                failwith $"{label}: expected %A{expected}, got %A{actual}"
+                failwith (
+                    label
+                    + ": expected "
+                    + string expected
+                    + ", got "
+                    + string actual
+                )
 
         let expectOutcome key (chromium: string) (actual: string) =
             match driver.Qualified.TryFind key with
@@ -153,17 +159,18 @@ let run (document: Document) (scroller: ViewportScrollService) (errorName: exn -
             else
                 $"{label range.startContainer}:{range.startOffset}"
 
+        // #bidi holds eight upright Ahem glyphs: 160px once the font applies. CoreText widens #inline's <b> run.
         let waitForFont () =
             async {
                 let mutable tries = 0
 
-                while (document.getElementById "inline").getBoundingClientRect().width
+                while (document.getElementById "bidi").getBoundingClientRect().width
                       <> 160.0
                       && tries < 200 do
                     tries <- tries + 1
                     do! driver.Settle ()
 
-                equal "Ahem applied" 160.0 ((document.getElementById "inline").getBoundingClientRect().width)
+                equal "Ahem applied" 160.0 ((document.getElementById "bidi").getBoundingClientRect().width)
             }
 
         for scale in CaretOracle.scales do
