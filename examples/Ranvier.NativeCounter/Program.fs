@@ -381,6 +381,8 @@ let private eglFailureSmoke beforeRegistration =
 
         failwith (SDL.SDL3.SDL_GetError ())
 
+    let mutable videoOwned = true
+
     try
         try
             use title = fixed (System.Text.Encoding.UTF8.GetBytes "EGL failure fixture\000")
@@ -402,7 +404,57 @@ let private eglFailureSmoke beforeRegistration =
 
             raise (InvalidOperationException "simulated failure before host construction")
         with :? InvalidOperationException as error when error.Message = "simulated failure before host construction" ->
-            ()
+            let consumer = EglRenderer.Capture renderer |> Option.get
+            let originalWindowId = SDL.SDL3.SDL_GetWindowID window
+            let mutable allowCleanup = false
+            let mutable attempts = 0
+            let mutable completions = 0
+
+            let cleanup () =
+                attempts <- attempts + 1
+
+                if allowCleanup && consumer.Activate () then
+                    SDL.SDL3.SDL_DestroyRenderer renderer
+                    SDL.SDL3.SDL_DestroyWindow window
+                    SDL.SDL3.SDL_QuitSubSystem SDL.SDL_InitFlags.SDL_INIT_VIDEO
+                    renderer <- NativePtr.nullPtr
+                    window <- NativePtr.nullPtr
+                    videoOwned <- false
+                    completions <- completions + 1
+                    true
+                else
+                    false
+
+            EglRenderer.RetainFailedConstruction cleanup
+
+            for _ in 1..2 do
+                let mutable blocked = false
+
+                try
+                    use unexpected = Window.create ("must not allocate", 16, 16)
+                    ()
+                with :? InvalidOperationException as pending when pending.Message = "An SDL EGL window is awaiting construction cleanup" ->
+                    blocked <- true
+
+                if
+                    not blocked
+                    || SDL.SDL3.SDL_GetWindowID window
+                       <> originalWindowId
+                    || completions <> 0
+                then
+                    failwith "Pending EGL construction cleanup failed to block new allocations"
+
+            if attempts <> 2 then
+                failwith "Pending EGL construction cleanup ownership accumulated"
+
+            allowCleanup <- true
+            EglRenderer.RetryFailedConstruction ()
+            EglRenderer.RetryFailedConstruction ()
+
+            if attempts <> 3 || completions <> 1 then
+                failwith "Pending EGL construction cleanup did not clear exactly once"
+
+            Console.WriteLine "EGL construction cleanup retry smoke passed"
     finally
         if not (Microsoft.FSharp.NativeInterop.NativePtr.isNullPtr renderer) then
             SDL.SDL3.SDL_DestroyRenderer renderer
@@ -410,7 +462,8 @@ let private eglFailureSmoke beforeRegistration =
         if not (Microsoft.FSharp.NativeInterop.NativePtr.isNullPtr window) then
             SDL.SDL3.SDL_DestroyWindow window
 
-        SDL.SDL3.SDL_QuitSubSystem SDL.SDL_InitFlags.SDL_INIT_VIDEO
+        if videoOwned then
+            SDL.SDL3.SDL_QuitSubSystem SDL.SDL_InitFlags.SDL_INIT_VIDEO
 
         blocker
         |> Option.iter (fun host -> (host :> IDisposable).Dispose())
@@ -422,7 +475,9 @@ let private eglFailureSmoke beforeRegistration =
     if retained = beforeRegistration then
         failwith "EGL cohort owner was released or retained across the wrong failure boundary"
 
-    printfn "EGL cohort failure smoke passed: before registration %b, owner retained %b" beforeRegistration retained
+    let beforeText = beforeRegistration.ToString().ToLowerInvariant()
+    let retainedText = retained.ToString().ToLowerInvariant()
+    Console.WriteLine $"EGL cohort failure smoke passed: before registration {beforeText}, owner retained {retainedText}"
 
 [<EntryPoint>]
 let main _ =
