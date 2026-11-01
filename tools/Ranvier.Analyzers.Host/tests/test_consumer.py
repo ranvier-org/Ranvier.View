@@ -32,6 +32,14 @@ ANALYZERS_PACKAGE_ID = "Ranvier.Analyzers"
 NUGET_SOURCE = "https://api.nuget.org/v3/index.json"
 DEFAULT_TIMEOUT_SECONDS = 540
 DEFAULT_SDK_VERSION = "10.0.403"
+CHILD_ENVIRONMENT_OVERRIDES = (
+    "DOTNET_GCHeapHardLimit", "COMPlus_GCHeapHardLimit",
+    "DOTNET_GCHeapHardLimitPercent", "COMPlus_GCHeapHardLimitPercent",
+    "RanvierAnalyzerHeapHardLimitBytes", "RANVIER_ANALYZER_HOST_PROVENANCE_DIR",
+    "RestoreConfigFile", "RestorePackagesPath", "NuGetPackageRoot",
+    "NUGET_PACKAGES", "NUGET_HTTP_CACHE_PATH", "UseLocalRanvier", "RanvierRoot",
+    "RanvierNativeApiContractRoot",
+)
 
 
 @dataclass(frozen=True)
@@ -130,6 +138,7 @@ def write_nuget_config(feed, destination):
     ET.SubElement(sources, "add", key="ranvier-analyzer-feed", value=str(feed))
     ET.SubElement(sources, "add", key="nuget.org", value=NUGET_SOURCE)
     mapping = ET.SubElement(config, "packageSourceMapping")
+    ET.SubElement(mapping, "clear")
     private = ET.SubElement(mapping, "packageSource", key="ranvier-analyzer-feed")
     ET.SubElement(private, "package", pattern=ANALYZERS_PACKAGE_ID)
     ET.SubElement(private, "package", pattern=HOST_PACKAGE_ID)
@@ -183,6 +192,7 @@ def project_text(analyzers_version):
     ET.SubElement(properties, "TargetFramework").text = "net10.0"
     ET.SubElement(properties, "GenerateDocumentationFile").text = "false"
     references = ET.SubElement(project, "ItemGroup")
+    ET.SubElement(references, "Compile", Include="Fixture.fs")
     ET.SubElement(references, "PackageReference", Include="Ranvier", Version=PUBLIC_RANVIER_VERSION)
     ET.SubElement(references, "PackageReference", Include=ANALYZERS_PACKAGE_ID,
                   Version=analyzers_version, PrivateAssets="all")
@@ -199,13 +209,7 @@ def build_command(dotnet, project, heap_bytes=None):
 
 def child_environment(cache, provenance):
     env = os.environ.copy()
-    for name in ("DOTNET_GCHeapHardLimit", "COMPlus_GCHeapHardLimit",
-                 "DOTNET_GCHeapHardLimitPercent", "COMPlus_GCHeapHardLimitPercent",
-                 "RanvierAnalyzerHeapHardLimitBytes", "RANVIER_ANALYZER_HOST_PROVENANCE_DIR",
-                 "RestoreConfigFile", "RestorePackagesPath", "NuGetPackageRoot",
-                 "NUGET_PACKAGES", "NUGET_HTTP_CACHE_PATH", "UseLocalRanvier", "RanvierRoot",
-                 "RanvierNativeApiContractRoot"):
-        env.pop(name, None)
+    _remove_child_environment_overrides(env)
     cache = Path(cache).resolve()
     env["NUGET_PACKAGES"] = str(cache)
     env["NUGET_HTTP_CACHE_PATH"] = str(cache / "http-cache")
@@ -215,6 +219,13 @@ def child_environment(cache, provenance):
     env["DOTNET_NOLOGO"] = "1"
     env["RANVIER_ANALYZER_HOST_PROVENANCE_DIR"] = str(Path(provenance).resolve())
     return env
+
+
+def _remove_child_environment_overrides(env):
+    blocked = {name.casefold() for name in CHILD_ENVIRONMENT_OVERRIDES}
+    for name in list(env):
+        if name.casefold() in blocked:
+            env.pop(name, None)
 
 
 def _write_fake_package(path, package_id, version, files, dependency=None):
@@ -581,6 +592,7 @@ class ConsumerHarnessContract(unittest.TestCase):
                    for item in config.findall("./packageSources/add")}
         mapping = {node.attrib["key"]: [item.attrib["pattern"] for item in node.findall("package")]
                    for node in config.findall("./packageSourceMapping/packageSource")}
+        self.assertIsNotNone(config.find("./packageSourceMapping/clear"))
         self.assertEqual(set(sources), {"ranvier-analyzer-feed", "nuget.org"})
         self.assertEqual(mapping["ranvier-analyzer-feed"], ["Ranvier.Analyzers", "Ranvier.Analyzers.Host"])
         self.assertEqual(mapping["nuget.org"], ["*"])
@@ -599,8 +611,10 @@ class ConsumerHarnessContract(unittest.TestCase):
         project = ET.fromstring(project_text("0.1.1-preview.2"))
         references = {node.attrib["Include"]: node.attrib["Version"]
                       for node in project.findall("./ItemGroup/PackageReference")}
+        compile_items = [node.attrib["Include"] for node in project.findall("./ItemGroup/Compile")]
         self.assertEqual(references, {"Ranvier": PUBLIC_RANVIER_VERSION,
                                       ANALYZERS_PACKAGE_ID: "0.1.1-preview.2"})
+        self.assertEqual(compile_items, ["Fixture.fs"])
         self.assertNotIn(HOST_PACKAGE_ID, references)
 
     def test_default_build_does_not_pass_a_heap_override(self):
@@ -619,21 +633,33 @@ class ConsumerHarnessContract(unittest.TestCase):
                                              "allowPrerelease": False}})
 
     def test_child_environment_isolated_from_parent_gc_and_restore_settings(self):
-        inherited = {"DOTNET_GCHeapHardLimit": "0x40000000", "COMPlus_GCHeapHardLimit": "40000000",
-                     "DOTNET_GCHeapHardLimitPercent": "50", "COMPlus_GCHeapHardLimitPercent": "50",
-                     "RanvierAnalyzerHeapHardLimitBytes": "1", "NUGET_PACKAGES": "wrong-cache",
-                     "RestoreConfigFile": "wrong-config"}
-        original_heap = os.environ.get("DOTNET_GCHeapHardLimit")
+        inherited = {"DOTNET_GCHEAPHARDLIMIT": "0x40000000", "COMPLUS_GCHEAPHARDLIMIT": "40000000",
+                     "DOTNET_GCHEAPHARDLIMITPERCENT": "50", "COMPLUS_GCHEAPHARDLIMITPERCENT": "50",
+                     "RANVIERANALYZERHEAPHARDLIMITBYTES": "1", "NUGET_PACKAGES": "wrong-cache",
+                     "RESTORECONFIGFILE": "wrong-config"}
+        original_heap = os.environ.get("DOTNET_GCHEAPHARDLIMIT")
         with mock.patch.dict(os.environ, inherited):
             env = child_environment(Path("fresh-packages"), Path("provenance"))
-            self.assertNotIn("DOTNET_GCHeapHardLimit", env)
-            self.assertNotIn("COMPlus_GCHeapHardLimit", env)
-            self.assertNotIn("DOTNET_GCHeapHardLimitPercent", env)
-            self.assertNotIn("COMPlus_GCHeapHardLimitPercent", env)
-            self.assertNotIn("RanvierAnalyzerHeapHardLimitBytes", env)
-            self.assertNotEqual(env["NUGET_PACKAGES"], "wrong-cache")
-            self.assertNotIn("RestoreConfigFile", env)
-        self.assertEqual(os.environ.get("DOTNET_GCHeapHardLimit"), original_heap)
+            env_keys = {key.casefold() for key in env}
+            for name in ("DOTNET_GCHEAPHARDLIMIT", "COMPLUS_GCHEAPHARDLIMIT",
+                         "DOTNET_GCHEAPHARDLIMITPERCENT", "COMPLUS_GCHEAPHARDLIMITPERCENT",
+                         "RANVIERANALYZERHEAPHARDLIMITBYTES", "RESTORECONFIGFILE",
+                         "RESTOREPACKAGESPATH", "NUGETPACKAGEROOT", "USELOCALRANVIER",
+                         "RANVIERROOT", "RANVIERNATIVEAPICONTRACTROOT"):
+                self.assertNotIn(name.casefold(), env_keys)
+            self.assertEqual(env["NUGET_PACKAGES"], str(Path("fresh-packages").resolve()))
+            self.assertEqual(env["NUGET_HTTP_CACHE_PATH"], str((Path("fresh-packages").resolve() / "http-cache")))
+            self.assertEqual(env["RANVIER_ANALYZER_HOST_PROVENANCE_DIR"], str(Path("provenance").resolve()))
+        self.assertEqual(os.environ.get("DOTNET_GCHEAPHARDLIMIT"), original_heap)
+
+    def test_environment_override_removal_handles_upper_and_mixed_case_keys(self):
+        inherited = {}
+        for name in CHILD_ENVIRONMENT_OVERRIDES:
+            inherited[name.upper()] = "uppercase"
+            inherited[name.lower()] = "lowercase"
+            inherited[name.swapcase()] = "mixedcase"
+        _remove_child_environment_overrides(inherited)
+        self.assertEqual(inherited, {})
 
     def test_feed_fingerprint_is_stable_and_tracks_private_package_bytes(self):
         with (tempfile.TemporaryDirectory(prefix="consumer-feed-hash-test-") as first,
