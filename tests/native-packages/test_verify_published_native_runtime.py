@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 
 sys.dont_write_bytecode = True
 SCRIPT = Path(__file__).resolve().parents[2] / 'tools/verify-published-native-runtime.py'
@@ -15,13 +16,13 @@ SPEC = importlib.util.spec_from_file_location('published_native_runtime', SCRIPT
 VERIFY = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(VERIFY)
 
-VERSION = '0.1.0-preview.6'
+VERSION = '0.1.1-preview.2'
 VIEW = 'Ranvier.View.WebCore.Sdl.Traced'
 VIEW_VERSION = '0.1.0-test.1'
 SLIM = 'Ranvier.WebCore.Native.win-x64'
 GPU = 'Ranvier.WebCore.Native.Gpu.win-x64'
 RIDS = ['linux-x64', 'linux-arm64', 'osx-arm64', 'win-arm64', 'win-x64']
-ABI = 59
+ABI = 60
 
 
 def write_json(path, value):
@@ -135,9 +136,38 @@ class RuntimeVerification(unittest.TestCase):
     def test_workflow_requires_and_passes_expected_cohort_abi(self):
         workflow = (Path(__file__).resolve().parents[2] /
                     '.github/workflows/published-native-packages.yml').read_text(encoding='utf-8')
+        view_input = workflow.split('view_package_version:', 1)[1].split('native_runtime_version:', 1)[0]
+        runtime_input = workflow.split('native_runtime_version:', 1)[1].split('native_abi:', 1)[0]
+        self.assertIn('native_runtime_version:', workflow)
         self.assertIn('native_abi:', workflow)
+        self.assertIn('required: true', view_input)
+        self.assertIn('required: true', runtime_input)
+        self.assertIn('NativeViewPackageVersion: ${{ inputs.view_package_version }}', workflow)
+        self.assertIn('NativeRuntimePackageVersion: ${{ inputs.native_runtime_version }}', workflow)
         self.assertIn("NativeRuntimeAbi: ${{ inputs.native_abi }}", workflow)
         self.assertEqual(workflow.count('--abi "$env:NativeRuntimeAbi"'), 2)
+
+    def test_public_consumer_defaults_match_allocated_native_preview_and_abi(self):
+        root = Path(__file__).resolve().parents[2]
+        backend = ET.parse(root / 'src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj').getroot()
+        fixture = ET.parse(root / 'tests/native-packages/Directory.Build.props').getroot()
+        backend_version = backend.findtext(".//RanvierWebCoreNativeVersion")
+        consumer_version = fixture.findtext(".//NativeRuntimePackageVersion")
+        self.assertEqual(backend_version, '0.1.1-preview.2')
+        self.assertEqual(consumer_version, '0.1.1-preview.2')
+        self.assertEqual(VERSION, '0.1.1-preview.2')
+        self.assertEqual(ABI, 60)
+        self.assertEqual(backend.find(".//RanvierWebCoreNativeVersion").attrib.get('Condition'),
+                         "'$(RanvierWebCoreNativeVersion)' == ''")
+        backend_text = (root / 'src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj').read_text(encoding='utf-8')
+        self.assertIn("<UseLocalRanvierWebCore Condition=\"'$(UseLocalRanvierWebCore)' == ''\">false", backend_text)
+        self.assertIn("<ProjectReference Include=\"$(RanvierWebCoreRoot)/src/Ranvier.WebCore/Ranvier.WebCore.fsproj\" />",
+                      backend_text)
+        self.assertIn("<ItemGroup Condition=\"'$(RanvierWebCoreNativeDir)' == ''\">", backend_text)
+        sdl_readme = (root / 'src/Ranvier.View.WebCore.Sdl/README.md').read_text(encoding='utf-8')
+        self.assertEqual(sdl_readme.count('Version="[0.1.1-preview.2]"'), 2)
+        self.assertIn("<NativeRuntimePackageVersion Condition=\"'$(NativeRuntimePackageVersion)' == ''\">",
+                      (root / 'tests/native-packages/Directory.Build.props').read_text(encoding='utf-8'))
 
     def test_cpu_checks_every_one_of_317_manifest_files(self):
         self.assertEqual(self.fixture().verify()['files'], 317)
