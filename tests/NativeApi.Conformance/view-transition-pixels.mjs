@@ -67,6 +67,16 @@ async function activeNewAnimation(page) {
     animation.effect?.pseudoElement === '::view-transition-new(root)'));
 }
 
+async function assertNoViewTransitionAnimations(page, boundary) {
+  await nextPaint(page);
+  const remaining = await page.evaluate(() => [...document.getAnimations({ subtree: true })]
+    .filter(animation => animation.effect?.pseudoElement?.startsWith('::view-transition-'))
+    .map(animation => `${animation.effect.pseudoElement}:${animation.playState}`));
+  if (remaining.length) {
+    throw new Error(`${boundary}: view-transition animations remain: ${remaining.join(', ')}`);
+  }
+}
+
 export async function runViewTransitionPixels(chromium, requestedOutputDirectory = process.env.NATIVE_API_PIXEL_OUTPUT) {
   const temporaryOutput = !requestedOutputDirectory;
   const outputDirectory = requestedOutputDirectory
@@ -126,6 +136,7 @@ export async function runViewTransitionPixels(chromium, requestedOutputDirectory
     await capture('at-100-seconds-blue', colors.blue);
     await first.evaluate(animation => animation.finish());
     await page.evaluate(async () => { await window.__pixelTransition.finished; });
+    await assertNoViewTransitionAnimations(page, 'finished transition cleanup');
     await capture('finished-blue', colors.blue);
     await first.dispose();
 
@@ -136,6 +147,7 @@ export async function runViewTransitionPixels(chromium, requestedOutputDirectory
       window.__pixelTransition.skipTransition();
       await window.__pixelTransition.finished;
     });
+    await assertNoViewTransitionAnimations(page, 'skipped transition cleanup');
     await capture('skip-cleans-pseudo-tree-red', colors.red);
     await second.dispose();
 
@@ -145,6 +157,7 @@ export async function runViewTransitionPixels(chromium, requestedOutputDirectory
     await third.dispose();
     const replacement = pageHtml.replace('rgb(255,0,0)', 'rgb(0,255,0)');
     await page.goto(`data:text/html,${encodeURIComponent(replacement)}`);
+    await assertNoViewTransitionAnimations(page, 'replacement document cleanup');
     await capture('replacement-document-green', colors.green);
 
     if (samples.length !== 9) throw new Error(`Expected 9 screenshots, captured ${samples.length}`);
