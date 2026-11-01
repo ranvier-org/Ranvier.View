@@ -22,6 +22,7 @@
 
     <ItemGroup>
         <Compile Include="Keys.fs" />
+        <Compile Include="EglPresentation.fs" />
         <Compile Include="Presentation.fs" />
         <Compile Include="Window.fs" />
         <None Include="README.md" Pack="true" PackagePath="\" />

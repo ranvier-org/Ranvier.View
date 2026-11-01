@@ -17,8 +17,8 @@ module private PresentationNative =
     let failure operation =
         InvalidOperationException $"{operation} failed: {SDL3.SDL_GetError ()}"
 
-/// <summary>CPU and shared D3D11 textures presented on the host and SDL owner thread.</summary>
-type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
+/// <summary>CPU and shared GPU textures presented on the host and SDL owner thread.</summary>
+type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option) =
     let mutable cpuTexture = NativePtr.nullPtr<SDL_Texture>
     let mutable cpuWidth = 0
     let mutable cpuHeight = 0
@@ -29,6 +29,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
     let mutable gpuWidth = 0
     let mutable gpuHeight = 0
     let mutable gpuFrames = 0L
+    let mutable cpuFrames = 0L
     let mutable lastGpu = false
 
     let device () =
@@ -36,9 +37,10 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
         SDL3.SDL_GetPointerProperty (SDL3.SDL_GetRendererProperties renderer, key, 0n)
 
     let gpuEnabled =
-        OperatingSystem.IsWindows ()
-        && WebCoreHost.Has "presentation-d3d11"
-        && device () <> 0n
+        ((OperatingSystem.IsWindows ()
+          && WebCoreHost.Has "presentation-d3d11"
+          && device () <> 0n)
+         || egl.IsSome)
         && RanvierWebCoreAbi.Native.rv_host_set_accelerated_compositing (host.Handle, 1) = 0
 
     let draw texture width height =
@@ -154,11 +156,15 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
     member private _.WithGpu(action: nativeptr<SDL_Texture> -> int -> int -> 'T) : 'T voption =
         let mutable frame = 0n
 
-        if
-            not gpuEnabled
-            || RanvierWebCoreAbi.Native.rv_host_acquire_d3d11_frame (host.Handle, device (), &frame)
-               <> 0
-        then
+        let acquired =
+            if not gpuEnabled then
+                -9
+            else
+                match egl with
+                | Some consumer -> consumer.Acquire (host.Handle, &frame)
+                | None -> RanvierWebCoreAbi.Native.rv_host_acquire_d3d11_frame (host.Handle, device (), &frame)
+
+        if acquired <> 0 then
             ValueNone
         else
             try
@@ -184,7 +190,11 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
                         if not (NativePtr.isNullPtr gpuTexture) then
                             SDL3.SDL_DestroyTexture gpuTexture
 
-                        gpuTexture <- importTexture resource width height
+                        gpuTexture <-
+                            match egl with
+                            | Some consumer -> consumer.Import (resource, width, height)
+                            | None -> importTexture resource width height
+
                         gpuResource <- resource
                         gpuWidth <- width
                         gpuHeight <- height
@@ -204,7 +214,16 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
                         ValueSome (action gpuTexture width height)
             finally
                 let flushed = PresentationNative.ok (SDL3.SDL_FlushRenderer renderer)
-                let released = RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
+
+                if egl.IsSome && not (NativePtr.isNullPtr gpuTexture) then
+                    SDL3.SDL_DestroyTexture gpuTexture
+                    gpuTexture <- NativePtr.nullPtr
+                    gpuResource <- 0n
+
+                let released =
+                    match egl with
+                    | Some consumer -> consumer.Release frame
+                    | None -> RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
 
                 if not flushed then
                     raise (PresentationNative.failure "SDL_FlushRenderer")
@@ -218,6 +237,9 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
 
     /// <summary>The number of shared GPU frames presented to this renderer.</summary>
     member _.GpuFramesPresented = gpuFrames
+
+    /// <summary>The number of presentation attempts that took the CPU path.</summary>
+    member _.CpuFramesPresented = cpuFrames
 
     /// <summary>Presents the updated page, with CPU painting when shared texture import is unavailable.</summary>
     member this.Present(exposed: bool) =
@@ -233,6 +255,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
             lastGpu <- true
             fullPaint <- true
         | ValueNone ->
+            cpuFrames <- cpuFrames + 1L
             lastGpu <- false
             let painted = updateCpu ()
 
