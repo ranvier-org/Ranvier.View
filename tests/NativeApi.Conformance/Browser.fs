@@ -841,9 +841,10 @@ let private moveBy (x: int) (y: int) (dx: int) (dy: int) : JS.Promise<unit> = js
 let private settleTasks () : JS.Promise<unit> = jsNative
 
 // Platform difference: Linux Chromium delivers a locked CDP move as several pointermoves, with movement measured from
-// the window origin and a return move (measured: 0,0; 90,80; -90,-80; 0,0 for a move by 30,20 from 60,60).
+// the window origin and a return move (measured: 0,0; 90,80; -90,-80; 0,0 for a move by 30,20 from 60,60), and may
+// report unlocked before the granted lock (CI run 41323455589).
 [<Emit("!navigator.userAgent.includes('Linux')")>]
-let private exactLockedMoves () : bool = jsNative
+let private exactPointerLock () : bool = jsNative
 
 /// <summary>Runs the shared pointer-input assertions with CDP touch, pen and mouse input.</summary>
 /// <remarks>Headless Chromium grants a pointer-lock request without asking, so granting is a no-op.</remarks>
@@ -857,7 +858,7 @@ let runPointerInput () =
                 Pen = fun pen -> penSample pen |> Async.AwaitPromise
                 Click = fun x y -> clickAt x y |> Async.AwaitPromise
                 MoveBy = fun x y dx dy -> moveBy x y dx dy |> Async.AwaitPromise
-                ExactLockedMoves = exactLockedMoves ()
+                ExactPointerLock = exactPointerLock ()
                 GrantLock = fun () -> settleTasks () |> Async.AwaitPromise
                 Settle = fun () -> settleTasks () |> Async.AwaitPromise
             }

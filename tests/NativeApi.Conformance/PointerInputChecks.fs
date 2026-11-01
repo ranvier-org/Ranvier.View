@@ -45,10 +45,11 @@ type Driver =
         /// <summary>A mouse move by movementX, movementY to x, y.</summary>
         MoveBy: int -> int -> int -> int -> Async<unit>
         /// <summary>
-        /// Whether a locked move arrives as one pointermove with the given movement. False accepts any number of locked
-        /// moves on the lock target at the held position, with their movement unchecked.
+        /// Whether a grant reports exactly its lock changes and a locked move arrives as one pointermove with the given
+        /// movement. False also accepts unlocked changes around the grant and the exit, and any number of locked moves
+        /// on the lock target at the held position, with their movement unchecked.
         /// </summary>
-        ExactLockedMoves: bool
+        ExactPointerLock: bool
         /// <summary>The embedder grants the pending pointer-lock request.</summary>
         GrantLock: unit -> Async<unit>
         /// <summary>Runs queued tasks, such as pointerlockchange.</summary>
@@ -400,6 +401,7 @@ let run (document: Document) (provider: PointerInputProvider) (capabilities: Cap
                 | PointerLockChange.Unlocked -> "unlocked"
                 | PointerLockChange.Error -> "error")
             |> Array.distinct
+            |> Array.filter (fun change -> driver.ExactPointerLock || change <> "unlocked")
 
         equal "lock changes" [| "pointer-t" |] locks
         changes.Clear ()
@@ -408,11 +410,11 @@ let run (document: Document) (provider: PointerInputProvider) (capabilities: Cap
         do! driver.MoveBy 100 180 30 20
 
         match pointersOf (take ()) "pointermove" with
-        | [| move |] when driver.ExactLockedMoves ->
+        | [| move |] when driver.ExactPointerLock ->
             equal "locked move target" "pointer-t" (idOf move.target)
             equal "locked move holds the position" (60.0, 60.0) (move.clientX, move.clientY)
             equal "locked move movement" (30.0, 20.0) (move.movementX, move.movementY)
-        | moves when not driver.ExactLockedMoves && moves.Length > 0 ->
+        | moves when not driver.ExactPointerLock && moves.Length > 0 ->
             equal
                 "locked moves target"
                 true
@@ -429,7 +431,15 @@ let run (document: Document) (provider: PointerInputProvider) (capabilities: Cap
         equal "lock is not pointer capture" false (t.hasPointerCapture 1)
         service.Exit ()
         do! driver.Settle ()
-        equal "unlock change" [| PointerLockChange.Unlocked |] (changes.ToArray ())
+
+        equal
+            "unlock change"
+            [| PointerLockChange.Unlocked |]
+            (if driver.ExactPointerLock then
+                 changes.ToArray ()
+             else
+                 changes.ToArray () |> Array.distinct)
+
         equal "unlocked" PointerLockState.Unlocked (service.Current ())
         subscription.Dispose ()
         service.Dispose ()
