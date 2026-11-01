@@ -56,9 +56,12 @@ module internal AnimationResults =
             let value =
                 Marshal.PtrToStructure<NativeDom.RvDomUnionDoubleOrCSSNumericValue> pointer
 
-            if value.present = 0 then None
-            elif value.tag = 1 then Some (DoubleOrCSSNumericValue.Double value.arm0)
-            else invalidOp "A typed time from WebCore is not supported"
+            if value.present = 0 then
+                None
+            elif value.tag = 1 then
+                Some (DoubleOrCSSNumericValue.Double value.arm0)
+            else
+                invalidOp "A typed time from WebCore is not supported"
 
     let private nullableNumberish (pointer: nativeint) =
         if pointer = 0n then
@@ -67,9 +70,12 @@ module internal AnimationResults =
             let value =
                 Marshal.PtrToStructure<NativeDom.RvDomUnionDoubleOrCSSNumericValueNullable> pointer
 
-            if value.present = 0 then None
-            elif value.tag = 1 then Some (DoubleOrCSSNumericValue.Double value.arm0)
-            else invalidOp "A typed time from WebCore is not supported"
+            if value.present = 0 then
+                None
+            elif value.tag = 1 then
+                Some (DoubleOrCSSNumericValue.Double value.arm0)
+            else
+                invalidOp "A typed time from WebCore is not supported"
 
     /// <summary>AnimationEffect.getTiming.</summary>
     let timing (target: obj) : EffectTiming =
@@ -148,7 +154,7 @@ module internal AnimationResults =
 
                         Array.init properties.count (fun item ->
                             let entry =
-                                Marshal.PtrToStructure<NativeDom.RvDomKeyframeProperty> (
+                                Marshal.PtrToStructure<NativeDom.RvDomKeyframeProperty>(
                                     Marshal.ReadIntPtr (properties.items, item * System.IntPtr.Size)
                                 )
 

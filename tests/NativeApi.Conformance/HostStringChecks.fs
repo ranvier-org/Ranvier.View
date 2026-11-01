@@ -33,6 +33,9 @@ let run (document: Document) (create: unit -> EventService) =
     document.body.appendChild element |> ignore
     equal "element listener" [ true; false ] (fired (element :> EventTarget))
     equal "standalone target listener" [ true; false ] (fired (service.CreateTarget () :> EventTarget))
-    let trailing = service.Create ("t\u0000", EventConstruction.Event EventOptions.Default)
+
+    let trailing =
+        service.Create ("t\u0000", EventConstruction.Event EventOptions.Default)
+
     equal "trailing U+0000 type" "t\u0000" trailing.``type``
     checks

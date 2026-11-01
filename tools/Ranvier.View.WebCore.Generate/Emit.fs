@@ -187,10 +187,10 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
                 | Some raw ->
                     // An enumeration entry is [values, attributes, IDL file].
                     let entry =
-                        ctx.Input.Model.GetProperty("enumerations").GetProperty (Metadata.text "enum" mapping)
+                        ctx.Input.Model.GetProperty("enumerations").GetProperty(Metadata.text "enum" mapping)
 
                     let values =
-                        entry[0].EnumerateArray ()
+                        entry[0].EnumerateArray()
                         |> Seq.map _.GetString()
                         |> Seq.toArray
 
@@ -345,7 +345,12 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
             root = "EventTarget"
             && ctx.Input.Kinds.ContainsKey (Metadata.publicInterfaceName ctx.Input.Model (Metadata.text "interface" mapping))
 
-        let root = if eventTargetObject then Metadata.text "interface" mapping else root
+        let root =
+            if eventTargetObject then
+                Metadata.text "interface" mapping
+            else
+                root
+
         let publicRoot = Metadata.publicInterfaceName ctx.Input.Model root
 
         let query =
@@ -464,7 +469,12 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
 
             let expression =
                 // An event-target object (Animation, FileReader) retains through the hand-written event target ABI.
-                let retain = if root = "event_target" then "Native.rv_event_target_retain" else $"NativeDom.rv_dom_{root}_retain"
+                let retain =
+                    if root = "event_target" then
+                        "Native.rv_event_target_retain"
+                    else
+                        $"NativeDom.rv_dom_{root}_retain"
+
                 $"({capture}let handle = {value} in {retain} handle |> ignore; {wrapped})"
 
             if mapping.GetProperty("nullable").GetBoolean() then
@@ -544,7 +554,9 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
     | "union" when (Metadata.items "subtypes" mapping).Length = 1 ->
         // The model types a single-arm union as its arm.
         let arm = (Metadata.items "subtypes" mapping)[0]
-        decoded ctx arm plain $"{value}.arm0" owner |> Result.map wrap
+
+        decoded ctx arm plain $"{value}.arm0" owner
+        |> Result.map wrap
     | _ -> Error $"Unsupported owned result {kind} as {name managed}"
 
 /// <summary>The body of a mapped member, or why it cannot be mapped.</summary>

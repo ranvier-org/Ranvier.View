@@ -19,7 +19,16 @@ let run (create: unit -> CanvasContextService) (document: Document) =
             failwith (String.Concat ([| label; ": expected "; string (box expected); ", got "; string (box actual) |]))
 
     let describe (value: Canvas2DSettings) =
-        String.Join (",", [| string value.Alpha; string value.Desynchronized; string value.WillReadFrequently; string (int value.ColorSpace); string (int value.ColorType) |])
+        String.Join (
+            ",",
+            [|
+                string value.Alpha
+                string value.Desynchronized
+                string value.WillReadFrequently
+                string (int value.ColorSpace)
+                string (int value.ColorType)
+            |]
+        )
 
     let settings label (expected: Canvas2DSettings) (actual: Canvas2DSettings) =
         checks <- checks + 1
@@ -55,7 +64,7 @@ let run (create: unit -> CanvasContextService) (document: Document) =
         | _ -> "(not a string)"
 
     let canvas (append: bool) =
-        let element = unbox<HTMLCanvasElement> (document.createElement "canvas")
+        let element = unbox<HTMLCanvasElement>(document.createElement "canvas")
 
         if append then
             document.body.appendChild element |> ignore
@@ -68,19 +77,55 @@ let run (create: unit -> CanvasContextService) (document: Document) =
     equal "default width" 300u first.width
     equal "default height" 150u first.height
 
-    for kind in [ CanvasContextType.BitmapRenderer; CanvasContextType.WebGL; CanvasContextType.WebGL2; CanvasContextType.WebGpu; enum<CanvasContextType> 99 ] do
+    for kind in
+        [
+            CanvasContextType.BitmapRenderer
+            CanvasContextType.WebGL
+            CanvasContextType.WebGL2
+            CanvasContextType.WebGpu
+            enum<CanvasContextType> 99
+        ] do
         unsupported ("type " + string (int kind)) (service.GetContext (first, kind, defaults))
 
     unsupported "alpha false" (service.GetContext (first, CanvasContextType.TwoD, { defaults with Alpha = false }))
-    unsupported "display-p3" (service.GetContext (first, CanvasContextType.TwoD, { defaults with ColorSpace = CanvasColorSpace.DisplayP3 }))
-    unsupported "float16" (service.GetContext (first, CanvasContextType.TwoD, { defaults with ColorType = CanvasColorType.Float16 }))
-    let ctx = context "first 2D context" (service.GetContext (first, CanvasContextType.TwoD, defaults))
+
+    unsupported
+        "display-p3"
+        (service.GetContext (
+            first,
+            CanvasContextType.TwoD,
+            { defaults with
+                ColorSpace = CanvasColorSpace.DisplayP3
+            }
+        ))
+
+    unsupported
+        "float16"
+        (service.GetContext (
+            first,
+            CanvasContextType.TwoD,
+            { defaults with
+                ColorType = CanvasColorType.Float16
+            }
+        ))
+
+    let ctx =
+        context "first 2D context" (service.GetContext (first, CanvasContextType.TwoD, defaults))
+
     same "getContext returns the same context" ctx (context "second 2D request" (service.GetContext (first, CanvasContextType.TwoD, defaults)))
 
     same
         "later supported settings are ignored"
         ctx
-        (context "third 2D request" (service.GetContext (first, CanvasContextType.TwoD, { defaults with WillReadFrequently = true })))
+        (context
+            "third 2D request"
+            (service.GetContext (
+                first,
+                CanvasContextType.TwoD,
+                { defaults with
+                    WillReadFrequently = true
+                }
+            )))
 
     unsupported "unsupported settings on an existing context" (service.GetContext (first, CanvasContextType.TwoD, { defaults with Alpha = false }))
     unsupported "WebGL on a 2D canvas" (service.GetContext (first, CanvasContextType.WebGL, defaults))
@@ -89,7 +134,13 @@ let run (create: unit -> CanvasContextService) (document: Document) =
 
     equal "initial fillStyle" "#000000" (style ctx)
 
-    for given, expected in [ "#ff0000", "#ff0000"; "not a colour", "#ff0000"; "rgba(0, 0, 255, 0.5)", "rgba(0, 0, 255, 0.5)"; "lime", "#00ff00" ] do
+    for given, expected in
+        [
+            "#ff0000", "#ff0000"
+            "not a colour", "#ff0000"
+            "rgba(0, 0, 255, 0.5)", "rgba(0, 0, 255, 0.5)"
+            "lime", "#00ff00"
+        ] do
         ctx.fillStyle <- DOMStringOrCanvasGradientOrCanvasPattern.DOMString given
         equal ("fillStyle " + given) expected (style ctx)
 
@@ -111,12 +162,30 @@ let run (create: unit -> CanvasContextService) (document: Document) =
     settings "attributes of a zero-width canvas" defaults (service.Attributes ctx)
 
     let reading = canvas true
-    let readingContext = context "willReadFrequently context" (service.GetContext (reading, CanvasContextType.TwoD, { defaults with WillReadFrequently = true }))
-    settings "requested attributes" { defaults with WillReadFrequently = true } (service.Attributes readingContext)
+
+    let readingContext =
+        context
+            "willReadFrequently context"
+            (service.GetContext (
+                reading,
+                CanvasContextType.TwoD,
+                { defaults with
+                    WillReadFrequently = true
+                }
+            ))
+
+    settings
+        "requested attributes"
+        { defaults with
+            WillReadFrequently = true
+        }
+        (service.Attributes readingContext)
 
     let fresh = canvas true
     unsupported "WebGL on a fresh canvas" (service.GetContext (fresh, CanvasContextType.WebGL, defaults))
-    context "an unsupported request leaves the canvas free" (service.GetContext (fresh, CanvasContextType.TwoD, defaults)) |> ignore
+
+    context "an unsupported request leaves the canvas free" (service.GetContext (fresh, CanvasContextType.TwoD, defaults))
+    |> ignore
 
     first.remove ()
     ctx.fillRect (0.0, 0.0, 10.0, 10.0)
@@ -124,7 +193,10 @@ let run (create: unit -> CanvasContextService) (document: Document) =
     document.body.appendChild first |> ignore
 
     let detached = canvas false
-    let detachedContext = context "a never-attached canvas" (service.GetContext (detached, CanvasContextType.TwoD, defaults))
+
+    let detachedContext =
+        context "a never-attached canvas" (service.GetContext (detached, CanvasContextType.TwoD, defaults))
+
     same "the detached context's canvas" detached detachedContext.canvas
     equal "the detached canvas size" 300u detachedContext.canvas.width
     checks

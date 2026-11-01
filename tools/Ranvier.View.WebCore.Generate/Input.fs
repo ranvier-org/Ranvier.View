@@ -99,7 +99,7 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
                 let fieldMapping = field.GetProperty "mapping"
                 let ctype = Metadata.text "ctype" field
 
-                let nullableField = fieldMapping.GetProperty("nullable").GetBoolean ()
+                let nullableField = fieldMapping.GetProperty("nullable").GetBoolean()
 
                 let expression =
                     if ctype.EndsWith "* const*" then

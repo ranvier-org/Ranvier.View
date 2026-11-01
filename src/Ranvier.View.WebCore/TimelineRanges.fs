@@ -11,11 +11,19 @@ module internal TimelineRanges =
     /// union and its dictionary are released before the call returns.
     /// </summary>
     let read (animation: nativeint) (start: bool) (wrap: nativeint -> obj) =
-        let label = if start then "WebAnimation.rangeStart" else "WebAnimation.rangeEnd"
-        let mutable result = NativeDom.RvDomUnionTimelineRangeOffsetOrCSSNumericValueOrCSSOMKeywordValueOrDOMString ()
+        let label =
+            if start then
+                "WebAnimation.rangeStart"
+            else
+                "WebAnimation.rangeEnd"
+
+        let mutable result =
+            NativeDom.RvDomUnionTimelineRangeOffsetOrCSSNumericValueOrCSSOMKeywordValueOrDOMString ()
 
         let style (handle: nativeint) =
-            NativeDom.rv_dom_css_style_value_retain handle |> ignore
+            NativeDom.rv_dom_css_style_value_retain handle
+            |> ignore
+
             wrap handle
 
         try
@@ -41,12 +49,16 @@ module internal TimelineRanges =
                     if fields.offset = 0n then
                         None
                     else
-                        Some (unbox<CSSNumericValue> (style fields.offset))
+                        Some (unbox<CSSNumericValue>(style fields.offset))
 
                 TimelineRangeOffsetOrCSSNumericValueOrCSSOMKeywordValueOrDOMString.TimelineRangeOffset value
             | 2 -> TimelineRangeOffsetOrCSSNumericValueOrCSSOMKeywordValueOrDOMString.CSSNumericValue (unbox (style result.arm1))
             | 3 -> TimelineRangeOffsetOrCSSNumericValueOrCSSOMKeywordValueOrDOMString.CSSOMKeywordValue (unbox (style result.arm2))
             | 4 -> TimelineRangeOffsetOrCSSNumericValueOrCSSOMKeywordValueOrDOMString.DOMString (Interop.spanText result.arm3)
-            | _ -> invalidOp ("Unknown range union tag from WebCore: " + string result.tag)
+            | _ ->
+                invalidOp (
+                    "Unknown range union tag from WebCore: "
+                    + string result.tag
+                )
         finally
             NativeDom.rv_dom_union_timeline_range_offset_or_css_numeric_value_or_cssom_keyword_value_or_dom_string_release (&result)

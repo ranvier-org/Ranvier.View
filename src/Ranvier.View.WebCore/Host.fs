@@ -119,12 +119,18 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let engineNow =
         let mutable value = 0.0
 
-        if Native.rv_abi_has "intersection-entries" = 1 && Native.rv_host_now (handle, &value) = 0 then
+        if
+            Native.rv_abi_has "intersection-entries" = 1
+            && Native.rv_host_now (handle, &value) = 0
+        then
             value
         else
             0.0
 
-    let timeOrigin = float (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds ()) - engineNow
+    let timeOrigin =
+        float (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds ())
+        - engineNow
+
     let clock = Stopwatch.StartNew ()
     let mutable advanced = engineNow
     let mutable manual = false
@@ -739,7 +745,10 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     /// <summary>Native key input: an <c>RV_KEY_*</c> action with <c>KeyboardEvent.key</c> and <c>code</c> values.</summary>
     member this.Key(action: int, key: string, code: string, text: string, modifiers: int, repeat: bool) =
-        this.Input ("rv_host_key", fun () -> Native.rv_host_key (handle, action, key, code, Native.utf8 text, Native.utf8Length text, modifiers, (if repeat then 1 else 0)))
+        this.Input (
+            "rv_host_key",
+            fun () -> Native.rv_host_key (handle, action, key, code, Native.utf8 text, Native.utf8Length text, modifiers, (if repeat then 1 else 0))
+        )
 
     /// <summary>Presses and releases a key that types <c>text</c>.</summary>
     member this.Type(key: string, code: string, text: string) =
@@ -800,7 +809,10 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// within it in UTF-16 offsets. Empty text removes it.
     /// </summary>
     member this.SetComposition(text: string, selectionStart: int, selectionEnd: int) =
-        this.Input ("rv_host_ime_set_composition", fun () -> Native.rv_host_ime_set_composition (handle, Native.utf8 text, Native.utf8Length text, selectionStart, selectionEnd))
+        this.Input (
+            "rv_host_ime_set_composition",
+            fun () -> Native.rv_host_ime_set_composition (handle, Native.utf8 text, Native.utf8Length text, selectionStart, selectionEnd)
+        )
         |> ignore
 
     /// <summary>Replaces the composition, or the selection when there is none, with <c>text</c>, as typed text.</summary>

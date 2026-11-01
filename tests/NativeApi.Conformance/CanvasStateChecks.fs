@@ -19,14 +19,15 @@ let run (create: unit -> CanvasContextService) (document: Document) (errorName: 
         if actual <> expected then
             failwith (String.Concat ([| label; ": expected "; string (box expected); ", got "; string (box actual) |]))
 
-    let round (value: float) = Math.Round (value, 6) + 0.0
+    let round (value: float) =
+        Math.Round (value, 6) + 0.0
 
     let matrix (ctx: CanvasRenderingContext2D) =
         let m = ctx.getTransform ()
         [ round m.a; round m.b; round m.c; round m.d; round m.e; round m.f ], m.is2D, m.isIdentity
 
     use service = create ()
-    let element = unbox<HTMLCanvasElement> (document.createElement "canvas")
+    let element = unbox<HTMLCanvasElement>(document.createElement "canvas")
     element.width <- 60u
     element.height <- 40u
     document.body.appendChild element |> ignore
@@ -91,10 +92,7 @@ let run (create: unit -> CanvasContextService) (document: Document) (errorName: 
     square.rect (0.0, 0.0, 10.0, 10.0)
     ctx.translate (40.0, 0.0)
 
-    equal
-        "Path2D under the current transform"
-        (true, false)
-        (ctx.isPointInPath (square, 45.0, 5.0), ctx.isPointInPath (square, 5.0, 5.0))
+    equal "Path2D under the current transform" (true, false) (ctx.isPointInPath (square, 45.0, 5.0), ctx.isPointInPath (square, 5.0, 5.0))
 
     ctx.resetTransform ()
 
@@ -151,9 +149,32 @@ let run (create: unit -> CanvasContextService) (document: Document) (errorName: 
     // Composite operations.
     let names =
         [
-            "source-over"; "source-in"; "source-out"; "source-atop"; "destination-over"; "destination-in"; "destination-out"
-            "destination-atop"; "lighter"; "copy"; "xor"; "multiply"; "screen"; "overlay"; "darken"; "lighten"; "color-dodge"
-            "color-burn"; "hard-light"; "soft-light"; "difference"; "exclusion"; "hue"; "saturation"; "color"; "luminosity"
+            "source-over"
+            "source-in"
+            "source-out"
+            "source-atop"
+            "destination-over"
+            "destination-in"
+            "destination-out"
+            "destination-atop"
+            "lighter"
+            "copy"
+            "xor"
+            "multiply"
+            "screen"
+            "overlay"
+            "darken"
+            "lighten"
+            "color-dodge"
+            "color-burn"
+            "hard-light"
+            "soft-light"
+            "difference"
+            "exclusion"
+            "hue"
+            "saturation"
+            "color"
+            "luminosity"
         ]
 
     let accepted =

@@ -32,7 +32,7 @@ let run (create: unit -> CanvasContextService) (document: Document) (errorName: 
     use service = create ()
 
     let canvas width height =
-        let element = unbox<HTMLCanvasElement> (document.createElement "canvas")
+        let element = unbox<HTMLCanvasElement>(document.createElement "canvas")
         element.width <- width
         element.height <- height
         document.body.appendChild element |> ignore
@@ -118,9 +118,18 @@ let run (create: unit -> CanvasContextService) (document: Document) (errorName: 
     raises "addColorStop above 1" "IndexSizeError" (fun () -> linear.addColorStop (1.1, "red"))
     raises "addColorStop NaN" "TypeError" (fun () -> linear.addColorStop (nan, "red"))
     raises "addColorStop colour" "SyntaxError" (fun () -> linear.addColorStop (0.5, "not a colour"))
-    raises "createLinearGradient NaN" "TypeError" (fun () -> ctx.createLinearGradient (nan, 0.0, 1.0, 1.0) |> ignore)
-    raises "createRadialGradient negative radius" "IndexSizeError" (fun () -> ctx.createRadialGradient (0.0, 0.0, -1.0, 0.0, 0.0, 1.0) |> ignore)
-    raises "createConicGradient Infinity" "TypeError" (fun () -> ctx.createConicGradient (infinity, 0.0, 0.0) |> ignore)
+
+    raises "createLinearGradient NaN" "TypeError" (fun () ->
+        ctx.createLinearGradient (nan, 0.0, 1.0, 1.0)
+        |> ignore)
+
+    raises "createRadialGradient negative radius" "IndexSizeError" (fun () ->
+        ctx.createRadialGradient (0.0, 0.0, -1.0, 0.0, 0.0, 1.0)
+        |> ignore)
+
+    raises "createConicGradient Infinity" "TypeError" (fun () ->
+        ctx.createConicGradient (infinity, 0.0, 0.0)
+        |> ignore)
 
     // Patterns.
     let repeat = ctx.createPattern (source, "repeat")

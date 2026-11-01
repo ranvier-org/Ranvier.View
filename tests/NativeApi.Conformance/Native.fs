@@ -2470,7 +2470,9 @@ let private runCanvas () =
 
     let shared =
         try
-            let count = CanvasChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document
+            let count =
+                CanvasChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document
+
             paths <- CanvasPathChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
             state <- CanvasStateChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
             paints <- CanvasPaintChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
@@ -2478,13 +2480,13 @@ let private runCanvas () =
             let document = host.Document
             document.body.innerHTML <- ""
             document.body.setAttribute ("style", "margin:0;background:#fff")
-            let canvas = unbox<Ranvier.Dom.HTMLCanvasElement> (document.createElement "canvas")
+            let canvas = unbox<Ranvier.Dom.HTMLCanvasElement>(document.createElement "canvas")
             canvas.setAttribute ("width", "40")
             canvas.setAttribute ("height", "20")
             canvas.setAttribute ("style", "display:block;width:40px;height:20px")
             document.body.appendChild canvas |> ignore
             let struct (width, height) = host.PaintSize
-            let rgba = Array.zeroCreate<byte> (width * height * 4)
+            let rgba = Array.zeroCreate<byte>(width * height * 4)
 
             let pixel x y =
                 host.Paint rgba
@@ -2615,7 +2617,10 @@ let private runCanvasExport () =
 
     let shared =
         try
-            let driver: CanvasExportChecks.Driver = { Settle = fun () -> async { host.Cycle () |> ignore } }
+            let driver: CanvasExportChecks.Driver =
+                {
+                    Settle = fun () -> async { host.Cycle () |> ignore }
+                }
 
             let count =
                 CanvasExportChecks.run
@@ -3313,7 +3318,7 @@ let private runAnimations () =
         try
             AnimationEffectChecks.run effectHost.Document (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost effectHost) errorName
         finally
-            (effectHost :> System.IDisposable).Dispose ()
+            (effectHost :> System.IDisposable).Dispose()
 
     if effects <> AnimationEffectChecksCount then
         failwith $"Web Animations effect assertions did not run: {effects}"
@@ -3325,9 +3330,12 @@ let private runAnimations () =
         try
             AnimationDiscoveryChecks.run discoveryHost.Document (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost discoveryHost)
         finally
-            (discoveryHost :> System.IDisposable).Dispose ()
+            (discoveryHost :> System.IDisposable).Dispose()
 
-    if (discovery, commits) <> (AnimationDiscoveryChecksCount, AnimationCommitChecksCount) then
+    if
+        (discovery, commits)
+        <> (AnimationDiscoveryChecksCount, AnimationCommitChecksCount)
+    then
         failwith $"Web Animations discovery assertions did not run: {discovery} {commits}"
 
     System.Console.WriteLine $"NATIVE_API A05 PASS assertions={discovery}"
@@ -3494,7 +3502,8 @@ let private runTimelines () =
 
     let shared, scroll, view =
         try
-            let shared = TimelineChecks.runDocumentTimelines host.Document (fun () -> Ranvier.View.WebCore.Animations.forHost host)
+            let shared =
+                TimelineChecks.runDocumentTimelines host.Document (fun () -> Ranvier.View.WebCore.Animations.forHost host)
 
             let scroll =
                 TimelineChecks.runScrollTimelines
@@ -3505,16 +3514,12 @@ let private runTimelines () =
                 |> fun work -> (Async.StartImmediateAsTask work).GetAwaiter().GetResult()
 
             let view =
-                TimelineChecks.runViewTimelines
-                    host.Document
-                    (fun () -> Ranvier.View.WebCore.Timelines.forHost host)
-                    settle
-                    errorName
+                TimelineChecks.runViewTimelines host.Document (fun () -> Ranvier.View.WebCore.Timelines.forHost host) settle errorName
                 |> fun work -> (Async.StartImmediateAsTask work).GetAwaiter().GetResult()
 
             shared, scroll, view
         with error ->
-            (host :> System.IDisposable).Dispose ()
+            (host :> System.IDisposable).Dispose()
             raise error
 
     let timelines = Ranvier.View.WebCore.Timelines.forHost host
@@ -3524,7 +3529,7 @@ let private runTimelines () =
     let held = service.CreateDocumentTimeline 100.0
     let document = host.Document.timeline
     expect held.currentTime.IsSome "A new DocumentTimeline has a current time"
-    (host :> System.IDisposable).Dispose ()
+    (host :> System.IDisposable).Dispose()
 
     let afterDisposal (timeline: Ranvier.Dom.AnimationTimeline) =
         try
@@ -3547,15 +3552,26 @@ let private runTimelines () =
     service.Dispose ()
     timelines.Dispose ()
 
-    if TimelineChecksCount <> 0 && shared <> TimelineChecksCount then
+    if
+        TimelineChecksCount <> 0
+        && shared <> TimelineChecksCount
+    then
         failwith $"Animation timeline shared assertions did not run: {shared}"
 
     System.Console.WriteLine $"NATIVE_API A06 PASS assertions={shared}"
-    if ScrollTimelineChecksCount <> 0 && scroll <> ScrollTimelineChecksCount then
+
+    if
+        ScrollTimelineChecksCount <> 0
+        && scroll <> ScrollTimelineChecksCount
+    then
         failwith $"Scroll timeline shared assertions did not run: {scroll}"
 
     System.Console.WriteLine $"NATIVE_API A06 LIFETIME PASS assertions={lifetime}"
-    if ViewTimelineChecksCount <> 0 && view <> ViewTimelineChecksCount then
+
+    if
+        ViewTimelineChecksCount <> 0
+        && view <> ViewTimelineChecksCount
+    then
         failwith $"View timeline shared assertions did not run: {view}"
 
     System.Console.WriteLine $"NATIVE_API A07 PASS assertions={scroll}"
@@ -3679,7 +3695,8 @@ let private runResizeObservation () =
 
             let timeout = System.Diagnostics.Stopwatch.StartNew ()
 
-            while not count.IsCompleted && timeout.ElapsedMilliseconds < 20000L do
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 20000L do
                 host.Cycle ()
 
             let count = count.GetAwaiter().GetResult()
@@ -3690,13 +3707,21 @@ let private runResizeObservation () =
             let observer =
                 service.Create (fun entries ->
                     for entry in entries do
-                        delivered.Add (entry.Target.nodeName + " " + string entry.ContentRect.Width)
+                        delivered.Add (
+                            entry.Target.nodeName
+                            + " "
+                            + string entry.ContentRect.Width
+                        )
 
                     heldEntry <- Some entries[0])
 
             observer.Observe body
             host.Frame ()
-            expect (List.ofSeq delivered = [ "BODY 784" ]) ("The body is observed inside its 8px margins: " + System.String.Join (",", delivered))
+
+            expect
+                (List.ofSeq delivered = [ "BODY 784" ])
+                ("The body is observed inside its 8px margins: "
+                 + System.String.Join (",", delivered))
 
             let wrongThread (action: unit -> unit) =
                 System.Threading.Tasks.Task
@@ -3711,7 +3736,13 @@ let private runResizeObservation () =
 
             expect (wrongThread (fun () -> observer.Observe body)) "Observe rejects another thread"
             expect (wrongThread (fun () -> observer.Disconnect ())) "Disconnect rejects another thread"
-            expect (wrongThread (fun () -> Ranvier.View.WebCore.ResizeObservation.forHost host |> ignore)) "forHost rejects another thread"
+
+            expect
+                (wrongThread (fun () ->
+                    Ranvier.View.WebCore.ResizeObservation.forHost host
+                    |> ignore))
+                "forHost rejects another thread"
+
             let other = WebCoreHost.Create (100, 80)
 
             let foreign =
@@ -3721,7 +3752,7 @@ let private runResizeObservation () =
                 with :? System.ArgumentException ->
                     true
 
-            (other :> System.IDisposable).Dispose ()
+            (other :> System.IDisposable).Dispose()
             expect foreign "An element of another host is rejected"
 
             // The replaced document's observer delivers nothing; a new observer observes the replacing document.
@@ -3729,14 +3760,22 @@ let private runResizeObservation () =
             host.Resize (700, 600)
             host.Frame ()
             expect (delivered.Count = 1) "The replaced document's observer delivers nothing"
-            let replacing = service.Create (fun entries -> delivered.Add (string entries.Length))
+
+            let replacing =
+                service.Create (fun entries -> delivered.Add (string entries.Length))
+
             replacing.Observe host.Document.documentElement
             host.Frame ()
-            expect (List.ofSeq delivered = [ "BODY 784"; "1" ]) ("The replacing document is observed: " + System.String.Join (",", delivered))
+
+            expect
+                (List.ofSeq delivered = [ "BODY 784"; "1" ])
+                ("The replacing document is observed: "
+                 + System.String.Join (",", delivered))
+
             held <- Some (service, observer)
             count
         finally
-            (host :> System.IDisposable).Dispose ()
+            (host :> System.IDisposable).Dispose()
 
     expect (session.LiveObjects = 0) "Resize observation leaves no live native objects"
     let service, observer = held.Value
@@ -3753,7 +3792,11 @@ let private runResizeObservation () =
     observer.Dispose ()
     service.Dispose ()
     let entry = heldEntry.Value
-    expect (entry.ContentRect.Width = 784.0 && entry.BorderBoxSize.Length = 1) "An entry held past host disposal keeps its copied values"
+
+    expect
+        (entry.ContentRect.Width = 784.0
+         && entry.BorderBoxSize.Length = 1)
+        "An entry held past host disposal keeps its copied values"
 
     if shared <> ResizeObservationChecksCount then
         failwith $"Resize observation shared assertions did not run: {shared}"
@@ -3802,7 +3845,8 @@ let private runIntersectionObservation () =
 
             let timeout = System.Diagnostics.Stopwatch.StartNew ()
 
-            while not count.IsCompleted && timeout.ElapsedMilliseconds < 20000L do
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 20000L do
                 host.Cycle ()
 
             let count = count.GetAwaiter().GetResult()
@@ -3814,7 +3858,11 @@ let private runIntersectionObservation () =
                 service.Create (
                     (fun entries ->
                         for entry in entries do
-                            delivered.Add (entry.Target.nodeName + " " + string entry.IsIntersecting)
+                            delivered.Add (
+                                entry.Target.nodeName
+                                + " "
+                                + string entry.IsIntersecting
+                            )
 
                         heldEntry <- Some entries[0]),
                     Ranvier.Dom.IntersectionObserverInit.Default
@@ -3822,7 +3870,11 @@ let private runIntersectionObservation () =
 
             observer.Observe body
             host.Frame ()
-            expect (List.ofSeq delivered = [ "BODY True" ]) ("The body intersects the viewport: " + System.String.Join (",", delivered))
+
+            expect
+                (List.ofSeq delivered = [ "BODY True" ])
+                ("The body intersects the viewport: "
+                 + System.String.Join (",", delivered))
 
             let wrongThread (action: unit -> unit) =
                 System.Threading.Tasks.Task
@@ -3838,7 +3890,13 @@ let private runIntersectionObservation () =
             expect (wrongThread (fun () -> observer.Observe body)) "Observe rejects another thread"
             expect (wrongThread (fun () -> observer.TakeRecords () |> ignore)) "TakeRecords rejects another thread"
             expect (wrongThread (fun () -> service.Now () |> ignore)) "Now rejects another thread"
-            expect (wrongThread (fun () -> Ranvier.View.WebCore.IntersectionObservation.forHost host |> ignore)) "forHost rejects another thread"
+
+            expect
+                (wrongThread (fun () ->
+                    Ranvier.View.WebCore.IntersectionObservation.forHost host
+                    |> ignore))
+                "forHost rejects another thread"
+
             let other = WebCoreHost.Create (100, 80)
 
             let rejected (action: unit -> unit) =
@@ -3854,11 +3912,13 @@ let private runIntersectionObservation () =
                 rejected (fun () ->
                     service.Create (
                         ignore,
-                        { Ranvier.Dom.IntersectionObserverInit.Default with Root = Ranvier.Dom.IntersectionObserverRoot.Element other.Document.body }
+                        { Ranvier.Dom.IntersectionObserverInit.Default with
+                            Root = Ranvier.Dom.IntersectionObserverRoot.Element other.Document.body
+                        }
                     )
                     |> ignore)
 
-            (other :> System.IDisposable).Dispose ()
+            (other :> System.IDisposable).Dispose()
             expect foreignTarget "A target of another host is rejected"
             expect foreignRoot "A root of another host is rejected"
             let before = service.Now ()
@@ -3869,14 +3929,22 @@ let private runIntersectionObservation () =
             expect (delivered.Count = 1) "The replaced document's observer delivers nothing"
             expect (observer.TakeRecords().Length = 0) "The replaced document's observer has no records"
             expect (service.Now () >= before) "The replacing document keeps the time origin"
-            let replacing = service.Create ((fun entries -> delivered.Add (string entries.Length)), Ranvier.Dom.IntersectionObserverInit.Default)
+
+            let replacing =
+                service.Create ((fun entries -> delivered.Add (string entries.Length)), Ranvier.Dom.IntersectionObserverInit.Default)
+
             replacing.Observe host.Document.documentElement
             host.Frame ()
-            expect (List.ofSeq delivered = [ "BODY True"; "1" ]) ("The replacing document is observed: " + System.String.Join (",", delivered))
+
+            expect
+                (List.ofSeq delivered = [ "BODY True"; "1" ])
+                ("The replacing document is observed: "
+                 + System.String.Join (",", delivered))
+
             held <- Some (service, observer)
             count
         finally
-            (host :> System.IDisposable).Dispose ()
+            (host :> System.IDisposable).Dispose()
 
     expect (session.LiveObjects = 0) "Intersection observation leaves no live native objects"
     let service, observer = held.Value
@@ -3890,17 +3958,31 @@ let private runIntersectionObservation () =
 
     expect (disposed (fun () -> observer.Observe Unchecked.defaultof<Ranvier.Dom.Element>)) "A held observer rejects Observe after host disposal"
     expect (observer.TakeRecords().Length = 0) "A held observer has no records after host disposal"
-    expect (disposed (fun () -> service.Create (ignore, Ranvier.Dom.IntersectionObserverInit.Default) |> ignore)) "A held service rejects Create after host disposal"
+
+    expect
+        (disposed (fun () ->
+            service.Create (ignore, Ranvier.Dom.IntersectionObserverInit.Default)
+            |> ignore))
+        "A held service rejects Create after host disposal"
+
     observer.Dispose ()
     service.Dispose ()
     let entry = heldEntry.Value
     expect (entry.IsIntersecting && entry.RootBounds.IsSome) "An entry held past host disposal keeps its copied values"
 
     if shared <> IntersectionObservationChecksCount then
-        failwith ("Intersection observation shared assertions did not run: " + string shared)
+        failwith (
+            "Intersection observation shared assertions did not run: "
+            + string shared
+        )
 
     System.Console.WriteLine ("NATIVE_API G11 PASS assertions=" + string shared)
-    System.Console.WriteLine ("NATIVE_API G11 LIFETIME PASS assertions=" + string lifetime)
+
+    System.Console.WriteLine (
+        "NATIVE_API G11 LIFETIME PASS assertions="
+        + string lifetime
+    )
+
     shared
 
 /// <summary>Runs the shared media query fixture (G01/G15) with native supply, thread and teardown checks.</summary>
@@ -4006,6 +4088,7 @@ let private runMediaQueries () =
 
     expect rejected "A held media query service rejects Supply after host disposal"
     service.Dispose ()
+
     let closed =
         try
             fresh.Matches |> ignore
@@ -5135,10 +5218,17 @@ let private runCanvasText () =
             (host :> System.IDisposable).Dispose()
 
     if session.LiveObjects <> 0 then
-        failwith ("Canvas text fixture leaked " + string session.LiveObjects + " managed native objects")
+        failwith (
+            "Canvas text fixture leaked "
+            + string session.LiveObjects
+            + " managed native objects"
+        )
 
     if count <> CanvasTextChecksCount then
-        failwith ("Canvas text shared assertions did not run: " + string count)
+        failwith (
+            "Canvas text shared assertions did not run: "
+            + string count
+        )
 
     System.Console.WriteLine ("NATIVE_API R05 PASS assertions=" + string count)
     System.Console.WriteLine "NATIVE_API R05 TEARDOWN PASS"
@@ -5996,8 +6086,7 @@ let private runSurfaces () =
     let session = host.Session
 
     try
-        let shapes =
-            SvgShapes.run host.Document surfaceErrorName "ArgumentNullException"
+        let shapes = SvgShapes.run host.Document surfaceErrorName "ArgumentNullException"
 
         let fontData =
             System.Convert.ToBase64String (

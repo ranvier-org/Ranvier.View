@@ -49,7 +49,9 @@ module Animations =
             value
 
     let private duration (scope: InputScope) (value: UnrestrictedDoubleOrCSSNumericValueOrDOMString) =
-        let mutable result = NativeDom.RvDomUnionUnrestrictedDoubleOrCSSNumericValueOrDOMString ()
+        let mutable result =
+            NativeDom.RvDomUnionUnrestrictedDoubleOrCSSNumericValueOrDOMString ()
+
         result.present <- 1
 
         match value with
@@ -175,8 +177,8 @@ module Animations =
         let engine label (call: unit -> int) =
             try
                 call () |> Interop.check label
-            with WebCoreDomException(name, detail) ->
-                raise (AnimationException(name, detail))
+            with WebCoreDomException (name, detail) ->
+                raise (AnimationException (name, detail))
 
         let effect handle =
             session.Object (handle, Kind.AnimationEffect, owner, Func<Session, nativeint, NativeObject>(fun s h -> Classes.AnimationEffect (s, h)))
@@ -262,7 +264,12 @@ module Animations =
         let create target frames (options: NativeDom.RvDomUnionUnrestrictedDoubleOrKeyframeEffectOptions) (scope: InputScope) =
             let documentHandle = active ()
             let mutable handle = 0n
-            let target = if isNull (box target) then 0n else Interop.handle (box target)
+
+            let target =
+                if isNull (box target) then
+                    0n
+                else
+                    Interop.handle (box target)
 
             engine "KeyframeEffect constructor" (fun () ->
                 NativeDom.rv_dom_keyframe_effect_create_3 (documentHandle, target, [| keyframes scope frames |], [| options |], &handle))
@@ -272,10 +279,14 @@ module Animations =
         let construct (effect: AnimationEffect) (timeline: nativeint) present =
             let documentHandle = active ()
             let mutable handle = 0n
-            let effect = if isNull (box effect) then 0n else Interop.handle (box effect)
 
-            engine "Animation constructor" (fun () ->
-                NativeDom.rv_dom_web_animation_create (documentHandle, effect, timeline, present, &handle))
+            let effect =
+                if isNull (box effect) then
+                    0n
+                else
+                    Interop.handle (box effect)
+
+            engine "Animation constructor" (fun () -> NativeDom.rv_dom_web_animation_create (documentHandle, effect, timeline, present, &handle))
 
             animation handle
 
@@ -310,23 +321,27 @@ module Animations =
 
             member _.CreateAnimation(?effect, ?timeline) =
                 match timeline with
-                | Some timeline when not (isNull (box timeline)) ->
-                    construct (defaultArg effect null) (Interop.handle (box timeline)) 1
+                | Some timeline when not (isNull (box timeline)) -> construct (defaultArg effect null) (Interop.handle (box timeline)) 1
                 | _ -> construct (defaultArg effect null) 0n 0
 
-            member _.CreateAnimationWithoutTimeline ?effect = construct (defaultArg effect null) 0n 1
+            member _.CreateAnimationWithoutTimeline?effect =
+                construct (defaultArg effect null) 0n 1
 
-            member _.CreateDocumentTimeline ?originTime =
+            member _.CreateDocumentTimeline?originTime =
                 let documentHandle = active ()
                 let mutable options = NativeDom.RvDomDocumentTimelineOptions ()
                 options.size <- uint32 (Marshal.SizeOf<NativeDom.RvDomDocumentTimelineOptions>())
                 options.origin_time <- defaultArg originTime 0.
                 let mutable handle = 0n
 
-                engine "DocumentTimeline constructor" (fun () ->
-                    NativeDom.rv_dom_document_timeline_create (documentHandle, [| options |], &handle))
+                engine "DocumentTimeline constructor" (fun () -> NativeDom.rv_dom_document_timeline_create (documentHandle, [| options |], &handle))
 
-                session.Object (handle, Kind.AnimationTimeline, owner, Func<Session, nativeint, NativeObject>(fun s h -> Classes.AnimationTimeline (s, h)))
+                session.Object (
+                    handle,
+                    Kind.AnimationTimeline,
+                    owner,
+                    Func<Session, nativeint, NativeObject>(fun s h -> Classes.AnimationTimeline (s, h))
+                )
                 |> unbox<DocumentTimeline>
 
             member _.Ready(target, terminal) =

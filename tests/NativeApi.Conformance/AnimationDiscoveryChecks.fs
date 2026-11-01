@@ -35,7 +35,13 @@ let run (document: Document) (styles: unit -> ComputedStyleService) =
         checks <- checks + 1
 
         if actual <> expected then
-            failwith (label + ": expected " + string (box expected) + ", got " + string (box actual))
+            failwith (
+                label
+                + ": expected "
+                + string (box expected)
+                + ", got "
+                + string (box actual)
+            )
 
     let same label (expected: obj) (actual: obj) =
         checks <- checks + 1
@@ -73,16 +79,29 @@ let run (document: Document) (styles: unit -> ComputedStyleService) =
     let mutable commitChecks = 0
 
     try
-        (computed.Get (tr, None)).getPropertyValue "opacity" |> ignore
+        (computed.Get (tr, None)).getPropertyValue "opacity"
+        |> ignore
+
         tr.style.setProperty ("opacity", "0.2")
+
         let options id =
             let value = KeyframeAnimationOptions ()
             value.duration <- UnrestrictedDoubleOrCSSNumericValueOrDOMString.UnrestrictedDouble 100000.0
             value.id <- id
             value
 
-        let scripted = c1.animate ([| frame [ "opacity", "0" ]; frame [ "opacity", "1" ] |], options "scripted")
-        let second = css.animate ([| frame [ "transform", "translateX(0px)" ]; frame [ "transform", "translateX(10px)" ] |], options "second")
+        let scripted =
+            c1.animate ([| frame [ "opacity", "0" ]; frame [ "opacity", "1" ] |], options "scripted")
+
+        let second =
+            css.animate (
+                [|
+                    frame [ "transform", "translateX(0px)" ]
+                    frame [ "transform", "translateX(10px)" ]
+                |],
+                options "second"
+            )
+
         let all = document.getAnimations ()
         equal "document count" 5 all.Length
         equal "transition first" "opacity" (unbox<CSSTransition> all[0]).transitionProperty
@@ -107,7 +126,18 @@ let run (document: Document) (styles: unit -> ComputedStyleService) =
         equal "tree subtree" [ "wd-c2"; "wd-c1" ] (subtree |> Array.map targetId |> Array.toList)
         same "subtree CSS animation is listed" (box all[2]) (box subtree[0])
         let own = css.getAnimations ()
-        equal "css element" [ "wd-fade"; "second" ] (own |> Array.map (fun a -> if a.id = "" then (unbox<CSSAnimation> a).animationName else a.id) |> Array.toList)
+
+        equal
+            "css element"
+            [ "wd-fade"; "second" ]
+            (own
+             |> Array.map (fun a ->
+                 if a.id = "" then
+                     (unbox<CSSAnimation> a).animationName
+                 else
+                     a.id)
+             |> Array.toList)
+
         same "element lists the document's object" (box all[1]) (box own[0])
         equal "transition element" 1 (tr.getAnimations ()).Length
         let again = document.getAnimations ()
@@ -115,16 +145,37 @@ let run (document: Document) (styles: unit -> ComputedStyleService) =
         for index, animation in Array.indexed all do
             same ("document again " + string index) (box animation) (box again[index])
 
-        all[1].cancel ()
+        all[1].cancel()
         equal "css cancelled" AnimationPlayState.Idle all[1].playState
-        equal "css cancelled remaining" [ "second" ] (css.getAnimations () |> Array.map (fun a -> a.id) |> Array.toList)
+
+        equal
+            "css cancelled remaining"
+            [ "second" ]
+            (css.getAnimations ()
+             |> Array.map (fun a -> a.id)
+             |> Array.toList)
+
         scripted.cancel ()
-        equal "scripted cancelled tree" [ "wd-c2" ] (tree.getAnimations subtreeOptions |> Array.map targetId |> Array.toList)
+
+        equal
+            "scripted cancelled tree"
+            [ "wd-c2" ]
+            (tree.getAnimations subtreeOptions
+             |> Array.map targetId
+             |> Array.toList)
+
         equal "scripted cancelled document" 3 (document.getAnimations ()).Length
-        all[0].cancel ()
+        all[0].cancel()
         second.cancel ()
-        equal "after all cancelled" [ "wd-spin" ] (document.getAnimations () |> Array.map (fun a -> (unbox<CSSAnimation> a).animationName) |> Array.toList)
-        all[2].cancel ()
+
+        equal
+            "after all cancelled"
+            [ "wd-spin" ]
+            (document.getAnimations ()
+             |> Array.map (fun a -> (unbox<CSSAnimation> a).animationName)
+             |> Array.toList)
+
+        all[2].cancel()
 
         // A04: commitStyles.
         let discovery = checks
@@ -132,9 +183,13 @@ let run (document: Document) (styles: unit -> ComputedStyleService) =
         let target = element document.body "wd-commit"
         target.style.setProperty ("color", "rgb(1, 2, 3)", "important")
         target.style.setProperty ("margin-top", "0px")
+
         let committed =
             target.animate (
-                [| frame [ "opacity", "0"; "transform", "translateX(0px)" ]; frame [ "opacity", "1"; "transform", "translateX(100px)" ] |],
+                [|
+                    frame [ "opacity", "0"; "transform", "translateX(0px)" ]
+                    frame [ "opacity", "1"; "transform", "translateX(100px)" ]
+                |],
                 1000.0
             )
 
@@ -154,7 +209,7 @@ let run (document: Document) (styles: unit -> ComputedStyleService) =
 
         let failed =
             try
-                (detached.animate ([| frame [ "opacity", "0" ] |], 1000.0)).commitStyles ()
+                (detached.animate ([| frame [ "opacity", "0" ] |], 1000.0)).commitStyles()
                 false
             with _ ->
                 true

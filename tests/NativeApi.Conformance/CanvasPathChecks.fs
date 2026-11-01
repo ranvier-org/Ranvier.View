@@ -35,7 +35,7 @@ let run (create: unit -> CanvasContextService) (document: Document) (errorName: 
         | None -> failwith (label + ": no error")
 
     use service = create ()
-    let element = unbox<HTMLCanvasElement> (document.createElement "canvas")
+    let element = unbox<HTMLCanvasElement>(document.createElement "canvas")
     element.width <- 60u
     element.height <- 40u
     document.body.appendChild element |> ignore
@@ -98,7 +98,9 @@ let run (create: unit -> CanvasContextService) (document: Document) (errorName: 
     let hits (build: unit -> unit) (points: (float * float) list) =
         ctx.beginPath ()
         build ()
-        points |> List.map (fun (x, y) -> ctx.isPointInPath (x, y))
+
+        points
+        |> List.map (fun (x, y) -> ctx.isPointInPath (x, y))
 
     equal "arc" [ true; false; true ] (hits (fun () -> ctx.arc (30.0, 20.0, 10.0, 0.0, Math.PI * 2.0)) [ 30.0, 20.0; 30.0, 32.0; 37.0, 20.0 ])
     equal "half arc" [ true; false ] (hits (fun () -> ctx.arc (30.0, 20.0, 10.0, 0.0, Math.PI)) [ 30.0, 25.0; 30.0, 15.0 ])
@@ -151,7 +153,9 @@ let run (create: unit -> CanvasContextService) (document: Document) (errorName: 
     equal
         "roundRect list"
         [ false; true; true ]
-        (hits (fun () -> ctx.roundRect (0.0, 0.0, 40.0, 40.0, [| UnrestrictedDoubleOrDOMPointInit.UnrestrictedDouble 10.0 |])) [ 1.0, 1.0; 20.0, 20.0; 5.0, 20.0 ])
+        (hits
+            (fun () -> ctx.roundRect (0.0, 0.0, 40.0, 40.0, [| UnrestrictedDoubleOrDOMPointInit.UnrestrictedDouble 10.0 |]))
+            [ 1.0, 1.0; 20.0, 20.0; 5.0, 20.0 ])
 
     equal "roundRect value" [ false; true ] (hits (fun () -> ctx.roundRect (0.0, 0.0, 40.0, 40.0, 10.0)) [ 1.0, 1.0; 20.0, 20.0 ])
 
@@ -170,7 +174,8 @@ let run (create: unit -> CanvasContextService) (document: Document) (errorName: 
                     0.0,
                     40.0,
                     40.0,
-                    [| 0.0; 0.0; 0.0; 20.0 |] |> Array.map UnrestrictedDoubleOrDOMPointInit.UnrestrictedDouble
+                    [| 0.0; 0.0; 0.0; 20.0 |]
+                    |> Array.map UnrestrictedDoubleOrDOMPointInit.UnrestrictedDouble
                 ))
             [ 1.0, 1.0; 39.0, 39.0; 1.0, 39.0 ])
 
@@ -183,7 +188,9 @@ let run (create: unit -> CanvasContextService) (document: Document) (errorName: 
         ctx.roundRect (0.0, 0.0, 10.0, 10.0, [| UnrestrictedDoubleOrDOMPointInit.UnrestrictedDouble -1.0 |]))
 
     raises "roundRect with no radii" "RangeError" (fun () -> ctx.roundRect (0.0, 0.0, 10.0, 10.0, [||]))
-    raises "addPath with conflicting members" "TypeError" (fun () -> service.CreatePath().addPath (square, DOMMatrix2DInit (a = Some 1.0, m11 = Some 2.0)))
+
+    raises "addPath with conflicting members" "TypeError" (fun () ->
+        service.CreatePath().addPath(square, DOMMatrix2DInit (a = Some 1.0, m11 = Some 2.0)))
 
     // Non-finite values.
     ctx.beginPath ()

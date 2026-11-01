@@ -18,7 +18,13 @@ let runDocumentTimelines (document: Document) (create: unit -> AnimationService)
         checks <- checks + 1
 
         if actual <> expected then
-            failwith (label + ": expected " + string (box expected) + ", got " + string (box actual))
+            failwith (
+                label
+                + ": expected "
+                + string (box expected)
+                + ", got "
+                + string (box actual)
+            )
 
     let time (value: DoubleOrCSSNumericValue option) =
         match value with
@@ -40,13 +46,22 @@ let runDocumentTimelines (document: Document) (create: unit -> AnimationService)
             | Some value, Some reference -> abs (value - (reference - origin)) < Close
             | _ -> false
 
-        equal (label + ": current time is document time minus origin") true offset
+        equal
+            (label
+             + ": current time is document time minus origin")
+            true
+            offset
+
         equal (label + ": duration") None (time own.duration)
         equal (label + ": a timeline of its own") false (obj.ReferenceEquals (own, timeline))
 
     let future = service.CreateDocumentTimeline 1e9
 
-    equal "a future origin gives a negative current time" true (time future.currentTime |> Option.exists (fun value -> value < 0.0))
+    equal
+        "a future origin gives a negative current time"
+        true
+        (time future.currentTime
+         |> Option.exists (fun value -> value < 0.0))
 
     equal "the default origin is document.timeline's" now (time (service.CreateDocumentTimeline ()).currentTime)
 
@@ -94,12 +109,7 @@ let private ScrollCss =
 /// middle, end and quarter, an animation created by Element.animate on a timeline (current time, play state and
 /// computed opacity), a content resize and the source removed. The result is the assertion count.
 /// </summary>
-let runScrollTimelines
-    (document: Document)
-    (create: unit -> TimelineService)
-    (styles: unit -> ComputedStyleService)
-    (settle: unit -> Async<unit>)
-    =
+let runScrollTimelines (document: Document) (create: unit -> TimelineService) (styles: unit -> ComputedStyleService) (settle: unit -> Async<unit>) =
     async {
         let mutable checks = 0
 
@@ -107,7 +117,13 @@ let runScrollTimelines
             checks <- checks + 1
 
             if actual <> expected then
-                failwith (label + ": expected " + string (box expected) + ", got " + string (box actual))
+                failwith (
+                    label
+                    + ": expected "
+                    + string (box expected)
+                    + ", got "
+                    + string (box actual)
+                )
 
         let percent (value: DoubleOrCSSNumericValue option) =
             match value with
@@ -162,6 +178,7 @@ let runScrollTimelines
             let options = KeyframeAnimationOptions ()
             options.fill <- FillMode.Both
             options.timeline <- Some (block :> AnimationTimeline)
+
             let frame (opacity: string) =
                 let property = KeyframeProperty ()
                 property.name <- "opacity"
@@ -222,12 +239,7 @@ let private ViewCss =
 /// invalid inset; an animation with range strings (current time, range read-back) and the range setters. The result is
 /// the assertion count.
 /// </summary>
-let runViewTimelines
-    (document: Document)
-    (create: unit -> TimelineService)
-    (settle: unit -> Async<unit>)
-    (errorName: exn -> string)
-    =
+let runViewTimelines (document: Document) (create: unit -> TimelineService) (settle: unit -> Async<unit>) (errorName: exn -> string) =
     async {
         let mutable checks = 0
 
@@ -235,7 +247,13 @@ let runViewTimelines
             checks <- checks + 1
 
             if actual <> expected then
-                failwith (label + ": expected " + string (box expected) + ", got " + string (box actual))
+                failwith (
+                    label
+                    + ": expected "
+                    + string (box expected)
+                    + ", got "
+                    + string (box actual)
+                )
 
         let numeric (value: CSSNumericValue) =
             let unit = unbox<CSSUnitValue> value
@@ -291,7 +309,10 @@ let runViewTimelines
             let sequence =
                 service.CreateViewTimelineWithInsets (
                     subject,
-                    [| CSSNumericValueOrDOMStringOrCSSOMKeywordValue.DOMString "auto"; CSSNumericValueOrDOMStringOrCSSOMKeywordValue.DOMString "auto" |]
+                    [|
+                        CSSNumericValueOrDOMStringOrCSSOMKeywordValue.DOMString "auto"
+                        CSSNumericValueOrDOMStringOrCSSOMKeywordValue.DOMString "auto"
+                    |]
                 )
 
             equal "subject" true (obj.ReferenceEquals (auto.subject, subject))
@@ -300,7 +321,9 @@ let runViewTimelines
 
             let invalid =
                 try
-                    service.CreateViewTimeline (subject, inset = "1s") |> ignore
+                    service.CreateViewTimeline (subject, inset = "1s")
+                    |> ignore
+
                     "none"
                 with error ->
                     errorName error
@@ -311,6 +334,7 @@ let runViewTimelines
             options.timeline <- Some (auto :> AnimationTimeline)
             options.rangeStart <- TimelineRangeOffsetOrCSSNumericValueOrCSSOMKeywordValueOrDOMString.DOMString "entry 0%"
             options.rangeEnd <- TimelineRangeOffsetOrCSSNumericValueOrCSSOMKeywordValueOrDOMString.DOMString "exit 100%"
+
             let frame (opacity: string) =
                 let property = KeyframeProperty ()
                 property.name <- "opacity"

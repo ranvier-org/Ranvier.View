@@ -154,17 +154,17 @@ module ValueFactories =
         { new ValueFactoryService with
             member _.CreateText data =
                 let data = utf8 (ValueFactoryContract.text "data" data)
-                unbox<Text>(node "Text constructor" (Create(fun t r -> NativeDom.rv_dom_text_create (t, data, data.Length, &r))))
+                unbox<Text>(node "Text constructor" (Create (fun t r -> NativeDom.rv_dom_text_create (t, data, data.Length, &r))))
 
             member _.CreateComment data =
                 let data = utf8 (ValueFactoryContract.text "data" data)
-                unbox<Comment>(node "Comment constructor" (Create(fun t r -> NativeDom.rv_dom_comment_create (t, data, data.Length, &r))))
+                unbox<Comment>(node "Comment constructor" (Create (fun t r -> NativeDom.rv_dom_comment_create (t, data, data.Length, &r))))
 
             member _.CreateDocumentFragment() =
-                unbox<DocumentFragment>(node "DocumentFragment constructor" (Create(fun t r -> NativeDom.rv_dom_document_fragment_create (t, &r))))
+                unbox<DocumentFragment>(node "DocumentFragment constructor" (Create (fun t r -> NativeDom.rv_dom_document_fragment_create (t, &r))))
 
             member _.CreateRange() =
-                unbox<Ranvier.Dom.Range>(range "Range constructor" true (Create(fun t r -> NativeDom.rv_dom_range_create (t, &r))))
+                unbox<Ranvier.Dom.Range>(range "Range constructor" true (Create (fun t r -> NativeDom.rv_dom_range_create (t, &r))))
 
             member _.CreateStaticRange(startContainer, startOffset, endContainer, endOffset) =
                 let start =
@@ -180,15 +180,19 @@ module ValueFactories =
                 init.end_container <- finish.Handle
                 init.end_offset <- endOffset
 
-                unbox<StaticRange>(range "StaticRange constructor" false (Create(fun t r -> NativeDom.rv_dom_static_range_create (t, [| init |], &r))))
+                unbox<StaticRange>(
+                    range "StaticRange constructor" false (Create (fun t r -> NativeDom.rv_dom_static_range_create (t, [| init |], &r)))
+                )
 
             member _.CreateDocument() =
-                unbox<Document>(node "Document constructor" (Create(fun t r -> NativeDom.rv_dom_document_create (t, &r))))
+                unbox<Document>(node "Document constructor" (Create (fun t r -> NativeDom.rv_dom_document_create (t, &r))))
 
             member _.ParseHtmlUnsafe html =
                 let html = utf8 (ValueFactoryContract.text "html" html)
 
-                unbox<Document>(node "Document.parseHTMLUnsafe" (Create(fun t r -> NativeDom.rv_dom_document_parse_html_unsafe (t, html, html.Length, &r))))
+                unbox<Document>(
+                    node "Document.parseHTMLUnsafe" (Create (fun t r -> NativeDom.rv_dom_document_parse_html_unsafe (t, html, html.Length, &r)))
+                )
 
             member _.CreateInputEvent(eventType, options, fields) =
                 let fields = ValueFactoryContract.input eventType fields
@@ -205,7 +209,7 @@ module ValueFactories =
                 init.input_type <- inputs.TextInput (Some fields.InputType)
 
                 unbox<InputEvent>(
-                    event "InputEvent constructor" (Create(fun t r -> NativeDom.rv_dom_input_event_create (t, name, name.Length, [| init |], &r)))
+                    event "InputEvent constructor" (Create (fun t r -> NativeDom.rv_dom_input_event_create (t, name, name.Length, [| init |], &r)))
                 )
 
             member _.CreateWheelEvent(eventType, options, mouse, fields) =
@@ -242,7 +246,9 @@ module ValueFactories =
                     init.wheel_delta_y <- fields.WheelDeltaY
 
                     unbox<WheelEvent>(
-                        event "WheelEvent constructor" (Create(fun t r -> NativeDom.rv_dom_wheel_event_create (t, name, name.Length, [| init |], &r)))
+                        event
+                            "WheelEvent constructor"
+                            (Create (fun t r -> NativeDom.rv_dom_wheel_event_create (t, name, name.Length, [| init |], &r)))
                     )
                 finally
                     release target
@@ -290,7 +296,9 @@ module ValueFactories =
                     init.predicted_events <- predicted
 
                     unbox<PointerEvent>(
-                        event "PointerEvent constructor" (Create(fun t r -> NativeDom.rv_dom_pointer_event_create (t, name, name.Length, [| init |], &r)))
+                        event
+                            "PointerEvent constructor"
+                            (Create (fun t r -> NativeDom.rv_dom_pointer_event_create (t, name, name.Length, [| init |], &r)))
                     )
                 finally
                     release target
@@ -299,30 +307,36 @@ module ValueFactories =
                 let values = ValueFactoryContract.values values
 
                 unbox<DOMMatrix>(
-                    matrix "DOMMatrix.fromFloat32Array" (Create(fun t r -> NativeDom.rv_dom_dom_matrix_from_float32_array (t, values, values.Length, &r)))
+                    matrix
+                        "DOMMatrix.fromFloat32Array"
+                        (Create (fun t r -> NativeDom.rv_dom_dom_matrix_from_float32_array (t, values, values.Length, &r)))
                 )
 
             member _.MatrixFromFloat64Array values =
                 let values = ValueFactoryContract.values values
 
                 unbox<DOMMatrix>(
-                    matrix "DOMMatrix.fromFloat64Array" (Create(fun t r -> NativeDom.rv_dom_dom_matrix_from_float64_array (t, values, values.Length, &r)))
+                    matrix
+                        "DOMMatrix.fromFloat64Array"
+                        (Create (fun t r -> NativeDom.rv_dom_dom_matrix_from_float64_array (t, values, values.Length, &r)))
                 )
 
             member _.ReadOnlyMatrixFromFloat32Array values =
                 let values = ValueFactoryContract.values values
 
                 unbox<DOMMatrixReadOnly>(
-                    matrix "DOMMatrixReadOnly.fromFloat32Array" (Create(fun t r ->
-                        NativeDom.rv_dom_dom_matrix_read_only_from_float32_array (t, values, values.Length, &r)))
+                    matrix
+                        "DOMMatrixReadOnly.fromFloat32Array"
+                        (Create (fun t r -> NativeDom.rv_dom_dom_matrix_read_only_from_float32_array (t, values, values.Length, &r)))
                 )
 
             member _.ReadOnlyMatrixFromFloat64Array values =
                 let values = ValueFactoryContract.values values
 
                 unbox<DOMMatrixReadOnly>(
-                    matrix "DOMMatrixReadOnly.fromFloat64Array" (Create(fun t r ->
-                        NativeDom.rv_dom_dom_matrix_read_only_from_float64_array (t, values, values.Length, &r)))
+                    matrix
+                        "DOMMatrixReadOnly.fromFloat64Array"
+                        (Create (fun t r -> NativeDom.rv_dom_dom_matrix_read_only_from_float64_array (t, values, values.Length, &r)))
                 )
 
             member _.Dispose() =

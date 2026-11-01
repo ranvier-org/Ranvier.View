@@ -1507,7 +1507,9 @@ let runMediaQueries () =
                 Native = false
             }
 
-        let! count = MediaQueryChecks.run (fun () -> BrowserMediaQueries.forDocument document) driver
+        let! count =
+            MediaQueryChecks.run (fun () -> BrowserMediaQueries.forDocument document) driver
+
         return {| media = count |}
     }
     |> Async.StartAsPromise
@@ -1525,10 +1527,22 @@ let runHighlights () =
 let runCanvas () =
     let document = document ()
     let count = CanvasChecks.run (fun () -> BrowserCanvas.forDocument document) document
-    let paths = CanvasPathChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
-    let state = CanvasStateChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
-    let paints = CanvasPaintChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
-    {| canvas = count; canvasPaths = paths; canvasState = state; canvasPaints = paints |}
+
+    let paths =
+        CanvasPathChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
+
+    let state =
+        CanvasStateChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
+
+    let paints =
+        CanvasPaintChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
+
+    {|
+        canvas = count
+        canvasPaths = paths
+        canvasState = state
+        canvasPaints = paints
+    |}
 
 /// <summary>Runs the shared R05 canvas text assertions over the fixture server's Ahem face.</summary>
 let runCanvasText () =
@@ -1691,7 +1705,12 @@ let runAnimations () =
     let discovery, commits =
         AnimationDiscoveryChecks.run document (fun () -> Ranvier.Dom.ComputedStyles.forDocument document)
 
-    {| animations = count; effects = effects; discovery = discovery; commits = commits |}
+    {|
+        animations = count
+        effects = effects
+        discovery = discovery
+        commits = commits
+    |}
 
 [<Emit("$0.constructor.name")>]
 let private eventConstructorName (value: obj) : string = jsNative
@@ -1736,7 +1755,8 @@ let runTimelines () =
         animationFrames 2 |> Async.AwaitPromise
 
     async {
-        let timelines = TimelineChecks.runDocumentTimelines document (fun () -> BrowserAnimations.forDocument document)
+        let timelines =
+            TimelineChecks.runDocumentTimelines document (fun () -> BrowserAnimations.forDocument document)
 
         let! scroll =
             TimelineChecks.runScrollTimelines
@@ -1750,9 +1770,15 @@ let runTimelines () =
             | AnimationException (name, _) -> name
             | error -> errorName error
 
-        let! view = TimelineChecks.runViewTimelines document (fun () -> BrowserTimelines.forDocument document) settle name
+        let! view =
+            TimelineChecks.runViewTimelines document (fun () -> BrowserTimelines.forDocument document) settle name
 
-        return {| timelines = timelines; scrollTimelines = scroll; viewTimelines = view |}
+        return
+            {|
+                timelines = timelines
+                scrollTimelines = scroll
+                viewTimelines = view
+            |}
     }
     |> Async.StartAsPromise
 

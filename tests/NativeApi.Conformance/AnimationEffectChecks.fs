@@ -31,13 +31,25 @@ let run (document: Document) (styles: unit -> ComputedStyleService) (errorName: 
         checks <- checks + 1
 
         if actual <> expected then
-            failwith (label + ": expected " + string (box expected) + ", got " + string (box actual))
+            failwith (
+                label
+                + ": expected "
+                + string (box expected)
+                + ", got "
+                + string (box actual)
+            )
 
     let near label (expected: float) (actual: float) =
         checks <- checks + 1
 
         if abs (expected - actual) > 1e-3 then
-            failwith (label + ": expected " + string expected + ", got " + string actual)
+            failwith (
+                label
+                + ": expected "
+                + string expected
+                + ", got "
+                + string actual
+            )
 
     let throws label expected (action: unit -> unit) =
         checks <- checks + 1
@@ -81,7 +93,13 @@ let run (document: Document) (styles: unit -> ComputedStyleService) (errorName: 
         (computed.Get (target, None)).getPropertyValue property
 
     try
-        let frames = [| frame [ "opacity", "0" ]; frame [ "opacity", "1" ]; frame [ "opacity", "0.5" ] |]
+        let frames =
+            [|
+                frame [ "opacity", "0" ]
+                frame [ "opacity", "1" ]
+                frame [ "opacity", "0.5" ]
+            |]
+
         frames[1].offset <- Some 0.5
         frames[1].easing <- Some "ease-in"
         let options = KeyframeAnimationOptions ()
@@ -125,7 +143,9 @@ let run (document: Document) (styles: unit -> ComputedStyleService) (errorName: 
         equal
             "keyframe 2 properties"
             [ "opacity", "0.5" ]
-            (keyframes[2].properties |> Array.map (fun p -> p.name, p.value) |> Array.toList)
+            (keyframes[2].properties
+             |> Array.map (fun p -> p.name, p.value)
+             |> Array.toList)
 
         let update = OptionalEffectTiming ()
         update.duration <- Some (UnrestrictedDoubleOrDOMString.UnrestrictedDouble 2000.0)
@@ -156,7 +176,12 @@ let run (document: Document) (styles: unit -> ComputedStyleService) (errorName: 
         equal "eased fill" FillMode.Forwards (effect.getTiming ()).fill
         equal "eased easing" "ease-out" (effect.getTiming ()).easing
 
-        let slide = [| frame [ "transform", "translateX(0px)" ]; frame [ "transform", "translateX(100px)" ] |]
+        let slide =
+            [|
+                frame [ "transform", "translateX(0px)" ]
+                frame [ "transform", "translateX(100px)" ]
+            |]
+
         slide[1].composite <- Some "add"
         effect.setKeyframes slide
         let reset = effect.getKeyframes ()

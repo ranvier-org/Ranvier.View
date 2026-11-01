@@ -20,10 +20,14 @@ let private frame (properties: (string * string) list) =
 
     value
 
-let private fade () = [| frame [ "opacity", "0" ]; frame [ "opacity", "1" ] |]
+let private fade () =
+    [| frame [ "opacity", "0" ]; frame [ "opacity", "1" ] |]
 
 let private slide (distance: int) =
-    [| frame [ "transform", "translateX(0px)" ]; frame [ "transform", "translateX(" + string distance + "px)" ] |]
+    [|
+        frame [ "transform", "translateX(0px)" ]
+        frame [ "transform", "translateX(" + string distance + "px)" ]
+    |]
 
 /// <summary>
 /// Creates keyframe animations through Element.animate, the KeyframeEffect and Animation constructors and a new
@@ -39,7 +43,13 @@ let run (document: Document) (create: unit -> AnimationService) (styles: unit ->
         checks <- checks + 1
 
         if actual <> expected then
-            failwith (label + ": expected " + string (box expected) + ", got " + string (box actual))
+            failwith (
+                label
+                + ": expected "
+                + string (box expected)
+                + ", got "
+                + string (box actual)
+            )
 
     let throws label expected (action: unit -> unit) =
         checks <- checks + 1
@@ -90,7 +100,15 @@ let run (document: Document) (create: unit -> AnimationService) (styles: unit ->
             seek animation milliseconds
             equal (label + " currentTime " + string milliseconds) (Some milliseconds) (time animation)
             equal (label + " paused at " + string milliseconds) AnimationPlayState.Paused animation.playState
-            equal (label + " " + property + " at " + string milliseconds) wanted (value target property)
+
+            equal
+                (label
+                 + " "
+                 + property
+                 + " at "
+                 + string milliseconds)
+                wanted
+                (value target property)
 
         animation.cancel ()
         equal (label + " cancelled") AnimationPlayState.Idle animation.playState
@@ -101,33 +119,80 @@ let run (document: Document) (create: unit -> AnimationService) (styles: unit ->
         configure value
         value
 
-    let animate (target: Element) frames configure = target.animate (frames, options configure)
+    let animate (target: Element) frames configure =
+        target.animate (frames, options configure)
 
     try
         points "opacity fill both" (animate a (fade ()) (fun o -> o.fill <- FillMode.Both)) a "opacity" [ 0.0, "0"; 500.0, "0.5"; 1000.0, "1" ]
-        points "transform" (animate b (slide 100) (fun o -> o.fill <- FillMode.Both)) b "transform"
-            [ 0.0, "matrix(1, 0, 0, 1, 0, 0)"; 500.0, "matrix(1, 0, 0, 1, 50, 0)"; 1000.0, "matrix(1, 0, 0, 1, 100, 0)" ]
+
+        points
+            "transform"
+            (animate b (slide 100) (fun o -> o.fill <- FillMode.Both))
+            b
+            "transform"
+            [
+                0.0, "matrix(1, 0, 0, 1, 0, 0)"
+                500.0, "matrix(1, 0, 0, 1, 50, 0)"
+                1000.0, "matrix(1, 0, 0, 1, 100, 0)"
+            ]
+
         points "delay" (animate a (fade ()) (fun o -> o.delay <- 500.0)) a "opacity" [ 250.0, "1"; 1000.0, "0.5"; 1500.0, "1" ]
-        points "reverse" (animate a (fade ()) (fun o -> o.direction <- PlaybackDirection.Reverse; o.fill <- FillMode.Both)) a "opacity"
+
+        points
+            "reverse"
+            (animate a (fade ()) (fun o ->
+                o.direction <- PlaybackDirection.Reverse
+                o.fill <- FillMode.Both))
+            a
+            "opacity"
             [ 0.0, "1"; 250.0, "0.75"; 1000.0, "0" ]
-        points "alternate" (animate a (fade ()) (fun o -> o.iterations <- 2.0; o.direction <- PlaybackDirection.Alternate; o.fill <- FillMode.Both))
-            a "opacity" [ 250.0, "0.25"; 1250.0, "0.75" ]
-        points "composite add" (animate c (slide 100) (fun o -> o.composite <- CompositeOperation.Add; o.fill <- FillMode.Both)) c "transform"
+
+        points
+            "alternate"
+            (animate a (fade ()) (fun o ->
+                o.iterations <- 2.0
+                o.direction <- PlaybackDirection.Alternate
+                o.fill <- FillMode.Both))
+            a
+            "opacity"
+            [ 250.0, "0.25"; 1250.0, "0.75" ]
+
+        points
+            "composite add"
+            (animate c (slide 100) (fun o ->
+                o.composite <- CompositeOperation.Add
+                o.fill <- FillMode.Both))
+            c
+            "transform"
             [ 500.0, "matrix(1, 0, 0, 1, 60, 0)" ]
+
         let keyframeAdd = [| frame [ "opacity", "0" ]; frame [ "opacity", "0.25" ] |]
 
         for item in keyframeAdd do
             item.composite <- Some "add"
 
         points "keyframe composite add" (animate e keyframeAdd (fun o -> o.fill <- FillMode.Both)) e "opacity" [ 500.0, "0.625" ]
-        let offsets = [| frame [ "opacity", "0" ]; frame [ "opacity", "0.8" ]; frame [ "opacity", "1" ] |]
+
+        let offsets =
+            [|
+                frame [ "opacity", "0" ]
+                frame [ "opacity", "0.8" ]
+                frame [ "opacity", "1" ]
+            |]
+
         offsets[1].offset <- Some 0.8
         points "offsets" (animate a offsets (fun o -> o.fill <- FillMode.Both)) a "opacity" [ 400.0, "0.4"; 900.0, "0.9" ]
         let stepped = fade ()
         stepped[0].easing <- Some "step-end"
         points "keyframe easing" (animate a stepped (fun o -> o.fill <- FillMode.Both)) a "opacity" [ 500.0, "0"; 1000.0, "1" ]
         points "number options" (a.animate (fade (), 2000.0)) a "opacity" [ 500.0, "0.25" ]
-        let identified = animate a (fade ()) (fun o -> o.id <- "wa-id"; o.fill <- FillMode.Both; o.timeline <- Some (document.timeline :> AnimationTimeline))
+
+        let identified =
+            animate a (fade ()) (fun o ->
+                o.id <- "wa-id"
+                o.fill <- FillMode.Both
+                o.timeline <- Some (document.timeline :> AnimationTimeline))
+
         equal "animate id" "wa-id" identified.id
         equal "animate on document.timeline" true (obj.ReferenceEquals (identified.timeline, document.timeline))
         points "timeline option" identified a "opacity" [ 500.0, "0.5" ]
@@ -150,11 +215,17 @@ let run (document: Document) (create: unit -> AnimationService) (styles: unit ->
         equal "Animation without effect" AnimationPlayState.Idle empty.playState
         equal "Animation without effect has no effect" true (isNull empty.effect)
         equal "Animation without effect has no current time" None (time empty)
-        let detached = service.CreateAnimationWithoutTimeline (service.CreateKeyframeEffectFor (a, fade (), 1000.0))
+
+        let detached =
+            service.CreateAnimationWithoutTimeline (service.CreateKeyframeEffectFor (a, fade (), 1000.0))
+
         equal "Animation without timeline" true (isNull detached.timeline)
         let timeline = service.CreateDocumentTimeline ()
         equal "new DocumentTimeline has a current time" true (timeline.currentTime.IsSome)
-        let own = service.CreateAnimation (service.CreateKeyframeEffectFor (a, fade (), 1000.0), timeline)
+
+        let own =
+            service.CreateAnimation (service.CreateKeyframeEffectFor (a, fade (), 1000.0), timeline)
+
         points "new DocumentTimeline" own a "opacity" [ 250.0, "0.25" ]
 
         // Engine errors.
@@ -171,7 +242,11 @@ let run (document: Document) (create: unit -> AnimationService) (styles: unit ->
         throws "negative duration" "TypeError" (fun () -> a.animate (fade (), -1.0) |> ignore)
         let pseudo = KeyframeEffectOptions ()
         pseudo.pseudoElement <- "bogus"
-        throws "invalid pseudo-element" "SyntaxError" (fun () -> service.CreateKeyframeEffect (a, [||], pseudo) |> ignore)
+
+        throws "invalid pseudo-element" "SyntaxError" (fun () ->
+            service.CreateKeyframeEffect (a, [||], pseudo)
+            |> ignore)
+
         equal "empty keyframes" AnimationPlayState.Running ((a.animate ([||], 1000.0)).playState)
 
         for animation in document.getAnimations () do

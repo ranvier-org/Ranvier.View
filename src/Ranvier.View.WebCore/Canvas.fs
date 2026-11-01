@@ -23,7 +23,8 @@ module Canvas =
     [<Literal>]
     let private Unsupported = -9
 
-    let private flag (value: bool) = if value then 1 else 0
+    let private flag (value: bool) =
+        if value then 1 else 0
 
     /// <summary>A canvas context service for the document <c>host</c> shows at each call.</summary>
     /// <remarks>
@@ -59,7 +60,7 @@ module Canvas =
             session.Object (
                 handle,
                 Kind.Path2D,
-                unbox<NativeObject> (box host.Document),
+                unbox<NativeObject>(box host.Document),
                 Func<Session, nativeint, NativeObject>(fun s h -> Path2DObject (s, h))
             )
             |> unbox<Path2D>
@@ -80,7 +81,9 @@ module Canvas =
                     value.ColorSpace <- int settings.ColorSpace
                     value.ColorType <- int settings.ColorType
                     let mutable result = 0n
-                    let status = Native.rv_canvas_get_context (canvasHandle, int contextType, NativePtr.toNativeInt &&value, &result)
+
+                    let status =
+                        Native.rv_canvas_get_context (canvasHandle, int contextType, NativePtr.toNativeInt &&value, &result)
 
                     if status = Unsupported then
                         CanvasContextOutcome.Unsupported "the native engine renders no such context"
@@ -90,7 +93,7 @@ module Canvas =
                         if result = 0n then
                             CanvasContextOutcome.OtherContext
                         else
-                            let owner = unbox<NativeObject> (box canvas)
+                            let owner = unbox<NativeObject>(box canvas)
 
                             session.Object (
                                 result,
@@ -152,4 +155,6 @@ module Canvas =
                 path result
 
           interface IDisposable with
-              member _.Dispose() = disposed.Value <- true }
+              member _.Dispose() =
+                  disposed.Value <- true
+        }

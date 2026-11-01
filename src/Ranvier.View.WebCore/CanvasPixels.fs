@@ -51,7 +51,9 @@ module CanvasPixels =
 
         let created (status: int) (result: nativeint array) =
             Interop.check "new ImageData" status
-            session.Track (ImageDataObject (session, result[0])) |> unbox<ImageData>
+
+            session.Track (ImageDataObject (session, result[0]))
+            |> unbox<ImageData>
 
         { new ImageDataService with
             member _.Create(width, height) =
@@ -112,4 +114,6 @@ module CanvasPixels =
                 |> Interop.check "ImageData write"
 
           interface IDisposable with
-              member _.Dispose() = disposed.Value <- true }
+              member _.Dispose() =
+                  disposed.Value <- true
+        }
