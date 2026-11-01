@@ -2,9 +2,10 @@
 
 Run the **Published native packages** manual Actions workflow after a coordinated release exists on
 NuGet. Supply `view_package_version` for the exact published backend and SDL version, including their
-`.Traced` variants. `native_runtime_version` defaults to `0.1.0-preview.7`; managed interop, the native
-meta-package, all five RID packages and the Windows GPU package must be from that same release.
-An absent package or mismatched cohort fails acceptance.
+`.Traced` variants, plus the exact `native_runtime_version` and `native_abi` for the same published
+cohort. The workflow has no default package version or ABI. Managed interop, the native meta-package,
+all five RID packages and the Windows GPU package must be from that same release. An absent package
+or mismatched cohort fails acceptance.
 
 The four Windows jobs cover normal/traced packages with CPU (`slim`) or strict GPU presentation. They
 restore into separate fresh caches using only the official NuGet source. Both projects link the
@@ -17,14 +18,14 @@ the same exact version. The five-RID meta-package remains in the dependency grap
 are downloaded separately or copied over a build output.
 
 For each JIT and NativeAOT output, `tools/verify-published-native-runtime.py` checks the restore graph,
-official cache provenance, clean source commit, WebKit commit, ABI 21, version, RID and flavor. It
+official cache provenance, clean source commit, WebKit commit, the explicitly supplied ABI, version, RID and flavor. It
 hashes every native/resource file in both the selected package and the final output. GPU and slim
 manifests must identify the same release cohort. Native graphs reject `Xantham.*` and
 `Fable.Ranvier*`; `Fable.Core` compile attributes remain permitted and contracts resolve `Ranvier.Dom`.
 
 Both execution modes run the expanded smoke and the actual counter window with an independently
 built OS accessibility probe. GPU jobs also require shared GPU presentation. The workflow requires
-real package versions and performs no publication.
+exact package versions and ABI and performs no publication.
 
 The hermetic verifier tests do not contact NuGet or execute native code:
 

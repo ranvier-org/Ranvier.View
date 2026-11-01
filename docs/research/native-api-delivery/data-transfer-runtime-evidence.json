@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    "I07 drag/drop object model",
+    "T09 clipboard formats and file payloads",
+    "T04 rich beforeinput/input payloads"
+  ],
+  "status": "green (private integration; not accepted)",
+  "route": "generated rv_dom_data_transfer_* / DragEvent.dataTransfer / ClipboardEvent.clipboardData / InputEvent.dataTransfer; rv_drag_data_add_file, rv_clipboard_offer_file, rv_clipboard_deny, rv_host_set_clipboard_file_write, rv_host_replace_range; source patch 0041 (in-memory pasteboard files on non-Cocoa ports)",
+  "issues": [
+    "https://github.com/ranvier-org/Ranvier.WebCore/issues/104",
+    "https://github.com/ranvier-org/Ranvier.WebCore/issues/77",
+    "https://github.com/ranvier-org/Ranvier.WebCore/issues/75"
+  ],
+  "coreSourceCommit": "21687035db50f69664c2ebeb99eeb0e157779060",
+  "viewsSourceCommit": "82008cfadb0713039bf4b42dbcfcd31f25da74c8",
+  "stackedOn": "Views batch-1 ea4db39d + #145 Views a8b3645; Core batch-1 ebabe067 + #145 Core 526ec1fb",
+  "nativeProducer": {
+    "branch": "codex/native-api-drag-drop",
+    "head": "a185fa0130510fd81ffb91804e4f98d4c737c919",
+    "abi": 55,
+    "runtime": "native-dnd artifacts/dnd-candidate-9",
+    "evidence": "Ranvier.WebCore docs/data-transfer-evidence/final-evidence.json"
+  },
+  "versions": {
+    "native": "0.1.0-preview.47 (private; root assigns at integration)",
+    "dom": "0.1.0-alpha.50 (private)"
+  },
+  "placeholderKinds": {
+    "DataTransfer": 160,
+    "DataTransferItemList": 161,
+    "DataTransferItem": 162
+  },
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.50.nupkg": "1b08b471bcf086cd03ab24c6b2e13fc5f78e4dcd1b4d2040b9a1cf1b19a07853",
+    "Ranvier.Dom.0.1.0-alpha.50.nupkg": "68e6c00191611d097910a9a2919bb1e1b9232acd7c0df3791de448b609a8d592",
+    "Ranvier.WebCore.0.1.0-preview.47.nupkg": "5c35f40c1ba27792113f67ca1d1b000ac942e7b177de86e94dfc2219db1d1778"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "bee4f7a67d3d3feddcbde59defbeff13de09aa8602203aeecdf575c47ec88965",
+    "WebCore.dll": "16a4ce8890935b627563ca34d7bd909434f6487162bdbb108124b4b0f36e8e88",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\dnd-artifacts\\managed\\final-1\\aot\\Native.exe",
+    "sha256": "88264a076253cd54c8dc8f8fd63c08eee6af57320209c6378d8674688d961759"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "c350041c9f46f012a017c2f294a8c03e972f52eafc77e4f49bc7963ed38a2162",
+      "passLines": 124,
+      "failLines": [],
+      "baselinePassLines": 122,
+      "missingFromBaseline": [],
+      "added": [
+        "NATIVE_API I07 PASS assertions=49",
+        "NATIVE_API I07 LIFETIME PASS assertions=18"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "6652a2b584d9b7f6f4ca7e1c81f665538d9fa998d89e3301183d38316c33e8be",
+      "passLines": 124,
+      "failLines": [],
+      "baselinePassLines": 122,
+      "missingFromBaseline": [],
+      "added": [
+        "NATIVE_API I07 PASS assertions=49",
+        "NATIVE_API I07 LIFETIME PASS assertions=18"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "bcff78e077a810efcd0f97f68414bb197f66a472c2fd731585ced74b733a719e",
+      "passLines": 88,
+      "failLines": [],
+      "baselinePassLines": 87,
+      "missingFromBaseline": [],
+      "added": [
+        "BROWSER_API I07 PASS assertions=49 engine=chromium"
+      ]
+    },
+    "baseline": "#145 final managed run C:/wk/str2-artifacts/managed/final-1"
+  },
+  "jitAotPassLinesIdentical": true,
+  "repeats": {
+    "aotDataTransferOnly": {
+      "runs": 30,
+      "distinct": [
+        "NATIVE_API I07 PASS assertions=49"
+      ]
+    },
+    "chromiumDataTransferOnly": {
+      "runs": 30,
+      "distinct": [
+        "BROWSER_API I07 PASS assertions=49 engine=chromium"
+      ]
+    }
+  },
+  "wrapperRegeneration": {
+    "objectsFs": "bb97efcb5aaaceb980bd3180a908f84f81e836c206b5d6a2c1ddf63c5a938717",
+    "reportTxt": "aa05b724cde26b91c8e0c9c67dc1077ad6f0ff578aa0ba530f9367281d069fae"
+  },
+  "fixture": {
+    "shared": "tests/NativeApi.Conformance/DataTransferChecks.fs",
+    "nativeChecks": 49,
+    "chromiumChecks": 49,
+    "nativeLifetimeChecks": 18
+  },
+  "coreAndViewState": "docs/superpowers/plans/2026-10-31-data-transfer.md",
+  "qualifications": [
+    "Chromium runs the shared drop and paste checks on synthetic DragEvent and ClipboardEvent dispatches with a constructed DataTransfer; store modes, permission, copy and range replacement are native-only checks.",
+    "Engine differences from Chromium are recorded with both values in Ranvier.WebCore tests/fixtures/data-transfer-qualified.json.",
+    "Drags out of the page have no Views API yet; the native probe covers rv_drag_file and setDragImage.",
+    "Linux keeps files out of drops (GTK/WPE allowsFileAccess); pastes carry files on every platform."
+  ]
+}

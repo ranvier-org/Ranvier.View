@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "groups": "I03 touch payloads and injection, I04 pen/pointer fidelity, I06 relative pointer capture/lock",
+  "status": "green (private integration; not accepted)",
+  "issues": [
+    "https://github.com/ranvier-org/Ranvier.WebCore/issues/101",
+    "https://github.com/ranvier-org/Ranvier.WebCore/issues/102",
+    "https://github.com/ranvier-org/Ranvier.WebCore/issues/103"
+  ],
+  "viewsSourceCommit": "1b0f8e901b5dc7f1e315f98ad3ee13e03f2c03d4",
+  "coreSourceCommit": "0b14c1e5947086be3e715f16edaff953e25ba246",
+  "nativeProducer": {
+    "branch": "codex/native-api-pointer-input",
+    "head": "a4ef57c8381cc745745e6508b57b2b2a35a5e572",
+    "abi": "54 (placeholder)",
+    "runtime": "C:/wk/pointer-artifacts/pointer-candidate-4 (full rebuild, ENABLE_TOUCH_EVENTS and ENABLE_POINTER_LOCK)",
+    "evidence": "Ranvier.WebCore docs/pointer-input-evidence/final-evidence.json"
+  },
+  "versions": {
+    "native": "0.1.0-preview.46 (private)",
+    "dom": "0.1.0-alpha.49 (private)"
+  },
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.49.nupkg": "5c0782d1b32b6267d42dd8322ca42f5f1c6d2ad3b9a1da22af05d4a0139c3e31",
+    "Ranvier.Dom.0.1.0-alpha.49.nupkg": "25d647653b5e10d65b61ced05099052d0691a26c193b1dedca5114a22d0ac528",
+    "Ranvier.WebCore.0.1.0-preview.46.nupkg": "1175c895d77cf9c7b2d261c085933885735d81087f65023b2b21179c9f6fc826"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "1af0ee5fc6c4a907812cd16a92d72961786c3a631ffb81b14479f0123c9264dc",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "f1545e355230a460d5720a52e3ba5e2032b927b6840029474fa73087b7411084",
+    "WebCore.dll": "3ca19a68698c9776b5a245a554ee782bf8cc35e2dbb8a8ba3f6dce1122f97bb9",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "jit": {
+    "exitCode": 0,
+    "logSha256": "fbbad8fe745346b6f75f253319c553e826ab73c710172a1a274f7aba9959a024",
+    "passLines": 121,
+    "baselinePassLines": 119,
+    "missingFromBaseline": [],
+    "added": [
+      "NATIVE_API I03_I04_I06 PASS assertions=61",
+      "NATIVE_API I03_I04_I06 NATIVE PASS assertions=13"
+    ]
+  },
+  "aot": {
+    "exitCode": 0,
+    "logSha256": "fe2bc8f75b40bc552768f3db6cc8788b2a5a4d6dfa0ac2b8e3cb54ae973f5562",
+    "passLines": 121,
+    "baselinePassLines": 119,
+    "missingFromBaseline": [],
+    "added": [
+      "NATIVE_API I03_I04_I06 PASS assertions=61",
+      "NATIVE_API I03_I04_I06 NATIVE PASS assertions=13"
+    ]
+  },
+  "chromium": {
+    "exitCode": 0,
+    "logSha256": "52ed4c11a03e43afc6264264407411244ee20e0232f9589135289c50a7b27f30",
+    "passLines": 87,
+    "baselinePassLines": 86,
+    "missingFromBaseline": [],
+    "added": [
+      "BROWSER_API I03_I04_I06 PASS assertions=61 engine=chromium"
+    ]
+  },
+  "fixture": {
+    "shared": 61,
+    "nativeOnly": 13
+  },
+  "repeat30": "REPEAT30 aot=30/30 chromium=30/30",
+  "qualifications": [
+    "Chromium may dispatch pointerlockchange more than once for one grant; the fixture checks the distinct lock targets.",
+    "Headless Chromium grants pointer lock without a gesture or embedder; the native host waits for resolveLock, and the gesture refusal and denial are native-only checks.",
+    "Touch pointer ids are engine-assigned: native 2 + contact id (native-only check), Chromium its own; the shared fixture checks identity per contact.",
+    "Kind.Touch 140 and Kind.TouchList 141 are placeholder release kinds for root renumbering."
+  ]
+}

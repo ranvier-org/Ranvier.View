@@ -311,7 +311,7 @@ let private runInputState () =
                     host.Document
                     (fun () -> Ranvier.View.WebCore.InputState.forHost host)
                     Ranvier.View.WebCore.InputState.capabilities
-                    Ranvier.Dom.CapabilityState.No
+                    Ranvier.Dom.CapabilityState.Yes
                     driver
                 |> Async.StartImmediateAsTask
 
@@ -367,6 +367,249 @@ let private runInputState () =
 
     System.Console.WriteLine $"NATIVE_API I12 PASS assertions={shared}"
     System.Console.WriteLine $"NATIVE_API I12 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared pointer-input fixture with native pointer ids, lock denial and refusal, touch capacity and
+/// host-disposal checks.</summary>
+let private runPointerInput () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable native = 0
+
+    let expect condition message =
+        native <- native + 1
+
+        if not condition then
+            failwith message
+
+    let input action =
+        async { action () }
+
+    let send (samples: Ranvier.View.WebCore.PointerSample array) =
+        host.Pointer samples |> ignore
+
+    let touchSample (contact: PointerInputChecks.Contact) =
+        let mutable sample =
+            Ranvier.View.WebCore.PointerSample.Create (2, contact.Id, contact.Action, contact.X, contact.Y)
+
+        sample.Width <- float32 (2.0 * contact.RadiusX)
+        sample.Height <- float32 (2.0 * contact.RadiusY)
+        sample.Twist <- int contact.Angle
+        sample.Pressure <- float32 contact.Force
+        sample
+
+    let penSample (pen: PointerInputChecks.Pen) =
+        let mutable sample =
+            Ranvier.View.WebCore.PointerSample.Create (1, 3, pen.Action, pen.X, pen.Y)
+
+        sample.Buttons <- pen.Buttons
+        sample.Button <- (if pen.Action = 1 || pen.Action = 2 then 0 else -1)
+        sample.ClickCount <- (if pen.Action = 1 || pen.Action = 2 then 1 else 0)
+        sample.Pressure <- float32 pen.Pressure
+        sample.TangentialPressure <- float32 pen.Tangential
+        sample.TiltX <- pen.TiltX
+        sample.TiltY <- pen.TiltY
+        sample.Twist <- pen.Twist
+        sample.MovementX <- pen.MovementX
+        sample.MovementY <- pen.MovementY
+        sample
+
+    let settle () =
+        for _ in 1..4 do
+            host.Cycle 0
+
+    let driver: PointerInputChecks.Driver =
+        {
+            Touch = fun contacts -> input (fun () -> send (contacts |> Array.map touchSample))
+            Pen = fun pen -> input (fun () -> send [| penSample pen |])
+            Click = fun x y -> input (fun () -> host.Click (x, y) |> ignore)
+            MoveBy =
+                fun x y dx dy ->
+                    input (fun () ->
+                        let mutable sample =
+                            Ranvier.View.WebCore.PointerSample.Create (0, 0, 0, float x, float y)
+
+                        sample.MovementX <- float dx
+                        sample.MovementY <- float dy
+                        send [| sample |])
+            GrantLock =
+                fun () ->
+                    input (fun () ->
+                        Ranvier.View.WebCore.PointerInput.resolveLock host true
+                        |> ignore)
+            Settle = fun () -> input settle
+        }
+
+    let shared =
+        try
+            host.SetFocused true
+
+            let count =
+                PointerInputChecks.run
+                    host.Document
+                    (Ranvier.View.WebCore.PointerInput.provider host)
+                    (Ranvier.View.WebCore.PointerInput.capabilities ())
+                    Ranvier.Dom.CapabilityState.Yes
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 20000L do
+                host.Cycle ()
+
+            let count = count.GetAwaiter().GetResult()
+
+            // Native pointer ids: 2 + id for a touch contact, 2^30 + id for a pen.
+            let ids = System.Collections.Generic.List<int * string>()
+
+            let listener =
+                fun (event: Ranvier.Dom.Event) ->
+                    let pointer = event :?> Ranvier.Dom.PointerEvent
+                    ids.Add ((pointer.pointerId, pointer.pointerType))
+
+            host.Document.addEventListener ("pointerdown", listener, false)
+
+            send
+                [|
+                    touchSample
+                        {
+                            Id = 5
+                            Action = 1
+                            X = 50.0
+                            Y = 50.0
+                            RadiusX = 1.0
+                            RadiusY = 1.0
+                            Angle = 0.0
+                            Force = 0.5
+                        }
+                |]
+
+            send
+                [|
+                    touchSample
+                        {
+                            Id = 5
+                            Action = 2
+                            X = 50.0
+                            Y = 50.0
+                            RadiusX = 1.0
+                            RadiusY = 1.0
+                            Angle = 0.0
+                            Force = 0.5
+                        }
+                |]
+
+            send
+                [|
+                    penSample
+                        {
+                            Action = 1
+                            X = 50.0
+                            Y = 50.0
+                            Buttons = 1
+                            Pressure = 0.5
+                            Tangential = 0.0
+                            TiltX = 0
+                            TiltY = 0
+                            Twist = 0
+                            MovementX = 0.0
+                            MovementY = 0.0
+                        }
+                |]
+
+            send
+                [|
+                    penSample
+                        {
+                            Action = 2
+                            X = 50.0
+                            Y = 50.0
+                            Buttons = 0
+                            Pressure = 0.0
+                            Tangential = 0.0
+                            TiltX = 0
+                            TiltY = 0
+                            Twist = 0
+                            MovementX = 0.0
+                            MovementY = 0.0
+                        }
+                |]
+
+            host.Document.removeEventListener ("pointerdown", listener, false)
+            expect (ids.ToArray () = [| (7, "touch"); ((1 <<< 30) + 3, "pen") |]) "Native touch and pen pointer ids"
+
+            // The embedder denies a request; a request without a gesture is refused at once. A new document has no relock
+            // allowance from the shared fixture's exit.
+            let first = host
+            let host = WebCoreHost.Create (320, 240)
+            host.SetFocused true
+            let service = Ranvier.View.WebCore.PointerInput.lockForHost host
+            let changes = System.Collections.Generic.List<Ranvier.Dom.PointerLockChange>()
+            service.Subscribe changes.Add |> ignore
+            let element = host.Document.createElement "div"
+            element.setAttribute ("style", "position:absolute;left:0;top:0;width:100px;height:100px")
+            host.Document.body.appendChild element |> ignore
+            expect (service.Request (element, false) = Error Ranvier.Dom.PointerLockRefusal.NotAllowed) "No gesture: NotAllowed"
+            settle ()
+            expect (changes.ToArray () = [| Ranvier.Dom.PointerLockChange.Error |]) "Refusal: pointerlockerror"
+            changes.Clear ()
+
+            let requests =
+                System.Collections.Generic.List<Result<unit, Ranvier.Dom.PointerLockRefusal>>()
+
+            let onDown =
+                fun (_: Ranvier.Dom.Event) -> requests.Add (service.Request (element, false))
+
+            element.addEventListener ("mousedown", onDown, false)
+            host.Click (50, 50) |> ignore
+            element.removeEventListener ("mousedown", onDown, false)
+
+            expect
+                (match service.Current () with
+                 | Ranvier.Dom.PointerLockState.Pending target -> obj.ReferenceEquals (target, element)
+                 | _ -> false)
+                "Gesture request pending"
+
+            expect (Ranvier.View.WebCore.PointerInput.resolveLock host false) "Deny"
+            expect (not (Ranvier.View.WebCore.PointerInput.resolveLock host false)) "Nothing pending after the answer"
+            settle ()
+
+            expect
+                (changes.ToArray () = [| Ranvier.Dom.PointerLockChange.Error |]
+                 && service.Current () = Ranvier.Dom.PointerLockState.Unlocked)
+                "Denial: pointerlockerror, unlocked"
+
+            element.remove ()
+            service.Dispose ()
+
+            // Navigator.maxTouchPoints: set per host, 0 by default.
+            let input = Ranvier.View.WebCore.InputState.forHost host
+            expect (input.Current().MaxTouchPoints = 0) "maxTouchPoints 0 by default"
+            host.SetMaxTouchPoints 5
+            expect (input.Current().MaxTouchPoints = 5) "maxTouchPoints 5"
+            let other = WebCoreHost.Create (10, 10)
+            let otherInput = Ranvier.View.WebCore.InputState.forHost other
+            expect (otherInput.Current().MaxTouchPoints = 0) "maxTouchPoints per host"
+            otherInput.Dispose ()
+            (other :> System.IDisposable).Dispose()
+            host.SetMaxTouchPoints 0
+            expect (input.Current().MaxTouchPoints = 0) "maxTouchPoints reset"
+            input.Dispose ()
+            (host :> System.IDisposable).Dispose()
+            expect (first.Session.LiveObjects >= 0) "First host still live"
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Pointer-input fixture leaves no live native objects"
+
+    if shared <> 61 then
+        failwith $"Pointer-input shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API I03_I04_I06 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API I03_I04_I06 NATIVE PASS assertions={native}"
     shared
 
 /// <summary>Runs the shared viewport fixture with native visibility and host-disposal checks.</summary>
@@ -1140,9 +1383,223 @@ let private runBinary () =
     System.Console.WriteLine $"NATIVE_API H11 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>
+/// Runs the shared DataTransfer fixture through native drops and pastes, with the native store-mode lifetime, permission,
+/// copy, reserved-type and range-replacement checks.
+/// </summary>
+[<Literal>]
+let private DataTransferChecksCount = 49
+
+let private runDataTransfer () =
+    let host = WebCoreHost.Create (320, 200)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let shared =
+        try
+            let document = host.Document
+            use binary = Ranvier.View.WebCore.BinaryValues.forHost host
+            use transfers = Ranvier.View.WebCore.DataTransfers.forHost host
+
+            let file name kind (text: string) =
+                binary.CreateFile (
+                    [| Ranvier.Dom.BlobPart.Text text |],
+                    name,
+                    { Ranvier.Dom.FileOptions.Default with
+                        Type = kind
+                    }
+                )
+
+            let center (element: Ranvier.Dom.Element) =
+                let rect = element.getBoundingClientRect ()
+                int (rect.x + rect.width / 2.0), int (rect.y + rect.height / 2.0)
+
+            let payload strings files : Ranvier.View.WebCore.TransferPayload =
+                { Strings = strings; Files = files }
+
+            let driver: DataTransferChecks.Driver =
+                {
+                    Create = fun () -> transfers.Create ()
+                    File = file
+                    Drop =
+                        fun element strings files ->
+                            let x, y = center element
+
+                            Ranvier.View.WebCore.DataTransfers.drop host x y 1 (payload strings files)
+                            |> ignore
+                    Paste =
+                        fun element strings files ->
+                            (unbox<Ranvier.Dom.HTMLElement> element).focus()
+                            Ranvier.View.WebCore.DataTransfers.setClipboard host ignore (fun () -> Some (payload strings files))
+
+                            Ranvier.View.WebCore.DataTransfers.paste host
+                            |> ignore
+                }
+
+            let count = DataTransferChecks.run document driver
+
+            // Store modes: a drop's DataTransfer reads its data during the event and nothing afterwards.
+            let target = document.createElement "div"
+            target.setAttribute ("style", "position:absolute;left:0;top:0;width:200px;height:80px")
+            document.body.appendChild target |> ignore
+            let mutable held: Ranvier.Dom.DataTransfer = null
+            let mutable during = ""
+            let mutable overText = "unset"
+
+            let onOver: Ranvier.Dom.EventListener =
+                fun event ->
+                    event.preventDefault ()
+                    overText <- (unbox<Ranvier.Dom.DragEvent> event).dataTransfer.getData "text/plain"
+
+            let onDrop: Ranvier.Dom.EventListener =
+                fun event ->
+                    event.preventDefault ()
+                    held <- (unbox<Ranvier.Dom.DragEvent> event).dataTransfer
+                    during <- held.getData "text/plain"
+
+            target.addEventListener ("dragover", onOver)
+            target.addEventListener ("drop", onDrop)
+            let kept = file "kept.txt" "text/plain" "kept"
+
+            let operation =
+                Ranvier.View.WebCore.DataTransfers.drop host 20 20 1 (payload [| struct ("text/plain", "D") |] [| kept |])
+
+            expect (operation = 1) "A cancelled dragover accepts the drop as a copy"
+            expect (overText = "") "dragover's DataTransfer is protected: its data reads empty"
+            expect (during = "D") "drop's DataTransfer is read-only: its data reads"
+
+            expect
+                (held.types.Length = 0
+                 && held.getData "text/plain" = "")
+                "The drop's DataTransfer reads nothing after the event"
+
+            expect (held.files.length = 0u) "The drop's DataTransfer lists no File after the event"
+
+            let reserved =
+                try
+                    Ranvier.View.WebCore.DataTransfers.drop host 20 20 1 (payload [| struct ("Files", "x") |] [||])
+                    |> ignore
+
+                    false
+                with _ ->
+                    true
+
+            expect reserved "A Files string type is refused"
+
+            // Permission: the app refuses a paste.
+            let editable = document.createElement "div"
+            editable.setAttribute ("contenteditable", "")
+            editable.textContent <- "ab"
+            document.body.appendChild editable |> ignore
+            (unbox<Ranvier.Dom.HTMLElement> editable).focus()
+            let copied = ResizeArray<Ranvier.View.WebCore.TransferPayload>()
+            Ranvier.View.WebCore.DataTransfers.setClipboard host copied.Add (fun () -> None)
+
+            let denied =
+                try
+                    Ranvier.View.WebCore.DataTransfers.paste host
+                    |> ignore
+
+                    ""
+                with WebCoreDomException (name, _) ->
+                    name
+
+            expect (denied = "NotAllowedError") "A refused paste fails with NotAllowedError"
+            expect (editable.textContent = "ab") "A refused paste inserts nothing"
+
+            // Copy: the page's string, U+0000 included, and File reach the app.
+            let copiedText = "C" + string (char 0) + "1"
+
+            let onCopy: Ranvier.Dom.EventListener =
+                fun event ->
+                    event.preventDefault ()
+                    let data = (unbox<Ranvier.Dom.ClipboardEvent> event).clipboardData
+                    data.setData ("text/plain", copiedText)
+
+                    data.items.add (file "c.txt" "text/plain" "copied")
+                    |> ignore
+
+            editable.addEventListener ("copy", onCopy)
+            expect (Ranvier.View.WebCore.DataTransfers.copy host) "A cancelled copy applies"
+            expect (copied.Count = 1) "The copy reaches the app once"
+            let copy = copied[0]
+            expect (copy.Strings = [| struct ("text/plain", copiedText) |]) "The copy carries the page's string, U+0000 included"
+
+            expect
+                (copy.Files.Length = 1
+                 && copy.Files[0].name = "c.txt"
+                 && copy.Files[0].size = 6UL)
+                "The copy carries the page's File"
+
+            // T04: a replacement edit, cancelled and applied, with its target range and payload.
+            editable.textContent <- "hello world"
+            let text = editable.firstChild
+            let mutable cancel = true
+            let records = ResizeArray<string * string * int>()
+
+            let onBefore: Ranvier.Dom.EventListener =
+                fun event ->
+                    let input = unbox<Ranvier.Dom.InputEvent> event
+                    records.Add (input.inputType, input.dataTransfer.getData "text/plain", input.getTargetRanges().Length)
+
+                    if cancel then
+                        event.preventDefault ()
+
+            editable.addEventListener ("beforeinput", onBefore)
+
+            let replace () =
+                let range = document.createRange ()
+                range.setStart (text, 6u)
+                range.setEnd (text, 11u)
+                Ranvier.View.WebCore.DataTransfers.replaceRange host range "there"
+
+            expect (not (replace ())) "A cancelled beforeinput prevents the replacement"
+            expect (editable.textContent = "hello world") "The cancelled replacement leaves the text"
+            cancel <- false
+            expect (replace ()) "An uncancelled replacement applies"
+            expect (editable.textContent = "hello there") "The replacement replaces the range"
+
+            expect
+                (List.ofSeq records = [ ("insertReplacementText", "there", 1); ("insertReplacementText", "there", 1) ])
+                "beforeinput carries insertReplacementText, its text and one target range"
+
+            editable.removeEventListener ("beforeinput", onBefore)
+            editable.removeEventListener ("copy", onCopy)
+            target.removeEventListener ("dragover", onOver)
+            target.removeEventListener ("drop", onDrop)
+            held <- null
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    System.GC.Collect ()
+    System.GC.WaitForPendingFinalizers ()
+    expect (session.LiveObjects = 0) "DataTransfer fixture leaves no live native objects"
+
+    if shared <> DataTransferChecksCount then
+        failwith (
+            "DataTransfer shared assertions did not run: "
+            + string shared
+        )
+
+    System.Console.WriteLine ("NATIVE_API I07 PASS assertions=" + string shared)
+
+    System.Console.WriteLine (
+        "NATIVE_API I07 LIFETIME PASS assertions="
+        + string lifetime
+    )
+
+    shared
+
 /// <summary>Runs the shared URL fixture with native thread and teardown checks.</summary>
 [<Literal>]
-let private UrlChecksCount = 189
+let private UrlChecksCount = 190
 
 let private runUrls () =
     let host = WebCoreHost.Create (320, 240)
@@ -1366,6 +1823,153 @@ let private runEventDetails () =
     System.Console.WriteLine $"NATIVE_API I08 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared value factory fixture with native type, session, thread and teardown checks.</summary>
+[<Literal>]
+let private ValueFactoryChecksCount = 112
+
+let private runValueFactories () =
+    let host = WebCoreHost.Create (320, 240)
+    let other = WebCoreHost.Create (64, 64)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let raisesType (accept: exn -> bool) (action: unit -> unit) =
+        try
+            action ()
+            false
+        with error ->
+            accept error
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                ValueFactoryChecks.run host.Document (fun () -> Ranvier.View.WebCore.ValueFactories.forHost host)
+
+            let service = Ranvier.View.WebCore.ValueFactories.forHost host
+            let foreign = Ranvier.View.WebCore.ValueFactories.forHost other
+            let options = Ranvier.Dom.EventOptions.Default
+            let text = service.CreateText "kept"
+
+            let wheel =
+                service.CreateWheelEvent ("wheel", options, Ranvier.Dom.MouseFields.Default, Ranvier.Dom.WheelFields.Default)
+
+            expect (box text :? Ranvier.Dom.Text) "A constructed Text wraps as Text"
+            expect (box wheel :? Ranvier.Dom.WheelEvent) "A constructed WheelEvent wraps as WheelEvent"
+            expect (box (service.CreateRange ()) :? Ranvier.Dom.Range) "A constructed Range wraps as Range"
+            expect (box (service.CreateStaticRange (text, 0u, text, 1u)) :? Ranvier.Dom.StaticRange) "A constructed StaticRange wraps as StaticRange"
+
+            expect
+                (box (service.MatrixFromFloat64Array [| 1.0; 0.0; 0.0; 1.0; 0.0; 0.0 |]) :? Ranvier.Dom.DOMMatrix)
+                "fromFloat64Array wraps as DOMMatrix"
+
+            expect
+                (raisesType (fun error -> error :? System.ArgumentNullException) (fun () -> service.CreateText null |> ignore))
+                "A null Text data raises ArgumentNullException"
+
+            expect
+                (raisesType (fun error -> error :? System.ArgumentException) (fun () ->
+                    service.CreateWheelEvent (
+                        "wheel",
+                        options,
+                        Ranvier.Dom.MouseFields.Default,
+                        { Ranvier.Dom.WheelFields.Default with
+                            DeltaY = infinity
+                        }
+                    )
+                    |> ignore))
+                "An infinite delta raises ArgumentException"
+
+            let foreignText = foreign.CreateText "z"
+            expect (System.Object.ReferenceEquals (foreignText.ownerDocument, other.Document)) "Another host's service makes nodes of its document"
+
+            expect
+                (raisesType (fun error -> error :? System.ArgumentException) (fun () ->
+                    service.CreateStaticRange (foreignText, 0u, text, 0u)
+                    |> ignore))
+                "A StaticRange container of another host raises ArgumentException"
+
+            expect
+                (raisesType (fun error -> error :? System.ArgumentException) (fun () ->
+                    service.CreatePointerEvent (
+                        "pointermove",
+                        options,
+                        { Ranvier.Dom.MouseFields.Default with
+                            RelatedTarget = foreignText
+                        },
+                        Ranvier.Dom.PointerFields.Default
+                    )
+                    |> ignore))
+                "A related target of another host raises ArgumentException"
+
+            let foreignPointer =
+                foreign.CreatePointerEvent ("pointermove", options, Ranvier.Dom.MouseFields.Default, Ranvier.Dom.PointerFields.Default)
+
+            expect
+                (raisesType (fun error -> error :? System.ArgumentException) (fun () ->
+                    service.CreatePointerEvent (
+                        "pointermove",
+                        options,
+                        Ranvier.Dom.MouseFields.Default,
+                        { Ranvier.Dom.PointerFields.Default with
+                            CoalescedEvents = [| foreignPointer |]
+                        }
+                    )
+                    |> ignore))
+                "A coalesced event of another host raises ArgumentException"
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () -> raisesType (fun error -> error :? System.InvalidOperationException) (fun () -> service.CreateText "w" |> ignore))
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "A factory rejects another thread"
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            expect (text.data = "kept") "A constructed node survives document replacement"
+            expect (wheel.deltaX = 0.0) "A constructed event survives document replacement"
+            foreign.Dispose ()
+            held <- Some (service, text)
+            count
+        finally
+            (other :> System.IDisposable).Dispose()
+            (host :> System.IDisposable).Dispose()
+
+    let service, text = held.Value
+
+    expect
+        (raisesType (fun error -> error :? System.ObjectDisposedException) (fun () -> text.data |> ignore))
+        "A constructed Text raises ObjectDisposedException after host disposal"
+
+    expect
+        (raisesType
+            (fun error ->
+                error :? System.ObjectDisposedException
+                || error :? System.InvalidOperationException)
+            (fun () -> service.CreateComment "c" |> ignore))
+        "A factory after host disposal raises"
+
+    expect (session.LiveObjects = 0) "Value factory fixture leaves no live native objects"
+    service.Dispose ()
+
+    expect
+        (raisesType (fun error -> error :? System.ObjectDisposedException) (fun () -> service.CreateRange () |> ignore))
+        "A factory after disposal raises ObjectDisposedException"
+
+    if shared <> ValueFactoryChecksCount then
+        failwith $"Value factory shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API D17 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API D17 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared form submission fixture with native exception, thread and teardown checks.</summary>
 [<Literal>]
 let private SubmissionChecksCount = 26
@@ -1472,7 +2076,7 @@ let private runSubmissions () =
 
 /// <summary>Runs the shared text segmentation fixture with native thread and teardown checks.</summary>
 [<Literal>]
-let private SegmentChecksCount = 219
+let private SegmentChecksCount = 220
 
 let private runSegments () =
     let host = WebCoreHost.Create (320, 240)
@@ -1492,10 +2096,7 @@ let private runSegments () =
     let shared =
         try
             let count =
-                TextSegmentationChecks.run
-                    (fun () -> Ranvier.View.WebCore.TextSegmentation.forHost host)
-                    errorName
-                    (TextSegmentationChecks.WebKit (System.OperatingSystem.IsMacOS ()))
+                TextSegmentationChecks.run (fun () -> Ranvier.View.WebCore.TextSegmentation.forHost host) errorName TextSegmentationChecks.WebKit
 
             use segmenter = Ranvier.View.WebCore.TextSegmentation.forHost host
 
@@ -1681,6 +2282,97 @@ let private runStrings () =
     System.Console.WriteLine $"NATIVE_API WC142 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>
+/// Runs the shared U+0000 event-type fixture (WebCore #145), then the host inputs that have no browser equivalent:
+/// key text, input-method composition and commit, clipboard data in and out, and SVG markup.
+/// </summary>
+[<Literal>]
+let private HostStringChecksCount = 5
+
+let private runHostStrings () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+    let mutable inputs = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let equal label (expected: string) (actual: string) =
+        inputs <- inputs + 1
+
+        if actual <> expected then
+            failwith $"U+0000 host input {label}: expected %A{expected}, got %A{actual}"
+
+    let shared =
+        try
+            let count =
+                HostStringChecks.run host.Document (fun () -> Ranvier.View.WebCore.EventConstruction.forHost host)
+
+            let document = host.Document
+            let area = unbox<Ranvier.Dom.HTMLTextAreaElement>(document.createElement "textarea")
+            document.body.appendChild area |> ignore
+            host.SetFocused true
+            area.focus ()
+
+            host.Key (2, "a", "KeyA", "a\u0000b", 0, false)
+            |> ignore
+
+            equal "key text" "a\u0000b" area.value
+            area.value <- ""
+            host.SetComposition ("c\u0000d", 3, 3)
+            host.CommitComposition "c\u0000d"
+            equal "composition commit" "c\u0000d" area.value
+            let written = ResizeArray<struct (string * string)>()
+            host.SetClipboard ((fun kind data _ -> written.Add (struct (kind, data))), (fun () -> [ struct ("text/plain", "p\u0000q") ]))
+            area.value <- ""
+
+            host.Key (0, "v", "KeyV", null, 2, false)
+            |> ignore
+
+            equal "clipboard paste" "p\u0000q" area.value
+            area.value <- "aé中\U0001F600b"
+
+            host.Key (0, "a", "KeyA", null, 2, false)
+            |> ignore
+
+            host.Key (0, "c", "KeyC", null, 2, false)
+            |> ignore
+
+            let plain =
+                [
+                    for struct (kind, data) in written do
+                        if kind = "text/plain" then
+                            data
+                ]
+
+            equal "clipboard copy" "aé中\U0001F600b" (String.concat "|" plain)
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"><text>a</text></svg>\u0000<!--tail-->"
+
+            equal
+                "SVG markup after U+0000"
+                "parsererror"
+                (match host.Document.querySelector "parsererror" with
+                 | null -> "none"
+                 | _ -> "parsererror")
+
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "U+0000 host input fixture leaves no live native objects"
+
+    if shared <> HostStringChecksCount then
+        failwith $"U+0000 event-type shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API WC145 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API WC145 HOST PASS assertions={inputs}"
+    System.Console.WriteLine $"NATIVE_API WC145 LIFETIME PASS assertions={lifetime}"
+    shared
+
 /// <summary>Runs the shared custom highlight fixture with native thread, document replacement and teardown checks.</summary>
 [<Literal>]
 let private HighlightChecksCount = 35
@@ -1746,6 +2438,230 @@ let private runHighlights () =
 
     System.Console.WriteLine $"NATIVE_API T03 PASS assertions={shared}"
     System.Console.WriteLine $"NATIVE_API T03 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared canvas context fixture with native paint, thread and teardown checks.</summary>
+[<Literal>]
+let private CanvasChecksCount = 41
+
+[<Literal>]
+let private CanvasPathChecksCount = 43
+
+[<Literal>]
+let private CanvasStateChecksCount = 26
+
+[<Literal>]
+let private CanvasPaintChecksCount = 35
+
+let private runCanvas () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    let mutable held = None
+    let mutable paths = 0
+    let mutable state = 0
+    let mutable paints = 0
+
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let shared =
+        try
+            let count =
+                CanvasChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document
+
+            paths <- CanvasPathChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
+            state <- CanvasStateChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
+            paints <- CanvasPaintChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
+            let service = Ranvier.View.WebCore.Canvas.forHost host
+            let document = host.Document
+            document.body.innerHTML <- ""
+            document.body.setAttribute ("style", "margin:0;background:#fff")
+            let canvas = unbox<Ranvier.Dom.HTMLCanvasElement>(document.createElement "canvas")
+            canvas.setAttribute ("width", "40")
+            canvas.setAttribute ("height", "20")
+            canvas.setAttribute ("style", "display:block;width:40px;height:20px")
+            document.body.appendChild canvas |> ignore
+            let struct (width, height) = host.PaintSize
+            let rgba = Array.zeroCreate<byte>(width * height * 4)
+
+            let pixel x y =
+                host.Paint rgba
+                let at = (y * width + x) * 4
+                (int rgba[at], int rgba[at + 1], int rgba[at + 2], int rgba[at + 3])
+
+            expect (pixel 5 5 = (255, 255, 255, 255)) "A canvas without a context paints its fallback"
+
+            match service.GetContext (canvas, Ranvier.Dom.CanvasContextType.TwoD, Ranvier.Dom.Canvas2DSettings.Default) with
+            | Ranvier.Dom.CanvasContextOutcome.Context ctx ->
+                ctx.fillStyle <- Ranvier.Dom.DOMStringOrCanvasGradientOrCanvasPattern.DOMString "#ff0000"
+                ctx.fillRect (0.0, 0.0, 20.0, 20.0)
+                ctx.fillStyle <- Ranvier.Dom.DOMStringOrCanvasGradientOrCanvasPattern.DOMString "rgb(0, 0, 255)"
+                ctx.fillRect (20.0, 0.0, 20.0, 20.0)
+                expect (pixel 5 5 = (255, 0, 0, 255)) "The host paints the canvas bitmap's red half"
+                expect (pixel 30 5 = (0, 0, 255, 255)) "The host paints the canvas bitmap's blue half"
+                canvas.width <- canvas.width
+                expect (pixel 5 5 = (255, 255, 255, 255)) "A width assignment clears the painted bitmap"
+
+                let wrongThread =
+                    System.Threading.Tasks.Task.Run(fun () -> rejected (fun () -> service.Attributes ctx |> ignore)).GetAwaiter().GetResult()
+
+                expect wrongThread "getContextAttributes rejects another thread"
+            | _ -> failwith "The paint canvas has no 2D context"
+
+            held <- Some service
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Canvas fixture leaves no live native objects"
+    let service = held.Value
+    expect (rejected (fun () -> service.Attributes null |> ignore)) "A held canvas service rejects calls after host disposal"
+    service.Dispose ()
+
+    if shared <> CanvasChecksCount then
+        failwith $"Canvas shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API R01 PASS assertions={shared}"
+
+    if paths <> CanvasPathChecksCount then
+        failwith $"Canvas path shared assertions did not run: {paths}"
+
+    System.Console.WriteLine $"NATIVE_API R02 PASS assertions={paths}"
+
+    if state <> CanvasStateChecksCount then
+        failwith $"Canvas state shared assertions did not run: {state}"
+
+    System.Console.WriteLine $"NATIVE_API R03 PASS assertions={state}"
+
+    if paints <> CanvasPaintChecksCount then
+        failwith $"Canvas paint shared assertions did not run: {paints}"
+
+    System.Console.WriteLine $"NATIVE_API R04 PASS assertions={paints}"
+    System.Console.WriteLine $"NATIVE_API R01 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared canvas pixel fixture with native thread and teardown checks.</summary>
+[<Literal>]
+let private CanvasPixelChecksCount = 36
+
+let private runCanvasPixels () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let errorName =
+        function
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    let mutable held = None
+
+    let shared =
+        try
+            let count =
+                CanvasPixelChecks.run
+                    (fun () -> Ranvier.View.WebCore.Canvas.forHost host)
+                    (fun () -> Ranvier.View.WebCore.CanvasPixels.forHost host)
+                    host.Document
+                    errorName
+
+            let service = Ranvier.View.WebCore.CanvasPixels.forHost host
+            let image = service.Create (1, 1)
+
+            let wrongThread =
+                System.Threading.Tasks.Task.Run(fun () -> rejected (fun () -> service.Layout image |> ignore)).GetAwaiter().GetResult()
+
+            expect wrongThread "ImageData layout rejects another thread"
+            held <- Some (service, image)
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Canvas pixel fixture leaves no live native objects"
+    let service, image = held.Value
+    expect (rejected (fun () -> service.Read (image, 0, 4) |> ignore)) "A held ImageData service rejects calls after host disposal"
+    service.Dispose ()
+
+    if shared <> CanvasPixelChecksCount then
+        failwith $"Canvas pixel shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API R06 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API R06 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared canvas export fixture with native teardown checks.</summary>
+[<Literal>]
+let private CanvasExportChecksCount = 40
+
+let private runCanvasExport () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+
+    let shared =
+        try
+            let driver: CanvasExportChecks.Driver =
+                {
+                    Settle = fun () -> async { host.Cycle () |> ignore }
+                }
+
+            let count =
+                CanvasExportChecks.run
+                    (fun () -> Ranvier.View.WebCore.Canvas.forHost host)
+                    (fun () -> Ranvier.View.WebCore.CanvasPixels.forHost host)
+                    (fun () -> Ranvier.View.WebCore.CanvasExport.forHost host)
+                    host.Document
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 120000L do
+                host.Cycle () |> ignore
+
+            count.GetAwaiter().GetResult()
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith "Canvas export fixture leaves live native objects"
+
+    if shared <> CanvasExportChecksCount then
+        failwith $"Canvas export shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API R07 PASS assertions={shared}"
     shared
 
 /// <summary>Runs the shared diagnostics fixture with native thread, snapshot release and teardown checks.</summary>
@@ -1983,6 +2899,135 @@ let private runBlobUrls () =
     System.Console.WriteLine $"NATIVE_API B144 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared media capability fixture and the host-disposal check.</summary>
+[<Literal>]
+let private MediaCapabilityChecksCount = 107
+
+let private runMediaCapabilities () =
+    let host = WebCoreHost.Create (320, 200)
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let driver: MediaCapabilityChecks.Driver =
+        {
+            Settle = fun () -> async { host.Cycle () |> ignore }
+            Rejected = MediaCapabilityChecks.webkitRejected
+            // No flavor has a media engine configuration provider (the media-decoding-provider capability).
+            Answer =
+                Some
+                    {
+                        Supported = false
+                        Smooth = false
+                        PowerEfficient = false
+                    }
+        }
+
+    let shared =
+        let count =
+            MediaCapabilityChecks.run (fun () -> Ranvier.View.WebCore.MediaCapabilities.forHost host) driver
+            |> Async.StartImmediateAsTask
+
+        let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+        while not count.IsCompleted
+              && timeout.ElapsedMilliseconds < 120000L do
+            host.Cycle () |> ignore
+
+        count.GetAwaiter().GetResult()
+
+    // Host disposal ends a query not yet delivered and rejects later queries.
+    let service = Ranvier.View.WebCore.MediaCapabilities.forHost host
+    let mutable outcome = None
+
+    let pending =
+        service.DecodingInfo (
+            Ranvier.Dom.MediaDecodingType.File,
+            Some
+                {
+                    ContentType = "video/webm;codecs=\"vp8\""
+                    Width = 640u
+                    Height = 360u
+                    Bitrate = 1000000UL
+                    Framerate = 30.0
+                    AlphaChannel = None
+                    HdrMetadataType = None
+                    ColorGamut = None
+                    TransferFunction = None
+                },
+            None,
+            fun value -> outcome <- Some value
+        )
+
+    expect outcome.IsNone "A query is not delivered inside the starting call"
+    (host :> System.IDisposable).Dispose()
+
+    expect (outcome = Some (Ranvier.Dom.ResourceOutcome.Failed Ranvier.Dom.ResourceFailure.Cancelled)) "Host disposal ends a query in flight"
+
+    let rejected =
+        try
+            service.DecodingInfo (Ranvier.Dom.MediaDecodingType.File, None, None, ignore)
+            |> ignore
+
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    expect rejected "A held media capability service rejects queries after host disposal"
+    pending.Dispose ()
+    service.Dispose ()
+
+    if shared <> MediaCapabilityChecksCount then
+        failwith $"Media capability shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API B06 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API B06 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared snapshot fixture on a host with a 20 by 10 red element.</summary>
+[<Literal>]
+let private SnapshotChecksCount = 23
+
+let private runSnapshots () =
+    let host = WebCoreHost.Create (40, 30)
+
+    try
+        let red = host.Document.createElement "div"
+        red.setAttribute ("style", "position:absolute;left:5px;top:4px;width:20px;height:10px;background:rgb(255,0,0)")
+        host.Document.body.appendChild red |> ignore
+
+        let driver: SnapshotChecks.Driver =
+            {
+                Settle = fun () -> async { host.Cycle () |> ignore }
+                Red = red
+                DeviceScale = 1.0
+            }
+
+        let count =
+            SnapshotChecks.run (fun () -> Ranvier.View.WebCore.Snapshots.forHost host) driver
+            |> Async.StartImmediateAsTask
+
+        let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+        while not count.IsCompleted
+              && timeout.ElapsedMilliseconds < 120000L do
+            host.Cycle () |> ignore
+
+        let shared = count.GetAwaiter().GetResult()
+
+        if shared <> SnapshotChecksCount then
+            failwith $"Snapshot shared assertions did not run: {shared}"
+
+        System.Console.WriteLine $"NATIVE_API R12 PASS assertions={shared}"
+        shared
+    finally
+        (host :> System.IDisposable).Dispose()
+
 /// <summary>Runs the shared coordinate fixture with page scale, thread and teardown checks.</summary>
 [<Literal>]
 let private CoordinateChecksCount = 304
@@ -2107,6 +3152,446 @@ let private runCoordinates () =
     System.Console.WriteLine $"NATIVE_API G14 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs the shared Web Animations fixture with native thread, disposal and handle-lifetime checks.</summary>
+[<Literal>]
+let private AnimationChecksCount = 110
+
+[<Literal>]
+let private AnimationEffectChecksCount = 54
+
+[<Literal>]
+let private AnimationDiscoveryChecksCount = 33
+
+[<Literal>]
+let private AnimationCommitChecksCount = 9
+
+/// <summary>Runs the shared custom effect fixture on the host's frames, with the provider's native lifetime checks.</summary>
+[<Literal>]
+let private CustomEffectChecksCount = 23
+
+let private runCustomEffects () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let errorName =
+        function
+        | Ranvier.Dom.AnimationException (name, _) -> name
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let driver: CustomEffectChecks.Driver =
+        {
+            NextFrame =
+                fun () ->
+                    async {
+                        host.Frame ()
+                        host.Cycle ()
+                        host.Cycle ()
+                    }
+            RoutedErrors = fun () -> session.ListenerErrors.Count
+        }
+
+    let shared =
+        try
+            (CustomEffectChecks.run
+                host.Document
+                (fun () -> Ranvier.View.WebCore.CustomEffects.forHost host)
+                (fun () -> Ranvier.View.WebCore.Animations.forHost host)
+                (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost host)
+                errorName
+                driver
+             |> Async.StartImmediateAsTask)
+                .GetAwaiter()
+                .GetResult()
+        with error ->
+            (host :> System.IDisposable).Dispose()
+            raise error
+
+    session.ListenerErrors.Clear ()
+    let service = Ranvier.View.WebCore.CustomEffects.forHost host
+
+    let wrongThread =
+        System.Threading.Tasks.Task
+            .Run(fun () ->
+                try
+                    service.CreateCustomEffectFor (ignore, 100.0)
+                    |> ignore
+
+                    false
+                with :? System.InvalidOperationException ->
+                    true)
+            .GetAwaiter()
+            .GetResult()
+
+    expect wrongThread "A custom effect service rejects another thread"
+    let mutable ticks = 0
+
+    let held =
+        service.Animate ((fun _ -> ticks <- ticks + 1), Ranvier.Dom.CustomAnimationOptions ())
+
+    host.Frame ()
+    let atDisposal = ticks
+    (host :> System.IDisposable).Dispose()
+    expect (ticks = atDisposal) "No tick runs after host disposal"
+    held.Dispose ()
+    service.Dispose ()
+
+    let rejected =
+        try
+            service.CreateCustomEffectFor (ignore, 100.0)
+            |> ignore
+
+            false
+        with _ ->
+            true
+
+    expect rejected "A disposed custom effect service rejects construction"
+
+    if
+        CustomEffectChecksCount <> 0
+        && shared <> CustomEffectChecksCount
+    then
+        failwith $"Custom effect shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API A09 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API A09 LIFETIME PASS assertions={lifetime}"
+    shared
+
+let private runAnimations () =
+    let host = WebCoreHost.Create (320, 240)
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let errorName =
+        function
+        | Ranvier.Dom.AnimationException (name, _) -> name
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let shared =
+        try
+            AnimationChecks.run
+                host.Document
+                (fun () -> Ranvier.View.WebCore.Animations.forHost host)
+                (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost host)
+                errorName
+        with error ->
+            (host :> System.IDisposable).Dispose()
+            raise error
+
+    let service = Ranvier.View.WebCore.Animations.forHost host
+    let body = host.Document.body
+
+    let wrongThread =
+        System.Threading.Tasks.Task
+            .Run(fun () ->
+                try
+                    service.CreateDocumentTimeline () |> ignore
+                    false
+                with :? System.InvalidOperationException ->
+                    true)
+            .GetAwaiter()
+            .GetResult()
+
+    expect wrongThread "An animation service rejects another thread"
+    let held = body.animate ([||], 1000.0)
+    let effect = service.CreateKeyframeEffectFor (body, [||], 1000.0)
+    expect (held.playState = Ranvier.Dom.AnimationPlayState.Running) "An animation held across host disposal runs"
+    (host :> System.IDisposable).Dispose()
+
+    let rejected =
+        try
+            service.CreateAnimation effect |> ignore
+            false
+        with _ ->
+            true
+
+    expect rejected "A held animation service rejects construction after host disposal"
+    service.Dispose ()
+
+    if shared <> AnimationChecksCount then
+        failwith $"Web Animations shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API A01 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API A01 LIFETIME PASS assertions={lifetime}"
+    let effectHost = WebCoreHost.Create (320, 240)
+
+    let effects =
+        try
+            AnimationEffectChecks.run effectHost.Document (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost effectHost) errorName
+        finally
+            (effectHost :> System.IDisposable).Dispose()
+
+    if effects <> AnimationEffectChecksCount then
+        failwith $"Web Animations effect assertions did not run: {effects}"
+
+    System.Console.WriteLine $"NATIVE_API A02 PASS assertions={effects}"
+    let discoveryHost = WebCoreHost.Create (320, 240)
+
+    let discovery, commits =
+        try
+            AnimationDiscoveryChecks.run discoveryHost.Document (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost discoveryHost)
+        finally
+            (discoveryHost :> System.IDisposable).Dispose()
+
+    if
+        (discovery, commits)
+        <> (AnimationDiscoveryChecksCount, AnimationCommitChecksCount)
+    then
+        failwith $"Web Animations discovery assertions did not run: {discovery} {commits}"
+
+    System.Console.WriteLine $"NATIVE_API A05 PASS assertions={discovery}"
+    System.Console.WriteLine $"NATIVE_API A04 PASS assertions={commits}"
+    shared
+
+/// <summary>Drives a shared async fixture on the host until it completes.</summary>
+let private driveAsync (host: WebCoreHost) (work: Async<int>) =
+    let task = work |> Async.StartImmediateAsTask
+    let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+    while not task.IsCompleted
+          && timeout.ElapsedMilliseconds < 120000L do
+        host.Cycle () |> ignore
+
+    task.GetAwaiter().GetResult()
+
+let private settleFrame (host: WebCoreHost) () =
+    async {
+        host.Cycle () |> ignore
+        host.Frame ()
+        host.Cycle () |> ignore
+        System.Threading.Thread.Sleep 2
+    }
+
+/// <summary>Runs the shared animation lifecycle fixture with native host, thread and invalidation checks.</summary>
+[<Literal>]
+let private AnimationLifecycleChecksCount = 29
+
+let private runAnimationLifecycle () =
+    let host = WebCoreHost.Create (320, 240)
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let shared =
+        try
+            AnimationLifecycleChecks.run host.Document (fun () -> Ranvier.View.WebCore.Animations.forHost host) { Settle = settleFrame host }
+            |> driveAsync host
+        with error ->
+            (host :> System.IDisposable).Dispose()
+            raise error
+
+    let service = Ranvier.View.WebCore.Animations.forHost host
+    let animation = host.Document.body.animate ([||], 100000.0)
+
+    let wrongThread =
+        System.Threading.Tasks.Task
+            .Run(fun () ->
+                try
+                    service.Ready (animation, ignore) |> ignore
+                    false
+                with :? System.InvalidOperationException ->
+                    true)
+            .GetAwaiter()
+            .GetResult()
+
+    expect wrongThread "Animation.ready rejects another thread"
+    let other = WebCoreHost.Create (64, 64)
+    let foreign = other.Document.body.animate ([||], 1000.0)
+
+    let wrongHost =
+        try
+            service.Finished (foreign, ignore) |> ignore
+            false
+        with :? System.ArgumentException ->
+            true
+
+    expect wrongHost "Animation.finished rejects an animation of another document"
+    (other :> System.IDisposable).Dispose()
+    let outcomes = System.Collections.Generic.List<string>()
+
+    let pending =
+        service.Finished (
+            animation,
+            fun outcome ->
+                outcomes.Add (
+                    match outcome with
+                    | Ranvier.Dom.ResourceOutcome.Failed (Ranvier.Dom.ResourceFailure.Invalidated _) -> "invalidated"
+                    | other -> string other
+                )
+        )
+
+    (host :> System.IDisposable).Dispose()
+    expect (List.ofSeq outcomes = [ "invalidated" ]) "Host disposal invalidates a pending Animation.finished"
+    pending.Dispose ()
+    expect (outcomes.Count = 1) "Disposing an invalidated operation delivers nothing more"
+    service.Dispose ()
+
+    if shared <> AnimationLifecycleChecksCount then
+        failwith $"Animation lifecycle shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API A03 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API A03 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared typed animation and transition event fixture.</summary>
+[<Literal>]
+let private AnimationEventChecksCount = 9
+
+let private runAnimationEvents () =
+    let host = WebCoreHost.Create (320, 240)
+
+    let interfaceName (event: Ranvier.Dom.Event) =
+        match box event with
+        | :? Ranvier.Dom.AnimationPlaybackEvent -> "AnimationPlaybackEvent"
+        | :? Ranvier.Dom.AnimationEvent -> "AnimationEvent"
+        | :? Ranvier.Dom.TransitionEvent -> "TransitionEvent"
+        | value -> value.GetType().Name
+
+    let shared =
+        try
+            AnimationEventChecks.run
+                host.Document
+                {
+                    Settle = settleFrame host
+                    InterfaceName = interfaceName
+                }
+            |> driveAsync host
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    if shared <> AnimationEventChecksCount then
+        failwith $"Animation event shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API A10 PASS assertions={shared}"
+    shared
+
+/// <summary>Runs the shared animation timeline fixture, then reads a held timeline past host disposal.</summary>
+[<Literal>]
+let private TimelineChecksCount = 24
+
+[<Literal>]
+let private ScrollTimelineChecksCount = 38
+
+[<Literal>]
+let private ViewTimelineChecksCount = 54
+
+let private runTimelines () =
+    let host = WebCoreHost.Create (320, 240)
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let settle () =
+        async {
+            host.Frame ()
+            host.Frame ()
+        }
+
+    let errorName =
+        function
+        | Ranvier.Dom.AnimationException (name, _) -> name
+        | WebCoreDomException (name, _) -> name
+        | error -> error.GetType().Name
+
+    let shared, scroll, view =
+        try
+            let shared =
+                TimelineChecks.runDocumentTimelines host.Document (fun () -> Ranvier.View.WebCore.Animations.forHost host)
+
+            let scroll =
+                TimelineChecks.runScrollTimelines
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.Timelines.forHost host)
+                    (fun () -> Ranvier.View.WebCore.ComputedStyles.forHost host)
+                    settle
+                |> fun work -> (Async.StartImmediateAsTask work).GetAwaiter().GetResult()
+
+            let view =
+                TimelineChecks.runViewTimelines host.Document (fun () -> Ranvier.View.WebCore.Timelines.forHost host) settle errorName
+                |> fun work -> (Async.StartImmediateAsTask work).GetAwaiter().GetResult()
+
+            shared, scroll, view
+        with error ->
+            (host :> System.IDisposable).Dispose()
+            raise error
+
+    let timelines = Ranvier.View.WebCore.Timelines.forHost host
+    let heldScroll = timelines.CreateScrollTimeline host.Document.body
+
+    let service = Ranvier.View.WebCore.Animations.forHost host
+    let held = service.CreateDocumentTimeline 100.0
+    let document = host.Document.timeline
+    expect held.currentTime.IsSome "A new DocumentTimeline has a current time"
+    (host :> System.IDisposable).Dispose()
+
+    let afterDisposal (timeline: Ranvier.Dom.AnimationTimeline) =
+        try
+            timeline.currentTime.IsNone
+        with _ ->
+            true
+
+    expect (afterDisposal held) "A held DocumentTimeline reads no current time after host disposal"
+    expect (afterDisposal document) "document.timeline reads no current time after host disposal"
+    expect (afterDisposal heldScroll) "A held ScrollTimeline reads no current time after host disposal"
+
+    let rejected =
+        try
+            timelines.CreateScrollTimeline () |> ignore
+            false
+        with _ ->
+            true
+
+    expect rejected "A held timeline service rejects construction after host disposal"
+    service.Dispose ()
+    timelines.Dispose ()
+
+    if
+        TimelineChecksCount <> 0
+        && shared <> TimelineChecksCount
+    then
+        failwith $"Animation timeline shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API A06 PASS assertions={shared}"
+
+    if
+        ScrollTimelineChecksCount <> 0
+        && scroll <> ScrollTimelineChecksCount
+    then
+        failwith $"Scroll timeline shared assertions did not run: {scroll}"
+
+    System.Console.WriteLine $"NATIVE_API A06 LIFETIME PASS assertions={lifetime}"
+
+    if
+        ViewTimelineChecksCount <> 0
+        && view <> ViewTimelineChecksCount
+    then
+        failwith $"View timeline shared assertions did not run: {view}"
+
+    System.Console.WriteLine $"NATIVE_API A07 PASS assertions={scroll}"
+    System.Console.WriteLine $"NATIVE_API A08 PASS assertions={view}"
+    shared + scroll + view
+
 /// <summary>Runs the shared cascade fixture with native thread, snapshot release and teardown checks.</summary>
 [<Literal>]
 let private CascadeChecksCount = 609
@@ -2185,6 +3670,454 @@ let private runCascade () =
 
     System.Console.WriteLine $"NATIVE_API C25 PASS assertions={shared}"
     System.Console.WriteLine $"NATIVE_API C25 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared resize observation fixture with thread, document replacement and teardown checks.</summary>
+[<Literal>]
+let private ResizeObservationChecksCount = 35
+
+let private runResizeObservation () =
+    let host = WebCoreHost.Create (800, 600)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let mutable held = None
+    let mutable heldEntry = None
+
+    let shared =
+        try
+            let driver: ResizeObservationChecks.Driver =
+                {
+                    Update = fun () -> async { host.Frame () }
+                    Errors = fun () -> host.Errors.Count
+                    Engine = ResizeObservationChecks.Native
+                }
+
+            let count =
+                ResizeObservationChecks.run
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.ResizeObservation.forHost host)
+                    (fun () -> Ranvier.View.WebCore.Cancellation.forHost host)
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 20000L do
+                host.Cycle ()
+
+            let count = count.GetAwaiter().GetResult()
+            let service = Ranvier.View.WebCore.ResizeObservation.forHost host
+            let body = host.Document.body
+            let delivered = System.Collections.Generic.List<string>()
+
+            let observer =
+                service.Create (fun entries ->
+                    for entry in entries do
+                        delivered.Add (
+                            entry.Target.nodeName
+                            + " "
+                            + string entry.ContentRect.Width
+                        )
+
+                    heldEntry <- Some entries[0])
+
+            observer.Observe body
+            host.Frame ()
+
+            expect
+                (List.ofSeq delivered = [ "BODY 784" ])
+                ("The body is observed inside its 8px margins: "
+                 + System.String.Join (",", delivered))
+
+            let wrongThread (action: unit -> unit) =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            action ()
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect (wrongThread (fun () -> observer.Observe body)) "Observe rejects another thread"
+            expect (wrongThread (fun () -> observer.Disconnect ())) "Disconnect rejects another thread"
+
+            expect
+                (wrongThread (fun () ->
+                    Ranvier.View.WebCore.ResizeObservation.forHost host
+                    |> ignore))
+                "forHost rejects another thread"
+
+            let other = WebCoreHost.Create (100, 80)
+
+            let foreign =
+                try
+                    observer.Observe other.Document.body
+                    false
+                with :? System.ArgumentException ->
+                    true
+
+            (other :> System.IDisposable).Dispose()
+            expect foreign "An element of another host is rejected"
+
+            // The replaced document's observer delivers nothing; a new observer observes the replacing document.
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"30\" height=\"20\"/>"
+            host.Resize (700, 600)
+            host.Frame ()
+            expect (delivered.Count = 1) "The replaced document's observer delivers nothing"
+
+            let replacing =
+                service.Create (fun entries -> delivered.Add (string entries.Length))
+
+            replacing.Observe host.Document.documentElement
+            host.Frame ()
+
+            expect
+                (List.ofSeq delivered = [ "BODY 784"; "1" ])
+                ("The replacing document is observed: "
+                 + System.String.Join (",", delivered))
+
+            held <- Some (service, observer)
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Resize observation leaves no live native objects"
+    let service, observer = held.Value
+
+    let rejected (action: unit -> unit) =
+        try
+            action ()
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect (rejected (fun () -> observer.Observe Unchecked.defaultof<Ranvier.Dom.Element>)) "A held observer rejects Observe after host disposal"
+    expect (rejected (fun () -> service.Create ignore |> ignore)) "A held service rejects Create after host disposal"
+    observer.Dispose ()
+    service.Dispose ()
+    let entry = heldEntry.Value
+
+    expect
+        (entry.ContentRect.Width = 784.0
+         && entry.BorderBoxSize.Length = 1)
+        "An entry held past host disposal keeps its copied values"
+
+    if shared <> ResizeObservationChecksCount then
+        failwith $"Resize observation shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API G10 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G10 LIFETIME PASS assertions={lifetime}"
+    shared
+
+/// <summary>Runs the shared intersection observation fixture with thread, root, document replacement and teardown
+/// checks.</summary>
+[<Literal>]
+let private IntersectionObservationChecksCount = 40
+
+let private runIntersectionObservation () =
+    let width, height = IntersectionObservationChecks.Viewport
+    let host = WebCoreHost.Create (width, height)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let mutable held = None
+    let mutable heldEntry = None
+
+    let shared =
+        try
+            let driver: IntersectionObservationChecks.Driver =
+                {
+                    Update = fun () -> async { host.Frame () }
+                    Errors = fun () -> host.Errors.Count
+                    Engine = IntersectionObservationChecks.Native
+                }
+
+            let count =
+                IntersectionObservationChecks.run
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.IntersectionObservation.forHost host)
+                    (fun () -> Ranvier.View.WebCore.Timing.forHost host)
+                    (fun () -> Ranvier.View.WebCore.Cancellation.forHost host)
+                    driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 20000L do
+                host.Cycle ()
+
+            let count = count.GetAwaiter().GetResult()
+            let service = Ranvier.View.WebCore.IntersectionObservation.forHost host
+            let body = host.Document.body
+            let delivered = System.Collections.Generic.List<string>()
+
+            let observer =
+                service.Create (
+                    (fun entries ->
+                        for entry in entries do
+                            delivered.Add (
+                                entry.Target.nodeName
+                                + " "
+                                + string entry.IsIntersecting
+                            )
+
+                        heldEntry <- Some entries[0]),
+                    Ranvier.Dom.IntersectionObserverInit.Default
+                )
+
+            observer.Observe body
+            host.Frame ()
+
+            expect
+                (List.ofSeq delivered = [ "BODY True" ])
+                ("The body intersects the viewport: "
+                 + System.String.Join (",", delivered))
+
+            let wrongThread (action: unit -> unit) =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            action ()
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect (wrongThread (fun () -> observer.Observe body)) "Observe rejects another thread"
+            expect (wrongThread (fun () -> observer.TakeRecords () |> ignore)) "TakeRecords rejects another thread"
+            expect (wrongThread (fun () -> service.Now () |> ignore)) "Now rejects another thread"
+
+            expect
+                (wrongThread (fun () ->
+                    Ranvier.View.WebCore.IntersectionObservation.forHost host
+                    |> ignore))
+                "forHost rejects another thread"
+
+            let other = WebCoreHost.Create (100, 80)
+
+            let rejected (action: unit -> unit) =
+                try
+                    action ()
+                    false
+                with :? System.ArgumentException ->
+                    true
+
+            let foreignTarget = rejected (fun () -> observer.Observe other.Document.body)
+
+            let foreignRoot =
+                rejected (fun () ->
+                    service.Create (
+                        ignore,
+                        { Ranvier.Dom.IntersectionObserverInit.Default with
+                            Root = Ranvier.Dom.IntersectionObserverRoot.Element other.Document.body
+                        }
+                    )
+                    |> ignore)
+
+            (other :> System.IDisposable).Dispose()
+            expect foreignTarget "A target of another host is rejected"
+            expect foreignRoot "A root of another host is rejected"
+            let before = service.Now ()
+
+            // The replaced document's observer delivers nothing; a new observer observes the replacing document.
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"30\" height=\"20\"/>"
+            host.Frame ()
+            expect (delivered.Count = 1) "The replaced document's observer delivers nothing"
+            expect (observer.TakeRecords().Length = 0) "The replaced document's observer has no records"
+            expect (service.Now () >= before) "The replacing document keeps the time origin"
+
+            let replacing =
+                service.Create ((fun entries -> delivered.Add (string entries.Length)), Ranvier.Dom.IntersectionObserverInit.Default)
+
+            replacing.Observe host.Document.documentElement
+            host.Frame ()
+
+            expect
+                (List.ofSeq delivered = [ "BODY True"; "1" ])
+                ("The replacing document is observed: "
+                 + System.String.Join (",", delivered))
+
+            held <- Some (service, observer)
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Intersection observation leaves no live native objects"
+    let service, observer = held.Value
+
+    let disposed (action: unit -> unit) =
+        try
+            action ()
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect (disposed (fun () -> observer.Observe Unchecked.defaultof<Ranvier.Dom.Element>)) "A held observer rejects Observe after host disposal"
+    expect (observer.TakeRecords().Length = 0) "A held observer has no records after host disposal"
+
+    expect
+        (disposed (fun () ->
+            service.Create (ignore, Ranvier.Dom.IntersectionObserverInit.Default)
+            |> ignore))
+        "A held service rejects Create after host disposal"
+
+    observer.Dispose ()
+    service.Dispose ()
+    let entry = heldEntry.Value
+    expect (entry.IsIntersecting && entry.RootBounds.IsSome) "An entry held past host disposal keeps its copied values"
+
+    if shared <> IntersectionObservationChecksCount then
+        failwith (
+            "Intersection observation shared assertions did not run: "
+            + string shared
+        )
+
+    System.Console.WriteLine ("NATIVE_API G11 PASS assertions=" + string shared)
+
+    System.Console.WriteLine (
+        "NATIVE_API G11 LIFETIME PASS assertions="
+        + string lifetime
+    )
+
+    shared
+
+/// <summary>Runs the shared media query fixture (G01/G15) with native supply, thread and teardown checks.</summary>
+[<Literal>]
+let private MediaQueryChecksCount = 41
+
+let private runMediaQueries () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let settle () =
+        async {
+            for _ in 1..3 do
+                host.Frame ()
+                host.Cycle 20 |> ignore
+
+            host.Frame ()
+        }
+
+    let mutable held = None
+
+    let shared =
+        try
+            let supplier = Ranvier.View.WebCore.MediaQueries.forHost host
+
+            let driver: MediaQueryChecks.Driver =
+                {
+                    Apply =
+                        fun step ->
+                            async {
+                                host.Resize (step.Width, step.Height)
+                                host.SetDeviceScale (float32 step.Scale)
+                                supplier.Supply step.Preferences
+                                do! settle ()
+                            }
+                    Settle = settle
+                    Native = true
+                }
+
+            let count =
+                MediaQueryChecks.run (fun () -> Ranvier.View.WebCore.MediaQueries.forHost host) driver
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not count.IsCompleted
+                  && timeout.ElapsedMilliseconds < 60000L do
+                host.Cycle () |> ignore
+
+            let count = count.GetAwaiter().GetResult()
+
+            let service = Ranvier.View.WebCore.MediaQueries.forHost host
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            service.Supply Ranvier.Dom.MediaPreferences.Default
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Supply rejects another thread"
+            let dark = service.Match "(prefers-color-scheme: dark)"
+            let changes = ResizeArray<bool>()
+            use _ = dark.Subscribe changes.Add
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+
+            service.Supply
+                { Ranvier.Dom.MediaPreferences.Default with
+                    ColorScheme = Some Ranvier.Dom.ColorSchemePreference.Dark
+                }
+
+            settle () |> Async.StartImmediateAsTask |> ignore
+            expect (changes.Count = 0) "A query of a replaced document receives no change"
+            let fresh = service.Match "(prefers-color-scheme: dark)"
+            expect fresh.Matches "The replacing document sees the supplied preferences"
+            held <- Some (service, fresh)
+            supplier.Dispose ()
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Media query fixture leaves no live native objects"
+    let service, fresh = held.Value
+
+    let rejected =
+        try
+            service.Supply Ranvier.Dom.MediaPreferences.Default
+            false
+        with
+        | :? System.ObjectDisposedException
+        | :? System.InvalidOperationException -> true
+
+    expect rejected "A held media query service rejects Supply after host disposal"
+    service.Dispose ()
+
+    let closed =
+        try
+            fresh.Matches |> ignore
+            false
+        with :? System.ObjectDisposedException ->
+            true
+
+    expect closed "Disposing the service after host disposal disposes its queries"
+
+    if shared <> MediaQueryChecksCount then
+        failwith $"Media query shared assertions did not run: {shared}"
+
+    System.Console.WriteLine $"NATIVE_API G01 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G15 PASS assertions={shared}"
+    System.Console.WriteLine $"NATIVE_API G01/G15 LIFETIME PASS assertions={lifetime}"
     shared
 
 /// <summary>Runs the shared crypto fixture with native thread and teardown checks.</summary>
@@ -2572,6 +4505,388 @@ let private runCancellation () =
     System.Console.WriteLine $"NATIVE_API I01 LIFETIME PASS assertions={lifetime}"
     shared
 
+/// <summary>Runs a task on the hosts' thread, cycling every host until it completes; a hang guard raises.</summary>
+let private driveAll (hosts: WebCoreHost list) (pending: System.Threading.Tasks.Task<'T>) =
+    let mutable turns = 0
+
+    while not pending.IsCompleted do
+        turns <- turns + 1
+
+        if turns > 10000 then
+            failwith "Task did not complete on the host thread"
+
+        for host in hosts do
+            host.Cycle ()
+
+    pending.GetAwaiter().GetResult()
+
+/// <summary>Runs a task on the host thread, cycling the host until it completes; a hang guard raises.</summary>
+let private drive (host: WebCoreHost) (pending: System.Threading.Tasks.Task<'T>) =
+    driveAll [ host ] pending
+
+/// <summary>Runs the shared wake lock fixture and native policy, visibility, display, thread and teardown checks.</summary>
+let private runWakeLocks () =
+    let host = WebCoreHost.Create (320, 240)
+    let deniedHost = WebCoreHost.Create (32, 32)
+    let session = host.Session
+    let mutable lifetime = 0
+    let kinds = ResizeArray<Ranvier.Dom.WakeLockType>()
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let rejects (pending: System.Threading.Tasks.Task<Ranvier.Dom.WakeLockSentinel>) (name: string) =
+        try
+            drive host pending |> ignore
+            false
+        with
+        | Ranvier.Dom.WakeLockException (actual, _) -> actual = name
+        | :? System.AggregateException as error ->
+            match error.InnerException with
+            | Ranvier.Dom.WakeLockException (actual, _) -> actual = name
+            | _ -> false
+
+    let shared =
+        try
+            let granted =
+                WakeLock.forHost
+                    host
+                    (Some (fun kind ->
+                        kinds.Add kind
+                        true))
+
+            let denied = WakeLock.forHost deniedHost None
+            let cancellation = Ranvier.View.WebCore.Cancellation.forHost host
+
+            let count =
+                driveAll [ host; deniedHost ] (WakeLocks.run granted denied cancellation)
+
+            expect
+                (kinds.Count > 0
+                 && Seq.forall ((=) Ranvier.Dom.WakeLockType.Screen) kinds)
+                "Policy decides each screen request"
+
+            let pending = granted.Request (Ranvier.Dom.WakeLockType.Screen, None)
+            expect (not pending.IsCompleted) "A request completes after the call returns"
+            let held = drive host pending
+            expect (WakeLock.displayHeld () = System.OperatingSystem.IsWindows ()) "A held lock holds the display on Windows"
+            let mutable hiddenReleases = 0
+            use _hidden = held.OnRelease (fun () -> hiddenReleases <- hiddenReleases + 1)
+
+            RanvierWebCoreAbi.Native.rv_host_set_visible (host.Handle, 0)
+            |> ignore
+
+            host.Cycle ()
+            expect held.Released "Hiding the page releases its locks"
+            expect (hiddenReleases = 1) "A hidden page dispatches release"
+            expect (not (WakeLock.displayHeld ())) "Releasing the last lock frees the display"
+            expect (rejects (granted.Request (Ranvier.Dom.WakeLockType.Screen, None)) "NotAllowedError") "A hidden page rejects requests"
+
+            RanvierWebCoreAbi.Native.rv_host_set_visible (host.Handle, 1)
+            |> ignore
+
+            let visible = drive host (granted.Request (Ranvier.Dom.WakeLockType.Screen, None))
+            expect (not visible.Released) "A visible page grants again"
+            drive host (visible.Release ())
+
+            let errors = host.Errors.Count
+            let throwing = WakeLock.forHost host (Some (fun _ -> failwith "policy failure"))
+            expect (rejects (throwing.Request (Ranvier.Dom.WakeLockType.Screen, None)) "NotAllowedError") "A throwing policy denies"
+            expect (host.Errors.Count = errors + 1) "A throwing policy is reported to the host"
+            throwing.Dispose ()
+            expect (rejects (granted.Request (Ranvier.Dom.WakeLockType.Screen, None)) "NotAllowedError") "A disposed service clears the policy"
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            granted.Request (Ranvier.Dom.WakeLockType.Screen, None)
+                            |> ignore
+
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Wake locks reject another thread"
+
+            let disposedRequest =
+                try
+                    throwing.Request (Ranvier.Dom.WakeLockType.Screen, None)
+                    |> ignore
+
+                    false
+                with :? System.ObjectDisposedException ->
+                    true
+
+            expect disposedRequest "A disposed service rejects requests"
+
+            let survivor = WakeLock.forHost host (Some (fun _ -> true))
+            let kept = drive host (survivor.Request (Ranvier.Dom.WakeLockType.Screen, None))
+            expect (WakeLock.displayHeld () = System.OperatingSystem.IsWindows ()) "Survivor holds the display before host disposal"
+            use registry = Ranvier.Dom.Capabilities.create ()
+            use _provider = registry.Register WakeLock.capabilityProvider
+
+            let report =
+                drive
+                    host
+                    (registry.Observe (
+                        Ranvier.Dom.Capabilities.key Ranvier.Dom.CapabilityCategory.PlatformFacility "display-wake",
+                        System.Threading.CancellationToken.None
+                    ))
+
+            let expected =
+                if System.OperatingSystem.IsWindows () then
+                    Ranvier.Dom.CapabilityState.Yes
+                else
+                    Ranvier.Dom.CapabilityState.No
+
+            expect (report.Available.State = expected) "Display wake availability follows the operating system"
+            ignore kept
+            count
+        finally
+            (deniedHost :> System.IDisposable).Dispose()
+            (host :> System.IDisposable).Dispose()
+
+    expect (not (WakeLock.displayHeld ())) "Host disposal frees the display"
+    expect (session.LiveObjects = 0) "Wake lock fixture leaves no live native objects"
+
+    if shared <> 17 then
+        failwith (
+            "Wake lock shared assertions did not run: "
+            + string shared
+        )
+
+    System.Console.WriteLine ("NATIVE_API B10 PASS assertions=" + string shared)
+
+    System.Console.WriteLine (
+        "NATIVE_API B10 LIFETIME PASS assertions="
+        + string lifetime
+    )
+
+    shared
+
+/// <summary>Cycles the host until <c>condition</c> holds; a hang guard raises.</summary>
+let private cycleUntil (host: WebCoreHost) (condition: unit -> bool) =
+    let mutable turns = 0
+
+    while not (condition ()) do
+        turns <- turns + 1
+
+        if turns > 2000 then
+            failwith "The host did not reach the expected state"
+
+        host.Cycle 5
+
+/// <summary>Runs a task on the host thread, cycling the host until it completes; a hang guard raises.</summary>
+let private settleTask (host: WebCoreHost) (pending: System.Threading.Tasks.Task<'T>) =
+    cycleUntil host (fun () -> pending.IsCompleted)
+    pending.GetAwaiter().GetResult()
+
+/// <summary>Runs the shared notification fixture and native presenter, permission, badge, thread and teardown checks.</summary>
+let private runNotifications () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let mutable lifetime = 0
+
+    let requests =
+        ResizeArray<Ranvier.Dom.NotificationHandle * Ranvier.View.WebCore.NotificationRequest>()
+
+    let badgeValues = ResizeArray<uint64 option>()
+
+    let expect condition message =
+        lifetime <- lifetime + 1
+
+        if not condition then
+            failwith message
+
+    let shared =
+        try
+            let presenter (handle: Ranvier.Dom.NotificationHandle) (request: Ranvier.View.WebCore.NotificationRequest) =
+                requests.Add ((handle, request))
+
+                match request with
+                | Ranvier.View.WebCore.NotificationRequest.Show ->
+                    Ranvier.View.WebCore.Notifications.report handle Ranvier.View.WebCore.NotificationEvent.Show
+                    Ranvier.View.WebCore.Notifications.report handle Ranvier.View.WebCore.NotificationEvent.Click
+                | Ranvier.View.WebCore.NotificationRequest.Cancel ->
+                    Ranvier.View.WebCore.Notifications.report handle Ranvier.View.WebCore.NotificationEvent.Close
+                | _ -> ()
+
+            let service =
+                Ranvier.View.WebCore.Notifications.forHost host Ranvier.Dom.NotificationPermission.Granted (Some presenter)
+
+            let badges =
+                Ranvier.View.WebCore.Notifications.badgeForHost host (Some badgeValues.Add)
+
+            let cancellation = Ranvier.View.WebCore.Cancellation.forHost host
+
+            let count =
+                settleTask host (NativeApiConformance.Notifications.run service badges cancellation)
+
+            expect (List.ofSeq badgeValues = [ Some 3UL; None; Some 0UL ]) "The badge handler receives each badge in order"
+
+            requests.Clear ()
+            let log = ResizeArray<string>()
+            let shown = service.Show ("Shown", Ranvier.Dom.NotificationOptions.Default, None)
+            use _show = shown.OnShow (fun () -> log.Add "show")
+            use _click = shown.OnClick (fun () -> log.Add "click")
+            use _close = shown.OnClose (fun () -> log.Add "close")
+            use _error = shown.OnError (fun () -> log.Add "error")
+
+            expect
+                ((requests
+                  |> Seq.filter (fun (item, _) -> obj.ReferenceEquals (item, shown))
+                  |> Seq.length)
+                    =
+                    0)
+                "Show requests nothing inside the call"
+
+            cycleUntil host (fun () -> log.Count >= 2)
+            expect (List.ofSeq log = [ "show"; "click" ]) "The presenter's show and click dispatch"
+            shown.Close ()
+
+            expect
+                ((requests
+                  |> Seq.filter (fun (item, _) -> obj.ReferenceEquals (item, shown))
+                  |> Seq.length)
+                    =
+                    1)
+                "Close requests nothing inside the call"
+
+            cycleUntil host (fun () -> log.Count >= 3)
+            expect (List.ofSeq log = [ "show"; "click"; "close" ]) "The cancel request leads to close"
+
+            expect
+                (requests
+                 |> Seq.filter (fun (item, _) -> obj.ReferenceEquals (item, shown))
+                 |> Seq.map snd
+                 |> List.ofSeq
+                    =
+                    [
+                        Ranvier.View.WebCore.NotificationRequest.Show
+                        Ranvier.View.WebCore.NotificationRequest.Cancel
+                    ])
+                "Presenter requests in order"
+
+            let quiet =
+                Ranvier.View.WebCore.Notifications.forHost host Ranvier.Dom.NotificationPermission.Default None
+
+            expect (quiet.Permission = Ranvier.Dom.NotificationPermission.Default) "Default permission"
+            let mutable errors = 0
+            let refused = quiet.Show ("Refused", Ranvier.Dom.NotificationOptions.Default, None)
+            use _refused = refused.OnError (fun () -> errors <- errors + 1)
+            cycleUntil host (fun () -> errors > 0)
+            expect (errors = 1) "A show under default permission fires error"
+
+            let granted =
+                Ranvier.View.WebCore.Notifications.forHost host Ranvier.Dom.NotificationPermission.Granted None
+
+            let mutable unpresented = 0
+            let lonely = granted.Show ("Lonely", Ranvier.Dom.NotificationOptions.Default, None)
+            use _lonely = lonely.OnError (fun () -> unpresented <- unpresented + 1)
+            cycleUntil host (fun () -> unpresented > 0)
+            expect (unpresented = 1) "A granted show without a presenter fires error"
+            granted.Dispose ()
+            expect (quiet.Permission = Ranvier.Dom.NotificationPermission.Default) "Disposal resets the permission"
+
+            let destroyed = ResizeArray<Ranvier.View.WebCore.NotificationRequest>()
+
+            let watcher =
+                Ranvier.View.WebCore.Notifications.forHost
+                    host
+                    Ranvier.Dom.NotificationPermission.Granted
+                    (Some (fun _ request -> destroyed.Add request))
+
+            watcher.Show ("Kept", Ranvier.Dom.NotificationOptions.Default, None)
+            |> ignore
+
+            cycleUntil host (fun () -> destroyed.Count >= 1)
+            host.LoadSvg "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+            cycleUntil host (fun () -> destroyed.Contains Ranvier.View.WebCore.NotificationRequest.Destroyed)
+            expect (destroyed[0] = Ranvier.View.WebCore.NotificationRequest.Show) "The watcher saw the show"
+
+            let unbadged = Ranvier.View.WebCore.Notifications.badgeForHost host None
+
+            let unsupported =
+                try
+                    settleTask host (unbadged.Set (Some 1UL))
+                    false
+                with
+                | :? System.NotSupportedException -> true
+                | :? System.AggregateException as error -> (error.InnerException :? System.NotSupportedException)
+
+            expect unsupported "Without a handler the badge is unsupported"
+            use registry = Ranvier.Dom.Capabilities.create ()
+
+            use _provider =
+                registry.Register Ranvier.View.WebCore.Notifications.badgeCapabilityProvider
+
+            let badgeKey =
+                Ranvier.Dom.Capabilities.key Ranvier.Dom.CapabilityCategory.PlatformFacility "app-badge"
+
+            let available =
+                settleTask host (registry.Observe (badgeKey, System.Threading.CancellationToken.None))
+
+            expect (available.Available.State = Ranvier.Dom.CapabilityState.Yes) "A registered handler makes the badge available"
+            badges.Dispose ()
+
+            let unavailable =
+                settleTask host (registry.Observe (badgeKey, System.Threading.CancellationToken.None))
+
+            expect (unavailable.Available.State = Ranvier.Dom.CapabilityState.No) "Without a handler the badge is unavailable"
+
+            let wrongThread =
+                System.Threading.Tasks.Task
+                    .Run(fun () ->
+                        try
+                            watcher.Show ("t", Ranvier.Dom.NotificationOptions.Default, None)
+                            |> ignore
+
+                            false
+                        with :? System.InvalidOperationException ->
+                            true)
+                    .GetAwaiter()
+                    .GetResult()
+
+            expect wrongThread "Notifications reject another thread"
+            quiet.Dispose ()
+
+            let disposedShow =
+                try
+                    quiet.Show ("t", Ranvier.Dom.NotificationOptions.Default, None)
+                    |> ignore
+
+                    false
+                with :? System.ObjectDisposedException ->
+                    true
+
+            expect disposedShow "A disposed service rejects shows"
+            count
+        finally
+            (host :> System.IDisposable).Dispose()
+
+    expect (session.LiveObjects = 0) "Notification fixture leaves no live native objects"
+
+    if shared <> 16 then
+        failwith (
+            "Notification shared assertions did not run: "
+            + string shared
+        )
+
+    System.Console.WriteLine ("NATIVE_API B09 PASS assertions=" + string shared)
+
+    System.Console.WriteLine (
+        "NATIVE_API B09 LIFETIME PASS assertions="
+        + string lifetime
+    )
+
+    shared
+
 let private runCapabilities () =
     let host = WebCoreHost.Create (320, 240)
     let session = host.Session
@@ -2737,6 +5052,203 @@ let private runResources () =
     System.Console.WriteLine "NATIVE_API H05 TEARDOWN PASS"
     count
 
+/// <summary>Runs the shared T01 font set fixture over a held CSS @font-face served through the resource handler.</summary>
+let private runFonts () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let previous = System.Threading.SynchronizationContext.Current
+    let loop = OwnerLoop ()
+    System.Threading.SynchronizationContext.SetSynchronizationContext loop
+    let font = (resourceFixture ()).Font
+
+    let requests =
+        System.Collections.Generic.Dictionary<string, Result<Ranvier.Dom.ResourceResponse, string> -> unit>()
+
+    let provider: Ranvier.Dom.ResourceProvider =
+        fun request complete ->
+            let name = request.Url.Substring (request.Url.LastIndexOf '/' + 1)
+            requests[name] <- complete
+
+            { new System.IDisposable with
+                member _.Dispose() = ()
+            }
+
+    let server: Fonts.FontServer =
+        {
+            Url = fun name -> "https://t01.test/" + name
+            Requested = fun name -> async { return requests.ContainsKey name }
+            Respond =
+                fun name response ->
+                    async {
+                        let complete = requests[name]
+
+                        match response with
+                        | Fonts.FontResponse.Font ->
+                            complete (
+                                Ok
+                                    {
+                                        ContentType = "font/ttf"
+                                        Bytes = font
+                                    }
+                            )
+                        | Fonts.FontResponse.Broken ->
+                            complete (
+                                Ok
+                                    {
+                                        ContentType = "font/ttf"
+                                        Bytes = "not a font"B
+                                    }
+                            )
+                        | Fonts.FontResponse.Missing -> complete (Error "404")
+                    }
+        }
+
+    let count =
+        try
+            use resources = Ranvier.View.WebCore.Resources.forHost host provider
+            use signals = Ranvier.View.WebCore.Cancellation.forHost host
+
+            let wait milliseconds =
+                async {
+                    let clock = System.Diagnostics.Stopwatch.StartNew ()
+
+                    while clock.ElapsedMilliseconds < int64 milliseconds do
+                        loop.Drain ()
+                        host.Cycle 5
+                }
+
+            let pending =
+                async {
+                    let! readiness =
+                        Fonts.run host.Document server (fun () -> Ranvier.View.WebCore.Fonts.forHost host) signals wait
+
+                    let! construction =
+                        FontConstruction.run host.Document server (fun () -> Ranvier.View.WebCore.Fonts.forHost host) font wait
+
+                    return readiness, construction
+                }
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not pending.IsCompleted
+                  && timeout.ElapsedMilliseconds < 30000L do
+                loop.Drain ()
+                host.Cycle ()
+                System.Threading.Thread.Sleep 1
+
+            if not pending.IsCompleted then
+                failwith "Font fixture did not complete on the owner loop"
+
+            pending.GetAwaiter().GetResult()
+        finally
+            System.Threading.SynchronizationContext.SetSynchronizationContext previous
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith (
+            "Font fixture leaked "
+            + string session.LiveObjects
+            + " managed native objects"
+        )
+
+    let readiness, construction = count
+
+    System.Console.WriteLine (
+        "NATIVE_API T01 PASS assertions="
+        + string readiness
+    )
+
+    System.Console.WriteLine "NATIVE_API T01 TEARDOWN PASS"
+
+    System.Console.WriteLine (
+        "NATIVE_API T02 PASS assertions="
+        + string construction
+    )
+
+    System.Console.WriteLine "NATIVE_API T02 TEARDOWN PASS"
+    readiness + construction
+
+[<Literal>]
+let private CanvasTextChecksCount = 80
+
+/// <summary>Runs the shared R05 canvas text fixture over an Ahem face served through the host's resource provider.</summary>
+let private runCanvasText () =
+    let host = WebCoreHost.Create (320, 240)
+    let session = host.Session
+    let previous = System.Threading.SynchronizationContext.Current
+    let loop = OwnerLoop ()
+    System.Threading.SynchronizationContext.SetSynchronizationContext loop
+    let font = (resourceFixture ()).Font
+
+    let provider: Ranvier.Dom.ResourceProvider =
+        fun _ complete ->
+            complete (
+                Ok
+                    {
+                        ContentType = "font/ttf"
+                        Bytes = font
+                    }
+            )
+
+            { new System.IDisposable with
+                member _.Dispose() = ()
+            }
+
+    let count =
+        try
+            use resources = Ranvier.View.WebCore.Resources.forHost host provider
+
+            let pending =
+                CanvasTextChecks.run
+                    (fun () -> Ranvier.View.WebCore.Canvas.forHost host)
+                    host.Document
+                    (fun () -> Ranvier.View.WebCore.Fonts.forHost host)
+                    "https://r05.test/ahem"
+                    CanvasTextChecks.TextEngine.WebKit
+                    (fun milliseconds ->
+                        async {
+                            let clock = System.Diagnostics.Stopwatch.StartNew ()
+
+                            while clock.ElapsedMilliseconds < int64 milliseconds do
+                                loop.Drain ()
+                                host.Cycle 5
+                        })
+                |> Async.StartImmediateAsTask
+
+            let timeout = System.Diagnostics.Stopwatch.StartNew ()
+
+            while not pending.IsCompleted
+                  && timeout.ElapsedMilliseconds < 30000L do
+                loop.Drain ()
+                host.Cycle ()
+                System.Threading.Thread.Sleep 1
+
+            if not pending.IsCompleted then
+                failwith "Canvas text fixture did not complete on the owner loop"
+
+            pending.GetAwaiter().GetResult()
+        finally
+            System.Threading.SynchronizationContext.SetSynchronizationContext previous
+            (host :> System.IDisposable).Dispose()
+
+    if session.LiveObjects <> 0 then
+        failwith (
+            "Canvas text fixture leaked "
+            + string session.LiveObjects
+            + " managed native objects"
+        )
+
+    if count <> CanvasTextChecksCount then
+        failwith (
+            "Canvas text shared assertions did not run: "
+            + string count
+        )
+
+    System.Console.WriteLine ("NATIVE_API R05 PASS assertions=" + string count)
+    System.Console.WriteLine "NATIVE_API R05 TEARDOWN PASS"
+    count
+
 /// <summary>Runs the shared tree traversal and MathML fixtures with native traversal lifetime checks.</summary>
 let private runDomModel () =
     let lifetime = TraversalLifecycle.run ()
@@ -2795,9 +5307,12 @@ let private runAll () =
     UserTimingNative.run ()
     runCapabilities () |> ignore
     runCancellation () |> ignore
+    runNotifications () |> ignore
     runResources () |> ignore
+    runFonts () |> ignore
     runCustomEvents () |> ignore
     runInputState () |> ignore
+    runPointerInput () |> ignore
     runViewport () |> ignore
     runViewportScroll () |> ignore
     runVisualViewport () |> ignore
@@ -2806,21 +5321,39 @@ let private runAll () =
     runForms () |> ignore
     runDialogs () |> ignore
     runBinary () |> ignore
+    runDataTransfer () |> ignore
     runUrls () |> ignore
     runSubmissions () |> ignore
     runSegments () |> ignore
     runCrypto () |> ignore
     runScreen () |> ignore
+    runMediaQueries () |> ignore
     runEventDetails () |> ignore
+    runValueFactories () |> ignore
     runHighlights () |> ignore
+    runCanvas () |> ignore
+    runCanvasText () |> ignore
+    runCanvasPixels () |> ignore
+    runCanvasExport () |> ignore
     runStrings () |> ignore
+    runHostStrings () |> ignore
     runDiagnostics () |> ignore
     runCascade () |> ignore
     runCoordinates () |> ignore
+    runResizeObservation () |> ignore
+    runIntersectionObservation () |> ignore
+    runAnimations () |> ignore
+    runAnimationLifecycle () |> ignore
+    runAnimationEvents () |> ignore
+    runTimelines () |> ignore
+    runCustomEffects () |> ignore
     runBlobUrls () |> ignore
+    runMediaCapabilities () |> ignore
+    runSnapshots () |> ignore
     runDomModel () |> ignore
     runFrames () |> ignore
     runIdle () |> ignore
+    runWakeLocks () |> ignore
     let transformLifecycle = TransformLifecycle.run ()
 
     if transformLifecycle <> 47 then
@@ -3212,7 +5745,7 @@ let private runAll () =
 
         match construction with
         | Some (Ok checks) ->
-            if checks <> 78 then
+            if checks <> 79 then
                 failwith "Constructed stylesheet preservation assertions did not run"
 
             System.Console.WriteLine $"NATIVE_API C07 PASS assertions={checks}"
@@ -3568,8 +6101,7 @@ let private runSurfaces () =
     let session = host.Session
 
     try
-        let shapes =
-            SvgShapes.run host.Document surfaceErrorName "ArgumentNullException" true
+        let shapes = SvgShapes.run host.Document surfaceErrorName "ArgumentNullException"
 
         let fontData =
             System.Convert.ToBase64String (
@@ -3791,6 +6323,9 @@ let main args =
     elif Array.contains "--input-state-only" args then
         runInputState () |> ignore
         0
+    elif Array.contains "--pointer-input-only" args then
+        runPointerInput () |> ignore
+        0
     elif Array.contains "--viewport-only" args then
         runViewport () |> ignore
         0
@@ -3818,11 +6353,30 @@ let main args =
     elif Array.contains "--blob-urls-only" args then
         runBlobUrls () |> ignore
         0
+    elif Array.contains "--media-capabilities-only" args then
+        runMediaCapabilities () |> ignore
+        0
+    elif Array.contains "--snapshots-only" args then
+        runSnapshots () |> ignore
+        0
     elif Array.contains "--highlights-only" args then
         runHighlights () |> ignore
         0
+    elif Array.contains "--canvas-only" args then
+        runCanvas () |> ignore
+        runCanvasText () |> ignore
+        0
+    elif Array.contains "--canvas-pixels-only" args then
+        runCanvasPixels () |> ignore
+        0
+    elif Array.contains "--canvas-export-only" args then
+        runCanvasExport () |> ignore
+        0
     elif Array.contains "--strings-only" args then
         runStrings () |> ignore
+        0
+    elif Array.contains "--host-strings-only" args then
+        runHostStrings () |> ignore
         0
     elif Array.contains "--diagnostics-only" args then
         runDiagnostics () |> ignore
@@ -3830,8 +6384,32 @@ let main args =
     elif Array.contains "--cascade-only" args then
         runCascade () |> ignore
         0
+    elif Array.contains "--media-only" args then
+        runMediaQueries () |> ignore
+        0
+    elif Array.contains "--custom-effects-only" args then
+        runCustomEffects () |> ignore
+        0
+    elif Array.contains "--animations-only" args then
+        runAnimations () |> ignore
+        0
+    elif Array.contains "--animation-lifecycle-only" args then
+        runAnimationLifecycle () |> ignore
+        0
+    elif Array.contains "--animation-events-only" args then
+        runAnimationEvents () |> ignore
+        0
+    elif Array.contains "--timelines-only" args then
+        runTimelines () |> ignore
+        0
     elif Array.contains "--coordinates-only" args then
         runCoordinates () |> ignore
+        0
+    elif Array.contains "--resize-only" args then
+        runResizeObservation () |> ignore
+        0
+    elif Array.contains "--intersection-only" args then
+        runIntersectionObservation () |> ignore
         0
     elif Array.contains "--crypto-only" args then
         runCrypto () |> ignore
@@ -3845,11 +6423,17 @@ let main args =
     elif Array.contains "--event-details-only" args then
         runEventDetails () |> ignore
         0
+    elif Array.contains "--value-factories-only" args then
+        runValueFactories () |> ignore
+        0
     elif Array.contains "--dialogs-only" args then
         runDialogs () |> ignore
         0
     elif Array.contains "--binary-only" args then
         runBinary () |> ignore
+        0
+    elif Array.contains "--data-transfer-only" args then
+        runDataTransfer () |> ignore
         0
     elif Array.contains "--frames-only" args then
         runFrames () |> ignore
@@ -3860,11 +6444,20 @@ let main args =
     elif Array.contains "--cancellation-only" args then
         runCancellation () |> ignore
         0
+    elif Array.contains "--wake-locks-only" args then
+        runWakeLocks () |> ignore
+        0
+    elif Array.contains "--notifications-only" args then
+        runNotifications () |> ignore
+        0
     elif Array.contains "--capabilities-only" args then
         runCapabilities () |> ignore
         0
     elif Array.contains "--resources-only" args then
         runResources () |> ignore
+        0
+    elif Array.contains "--fonts-only" args then
+        runFonts () |> ignore
         0
     elif Array.contains "--custom-properties-only" args then
         let lifecycle = CustomPropertyLifecycle.run ()

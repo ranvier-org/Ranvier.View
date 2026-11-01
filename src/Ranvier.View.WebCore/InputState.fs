@@ -47,13 +47,20 @@ module InputState =
         Ranvier.Dom.InputState.create target host.Document touchPoints
 
     /// <summary>The capability provider "webcore-input" over <c>service</c>.</summary>
-    /// <remarks>Touch points report Implemented No: the native engine delivers no touch input.</remarks>
+    /// <remarks>Touch points report Implemented Yes where the native engine has touch input ("touch-input"), and
+    /// Available once the app sets a positive capacity with <c>WebCoreHost.SetMaxTouchPoints</c>.</remarks>
     let capabilities (service: InputStateService) : CapabilityProvider =
         Ranvier.Dom.InputState.capabilities
             "webcore-input"
             "Host window focus, blur, input and pointer capture events, Document.hasFocus, :focus-visible and rv_host_max_touch_points."
-            {
-                State = CapabilityState.No
-                Reason = "The native engine is built without touch events and the host has no touch input path."
-            }
+            (if WebCoreHost.Has "touch-input" then
+                 {
+                     State = CapabilityState.Yes
+                     Reason = "The app delivers touch frames through rv_host_pointer."
+                 }
+             else
+                 {
+                     State = CapabilityState.No
+                     Reason = "The native engine is built without touch events."
+                 })
             service

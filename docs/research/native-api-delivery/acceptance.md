@@ -2,7 +2,7 @@
 
 ## Current follow-up checkpoint, 2026-10-30
 
-This checkpoint supersedes older publication and CI status notes below. The selected scope remains98 required groups and5 conditional groups;53 query groups remain deferred.
+This checkpoint supersedes older publication and CI status notes below. The selected scope is 98 required groups and 4 conditional groups; 53 query groups remain deferred. Conditional group A11 moved to [project 2](https://github.com/orgs/ranvier-org/projects/2) on 2026-11-01, with the GPU work.
 
 - Views PR7 merged as a097f8ec448f8974022f8416ccbf3fabf20493a4 after [PR CI40923137860](https://github.com/ranvier-org/Ranvier.View/actions/runs/40923137860) passed. [Main CI40925669712](https://github.com/ranvier-org/Ranvier.View/actions/runs/40925669712) and [trusted publication40927498585](https://github.com/ranvier-org/Ranvier.View/actions/runs/40927498585) succeeded. The earlier sugar generator failure is repaired.
 - All12 new official Views0.1.2/backendalpha2 packages are indexed. Isolated normal/traced native JIT, NativeAOT and Chromium consumers each pass the full685 release fixture, including50 common-hyperlink assertions. Native adds17 lifetime/context checks and teardown; browser adds4 context checks, Tab traversal and196609 CSS.escape oracle comparisons. Package graphs, trace markers and repository commit a097f8e are verified, with no source-project references. The browser recipe explicitly excludes native Ranvier.Dom compile assets and selects Fable.Ranvier.Dom of the same profile. [Hosted CPU slim acceptance40930899252](https://github.com/ranvier-org/Ranvier.View/actions/runs/40930899252) passes both profiles, including smoke/counter JIT/AOT and independent accessibility checks. Windows GPU cohort maintenance remains [issue120](https://github.com/ranvier-org/Ranvier.WebCore/issues/120).
@@ -36,7 +36,7 @@ Independent acceptance review closed [WebCore issue30](https://github.com/ranvie
 
 ## GitHub tracking and official C04 dependency follow-up, 2026-10-29
 
-- GitHub Project: https://github.com/orgs/ranvier-org/projects/1 tracks the 98 required and 5 conditional groups. The 53 query groups remain deferred to the next goal. Project completion requires full group acceptance; merging a dependency PR does not close a group.
+- GitHub Project: https://github.com/orgs/ranvier-org/projects/1 tracks the 98 required and 4 conditional groups (A11 moved to project 2 on 2026-11-01). The 53 query groups remain deferred to the next goal. Project completion requires full group acceptance; merging a dependency PR does not close a group.
 - CSS PR2 merged77aa632e3f2d4bff2476b5d9dcab3e3254a4cd23; trusted publication40887477904 supplied all four adapter packages0.1.0-alpha.1. Their published Fable sources and DOM alpha.11 dependencies were verified.
 - A fresh traced consumer exposed missing Ranvier.Css.Traced and Ranvier.Css.Bindings.Traced0.1.1-alpha.1 dependencies (NU1102). CSS PR3 repaired traced-parent packing and added an isolated four-variant package consumption gate. It mergedef6916ffb5c13c8f7f9b349ac2d1424a6c31cade after checks passed; CI40896175768 and trusted publication40896943883 succeeded.
 - Both missing official traced parents now download from NuGet with the expected release commit. Fresh isolated restores and executable trace-metadata checks pass for all four native/Fable normal/traced adapter combinations using exclusively official CSS packages.

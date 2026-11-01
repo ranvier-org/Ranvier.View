@@ -1,0 +1,33 @@
+{
+  "group": "B10",
+  "issue": "ranvier-org/Ranvier.WebCore#118",
+  "native": "native-wake-locks 66b0239",
+  "core": "rv-wake-core 0be44e45",
+  "nativeCandidate": "wake-candidate-2",
+  "jit": {
+    "passLines": 121,
+    "group": [
+      "NATIVE_API B10 PASS assertions=17",
+      "NATIVE_API B10 LIFETIME PASS assertions=17"
+    ]
+  },
+  "aot": {
+    "passLines": 121,
+    "group": [
+      "NATIVE_API B10 PASS assertions=17",
+      "NATIVE_API B10 LIFETIME PASS assertions=17"
+    ]
+  },
+  "chromium": {
+    "passLines": 87,
+    "group": [
+      "BROWSER_API B10 PASS assertions=17 engine=chromium"
+    ]
+  },
+  "baseline": "Views batch-1 f9798630: 119 JIT / 119 AOT / 86 Chromium PASS lines",
+  "repeat30": {
+    "jitFocused": "30/30",
+    "aotFocused": "30/30"
+  },
+  "packages": "private feed: Core packed as 0.1.0-alpha.49, native Ranvier.WebCore as 0.1.0-preview.46 from the candidate (local only)"
+}

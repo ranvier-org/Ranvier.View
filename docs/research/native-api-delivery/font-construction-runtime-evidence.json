@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "group": [
+    "T02 font construction/registration"
+  ],
+  "status": "green (private integration; not accepted)",
+  "route": "Qualified: generated FontFace/FontFaceSet plus rv_font_face_load/loaded (font-face-load; ABI placeholder 54; patch 0048)",
+  "issues": [
+    "https://github.com/ranvier-org/Ranvier.WebCore/issues/73"
+  ],
+  "coreSourceCommit": "06b342d4b0ed77142a41d2eed9a6039410895fd9",
+  "viewsSourceCommit": "9996895fe5d8ff894c1c3bb8553c7b9f233a6ace",
+  "stackedOn": {
+    "core": "T01 1ed5855a",
+    "views": "T01 a8c912d",
+    "native": "T01 86f179b + batch-1 cae4da82"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-font-construction",
+    "head": "d5c8375791d359b6971a412c2c06d2e4c7a40cb5",
+    "abi": 54,
+    "runtime": "native-fontface artifacts/fontface-candidate-1-frozen",
+    "evidence": "Ranvier.WebCore docs/font-construction-evidence/final-evidence.json"
+  },
+  "versions": {
+    "native": "0.1.0-preview.46 (local)",
+    "dom": "0.1.0-alpha.49 (local)",
+    "note": "root assigns versions at integration"
+  },
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.49.nupkg": "2292145990d9a5530696f3a5703292fa0e96c56836ca3038adb2b5a1c28c001e",
+    "Ranvier.Dom.0.1.0-alpha.49.nupkg": "1b6f5f6e5acbc732b51a31e0a413a52c1ffa5f3819e9c72db755865be5d9dc72",
+    "Ranvier.WebCore.0.1.0-preview.46.nupkg": "eaa32ab20823c2e18a86b81c13b770d7524c1ea0a9c6671ffeda524a1f48c005"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "7b268bf0c80be2abd5ed03184a02cae26204a59883fd78c96904d10a60b3e5b8",
+    "WebCore.dll": "f1ca25d9d26dc1392b16f9ecfc3f8ba23d5e874e429e50da92fdcfd4b44ce22f",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\fontface-artifacts\\managed\\final-1\\aot\\Native.exe",
+    "sha256": "05a98e2b6672fcf13c817855a8d1610d7c871b2aa94784e46751bc20119ebceb"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "6f1db7628fe14e7dc15e02f7ecb97dfe6499f9508f654a3ba01f412e387ede20",
+      "passLines": 123,
+      "failLines": [],
+      "t02": [
+        "NATIVE_API T02 PASS assertions=35",
+        "NATIVE_API T02 TEARDOWN PASS"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "36f2e9b16949c1dff7cbc928a04d8cedfedbe6d78dc3a7eb599605964df31fd9",
+      "passLines": 123,
+      "failLines": [],
+      "t02": [
+        "NATIVE_API T02 PASS assertions=35",
+        "NATIVE_API T02 TEARDOWN PASS"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "74f3b1438a6a62f307e38612af058f13917d622c79489af599b0f6d62b3f1d97",
+      "passLines": 88,
+      "failLines": [],
+      "t02": [
+        "BROWSER_API T02 PASS assertions=35 engine=chromium"
+      ]
+    },
+    "baselinePassLines": {
+      "jitAot": 121,
+      "chromium": 87,
+      "source": "T01 managed final-2 (C:/wk/fonts-artifacts/managed/final-2)",
+      "added": {
+        "jitAot": 2,
+        "chromium": 1
+      }
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "repeats": {
+    "aotFontsOnly": "30 NATIVE_API T01 PASS assertions=25\n     30 NATIVE_API T01 TEARDOWN PASS\n     30 NATIVE_API T02 PASS assertions=35\n     30 NATIVE_API T02 TEARDOWN PASS",
+    "chromiumFontsOnly": "30 BROWSER_API T01 PASS assertions=25 engine=chromium\n     30 BROWSER_API T02 PASS assertions=35 engine=chromium"
+  },
+  "wrapperRegeneration": {
+    "objectsFs": "003df4aaefe14da53b1158628b50695fc51e1fa81371503fcb78f945d5d5a3f1",
+    "reportTxt": "a134eb04e2bc0d3d753dac9ea1c20546ce40f4718cd35a1afc5885632c9fd6b2",
+    "result": "regenerated: FontFaceObject (25 members) and FontFaceSetObject (7 generated, 9 hand-written EventTarget); kinds 120/121 are placeholders"
+  },
+  "fixture": {
+    "shared": "tests/NativeApi.Conformance/FontConstruction.fs",
+    "checks": 35,
+    "runsAfter": "T01 Fonts.fs (25) in the same font run"
+  },
+  "qualifications": [
+    "unicode-range serializes in lowercase hexadecimal in WebKit and uppercase in Chromium; the shared fixture compares it case-insensitively.",
+    "WebKit FontFaceSet.check is true for an unloaded face; Chromium false (the native probe records it; the shared fixture does not assert it).",
+    "Document.fonts enters the shared Ranvier.Dom Document interface: Core pins dom-contracts to the native T02 head.",
+    "FontFace and FontFaceSet object kinds 120/121 are placeholders for the integration batch."
+  ]
+}

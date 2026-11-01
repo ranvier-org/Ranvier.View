@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    "A01 creation",
+    "A02 effect inspection/mutation",
+    "A05 discovery/identity",
+    "A04 commit styles"
+  ],
+  "heads": {
+    "native": "b5b2f86d24091cd7ccdd2c03bce6cd3b0198c987",
+    "core": "97a0dadd6278548516f4f75da6943149043ee551",
+    "views": "36c8ffa87b8e7bf2361222bf077f42ed111156e9"
+  },
+  "privateFeed": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.49.nupkg": "36e1b3c69db5178c5df98eb77df024de3f5349444511eb0cc0f15fe8f868c9b9",
+    "Ranvier.Dom.0.1.0-alpha.49.nupkg": "2cbf094dee337e68f7f99a8131ae4fb4c78a2a14d579db68496783a09f37ecc2",
+    "Ranvier.WebCore.0.1.0-preview.46.nupkg": "4a747b40b9f6981c9fab513698ea81df2660ad1dec0327ef87f8c9ebc47a67f5"
+  },
+  "nativeRuntime": "waapi-candidate-5 (Ranvier.WebCore docs/web-animations-evidence/a05/final-evidence.json)",
+  "jit": {
+    "exitCode": 0,
+    "logSha256": "b9233d66973ebd65bdd3ef056f8cd0ecfd590e22cb93e720e2ae7cd018719d93",
+    "passLines": 124,
+    "webAnimations": [
+      "NATIVE_API A01 PASS assertions=110",
+      "NATIVE_API A01 LIFETIME PASS assertions=3",
+      "NATIVE_API A02 PASS assertions=54",
+      "NATIVE_API A05 PASS assertions=33",
+      "NATIVE_API A04 PASS assertions=9"
+    ]
+  },
+  "aot": {
+    "exitCode": 0,
+    "logSha256": "49707f8f9541504f2ea625524b96eac07a763f8394280d98431bc1e089b7d535",
+    "passLines": 124,
+    "webAnimations": [
+      "NATIVE_API A01 PASS assertions=110",
+      "NATIVE_API A01 LIFETIME PASS assertions=3",
+      "NATIVE_API A02 PASS assertions=54",
+      "NATIVE_API A05 PASS assertions=33",
+      "NATIVE_API A04 PASS assertions=9"
+    ]
+  },
+  "chromium": {
+    "exitCode": 0,
+    "logSha256": "1e34c6d29e7bee9ce17301f6d3ada1b15415f54d5cf14594866e912081c84c5b",
+    "passLines": 90,
+    "webAnimations": [
+      "BROWSER_API A01 PASS assertions=110 engine=chromium",
+      "BROWSER_API A02 PASS assertions=54 engine=chromium",
+      "BROWSER_API A05 PASS assertions=33 engine=chromium",
+      "BROWSER_API A04 PASS assertions=9 engine=chromium"
+    ]
+  },
+  "repeat30": {
+    "aot": {
+      "runs": 120,
+      "distinct": [
+        "NATIVE_API A01 PASS assertions=110",
+        "NATIVE_API A02 PASS assertions=54",
+        "NATIVE_API A04 PASS assertions=9",
+        "NATIVE_API A05 PASS assertions=33"
+      ]
+    },
+    "chromium": {
+      "runs": 120,
+      "distinct": [
+        "BROWSER_API A01 PASS assertions=110 engine=chromium",
+        "BROWSER_API A02 PASS assertions=54 engine=chromium",
+        "BROWSER_API A04 PASS assertions=9 engine=chromium",
+        "BROWSER_API A05 PASS assertions=33 engine=chromium"
+      ]
+    }
+  },
+  "baselinePassLines": {
+    "jit": 119,
+    "aot": 119,
+    "chromium": 86,
+    "note": "batch-1 base by subtraction of the lane lines"
+  },
+  "qualifications": [
+    "omitted timeline and Some null are the document timeline; CreateAnimationWithoutTimeline is explicit",
+    "keyframe-sequence form only",
+    "Views kinds 900-902 are placeholders",
+    "A02 numbers within 1e-3; typed CSSNumericValue durations/times unsupported in native decoders",
+    "A04 engine differences (style attribute order, value over important inline) are native-only qualified, outside the shared fixture",
+    "local private feed (alpha.49/preview.46 rebuilt locally); never pushed"
+  ]
+}
