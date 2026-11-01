@@ -16,6 +16,8 @@ The host uses a 4 GiB managed heap limit. The MSBuild integration writes its run
 decimal byte count, for example `-p:RanvierAnalyzerHeapHardLimitBytes=6442450944`, to choose another limit for that build.
 The limit covers the managed heap; the process also uses native memory. Direct invocation uses the packaged 4 GiB default.
 The optional provenance receipt records the runtime's actual available GC memory and GC mode.
+The default is a JSON number in `runtimeconfig.template.json`: the SDK's MSBuild option conversion
+only recognizes 32-bit integers and would emit the 4 GiB value as a string.
 
 To reproduce the compiler producer, install .NET SDK 10.0.403 and run
 `python build_compiler.py --work <empty-work-directory>` from this directory. The producer fetches the
