@@ -6,7 +6,7 @@
   "compilerSourceCommit": "a8dd0577c5c13f43a2f57fe33b4ff11b90f6371e",
   "compilerVersion": "43.12.402.0",
   "compilerPublicKeyToken": "",
-  "compilerSha256": "ba8cbca099c187650df9720f3a71285546587546a697ee14e7126b62c447a238",
+  "compilerSha256": "7fd7d2eb612f03a75bafe1fec971d1caad3352fcaa876eabde81db62111e8031",
   "sourceGuardSha256": "f18c28c6eb1005157de326be2f122e054ec1f8f4ee63c23345fe8a62f2fb98d5",
   "qualification": "Unsigned experimental vendor build. Not an official Microsoft compiler package or identity."
 }

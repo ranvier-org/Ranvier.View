@@ -83,6 +83,29 @@ jobs:
         run: python tools/Ranvier.Analyzers.Host/tests/test_build_compiler_supervision.py
       - name: Verify package layout and pinned upstream payload
         run: python tools/Ranvier.Analyzers.Host/tests/test_package.py --package artifacts/feed/Ranvier.Analyzers.Host.0.1.0-preview.1.nupkg --upstream-package artifacts/nuget/fsharp-analyzers/0.41.0/fsharp-analyzers.0.41.0.nupkg
+      - name: Verify the external-consumer harness
+        run: python tools/Ranvier.Analyzers.Host/tests/test_consumer.py
+      - name: Prepare the isolated analyzer feed configuration
+        shell: python {0}
+        run: |
+          import runpy
+          harness = runpy.run_path('tools/Ranvier.Analyzers.Host/tests/test_consumer.py', run_name='feed_configuration')
+          harness['write_nuget_config']('artifacts/feed', 'artifacts/analyzer-feed.NuGet.Config')
+      - name: Pack the analyzer with its transitive owned host
+        run: |
+          $config = (Resolve-Path 'artifacts/analyzer-feed.NuGet.Config').Path
+          dotnet pack tools/Ranvier.Analyzers/Ranvier.Analyzers.fsproj -c Release --nologo -o artifacts/feed "-p:RestoreConfigFile=$config"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify fresh package-only external consumers
+        run: python tools/Ranvier.Analyzers.Host/tests/test_consumer.py --run-external --host-feed artifacts/feed --evidence-dir "${{ runner.temp }}/ranvier-analyzer-consumer-proof" --dotnet dotnet --sdk-version 10.0.403
+      - name: Retain external-consumer diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analyzer-host-consumers-${{ matrix.os }}-${{ github.sha }}
+          path: ${{ runner.temp }}/ranvier-analyzer-consumer-proof
+          if-no-files-found: warn
+          retention-days: 3
       - name: Retain qualification packages
         uses: actions/upload-artifact@v4
         with:
