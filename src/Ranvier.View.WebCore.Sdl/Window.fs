@@ -82,7 +82,7 @@ module internal Sdl =
 /// created it, which is the host's thread.
 /// </summary>
 [<Sealed>]
-type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
+type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option) =
     // CSS pixels a wheel tick scrolls.
     static let wheelStep = 40.0f
     // RV_CURSOR_NONE.
@@ -90,7 +90,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     let id = SDL3.SDL_GetWindowID window
     let cursors = Dictionary<SDL_SystemCursor, nativeint>()
-    let presenter = new Presenter (renderer, host)
+    let presenter = new Presenter (renderer, host, egl)
     let mutable accessibilityAttached = false
     let mutable fullPaint = true
     let mutable exposed = true
@@ -437,6 +437,12 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                     SDL3.SDL_CreateRenderer (window, NativePtr.nullPtr<byte>)
                 else
                     accelerated
+            | None when
+                OperatingSystem.IsLinux ()
+                && WebCoreHost.Has "presentation-egl"
+                ->
+                use name = fixed Sdl.utf8 "opengles2"
+                SDL3.SDL_CreateRenderer (window, name)
             | None -> SDL3.SDL_CreateRenderer (window, NativePtr.nullPtr<byte>)
 
         if NativePtr.isNullPtr drawing then
@@ -449,9 +455,10 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         let mutable page = None
 
         try
+            let egl = EglRenderer.TryCreate drawing
             let host = WebCoreHost.Create (width, height)
             page <- Some host
-            new Window (window, drawing, host)
+            new Window (window, drawing, host, egl)
         with _ ->
             page
             |> Option.iter (fun host -> (host :> IDisposable).Dispose())
@@ -544,6 +551,9 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     /// <summary>The number of shared GPU frames presented to the window.</summary>
     member internal _.GpuFramesPresented = presenter.GpuFramesPresented
+
+    /// <summary>The number of presentation attempts that took the CPU path.</summary>
+    member internal _.CpuFramesPresented = presenter.CpuFramesPresented
 
     /// <summary>Whether Windows UI Automation is attached to the window.</summary>
     member internal _.AccessibilityAttached = accessibilityAttached
