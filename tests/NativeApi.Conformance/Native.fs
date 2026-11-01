@@ -2944,19 +2944,26 @@ let private runMediaCapabilities () =
         {
             Settle = fun () -> async { host.Cycle () |> ignore }
             Rejected = MediaCapabilityChecks.webkitRejected
-            // No flavor has a media engine configuration provider (the media-decoding-provider capability).
-            // Platform difference: macOS builds WebRTC in, and its engine WebRTCProvider supports VP8, as the
-            // Ranvier.WebCore media_capabilities probe records.
+            // Windows and Linux have no media engine configuration provider (the media-decoding-provider and
+            // media-encoding-provider capabilities), so every valid query is unsupported. Platform differences, as the
+            // Ranvier.WebCore media_capabilities probe records: macOS decoding answers come from the Cocoa decoding
+            // provider, and macOS builds WebRTC in, whose engine WebRTCProvider supports VP8 encoding.
             Answer =
                 fun name ->
-                    Some
-                        {
-                            Supported =
-                                System.OperatingSystem.IsMacOS ()
-                                && name.EndsWith ("webrtc vp8", System.StringComparison.Ordinal)
-                            Smooth = false
-                            PowerEfficient = false
-                        }
+                    if
+                        System.OperatingSystem.IsMacOS ()
+                        && not (name.StartsWith ("encoding ", System.StringComparison.Ordinal))
+                    then
+                        None
+                    else
+                        Some
+                            {
+                                Supported =
+                                    System.OperatingSystem.IsMacOS ()
+                                    && name.EndsWith ("webrtc vp8", System.StringComparison.Ordinal)
+                                Smooth = false
+                                PowerEfficient = false
+                            }
         }
 
     let shared =
