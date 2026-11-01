@@ -1,6 +1,7 @@
 """Writes tests/NativeApi.Conformance/CaretOracle.fs from Ranvier.WebCore's tests/fixtures/caret-hit-oracle.json (Chromium
 156) and the native engine's measured differences per platform: tests/fixtures/caret-hit-qualified.json (Windows),
-caret-hit-qualified.linux.json and caret-hit-qualified.darwin.json.
+caret-hit-qualified.linux.json and caret-hit-qualified.darwin.json. Chromium's own differences on Linux come from
+tests/NativeApi.Conformance/caret-hit-qualified.chromium-linux.json in this repository.
 
 Usage: python -I tools/generate-caret-oracle.py <Ranvier.WebCore checkout>"""
 import hashlib
@@ -108,6 +109,16 @@ def main(webcore):
             lines.append(f'            {fs(scroll + "|" + point + "|" + member)}, {fs(value)}')
         lines.append('        ]')
         counts.append(f'{len(seen)} {platform}')
+    chromium_path = here / 'tests/NativeApi.Conformance/caret-hit-qualified.chromium-linux.json'
+    chromium = json.loads(chromium_path.read_text(encoding='utf-8'))
+    assert chromium['browser'] == oracle['browser'], 'the Chromium Linux differences were measured on another browser'
+    lines += ['',
+              f"/// <summary>Chromium's measured differences on Linux from the oracle, recorded on Windows (caret-hit-qualified.chromium-linux.json, sha256 {hashlib.sha256(chromium_path.read_bytes()).hexdigest()[:16]}).</summary>",
+              'let chromiumQualifiedLinux =', '    Map.ofList', '        [']
+    for key, value in sorted(chromium['differences'].items()):
+        lines.append(f'            {fs(key)}, {fs(value)}')
+    lines.append('        ]')
+    counts.append(f"{len(chromium['differences'])} Chromium on Linux")
     lines.append('')
     (here / 'tests/NativeApi.Conformance/CaretOracle.fs').write_text('\n'.join(lines), encoding='utf-8', newline='\n')
     print('CaretOracle.fs:', len(oracle['points']), 'points,', len(cases), 'scroll offsets,', 'native qualifications:', ', '.join(counts))
