@@ -26,6 +26,11 @@ type Driver =
         Settle: unit -> Async<unit>
         /// <summary>The native host: runs the native-only steps and the supply checks.</summary>
         Native: bool
+        /// <summary>
+        /// False where the engine reports no pointing device outside touch emulation: a step with a fine pointer then
+        /// matches <c>(pointer: none)</c> in place of the fine pointer and hover queries.
+        /// </summary>
+        PointingDevice: bool
     }
 
 let queries =
@@ -243,9 +248,33 @@ let run (create: unit -> MediaQueryService) (driver: Driver) =
 
         let mutable previous: Step option = None
 
+        let expectation (step: Step) =
+            if
+                driver.PointingDevice
+                || step.Preferences.Pointer
+                   <> Some PointerAccuracy.Fine
+            then
+                step
+            else
+                let pointing =
+                    [
+                        "(pointer: fine)"
+                        "(hover: hover)"
+                        "(any-pointer: fine)"
+                        "(any-hover: hover)"
+                    ]
+
+                { step with
+                    Matches =
+                        "(pointer: none)"
+                        :: (step.Matches
+                            |> List.filter (fun query -> not (List.contains query pointing)))
+                }
+
         for step in
             steps
-            |> List.filter (fun step -> driver.Native || step.Chromium) do
+            |> List.filter (fun step -> driver.Native || step.Chromium)
+            |> List.map expectation do
             do! driver.Apply step
             do! driver.Settle ()
 

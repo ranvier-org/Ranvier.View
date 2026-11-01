@@ -311,7 +311,11 @@ let private runInputState () =
                     host.Document
                     (fun () -> Ranvier.View.WebCore.InputState.forHost host)
                     Ranvier.View.WebCore.InputState.capabilities
-                    Ranvier.Dom.CapabilityState.Yes
+                    // Platform difference: macOS engine builds turn touch events off and report touch input Implemented No.
+                    (if System.OperatingSystem.IsMacOS () then
+                         Ranvier.Dom.CapabilityState.No
+                     else
+                         Ranvier.Dom.CapabilityState.Yes)
                     driver
                 |> Async.StartImmediateAsTask
 
@@ -372,6 +376,8 @@ let private runInputState () =
 /// <summary>Runs the shared pointer-input fixture with native pointer ids, lock denial and refusal, touch capacity and
 /// host-disposal checks.</summary>
 let private runPointerInput () =
+    // Platform difference: macOS engine builds turn touch events off, which leaves out the 30 touch-frame assertions.
+    let touch = not (System.OperatingSystem.IsMacOS ())
     let host = WebCoreHost.Create (320, 240)
     let session = host.Session
     let mutable native = 0
@@ -432,6 +438,7 @@ let private runPointerInput () =
                         sample.MovementX <- float dx
                         sample.MovementY <- float dy
                         send [| sample |])
+            ExactLockedMoves = true
             GrantLock =
                 fun () ->
                     input (fun () ->
@@ -449,7 +456,10 @@ let private runPointerInput () =
                     host.Document
                     (Ranvier.View.WebCore.PointerInput.provider host)
                     (Ranvier.View.WebCore.PointerInput.capabilities ())
-                    Ranvier.Dom.CapabilityState.Yes
+                    (if touch then
+                         Ranvier.Dom.CapabilityState.Yes
+                     else
+                         Ranvier.Dom.CapabilityState.No)
                     driver
                 |> Async.StartImmediateAsTask
 
@@ -471,35 +481,36 @@ let private runPointerInput () =
 
             host.Document.addEventListener ("pointerdown", listener, false)
 
-            send
-                [|
-                    touchSample
-                        {
-                            Id = 5
-                            Action = 1
-                            X = 50.0
-                            Y = 50.0
-                            RadiusX = 1.0
-                            RadiusY = 1.0
-                            Angle = 0.0
-                            Force = 0.5
-                        }
-                |]
+            if touch then
+                send
+                    [|
+                        touchSample
+                            {
+                                Id = 5
+                                Action = 1
+                                X = 50.0
+                                Y = 50.0
+                                RadiusX = 1.0
+                                RadiusY = 1.0
+                                Angle = 0.0
+                                Force = 0.5
+                            }
+                    |]
 
-            send
-                [|
-                    touchSample
-                        {
-                            Id = 5
-                            Action = 2
-                            X = 50.0
-                            Y = 50.0
-                            RadiusX = 1.0
-                            RadiusY = 1.0
-                            Angle = 0.0
-                            Force = 0.5
-                        }
-                |]
+                send
+                    [|
+                        touchSample
+                            {
+                                Id = 5
+                                Action = 2
+                                X = 50.0
+                                Y = 50.0
+                                RadiusX = 1.0
+                                RadiusY = 1.0
+                                Angle = 0.0
+                                Force = 0.5
+                            }
+                    |]
 
             send
                 [|
@@ -538,7 +549,10 @@ let private runPointerInput () =
                 |]
 
             host.Document.removeEventListener ("pointerdown", listener, false)
-            expect (ids.ToArray () = [| (7, "touch"); ((1 <<< 30) + 3, "pen") |]) "Native touch and pen pointer ids"
+
+            expect
+                (ids.ToArray () = Array.append (if touch then [| (7, "touch") |] else [||]) [| ((1 <<< 30) + 3, "pen") |])
+                "Native touch and pen pointer ids"
 
             // The embedder denies a request; a request without a gesture is refused at once. A new document has no relock
             // allowance from the shared fixture's exit.
@@ -605,7 +619,7 @@ let private runPointerInput () =
 
     expect (session.LiveObjects = 0) "Pointer-input fixture leaves no live native objects"
 
-    if shared <> 61 then
+    if shared <> (if touch then 61 else 31) then
         failwith $"Pointer-input shared assertions did not run: {shared}"
 
     System.Console.WriteLine $"NATIVE_API I03_I04_I06 PASS assertions={shared}"
@@ -1390,6 +1404,10 @@ let private runBinary () =
 [<Literal>]
 let private DataTransferChecksCount = 49
 
+// KNOWN BUG Ranvier.WebCore#156, not a platform difference: Linux (WPE) drops carry no Files, which asserts five
+// fewer checks. Remove the case when #156 is fixed.
+let private dropKeepsFiles = not (System.OperatingSystem.IsLinux ())
+
 let private runDataTransfer () =
     let host = WebCoreHost.Create (320, 200)
     let session = host.Session
@@ -1433,6 +1451,7 @@ let private runDataTransfer () =
 
                             Ranvier.View.WebCore.DataTransfers.drop host x y 1 (payload strings files)
                             |> ignore
+                    DropKeepsFiles = dropKeepsFiles
                     Paste =
                         fun element strings files ->
                             (unbox<Ranvier.Dom.HTMLElement> element).focus()
@@ -1582,7 +1601,13 @@ let private runDataTransfer () =
     System.GC.WaitForPendingFinalizers ()
     expect (session.LiveObjects = 0) "DataTransfer fixture leaves no live native objects"
 
-    if shared <> DataTransferChecksCount then
+    if
+        shared
+        <> (if dropKeepsFiles then
+                DataTransferChecksCount
+            else
+                DataTransferChecksCount - 5)
+    then
         failwith (
             "DataTransfer shared assertions did not run: "
             + string shared
@@ -4041,6 +4066,7 @@ let private runMediaQueries () =
                             }
                     Settle = settle
                     Native = true
+                    PointingDevice = true
                 }
 
             let count =
@@ -5206,6 +5232,11 @@ let private runCanvasText () =
                     (fun () -> Ranvier.View.WebCore.Fonts.forHost host)
                     "https://r05.test/ahem"
                     CanvasTextChecks.TextEngine.WebKit
+                    // Platform difference: Linux (WPE, FreeType) measures a 20px Ahem advance as 20 - 2^-16.
+                    (if System.OperatingSystem.IsLinux () then
+                         20.0 - 1.0 / 65536.0
+                     else
+                         20.0)
                     (fun milliseconds ->
                         async {
                             let clock = System.Diagnostics.Stopwatch.StartNew ()

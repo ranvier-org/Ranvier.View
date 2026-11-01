@@ -15,6 +15,7 @@ type TextEngine =
 /// Chromium 156's and WebKit's (Ranvier.WebCore docs/canvas-text-evidence): WebKit reports the hanging baseline at the
 /// ascent and an inherited direction resolved, Chromium at 0.8 of the ascent and as inherit, without emHeight members.
 /// Actual bounding boxes are compared within 1px. Pixels are checked by the native canvas_text probe.
+/// <c>advance</c> is the measured advance of one 20px Ahem glyph: 20 where the engine keeps exact advances.
 /// </summary>
 let run
     (create: unit -> CanvasContextService)
@@ -22,6 +23,7 @@ let run
     (fonts: unit -> FontSet)
     (fontUrl: string)
     (engine: TextEngine)
+    (advance: float)
     (wait: int -> Async<unit>)
     =
     async {
@@ -146,29 +148,32 @@ let run
                 equal (label + " emHeightDescent") None measured.EmHeightDescent
                 near (label + " hangingBaseline") (12.8 - shift) measured.HangingBaseline 0.001
 
-        metrics "XXX" (CanvasText.measure ctx "XXX") 60.0 0.0 60.0 16.0 4.0 0.0
-        metrics "p" (CanvasText.measure ctx "p") 20.0 0.0 20.0 0.0 4.0 0.0
+        let glyphs (count: int) =
+            float count * advance
+
+        metrics "XXX" (CanvasText.measure ctx "XXX") (glyphs 3) 0.0 60.0 16.0 4.0 0.0
+        metrics "p" (CanvasText.measure ctx "p") (glyphs 1) 0.0 20.0 0.0 4.0 0.0
         ctx.textAlign <- CanvasTextAlign.Center
-        metrics "centred XX" (CanvasText.measure ctx "XX") 40.0 20.0 20.0 16.0 4.0 0.0
+        metrics "centred XX" (CanvasText.measure ctx "XX") (glyphs 2) 20.0 20.0 16.0 4.0 0.0
         ctx.textAlign <- CanvasTextAlign.Start
         ctx.textBaseline <- CanvasTextBaseline.Middle
-        metrics "middle X" (CanvasText.measure ctx "X") 20.0 0.0 20.0 16.0 4.0 6.0
+        metrics "middle X" (CanvasText.measure ctx "X") (glyphs 1) 0.0 20.0 16.0 4.0 6.0
         ctx.textBaseline <- CanvasTextBaseline.Alphabetic
         ctx.wordSpacing <- "7px"
-        equal "word-spaced width" 67.0 (CanvasText.measure ctx "X X").Width
+        equal "word-spaced width" (glyphs 3 + 7.0) (CanvasText.measure ctx "X X").Width
         ctx.wordSpacing <- "0px"
         ctx.letterSpacing <- "5px"
-        equal "letter-spaced width" 75.0 (CanvasText.measure ctx "XXX").Width
+        equal "letter-spaced width" (glyphs 3 + 15.0) (CanvasText.measure ctx "XXX").Width
         ctx.letterSpacing <- "0px"
         ctx.direction <- CanvasDirection.Rtl
-        metrics "rtl XX" (CanvasText.measure ctx "XX") 40.0 40.0 0.0 16.0 4.0 0.0
+        metrics "rtl XX" (CanvasText.measure ctx "XX") (glyphs 2) 40.0 0.0 16.0 4.0 0.0
 
         // Drawing calls with and without maxWidth.
         ctx.fillText ("X", 10.0, 30.0)
         ctx.fillText ("XXXX", 0.0, 30.0, 40.0)
         ctx.strokeText ("X", 10.0, 30.0)
         ctx.strokeText ("X", 10.0, 30.0, 0.0)
-        equal "measure after drawing" 20.0 (CanvasText.measure ctx "X").Width
+        equal "measure after drawing" (glyphs 1) (CanvasText.measure ctx "X").Width
         style.remove ()
         element.remove ()
         return checks

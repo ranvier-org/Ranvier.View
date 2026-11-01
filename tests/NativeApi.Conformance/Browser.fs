@@ -840,6 +840,11 @@ let private moveBy (x: int) (y: int) (dx: int) (dy: int) : JS.Promise<unit> = js
 [<Emit("new Promise(resolve => setTimeout(resolve, 150))")>]
 let private settleTasks () : JS.Promise<unit> = jsNative
 
+// Platform difference: Linux Chromium delivers a locked CDP move as several pointermoves, with movement measured from
+// the window origin and a return move (measured: 0,0; 90,80; -90,-80; 0,0 for a move by 30,20 from 60,60).
+[<Emit("!navigator.userAgent.includes('Linux')")>]
+let private exactLockedMoves () : bool = jsNative
+
 /// <summary>Runs the shared pointer-input assertions with CDP touch, pen and mouse input.</summary>
 /// <remarks>Headless Chromium grants a pointer-lock request without asking, so granting is a no-op.</remarks>
 let runPointerInput () =
@@ -852,6 +857,7 @@ let runPointerInput () =
                 Pen = fun pen -> penSample pen |> Async.AwaitPromise
                 Click = fun x y -> clickAt x y |> Async.AwaitPromise
                 MoveBy = fun x y dx dy -> moveBy x y dx dy |> Async.AwaitPromise
+                ExactLockedMoves = exactLockedMoves ()
                 GrantLock = fun () -> settleTasks () |> Async.AwaitPromise
                 Settle = fun () -> settleTasks () |> Async.AwaitPromise
             }
@@ -1251,6 +1257,7 @@ let runDataTransfer () =
             Create = fun () -> transfers.Create ()
             File = fun name kind text -> binary.CreateFile ([| BlobPart.Text text |], name, { FileOptions.Default with Type = kind })
             Drop = fun element strings files -> dispatchDrop element (transfer strings files)
+            DropKeepsFiles = true
             Paste = fun element strings files -> dispatchPaste element (transfer strings files)
         }
 
@@ -1516,6 +1523,8 @@ let runMediaQueries () =
                                 do! viewportFrames () |> Async.AwaitPromise
                         }
                 Native = false
+                // Platform difference: headless Chromium on Linux reports no pointing device (pointer: none).
+                PointingDevice = not (onLinux ())
             }
 
         let! count =
@@ -1567,6 +1576,7 @@ let runCanvasText () =
                 (fun () -> BrowserFonts.forDocument document)
                 "/fixtures/Ahem.ttf"
                 CanvasTextChecks.TextEngine.Chromium
+                20.0
                 wait
 
         return {| canvasText = count |}

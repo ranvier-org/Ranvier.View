@@ -44,6 +44,11 @@ type Driver =
         Click: int -> int -> Async<unit>
         /// <summary>A mouse move by movementX, movementY to x, y.</summary>
         MoveBy: int -> int -> int -> int -> Async<unit>
+        /// <summary>
+        /// Whether a locked move arrives as one pointermove with the given movement. False accepts any number of locked
+        /// moves on the lock target at the held position, with their movement unchecked.
+        /// </summary>
+        ExactLockedMoves: bool
         /// <summary>The embedder grants the pending pointer-lock request.</summary>
         GrantLock: unit -> Async<unit>
         /// <summary>Runs queued tasks, such as pointerlockchange.</summary>
@@ -159,122 +164,124 @@ let run (document: Document) (provider: PointerInputProvider) (capabilities: Cap
                 Force = force
             }
 
-        // Touch: two contacts on #t, then contact 1 moves, lifts, and the platform cancels contact 0.
-        do! driver.Touch [| contact 0 1 50.0 50.0 4.0 6.0 30.0 0.4 |]
-        let frame = take ()
+        // Touch: two contacts on #t, then contact 1 moves, lifts, and the platform cancels contact 0. A host without
+        // touch events (touchState No) delivers no touch frames.
+        if touchState = CapabilityState.Yes then
+            do! driver.Touch [| contact 0 1 50.0 50.0 4.0 6.0 30.0 0.4 |]
+            let frame = take ()
 
-        match touchesOf frame "touchstart" with
-        | [| start |] ->
-            equal "touchstart trusted" true start.isTrusted
-            equal "touchstart target" "pointer-t" (idOf start.target)
-            equal "start 0 touches" [| 0 |] (ids start.touches)
-            equal "start 0 changed" [| 0 |] (ids start.changedTouches)
-            equal "start 0 target touches" [| 0 |] (ids start.targetTouches)
-            let first = (PointerInput.contacts provider start.changedTouches)[0]
-            equal "start 0 position" (50.0, 50.0, 50.0, 50.0) (first.ClientX, first.ClientY, first.PageX, first.PageY)
-            equal "start 0 radii" (4.0, 6.0) (first.Geometry.RadiusX, first.Geometry.RadiusY)
-            near "start 0 rotation" 30.0 first.Geometry.RotationAngle
-            near "start 0 force" 0.4 first.Geometry.Force
-            equal "start 0 contact target" "pointer-t" (idOf first.Target)
-        | other -> failwith ("touchstart count " + string other.Length)
+            match touchesOf frame "touchstart" with
+            | [| start |] ->
+                equal "touchstart trusted" true start.isTrusted
+                equal "touchstart target" "pointer-t" (idOf start.target)
+                equal "start 0 touches" [| 0 |] (ids start.touches)
+                equal "start 0 changed" [| 0 |] (ids start.changedTouches)
+                equal "start 0 target touches" [| 0 |] (ids start.targetTouches)
+                let first = (PointerInput.contacts provider start.changedTouches)[0]
+                equal "start 0 position" (50.0, 50.0, 50.0, 50.0) (first.ClientX, first.ClientY, first.PageX, first.PageY)
+                equal "start 0 radii" (4.0, 6.0) (first.Geometry.RadiusX, first.Geometry.RadiusY)
+                near "start 0 rotation" 30.0 first.Geometry.RotationAngle
+                near "start 0 force" 0.4 first.Geometry.Force
+                equal "start 0 contact target" "pointer-t" (idOf first.Target)
+            | other -> failwith ("touchstart count " + string other.Length)
 
-        let firstPointer =
-            match pointersOf frame "pointerdown" with
-            | [| down |] ->
-                equal "touch pointerdown type" "touch" down.pointerType
-                equal "touch pointerdown primary" true down.isPrimary
-                equal "touch pointerdown size" (8.0, 12.0) (down.width, down.height)
-                near "touch pointerdown pressure" 0.4 (float down.pressure)
-                equal "touch pointerdown target" "pointer-t" (idOf down.target)
-                down.pointerId
-            | other -> failwith ("pointerdown count " + string other.Length)
+            let firstPointer =
+                match pointersOf frame "pointerdown" with
+                | [| down |] ->
+                    equal "touch pointerdown type" "touch" down.pointerType
+                    equal "touch pointerdown primary" true down.isPrimary
+                    equal "touch pointerdown size" (8.0, 12.0) (down.width, down.height)
+                    near "touch pointerdown pressure" 0.4 (float down.pressure)
+                    equal "touch pointerdown target" "pointer-t" (idOf down.target)
+                    down.pointerId
+                | other -> failwith ("pointerdown count " + string other.Length)
 
-        do!
-            driver.Touch
-                [|
-                    contact 0 4 50.0 50.0 4.0 6.0 30.0 0.4
-                    contact 1 1 100.0 60.0 2.0 2.0 0.0 0.8
-                |]
+            do!
+                driver.Touch
+                    [|
+                        contact 0 4 50.0 50.0 4.0 6.0 30.0 0.4
+                        contact 1 1 100.0 60.0 2.0 2.0 0.0 0.8
+                    |]
 
-        let frame = take ()
+            let frame = take ()
 
-        match touchesOf frame "touchstart" with
-        | [| start |] ->
-            equal "start 1 touches" [| 0; 1 |] (ids start.touches)
-            equal "start 1 changed" [| 1 |] (ids start.changedTouches)
-        | other -> failwith ("second touchstart count " + string other.Length)
+            match touchesOf frame "touchstart" with
+            | [| start |] ->
+                equal "start 1 touches" [| 0; 1 |] (ids start.touches)
+                equal "start 1 changed" [| 1 |] (ids start.changedTouches)
+            | other -> failwith ("second touchstart count " + string other.Length)
 
-        let secondPointer =
-            match pointersOf frame "pointerdown" with
-            | [| down |] ->
-                equal "second contact not primary" false down.isPrimary
-                equal "second contact distinct pointer" true (down.pointerId <> firstPointer)
-                down.pointerId
-            | other -> failwith ("second pointerdown count " + string other.Length)
+            let secondPointer =
+                match pointersOf frame "pointerdown" with
+                | [| down |] ->
+                    equal "second contact not primary" false down.isPrimary
+                    equal "second contact distinct pointer" true (down.pointerId <> firstPointer)
+                    down.pointerId
+                | other -> failwith ("second pointerdown count " + string other.Length)
 
-        do!
-            driver.Touch
-                [|
-                    contact 0 4 50.0 50.0 4.0 6.0 30.0 0.4
-                    contact 1 0 120.0 70.0 2.0 2.0 0.0 0.9
-                |]
+            do!
+                driver.Touch
+                    [|
+                        contact 0 4 50.0 50.0 4.0 6.0 30.0 0.4
+                        contact 1 0 120.0 70.0 2.0 2.0 0.0 0.9
+                    |]
 
-        let frame = take ()
+            let frame = take ()
 
-        match touchesOf frame "touchmove" with
-        | [| move |] ->
-            equal "move 1 changed" [| 1 |] (ids move.changedTouches)
-            equal "move 1 touches" [| 0; 1 |] (ids move.touches)
-            let moved = (PointerInput.contacts provider move.changedTouches)[0]
-            equal "move 1 position" (120.0, 70.0) (moved.ClientX, moved.ClientY)
-            near "move 1 force" 0.9 moved.Geometry.Force
-        | other -> failwith ("touchmove count " + string other.Length)
+            match touchesOf frame "touchmove" with
+            | [| move |] ->
+                equal "move 1 changed" [| 1 |] (ids move.changedTouches)
+                equal "move 1 touches" [| 0; 1 |] (ids move.touches)
+                let moved = (PointerInput.contacts provider move.changedTouches)[0]
+                equal "move 1 position" (120.0, 70.0) (moved.ClientX, moved.ClientY)
+                near "move 1 force" 0.9 moved.Geometry.Force
+            | other -> failwith ("touchmove count " + string other.Length)
 
-        let moves =
-            pointersOf frame "pointermove"
-            |> Array.filter (fun event -> event.pointerId = secondPointer)
+            let moves =
+                pointersOf frame "pointermove"
+                |> Array.filter (fun event -> event.pointerId = secondPointer)
 
-        equal
-            "contact 1 pointermove"
-            [| (120.0, 70.0) |]
-            (moves
-             |> Array.map (fun event -> event.clientX, event.clientY))
+            equal
+                "contact 1 pointermove"
+                [| (120.0, 70.0) |]
+                (moves
+                 |> Array.map (fun event -> event.clientX, event.clientY))
 
-        do!
-            driver.Touch
-                [|
-                    contact 0 4 50.0 50.0 4.0 6.0 30.0 0.4
-                    contact 1 2 120.0 70.0 2.0 2.0 0.0 0.9
-                |]
+            do!
+                driver.Touch
+                    [|
+                        contact 0 4 50.0 50.0 4.0 6.0 30.0 0.4
+                        contact 1 2 120.0 70.0 2.0 2.0 0.0 0.9
+                    |]
 
-        let frame = take ()
+            let frame = take ()
 
-        match touchesOf frame "touchend" with
-        | [| ending |] ->
-            equal "end 1 changed" [| 1 |] (ids ending.changedTouches)
-            equal "end 1 touches" [| 0 |] (ids ending.touches)
-        | other -> failwith ("touchend count " + string other.Length)
+            match touchesOf frame "touchend" with
+            | [| ending |] ->
+                equal "end 1 changed" [| 1 |] (ids ending.changedTouches)
+                equal "end 1 touches" [| 0 |] (ids ending.touches)
+            | other -> failwith ("touchend count " + string other.Length)
 
-        equal
-            "contact 1 pointerup"
-            [| secondPointer |]
-            (pointersOf frame "pointerup"
-             |> Array.map (fun event -> event.pointerId))
+            equal
+                "contact 1 pointerup"
+                [| secondPointer |]
+                (pointersOf frame "pointerup"
+                 |> Array.map (fun event -> event.pointerId))
 
-        do! driver.Touch [| contact 0 3 50.0 50.0 4.0 6.0 30.0 0.4 |]
-        let frame = take ()
+            do! driver.Touch [| contact 0 3 50.0 50.0 4.0 6.0 30.0 0.4 |]
+            let frame = take ()
 
-        match touchesOf frame "touchcancel" with
-        | [| cancel |] ->
-            equal "cancel 0 changed" [| 0 |] (ids cancel.changedTouches)
-            equal "cancel 0 touches" 0u cancel.touches.length
-        | other -> failwith ("touchcancel count " + string other.Length)
+            match touchesOf frame "touchcancel" with
+            | [| cancel |] ->
+                equal "cancel 0 changed" [| 0 |] (ids cancel.changedTouches)
+                equal "cancel 0 touches" 0u cancel.touches.length
+            | other -> failwith ("touchcancel count " + string other.Length)
 
-        equal
-            "contact 0 pointercancel"
-            [| firstPointer |]
-            (pointersOf frame "pointercancel"
-             |> Array.map (fun event -> event.pointerId))
+            equal
+                "contact 0 pointercancel"
+                [| firstPointer |]
+                (pointersOf frame "pointercancel"
+                 |> Array.map (fun event -> event.pointerId))
 
         // Pen: hover, a tilted press with pressure, a drag, release.
         let pen action x y buttons pressure =
@@ -401,10 +408,22 @@ let run (document: Document) (provider: PointerInputProvider) (capabilities: Cap
         do! driver.MoveBy 100 180 30 20
 
         match pointersOf (take ()) "pointermove" with
-        | [| move |] ->
+        | [| move |] when driver.ExactLockedMoves ->
             equal "locked move target" "pointer-t" (idOf move.target)
             equal "locked move holds the position" (60.0, 60.0) (move.clientX, move.clientY)
             equal "locked move movement" (30.0, 20.0) (move.movementX, move.movementY)
+        | moves when not driver.ExactLockedMoves && moves.Length > 0 ->
+            equal
+                "locked moves target"
+                true
+                (moves
+                 |> Array.forall (fun move -> idOf move.target = "pointer-t"))
+
+            equal
+                "locked moves hold the position"
+                true
+                (moves
+                 |> Array.forall (fun move -> (move.clientX, move.clientY) = (60.0, 60.0)))
         | other -> failwith ("locked moves " + string other.Length)
 
         equal "lock is not pointer capture" false (t.hasPointerCapture 1)
