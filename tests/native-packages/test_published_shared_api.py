@@ -16,6 +16,33 @@ spec.loader.exec_module(gate)
 
 
 class PublishedSharedApiTests(unittest.TestCase):
+    def test_pinned_fixture_content_preserves_font_output_metadata(self):
+        project = ('<Project><ItemGroup><None Include="Assets/Ahem.ttf" '
+                   'CopyToOutputDirectory="PreserveNewest" /><None Include="unused.txt" />'
+                   '</ItemGroup></Project>')
+        self.assertEqual(gate.content_items(project), [('Assets/Ahem.ttf', 'PreserveNewest')])
+        self.assertEqual(gate.content_items('<Project />'), [])
+        for include in ['../Ahem.ttf', '/tmp/Ahem.ttf', 'Assets/../../Ahem.ttf', 'C:/Ahem.ttf']:
+            with self.subTest(include=include), self.assertRaises(ValueError):
+                gate.content_items(f'<Project><None Include="{include}" CopyToOutputDirectory="Always" /></Project>')
+
+    def test_browser_staging_copies_pinned_imported_helper_modules(self):
+        files = {'package.json': b'{}', 'package-lock.json': b'{}',
+                 'browser.mjs': b"import { pixels } from './view-transition-pixels.mjs';\npixels();\n",
+                 'view-transition-pixels.mjs': b'export function pixels() {}\n'}
+        requested = []
+        def source(path):
+            requested.append(path)
+            return files[path.removeprefix(gate.FIXTURES)]
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            gate.stage_browser_runtime(source, output)
+            self.assertEqual({path.name: path.read_bytes() for path in output.iterdir()}, files)
+        self.assertEqual(set(requested), {gate.FIXTURES+name for name in files})
+        files['browser.mjs'] = b"import { pixels } from '../outside.mjs';\n"
+        with tempfile.TemporaryDirectory() as temporary, self.assertRaises(ValueError):
+            gate.stage_browser_runtime(source, Path(temporary))
+
     def test_current_module_labels_preserve_exact_counts_and_duplicate_guards(self):
         profile = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.8.json').read_text())
         modules = {

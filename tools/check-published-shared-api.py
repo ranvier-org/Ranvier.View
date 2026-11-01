@@ -91,6 +91,39 @@ def compile_names(project):
     return [name for _, name in compile_items(project)]
 
 
+def content_items(project):
+    items = []
+    for item in ET.fromstring(project).iter('None'):
+        copy = item.get('CopyToOutputDirectory')
+        if copy not in ['Always', 'PreserveNewest', 'IfDifferent']:
+            continue
+        include = item.get('Include', '')
+        if (not re.fullmatch(r'[A-Za-z0-9_./-]+', include) or include.startswith('/')
+                or any(part in ['', '.', '..'] for part in include.split('/'))):
+            raise ValueError('Fixture content must stay inside its source directory.')
+        items.append((include, copy))
+    return items
+
+
+def stage_browser_runtime(source, output):
+    pending = ['package.json', 'package-lock.json', 'browser.mjs']
+    copied = set()
+    while pending:
+        name = pending.pop(0)
+        if name in copied:
+            continue
+        if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:mjs|json)', name):
+            raise ValueError('Browser helper modules must stay in the fixture directory.')
+        content = source(FIXTURES + name)
+        (output / name).write_bytes(content)
+        copied.add(name)
+        if name.endswith('.mjs'):
+            for imported in re.findall(r"(?:\bfrom\s*|\bimport\s*)['\"](\.[^'\"\r\n]+)['\"]", content.decode()):
+                if not imported.startswith('./') or not imported.endswith('.mjs'):
+                    raise ValueError('Browser helper modules must stay in the fixture directory.')
+                pending.append(imported[2:])
+
+
 def verify_nuspec(source, commit):
     repository = ET.fromstring(source).find('.//{*}repository')
     if (repository is None or repository.get('commit') != commit
@@ -245,10 +278,17 @@ def main():
                           '<package pattern="*"/></packageSource></packageSourceMapping></configuration>')
         (output / 'global.json').write_bytes(source('global.json'))
         name = 'Native' if args.target == 'native' else 'Browser'
-        compiled = compile_items(source(FIXTURES + name + '.fsproj'))
+        fixture_project = source(FIXTURES + name + '.fsproj')
+        compiled = compile_items(fixture_project)
+        content_project = fixture_project if args.target == 'native' else source(FIXTURES + 'Native.fsproj')
+        content = content_items(content_project)
         names = [filename for _, filename in compiled]
         for path, filename in compiled:
             (output / filename).write_bytes(source(path))
+        for filename, _ in content:
+            destination = output / filename
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(source(FIXTURES + filename))
         properties = '<OutputType>Exe</OutputType><RuntimeIdentifier>win-x64</RuntimeIdentifier><PublishAot>true</PublishAot>' if args.target == 'native' else ''
         if args.target == 'native':
             trace = REPOSITORY / 'tests/native-packages/SharedTraceProbe.fs'
@@ -259,6 +299,8 @@ def main():
             evidence['native_runner_precheck'] = 'OfficialTraceProbe.verify () before original entry point'
             names.insert(0, trace.name)
         items = '\n'.join(f'    <Compile Include="{filename}" />' for filename in names)
+        items += '\n' + '\n'.join(f'    <None Include="{filename}" CopyToOutputDirectory="{copy}" CopyToPublishDirectory="{copy}" />'
+                                 for filename, copy in content)
         project = output / 'Consumer.fsproj'
         project.write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework>'
                            '<AssemblyName>' + ('OfficialViewConsumer' if args.target == 'native' else 'Browser')
@@ -294,8 +336,7 @@ def main():
             (output / '.config').mkdir()
             (output / '.config/dotnet-tools.json').write_text(json.dumps(tools))
             run('tools', 'dotnet', 'tool', 'restore', '--configfile', config)
-            for filename in ['package.json', 'package-lock.json', 'browser.mjs']:
-                (output / filename).write_bytes(source(FIXTURES + filename))
+            stage_browser_runtime(source, output)
             run('npm', 'npm.cmd' if os.name == 'nt' else 'npm', 'ci')
             run('chromium-install', 'npx.cmd' if os.name == 'nt' else 'npx', 'playwright', 'install', 'chromium')
             command = ['dotnet', 'fickl', project, '--outDir', output / 'generated', '--configuration', 'Release',
