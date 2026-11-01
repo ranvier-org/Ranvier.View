@@ -59,7 +59,7 @@ def validate_profile(profile):
             raise ValueError('Module assertions must name both targets.')
         for target, expected in modules.items():
             if (not isinstance(expected, dict) or not expected
-                    or any(not re.fullmatch('[A-Z0-9_]+', name) or type(value) is not int or value <= 0
+                    or any(not re.fullmatch(r'[A-Z0-9_]+(?:[ /][A-Z0-9_]+)*', name) or type(value) is not int or value <= 0
                            for name, value in expected.items())
                     or sum(expected.values()) != expected_shared(profile, target)):
                 raise ValueError('Module assertion counts must match the target total.')

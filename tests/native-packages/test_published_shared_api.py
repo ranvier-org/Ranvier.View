@@ -16,6 +16,47 @@ spec.loader.exec_module(gate)
 
 
 class PublishedSharedApiTests(unittest.TestCase):
+    def test_current_module_labels_preserve_exact_counts_and_duplicate_guards(self):
+        profile = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.8.json').read_text())
+        modules = {
+            'native': {'D11_VIEW_HYPERLINKS': 50, 'I03_I04_I06 NATIVE': 2,
+                       'G02/G12': 2, 'WC145 HOST': 2, 'A11 UNSUPPORTED': 1},
+            'browser': {'D11_VIEW_HYPERLINKS': 50, 'G02/G12': 2,
+                        'G03 NAVIGATION': 2, 'B22 INSECURE': 2}}
+        profile.update(module_assertions=modules,
+                       shared_assertions={target: sum(values.values()) for target, values in modules.items()},
+                       native_lifetime_assertions=2, browser_context_assertions=4)
+        gate.validate_profile(profile)
+        for target in ['native', 'browser']:
+            kind = target.upper()
+            log = '\n'.join(f'{kind}_API {name} PASS assertions={count}'
+                            for name, count in modules[target].items()) + '\n'
+            log += f'{kind}_API D09 TAB PASS\n'
+            if target == 'native':
+                log += ('NATIVE_API C04 LIFETIME PASS assertions=2\nNATIVE_API TEARDOWN PASS\n'
+                        'OFFICIAL_TRACE_METADATA PASS expected=False assemblies=5\n')
+            else:
+                log += 'BROWSER_API C03 CONTEXT PASS assertions=4 oracle=196609\n'
+            gate.verify_assertions(log, target, 'normal', profile)
+            duplicate = log.replace(f'{kind}_API G02/G12 PASS assertions=2',
+                                    f'{kind}_API G02/G12 PASS assertions=1\n'
+                                    f'{kind}_API G02/G12 PASS assertions=1')
+            with self.assertRaisesRegex(ValueError, 'module'):
+                gate.verify_assertions(duplicate, target, 'normal', profile)
+            altered = log.replace('G02/G12 PASS assertions=2', 'G02/G12 PASS assertions=3')
+            other = 'I03_I04_I06 NATIVE' if target == 'native' else 'G03 NAVIGATION'
+            altered = altered.replace(other+' PASS assertions=2', other+' PASS assertions=1')
+            with self.assertRaisesRegex(ValueError, 'module'):
+                gate.verify_assertions(altered, target, 'normal', profile)
+
+    def test_module_labels_reject_unstructured_whitespace_and_punctuation(self):
+        for label in [' A11', 'A11 ', 'A11  UNSUPPORTED', 'A11\tUNSUPPORTED', 'A11\nUNSUPPORTED',
+                      'A11 unsupported', '../A11', '/A11', 'A11/', 'A11\\UNSUPPORTED']:
+            profile = json.loads((ROOT / 'tests/native-packages/shared-api-0.1.8.json').read_text())
+            profile['module_assertions']['native'][label] = profile['module_assertions']['native'].pop('H02')
+            with self.subTest(label=label), self.assertRaisesRegex(ValueError, 'Module'):
+                gate.validate_profile(profile)
+
     def test_aot_receipt_rejects_successful_publish_of_managed_apphost(self):
         self.assertTrue(hasattr(gate, 'verify_aot_publish'), 'A successful publish and CLR-free apphost do not prove NativeAOT.')
         image = bytearray(512)
