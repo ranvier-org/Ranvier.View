@@ -3059,8 +3059,28 @@ let private runSnapshots () =
 
         let shared = count.GetAwaiter().GetResult()
 
-        if shared <> SnapshotChecksCount then
-            failwith $"Snapshot shared assertions did not run: {shared}"
+        // Platform difference: the macOS engine has no WEBP encoder (MIMETypeRegistry over ImageIO), so the three WEBP
+        // checks run on Windows and Linux only.
+        if
+            shared
+            <> (if System.OperatingSystem.IsMacOS () then
+                    SnapshotChecksCount - 3
+                else
+                    SnapshotChecksCount)
+        then
+            use service = Ranvier.View.WebCore.Snapshots.forHost host
+
+            let supported =
+                [
+                    Ranvier.Dom.ImageEncoding.Png
+                    Ranvier.Dom.ImageEncoding.Jpeg
+                    Ranvier.Dom.ImageEncoding.Webp
+                ]
+                |> List.map (fun encoding -> $"{encoding}={service.SupportsEncoding encoding}")
+                |> String.concat " "
+
+            failwith
+                $"Snapshot shared assertions did not run: {shared}; {supported} display-p3={service.SupportsColorSpace Ranvier.Dom.SnapshotColorSpace.DisplayP3}"
 
         System.Console.WriteLine $"NATIVE_API R12 PASS assertions={shared}"
         shared
