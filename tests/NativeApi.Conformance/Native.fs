@@ -2096,10 +2096,7 @@ let private runSegments () =
     let shared =
         try
             let count =
-                TextSegmentationChecks.run
-                    (fun () -> Ranvier.View.WebCore.TextSegmentation.forHost host)
-                    errorName
-                    (TextSegmentationChecks.WebKit (System.OperatingSystem.IsMacOS ()))
+                TextSegmentationChecks.run (fun () -> Ranvier.View.WebCore.TextSegmentation.forHost host) errorName TextSegmentationChecks.WebKit
 
             use segmenter = Ranvier.View.WebCore.TextSegmentation.forHost host
 

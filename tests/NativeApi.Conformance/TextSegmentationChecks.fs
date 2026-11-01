@@ -5,8 +5,8 @@ open Ranvier.Dom
 
 /// <summary>The segmenter whose measured differences from the other engine the fixture expects.</summary>
 type Parser =
-    /// <summary>WebKit's ICU 77 iterators (UAX #29 word rules), on macOS or on another platform.</summary>
-    | WebKit of darwin: bool
+    /// <summary>WebKit's ICU 77 iterators (UAX #29 word rules).</summary>
+    | WebKit
     /// <summary>Chromium 156's Intl.Segmenter, which breaks words at a full stop between letters.</summary>
     | Chromium
 
@@ -57,7 +57,7 @@ let run (create: unit -> TextSegmenter) (errorName: exn -> string) (parser: Pars
 
     let pick webkit chromium =
         match parser with
-        | WebKit _ -> webkit
+        | WebKit -> webkit
         | Chromium -> chromium
 
     use segmenter = create ()
@@ -134,15 +134,7 @@ let run (create: unit -> TextSegmenter) (errorName: exn -> string) (parser: Pars
          |> Array.head)
 
     equal "flags" [| "🇯🇵"; "🇺🇸" |] (texts SegmentGranularity.Grapheme None "🇯🇵🇺🇸")
-    let crlf = texts SegmentGranularity.Grapheme None "\r\nx"
-
-    match parser with
-    | WebKit true ->
-        // KNOWN BUG Ranvier.WebCore#154, not a platform difference: the macOS host breaks between CR and LF, against
-        // UAX #29 GB3. Asserts the observed segments, so the fix fails this check; remove the case when #154 is fixed.
-        equal "CRLF (known bug Ranvier.WebCore#154)" [| "\r"; "\n"; "x" |] crlf
-    | _ -> equal "CRLF" [| "\r\n"; "x" |] crlf
-
+    equal "CRLF" [| "\r\n"; "x" |] (texts SegmentGranularity.Grapheme None "\r\nx")
     equal "Indic conjuncts" [| "क्षि"; " "; "ठ्ठ" |] (texts SegmentGranularity.Grapheme (Some "hi") "क्षि ठ्ठ")
 
     equal
