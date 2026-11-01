@@ -261,6 +261,12 @@ module internal Kind =
     [<Literal>]
     let TextMetrics = 116
 
+    [<Literal>]
+    let ViewTransition = 2001
+
+    [<Literal>]
+    let ViewTransitionTypeSet = 2002
+
 /// <summary>A DOM exception WebCore raised; <c>name</c> is the DOM exception name, such as <c>NotFoundError</c>.</summary>
 exception WebCoreDomException of name: string * detail: string with
     override this.Message = this.name + ": " + this.detail
@@ -458,6 +464,8 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
         | Kind.ImageBitmap -> NativeDom.rv_dom_image_bitmap_release handle
         | Kind.ImageBitmapRenderingContext -> NativeDom.rv_dom_image_bitmap_rendering_context_release handle
         | Kind.TextMetrics -> NativeDom.rv_dom_text_metrics_release handle
+        | Kind.ViewTransition -> NativeDom.rv_dom_view_transition_release handle
+        | Kind.ViewTransitionTypeSet -> NativeDom.rv_dom_view_transition_type_set_release handle
         | _ -> ()
 
     member internal _.KindName(kind: int) =

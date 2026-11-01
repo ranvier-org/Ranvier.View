@@ -151,6 +151,8 @@ let private kinds =
             "ImageBitmap", "Kind.ImageBitmap"
             "ImageBitmapRenderingContext", "Kind.ImageBitmapRenderingContext"
             "TextMetrics", "Kind.TextMetrics"
+            "ViewTransition", "Kind.ViewTransition"
+            "ViewTransitionTypeSet", "Kind.ViewTransitionTypeSet"
         ]
 
 [<EntryPoint>]
