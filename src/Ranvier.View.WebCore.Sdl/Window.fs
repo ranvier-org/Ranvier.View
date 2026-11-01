@@ -99,6 +99,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let mutable composing = false
     let mutable cursor = -1
     let mutable disposed = false
+    let mutable pageDisposed = false
 
     // The window's display, which the host's screen follows through a core effect on the window's own graph.
     let readDisplay () =
@@ -395,6 +396,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// as "software".
     /// </summary>
     static member Create(title: string, width: int, height: int, ?hidden: bool, ?renderer: string) : Window =
+        EglRenderer.RetryFailedConstruction ()
         EglRenderer.Prepare ()
         // The page draws the input method's composition itself; the platform draws the candidates.
         (use name = fixed Sdl.utf8 "SDL_IME_IMPLEMENTED_UI"
@@ -453,6 +455,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             raise error
 
         SDL3.SDL_SetRenderVSync (drawing, 1) |> ignore
+        let cleanupEgl = EglRenderer.Capture drawing
         let mutable page = None
         let mutable egl = None
 
@@ -465,12 +468,21 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             page
             |> Option.iter (fun host -> (host :> IDisposable).Dispose())
 
-            egl
-            |> Option.iter (fun consumer -> consumer.Activate () |> ignore)
+            let cleanup () =
+                if
+                    cleanupEgl
+                    |> Option.forall (fun consumer -> consumer.Activate ())
+                then
+                    SDL3.SDL_DestroyRenderer drawing
+                    SDL3.SDL_DestroyWindow window
+                    SDL3.SDL_QuitSubSystem SDL_InitFlags.SDL_INIT_VIDEO
+                    true
+                else
+                    false
 
-            SDL3.SDL_DestroyRenderer drawing
-            SDL3.SDL_DestroyWindow window
-            SDL3.SDL_QuitSubSystem SDL_InitFlags.SDL_INIT_VIDEO
+            if not (cleanup ()) then
+                EglRenderer.RetainFailedConstruction cleanup
+
             reraise ()
 
     /// <summary>The window's page.</summary>
@@ -574,21 +586,24 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         member _.Dispose() =
             if not disposed then
                 presenter.ReleasePending ()
-                disposed <- true
 
-                if accessibilityAttached then
-                    WindowAccessibility.detach host
-                    accessibilityAttached <- false
+                if not pageDisposed then
+                    if accessibilityAttached then
+                        WindowAccessibility.detach host
+                        accessibilityAttached <- false
 
-                if not (isNull displayFeed) then
-                    displayFeed.Dispose ()
+                    if not (isNull displayFeed) then
+                        displayFeed.Dispose ()
 
-                (graph :> IDisposable).Dispose()
-                (presenter :> IDisposable).Dispose()
-                (host :> IDisposable).Dispose()
+                    (graph :> IDisposable).Dispose()
+                    (presenter :> IDisposable).Dispose()
+                    (host :> IDisposable).Dispose()
+                    pageDisposed <- true
 
                 egl
-                |> Option.iter (fun consumer -> consumer.Activate () |> ignore)
+                |> Option.iter (fun consumer ->
+                    if not (consumer.Activate ()) then
+                        raise (Sdl.failure "SDL_GL_MakeCurrent"))
 
                 for created in cursors.Values do
                     SDL3.SDL_DestroyCursor (NativePtr.ofNativeInt created)
@@ -597,6 +612,8 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 SDL3.SDL_DestroyRenderer renderer
                 SDL3.SDL_DestroyWindow window
                 SDL3.SDL_QuitSubSystem SDL_InitFlags.SDL_INIT_VIDEO
+
+                disposed <- true
 
 /// <summary>Opens SDL3 windows showing WebCore pages.</summary>
 module Window =

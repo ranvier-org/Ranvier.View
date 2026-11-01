@@ -49,6 +49,24 @@ module private EglCohort =
 
                     SDL3.SDL_QuitSubSystem SDL_InitFlags.SDL_INIT_VIDEO
 
+module private FailedConstruction =
+    // A failed activation cannot safely delete GL objects. Block new allocations
+    // until this single per-window owner can make its context current and clean up.
+    let mutable cleanup: (int * (unit -> bool)) option = None
+
+    let retry () =
+        match cleanup with
+        | Some (thread, _) when thread <> Environment.CurrentManagedThreadId -> invalidOp "SDL EGL construction cleanup must run on its owner thread"
+        | Some (_, pending) when pending () -> cleanup <- None
+        | Some _ -> invalidOp "An SDL EGL window is awaiting construction cleanup"
+        | None -> ()
+
+    let retain pending =
+        if cleanup.IsSome then
+            invalidOp "An SDL EGL construction cleanup owner already exists"
+
+        cleanup <- Some (Environment.CurrentManagedThreadId, pending)
+
 /// <summary>Imports Linux EGL frames into an SDL GLES renderer on its owner thread.</summary>
 /// <remarks>The shared EGL cohort lives until process exit; this window's renderer owns its context and textures.</remarks>
 type internal EglRenderer private (renderer: nativeptr<SDL_Renderer>, window: nativeptr<SDL_Window>, context: nativeptr<SDL_GLContextState>) =
@@ -60,6 +78,14 @@ type internal EglRenderer private (renderer: nativeptr<SDL_Renderer>, window: na
     /// <summary>Restores the actual consumer context after native WebCore calls.</summary>
     member _.Activate() =
         activate ()
+
+    /// <summary>Finishes the single pending constructor cleanup before allocating another window.</summary>
+    static member RetryFailedConstruction() =
+        FailedConstruction.retry ()
+
+    /// <summary>Retains one failed constructor's SDL resources until its context can be activated.</summary>
+    static member RetainFailedConstruction(cleanup: unit -> bool) =
+        FailedConstruction.retain cleanup
 
     /// <summary>Acquires a native frame with this renderer's consumer context current.</summary>
     member _.Acquire(host: nativeint, frame: byref<nativeint>) =
@@ -114,8 +140,8 @@ type internal EglRenderer private (renderer: nativeptr<SDL_Renderer>, window: na
             SDL3.SDL_SetHint ("SDL_VIDEO_FORCE_EGL", "1")
             |> ignore
 
-    /// <summary>Uses the process EGL cohort; the first registration must precede host creation.</summary>
-    static member TryCreate(renderer: nativeptr<SDL_Renderer>) =
+    /// <summary>Captures a GLES renderer for cleanup without committing the process EGL cohort.</summary>
+    static member Capture(renderer: nativeptr<SDL_Renderer>) =
         if
             OperatingSystem.IsLinux ()
             && WebCoreHost.Has "presentation-egl"
@@ -129,10 +155,15 @@ type internal EglRenderer private (renderer: nativeptr<SDL_Renderer>, window: na
                 display <> 0n
                 && not (NativePtr.isNullPtr window)
                 && not (NativePtr.isNullPtr context)
-                && EglCohort.configure display
             then
                 Some (new EglRenderer (renderer, window, context))
             else
                 None
         else
             None
+
+    /// <summary>Uses the process EGL cohort; the first registration must precede host creation.</summary>
+    static member TryCreate(renderer: nativeptr<SDL_Renderer>) =
+        match EglRenderer.Capture renderer with
+        | Some consumer when EglCohort.configure (SDL3.SDL_EGL_GetCurrentDisplay ()) -> Some consumer
+        | _ -> None

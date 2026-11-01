@@ -71,22 +71,15 @@ let private mount (host: Ranvier.View.WebCore.WebCoreHost) =
 [<System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)>]
 type private InvalidTextureBind = delegate of uint32 * uint32 -> unit
 
-let private eglReleaseRetrySmoke (window: Window) =
-    window.Present ()
-
-    let pointer =
-        Microsoft.FSharp.NativeInterop.NativePtr.ofNativeInt<SDL.SDL_Window> window.SdlWindow
-
-    let renderer = SDL.SDL3.SDL_GetRenderer pointer
-
-    use presenter =
-        new Presenter (renderer, window.Host, EglRenderer.TryCreate renderer)
-
+let private induceGlError () =
     let bind =
         System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<InvalidTextureBind>(SDL.SDL3.SDL_GL_GetProcAddress "glBindTexture")
 
+    bind.Invoke (0xFFFFFFFFu, 0u)
+
+let private retainFailingEglFrame (presenter: Presenter) =
     let action (_: nativeptr<SDL.SDL_Texture>) (_: int) (_: int) =
-        bind.Invoke (0xFFFFFFFFu, 0u)
+        induceGlError ()
 
     let flags =
         System.Reflection.BindingFlags.Instance
@@ -106,6 +99,18 @@ let private eglReleaseRetrySmoke (window: Window) =
     if not failed then
         failwith "The EGL release failure fixture did not exercise a retained frame"
 
+let private eglReleaseRetrySmoke (window: Window) =
+    window.Present ()
+
+    let pointer =
+        Microsoft.FSharp.NativeInterop.NativePtr.ofNativeInt<SDL.SDL_Window> window.SdlWindow
+
+    let renderer = SDL.SDL3.SDL_GetRenderer pointer
+
+    use presenter =
+        new Presenter (renderer, window.Host, EglRenderer.TryCreate renderer)
+
+    retainFailingEglFrame presenter
     (presenter :> IDisposable).Dispose()
     let before = window.GpuFramesPresented
     window.Present ()
@@ -117,6 +122,46 @@ let private eglReleaseRetrySmoke (window: Window) =
         failwith "The retained EGL frame was lost or not released before retry"
 
     printfn "EGL release retry smoke passed"
+
+let private eglWindowDisposeRetrySmoke () =
+    use window = Window.create ("Ranvier disposal retry", 80, 60)
+    window.Present ()
+    let pointer = NativePtr.ofNativeInt<SDL.SDL_Window> window.SdlWindow
+    let windowId = SDL.SDL3.SDL_GetWindowID pointer
+    let context = SDL.SDL3.SDL_GL_GetCurrentContext ()
+
+    let flags =
+        System.Reflection.BindingFlags.Instance
+        ||| System.Reflection.BindingFlags.NonPublic
+
+    let field =
+        typeof<Window>.GetFields flags
+        |> Array.find (fun field -> field.FieldType = typeof<Presenter>)
+
+    let presenter = field.GetValue window :?> Presenter
+    retainFailingEglFrame presenter
+    induceGlError ()
+    let mutable failed = false
+
+    try
+        (window :> IDisposable).Dispose()
+    with error when error.Message.StartsWith "GPU frame release failed" ->
+        failed <- true
+
+    if not failed then
+        failwith "Window.Dispose did not preserve the failed EGL frame for retry"
+
+    if
+        SDL.SDL3.SDL_GetWindowID pointer <> windowId
+        || SDL.SDL3.SDL_GL_GetCurrentContext () <> context
+    then
+        failwith "Window.Dispose destroyed the consumer window or context before releasing its frame"
+
+    if window.Host.PaintSize <> struct (80, 60) then
+        failwith "Window.Dispose destroyed the host before releasing its frame"
+
+    (window :> IDisposable).Dispose()
+    printfn "EGL window disposal retry smoke passed"
 
 let private smoke (window: Window) (beforeClose: unit -> unit) =
     if Environment.GetEnvironmentVariable "RANVIER_SMOKE_EGL_RELEASE_RETRY" = "1" then
@@ -296,8 +341,8 @@ let private runSmoke () =
 
 let private runTwoSmoke () =
     use first = Window.create ("Ranvier first", 480, 320)
-    use second = Window.create ("Ranvier second", 480, 320)
     let firstMount = mount first.Host
+    use second = Window.create ("Ranvier second", 480, 320)
     let secondMount = mount second.Host
 
     try
@@ -336,6 +381,8 @@ let private eglFailureSmoke beforeRegistration =
 
         failwith (SDL.SDL3.SDL_GetError ())
 
+    let mutable videoOwned = true
+
     try
         try
             use title = fixed (System.Text.Encoding.UTF8.GetBytes "EGL failure fixture\000")
@@ -357,7 +404,57 @@ let private eglFailureSmoke beforeRegistration =
 
             raise (InvalidOperationException "simulated failure before host construction")
         with :? InvalidOperationException as error when error.Message = "simulated failure before host construction" ->
-            ()
+            let consumer = EglRenderer.Capture renderer |> Option.get
+            let originalWindowId = SDL.SDL3.SDL_GetWindowID window
+            let mutable allowCleanup = false
+            let mutable attempts = 0
+            let mutable completions = 0
+
+            let cleanup () =
+                attempts <- attempts + 1
+
+                if allowCleanup && consumer.Activate () then
+                    SDL.SDL3.SDL_DestroyRenderer renderer
+                    SDL.SDL3.SDL_DestroyWindow window
+                    SDL.SDL3.SDL_QuitSubSystem SDL.SDL_InitFlags.SDL_INIT_VIDEO
+                    renderer <- NativePtr.nullPtr
+                    window <- NativePtr.nullPtr
+                    videoOwned <- false
+                    completions <- completions + 1
+                    true
+                else
+                    false
+
+            EglRenderer.RetainFailedConstruction cleanup
+
+            for _ in 1..2 do
+                let mutable blocked = false
+
+                try
+                    use unexpected = Window.create ("must not allocate", 16, 16)
+                    ()
+                with :? InvalidOperationException as pending when pending.Message = "An SDL EGL window is awaiting construction cleanup" ->
+                    blocked <- true
+
+                if
+                    not blocked
+                    || SDL.SDL3.SDL_GetWindowID window
+                       <> originalWindowId
+                    || completions <> 0
+                then
+                    failwith "Pending EGL construction cleanup failed to block new allocations"
+
+            if attempts <> 2 then
+                failwith "Pending EGL construction cleanup ownership accumulated"
+
+            allowCleanup <- true
+            EglRenderer.RetryFailedConstruction ()
+            EglRenderer.RetryFailedConstruction ()
+
+            if attempts <> 3 || completions <> 1 then
+                failwith "Pending EGL construction cleanup did not clear exactly once"
+
+            Console.WriteLine "EGL construction cleanup retry smoke passed"
     finally
         if not (Microsoft.FSharp.NativeInterop.NativePtr.isNullPtr renderer) then
             SDL.SDL3.SDL_DestroyRenderer renderer
@@ -365,7 +462,8 @@ let private eglFailureSmoke beforeRegistration =
         if not (Microsoft.FSharp.NativeInterop.NativePtr.isNullPtr window) then
             SDL.SDL3.SDL_DestroyWindow window
 
-        SDL.SDL3.SDL_QuitSubSystem SDL.SDL_InitFlags.SDL_INIT_VIDEO
+        if videoOwned then
+            SDL.SDL3.SDL_QuitSubSystem SDL.SDL_InitFlags.SDL_INIT_VIDEO
 
         blocker
         |> Option.iter (fun host -> (host :> IDisposable).Dispose())
@@ -377,7 +475,9 @@ let private eglFailureSmoke beforeRegistration =
     if retained = beforeRegistration then
         failwith "EGL cohort owner was released or retained across the wrong failure boundary"
 
-    printfn "EGL cohort failure smoke passed: before registration %b, owner retained %b" beforeRegistration retained
+    let beforeText = beforeRegistration.ToString().ToLowerInvariant()
+    let retainedText = retained.ToString().ToLowerInvariant()
+    Console.WriteLine $"EGL cohort failure smoke passed: before registration {beforeText}, owner retained {retainedText}"
 
 [<EntryPoint>]
 let main _ =
@@ -391,6 +491,9 @@ let main _ =
             eglFailureSmoke (failure = "before-registration")
 
         if failure <> "before-registration" then
+            if Environment.GetEnvironmentVariable "RANVIER_SMOKE_EGL_RELEASE_RETRY" = "1" then
+                eglWindowDisposeRetrySmoke ()
+
             if Environment.GetEnvironmentVariable "RANVIER_SMOKE_EGL_PAIR" = "1" then
                 runTwoSmoke ()
 
