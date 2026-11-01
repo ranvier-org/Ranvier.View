@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "group": "H08 native inspector hooks",
+  "status": "green (private integration; not accepted)",
+  "route": "Engine render tree, style rule collector and box geometry (Native42 / ABI50), opt-in per host, no inspector frontend",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/113",
+  "coreSourceCommit": "cd57a76383e61cfe9414adf46dc195f43e94b183",
+  "viewsSourceCommit": "b9c74d960c4ed9d4e547f48a721bc1f7f9b78e79",
+  "stackedOn": {
+    "core": "I11 Core afe86b90",
+    "views": "I11 Views acea78c"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-inspector-hooks",
+    "head": "acf26e35c1f00893884748bc2fc2f6ad7643562e",
+    "abi": 50,
+    "runtime": "native-inspect artifacts/native42-candidate-3-frozen",
+    "evidence": "Ranvier.WebCore docs/inspector-evidence/final-evidence.json"
+  },
+  "versions": {
+    "native": "0.1.0-preview.42",
+    "dom": "0.1.0-alpha.45",
+    "views": "0.1.35",
+    "webcoreBackend": "0.1.0-alpha.35"
+  },
+  "allocationReceipt": "Ranvier docs/research/native-api-delivery/h08-managed45-allocation.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.45.nupkg": "0d89daaa38a63994ecb7680f92c8ae66919dab6cfcf4b45a313f01dbc4f641c8",
+    "Ranvier.Dom.0.1.0-alpha.45.nupkg": "6630e1194c1826b7963d7921662badc37c15bd57be86acacb8555725250b0c83",
+    "Ranvier.WebCore.0.1.0-preview.42.nupkg": "229003b726c08194ef8c7743554e57f82ef4a801a42bbba5c4d8e010fce9d299"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "5111cca2420dd5f163f3402430f7549fb37549166984bb60afa16efcc4543946",
+    "WebCore.dll": "ffc7a43afe8f801290b487d026d6f44a03d03a47958511766704b84f0aacbba9",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\inspect-artifacts\\managed-h08\\final-1\\aot\\Native.exe",
+    "sha256": "1184f45c69fc8aaa20a98dd335b2a1b3ac3847796579cc92a4b19f6feeaaba35"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "4d0a58ae6e04f28340414fafbb3a6300b2cfb87b23b222fac4417a828fdd6b78",
+      "passLines": 111,
+      "failLines": [],
+      "h08": [
+        "NATIVE_API H08 LIFETIME PASS assertions=8",
+        "NATIVE_API H08 PASS assertions=73"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "4c334bb27d226f6c9fdb9036c5f8658ebf828ae15bc75c664ce9dd0645f72606",
+      "passLines": 111,
+      "failLines": [],
+      "h08": [
+        "NATIVE_API H08 LIFETIME PASS assertions=8",
+        "NATIVE_API H08 PASS assertions=73"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "f51b750fd32488c8c016c3c318cf8bb00eae095d1e573ad1dffa306f82e423b9",
+      "passLines": 82,
+      "failLines": [],
+      "h08": [
+        "BROWSER_API H08 PASS assertions=46 engine=chromium"
+      ]
+    },
+    "i11BaselinePassLines": {
+      "jitAot": 109,
+      "chromium": 81,
+      "logs": "C:/wk/ei-artifacts/runs (sha 6ebc1fbe, b31a3b6f)",
+      "missing": [],
+      "added": {
+        "jitAot": 2,
+        "chromium": 1
+      }
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "repeats": {
+    "aotDiagnosticsOnly": "30 NATIVE_API H08 PASS assertions=73 NATIVE_API H08 LIFETIME PASS assertions=8",
+    "chromiumDiagnosticsOnly": "30 BROWSER_API H08 PASS assertions=46 engine=chromium"
+  },
+  "wrapperRegeneration": {
+    "objectsFs": "cee36bfe9fff114ed6b260627e4d95057a2316e9efeaef400235b52dcf50774e",
+    "reportTxt": "b255b3bb1160220e39811f5d9adf5cee393d960336810abac8ab41c5eb4f8082",
+    "result": "identical: preview.42 adds no generated DOM members"
+  },
+  "fixture": {
+    "shared": "tests/NativeApi.Conformance/DiagnosticsChecks.fs",
+    "nativeChecks": 73,
+    "chromiumChecks": 46,
+    "nativeLifetimeChecks": 8
+  },
+  "qualifications": [
+    "Chromium exposes no render tree or matched-rule list to pages: the browser provider reads both, and a developer-tools frontend, as Unsupported.",
+    "The browser box model is derived from getBoundingClientRect and the computed widths, and reads Unsupported for a transformed element or ancestor.",
+    "Render-tree text is engine-specific: the fixture asserts structure, never text equality with another engine."
+  ]
+}

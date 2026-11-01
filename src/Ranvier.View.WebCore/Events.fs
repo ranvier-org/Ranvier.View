@@ -52,7 +52,10 @@ type internal Events private () =
                  | Some true -> 6)
 
         let listener =
-            Native.rv_node_add_event_listener (registration.Target, eventType, flags, Events.Pointer, GCHandle.ToIntPtr context)
+            if target.Kind = Kind.EventTarget then
+                Native.rv_event_target_add_listener (registration.Target, eventType, flags, Events.Pointer, GCHandle.ToIntPtr context)
+            else
+                Native.rv_node_add_event_listener (registration.Target, eventType, flags, Events.Pointer, GCHandle.ToIntPtr context)
 
         if listener = 0n then
             context.Free ()
@@ -88,26 +91,31 @@ type internal Events private () =
 
     static member private AddCore
         (target: NativeObject, eventType: string, identity: obj, invoke: obj -> unit, capture: bool, once: bool, passive: bool option)
-        =
-        if not (isNull identity) then
-            if (Events.Find (target, eventType, capture, identity)).IsNone then
-                if once then
-                    let registration: Registration ref = ref null
+        : Registration option =
+        if
+            not (isNull identity)
+            && (Events.Find (target, eventType, capture, identity)).IsNone
+        then
+            if once then
+                let registration: Registration ref = ref null
 
-                    registration.Value <-
-                        Events.Listen (
-                            target,
-                            eventType,
-                            capture,
-                            identity,
-                            (fun e ->
-                                Events.Unlisten (target.Session, registration.Value)
-                                invoke e),
-                            ?passive = passive
-                        )
-                else
-                    Events.Listen (target, eventType, capture, identity, invoke, ?passive = passive)
-                    |> ignore
+                registration.Value <-
+                    Events.Listen (
+                        target,
+                        eventType,
+                        capture,
+                        identity,
+                        (fun e ->
+                            Events.Unlisten (target.Session, registration.Value)
+                            invoke e),
+                        ?passive = passive
+                    )
+
+                Some registration.Value
+            else
+                Some (Events.Listen (target, eventType, capture, identity, invoke, ?passive = passive))
+        else
+            None
 
     static member private Options(options: AddEventListenerOptions) =
         if obj.ReferenceEquals (options, null) then
@@ -115,9 +123,15 @@ type internal Events private () =
         else
             options.capture, options.once, options.passive
 
+    /// <summary>Registers a function listener and returns its registration, or None for a duplicate.</summary>
+    static member internal AddRegistered(target: NativeObject, eventType: string, listener: EventListener, options: AddEventListenerOptions) =
+        let capture, once, passive = Events.Options options
+        Events.AddCore (target, eventType, box listener, (fun event -> listener (unbox<Event> event)), capture, once, passive)
+
     /// <summary>Registers a function listener, ignoring repeated callback/type/capture registrations.</summary>
     static member Add(target: NativeObject, eventType: string, listener: EventListener, capture: bool option) =
         Events.AddCore (target, eventType, box listener, (fun event -> listener (unbox<Event> event)), defaultArg capture false, false, None)
+        |> ignore
 
     /// <summary>Registers an object listener, preserving the object's removal identity.</summary>
     static member Add(target: NativeObject, eventType: string, listener: EventListenerObject, capture: bool option) =
@@ -130,18 +144,23 @@ type internal Events private () =
             false,
             None
         )
+        |> ignore
 
     /// <summary>Registers a function listener with capture, once and optional passive behavior.</summary>
     static member Add(target: NativeObject, eventType: string, listener: EventListener, options: AddEventListenerOptions) =
         let capture, once, passive = Events.Options options
+
         Events.AddCore (target, eventType, box listener, (fun event -> listener (unbox<Event> event)), capture, once, passive)
+        |> ignore
 
     /// <summary>Registers an object listener with capture, once and optional passive behavior.</summary>
     static member Add(target: NativeObject, eventType: string, listener: EventListenerObject, options: AddEventListenerOptions) =
         let capture, once, passive = Events.Options options
-        Events.AddCore (target, eventType, box listener, (fun event -> listener.handleEvent (unbox<Event> event)), capture, once, passive)
 
-    static member private RemoveCore(target: NativeObject, eventType: string, identity: obj, capture: bool) =
+        Events.AddCore (target, eventType, box listener, (fun event -> listener.handleEvent (unbox<Event> event)), capture, once, passive)
+        |> ignore
+
+    static member internal RemoveCore(target: NativeObject, eventType: string, identity: obj, capture: bool) =
         if not (isNull identity) then
             match Events.Find (target, eventType, capture, identity) with
             | Some registration -> Events.Unlisten (target.Session, registration)
@@ -187,7 +206,10 @@ type internal Events private () =
             session.ScriptDepth <- session.ScriptDepth + 1
 
             try
-                Native.rv_node_dispatch (Interop.handle (box target), native.Handle, &prevented)
+                (if target.Kind = Kind.EventTarget then
+                     Native.rv_event_target_dispatch (target.Handle, native.Handle, &prevented)
+                 else
+                     Native.rv_node_dispatch (Interop.handle (box target), native.Handle, &prevented))
                 |> Interop.check "EventTarget.dispatchEvent"
             finally
                 session.ScriptDepth <- session.ScriptDepth - 1
@@ -204,10 +226,31 @@ type internal Events private () =
             | true, value -> unbox<'T> value
             | _ -> read ()
 
+    /// <summary>The object of an owned EventTarget handle: the node object for a node, else the standalone target.</summary>
+    static member internal TargetObject(session: Session, handle: nativeint) : EventTarget =
+        if handle = 0n then
+            Unchecked.defaultof<EventTarget>
+        else
+            let node = Native.rv_event_target_as_node handle
+
+            if node <> 0n then
+                Native.rv_event_target_release handle
+                unbox<EventTarget>(session.Node node)
+            else
+                unbox<EventTarget>(session.Target handle)
+
+    /// <summary><c>Event.target</c>, including standalone targets.</summary>
+    static member Target(event: NativeObject) : EventTarget =
+        Events.TargetObject (event.Session, Native.rv_event_get_target (event.Handle, 0))
+
+    /// <summary><c>relatedTarget</c> of a mouse or focus event, including standalone targets.</summary>
+    static member RelatedTarget(event: NativeObject) : EventTarget =
+        Events.TargetObject (event.Session, Native.rv_event_get_related_target event.Handle)
+
     /// <summary><c>Event.currentTarget</c>, or the override the view's delegation set for the dispatch.</summary>
     static member CurrentTarget(event: NativeObject) : EventTarget =
         if isNull (box event.CurrentTargetOverride) then
-            unbox<EventTarget>(event.Session.Node (Native.rv_event_target (event.Handle, 1)))
+            Events.TargetObject (event.Session, Native.rv_event_get_target (event.Handle, 1))
         else
             match event.CurrentTargetOverride () with
             | null -> Unchecked.defaultof<EventTarget>

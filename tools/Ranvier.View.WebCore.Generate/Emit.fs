@@ -96,6 +96,7 @@ let private literal (value: string) =
     | "false" -> Some "0"
     | "true" -> Some "1"
     | "\"\"" -> Some "\"\""
+    | _ when value.StartsWith "0x" -> Some (string (Convert.ToUInt64 (value, 16)))
     | _ when fst (Double.TryParse value) -> Some value
     | _ -> None
 
@@ -129,6 +130,8 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
                 match p.FSharp with
                 | "uint32" -> value + "u"
                 | "uint16" -> value + "us"
+                | "int64" -> value + "L"
+                | "uint64" -> value + "UL"
                 | "float" when not (value.Contains ".") -> value + ".0"
                 | "float32" ->
                     (if value.Contains "." then value else value + ".0")
@@ -155,7 +158,25 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
         inner = typeof<string>
         && Metadata.hasText "stringInputs" "utf8-lengths" fn.Descriptor
         ->
-        Ok $"scope.Bytes({v})"
+        // A null reference for a nullable string, or an optional one without a default, passes length -1.
+        let absentAllowed =
+            mapping.GetProperty("nullable").GetBoolean()
+            || (argument.GetProperty("optional").GetBoolean()
+                && argument.GetProperty("default").ValueKind = System.Text.Json.JsonValueKind.Null)
+
+        // [LegacyNullToEmptyString] converts null to the empty string; any other string argument converts it to "null".
+        let nullToEmpty = Metadata.hasBool "legacyNullToEmptyString" argument
+
+        if not nullable && absentAllowed then
+            Ok $"(if isNull {v} then null else scope.Bytes({v}))"
+        elif not nullable && nullToEmpty then
+            Ok $"scope.Bytes(if isNull {v} then \"\" else {v})"
+        elif not nullable then
+            Ok $"scope.Bytes({v})"
+        else
+            match fn.Defaults.TryFind p.Name |> Option.bind literal with
+            | Some fallback -> Ok $"scope.Bytes(defaultArg {v} {fallback})"
+            | None -> Ok $"(match {v} with Some x -> scope.Bytes(x) | None -> null)"
     | "int" when mappingKind = "enum" ->
         Input.encode ctx.Input.Model mapping inner (if nullable then "item" else v)
         |> Result.bind (fun expression ->
@@ -222,8 +243,19 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
                     "CSSMatrixComponent"
                 ]
 
+        let svgInput = fn.Interface.StartsWith ("SVG", System.StringComparison.Ordinal)
+
         let reference value =
-            if transformInput then
+            if svgInput then
+                let kind =
+                    if mappingKind = "node" then
+                        "Kind.Node"
+                    else
+                        ctx.Input.Kinds[Metadata.publicInterfaceName ctx.Input.Model (Metadata.text "root" mapping)]
+
+                let allowNull = mapping.GetProperty("nullable").GetBoolean()
+                $"Interop.svgHandle this.Session {kind} {allowNull.ToString().ToLowerInvariant()} (box ({value}))"
+            elif transformInput then
                 match Metadata.text "root" mapping with
                 | "CSSStyleValue" -> $"Interop.valueHandle this.Session (box ({value}))"
                 | "CSSTransformComponent" -> $"Interop.transformHandle this.Session Kind.TransformComponent (box ({value}))"
@@ -234,12 +266,12 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
 
         Ok (
             if nullable then
-                if transformInput then
+                if transformInput || svgInput then
                     let expression = reference "value"
                     $"(match {v} with None -> 0n | Some value -> {expression})"
                 else
                     $"Interop.handleOr {v}"
-            else if transformInput then
+            else if transformInput || svgInput then
                 reference v
             else
                 $"Interop.handle (box {v})"
@@ -254,7 +286,15 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
         ->
         Input.encode ctx.Input.Model mapping inner (if nullable then "item" else v)
         |> Result.map (fun expression ->
-            if nullable then
+            if
+                fn.Interface.StartsWith ("SVG", System.StringComparison.Ordinal)
+                && mappingKind = "dict"
+            then
+                if nullable then
+                    $"(match {v} with None -> null | Some item when isNull (box item) -> null | Some item -> [| {expression} |])"
+                else
+                    $"(if isNull (box {v}) then null else [| {expression} |])"
+            elif nullable then
                 $"(match {v} with None -> null | Some item -> [| {expression} |])"
             else
                 $"[| {expression} |]")
@@ -306,6 +346,8 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
 
         if
             query.IsSome
+            || (root.StartsWith ("SVG", System.StringComparison.Ordinal)
+                && ctx.Input.Kinds.ContainsKey publicRoot)
             || List.contains
                 root
                 [
@@ -317,6 +359,11 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                     "DOMRectReadOnly"
                     "DOMQuad"
                     "CSSOMVariableReferenceValue"
+                    "Blob"
+                    "FileList"
+                    "DOMURL"
+                    "URLSearchParams"
+                    "URLPattern"
                 ]
         then
             let kind = ctx.Input.Kinds[publicRoot]
@@ -404,6 +451,7 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
                 expression)
     | "sequence" when plain.IsArray ->
         let element = plain.GetElementType ()
+        let nullableSequence = mapping.GetProperty("nullable").GetBoolean()
         let mapping = (Metadata.items "subtypes" mapping)[0]
 
         let nativeType =
@@ -429,7 +477,14 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
 
         decoded ctx mapping element "item" owner
         |> Result.map (fun expression ->
-            $"(Array.init {value}.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<{nativeType}>({value}.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<{nativeType}>())) in {expression}))")
+            let items =
+                $"(Array.init {value}.count (fun index -> let item = System.Runtime.InteropServices.Marshal.PtrToStructure<{nativeType}>({value}.items + nativeint (index * System.Runtime.InteropServices.Marshal.SizeOf<{nativeType}>())) in {expression}))"
+
+            // present 0 is the IDL null of a nullable sequence.
+            if nullableSequence then
+                $"(if {value}.present = 0 then null else {items})"
+            else
+                items)
     | "union" when FSharpType.IsUnion plain ->
         let cases = FSharpType.GetUnionCases plain
         let arms = Metadata.items "subtypes" mapping
@@ -508,7 +563,25 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
                     && Metadata.hasText "stringInputs" "utf8-lengths" fn.Descriptor
                 then
                     let local = $"nativeString{index}"
-                    [ $"let {local} = {expression}" ], [ local; local + ".Length" ]
+
+                    let length =
+                        if expression = "null" then
+                            "-1"
+                        elif
+                            expression.EndsWith "| None -> null)"
+                            || expression.StartsWith "(if isNull "
+                        then
+                            $"(if isNull {local} then -1 else {local}.Length)"
+                        else
+                            local + ".Length"
+
+                    let binding =
+                        if expression = "null" then
+                            $"let {local}: byte[] = null"
+                        else
+                            $"let {local} = {expression}"
+
+                    [ binding ], [ local; length ]
                 else
                     [], [ expression ])
 
@@ -631,7 +704,10 @@ let private body (ctx: Context) (fn: Abi.Function) (qualified: string) (paramete
             let lines = preparation @ lines
 
             if
-                List.contains
+                (fn.Interface.StartsWith ("SVG", System.StringComparison.Ordinal)
+                 && fn.Interface <> "SVGElement"
+                 && fn.Interface <> "SVGStyleElement")
+                || List.contains
                     fn.Interface
                     [
                         "CSSTransformValue"
@@ -991,8 +1067,10 @@ let run (input: Input) (tagMap: (string * string * string) list) : string * Entr
         |> List.map snd
         |> List.sortBy (fun t -> t.GetInterfaces().Length, t.Name)
 
+    // An interface with its own release kind is a root class: its handle is released as that kind, not as its base's.
     let rec chainOf (t: Type) =
         match baseOf classes t with
+        | Some _ when input.Kinds.ContainsKey t.Name -> []
         | Some b -> b :: chainOf b
         | None -> []
 
@@ -1103,14 +1181,36 @@ let run (input: Input) (tagMap: (string * string * string) list) : string * Entr
         emitter.Line (2, "let wrapped: NativeObject =")
         emitter.Line (3, "match interfaceName with")
 
-        for interfaceName in query.GetProperty("interfaces").EnumerateArray() do
-            let interfaceName = interfaceName.GetString ()
-            let publicName = Metadata.publicInterfaceName input.Model interfaceName
+        let interfaces =
+            [
+                for item in query.GetProperty("interfaces").EnumerateArray() -> item.GetString ()
+            ]
+
+        // A query with "names" reports exposed names, such as AnimationEvent for CSSAnimationEvent.
+        let reported =
+            match query.TryGetProperty "names" with
+            | true, names -> [ for item in names.EnumerateArray () -> item.GetString () ]
+            | _ -> interfaces
+
+        // Extras are unscoped interfaces the query names; they take the root's wrapper.
+        let extras =
+            match query.TryGetProperty "extras" with
+            | true, items -> set [ for item in items.EnumerateArray () -> item.GetString () ]
+            | _ -> Set.empty
+
+        let rootName = Metadata.publicInterfaceName input.Model root
+
+        for interfaceName, reportedName in List.zip interfaces reported do
+            let publicName =
+                if extras.Contains interfaceName then
+                    rootName
+                else
+                    Metadata.publicInterfaceName input.Model interfaceName
 
             if not (classes.ContainsKey publicName) then
                 invalidOp $"Native runtime interface {interfaceName} has no managed wrapper"
 
-            emitter.Line (3, $"| \"{interfaceName}\" -> {publicName}Object(session, handle)")
+            emitter.Line (3, $"| \"{reportedName}\" -> {publicName}Object(session, handle)")
 
         emitter.Line (3, $"| name -> invalidOp (\"Unknown {root} runtime interface: \" + name)")
 
@@ -1143,6 +1243,18 @@ let run (input: Input) (tagMap: (string * string * string) list) : string * Entr
 
     emitter.Line (2, "| \"http://www.w3.org/1999/xhtml\", _ -> HTMLElementObject (session, handle)")
     emitter.Line (2, "| \"http://www.w3.org/2000/svg\", _ -> SVGElementObject (session, handle)")
+
+    // The canonical tag table lists HTML and SVG tags only; MathMLMathElement is the one typed MathML tag interface.
+    if
+        classes.ContainsKey "MathMLMathElement"
+        && not (
+            tagMap
+            |> List.exists (fun (ns, tag, _) ->
+                ns = "http://www.w3.org/1998/Math/MathML"
+                && tag = "math")
+        )
+    then
+        emitter.Line (2, "| \"http://www.w3.org/1998/Math/MathML\", \"math\" -> MathMLMathElementObject (session, handle)")
 
     if classes.ContainsKey "MathMLElement" then
         emitter.Line (2, "| \"http://www.w3.org/1998/Math/MathML\", _ -> MathMLElementObject (session, handle)")

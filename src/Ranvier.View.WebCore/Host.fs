@@ -31,21 +31,9 @@ module internal Factories =
         | 2 -> AttrObject (session, handle)
         | _ -> NodeObject (session, handle)
 
+    /// <summary>The wrapper of the event's exposed interface, from the native Event type query.</summary>
     let event (session: Session) (handle: nativeint) : NativeObject =
-        match Native.rv_event_interface handle with
-        | 1 -> UIEventObject (session, handle)
-        | 2 ->
-            let mutable mode = 0u
-
-            if NativeDom.rv_dom_wheel_event_get_delta_mode (handle, &mode) = 0 then
-                WheelEventObject (session, handle)
-            else
-                MouseEventObject (session, handle)
-        | 3 -> PointerEventObject (session, handle)
-        | 4 -> KeyboardEventObject (session, handle)
-        | 5 -> InputEventObject (session, handle)
-        | 6 -> FocusEventObject (session, handle)
-        | _ -> EventObject (session, handle)
+        Classes.Event (session, handle)
 
 /// <summary>Posts work to a host's loop, which runs it on the host thread during <c>WebCoreHost.Cycle</c>.</summary>
 [<Sealed>]
@@ -80,6 +68,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let timers = SortedDictionary<struct (float * int), unit -> unit>()
     let timerKeys = Dictionary<int, struct (float * int)>()
     let frames = Dictionary<int, float -> unit>()
+    let idles = List<struct (int * (IdleDeadline -> unit))>()
+    let idleTimeouts = Dictionary<int, struct (float * int)>()
     let timeOrigin = float (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds ())
     let clock = Stopwatch.StartNew ()
     let mutable advanced = 0.0
@@ -87,6 +77,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     let context = HostContext (posted, thread)
     let disposedEvent = Event<unit>()
+    let screenEvent = Event<unit>()
     let previousContext = SynchronizationContext.Current
     let mutable nextId = 1
     let mutable inInput = 0
@@ -165,6 +156,50 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             else
                 going <- false
 
+    let removeIdle (id: int) =
+        let index = idles.FindIndex (fun struct (entry, _) -> entry = id)
+
+        if index >= 0 then
+            idles.RemoveAt index
+
+        match idleTimeouts.TryGetValue id with
+        | true, key ->
+            timers.Remove key |> ignore
+            idleTimeouts.Remove id |> ignore
+        | _ -> ()
+
+        index >= 0
+
+    let nextTimer () =
+        timers.Keys
+        |> Seq.filter (fun key -> not (idleTimeouts.ContainsValue key))
+        |> Seq.tryHead
+        |> Option.map (fun struct (due, _) -> due)
+        |> Option.defaultValue Double.PositiveInfinity
+
+    let runIdle () =
+        if idles.Count > 0 then
+            let start = now ()
+
+            let period =
+                IdleDeadline.until now (min (start + IdleDeadline.MaxPeriod) (nextTimer ()))
+
+            let pending = idles.ToArray ()
+            let mutable index = 0
+
+            while index < pending.Length
+                  && period.TimeRemaining () > 0.0 do
+                let struct (id, callback) = pending[index]
+                index <- index + 1
+
+                if removeIdle id then
+                    try
+                        callback period
+                    with error ->
+                        record error
+
+                    runMicrotasks ()
+
     // Runs a host operation as the DOM member it stands for, through the member's interceptions.
     let through (target: obj) (name: string) (args: obj array) (original: obj array -> obj) : obj =
         if session.Intercepting then
@@ -174,16 +209,16 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     /// <summary>Creates a page of <c>width</c> by <c>height</c> CSS pixels and installs it on the current thread.</summary>
     /// <exception cref="T:System.InvalidOperationException">
-    /// The native library predates this backend's geometry and matrix transport (ABI 24).
+    /// The native library lacks generated DOM support or the SVG transport required by ABI 29.
     /// </exception>
     static member Create(width: int, height: int) : WebCoreHost =
         if
-            Native.rv_abi_version () < 25
+            Native.rv_abi_version () < 29
             || Native.rv_abi_has "dom-generated" <> 1
         then
             raise (
                 InvalidOperationException
-                    $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks this backend's geometry and typed transform transport (ABI 25)"
+                    $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks this backend's SVG paint, filter and resource transport (ABI 29)"
             )
 
         let handle = Native.rv_host_create (width, height)
@@ -197,13 +232,13 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         let session = new Session (handle)
         session.NodeFactory <- Func<_, _, _>(Factories.node)
         session.EventFactory <- Func<_, _, _>(Factories.event)
+        session.TargetFactory <- Func<_, _, _>(fun session handle -> StandaloneEventTarget (session, handle) :> NativeObject)
         let host = new WebCoreHost (handle, session, width, height)
         host.Install ()
         host
 
     member private this.Install() =
         document <- unbox<Document>(session.Node (Native.rv_host_document handle))
-        session.Pin (box document :?> NativeObject)
 
         session.AfterListener <-
             Action (fun () ->
@@ -254,8 +289,62 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// <summary>Runs after owned DOM references have been detached at host disposal.</summary>
     member internal _.Disposed = disposedEvent.Publish
 
-    /// <summary>The page's document, an HTML document with an empty head and body at creation.</summary>
+    /// <summary>Runs after <c>SetScreen</c> or <c>Resize</c>, which can change the screen the document reports.</summary>
+    member internal _.ScreenMayHaveChanged = screenEvent.Publish
+
+    /// <summary>The current page document; creation starts with an empty HTML head and body.</summary>
     member _.Document = document
+
+    /// <summary>Replaces the page with a scripts-disabled SVG XML document and refreshes <c>Document</c>.</summary>
+    /// <param name="svg">Nonnull SVG XML text parsed as <c>image/svg+xml</c>.</param>
+    /// <remarks>
+    /// Malformed XML completes with the engine's parser-error document. Acquired objects retain their existing host/session lifetime.
+    /// </remarks>
+    /// <exception cref="T:System.ArgumentNullException">The SVG text is null.</exception>
+    /// <exception cref="T:System.InvalidOperationException">The call uses a thread other than the host's creating thread.</exception>
+    /// <exception cref="T:System.ObjectDisposedException">The host is disposed.</exception>
+    /// <exception cref="T:System.NotSupportedException">The native provider does not expose SVG document loading.</exception>
+    member this.LoadSvg(svg: string) : unit =
+        this.EnsureActive ()
+
+        if isNull svg then
+            nullArg (nameof svg)
+
+        if not (WebCoreHost.Has "svg-document") then
+            Interop.unsupported<unit> "svg-document"
+
+        Native.rv_host_load_svg (handle, svg)
+        |> Interop.check "rv_host_load_svg"
+
+        document <- unbox<Document>(session.Node (Native.rv_host_document handle))
+
+    /// <summary>Selects a view in the current main SVG document without changing its URL, history or <c>:target</c>.</summary>
+    /// <param name="fragment">SVG fragment text, not a full URL; an empty value resets the current view.</param>
+    /// <returns>The engine's actual selected-view flag. Reset, missing and malformed selections return false.</returns>
+    /// <remarks>A false result can reset a previous selection; it does not promise preservation of that selection.</remarks>
+    /// <exception cref="T:System.ArgumentNullException">The fragment is null.</exception>
+    /// <exception cref="T:System.InvalidOperationException">The call uses a thread other than the host's creating thread.</exception>
+    /// <exception cref="T:System.ObjectDisposedException">The host is disposed.</exception>
+    /// <exception cref="T:System.NotSupportedException">The native provider lacks SVG view selection, or the current document is not SVG.</exception>
+    member this.SelectSvgView(fragment: string) : bool =
+        this.EnsureActive ()
+
+        if isNull fragment then
+            nullArg (nameof fragment)
+
+        if not (WebCoreHost.Has "svg-view-selection") then
+            Interop.unsupported<unit> "svg-view-selection"
+
+        let mutable selected = 0
+
+        let status = Native.rv_host_select_svg_view (handle, fragment, &selected)
+
+        if status = -9 then
+            raise (NotSupportedException "SVG view selection requires an SVG main document.")
+
+        Interop.check "rv_host_select_svg_view" status
+
+        selected <> 0
 
     /// <summary>Exceptions raised by event listeners, microtasks, timers and animation frames, in raise order.</summary>
     member _.Errors = session.ListenerErrors
@@ -304,12 +393,45 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     member _.CancelAnimationFrame(id: int) =
         frames.Remove id |> ignore
 
+    /// <summary>Runs <c>callback</c> in a later idle period of <c>Cycle</c>; returns its id. With <c>timeout</c>, the
+    /// callback runs no later than the first <c>Cycle</c> after <c>timeout</c> milliseconds, with <c>DidTimeout</c>
+    /// true.</summary>
+    /// <remarks>An idle period starts in a <c>Cycle</c> with no frame requested, after its posted work, timers and
+    /// microtasks. Its deadline is the earlier of 50 ms on the timing clock and the next timer's due time.</remarks>
+    member _.RequestIdleCallback(callback: IdleDeadline -> unit, ?timeout: float) : int =
+        let id = nextId
+        nextId <- nextId + 1
+        idles.Add (struct (id, callback))
+
+        match timeout with
+        | Some milliseconds ->
+            let timer = nextId
+            nextId <- nextId + 1
+            let key = struct (now () + max 0.0 milliseconds, timer)
+
+            timers[key] <-
+                fun () ->
+                    idleTimeouts.Remove id |> ignore
+
+                    if removeIdle id then
+                        callback IdleDeadline.timedOut
+
+            idleTimeouts[id] <- key
+        | None -> ()
+
+        id
+
+    /// <summary>Cancels an idle callback that has not run.</summary>
+    member _.CancelIdleCallback(id: int) =
+        removeIdle id |> ignore
+
     /// <summary>True when the page wants a frame: a rendering update, an invalidation or an animation frame callback.</summary>
     member _.FrameRequested = Volatile.Read &frameRequested = 1
 
     /// <summary>
     /// One turn of the loop: cycles the native run loop for up to <c>milliseconds</c>, releases the references of collected
-    /// objects, runs posted work and due timers, each followed by the microtasks it queued.
+    /// objects, runs posted work and due timers, each followed by the microtasks it queued, then an idle period when
+    /// no frame is requested.
     /// </summary>
     member _.Cycle(?milliseconds: int) =
         Native.rv_run_loop_cycle (defaultArg milliseconds 0)
@@ -330,6 +452,9 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
         runDueTimers ()
         runMicrotasks ()
+
+        if Volatile.Read &frameRequested = 0 then
+            runIdle ()
 
     /// <summary>Moves the timer clock forward by <c>milliseconds</c> and runs the timers then due, as a test clock does.</summary>
     member internal this.AdvanceBy(milliseconds: float) =
@@ -424,6 +549,52 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
         viewportWidth <- width
         viewportHeight <- height
+        screenEvent.Trigger ()
+
+    /// <summary>
+    /// Sets the screen the document reports, from the app's display integration, in CSS pixels: its size, its
+    /// available work area, its color depth and its orientation.
+    /// </summary>
+    /// <remarks>
+    /// Until the first call the screen is the viewport, all of it available, 24 bits deep, landscape-primary unless
+    /// taller than wide. The orientation angle follows from the orientation on the natural landscape orientation.
+    /// Raises NotSupportedException for values outside the native contract.
+    /// </remarks>
+    member _.SetScreen
+        (
+            width: int,
+            height: int,
+            availLeft: int,
+            availTop: int,
+            availWidth: int,
+            availHeight: int,
+            colorDepth: int,
+            orientation: ScreenOrientationType
+        ) =
+        let values =
+            [|
+                36
+                width
+                height
+                availLeft
+                availTop
+                availWidth
+                availHeight
+                colorDepth
+                int orientation
+            |]
+
+        let metrics = Marshal.AllocHGlobal (values.Length * 4)
+
+        try
+            Marshal.Copy (values, 0, metrics, values.Length)
+
+            Native.rv_host_set_screen (handle, metrics)
+            |> Interop.check "rv_host_set_screen"
+        finally
+            Marshal.FreeHGlobal metrics
+
+        screenEvent.Trigger ()
 
     /// <summary>Sets the device pixels per CSS pixel, from 0.25 to 8; <c>PaintSize</c> scales with it.</summary>
     member _.SetDeviceScale(scale: float32) =
@@ -519,6 +690,12 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     member _.SetFocused(focused: bool) =
         Native.rv_host_set_focused (handle, (if focused then 1 else 0))
         |> Interop.check "rv_host_set_focused"
+
+    /// <summary>Sets whether the page is visible, as the app's window is shown, or minimized, hidden or occluded.</summary>
+    /// <remarks>A page starts visible. A change queues <c>visibilitychange</c>; a hidden page defers <c>resize</c>.</remarks>
+    member _.SetVisible(visible: bool) =
+        Native.rv_host_set_visible (handle, (if visible then 1 else 0))
+        |> Interop.check "rv_host_set_visible"
 
     /// <summary>The <c>RV_CURSOR_*</c> value for the mouse's position.</summary>
     member _.Cursor = Native.rv_host_cursor handle
@@ -682,6 +859,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                     raise (InvalidOperationException "A WebCore host is disposed on the thread that created it")
 
                 disposed <- true
+                idles.Clear ()
+                idleTimeouts.Clear ()
 
                 for item in installed do
                     item.Dispose ()

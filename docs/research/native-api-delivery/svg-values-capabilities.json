@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "groups": ["S01", "S02", "S04"],
+  "status": "private-jit-nativeaot-and-packaged-chromium",
+  "producer": {
+    "pullRequest": "https://github.com/ranvier-org/Ranvier.WebCore/pull/128",
+    "source": "9b6ad4445dcce0124008d1033eb7469355be4cf2",
+    "version": "0.1.0-preview.18",
+    "abi": 26,
+    "canonicalSharedSourceSha256": "efe7714ae584b4bfb8246e66f6b496cb3431e31584acb07bca1f28ad316a5cc6",
+    "modelSha256": "9d1e8033542b743baa0b2748cddb8425606a9f2e3ab379085f4747c6ba7b14e5"
+  },
+  "consumerReservation": {"dom": "0.1.0-alpha.19", "views": "0.1.9", "backendAndSdl": "0.1.0-alpha.9"},
+  "browser": {"engine": "Chromium156.0.8078.4", "fickl": "0.6.9", "fable": "5.24.0"},
+  "focusedProof": {
+    "windowsJit": {"geometry": 126, "reachableValues": 361, "nativeLifetime": 37},
+    "packagedFableChromium": {"geometry": 126, "reachableValues": 361, "twoRealmChecks": 54},
+    "verifiedNativeRuntimeFiles": 24,
+    "nativeAot": {"geometry": 126, "reachableValues": 361, "nativeLifetime": 37, "runtimeFilesBeforeAndAfter": 24},
+    "combined": {"nativeSharedIncludingH02": 3780, "nativeSeparateLifetime": 220, "h02AdditionalLifetime": 25, "h02Deterministic": 181, "h02Concurrent": 500, "chromiumSharedIncludingH02": 3793, "chromiumContext": 76},
+    "repositoryGates": "passed: four Core test variants, Core normal/traced analyzers, Views library/view/examples analyzers, SDL build, exact regeneration and configured clean FCS checks"
+  },
+  "observedContract": {
+    "precision": {"svgPointAndRectFields": "float32", "svgMatrixCoefficients": "float64"},
+    "restrictedScalarInputs": "NaN and infinities reject with TypeError before mutation; matrix dictionaries retain unrestricted fields.",
+    "listMethodResults": {
+      "native": "Stable managed wrapper identity for the retained native object.",
+      "chromium156": "Fresh JavaScript wrappers, including repeated getItem calls, alias the same underlying live value.",
+      "common": "Input, insertion result, getters, removed and reattached views propagate mutations bidirectionally. Rejected replacements preserve count, order, distinct values and retained aliases. Cross-list insertion clones an already attached item and preserves the source.",
+      "scope": "Number, length, point and transform object lists. Native exact identity and browser measured nonidentity are checked separately. SameObject properties retain exact identity checks."
+    },
+    "matrixDictionaryRoutes": {
+      "members": ["SVGSVGElement.createSVGTransformFromMatrix", "SVGTransform.setMatrix", "SVGTransformList.createSVGTransformFromMatrix"],
+      "native": "DOMMatrix2DInit aliases are validated/normalized and unrestricted coefficients are preserved.",
+      "chromium156": "The facade normalizes with DOMMatrix.fromMatrix, creates a genuine SVGMatrix, copies a-f and invokes the actual target method. Legacy SVGMatrix finite setters reject nonfinite copied dictionary coefficients. Actual SVGMatrix results from overflowing matrix operations may still contain infinity.",
+      "realms": "All three compiled facade routes preserve target-realm SVGTransform/SVGMatrix prototypes, six coefficients and independent matrices in the main window and an iframe.",
+      "presence": "Omitted and null dictionaries produce identity matrices; inconsistent aliases reject TypeError atomically."
+    },
+    "lifetime": "Native member inputs enforce session/kind/null/thread boundaries. Retained lists keep secondary documents and owners alive through managed and engine collection; host disposal invalidates wrappers, then event draining and final collection expire watched document/owner nodes.",
+    "acquisitionAnchor": "A cached native wrapper retains its first acquisition receiver. Later cache hits preserve that wrapper and original anchor. A factory-created item subsequently attached to another owner's list does not promise to retain that later owner/list by itself. When that owner dies, the engine detaches the retained item; the detached value remains usable under engine rules while the host lives. The fixture proves retained-list ownership and detached-item mutation/reattachment, not item-only retention of every later owner."
+  },
+  "remainingScope": [
+    "S04 SVGAnimatedBoolean is generated but currently has no selected returner. The real SVGFEConvolveMatrixElement.preserveAlpha provider belongs to the next required SVG producer; full S04 stays open.",
+    "Incidental view, animation and filter members do not close S03/S05/S06/S07/S09. Legacy SVGPathSeg APIs are outside the current selected scope.",
+    "Ordered releases, platform/profile CI and official package-only consumption remain required. S01/S02 can be accepted independently when their own complete scope and gates are proven."
+  ],
+  "historicalEvidence": {
+    "nativeNullDictionaryRed": "artifacts/svg-values-initial.log",
+    "nativeNullDictionaryGreen": "artifacts/svg-values-null-green.log",
+    "browserListIdentityRedReceipt": "artifacts/svg-operation-browser-focused.json",
+    "browserListIdentityRedProvenance": "artifacts/svg-browser-list-identity-red-provenance.json",
+    "actualListOracle": "artifacts/svg-list-oracle.json",
+    "actualMatrixRealmOracle": "artifacts/svg-matrix-realm-oracle.json",
+    "actualNonfiniteOracle": "artifacts/svg-nonfinite-oracle.json",
+    "operationalDeviation": "artifacts/svg-operational-deviation.json"
+  }
+}

@@ -39,6 +39,20 @@ type internal InputScope() =
         span.length <- bytes.Length
         span
 
+    /// <summary>Pins a length-delimited string with its presence; <c>None</c> is absent.</summary>
+    member this.TextInput(value: string option) =
+        let mutable input = Unchecked.defaultof<NativeDom.RvDomUtf8StringInput>
+
+        match value with
+        | Some text ->
+            let span = this.TextSpan text
+            input.present <- 1
+            input.data <- span.data
+            input.length <- span.length
+        | None -> ()
+
+        input
+
     interface IDisposable with
         member _.Dispose() =
             for pin in pins do

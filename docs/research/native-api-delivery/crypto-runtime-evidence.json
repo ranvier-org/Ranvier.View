@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "group": "B22 crypto",
+  "status": "green (private integration; not accepted)",
+  "route": "Engine random values and UUIDs (Native36 / ABI44); SHA digests from System.Security.Cryptography and crypto.subtle",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/119",
+  "coreSourceCommit": "ec5f369cbf645c7fb055bb7251866a49a6981450",
+  "viewsSourceCommit": "a9f475ca8cabf69890cbe8459430a34cfa9564bc",
+  "stackedOn": {
+    "core": "T06 2e58628a (DOM alpha.38; includes D14 522a7fa6, H13 d246756e, G09 dcaf0ad8, H11 b1048a5f) + B22 Crypto.fs; pins native d44a601",
+    "views": "T06 8332dbc (Views 0.1.28; includes D14 fc88949, H13 8a5def2, G09 5fe038b, H11 6b48817) + B22 provider and fixture"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-crypto",
+    "head": "c78a71add52bc2750534f80ebdbf60b1afc0cc8b",
+    "abi": 44,
+    "runtime": "native-crypto artifacts/native36-frozen-4",
+    "evidence": "Ranvier.WebCore docs/crypto-evidence/final-evidence.json"
+  },
+  "versions": {
+    "native": "0.1.0-preview.36",
+    "dom": "0.1.0-alpha.39",
+    "views": "0.1.29",
+    "webcoreBackend": "0.1.0-alpha.29"
+  },
+  "allocationReceipt": "Ranvier docs/research/native-api-delivery/b22-managed39-allocation.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.39.nupkg": "ec175668b5dccd85a67055fe0ff1571c9b682e94fa7a70a423efacc4c93bc845",
+    "Ranvier.Dom.0.1.0-alpha.39.nupkg": "8008fc2713d9246f0afb724d8952274e683eda197520d70a07788206d844f131",
+    "Ranvier.WebCore.0.1.0-preview.36.nupkg": "d8ebbc3eaf3fd24a6d5b787cc12dd22c838fb1b59e7684728e9da361db4c723b"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "25078c70e6bc98d58332fb61cef63f9ca352b64f9543df424681e2e58f00249a",
+    "WebCore.dll": "3f2f47bd8d06c95f114528aa114639b35c27a2308c07c15229b4586324eda194",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\crypto-artifacts\\managed\\evidence-2\\aot\\Native.exe",
+    "sha256": "6d9d0b2c4dd5242448423731bd15383f5db02967e9b11bb623ca59d3e79fd398"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "201f23bf1742b45282d699bf1b967d6bb25df4b3ad2e85c92f16b26aedd3c1e8",
+      "passLines": 99,
+      "failLines": [],
+      "b22": [
+        "NATIVE_API B22 LIFETIME PASS assertions=5",
+        "NATIVE_API B22 PASS assertions=155"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "7de76e4b412f7ac846ef29b820468c0fc2b79beaabde8e47c3260ed346813606",
+      "passLines": 99,
+      "failLines": [],
+      "b22": [
+        "NATIVE_API B22 LIFETIME PASS assertions=5",
+        "NATIVE_API B22 PASS assertions=155"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "c8cd25db573973cfaec29816046b59c852c7371b787f71580f8ca11239624abf",
+      "passLines": 75,
+      "failLines": [],
+      "b22": [
+        "BROWSER_API B22 INSECURE PASS assertions=4 engine=chromium",
+        "BROWSER_API B22 PASS assertions=155 engine=chromium"
+      ]
+    },
+    "t06BaselinePassLines": {
+      "jitAot": 97,
+      "chromium": 73
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "repeats": {
+    "aotCryptoOnly": "aot --crypto-only repeat30: 30/30 (B22 155 + lifetime 5)",
+    "nativeCryptoRandom": "Ranvier.WebCore docs/crypto-evidence/crypto-random-repeat30.txt"
+  },
+  "wrapperRegeneration": {
+    "objectsFs": "6952ed31d3b26ac313a7713c4fd17807776b0f7429e90b1d7f8b09acb85ad45f",
+    "reportTxt": "7bcb7765d0c4ac3e08d9732480a915d84c08dc4116a1ba72dc6ea60e139f6900",
+    "inputs": "restored Ranvier.WebCore preview.36 model + interop and Ranvier.Dom alpha.39 from the private feed"
+  },
+  "fixture": {
+    "shared": "tests/NativeApi.Conformance/CryptoChecks.fs",
+    "sharedChecks": 155,
+    "nativeLifetimeChecks": 5,
+    "chromiumInsecureChecks": 4
+  },
+  "vectors": "FIPS 180 SHA-1/256/384/512 of \"\", \"abc\" and 1,000,000 x \"a\", plus lowercase and mixed-case names over offset ranges",
+  "qualifications": [
+    "Random values are asserted as properties only: kinds, quota, ranges, untouched neighbours, two fills differ, v4 UUID format.",
+    "Chromium in an insecure context (http://insecure.test) has no randomUUID or crypto.subtle: the provider reads them as Unsupported.",
+    "Native digests come from System.Security.Cryptography; the slim Windows engine registers SHA digests only and SubtleCrypto is promise-only.",
+    "Fable reports no ObjectDisposedException type, so the shared fixture checks that a disposed service raises; the native lifetime checks the type."
+  ]
+}

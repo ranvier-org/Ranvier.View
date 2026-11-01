@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    "S13",
+    "D01"
+  ],
+  "status": "green (private integration; not accepted)",
+  "issues": [
+    "https://github.com/ranvier-org/Ranvier.WebCore/issues/89",
+    "https://github.com/ranvier-org/Ranvier.WebCore/pull/135",
+    "https://github.com/ranvier-org/Ranvier.WebCore/pull/137"
+  ],
+  "nativeProducer": {
+    "branch": "codex/native-api-focus-input",
+    "commit": "483c0e5c9795952d61c736376347c9c627dc2625",
+    "domModelBlob": "c532e1fbb9ae039647ad737d9feab6670b907132",
+    "stage": "native26-frozen (copied to C:/wk/dommodel-private/native26-stage)"
+  },
+  "core": {
+    "branch": "codex/native-api-dom-model",
+    "base": "a8b8109b",
+    "head": "ab268cf20888220643a16d43950b3a30d0355aac",
+    "domFsBlob": "c532e1fbb9ae039647ad737d9feab6670b907132"
+  },
+  "views": {
+    "branch": "codex/native-api-dom-model",
+    "base": "bf3899a",
+    "fixtureCommit": "62c56d73b6d5ed65e3f51e847ed5b87d0fb90def",
+    "generator": "223 classes; 2514 members: 2494 mapped to 2424 of 2477 rv_dom_* functions, 20 hand-written, 0 unmapped"
+  },
+  "versions": {
+    "native": "0.1.0-preview.26",
+    "dom": "0.1.0-alpha.27",
+    "views": "0.1.17",
+    "webcoreBackend": "0.1.0-alpha.17"
+  },
+  "privatePackagesPackedFrom": {
+    "core": "dc740759 (contracts; ab268cf2 adds README text only)",
+    "webcore": "copy of C:/wk/i12-local-feed preview.26"
+  },
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.27.nupkg": "b161d15f73fa1e63c8a5f25ff27a37dc2698cd8e497e11b750b2187a4e9b87fe",
+    "Ranvier.Dom.0.1.0-alpha.27.nupkg": "fd5d7622c7171659eff0f809706539ead511af9e86272088d9715a7f36b27429",
+    "Ranvier.WebCore.0.1.0-preview.26.nupkg": "c6bfaaecb0caafa0c1d80d853d500b3ece360adf7d4915a9a889db1a8a8aafd3"
+  },
+  "chromium": "156.0.8078.4 (Playwright, headless shell)",
+  "runs": {
+    "jit-dom-model": {
+      "exitCode": 0,
+      "command": [
+        "dotnet",
+        "C:\\wk\\rv-dommodel\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Native.dll",
+        "--dom-model-only"
+      ],
+      "logSha256": "6450a66b588a06c08b20f3446f26df0a77e467b8b61997c08aba9fb30f864053",
+      "passLines": 4,
+      "domModel": [
+        "NATIVE_API D01 PASS assertions=62",
+        "NATIVE_API D01 REENTRY iterator=InvalidStateError walker=InvalidStateError reference=null",
+        "NATIVE_API D01 LIFETIME PASS assertions=15",
+        "NATIVE_API S13 PASS assertions=116",
+        "NATIVE_API D01 S13 TEARDOWN PASS"
+      ],
+      "executedNative": {
+        "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+        "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+        "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+        "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+        "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+        "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+        "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+        "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+        "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+        "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+        "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+        "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+        "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+        "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+        "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+        "RanvierWebCoreHost.dll": "060699844bf3f2cb79db68e478a999481c5494eba99db19393387ab341f6bca7",
+        "WebCore.dll": "2f77ba2fb2d79876507113561285df096c539841d268b3cebc2adef382ae3203",
+        "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+      }
+    },
+    "aot-dom-model": {
+      "exitCode": 0,
+      "command": [
+        "C:\\wk\\dommodel-aot-native\\Native.exe",
+        "--dom-model-only"
+      ],
+      "logSha256": "6450a66b588a06c08b20f3446f26df0a77e467b8b61997c08aba9fb30f864053",
+      "passLines": 4,
+      "domModel": [
+        "NATIVE_API D01 PASS assertions=62",
+        "NATIVE_API D01 REENTRY iterator=InvalidStateError walker=InvalidStateError reference=null",
+        "NATIVE_API D01 LIFETIME PASS assertions=15",
+        "NATIVE_API S13 PASS assertions=116",
+        "NATIVE_API D01 S13 TEARDOWN PASS"
+      ],
+      "executedNative": {
+        "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+        "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+        "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+        "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+        "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+        "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+        "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+        "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+        "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+        "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+        "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+        "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+        "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+        "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+        "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+        "RanvierWebCoreHost.dll": "060699844bf3f2cb79db68e478a999481c5494eba99db19393387ab341f6bca7",
+        "WebCore.dll": "2f77ba2fb2d79876507113561285df096c539841d268b3cebc2adef382ae3203",
+        "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+      }
+    },
+    "jit-full": {
+      "exitCode": 0,
+      "command": [
+        "dotnet",
+        "C:\\wk\\rv-dommodel\\tests\\NativeApi.Conformance\\bin\\Release\\net10.0\\Native.dll"
+      ],
+      "logSha256": "2384ece8031824a608fa081fcf87ed5f30d1db199a17e66b5cce1aad176cbd3d",
+      "passLines": 76,
+      "domModel": [
+        "NATIVE_API D01 PASS assertions=62",
+        "NATIVE_API D01 REENTRY iterator=InvalidStateError walker=InvalidStateError reference=null",
+        "NATIVE_API D01 LIFETIME PASS assertions=15",
+        "NATIVE_API S13 PASS assertions=116",
+        "NATIVE_API D01 S13 TEARDOWN PASS"
+      ],
+      "executedNative": {
+        "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+        "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+        "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+        "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+        "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+        "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+        "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+        "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+        "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+        "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+        "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+        "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+        "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+        "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+        "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+        "RanvierWebCoreHost.dll": "060699844bf3f2cb79db68e478a999481c5494eba99db19393387ab341f6bca7",
+        "WebCore.dll": "2f77ba2fb2d79876507113561285df096c539841d268b3cebc2adef382ae3203",
+        "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+      }
+    },
+    "aot-full": {
+      "exitCode": 0,
+      "command": [
+        "C:\\wk\\dommodel-aot-native\\Native.exe"
+      ],
+      "logSha256": "2384ece8031824a608fa081fcf87ed5f30d1db199a17e66b5cce1aad176cbd3d",
+      "passLines": 76,
+      "domModel": [
+        "NATIVE_API D01 PASS assertions=62",
+        "NATIVE_API D01 REENTRY iterator=InvalidStateError walker=InvalidStateError reference=null",
+        "NATIVE_API D01 LIFETIME PASS assertions=15",
+        "NATIVE_API S13 PASS assertions=116",
+        "NATIVE_API D01 S13 TEARDOWN PASS"
+      ],
+      "executedNative": {
+        "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+        "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+        "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+        "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+        "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+        "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+        "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+        "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+        "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+        "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+        "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+        "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+        "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+        "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+        "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+        "RanvierWebCoreHost.dll": "060699844bf3f2cb79db68e478a999481c5494eba99db19393387ab341f6bca7",
+        "WebCore.dll": "2f77ba2fb2d79876507113561285df096c539841d268b3cebc2adef382ae3203",
+        "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+      }
+    }
+  },
+  "browserRuns": {
+    "chromium-dom-model": {
+      "logSha256": "cd86adcd91a071ba7a6dba06b4337bc6d2a4a82e0c77d46954b5fc76c3e03359",
+      "passLines": 3,
+      "domModel": [
+        "BROWSER_API D01 PASS assertions=62 reentry=InvalidStateError/InvalidStateError/unread engine=chromium",
+        "BROWSER_API S13 PASS assertions=116 math=MathMLElement engine=chromium"
+      ]
+    },
+    "chromium-default": {
+      "logSha256": "e92100b4525a242b079220a05ef68d71a6ad342fe8c85aeddc2b47353ccbffbf",
+      "passLines": 62,
+      "domModel": [
+        "BROWSER_API D01 PASS assertions=62 reentry=InvalidStateError/InvalidStateError/unread engine=chromium",
+        "BROWSER_API S13 PASS assertions=116 math=MathMLElement engine=chromium"
+      ]
+    }
+  },
+  "counts": {
+    "D01 shared": 62,
+    "D01 native lifetime": 15,
+    "S13 shared": 116
+  },
+  "qualifications": [
+    "Chromium 156 has no MathMLMathElement interface; math is a MathMLElement there (NotExposed).",
+    "A filter that re-enters its own traversal raises InvalidStateError on both engines; afterwards the engine leaves the NodeIterator referenceNode null. Reading it crashes the Chromium 156 renderer, so the browser run does not read it.",
+    "The canonical tagInterfaces table has no MathML rows; the Views generator maps the math tag to MathMLMathElement itself.",
+    "Unknown HTML elements wrap as HTMLElement natively (pre-existing, outside these groups).",
+    "Native runs only on win-x64 slim Native26; other platforms and official packages are acceptance gates."
+  ],
+  "unitTests": {
+    "project": "tests/Ranvier.View.WebCore.Tests",
+    "result": "782 passed, 12 ignored, 0 failed, 0 errored"
+  }
+}

@@ -1,0 +1,9 @@
+Unhandled exception. System.Exception: a disposed image releases its transport URL: expected 1, got 0
+   at NativeApiConformance.Resources.equal@52[a](FSharpRef`1, String, a, a) + 0xd3
+   at NativeApiConformance.Resources.run@256-19.Invoke(ResourceOutcome`1) + 0x57
+   at Microsoft.FSharp.Control.AsyncPrimitives.CallThenInvokeNoHijackCheck[a,b](AsyncActivation`1, b, FSharpFunc`2) + 0x22
+   at Microsoft.FSharp.Control.Trampoline.Execute(FSharpFunc`2) + 0x63
+--- End of stack trace from previous location ---
+   at NativeApiConformance.Native.runResources() + 0x251
+   at NativeApiConformance.Native.main$cont@1311-6(String[], Unit) + 0x114
+   at NativeApiConformance.Native.main(String[] args) + 0xcc

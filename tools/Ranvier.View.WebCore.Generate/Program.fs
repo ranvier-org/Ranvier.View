@@ -24,12 +24,23 @@ let private hand (dom: Type) (header: string) : Map<string, string> =
             "EventTarget.removeEventListener", "Events.Remove(this, {0}, {1}, {2})"
             "EventTarget.dispatchEvent", "Events.Dispatch(this, {0})"
             "Event.currentTarget.get", "Events.CurrentTarget this"
+            "Event.target.get", "Events.Target this"
+            "MouseEvent.relatedTarget.get", "Events.RelatedTarget this"
+            "FocusEvent.relatedTarget.get", "Events.RelatedTarget this"
             "KeyboardEvent.key.get",
             "Events.Init(this, \"key\", fun () -> Interop.text \"KeyboardEvent.key\" (fun b c l -> NativeDom.rv_dom_keyboard_event_get_key (this.Handle, b, c, l)))"
             "InputEvent.data.get",
             "Events.Init(this, \"data\", fun () -> Interop.text \"InputEvent.data\" (fun b c l -> NativeDom.rv_dom_input_event_get_data (this.Handle, b, c, l)))"
             "InputEvent.inputType.get",
             "Events.Init(this, \"inputType\", fun () -> Interop.text \"InputEvent.inputType\" (fun b c l -> NativeDom.rv_dom_input_event_get_input_type (this.Handle, b, c, l)))"
+            "Document.createNodeIterator",
+            "unbox<Ranvier.Dom.NodeIterator> (Traversal.Create(this, {0}, {1}, {2}, (fun target root show filter -> let mutable result = 0n in Interop.check \"Document.createNodeIterator\" (NativeDom.rv_dom_document_create_node_iterator (target, root, show, filter, &result)); result), (fun session handle -> NodeIteratorObject(session, handle) :> NativeObject)))"
+            "Document.createTreeWalker",
+            "unbox<Ranvier.Dom.TreeWalker> (Traversal.Create(this, {0}, {1}, {2}, (fun target root show filter -> let mutable result = 0n in Interop.check \"Document.createTreeWalker\" (NativeDom.rv_dom_document_create_tree_walker (target, root, show, filter, &result)); result), (fun session handle -> TreeWalkerObject(session, handle) :> NativeObject)))"
+            "NodeIterator.filter.get",
+            "Traversal.FilterOf(fun () -> let mutable result = 0n in Interop.check \"NodeIterator.filter\" (NativeDom.rv_dom_node_iterator_get_filter (Interop.handle (box this), &result)); result)"
+            "TreeWalker.filter.get",
+            "Traversal.FilterOf(fun () -> let mutable result = 0n in Interop.check \"TreeWalker.filter\" (NativeDom.rv_dom_tree_walker_get_filter (Interop.handle (box this), &result)); result)"
         ]
 
     let styles = []
@@ -60,10 +71,42 @@ let private kinds =
             "DOMPointReadOnly", "Kind.Point"
             "DOMMatrixReadOnly", "Kind.Matrix"
             "CSSTransformComponent", "Kind.TransformComponent"
+            "SVGRect", "Kind.SVGRect"
+            "SVGMatrix", "Kind.SVGMatrix"
+            "SVGPoint", "Kind.SVGPoint"
+            "SVGAnimatedRect", "Kind.SVGAnimatedRect"
+            "SVGPreserveAspectRatio", "Kind.SVGPreserveAspectRatio"
+            "SVGAnimatedPreserveAspectRatio", "Kind.SVGAnimatedPreserveAspectRatio"
+            "SVGTransform", "Kind.SVGTransform"
+            "SVGTransformList", "Kind.SVGTransformList"
+            "SVGAnimatedTransformList", "Kind.SVGAnimatedTransformList"
+            "SVGNumber", "Kind.SVGNumber"
+            "SVGLength", "Kind.SVGLength"
+            "SVGAngle", "Kind.SVGAngle"
+            "SVGNumberList", "Kind.SVGNumberList"
+            "SVGLengthList", "Kind.SVGLengthList"
+            "SVGPointList", "Kind.SVGPointList"
+            "SVGAnimatedNumber", "Kind.SVGAnimatedNumber"
+            "SVGAnimatedLength", "Kind.SVGAnimatedLength"
+            "SVGAnimatedLengthList", "Kind.SVGAnimatedLengthList"
+            "SVGAnimatedNumberList", "Kind.SVGAnimatedNumberList"
+            "SVGAnimatedEnumeration", "Kind.SVGAnimatedEnumeration"
+            "SVGAnimatedString", "Kind.SVGAnimatedString"
+            "SVGAnimatedBoolean", "Kind.SVGAnimatedBoolean"
+            "SVGAnimatedInteger", "Kind.SVGAnimatedInteger"
+            "SVGStringList", "Kind.SVGStringList"
+            "SVGViewSpec", "Kind.SVGViewSpec"
+            "SVGAnimatedAngle", "Kind.SVGAnimatedAngle"
             "DOMQuad", "Kind.Quad"
             "DOMRectList", "Kind.RectList"
             "NodeList", "Kind.NodeList"
             "HTMLCollection", "Kind.Collection"
+            "DOMFormData", "Kind.FormData"
+            "Blob", "Kind.Blob"
+            "FileList", "Kind.FileList"
+            "URL", "Kind.Url"
+            "URLSearchParams", "Kind.UrlSearchParams"
+            "URLPattern", "Kind.UrlPattern"
             "HTMLCollectionOf`1", "Kind.Collection"
             "ValidityState", "Kind.Validity"
             "DOMImplementation", "Kind.DOMImplementation"
@@ -76,6 +119,13 @@ let private kinds =
             "CSSStyleValue", "Kind.StyleValue"
             "CSSVariableReferenceValue", "Kind.VariableReferenceValue"
             "StylePropertyMapReadOnly", "Kind.StyleMap"
+            "NodeIterator", "Kind.NodeIterator"
+            "TreeWalker", "Kind.TreeWalker"
+            "CaretPosition", "Kind.CaretPosition"
+            "VisualViewport", "Kind.VisualViewport"
+            "Highlight", "Kind.Highlight"
+            "HighlightRegistry", "Kind.HighlightRegistry"
+            "FileReader", "Kind.FileReader"
         ]
 
 [<EntryPoint>]

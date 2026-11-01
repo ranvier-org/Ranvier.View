@@ -18,6 +18,14 @@ let hasText (name: string) (expected: string) (value: JsonElement) =
     && field.ValueKind = JsonValueKind.String
     && field.GetString () = expected
 
+/// <summary>Tests an optional boolean field that is true.</summary>
+let hasBool (name: string) (value: JsonElement) =
+    let mutable field = Unchecked.defaultof<JsonElement>
+
+    value.ValueKind = JsonValueKind.Object
+    && value.TryGetProperty (name, &field)
+    && field.ValueKind = JsonValueKind.True
+
 /// <summary>Reads an array field into values owned by the model.</summary>
 let items (name: string) (value: JsonElement) =
     value.GetProperty(name).EnumerateArray()

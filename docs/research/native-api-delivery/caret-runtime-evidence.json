@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "group": "G09",
+  "status": "green (private integration; not accepted)",
+  "route": "Engine (Native32 / ABI40)",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/54",
+  "coreSourceCommit": "dcaf0ad83e21f15f8a7a84e8ddcc147e233bbcd3",
+  "viewsSourceCommit": "909339bb372a099139399ec43044cc84ea44d127",
+  "stackedOn": {
+    "core": "H11 b1048a5f (DOM alpha.34; includes D16 106ee5b7 and H01 60b0fa69)",
+    "views": "H11 6b48817 (Views 0.1.24; includes D16 9d7710b and H01 bf1f59d); generator fix a367441 cherry-picked first"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-caret-hit-testing",
+    "head": "fb87eb048d3b4896ae902b70aa08af34c6199f3f",
+    "abi": 40,
+    "runtime": "native-caret artifacts/native32-frozen",
+    "evidence": "Ranvier.WebCore docs/caret-hit-evidence/final-evidence.json"
+  },
+  "versions": {
+    "native": "0.1.0-preview.32",
+    "dom": "0.1.0-alpha.35",
+    "views": "0.1.25",
+    "webcoreBackend": "0.1.0-alpha.25"
+  },
+  "allocationReceipt": "Ranvier: docs/research/native-api-delivery/g09-managed35-allocation.json",
+  "redReceipt": "Ranvier.View: docs/research/native-api-delivery/caret-red-measurements.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.35.nupkg": "6e2abbdaae872bd547fecb19bc987a41469514a222f4d82ac39148cafe953510",
+    "Ranvier.Dom.0.1.0-alpha.35.nupkg": "9959c42d26edd51b9ae75ef8d12ad16aefa5d833d74bb43c44f463fa03afb09d",
+    "Ranvier.WebCore.0.1.0-preview.32.nupkg": "b6026f58be0b07f7f390554c1555b3a3b3fce9b5d5cdf6b0e3dca27266facc10"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "766f3818a2f930ea66a5f9920cabaad8728b5ed278d7468195941f9f6d057933",
+    "WebCore.dll": "8404b40bfc4a5a3b8e9e8c6d926f244616caf8cf3e1f231fe16939ebb6207f32",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "stageMatchesAot": true,
+  "nativeAotExecutable": {
+    "path": "C:\\wk\\g09-private\\aot-api\\Native.exe",
+    "sha256": "ba65eb102cef677945025f410c7e135a6047434b384a6bfc3f3504877b053329"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "f1ab39c6b42fe42c93e6b04cda5e6596b94b64dd2b8ff0bfccee468ea982ffb3",
+      "passLines": 91,
+      "h11BaselinePassLines": 89,
+      "h11PassLinesMissing": [],
+      "failLines": [],
+      "g09": [
+        "NATIVE_API G09 LIFETIME PASS assertions=5",
+        "NATIVE_API G09 PASS assertions=1537"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "f1ab39c6b42fe42c93e6b04cda5e6596b94b64dd2b8ff0bfccee468ea982ffb3",
+      "passLines": 91,
+      "h11BaselinePassLines": 89,
+      "h11PassLinesMissing": [],
+      "failLines": [],
+      "g09": [
+        "NATIVE_API G09 LIFETIME PASS assertions=5",
+        "NATIVE_API G09 PASS assertions=1537"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "741e776d12a9705d9056d14fd6357d062c9e4d68d9e5ef94879efeea99d65c17",
+      "passLines": 70,
+      "h11BaselinePassLines": 69,
+      "h11PassLinesMissing": [],
+      "failLines": [],
+      "g09": [
+        "BROWSER_API G09 PASS assertions=1537 engine=chromium headless=new version=156.0.8078.4"
+      ]
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "wrapperRegeneration": {
+    "objectsFs": "c1c0aa09bb7b35c0b8a160f5f885567224f1e903ea918773afeae93ab2325956",
+    "reportTxt": "fbd7574607f50e12c49d020fb338411c4505bce565c5cf8f5354bef5b1b322bd"
+  },
+  "wrapperFunctionCoverage": {
+    "total": 2534,
+    "mapped": 2465,
+    "notMapped": 69,
+    "caretFunctionsNotMapped": 0,
+    "notMappedBreakdown": {
+      "constructors (factories, hand-written services or none)": 29,
+      "static operations (fromMatrix, fromPoint, parse, parseAll ...)": 10,
+      "CSS namespace operations (CSS.supports x2, CSS.registerProperty)": 3,
+      "Window bindings (getComputedStyle, scroll members; hand-written services)": 9,
+      "members implemented by the 20 hand-written adapters (traversal filters, adopted style sheets, event targets, entries, ...)": 18
+    },
+    "note": "\"0 unmapped\" counts model members without a native function; the 69 are native functions without a generated member"
+  },
+  "fcs": {
+    "Ranvier.Dom": {
+      "verdict": "clean",
+      "errors": 0,
+      "warnings": 0,
+      "diagnostics": []
+    },
+    "Fable.Ranvier.Dom": {
+      "verdict": "clean",
+      "errors": 0,
+      "warnings": 0,
+      "diagnostics": []
+    },
+    "Ranvier.View.WebCore": {
+      "verdict": "clean",
+      "errors": 0,
+      "warnings": 1,
+      "diagnostics": []
+    },
+    "Ranvier.View.Dom": {
+      "verdict": "errors",
+      "errors": 2,
+      "warnings": 0,
+      "diagnostics": [
+        "Debug.fs:985 FS0039 The value, constructor, namespace or type 'snapshot' is not defined.",
+        "Debug.fs:985 FS0072 The type of this expression could not be inferred before accessing its members. Add a type annotation, e.g. (expr: SomeType), to constrain the type before this point."
+      ]
+    }
+  },
+  "nativeProbeRepeats": "frozen repeats 30/30",
+  "contract": {
+    "model": "Ranvier.Dom Document.caretPositionFromPoint(x, y, ?options) -> CaretPosition (null outside the viewport or without a render tree); CaretPosition.offsetNode/offset/getClientRect; CaretPositionFromPointOptions.shadowRoots",
+    "nativeWrapper": "generated Ranvier.View.WebCore CaretPosition wrapper, Kind.CaretPosition release",
+    "browser": "Chromium CaretPosition through the Fable model"
+  },
+  "fixture": "tests/NativeApi.Conformance/CaretChecks.fs (1537 shared assertions per backend; CaretOracle.fs generated by tools/generate-caret-oracle.py) + native lifetime checks in Native.fs runCaret",
+  "qualifications": [
+    "Native (30 keys x 3 scales = 90 checks, CaretOracle.nativeQualified): legacy caretRangeFromPoint retargets shadow and text-control hits to the host at offset 0 (7 keys); 0x0 caret rectangles at collapsed line ends (16 keys) and in a text control (6 keys); a held caret whose text shrank below its offset gives the 0x20 box at x 40 (1 key). Chromium asserts no qualification.",
+    "Scroll: the native engine truncates scrollTo(0.5, 20.5) to (0, 20), Chromium gives (1, 21); each backend is checked against the Chromium case at its own actual offset (G05 qualification).",
+    "FCS on Ranvier.View.Dom reports the pre-existing Debug.fs:985 Trace.snapshot errors (traced Debug configuration); G09 does not touch Debug.fs.",
+    "Win-x64 only; Linux and macOS not run locally."
+  ]
+}

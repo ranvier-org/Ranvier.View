@@ -1,0 +1,100 @@
+{
+  "question": "Why did a released native transport URL sometimes reach the provider (1 request) and sometimes not (0)?",
+  "cause": "WebCore reuses a same-document image from its memory cache (CachedImage::canSkipRevalidation, CachedImage.cpp:819-821, the per-document image list) while the CachedImage is still cached. Once the image loader releases its element and memory release prunes the clientless CachedImage, the reload misses and reaches the provider.",
+  "probe": "memory-cache-probe.py on C:/wk/h05-private/native22-final (WebCore babc8278, Host 153db475), 10 rounds per mode",
+  "results": {
+    "retained": {
+      "reloadRequests": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reloadOutcomes": [
+        "(0, 3, 2)"
+      ]
+    },
+    "released": {
+      "reloadRequests": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reloadOutcomes": [
+        "(0, 3, 2)"
+      ]
+    },
+    "purged": {
+      "reloadRequests": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "reloadOutcomes": [
+        "(0, 3, 2)"
+      ]
+    },
+    "evicted": {
+      "reloadRequests": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "reloadOutcomes": [
+        "(0, 3, 2)"
+      ]
+    },
+    "navigated": {
+      "reloadRequests": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "reloadOutcomes": [
+        "(0, 3, 2)"
+      ]
+    }
+  },
+  "reading": {
+    "retained/released/purged": "0 requests in every round, decode SUCCEEDED 3x2: memory-cache hits while the element or its loader still holds the CachedImage",
+    "evicted": "1 request in every round after 3x(cycle 50ms + GC) then rv_release_memory: misses after pruning",
+    "navigated": "1 request in every round: a new document has no per-document reuse"
+  },
+  "fixture": "Engine.ReleaseEngineCaches runs the evicted sequence natively before the reload, so the native fixture expects exactly 1 request; Chromium expects 0 (revoked object URL) with a no-op release.",
+  "runs": "NativeAOT 5/5 and JIT 3/3 at 29 assertions, Chromium 29; before-fix logs kept (2 of 3 AOT runs got 0 requests).",
+  "unexplained": []
+}

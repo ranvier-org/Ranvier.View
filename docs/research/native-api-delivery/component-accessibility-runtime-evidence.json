@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "group": "I11 component accessibility",
+  "status": "green (private integration; not accepted)",
+  "route": "Engine (Native41 / ABI49)",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/106",
+  "coreSourceCommit": "afe86b904e27689e5f4d72976dff88075cabc806",
+  "viewsSourceCommit": "9cbafdb67219d04cb272acfc059e07492f45cefa",
+  "stackedOn": {
+    "core": "T03 b490d7d6 (alpha.43), I08 2008a4cc, G04 b59d5c56, G03 b9c943d1",
+    "views": "T03 c10d59d (0.1.33), I08 61722bc, G04 dbcf651, G03 102ab61"
+  },
+  "nativeProducer": {
+    "branch": "codex/native-api-element-internals",
+    "head": "5eee88afc2d5479387b5de50bcdbe411ea25ed29",
+    "abi": 49,
+    "runtime": "native-elinternals artifacts/ei-candidate-4-frozen",
+    "sourcePatches": "0035, 0037, 0038, 0039",
+    "evidence": "Ranvier.WebCore docs/element-internals-evidence/final-evidence.json"
+  },
+  "versions": {
+    "native": "0.1.0-preview.41",
+    "dom": "0.1.0-alpha.44",
+    "views": "0.1.34",
+    "webcoreBackend": "0.1.0-alpha.34"
+  },
+  "allocationReceipt": "Ranvier docs/research/native-api-delivery/i11-managed44-allocation.json; Ranvier.WebCore docs/element-internals-evidence/allocation-absence.json",
+  "privatePackages": {
+    "Fable.Ranvier.Dom.0.1.0-alpha.44.nupkg": "5f68f659c28c2e9c9b7e4d2cb5a39a7756127f762242ca3827bb6df11dfc659d",
+    "Ranvier.Dom.0.1.0-alpha.44.nupkg": "518947be610f721a613ce13a35802d3ef218fd3c08db35e4cb495e7ef7f19df1",
+    "Ranvier.WebCore.0.1.0-preview.41.nupkg": "69517d716c01850a55aeb2e0bd4d3818df553e32042f60a209f0465ab249c678"
+  },
+  "executedNative": {
+    "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+    "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+    "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+    "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+    "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+    "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+    "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+    "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+    "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+    "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+    "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+    "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+    "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+    "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+    "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+    "RanvierWebCoreHost.dll": "54d90fdcef7efa5874617af233e0f0d18aca7cdafc1d3ff93c9dd930bdbd8726",
+    "WebCore.dll": "6da409d417ed14b0adc2bb2901789025896c34c784c1981ba3af3fc68e0d7d05",
+    "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93"
+  },
+  "stageMatchesAot": true,
+  "nativeAotExecutable": {
+    "path": "C:/wk/ei-private/aot-api/Native.exe",
+    "sha256": "42fef35c30777b1742ca030e460705d7e5a6bf44351bf6d017052ab8a0d1090e"
+  },
+  "runs": {
+    "native-jit-full": {
+      "exitCode": 0,
+      "logSha256": "6ebc1fbe7c91f77c9ac07941ed95a8d7e6ef31245f9d63e831fb9ce95331c2a3",
+      "passLines": 109,
+      "failLines": [],
+      "i11": [
+        "NATIVE_API I11 LIFETIME PASS assertions=4",
+        "NATIVE_API I11 PASS assertions=18"
+      ]
+    },
+    "native-aot-full": {
+      "exitCode": 0,
+      "logSha256": "6ebc1fbe7c91f77c9ac07941ed95a8d7e6ef31245f9d63e831fb9ce95331c2a3",
+      "passLines": 109,
+      "failLines": [],
+      "i11": [
+        "NATIVE_API I11 LIFETIME PASS assertions=4",
+        "NATIVE_API I11 PASS assertions=18"
+      ]
+    },
+    "chromium-full": {
+      "exitCode": 0,
+      "logSha256": "b31a3b6f2be57fe129b8589828a65b1cfbc5ccb6ca4957a5dee67013461ba30c",
+      "passLines": 81,
+      "failLines": [],
+      "i11": [
+        "BROWSER_API I11 PASS assertions=18 engine=chromium"
+      ]
+    },
+    "baselinePassLines": {
+      "jitAot": 107,
+      "chromium": 80,
+      "source": "T03 final (root)"
+    },
+    "added": {
+      "native": [
+        "NATIVE_API I11 PASS assertions=18",
+        "NATIVE_API I11 LIFETIME PASS assertions=4"
+      ],
+      "chromium": [
+        "BROWSER_API I11 PASS assertions=18"
+      ]
+    }
+  },
+  "jitAotPassLinesIdentical": true,
+  "nativeProbeRepeats": {
+    "aotAriaOnly": "30 runs, PASS line counts: 2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2",
+    "nativeAriaRelations": "30/30 aria_relations 1210 on ei-candidate-4-frozen (Ranvier.WebCore docs/element-internals-evidence/aria-relations-repeat30.txt)"
+  },
+  "wrapperRegeneration": {
+    "objectsFs": "cee36bfe9fff114ed6b260627e4d95057a2316e9efeaef400235b52dcf50774e",
+    "reportTxt": "b255b3bb1160220e39811f5d9adf5cee393d960336810abac8ab41c5eb4f8082",
+    "inputs": "restored Ranvier.WebCore preview.41 model + interop and Ranvier.Dom alpha.44 from the private feed",
+    "nullableSequenceFix": "a null array is present 0 and present 0 reads null; with and without the fix only the seven ARIA element array members change",
+    "againstT03": "only the seven ARIA element array members and the header counts change"
+  },
+  "fixture": {
+    "shared": "tests/NativeApi.Conformance/AriaChecks.fs",
+    "sharedChecks": 18,
+    "nativeLifetimeChecks": 4,
+    "windowMetricsMirror": "tests/Ranvier.View.WebCore.Tests HostTests \"WindowMetrics mirrors RvWindowMetrics\""
+  },
+  "blocked": {
+    "ElementInternals": "deferred with D07 (custom element definition); not exposed by Core in this group"
+  },
+  "qualifications": [
+    "WebKit keeps a duplicate element in a reflected array ([l2, l1, l2]); Chromium keeps each once.",
+    "ariaActionsElements raises natively: WebKit keeps ARIAActionsSupportEnabled off in every configuration.",
+    "Views exposes no accessibility tree: rv_ax_relations is proven by the Ranvier.WebCore probe only."
+  ]
+}

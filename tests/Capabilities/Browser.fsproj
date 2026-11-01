@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(NativeApiContractRoot)/src/Ranvier.Dom/Generated/Dom.fs" Link="Dom.fs" />
+    <Compile Include="$(NativeApiContractRoot)/src/Ranvier.Dom/Capabilities.fs" Link="Capabilities.fs" />
+    <Compile Include="$(NativeApiContractRoot)/src/Fable.Ranvier.Dom/BrowserCapabilities.fs" Link="BrowserCapabilities.fs" />
+    <Compile Include="Browser.fs" />
+    <PackageReference Include="Fable.Core" Version="5.3.0" />
+  </ItemGroup>
+</Project>

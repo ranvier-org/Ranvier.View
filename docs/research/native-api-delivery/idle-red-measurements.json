@@ -1,0 +1,102 @@
+{
+  "group": "H01",
+  "issue": "https://github.com/ranvier-org/Ranvier.WebCore/issues/108",
+  "phase": "RED",
+  "native": {
+    "domApiIdleMatches": 0,
+    "domApiSha256": "e2ec06f7cdf4c58ff73fb7f4eb713df81bc9f67a18741f48443a54c677def03f",
+    "interopAssemblyIdleMatches": 0,
+    "hostDllIdleExports": 0,
+    "hostDllSha256": "029b88fc4de18dca718a1caf8b1e091c6f2d94be5080be5f2ab30f6e0b7401b5",
+    "webCoreHostIdleMembers": 0,
+    "generatedDomIdleMembers": [],
+    "sharedFrameSchedulerIdle": 0,
+    "webkitSource": {
+      "IdleCallbackController": "C:/wk/src/Source/WebCore/dom/IdleCallbackController.{h,cpp} present",
+      "preference": "RequestIdleCallbackEnabled:\n  type: bool\n  status: testable\n  category: dom\n  humanReadableName: \"requestIdleCallback\"\n  humanReadableDescription: \"Enable requestIdleCallback support\"\n  defaultValue:\n    WebKitLegacy:\n      default: false\n    WebKit:\n      default: false\n    WebCore:\n      default: false\n\nRequestStorageAccessThrowsExceptionUntilReload:\n  type: bool\n  status: unstable\n  category: dom\n  humanReadableNa"
+    },
+    "conclusion": "No native idle export, no WebCoreHost idle queue, no shared-contract idle member; WebKit carries IdleCallbackController behind RequestIdleCallbackEnabled (testable, default false) and reaches it only from script."
+  },
+  "chromium": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+    "requestIdleCallback": "function",
+    "cancelIdleCallback": "function",
+    "IdleDeadline": "function",
+    "quiet": [
+      {
+        "delay": 52.8,
+        "remaining": 11.8,
+        "didTimeout": false
+      },
+      {
+        "delay": 0.8,
+        "remaining": 49.9,
+        "didTimeout": false
+      },
+      {
+        "delay": 14,
+        "remaining": 49.9,
+        "didTimeout": false
+      },
+      {
+        "delay": 58.9,
+        "remaining": 49.9,
+        "didTimeout": false
+      },
+      {
+        "delay": 62.3,
+        "remaining": 49.9,
+        "didTimeout": false
+      }
+    ],
+    "maxRemaining": 49.9,
+    "withTimerIn10ms": {
+      "remaining": 49.9
+    },
+    "decay": {
+      "first": 49.9,
+      "afterBusy60ms": 0
+    },
+    "ids": {
+      "a": 8,
+      "b": 9,
+      "increasing": true
+    },
+    "cancel": [
+      "a"
+    ],
+    "order": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "nested": {
+      "seen": [
+        "outer",
+        "inner"
+      ],
+      "sameDeadline": false
+    },
+    "timeout": {
+      "didTimeout": true,
+      "remaining": 0
+    },
+    "withFrame": {
+      "seq": [
+        "raf",
+        "idle"
+      ],
+      "remaining": 49.9
+    }
+  },
+  "chromiumObservations": [
+    "requestIdleCallback, cancelIdleCallback and IdleDeadline are functions (HeadlessChrome 156).",
+    "timeRemaining() is capped at 49.9 ms (50 ms idle period) on a quiet page and reaches 0 once the deadline passes.",
+    "Callbacks run in request order; ids are increasing positive integers; cancel is idempotent and ignores unknown ids.",
+    "A callback requested inside an idle callback runs in a later idle period.",
+    "With {timeout: 20} on a busy main thread the callback runs with didTimeout = true and timeRemaining() = 0.",
+    "With a pending animation frame, the frame callback runs before the idle callback.",
+    "The pending-timer bound on the deadline was not observed: the 10 ms timer fired before the idle period began (inconclusive)."
+  ]
+}

@@ -1,0 +1,687 @@
+{
+  "schemaVersion": 1,
+  "groups": [
+    "S08",
+    "S09",
+    "S10",
+    "S11"
+  ],
+  "supporting": "S07 native frozen-animation restart on Native21 (patch 0032); S03-S07 regression",
+  "cohort": {
+    "core": "Ranvier.Dom/Fable.Ranvier.Dom 0.1.0-alpha.24 (private packs)",
+    "views": "0.1.14 / backend alpha.14",
+    "native": "Ranvier.WebCore(.Native) 0.1.0-preview.21 ABI29 private win-x64 slim, source e55d222e0cc68edbba2586fd9466178b68a4b69a, patches 0000-0032",
+    "handoffReceiptSha256": "0ca46a52fdfd8a8013aa394d977c78d1884cff85d19133e6b94e8e641263e4db",
+    "runtimeReceiptSha256": "2e20b62eee4e5c2495c01ac7bba074f0493e68b03810ff1fefc48495ff1b0fa1",
+    "canonical": "248 interfaces / 2455 functions / 50 roots / 22 dictionaries / 0 stubs; byte-identical to PR132 8fb2ef23 except dom.json line endings"
+  },
+  "runtimeManifest": {
+    "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-runtime21-manifest.json",
+    "sha256": "e3b285ad4215d02b495a931f70051481600bee7a462a92184e4cb86ed7457f9b",
+    "bytes": 5780
+  },
+  "allocationCheck": {
+    "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-allocation-check.json",
+    "sha256": "66910d8f898abdec1625601a3680b3e0856834a390133d220563a9c0c7466037",
+    "bytes": 2398
+  },
+  "javaScriptCore": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+  "packages": [
+    {
+      "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-packages\\Fable.Ranvier.Dom.0.1.0-alpha.24.nupkg",
+      "sha256": "ac0ad41899c795a9cfdf4bafeec86f96149964a684742838c3e6701d5a106c5e",
+      "bytes": 817918
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-packages\\Fable.Ranvier.Dom.Traced.0.1.0-alpha.24.nupkg",
+      "sha256": "264d3660e06e872483f85747c849b876dd02d4224133c5a701d8c67172c2c1ea",
+      "bytes": 817973
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-packages\\Ranvier.Dom.0.1.0-alpha.24.nupkg",
+      "sha256": "40c8c3d34bbdfcbaef54226cb292343f2990ce4ea3e860ea2424deb8fdc5509a",
+      "bytes": 690665
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-packages\\Ranvier.Dom.Traced.0.1.0-alpha.24.nupkg",
+      "sha256": "4207a22d00f4fff17e0292be610ae7199e6a8c7e22ded80b78de71c940c648a1",
+      "bytes": 690510
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-packages\\Ranvier.WebCore.0.1.0-preview.21.nupkg",
+      "sha256": "d08c239ffc8b27d98080ee4a552780e772af5d5d2eaf0016f49dd2deb895f2f1",
+      "bytes": 435187
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-packages\\Ranvier.WebCore.Native.win-x64.0.1.0-preview.21.nupkg",
+      "sha256": "9d4446e4c6f9a7fab8c4b8a50f5e354528d5ff245815ea1079f8aa8de1a99912",
+      "bytes": 30927158
+    }
+  ],
+  "browserRestore": [
+    {
+      "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-browser-package-cache\\fable.ranvier.dom\\0.1.0-alpha.24\\fable.ranvier.dom.0.1.0-alpha.24.nupkg",
+      "sha256": "ac0ad41899c795a9cfdf4bafeec86f96149964a684742838c3e6701d5a106c5e"
+    }
+  ],
+  "nativeAot": {
+    "publishLog": {
+      "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-aot-publish.log",
+      "sha256": "ad84bf5aca33dfb8b799efeebf58504090c2c7a5e14ad6294f8f3c3e7f816f23",
+      "bytes": 59578
+    },
+    "ilcInvoked": true,
+    "nativeDllPresent": false,
+    "executable": {
+      "bytes": 14820352,
+      "sha256": "bb99cff7cd1632a320bd5dbac59bf6a1b202f7382a72ccfea714bf112f3c998e",
+      "machine": "0x8664",
+      "clrDirectoryRva": 0,
+      "clrDirectorySize": 0
+    },
+    "qualification": "PublishAot is set in an artifacts wrapper project because a global property reaches netstandard2.1 Core source references."
+  },
+  "generatorRegeneration": {
+    "identical": [
+      "Objects.fs",
+      "report.txt"
+    ],
+    "summary": "221 classes; 2479 mapped to 2409 of 2455 functions; 0 unmapped; no new release kinds; only SVG wrapper blocks changed"
+  },
+  "fcs": {
+    "core-dom": "clean",
+    "core-fable": "clean",
+    "webcore": "clean",
+    "native": "clean"
+  },
+  "counts": {
+    "S08": 49,
+    "S09": 118,
+    "S10": 38,
+    "S11": 45,
+    "S07native": 31,
+    "bothEngines": true,
+    "unitTests": "782 passed, 12 skipped, 0 failed",
+    "capabilitiesNativeLifecycle": 21
+  },
+  "providerDifferences": [
+    "Native21 WebKit keeps one empty string in requiredExtensions/systemLanguage after removeAttribute (SVGStringList appends emptyString for a null value), so the element stays conditionally invalid; Chromium empties the list. Corrected by patch 0034 (MathML Native23); this Native21 consumer keeps the provider flag."
+  ],
+  "measuredInBothEngines": [
+    "A rendered switch keeps its selected child after a condition change.",
+    "setStdDeviation leaves the stdDeviation attribute unwritten.",
+    "A failed SVG image paints a placeholder.",
+    "Setting SVGLength.value on an unspecified percentage keeps percentage units, so focal edits use valueAsString.",
+    "A titled style element sets the document preferred stylesheet set; the fixture keeps titled styles detached so later fixtures are unaffected."
+  ],
+  "initialFailures": [
+    "Radial focal point edit via .value on default 50% (percentage conversion) - fixture corrected.",
+    "feDropShadow setStdDeviation attribute expectation - both engines leave it unwritten.",
+    "Failed image expected blank - both engines paint a placeholder.",
+    "Dynamic switch re-selection expectation - neither engine re-selects.",
+    "requiredExtensions list after removal - WebKit defect, patch 0034.",
+    "Titled style leaked a preferred stylesheet set into the Chromium D12 fixture (enabled sheet layout 17 vs 40) - fixture corrected."
+  ],
+  "sources": [
+    {
+      "path": "C:\\wk\\rv-svg-paint\\tests\\NativeApi.Conformance\\SvgChecks.fs",
+      "sha256": "645b4721d570014d8f911978be5931cfbe476cda3852de16c7401d17fb525bd0",
+      "bytes": 2466
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\tests\\NativeApi.Conformance\\SvgPaintServers.fs",
+      "sha256": "3c0c8895973ad877f42f98a23302052b65045667a7bd7b68c18dc2819ac5a803",
+      "bytes": 7572
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\tests\\NativeApi.Conformance\\SvgFilters.fs",
+      "sha256": "55fdad1f2e2ea59be637a068f0e0f60e22591f28bd5758ce295da37be2e7fd38",
+      "bytes": 12041
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\tests\\NativeApi.Conformance\\SvgClipping.fs",
+      "sha256": "aefa0750f36b894d3c31fa018595a21054199e2223581268b4218cce9d589008",
+      "bytes": 7026
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\tests\\NativeApi.Conformance\\SvgResources.fs",
+      "sha256": "1d0080cf1e0ae39270972e8d229372693ed4a1410e527b3443d7d84353a236ae",
+      "bytes": 9783
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\tests\\NativeApi.Conformance\\SvgAnimations.fs",
+      "sha256": "acf374578bf141d33914f524e57ad804eeb01498f248ac5c0f58768f7a4eea48",
+      "bytes": 7428
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\tests\\NativeApi.Conformance\\Native.fs",
+      "sha256": "8b8296b5a07d7e0dc50120bf81cf4b7f15d04f9c1813050cb0a856cdd65a524c",
+      "bytes": 49404
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\tests\\NativeApi.Conformance\\Browser.fs",
+      "sha256": "b9e467fe094f3e230eada4130fa33bea2517800992ff70cb90bd9fa7e2162c3d",
+      "bytes": 38765
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\tests\\NativeApi.Conformance\\browser.mjs",
+      "sha256": "508f2c558c9b4d8ce544857705632d8dbe15a58c775c27dfd560284f3b9c541b",
+      "bytes": 21535
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\tests\\NativeApi.Conformance\\Native.fsproj",
+      "sha256": "e865921f3148a17549c9040a6e0d3b49406b8fcca11fea05827efaf053968c1c",
+      "bytes": 3094
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\tests\\NativeApi.Conformance\\Browser.fsproj",
+      "sha256": "20d49a7a5075e40cfa6602d885b83b3a4697ed1ae8c4b97a37ecf99ca4c4503d",
+      "bytes": 2767
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\src\\Ranvier.View.WebCore\\Host.fs",
+      "sha256": "93b4fff8c5234e8319cf732ddffe027dbae3dc6c49a75c87d3a1450a2efae926",
+      "bytes": 31697
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\src\\Ranvier.View.WebCore\\Ranvier.View.WebCore.fsproj",
+      "sha256": "63ca6d62aadce5f80bef79a7cf44eb861c1354fac7d8faff8b5a3c90d42c1aa2",
+      "bytes": 4858
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\src\\Ranvier.View.WebCore\\Generated\\Objects.fs",
+      "sha256": "84ea115e58f6702079ad413dd4839f8a312c6c5abcf8270d10eb60b65541e837",
+      "bytes": 2015876
+    },
+    {
+      "path": "C:\\wk\\rv-svg-paint\\src\\Ranvier.View.WebCore\\Generated\\report.txt",
+      "sha256": "21e492354646a51ed818e7195e749f7e3e3405cb22709baa1b161c8f38e07b4f",
+      "bytes": 11496
+    },
+    {
+      "path": "C:\\Users\\shaya\\.codex\\worktrees\\native-api-svg-paint\\Ranvier\\src\\Ranvier.Dom\\Generated\\Dom.fs",
+      "sha256": "3986d93f74a4b926fbfdcf170683cb6ba14ee215fc1ddbd1073cc35b729a1de6",
+      "bytes": 277322
+    }
+  ],
+  "runs": {
+    "final-native-jit-all": {
+      "process": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-native-jit-all-process.json",
+        "sha256": "e434de332add19a96ffcf4e71e5a9703793edf1154a9ba46c5243a883cc55ed4",
+        "bytes": 3292
+      },
+      "log": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-native-jit-all.log",
+        "sha256": "bccb0cee08c7f2aa11df3bf6f838e29862817335604d223dfa8f508b792d22c4",
+        "bytes": 3462
+      },
+      "exitCode": 0,
+      "markers": [
+        "NATIVE_API S03 PASS assertions=194",
+        "NATIVE_API S05 PASS assertions=210",
+        "NATIVE_API S06 PASS assertions=126 arguments=7",
+        "NATIVE_API S07 PASS assertions=31",
+        "NATIVE_API SVG_DOCUMENT LIFETIME PASS assertions=49",
+        "NATIVE_API SVG_SURFACES TEARDOWN PASS",
+        "NATIVE_API S08 PASS assertions=49",
+        "NATIVE_API S09 PASS assertions=118",
+        "NATIVE_API S10 PASS assertions=38",
+        "NATIVE_API S11 PASS assertions=45",
+        "NATIVE_API SVG_PAINT TEARDOWN PASS",
+        "NATIVE_API H07 TEARDOWN PASS",
+        "NATIVE_API TEARDOWN PASS groups=D09,D10,D11,CSSOM"
+      ],
+      "passLines": 66,
+      "runtimeBefore": 24,
+      "runtimeAfter": 24,
+      "executedFiles": {
+        "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+        "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+        "Fable.Core.dll": "e4d5675c5a7ff80718fb95e1a8b01cc2f62e5ad90d5dfed61cf9efe90b971f7f",
+        "FSharp.Core.dll": "1af305b7625c30a54d141caf805c5b0b5a8f6166fb5cef22e3570f55d33152bd",
+        "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+        "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+        "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+        "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+        "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+        "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+        "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+        "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+        "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+        "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+        "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+        "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+        "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+        "Native.dll": "96b00d6d6ab24fd39e84b6c9055759cd059d66f2e0d5194ad02abb1823ef74c6",
+        "Ranvier.Css.Bindings.dll": "b4b7c2c1b6a0e08f56d0f76318856bb5cbce3939f458e1eff6b4c08e785a06c5",
+        "Ranvier.Css.dll": "b7bcffd38267634a3aa1130f1d16a8cea2b82424141e48127fd7d3771469e7af",
+        "Ranvier.Css.Dom.dll": "2068e902f6ce7362d71198b5d3879b4081a60e8ab70da009a5107d39721acf4f",
+        "Ranvier.dll": "a7d7141dd59cb62323a27b6215d80f16dcb26962a918056f97aa00cd9a5022d0",
+        "Ranvier.Dom.dll": "6bfd3f92b0a5aefb676121e33da6bdb9ca73c1d62cd6e1d755f5b0535b23eb5b",
+        "Ranvier.View.dll": "4d4c98b48285a9faf1d1e68ab7de6d2cd4fff8f6c3f2b60531a1cb7ff6e65ec5",
+        "Ranvier.View.Dom.dll": "a28e360f1c3a0925700cfb1231b89d1163a8924cbdbd59eccd3b4cfc46901d19",
+        "Ranvier.View.WebCore.dll": "0423a2fbc0018112ee2e3df9abbfc9eb8c374bed68c781cc1ff0583305119f48",
+        "Ranvier.WebCore.dll": "2ec459c7e7910063c99a0759876dec74f15109f89d0dee96bae8680297c4822b",
+        "RanvierWebCoreHost.dll": "1fb9599e265d95866a6bd5ddb514389943b10cf8a76f1fd5c77e86ba6430225f",
+        "WebCore.dll": "d90e595c5ac1427f9d8616797b3aa2f8d81abd96e90bc9e6e13f17f6fc4b6a0f",
+        "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+        "Native.exe": "c1640c0af659887c9245ee522fafdae9b6240739149689a390bb26999714b22a"
+      },
+      "modules": null,
+      "modulesUnchangedDuringRun": null
+    },
+    "final-native-aot-all": {
+      "process": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-native-aot-all-process.json",
+        "sha256": "96ef26fb316e108741bedf8595e0b2f1911bbf62104f063ff266359274c462c1",
+        "bytes": 2124
+      },
+      "log": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-native-aot-all.log",
+        "sha256": "bccb0cee08c7f2aa11df3bf6f838e29862817335604d223dfa8f508b792d22c4",
+        "bytes": 3462
+      },
+      "exitCode": 0,
+      "markers": [
+        "NATIVE_API S03 PASS assertions=194",
+        "NATIVE_API S05 PASS assertions=210",
+        "NATIVE_API S06 PASS assertions=126 arguments=7",
+        "NATIVE_API S07 PASS assertions=31",
+        "NATIVE_API SVG_DOCUMENT LIFETIME PASS assertions=49",
+        "NATIVE_API SVG_SURFACES TEARDOWN PASS",
+        "NATIVE_API S08 PASS assertions=49",
+        "NATIVE_API S09 PASS assertions=118",
+        "NATIVE_API S10 PASS assertions=38",
+        "NATIVE_API S11 PASS assertions=45",
+        "NATIVE_API SVG_PAINT TEARDOWN PASS",
+        "NATIVE_API H07 TEARDOWN PASS",
+        "NATIVE_API TEARDOWN PASS groups=D09,D10,D11,CSSOM"
+      ],
+      "passLines": 66,
+      "runtimeBefore": 24,
+      "runtimeAfter": 24,
+      "executedFiles": {
+        "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+        "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+        "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+        "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+        "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+        "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+        "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+        "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+        "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+        "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+        "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+        "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+        "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+        "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+        "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+        "RanvierWebCoreHost.dll": "1fb9599e265d95866a6bd5ddb514389943b10cf8a76f1fd5c77e86ba6430225f",
+        "WebCore.dll": "d90e595c5ac1427f9d8616797b3aa2f8d81abd96e90bc9e6e13f17f6fc4b6a0f",
+        "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+        "Native.exe": "bb99cff7cd1632a320bd5dbac59bf6a1b202f7382a72ccfea714bf112f3c998e"
+      },
+      "modules": null,
+      "modulesUnchangedDuringRun": null
+    },
+    "final-native-jit-svg-paint": {
+      "process": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-native-jit-svg-paint-process.json",
+        "sha256": "f865dc4fc4b8e06370bd85831e160732cd24bbeee9b12139ca11488ef0449e01",
+        "bytes": 3322
+      },
+      "log": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-native-jit-svg-paint.log",
+        "sha256": "80a8b8b8229dd06ac0fbeb26c47f54261c67a65e2eb3314b61c9c1b0a2b22134",
+        "bytes": 255
+      },
+      "exitCode": 0,
+      "markers": [
+        "NATIVE_API S08 PASS assertions=49",
+        "NATIVE_API S09 PASS assertions=118",
+        "NATIVE_API S10 PASS assertions=38",
+        "NATIVE_API S11 PASS assertions=45",
+        "NATIVE_API SVG_PAINT TEARDOWN PASS"
+      ],
+      "passLines": 5,
+      "runtimeBefore": 24,
+      "runtimeAfter": 24,
+      "executedFiles": {
+        "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+        "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+        "Fable.Core.dll": "e4d5675c5a7ff80718fb95e1a8b01cc2f62e5ad90d5dfed61cf9efe90b971f7f",
+        "FSharp.Core.dll": "1af305b7625c30a54d141caf805c5b0b5a8f6166fb5cef22e3570f55d33152bd",
+        "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+        "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+        "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+        "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+        "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+        "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+        "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+        "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+        "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+        "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+        "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+        "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+        "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+        "Native.dll": "96b00d6d6ab24fd39e84b6c9055759cd059d66f2e0d5194ad02abb1823ef74c6",
+        "Ranvier.Css.Bindings.dll": "b4b7c2c1b6a0e08f56d0f76318856bb5cbce3939f458e1eff6b4c08e785a06c5",
+        "Ranvier.Css.dll": "b7bcffd38267634a3aa1130f1d16a8cea2b82424141e48127fd7d3771469e7af",
+        "Ranvier.Css.Dom.dll": "2068e902f6ce7362d71198b5d3879b4081a60e8ab70da009a5107d39721acf4f",
+        "Ranvier.dll": "a7d7141dd59cb62323a27b6215d80f16dcb26962a918056f97aa00cd9a5022d0",
+        "Ranvier.Dom.dll": "6bfd3f92b0a5aefb676121e33da6bdb9ca73c1d62cd6e1d755f5b0535b23eb5b",
+        "Ranvier.View.dll": "4d4c98b48285a9faf1d1e68ab7de6d2cd4fff8f6c3f2b60531a1cb7ff6e65ec5",
+        "Ranvier.View.Dom.dll": "a28e360f1c3a0925700cfb1231b89d1163a8924cbdbd59eccd3b4cfc46901d19",
+        "Ranvier.View.WebCore.dll": "0423a2fbc0018112ee2e3df9abbfc9eb8c374bed68c781cc1ff0583305119f48",
+        "Ranvier.WebCore.dll": "2ec459c7e7910063c99a0759876dec74f15109f89d0dee96bae8680297c4822b",
+        "RanvierWebCoreHost.dll": "1fb9599e265d95866a6bd5ddb514389943b10cf8a76f1fd5c77e86ba6430225f",
+        "WebCore.dll": "d90e595c5ac1427f9d8616797b3aa2f8d81abd96e90bc9e6e13f17f6fc4b6a0f",
+        "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+        "Native.exe": "c1640c0af659887c9245ee522fafdae9b6240739149689a390bb26999714b22a"
+      },
+      "modules": null,
+      "modulesUnchangedDuringRun": null
+    },
+    "final-native-aot-svg-paint": {
+      "process": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-native-aot-svg-paint-process.json",
+        "sha256": "a272a08d26c533e3aef0df45c9ee90f2ba0c47fc0399c5e5e883f3469094d237",
+        "bytes": 2155
+      },
+      "log": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-native-aot-svg-paint.log",
+        "sha256": "80a8b8b8229dd06ac0fbeb26c47f54261c67a65e2eb3314b61c9c1b0a2b22134",
+        "bytes": 255
+      },
+      "exitCode": 0,
+      "markers": [
+        "NATIVE_API S08 PASS assertions=49",
+        "NATIVE_API S09 PASS assertions=118",
+        "NATIVE_API S10 PASS assertions=38",
+        "NATIVE_API S11 PASS assertions=45",
+        "NATIVE_API SVG_PAINT TEARDOWN PASS"
+      ],
+      "passLines": 5,
+      "runtimeBefore": 24,
+      "runtimeAfter": 24,
+      "executedFiles": {
+        "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+        "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+        "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+        "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+        "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+        "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+        "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+        "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+        "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+        "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+        "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+        "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+        "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+        "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+        "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+        "RanvierWebCoreHost.dll": "1fb9599e265d95866a6bd5ddb514389943b10cf8a76f1fd5c77e86ba6430225f",
+        "WebCore.dll": "d90e595c5ac1427f9d8616797b3aa2f8d81abd96e90bc9e6e13f17f6fc4b6a0f",
+        "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+        "Native.exe": "bb99cff7cd1632a320bd5dbac59bf6a1b202f7382a72ccfea714bf112f3c998e"
+      },
+      "modules": null,
+      "modulesUnchangedDuringRun": null
+    },
+    "final-native-jit-svg-surfaces": {
+      "process": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-native-jit-svg-surfaces-process.json",
+        "sha256": "15b91d687868214593e0de2f2ff9540cb0311da83919d5f6ef11d7ed2f55fb96",
+        "bytes": 3329
+      },
+      "log": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-native-jit-svg-surfaces.log",
+        "sha256": "8f1f11f16bdd4355955c16207e0a3d58b7e2e096016ead8cde5b245ae4efeb07",
+        "bytes": 325
+      },
+      "exitCode": 0,
+      "markers": [
+        "NATIVE_API S03 PASS assertions=194",
+        "NATIVE_API S05 PASS assertions=210",
+        "NATIVE_API S06 PASS assertions=126 arguments=7",
+        "NATIVE_API S07 PASS assertions=31",
+        "NATIVE_API SVG_DOCUMENT LIFETIME PASS assertions=49",
+        "NATIVE_API SVG_SURFACES TEARDOWN PASS"
+      ],
+      "passLines": 6,
+      "runtimeBefore": 24,
+      "runtimeAfter": 24,
+      "executedFiles": {
+        "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+        "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+        "Fable.Core.dll": "e4d5675c5a7ff80718fb95e1a8b01cc2f62e5ad90d5dfed61cf9efe90b971f7f",
+        "FSharp.Core.dll": "1af305b7625c30a54d141caf805c5b0b5a8f6166fb5cef22e3570f55d33152bd",
+        "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+        "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+        "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+        "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+        "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+        "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+        "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+        "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+        "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+        "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+        "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+        "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+        "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+        "Native.dll": "96b00d6d6ab24fd39e84b6c9055759cd059d66f2e0d5194ad02abb1823ef74c6",
+        "Ranvier.Css.Bindings.dll": "b4b7c2c1b6a0e08f56d0f76318856bb5cbce3939f458e1eff6b4c08e785a06c5",
+        "Ranvier.Css.dll": "b7bcffd38267634a3aa1130f1d16a8cea2b82424141e48127fd7d3771469e7af",
+        "Ranvier.Css.Dom.dll": "2068e902f6ce7362d71198b5d3879b4081a60e8ab70da009a5107d39721acf4f",
+        "Ranvier.dll": "a7d7141dd59cb62323a27b6215d80f16dcb26962a918056f97aa00cd9a5022d0",
+        "Ranvier.Dom.dll": "6bfd3f92b0a5aefb676121e33da6bdb9ca73c1d62cd6e1d755f5b0535b23eb5b",
+        "Ranvier.View.dll": "4d4c98b48285a9faf1d1e68ab7de6d2cd4fff8f6c3f2b60531a1cb7ff6e65ec5",
+        "Ranvier.View.Dom.dll": "a28e360f1c3a0925700cfb1231b89d1163a8924cbdbd59eccd3b4cfc46901d19",
+        "Ranvier.View.WebCore.dll": "0423a2fbc0018112ee2e3df9abbfc9eb8c374bed68c781cc1ff0583305119f48",
+        "Ranvier.WebCore.dll": "2ec459c7e7910063c99a0759876dec74f15109f89d0dee96bae8680297c4822b",
+        "RanvierWebCoreHost.dll": "1fb9599e265d95866a6bd5ddb514389943b10cf8a76f1fd5c77e86ba6430225f",
+        "WebCore.dll": "d90e595c5ac1427f9d8616797b3aa2f8d81abd96e90bc9e6e13f17f6fc4b6a0f",
+        "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+        "Native.exe": "c1640c0af659887c9245ee522fafdae9b6240739149689a390bb26999714b22a"
+      },
+      "modules": null,
+      "modulesUnchangedDuringRun": null
+    },
+    "final-native-aot-svg-surfaces": {
+      "process": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-native-aot-svg-surfaces-process.json",
+        "sha256": "d18938e3e5859c10b361b30e8f2f02012905db657a3afd33b15b6be1a6da0f06",
+        "bytes": 2159
+      },
+      "log": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-native-aot-svg-surfaces.log",
+        "sha256": "8f1f11f16bdd4355955c16207e0a3d58b7e2e096016ead8cde5b245ae4efeb07",
+        "bytes": 325
+      },
+      "exitCode": 0,
+      "markers": [
+        "NATIVE_API S03 PASS assertions=194",
+        "NATIVE_API S05 PASS assertions=210",
+        "NATIVE_API S06 PASS assertions=126 arguments=7",
+        "NATIVE_API S07 PASS assertions=31",
+        "NATIVE_API SVG_DOCUMENT LIFETIME PASS assertions=49",
+        "NATIVE_API SVG_SURFACES TEARDOWN PASS"
+      ],
+      "passLines": 6,
+      "runtimeBefore": 24,
+      "runtimeAfter": 24,
+      "executedFiles": {
+        "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+        "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+        "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+        "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+        "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+        "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+        "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+        "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+        "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+        "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+        "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+        "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+        "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+        "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+        "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+        "RanvierWebCoreHost.dll": "1fb9599e265d95866a6bd5ddb514389943b10cf8a76f1fd5c77e86ba6430225f",
+        "WebCore.dll": "d90e595c5ac1427f9d8616797b3aa2f8d81abd96e90bc9e6e13f17f6fc4b6a0f",
+        "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+        "Native.exe": "bb99cff7cd1632a320bd5dbac59bf6a1b202f7382a72ccfea714bf112f3c998e"
+      },
+      "modules": null,
+      "modulesUnchangedDuringRun": null
+    },
+    "final-browser-all": {
+      "process": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-browser-all-process.json",
+        "sha256": "29f8d7bbba6a50fef1e0b058cb26b8d17ac7e23c1ca34e690d9fb48d1d32baa8",
+        "bytes": 4566
+      },
+      "log": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-browser-all.log",
+        "sha256": "bd39e2607a2df36cf1252a080db39f55c887c36a95a3fb4994a93185c753054b",
+        "bytes": 3760
+      },
+      "exitCode": 0,
+      "markers": [
+        "BROWSER_API S08 PASS assertions=49 engine=chromium",
+        "BROWSER_API S09 PASS assertions=118 engine=chromium",
+        "BROWSER_API S10 PASS assertions=38 engine=chromium",
+        "BROWSER_API S11 PASS assertions=45 engine=chromium",
+        "BROWSER_API S03 PASS assertions=194 engine=chromium",
+        "BROWSER_API S05 PASS assertions=210 engine=chromium",
+        "BROWSER_API S06 PASS assertions=115 arguments=3 engine=chromium",
+        "BROWSER_API S07 PASS assertions=31 engine=chromium"
+      ],
+      "passLines": 57,
+      "runtimeBefore": null,
+      "runtimeAfter": null,
+      "executedFiles": null,
+      "modules": {
+        "Browser.js": "6e167f4ef97c139e835e9bda1e1502102cd0785e7faf878a10ab518242a8e50a",
+        "Cancellation.js": "71a05440f14f2c86aa10e332f6dbec186c3c08d61359f178ff074124c0d65d71",
+        "Capabilities.js": "c57f9ecf6c55799c09354950d05dae88f2ecef3a7baac2f4731a5501746ee0d0",
+        "CascadeRules.js": "581a31ec682e6aebf188b7540819aac0e48c1d06e457407a8477e0873b76dbe1",
+        "ComputedStyles.js": "fb321e771ba4ff4c13b5478cdc5046aae5676b581ab6d42e8c6fcd195e3ddf2b",
+        "ConditionalRules.js": "97ac299e9cdcaf43161b321593a758c30ff5c99f97aa6424df778ad4013cf82c",
+        "CounterStyleRules.js": "0d0ce73651fe8d968fe6ff7a520173669e5378a125fa4217944294ce91dba32d",
+        "CssEscaping.js": "6f00a9dcd03864bd682feb6292c3bc3ba637a9f522cc3ebc57b0b75a165c927b",
+        "CssSupport.js": "b0919b4aeaf1d9a759ce15355dbfcc821f70d153c69694f4ae8de1b71363dbd1",
+        "CustomProperties.js": "69f1cb4fe70f4157d5b484cbb7601b65f2ca72a76d25859a39aad4b0ec3b9b71",
+        "ElementOperations.js": "b4bd463b0f834f78569b8044220ca07aa238bea2ddfd55f1d882e17bd1171148",
+        "FontTransitionRules.js": "1b8511a7ee721d0bd3b0de7be6e58f0b2a513ac5e56486da89c3797e467af5b3",
+        "FragmentRectangles.js": "c6d668f63a5adbc0f92f4ffa840161c7b9299723293344e6e57f52df935fe42f",
+        "GeometryValues.js": "76c71563658fb9cd0b51b0d85ab16d012db093fe0ee9a6ea982bc2cead51a976",
+        "Hyperlinks.js": "e7e77b8cdb1ab00da8473ed2275360e9ea7c84d53dc5f72ec80df2e7a7718f56",
+        "KeyframeRules.js": "28eb22d575aee3f602fc62301e4836ff1e0160f0746525c4248830020c6835ad",
+        "LocalePreferences.js": "e90f882e50df4e2011e13610244735d8aaa589535f009e08a14c3779498868dd",
+        "MatrixValues.js": "42f749cd410a13c0345ac010a08fc077c8e0380a622f75e6e218dc0abfeac727",
+        "Namespaces.js": "c25107f4113e5af20b2f2da453021c42569f835b8a890e85210bca0b34e8528a",
+        "PositionTry.js": "a0a15373ed692b57895ed8c5ecfcfe92c1bf964995eadea58092394c1115f0ba",
+        "Reflection.js": "6fb428c699280331cd0f268c1cfe57d4d1176e6b92a163c1978fce68e8fba389",
+        "RuleMutations.js": "3969a0570d6091b6dda29e0807e4882d0767e4265aedd0958c1505b9794bf913",
+        "SheetConstruction.js": "ac97243feb578a19eafe69421514d058536013a81e3223b8a636585b356a4e4c",
+        "SheetElements.js": "23f757d70babce6ea31fa65bdd07f2faab76e1031f5b05b8eefe85f614d97ff9",
+        "StyleMaps.js": "03ba1ef248f1457f44e15c6c6a7b60024e0d6be8b55949dc11c24d460b336f25",
+        "Stylesheets.js": "12c1f699535a149886297270063187867b8e164ea4508b178079f48d67984da1",
+        "StyleValues.js": "63846c886ee1d95cd4a795cde64c12565b87cad12e87e28fcb4ff3cb306d25b8",
+        "SvgAnimations.js": "a4d8a2a6bed004ffd42704c51dee5c05767121e0ce32f0e2a2f2c66f7c3e7430",
+        "SvgChecks.js": "29b4458d5a69ad0d2d87bca426ecd0b6a3a2278373bf4966b24c375a08019b9d",
+        "SvgClipping.js": "bf9e4a6f59662bf3023c0651dc0afcd42e4877b8188336174e143091c210f5e6",
+        "SvgFilters.js": "9687e94bc969073e73cf526972f4a3cb483d7872b60efb5a937a03c101e9f8df",
+        "SvgGeometry.js": "fcdc3aff6a74184a3c5374739520859ebf30080f68e2c0854ecd752412e52482",
+        "SvgPaintServers.js": "2590f32153964c87c3036e2ff1cecf5c7e70b6ce2c149a5fc5cff2f06cab8da7",
+        "SvgResources.js": "ce4d7f5e9476dccf15ec90cc37d4fcfa8962b0a06b1d52d664b0fbf666c15251",
+        "SvgShapes.js": "bdd68f924e3f37d5ede4187baabb679a03b17839bc872111e11ce24f74a92555",
+        "SvgText.js": "c7cfe30f1be6f869ea250145191c5dc5cad863164ddf9ceac8239cbafe1d1647",
+        "SvgValues.js": "0e2f9fdc869267d7109f52e8eaeebbaa88576425463530a2581fa05bf08c2835",
+        "SvgViewSelection.js": "8b812d28c2e91784bdc25be111de9e645b21ddb01c7843bae5ec163dbe065dec",
+        "Tables.js": "5b78deff2a5663c6205110e50006e0e7c84cff9eacdb6a1b38fc55443104205c",
+        "TransformValues.js": "a35707804260b622c1499b2f6056015b735ec0cb2cf9f242ecb1f13ccc4bb0dc",
+        "TypedStyles.js": "9ab5efef9c580674b66c63d1a3b68ac7ec1927c41b1494f1c502dd1e35fd5de2",
+        "UserTiming.js": "8df76f03275c9e498015fe87baa153476006ee3aaf67c6f41b4902e9e0880f20",
+        "ViewHyperlinks.js": "337f37cdfe0d4bafc8ad99943577eeda046c34c028254b375bf2f46c05910b0f",
+        "ViewTables.js": "2d226fa23912869affdf6e6c1e00d15139853f2f3e0d0f0a8955f73ee84427f0"
+      },
+      "modulesUnchangedDuringRun": true
+    },
+    "final-unit-tests": {
+      "process": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-unit-tests-process.json",
+        "sha256": "0d2a6503df50153176ce1d8238a10a85f962d8dc56a4b8d9cda8c7a6da08d943",
+        "bytes": 487
+      },
+      "log": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-unit-tests.log",
+        "sha256": "2735c871d4020414585a2b9c9ee3fcedd6437f482b80c32bfd025c2e09c233e8",
+        "bytes": 2516
+      },
+      "exitCode": 0,
+      "markers": [
+        "Passed!  - Failed:     0, Passed:   782, Skipped:    12, Total:   794, Duration: 16 s - Ranvier.View.WebCore.Tests.dll (net10.0)"
+      ],
+      "passLines": 0,
+      "runtimeBefore": 24,
+      "runtimeAfter": 24,
+      "executedFiles": null,
+      "modules": null,
+      "modulesUnchangedDuringRun": null
+    },
+    "final-capabilities-native": {
+      "process": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-capabilities-native-process.json",
+        "sha256": "a5271c502807ed092618bc855ccbe4520b15f0645f726754038a74983655200d",
+        "bytes": 2998
+      },
+      "log": {
+        "path": "C:\\wk\\rv-svg-paint\\artifacts\\svg-paint-final-capabilities-native.log",
+        "sha256": "66d3d5e2a60de63ec5083c3ddc6b1d2d0e31ae3abae6fb338018a558f3a2d880",
+        "bytes": 117
+      },
+      "exitCode": 0,
+      "markers": [
+        "CAPABILITY_NATIVE_LIFECYCLE_CHECKS=21"
+      ],
+      "passLines": 0,
+      "runtimeBefore": 24,
+      "runtimeAfter": 24,
+      "executedFiles": {
+        "brotlicommon.dll": "6e476586cd2a7ab303b47d823cedff98408925d8951daef60a32c13a292de6c8",
+        "brotlidec.dll": "d42e2160f76f29a91f8be01b009b585c45496219794e16eab90b3599b6f70a7f",
+        "Fable.Core.dll": "e4d5675c5a7ff80718fb95e1a8b01cc2f62e5ad90d5dfed61cf9efe90b971f7f",
+        "FSharp.Core.dll": "1af305b7625c30a54d141caf805c5b0b5a8f6166fb5cef22e3570f55d33152bd",
+        "harfbuzz-icu.dll": "27662b477f7cb0c20cee64543a06296a48a00a17b6c7b57629bb166a30d5b164",
+        "harfbuzz.dll": "b519b2abc7f446ca45bff77aae1708f45afc9f557698bcd7295837cce0f12bfa",
+        "icudt77.dll": "b00d2fb856f548608c137e771257a70d0722654535c6c00b371c0fab3e2b802c",
+        "icuin77.dll": "e3785739e1fcf2e38053bbb85ef5f0f5dab63f865cbda762da5258566085a240",
+        "icuuc77.dll": "189c623f996c41488c262867bae04a5bb33dd485bd423e0a8bec05c455a90902",
+        "JavaScriptCore.dll": "95149cdcba0751d0960786872635a7f3ec17771fd5281a6f06bac75d9ec84d42",
+        "jpeg62.dll": "394811c1b1bf1fd914248a145ba3fcad1f5f27c7009754ce08e48ccb0266b785",
+        "libpng16.dll": "8b46592c5ea338dd6b23ca380d6db64a7849c2a534fc465a006ec668645d8185",
+        "libsharpyuv.dll": "df165de83480692f494c23061ef9c40c10abe19a89b1fa9fae2f1cd5152c07a7",
+        "libwebp.dll": "550c5a4860f61d32a274fdd7b5c8cbe266eee28b3a3ca888195248ea1d5e0f71",
+        "libwebpdemux.dll": "1c522d2684cd3fcd29491097eff8b18137458f0cc68983162448fda1e79c3163",
+        "libwebpmux.dll": "ee3bd0439191fe0c7983bb9c7977d25cd1a096784197ea643d992b92bc81ae29",
+        "libxml2.dll": "a89b639819e10d1c5f76717c405c1ee669d0af2f3e50af443345582d6832b7a5",
+        "Native.dll": "9173270cc5afe2a8b49423e44ae53d9e37136125c96c7cf5322253aaaf0dc71a",
+        "Ranvier.dll": "a7d7141dd59cb62323a27b6215d80f16dcb26962a918056f97aa00cd9a5022d0",
+        "Ranvier.Dom.dll": "6bfd3f92b0a5aefb676121e33da6bdb9ca73c1d62cd6e1d755f5b0535b23eb5b",
+        "Ranvier.View.dll": "4d4c98b48285a9faf1d1e68ab7de6d2cd4fff8f6c3f2b60531a1cb7ff6e65ec5",
+        "Ranvier.View.Dom.dll": "a28e360f1c3a0925700cfb1231b89d1163a8924cbdbd59eccd3b4cfc46901d19",
+        "Ranvier.View.WebCore.dll": "0423a2fbc0018112ee2e3df9abbfc9eb8c374bed68c781cc1ff0583305119f48",
+        "Ranvier.WebCore.dll": "2ec459c7e7910063c99a0759876dec74f15109f89d0dee96bae8680297c4822b",
+        "RanvierWebCoreHost.dll": "1fb9599e265d95866a6bd5ddb514389943b10cf8a76f1fd5c77e86ba6430225f",
+        "WebCore.dll": "d90e595c5ac1427f9d8616797b3aa2f8d81abd96e90bc9e6e13f17f6fc4b6a0f",
+        "zlib1.dll": "65933d64d3c9ab80281884551c4a338e5225a9ec44825c36452f13326a91fc93",
+        "Native.exe": "c1640c0af659887c9245ee522fafdae9b6240739149689a390bb26999714b22a"
+      },
+      "modules": null,
+      "modulesUnchangedDuringRun": null
+    }
+  },
+  "scope": "Private Windows x64 JIT, NativeAOT and packaged Fable/Chromium only; official packages, other RIDs and acceptance remain separate."
+}

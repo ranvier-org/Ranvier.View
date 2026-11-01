@@ -1,0 +1,31 @@
+{
+  "group": "H05 resource completion (#110)",
+  "core": "ranvier-org/Ranvier codex/native-api-resource-completion a8ac204d (Core DOM 0.1.0-alpha.25, on I01 7e929d06)",
+  "native": "ranvier-org/Ranvier.WebCore PR #133 0db15104 (preview.22 / ABI30, Source 0001-0033), private win-x64 runtime C:/wk/h05-private/native22-final (WebCore babc8278, Host 153db475, JSC 95149cdc)",
+  "nativeRun": {
+    "H05 resources": 28,
+    "H07 capabilities": 42,
+    "I01 cancellation": 56,
+    "I01 lifetime": 12,
+    "teardown": "no leaked native objects"
+  },
+  "browserRun": {
+    "engine": "Playwright Chromium",
+    "H05 resources": 28,
+    "contracts": "Fable.Ranvier.Dom 0.1.0-alpha.25 packed locally from the Core branch"
+  },
+  "measuredQualifications": [
+    "Chromium resolves decode for a PNG with a valid header and corrupt image data (3x2); WebKit's decode rejects it and native reports DecodeFailed.",
+    "Chromium reports every image decode failure as one EncodingError; the browser service qualifies it as Invalidated for a changed source, LoadFailed for an image without usable data and DecodeFailed otherwise.",
+    "A revoked browser object URL reaches no provider; a released native transport URL reaches the provider as an unknown request."
+  ],
+  "lifetime": [
+    "ClearCache makes the next UseCache request reach the provider.",
+    "Disposing an image operation releases its transport URL.",
+    "Disposing the service cancels pending operations once and rejects new operations."
+  ],
+  "pending": [
+    "Forward integration onto the SVG paint consumer (managed24) when it exists.",
+    "Hosted CI on all platforms, official packages and independent acceptance."
+  ]
+}
