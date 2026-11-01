@@ -1177,7 +1177,10 @@ let runVisualViewport () =
 let private key (name: string) : JS.Promise<unit> = jsNative
 
 [<Emit("navigator.userAgent.includes('Windows')")>]
-let private crlfLineEndings () : bool = jsNative
+let private onWindows () : bool = jsNative
+
+[<Emit("navigator.userAgent.includes('Linux')")>]
+let private onLinux () : bool = jsNative
 
 [<Emit("globalThis.__nativeApiClick($0, $1)")>]
 let private click (x: int) (y: int) : JS.Promise<unit> = jsNative
@@ -1210,7 +1213,7 @@ let runBinary () =
         let driver: BinaryChecks.Driver =
             {
                 Settle = fun () -> Async.Sleep 1
-                CrlfLineEndings = crlfLineEndings ()
+                CrlfLineEndings = onWindows ()
             }
 
         let! count =
@@ -1335,7 +1338,11 @@ let runEventDetails () =
     async {
         let document = document ()
 
-        let driver: EventDetailChecks.Driver = { Settle = fun () -> Async.Sleep 16 }
+        // Animation and transition events dispatch in a rendering update, so a settle waits for animation frames.
+        let driver: EventDetailChecks.Driver =
+            {
+                Settle = fun () -> viewportFrames () |> Async.AwaitPromise
+            }
 
         let! count =
             EventDetailChecks.run document (fun () -> BrowserEventDetails.forDocument document) driver
@@ -1382,7 +1389,11 @@ let runCaret () =
                         }
                 Settle = settle
                 Font = font
-                Qualified = Map.empty
+                Qualified =
+                    if onLinux () then
+                        CaretOracle.chromiumQualifiedLinux
+                    else
+                        Map.empty
             }
 
         let! count =
@@ -1410,7 +1421,7 @@ let runUrls () =
     let document = document ()
 
     let count =
-        UrlChecks.run (fun () -> BrowserUrls.forDocument document) errorName UrlChecks.Chromium
+        UrlChecks.run (fun () -> BrowserUrls.forDocument document) errorName (UrlChecks.Chromium (onWindows ()))
 
     {| urls = count |}
 

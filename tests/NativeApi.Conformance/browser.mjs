@@ -51,14 +51,17 @@ const valueFactoriesOnly = process.argv.includes('--value-factories-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
+// The fixture content at a request path: the static server and every page's request routing serve it.
+const content = async name => {
+  if (name === '/fixtures/Ahem.ttf') return { contentType: 'font/ttf', body: await readFile(assets['/Ahem.ttf']) };
+  if (name === '/') return { contentType: 'text/html', body: '<!doctype html><html><body></body></html>' };
+  const file = assets[name] ?? resolve(root, '.' + name);
+  if (!assets[name] && !file.startsWith(root + sep)) throw new Error('Outside fixture output');
+  return { contentType: extname(file) === '.js' ? 'text/javascript' : extname(file) === '.ttf' ? 'font/ttf' : 'text/plain', body: await readFile(file) };
+};
 const server = createServer(async (request, response) => {
   try {
     const name = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
-    if (name === '/fixtures/Ahem.ttf') {
-      response.setHeader('Content-Type', 'font/ttf');
-      response.end(await readFile(assets['/Ahem.ttf']));
-      return;
-    }
     const held = /^\/fixtures\/held\/([a-z]+)$/.exec(name);
     if (held) {
       heldFonts.set(held[1], response);
@@ -81,26 +84,38 @@ const server = createServer(async (request, response) => {
       response.end();
       return;
     }
-    if (name === '/') {
-      response.setHeader('Content-Type', 'text/html');
-      response.end('<!doctype html><html><body></body></html>');
-      return;
-    }
-    const file = assets[name] ?? resolve(root, '.' + name);
-    if (!assets[name] && !file.startsWith(root + sep)) throw new Error('Outside fixture output');
-    response.setHeader('Content-Type', extname(file) === '.js' ? 'text/javascript' : extname(file) === '.ttf' ? 'font/ttf' : 'text/plain');
-    response.end(await readFile(file));
+    const { contentType, body } = await content(name);
+    response.setHeader('Content-Type', contentType);
+    response.end(body);
   } catch {
     response.statusCode = 404;
     response.end();
   }
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+// Pages receive GET responses from the server's origin through request routing, which opens no socket: a loaded
+// Windows host can fail a loopback connect with net::ERR_NO_BUFFER_SPACE, and one failed module fetch fails the import.
+const routeFixtures = async target => {
+  const port = String(server.address().port);
+  await target.route(url => url.port === port, async route => {
+    if (route.request().method() !== 'GET') return route.continue();
+    // T01's held font requests wait on the server for the fixture's answer.
+    if (/^\/fixtures\/(held|requested|answer)\//.test(new URL(route.request().url()).pathname)) return route.continue();
+    try {
+      await route.fulfill({ status: 200, ...await content(decodeURIComponent(new URL(route.request().url()).pathname)) });
+    } catch {
+      await route.fulfill({ status: 404, body: '' });
+    }
+  });
+  return target;
+};
+const routedPage = async (browser, options) => routeFixtures(await browser.newPage(options));
+const routedContext = async (browser, options) => routeFixtures(await browser.newContext(options));
 // I12 needs page activation changes, which only new headless Chromium (channel 'chromium') delivers.
 const runInputState = async () => {
   const inputBrowser = await chromium.launch({ headless: true, channel: 'chromium' });
   try {
-    const context = await inputBrowser.newContext();
+    const context = await routedContext(inputBrowser);
     const page = await context.newPage();
     const other = await context.newPage();
     await page.exposeFunction('__nativeApiSetActive', async active => {
@@ -165,7 +180,7 @@ const POINTER_INPUT_ASSERTIONS = 61;
 const runViewport = async () => {
   const viewportBrowser = await chromium.launch({ headless: true });
   try {
-    const context = await viewportBrowser.newContext();
+    const context = await routedContext(viewportBrowser);
     const page = await context.newPage();
     const cdp = await context.newCDPSession(page);
     const { windowId } = await cdp.send('Browser.getWindowForTarget');
@@ -209,7 +224,7 @@ const VISUAL_VIEWPORT_ASSERTIONS = 66;
 const runForms = async () => {
   const formsBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await formsBrowser.newPage();
+    const page = await routedPage(formsBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runForms(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.forms !== FORMS_ASSERTIONS) throw new Error(`Form assertions did not run: ${JSON.stringify(result)}`);
@@ -223,7 +238,7 @@ const FORMS_ASSERTIONS = 69;
 const runDialogs = async () => {
   const dialogsBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await dialogsBrowser.newPage({ viewport: { width: 800, height: 600 } });
+    const page = await routedPage(dialogsBrowser, { viewport: { width: 800, height: 600 } });
     await page.exposeFunction('__nativeApiKey', async key => { await page.keyboard.press(key); });
     await page.exposeFunction('__nativeApiClick', async (x, y) => { await page.mouse.click(x, y); });
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
@@ -239,7 +254,7 @@ const DIALOG_ASSERTIONS = 143;
 const runUrls = async () => {
   const urlsBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await urlsBrowser.newPage();
+    const page = await routedPage(urlsBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runUrls(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.urls !== URL_ASSERTIONS) throw new Error(`URL assertions did not run: ${JSON.stringify(result)}`);
@@ -253,7 +268,7 @@ const URL_ASSERTIONS = 190;
 const runAria = async () => {
   const ariaBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await ariaBrowser.newPage();
+    const page = await routedPage(ariaBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runAria(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.aria !== ARIA_ASSERTIONS) throw new Error(`ARIA assertions did not run: ${JSON.stringify(result)}`);
@@ -267,7 +282,7 @@ const ARIA_ASSERTIONS = 18;
 const runSegments = async () => {
   const segmentsBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await segmentsBrowser.newPage();
+    const page = await routedPage(segmentsBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runSegments(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.segments !== SEGMENT_ASSERTIONS) throw new Error(`Text segmentation assertions did not run: ${JSON.stringify(result)}`);
@@ -281,7 +296,7 @@ const SEGMENT_ASSERTIONS = 220;
 const runBinary = async () => {
   const binaryBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await binaryBrowser.newPage();
+    const page = await routedPage(binaryBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runBinary(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.binary !== BINARY_ASSERTIONS) throw new Error(`Binary value assertions did not run: ${JSON.stringify(result)}`);
@@ -309,7 +324,7 @@ const DATA_TRANSFER_ASSERTIONS = 49;
 const runBlobUrls = async () => {
   const blobBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await blobBrowser.newPage();
+    const page = await routedPage(blobBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runBlobUrls(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.blobUrls !== BLOB_URL_ASSERTIONS) throw new Error(`Blob URL assertions did not run: ${JSON.stringify(result)}`);
@@ -352,12 +367,12 @@ const SNAPSHOT_ASSERTIONS = 6;
 const runCrypto = async () => {
   const cryptoBrowser = await chromium.launch({ headless: true, args: ['--host-resolver-rules=MAP insecure.test 127.0.0.1'] });
   try {
-    const page = await cryptoBrowser.newPage();
+    const page = await routedPage(cryptoBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runCrypto(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.crypto !== CRYPTO_ASSERTIONS) throw new Error(`Crypto assertions did not run: ${JSON.stringify(result)}`);
     console.log(`BROWSER_API B22 PASS assertions=${result.crypto} engine=chromium`);
-    const insecure = await cryptoBrowser.newPage();
+    const insecure = await routedPage(cryptoBrowser);
     await insecure.goto(`http://insecure.test:${server.address().port}/`);
     const secure = await insecure.evaluate(() => isSecureContext);
     if (secure) throw new Error('http://insecure.test is a secure context');
@@ -373,7 +388,7 @@ const CRYPTO_ASSERTIONS = 155;
 const runScreen = async () => {
   const screenBrowser = await chromium.launch({ headless: true });
   try {
-    const context = await screenBrowser.newContext({ viewport: { width: 320, height: 200 } });
+    const context = await routedContext(screenBrowser, { viewport: { width: 320, height: 200 } });
     const page = await context.newPage();
     const cdp = await context.newCDPSession(page);
     const types = ['portraitPrimary', 'portraitSecondary', 'landscapePrimary', 'landscapeSecondary'];
@@ -419,7 +434,7 @@ const CRYPTO_INSECURE_ASSERTIONS = 4;
 const runHighlights = async () => {
   const highlightsBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await highlightsBrowser.newPage();
+    const page = await routedPage(highlightsBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runHighlights(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.highlights !== HIGHLIGHT_ASSERTIONS) throw new Error(`Highlight assertions did not run: ${JSON.stringify(result)}`);
@@ -488,7 +503,7 @@ const CANVAS_EXPORT_ASSERTIONS = 40;
 const runStrings = async () => {
   const stringsBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await stringsBrowser.newPage();
+    const page = await routedPage(stringsBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runStrings(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.strings !== STRING_ASSERTIONS) throw new Error(`U+0000 round-trip assertions did not run: ${JSON.stringify(result)}`);
@@ -516,7 +531,7 @@ const HOST_STRING_ASSERTIONS = 5;
 const runDiagnostics = async () => {
   const diagnosticsBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await diagnosticsBrowser.newPage();
+    const page = await routedPage(diagnosticsBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runDiagnostics(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.diagnostics !== DIAGNOSTICS_ASSERTIONS) throw new Error(`Diagnostics assertions did not run: ${JSON.stringify(result)}`);
@@ -530,7 +545,7 @@ const DIAGNOSTICS_ASSERTIONS = 46;
 const runCascade = async () => {
   const cascadeBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await cascadeBrowser.newPage();
+    const page = await routedPage(cascadeBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runCascade(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.cascade !== CASCADE_ASSERTIONS) throw new Error(`Cascade assertions did not run: ${JSON.stringify(result)}`);
@@ -622,7 +637,7 @@ const VIEW_TIMELINE_ASSERTIONS = 54;
 const runCoordinates = async () => {
   const coordinatesBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await coordinatesBrowser.newPage();
+    const page = await routedPage(coordinatesBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runCoordinates(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.coordinates !== COORDINATE_ASSERTIONS) throw new Error(`Coordinate assertions did not run: ${JSON.stringify(result)}`);
@@ -664,7 +679,7 @@ const INTERSECTION_ASSERTIONS = 40;
 const runSubmissions = async () => {
   const submissionsBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await submissionsBrowser.newPage();
+    const page = await routedPage(submissionsBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runSubmissions(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.submissions !== SUBMISSION_ASSERTIONS) throw new Error(`Form submission assertions did not run: ${JSON.stringify(result)}`);
@@ -678,7 +693,7 @@ const SUBMISSION_ASSERTIONS = 26;
 const runEventDetails = async () => {
   const detailsBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await detailsBrowser.newPage();
+    const page = await routedPage(detailsBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runEventDetails(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.eventDetails !== EVENT_DETAIL_ASSERTIONS) throw new Error(`Event detail assertions did not run: ${JSON.stringify(result)}`);
@@ -692,7 +707,7 @@ const EVENT_DETAIL_ASSERTIONS = 91;
 const runFrames = async () => {
   const framesBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await framesBrowser.newPage();
+    const page = await routedPage(framesBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runFrames(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.frames !== 18 || result.manualFrames !== 18) throw new Error(`Frame assertions did not run: ${JSON.stringify(result)}`);
@@ -705,7 +720,7 @@ const runFrames = async () => {
 const runCaret = async () => {
   const caretBrowser = await chromium.launch({ headless: true, channel: 'chromium' });
   try {
-    const context = await caretBrowser.newContext({ viewport: { width: 320, height: 240 } });
+    const context = await routedContext(caretBrowser, { viewport: { width: 320, height: 240 } });
     const page = await context.newPage();
     const cdp = await context.newCDPSession(page);
     await page.exposeFunction('__nativeApiViewport', async (width, height, deviceScaleFactor) => {
@@ -725,7 +740,7 @@ const CARET_ASSERTIONS = 1537;
 const runIdle = async () => {
   const idleBrowser = await chromium.launch({ headless: true });
   try {
-    const page = await idleBrowser.newPage();
+    const page = await routedPage(idleBrowser);
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
     const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runIdle(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.idle !== IDLE_ASSERTIONS || result.manualIdle !== IDLE_ASSERTIONS || result.available !== true) throw new Error(`Idle assertions did not run: ${JSON.stringify(result)}`);
@@ -791,7 +806,7 @@ try {
   else if (caretOnly) { await runCaret(); process.exitCode = 0; }
   else {
   browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
+  const page = await routedPage(browser);
   const originalViewport = page.viewportSize();
   await page.exposeFunction('__nativeApiResizeViewport', async (width, height) => {
     await page.setViewportSize({ width, height });

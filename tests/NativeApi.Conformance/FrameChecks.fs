@@ -86,13 +86,6 @@ let run (create: unit -> FrameScheduler) (driver: Driver) =
         do! driver.NextFrame ()
         equal "rescheduled frame runs at the next frame" [ "frame 1" ] (drain ())
 
-        check
-            "frame time on the scheduler clock"
-            (times[0] > 0.0
-             && times[0] <= nows[0]
-             && times[0] <= times[1]
-             && times[1] <= nows[1])
-
         // Owner-bound scheduling.
         let root, inner =
             createRoot (fun root ->
@@ -106,6 +99,20 @@ let run (create: unit -> FrameScheduler) (driver: Driver) =
                 root, (fun () -> inner.Value))
 
         do! driver.NextFrame ()
+        let afterFrames = scheduler.Now ()
+
+        // Chromium can pass a frame time later than Now read in the same callback; each frame time is checked against
+        // Now read at a later frame.
+        check
+            ("frame time on the scheduler clock: "
+             + String.concat ", " [ for value in Seq.append times nows -> string value ]
+             + ", "
+             + string afterFrames)
+            (times[0] > 0.0
+             && times[0] <= times[1]
+             && times[0] <= nows[1]
+             && times[1] <= afterFrames)
+
         equal "owned frame runs" [ "owned frame" ] (drain ())
         check "owned frame runs in a child scope" (not (obj.ReferenceEquals (inner (), root)))
         check "child scope disposed after the callback" (inner ()).IsDisposed

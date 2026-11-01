@@ -1,6 +1,7 @@
 /// Each rule's time over Core.fs and Template.fs, the two largest files of the gate: 250 ms per rule per file, and
 /// 500 ms for the shared walk that every rule reads. The rules run ungated, so the view rules are timed over
-/// Template.fs as well.
+/// Template.fs as well. Each budget holds the fastest of three runs, so a scheduler or GC pause on a shared runner
+/// leaves the result unchanged and a slower walk or rule raises every run.
 module Ranvier.Analyzers.Tests.Budget
 
 open System.Diagnostics
@@ -33,11 +34,19 @@ let private coreProject: string =
     |> _.Value
 
 let private timed (label: string) (budget: int64) (action: unit -> unit) =
-    let clock = Stopwatch.StartNew ()
-    action ()
-    clock.Stop ()
-    printfn $"Budget: {label}: {clock.ElapsedMilliseconds} ms"
-    Expect.isLessThanOrEqual clock.ElapsedMilliseconds budget $"{label}: {clock.ElapsedMilliseconds} ms"
+    let runs =
+        [
+            for _ in 1..3 ->
+                let clock = Stopwatch.StartNew ()
+                action ()
+                clock.Stop ()
+                clock.ElapsedMilliseconds
+        ]
+
+    let fastest = List.min runs
+    let all = String.concat ", " (runs |> List.map string)
+    printfn $"Budget: {label}: {fastest} ms (runs {all})"
+    Expect.isLessThanOrEqual fastest budget $"{label}: {fastest} ms, the fastest of {all} ms"
 
 let private budgetOver (project: string) (file: string) (references: string list) =
     let sources = sourcesOf project
