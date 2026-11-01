@@ -1,5 +1,15 @@
 # Shared native API conformance
 
+The G10 device-pixel resize fixture runs eight measured scenarios at scales 1, 1.5 and 2 (52 assertions per scale).
+It checks position-only notifications, transforms, fractional padding/borders, nested offsets and SVG viewBox/writing modes.
+Native uses `WebCoreHost.SetDeviceScale`; Chromium uses a separate renderer process and context for each actual device scale.
+The native fixture also changes scale on a live host and checks that only the device-pixel observer fires while CSS dimensions stay fixed.
+Runtimes without `resize-device-pixel-content-box` retain option rejection and empty entry sizes (32 fallback assertions per scale).
+This fallback proof does not qualify a capability-true runtime. Existing G10 ordering, zoom and callback-error checks still run.
+
+`generate-resize-device-fixture.py --cases <resize-observation-cases.json> --oracle <resize-observation-oracle.json> --output ResizeDevicePixelData.fs`
+regenerates the shared measurements from the native lane's Chromium oracle; the generated file records both input hashes.
+
 The fixtures execute the same typed assertions through shared DOM contracts on native WebCore and a real Chromium document. The integrated Core18/Views8 candidate passes 3,293 shared checks on Windows JIT and NativeAOT, and 3,306 in Chromium. The H02 slice contributes 180 shared checks and a separate 181-check deterministic run. Native H02 lifetime/frame-clock/concurrency coverage adds 25 checks and 500 duplicate-name marks; its native teardown count is zero. Earlier groups retain their own lifetime, context, CSS.escape oracle and real Tab-traversal checks. Current proof is a private Native17-backed candidate; official package and other-platform acceptance remain separate.
 
 From the repository root, with the matching DOM and native packages published:

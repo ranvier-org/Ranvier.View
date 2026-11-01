@@ -13,14 +13,12 @@ open RanvierWebCoreAbi
 module ResizeObservation =
     /// <summary>A resize observation service of the document <c>host</c> shows when each observer is created.</summary>
     /// <remarks>
-    /// Callbacks run during <c>WebCoreHost.Frame</c>, in the order of each observer's first observation. Each entry is
-    /// copied before its callback runs; an exception the callback raises is added to <c>WebCoreHost.Errors</c> and
-    /// leaves other observers delivering. The engine has no device-pixel content box (Ranvier.WebCore#146):
-    /// <c>Supports DevicePixelContentBox</c> is false and every <c>DevicePixelContentBoxSize</c> is empty. An observer
-    /// of a replaced document delivers nothing. Host disposal disposes the service. Raises NotSupportedException when
-    /// the native library lacks the resize-entries functions.
+    /// Callbacks run during <c>WebCoreHost.Frame</c> in first-observe order. Entry values are copied; callback exceptions enter <c>WebCoreHost.Errors</c>.
+    /// Device-pixel box support follows the loaded native capability; older runtimes reject that option and return empty device-pixel sizes.
+    /// Replacing the document stops its observers delivering. Host disposal disposes the service and its observers.
     /// </remarks>
     /// <param name="host">The live host whose creating thread runs every operation.</param>
+    /// <exception cref="T:System.NotSupportedException">The native library lacks resize-entry observation.</exception>
     let forHost (host: WebCoreHost) : ResizeObservationService =
         if isNull (box host) then
             nullArg (nameof host)
@@ -157,7 +155,7 @@ module ResizeObservation =
                     Supports =
                         fun observed ->
                             match observed with
-                            | ResizeObserverBox.DevicePixelContentBox -> false
+                            | ResizeObserverBox.DevicePixelContentBox -> WebCoreHost.Has "resize-device-pixel-content-box"
                             | _ -> true
                     Create = create
                 }

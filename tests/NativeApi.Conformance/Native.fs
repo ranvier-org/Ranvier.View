@@ -3697,6 +3697,7 @@ let private runResizeObservation () =
                     Update = fun () -> async { host.Frame () }
                     Errors = fun () -> host.Errors.Count
                     Engine = ResizeObservationChecks.Native
+                    DevicePixelSupported = WebCoreHost.Has "resize-device-pixel-content-box"
                 }
 
             let count =
@@ -3812,11 +3813,39 @@ let private runResizeObservation () =
          && entry.BorderBoxSize.Length = 1)
         "An entry held past host disposal keeps its copied values"
 
-    if shared <> ResizeObservationChecksCount then
+    let expectedShared =
+        if WebCoreHost.Has "resize-device-pixel-content-box" then ResizeObservationChecksCount - 1
+        else ResizeObservationChecksCount
+    if shared <> expectedShared then
         failwith $"Resize observation shared assertions did not run: {shared}"
 
     System.Console.WriteLine $"NATIVE_API G10 PASS assertions={shared}"
     System.Console.WriteLine $"NATIVE_API G10 LIFETIME PASS assertions={lifetime}"
+
+    let mutable deviceChecks = 0
+    for scale in [ 1.; 1.5; 2. ] do
+        use deviceHost = WebCoreHost.Create (800, 600)
+        deviceHost.SetDeviceScale (float32 scale)
+        let create () = Ranvier.View.WebCore.ResizeObservation.forHost deviceHost
+        let update () = async { deviceHost.Frame () }
+        let supported = WebCoreHost.Has "resize-device-pixel-content-box"
+        let count =
+            ResizeDevicePixelChecks.run deviceHost.Document create update scale supported
+            |> Async.StartImmediateAsTask
+            |> fun task -> task.GetAwaiter().GetResult()
+        if count <> (if supported then 52 else 32) then
+            failwith "The measured device-pixel cases did not all run"
+        deviceChecks <- deviceChecks + count
+        System.Console.WriteLine $"NATIVE_API G10 DEVICE PASS scale={scale} supported={supported} assertions={count}"
+        if supported && scale = 1. then
+            let count =
+                ResizeDevicePixelChecks.runScaleChanges deviceHost.Document create update (float32 >> deviceHost.SetDeviceScale)
+                |> Async.StartImmediateAsTask
+                |> fun task -> task.GetAwaiter().GetResult()
+            deviceChecks <- deviceChecks + count
+            System.Console.WriteLine $"NATIVE_API G10 SCALE-CHANGE PASS assertions={count}"
+
+    if deviceChecks = 0 then failwith "Device-pixel resize assertions did not run"
     shared
 
 /// <summary>Runs the shared intersection observation fixture with thread, root, document replacement and teardown
