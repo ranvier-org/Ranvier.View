@@ -1293,7 +1293,7 @@ let runMediaCapabilities () =
             {
                 Settle = fun () -> Async.Sleep 1
                 Rejected = MediaCapabilityChecks.chromiumRejected
-                Answer = None
+                Answer = fun _ -> None
             }
 
         let! count =
@@ -1549,7 +1549,7 @@ let runCanvas () =
     let count = CanvasChecks.run (fun () -> BrowserCanvas.forDocument document) document
 
     let paths =
-        CanvasPathChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
+        CanvasPathChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName false
 
     let state =
         CanvasStateChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName

@@ -2512,7 +2512,9 @@ let private runCanvas () =
             let count =
                 CanvasChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document
 
-            paths <- CanvasPathChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
+            paths <-
+                CanvasPathChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName (System.OperatingSystem.IsMacOS ())
+
             state <- CanvasStateChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
             paints <- CanvasPaintChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
             let service = Ranvier.View.WebCore.Canvas.forHost host
@@ -2943,13 +2945,18 @@ let private runMediaCapabilities () =
             Settle = fun () -> async { host.Cycle () |> ignore }
             Rejected = MediaCapabilityChecks.webkitRejected
             // No flavor has a media engine configuration provider (the media-decoding-provider capability).
+            // Platform difference: macOS builds WebRTC in, and its engine WebRTCProvider supports VP8, as the
+            // Ranvier.WebCore media_capabilities probe records.
             Answer =
-                Some
-                    {
-                        Supported = false
-                        Smooth = false
-                        PowerEfficient = false
-                    }
+                fun name ->
+                    Some
+                        {
+                            Supported =
+                                System.OperatingSystem.IsMacOS ()
+                                && name.EndsWith ("webrtc vp8", System.StringComparison.Ordinal)
+                            Smooth = false
+                            PowerEfficient = false
+                        }
         }
 
     let shared =
