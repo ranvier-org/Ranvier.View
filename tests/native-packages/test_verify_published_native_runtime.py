@@ -4,6 +4,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -20,6 +21,7 @@ VIEW_VERSION = '0.1.0-test.1'
 SLIM = 'Ranvier.WebCore.Native.win-x64'
 GPU = 'Ranvier.WebCore.Native.Gpu.win-x64'
 RIDS = ['linux-x64', 'linux-arm64', 'osx-arm64', 'win-arm64', 'win-x64']
+ABI = 59
 
 
 def write_json(path, value):
@@ -72,7 +74,7 @@ class PackageFixture:
                     destination = self.output / name
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     destination.write_bytes(content)
-            manifest = {'flavor': kind, 'rid': 'win-x64', 'version': VERSION, 'webkit': 'b' * 40, 'abi': 21,
+            manifest = {'flavor': kind, 'rid': 'win-x64', 'version': VERSION, 'webkit': 'b' * 40, 'abi': ABI,
                         'source': {'dirty': False, 'commit': 'a' * 40}, 'files': records, 'total_bytes': sum(record['bytes'] for record in records)}
             self.manifests[kind] = manifest
             self.package_roots[kind] = package_root
@@ -94,7 +96,7 @@ class PackageFixture:
     def verify(self):
         self.save()
         return VERIFY.verify_runtime(self.assets_path, self.output, native_version=VERSION,
-                                     view_package=VIEW, view_version=VIEW_VERSION, flavor=self.flavor)
+                                     view_package=VIEW, view_version=VIEW_VERSION, flavor=self.flavor, abi=ABI)
 
 
 class RuntimeVerification(unittest.TestCase):
@@ -107,6 +109,35 @@ class RuntimeVerification(unittest.TestCase):
 
     def fixture(self, flavor='slim'):
         return PackageFixture(self.root, flavor)
+
+    def test_verifier_requires_expected_cohort_abi(self):
+        fixture = self.fixture()
+        fixture.save()
+        with self.assertRaises(TypeError):
+            VERIFY.verify_runtime(fixture.assets_path, fixture.output, native_version=VERSION,
+                                  view_package=VIEW, view_version=VIEW_VERSION, flavor=fixture.flavor)
+
+    def test_manifest_must_match_requested_cohort_abi(self):
+        fixture = self.fixture()
+        fixture.manifests['slim']['abi'] = ABI - 1
+        with self.assertRaisesRegex(ValueError, f'ABI must be {ABI}'):
+            fixture.verify()
+
+    def test_cli_requires_expected_cohort_abi(self):
+        completed = subprocess.run(
+            [sys.executable, '-I', str(SCRIPT), '--assets', 'unused', '--output', 'unused',
+             '--native-version', VERSION, '--view-package', VIEW, '--view-version', VIEW_VERSION,
+             '--flavor', 'slim'],
+            capture_output=True, text=True, check=False)
+        self.assertEqual(completed.returncode, 2)
+        self.assertIn('--abi', completed.stderr)
+
+    def test_workflow_requires_and_passes_expected_cohort_abi(self):
+        workflow = (Path(__file__).resolve().parents[2] /
+                    '.github/workflows/published-native-packages.yml').read_text(encoding='utf-8')
+        self.assertIn('native_abi:', workflow)
+        self.assertIn("NativeRuntimeAbi: ${{ inputs.native_abi }}", workflow)
+        self.assertEqual(workflow.count('--abi "$env:NativeRuntimeAbi"'), 2)
 
     def test_cpu_checks_every_one_of_317_manifest_files(self):
         self.assertEqual(self.fixture().verify()['files'], 317)
