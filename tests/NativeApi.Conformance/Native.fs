@@ -6155,26 +6155,7 @@ let private runSurfaces () =
 
 [<EntryPoint>]
 let main args =
-    if Array.contains "--view-transitions-only" args then
-        use host = WebCoreHost.Create (320, 240)
-        if not (WebCoreHost.Has "view-transitions") then
-            let rejected =
-                try
-                    ViewTransitions.forHost host |> ignore
-                    false
-                with :? System.NotSupportedException -> true
-            if not rejected then failwith "Slim view transitions were not safely rejected"
-            System.Console.WriteLine "NATIVE_API A11 UNSUPPORTED PASS assertions=1"
-        else
-            let nextFrame () = async {
-                host.Frame () |> ignore
-                RanvierWebCoreAbi.Native.rv_run_loop_cycle 16 |> ignore
-            }
-            let count = ViewTransitionChecks.run host.Document (fun () -> ViewTransitions.forHost host) nextFrame |> runOnHostThread
-            if count <> 35 then failwith "View-transition assertions did not run"
-            System.Console.WriteLine $"NATIVE_API A11 PASS assertions={count}"
-        0
-    elif Array.contains "--locales-only" args then
+    if Array.contains "--locales-only" args then
         runLocales ()
     elif Array.contains "--svg-surfaces-only" args then
         runSurfaces ()

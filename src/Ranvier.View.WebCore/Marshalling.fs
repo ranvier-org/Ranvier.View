@@ -10,13 +10,6 @@ open RanvierWebCoreAbi
 type internal InputScope() =
     let pins = List<GCHandle>()
     let strings = List<nativeint>()
-    let transitionCallbacks = List<nativeint>()
-
-    /// <summary>Keeps a native update callback reference through the call; a started transition retains its own.</summary>
-    member _.ViewTransitionCallback(session: Session, update: unit -> unit) =
-        let callback = ViewTransitionCallbacks.create session update
-        transitionCallbacks.Add callback
-        callback
 
     member _.Pin<'T when 'T: struct>(values: 'T array) =
         if isNull values || values.Length = 0 then
@@ -70,6 +63,3 @@ type internal InputScope() =
 
             pins.Clear ()
             strings.Clear ()
-            for callback in transitionCallbacks do
-                NativeDom.rv_dom_view_transition_update_callback_release callback
-            transitionCallbacks.Clear ()

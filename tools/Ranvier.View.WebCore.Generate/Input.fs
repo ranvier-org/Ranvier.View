@@ -61,9 +61,7 @@ let rec private build (model: JsonElement) (mapping: JsonElement) (t: Type) (val
     | "object" ->
         let root = Metadata.text "root" mapping
 
-        if root = "ViewTransitionUpdateCallback" then
-            $"scope.ViewTransitionCallback(this.Session, {value})"
-        elif
+        if
             root = "CSSStyleValue"
             || root = "CSSOMVariableReferenceValue"
         then

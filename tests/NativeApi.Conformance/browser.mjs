@@ -571,19 +571,6 @@ const runCustomEffects = async () => {
     await effectsBrowser.close();
   }
 };
-
-const runViewTransitions = async () => {
-  const engine = await chromium.launch({ headless: true });
-  try {
-    const page = await routedPage(engine);
-    await page.goto(`http://127.0.0.1:${server.address().port}/`);
-    const result = await page.evaluate(async () => (await import('/Browser.js')).runViewTransitions());
-    if (result.viewTransitions !== 35) throw new Error(`View-transition assertions did not run: ${JSON.stringify(result)}`);
-    console.log(`BROWSER_API A11 PASS assertions=${result.viewTransitions} engine=chromium`);
-  } finally {
-    await engine.close();
-  }
-};
 const CUSTOM_EFFECT_ASSERTIONS = 23;
 // A01 runs the Web Animations fixture in its own page.
 const runAnimations = async () => {
@@ -801,7 +788,6 @@ try {
   else if (process.argv.includes('--host-strings-only')) { await runHostStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
-  else if (process.argv.includes('--view-transitions-only')) { await runViewTransitions(); process.exitCode = 0; }
   else if (process.argv.includes('--custom-effects-only')) { await runCustomEffects(); process.exitCode = 0; }
   else if (process.argv.includes('--animations-only')) { await runAnimations(); process.exitCode = 0; }
   else if (process.argv.includes('--animation-lifecycle-only')) { await runAnimationLifecycle(); process.exitCode = 0; }
@@ -1083,7 +1069,6 @@ try {
   await runAnimationEvents();
   await runTimelines();
   await runCustomEffects();
-  await runViewTransitions();
   await runBlobUrls();
   await runMediaCapabilities();
   await runSnapshots();

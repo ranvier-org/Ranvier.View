@@ -53,7 +53,6 @@
         <Compile Include="Objects.fs" />
         <Compile Include="Events.fs" />
         <Compile Include="Traversal.fs" />
-        <Compile Include="ViewTransitionCallbacks.fs" />
         <Compile Include="Marshalling.fs" />
         <Compile Include="AnimationResults.fs" />
         <Compile Include="TimelineRanges.fs" />
@@ -110,7 +109,6 @@
         <Compile Include="Animations.fs" />
         <Compile Include="Timelines.fs" />
         <Compile Include="CustomEffects.fs" />
-        <Compile Include="ViewTransitions.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />
