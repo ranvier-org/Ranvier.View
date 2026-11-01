@@ -110,6 +110,7 @@ def build(source, work, dotnet, spec):
                   'FSHARPCORE_USE_PACKAGE=true', 'FSharpCoreShippedPackageVersionValue=10.1.402',
                   'SKIP_NETCURRENT_FSC_BUILD=true', 'EnablePublishReadyToRun=false', 'IgnoreMibc=true',
                   'GenerateDocumentationFile=false', 'UseSharedCompilation=false',
+                  'EnableSourceLink=false',
                   f'RestoreConfigFile={restore_config}',
                   f'SourceRevisionId={spec["compilerSourceCommit"]}',
                   'EnableXlfLocalization=false', 'UpdateXlfOnBuild=false']

@@ -30,6 +30,10 @@ differs from `vendor-spec.json` fails closed and must be reviewed before packagi
 pin identifies the Linux CI build; compiler source-path literals and embedded debug data make outputs
 from different checkout roots byte-distinct even with the same source and SDK. A matching assembly
 identity alone does not authorize a different payload.
+The compiler producer disables inherited SourceLink generation: its exported sources are not files
+in the containing Ranvier.View revision. Otherwise that unrelated revision enters the embedded PDB
+and changes the DLL on every host-source commit. The actual compiler source and guard remain pinned
+in the vendor manifest and source-build receipt; embedded source/debug data is retained.
 The workflow retains that output and its diagnostics, then packs and tests the host on Linux and Windows
 only when the compiler identity matches. These startup/package checks do not replace the full
 analyzer suite, external-consumer tests or documented `build.fsx analyze` acceptance.
