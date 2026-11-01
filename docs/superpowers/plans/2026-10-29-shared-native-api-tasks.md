@@ -19,7 +19,7 @@
 
 Live tracking: [GitHub Project: Shared browser/native API delivery](https://github.com/orgs/ranvier-org/projects/1). Agents record acceptance evidence, remaining scope, repository ownership and linked delivery PRs there; see [tracking instructions](../../research/native-api-delivery/project-tracking.md). API-group closure and individual PR completion are separate.
 
-- Current goal: **98 required `x` groups and 5 conditional `!` groups**, each represented once below.
+- Current goal: **98 required `x` groups and 4 conditional `!` groups**, each represented once below. Conditional A11 moved to [project 2](https://github.com/orgs/ranvier-org/projects/2) on 2026-11-01 and is scheduled with the GPU work.
 - Next goal: **53 deferred `?` groups**, explicitly listed at the end; no implementation work for them is included here.
 - The six blank selections are removed from the working checklist and omitted as tasks. The historical source ledger remains unchanged evidence of the full audit.
 - Completion checkboxes in this document start empty because work has not been performed; these are not the removed blank recommendation selections.
