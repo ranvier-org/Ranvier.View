@@ -22,6 +22,8 @@ To reproduce the compiler producer, install .NET SDK 10.0.403 and run
 754 Git blobs in `compiler-sources.json` (24,333,291 bytes), verifies every original blob, and applies
 only the reviewed guard. It uses an isolated source/output directory and never replaces an SDK or
 global tool assembly. `--prepare-only` verifies and patches the source without invoking .NET.
+Restore uses a work-local NuGet.org configuration, package cache and HTTP cache, so the upstream
+VMR source mapping and the developer's cache do not select the producer's dependencies.
 
 The producer records its source manifest, patch, command, SDK and output hash. A fresh output that
 differs from `vendor-spec.json` fails closed and must be reviewed before packaging. The qualification

@@ -94,13 +94,23 @@ def sdk_path(dotnet):
 
 def build(source, work, dotnet, spec):
     sdk = sdk_path(dotnet)
+    restore_config = work / 'NuGet.Config'
+    restore_config.write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<configuration><packageSources><clear/>'
+        '<add key="official" value="https://api.nuget.org/v3/index.json" protocolVersion="3"/>'
+        '</packageSources><packageSourceMapping><clear/>'
+        '<packageSource key="official"><package pattern="*"/></packageSource>'
+        '</packageSourceMapping></configuration>\n', encoding='utf-8')
     environment = dict(os.environ, MSBuildSDKsPath=str(sdk / 'Sdks'), DOTNET_HOST_PATH=dotnet,
                        DOTNET_CLI_USE_MSBUILD_SERVER='0', MSBUILDDISABLENODEREUSE='1',
-                       DOTNET_GCHeapHardLimit='100000000')
+                       DOTNET_GCHeapHardLimit='100000000', NUGET_PACKAGES=str(work / 'packages'),
+                       NUGET_HTTP_CACHE_PATH=str(work / 'http-cache'))
     properties = ['Configuration=Release', 'BUILDING_USING_DOTNET=true', 'DISABLE_ARCADE=true',
                   'FSHARPCORE_USE_PACKAGE=true', 'FSharpCoreShippedPackageVersionValue=10.1.402',
                   'SKIP_NETCURRENT_FSC_BUILD=true', 'EnablePublishReadyToRun=false', 'IgnoreMibc=true',
                   'GenerateDocumentationFile=false', 'UseSharedCompilation=false',
+                  f'RestoreConfigFile={restore_config}',
                   f'SourceRevisionId={spec["compilerSourceCommit"]}',
                   'EnableXlfLocalization=false', 'UpdateXlfOnBuild=false']
     command = [dotnet, str(sdk / 'MSBuild.dll'), 'src/Compiler/FSharp.Compiler.Service.fsproj',
@@ -108,7 +118,9 @@ def build(source, work, dotnet, spec):
                *['-p:' + value for value in properties]]
     started = time.monotonic()
     receipt = {'command': command, 'sdk': SDK, 'sourceCommit': spec['compilerSourceCommit'],
-               'patchSha256': spec['sourceGuardSha256'], 'sourceSha256': PATCHED_SOURCE_SHA256}
+               'patchSha256': spec['sourceGuardSha256'], 'sourceSha256': PATCHED_SOURCE_SHA256,
+               'restoreConfigSha256': sha256(restore_config.read_bytes()),
+               'packageCache': str(work / 'packages')}
     process = None
     try:
         with (work / 'compiler-build.log').open('w', encoding='utf-8') as log:
