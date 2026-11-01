@@ -4,6 +4,7 @@ module Ranvier.NativeCounter.Program
 #nowarn "51"
 
 open System
+open Microsoft.FSharp.NativeInterop
 open Ranvier.Dom
 open Ranvier
 open Ranvier.View
@@ -67,7 +68,60 @@ let private mount (host: Ranvier.View.WebCore.WebCoreHost) =
             graph.Dispose ()
     }
 
+[<System.Runtime.InteropServices.UnmanagedFunctionPointer(System.Runtime.InteropServices.CallingConvention.Cdecl)>]
+type private InvalidTextureBind = delegate of uint32 * uint32 -> unit
+
+let private eglReleaseRetrySmoke (window: Window) =
+    window.Present ()
+
+    let pointer =
+        Microsoft.FSharp.NativeInterop.NativePtr.ofNativeInt<SDL.SDL_Window> window.SdlWindow
+
+    let renderer = SDL.SDL3.SDL_GetRenderer pointer
+
+    use presenter =
+        new Presenter (renderer, window.Host, EglRenderer.TryCreate renderer)
+
+    let bind =
+        System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer<InvalidTextureBind>(SDL.SDL3.SDL_GL_GetProcAddress "glBindTexture")
+
+    let action (_: nativeptr<SDL.SDL_Texture>) (_: int) (_: int) =
+        bind.Invoke (0xFFFFFFFFu, 0u)
+
+    let flags =
+        System.Reflection.BindingFlags.Instance
+        ||| System.Reflection.BindingFlags.NonPublic
+
+    let operation =
+        typeof<Presenter>.GetMethod("WithGpu", flags).MakeGenericMethod [| typeof<unit> |]
+
+    let mutable failed = false
+
+    try
+        operation.Invoke (presenter, [| box action |])
+        |> ignore
+    with :? System.Reflection.TargetInvocationException as error when error.InnerException.Message.StartsWith "GPU frame release failed" ->
+        failed <- true
+
+    if not failed then
+        failwith "The EGL release failure fixture did not exercise a retained frame"
+
+    (presenter :> IDisposable).Dispose()
+    let before = window.GpuFramesPresented
+    window.Present ()
+
+    if
+        window.GpuFramesPresented <= before
+        || window.CpuFramesPresented <> 0L
+    then
+        failwith "The retained EGL frame was lost or not released before retry"
+
+    printfn "EGL release retry smoke passed"
+
 let private smoke (window: Window) (beforeClose: unit -> unit) =
+    if Environment.GetEnvironmentVariable "RANVIER_SMOKE_EGL_RELEASE_RETRY" = "1" then
+        eglReleaseRetrySmoke window
+
     for _ in 1..60 do
         if not (window.Step (timeout = 16)) then
             failwith "The sample window closed before the smoke completed"
@@ -135,9 +189,9 @@ let private smoke (window: Window) (beforeClose: unit -> unit) =
 
     if
         Environment.GetEnvironmentVariable "RANVIER_SMOKE_GPU" = "1"
-        && gpuFrames = 0L
+        && (gpuFrames = 0L || window.CpuFramesPresented <> 0L)
     then
-        failwith "The GPU smoke must present shared D3D11 frames"
+        failwith "The GPU smoke must present shared GPU frames without CPU fallback"
 
     if
         Environment.GetEnvironmentVariable "RANVIER_SMOKE_UIA" = "1"
@@ -225,22 +279,129 @@ let private smoke (window: Window) (beforeClose: unit -> unit) =
 
     window.Close ()
 
+let private runSmoke () =
+    use window = Window.create ("Ranvier", 480, 320)
+    let mounted = mount window.Host
+    let mutable mountedAlive = true
+
+    let cleanup () =
+        if mountedAlive then
+            mountedAlive <- false
+            mounted.Dispose ()
+
+    try
+        smoke window cleanup
+    finally
+        cleanup ()
+
+let private runTwoSmoke () =
+    use first = Window.create ("Ranvier first", 480, 320)
+    use second = Window.create ("Ranvier second", 480, 320)
+    let firstMount = mount first.Host
+    let secondMount = mount second.Host
+
+    try
+        smoke first ignore
+        smoke second ignore
+    finally
+        secondMount.Dispose ()
+        firstMount.Dispose ()
+
+    printfn "Two simultaneous GPU windows smoke passed"
+
+let private eglFailureSmoke beforeRegistration =
+    if not (OperatingSystem.IsLinux ()) then
+        failwith "EGL cohort failure checks require Linux"
+
+    if not (Ranvier.View.WebCore.WebCoreHost.Has "presentation-egl") then
+        failwith "EGL cohort failure checks require native EGL transport"
+
+    EglRenderer.Prepare ()
+
+    let blocker =
+        if beforeRegistration then
+            Some (Ranvier.View.WebCore.WebCoreHost.Create (16, 16))
+        else
+            None
+
+    let mutable window =
+        Microsoft.FSharp.NativeInterop.NativePtr.nullPtr<SDL.SDL_Window>
+
+    let mutable renderer =
+        Microsoft.FSharp.NativeInterop.NativePtr.nullPtr<SDL.SDL_Renderer>
+
+    if not (SDL.SDLBool.op_Implicit (SDL.SDL3.SDL_InitSubSystem SDL.SDL_InitFlags.SDL_INIT_VIDEO)) then
+        blocker
+        |> Option.iter (fun host -> (host :> IDisposable).Dispose())
+
+        failwith (SDL.SDL3.SDL_GetError ())
+
+    try
+        try
+            use title = fixed (System.Text.Encoding.UTF8.GetBytes "EGL failure fixture\000")
+            window <- SDL.SDL3.SDL_CreateWindow (title, 32, 24, SDL.SDL_WindowFlags.SDL_WINDOW_HIDDEN)
+
+            if Microsoft.FSharp.NativeInterop.NativePtr.isNullPtr window then
+                failwith (SDL.SDL3.SDL_GetError ())
+
+            use driver = fixed (System.Text.Encoding.UTF8.GetBytes "opengles2\000")
+            renderer <- SDL.SDL3.SDL_CreateRenderer (window, driver)
+
+            if Microsoft.FSharp.NativeInterop.NativePtr.isNullPtr renderer then
+                failwith (SDL.SDL3.SDL_GetError ())
+
+            let registered = (EglRenderer.TryCreate renderer).IsSome
+
+            if registered = beforeRegistration then
+                failwith "EGL registration did not respect the existing-host boundary"
+
+            raise (InvalidOperationException "simulated failure before host construction")
+        with :? InvalidOperationException as error when error.Message = "simulated failure before host construction" ->
+            ()
+    finally
+        if not (Microsoft.FSharp.NativeInterop.NativePtr.isNullPtr renderer) then
+            SDL.SDL3.SDL_DestroyRenderer renderer
+
+        if not (Microsoft.FSharp.NativeInterop.NativePtr.isNullPtr window) then
+            SDL.SDL3.SDL_DestroyWindow window
+
+        SDL.SDL3.SDL_QuitSubSystem SDL.SDL_InitFlags.SDL_INIT_VIDEO
+
+        blocker
+        |> Option.iter (fun host -> (host :> IDisposable).Dispose())
+
+    let retained =
+        SDL.SDL3.SDL_WasInit SDL.SDL_InitFlags.SDL_INIT_VIDEO
+        <> Unchecked.defaultof<SDL.SDL_InitFlags>
+
+    if retained = beforeRegistration then
+        failwith "EGL cohort owner was released or retained across the wrong failure boundary"
+
+    printfn "EGL cohort failure smoke passed: before registration %b, owner retained %b" beforeRegistration retained
+
 [<EntryPoint>]
 let main _ =
     if Environment.GetEnvironmentVariable "RANVIER_SMOKE" = "1" then
-        use window = Window.create ("Ranvier", 480, 320)
-        let mounted = mount window.Host
-        let mutable mountedAlive = true
+        let failure = Environment.GetEnvironmentVariable "RANVIER_SMOKE_EGL_FAILURE"
 
-        let cleanup () =
-            if mountedAlive then
-                mountedAlive <- false
-                mounted.Dispose ()
+        if
+            failure = "before-registration"
+            || failure = "after-registration"
+        then
+            eglFailureSmoke (failure = "before-registration")
 
-        try
-            smoke window cleanup
-        finally
-            cleanup ()
+        if failure <> "before-registration" then
+            if Environment.GetEnvironmentVariable "RANVIER_SMOKE_EGL_PAIR" = "1" then
+                runTwoSmoke ()
+
+            let count =
+                match Int32.TryParse (Environment.GetEnvironmentVariable "RANVIER_SMOKE_REOPEN") with
+                | true, value when value > 1 && value <= 100 -> value
+                | true, 1 -> 3
+                | _ -> 1
+
+            for _ in 1..count do
+                runSmoke ()
     else
         Window.run ("Ranvier", 480, 320) mount
 

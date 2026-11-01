@@ -82,7 +82,7 @@ module internal Sdl =
 /// created it, which is the host's thread.
 /// </summary>
 [<Sealed>]
-type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
+type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option) =
     // CSS pixels a wheel tick scrolls.
     static let wheelStep = 40.0f
     // RV_CURSOR_NONE.
@@ -90,7 +90,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     let id = SDL3.SDL_GetWindowID window
     let cursors = Dictionary<SDL_SystemCursor, nativeint>()
-    let presenter = new Presenter (renderer, host)
+    let presenter = new Presenter (renderer, host, egl)
     let mutable accessibilityAttached = false
     let mutable fullPaint = true
     let mutable exposed = true
@@ -395,6 +395,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// as "software".
     /// </summary>
     static member Create(title: string, width: int, height: int, ?hidden: bool, ?renderer: string) : Window =
+        EglRenderer.Prepare ()
         // The page draws the input method's composition itself; the platform draws the candidates.
         (use name = fixed Sdl.utf8 "SDL_IME_IMPLEMENTED_UI"
          use value = fixed Sdl.utf8 "composition"
@@ -437,6 +438,12 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                     SDL3.SDL_CreateRenderer (window, NativePtr.nullPtr<byte>)
                 else
                     accelerated
+            | None when
+                OperatingSystem.IsLinux ()
+                && WebCoreHost.Has "presentation-egl"
+                ->
+                use name = fixed Sdl.utf8 "opengles2"
+                SDL3.SDL_CreateRenderer (window, name)
             | None -> SDL3.SDL_CreateRenderer (window, NativePtr.nullPtr<byte>)
 
         if NativePtr.isNullPtr drawing then
@@ -447,14 +454,19 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
         SDL3.SDL_SetRenderVSync (drawing, 1) |> ignore
         let mutable page = None
+        let mutable egl = None
 
         try
+            egl <- EglRenderer.TryCreate drawing
             let host = WebCoreHost.Create (width, height)
             page <- Some host
-            new Window (window, drawing, host)
+            new Window (window, drawing, host, egl)
         with _ ->
             page
             |> Option.iter (fun host -> (host :> IDisposable).Dispose())
+
+            egl
+            |> Option.iter (fun consumer -> consumer.Activate () |> ignore)
 
             SDL3.SDL_DestroyRenderer drawing
             SDL3.SDL_DestroyWindow window
@@ -545,6 +557,9 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// <summary>The number of shared GPU frames presented to the window.</summary>
     member internal _.GpuFramesPresented = presenter.GpuFramesPresented
 
+    /// <summary>The number of presentation attempts that took the CPU path.</summary>
+    member internal _.CpuFramesPresented = presenter.CpuFramesPresented
+
     /// <summary>Whether Windows UI Automation is attached to the window.</summary>
     member internal _.AccessibilityAttached = accessibilityAttached
 
@@ -558,6 +573,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     interface IDisposable with
         member _.Dispose() =
             if not disposed then
+                presenter.ReleasePending ()
                 disposed <- true
 
                 if accessibilityAttached then
@@ -570,6 +586,9 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 (graph :> IDisposable).Dispose()
                 (presenter :> IDisposable).Dispose()
                 (host :> IDisposable).Dispose()
+
+                egl
+                |> Option.iter (fun consumer -> consumer.Activate () |> ignore)
 
                 for created in cursors.Values do
                     SDL3.SDL_DestroyCursor (NativePtr.ofNativeInt created)
