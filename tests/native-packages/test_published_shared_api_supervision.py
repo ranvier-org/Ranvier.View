@@ -77,16 +77,25 @@ class PublishedSharedApiSupervisionTests(unittest.TestCase):
             subprocess.run(["git", "commit", "-qm", "binary fixture"], cwd=repository, check=True)
             commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repository, text=True).strip()
             log_path = root / "source.log"
+            environment = os.environ.copy()
+            environment["GIT_TRACE"] = "1"
+            steps = []
 
             def run(label, *command, raw_output=False):
+                step = {"label": label}
+                steps.append(step)
                 return gate.run_logged_command(
-                    command, cwd=root, environment=os.environ.copy(), timeout_seconds=5,
-                    log_path=log_path, step={"label": label}, raw_output=raw_output,
+                    command, cwd=root, environment=environment, timeout_seconds=5,
+                    log_path=log_path, step=step, raw_output=raw_output,
                 )
 
             actual = gate.source_from_git(repository, commit, "fixture.bin", run)
             self.assertEqual(actual, expected)
             self.assertEqual(log_path.read_bytes(), expected)
+            self.assertEqual(len(steps), 1)
+            stderr_log = Path(steps[0]["stderr_log"])
+            self.assertTrue(stderr_log.is_file())
+            self.assertIn(b"trace", stderr_log.read_bytes().lower())
 
     def test_checker_environment_disables_child_build_servers_without_mutating_parent(self):
         self.assertIsNotNone(

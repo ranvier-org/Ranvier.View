@@ -1,5 +1,6 @@
 """Run a release's shared API fixtures using only its official NuGet packages."""
 import argparse
+from contextlib import ExitStack
 import hashlib
 import io
 import json
@@ -112,12 +113,19 @@ def run_logged_command(command, *, cwd, environment, timeout_seconds, log_path, 
     timed_out = False
 
     try:
-        with log_path.open('wb') as log_file:
+        with ExitStack() as logs:
+            log_file = logs.enter_context(log_path.open('wb'))
+            if raw_output:
+                stderr_log_path = log_path.with_name(log_path.name + '.stderr.log')
+                step['stderr_log'] = str(stderr_log_path)
+                stderr_file = logs.enter_context(stderr_log_path.open('wb'))
+            else:
+                stderr_file = subprocess.STDOUT
             options = {
                 'cwd': cwd,
                 'env': environment,
                 'stdout': log_file,
-                'stderr': subprocess.STDOUT,
+                'stderr': stderr_file,
             }
             if os.name == 'nt':
                 options['creationflags'] = getattr(subprocess, 'CREATE_NEW_PROCESS_GROUP', 0)
