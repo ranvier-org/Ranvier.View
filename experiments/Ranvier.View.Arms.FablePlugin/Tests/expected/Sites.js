@@ -1,5 +1,5 @@
 
-import { Signal$1__get_Value } from "<core>/Core.fs.js";
+import { Signal$1__get_Value } from "<core>/Core.js";
 import { Hooks, Element$2__Yield_Z5833CC7, Element$2__Yield_Z721C83C5, Element$2__Run_706D0133, Component_template } from "./src/Ranvier.View/TemplateSugar.js";
 import { Arms_Match_7CDE3892 } from "./Ranvier.View.Arms/Arms.js";
 import { section$1_$ctor_Z10189819, i$1_$ctor_Z10189819, div$1_$ctor_69400C3C, pre$1_$ctor_D6A77C0, b$1_$ctor_Z10189819, span$1_$ctor_Z7EAF50F5 } from "./src/Ranvier.View/Generated/HtmlTemplateSugar.js";
