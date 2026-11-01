@@ -1,0 +1,36 @@
+{
+  "base": "7a4f2fa3c0c37066d5d22af017c015bec8b01666",
+  "equivalent_compiled_integration": "56ebaf4394a7fe0d907fdb6f99eca095b27c47bb",
+  "native_nupkg_sha256": "23c19265d5ad3a3944dcee33773493a15996fdae44669d97345488735381db3e",
+  "native_payload_sha256": "c6bad247d2c5cc7759d99f87978cc7d84279414721e8c411247b601d282a11b1",
+  "red": "Full unfiltered normal JIT and NativeAOT abort: drop types without Files expected2 got3",
+  "red_logs": {
+    "run-normal-aot-api-before156-profile-red.log": "cb20184f0c132618a4308e97dc5579580dcfa57c98a9147827bb8e9065441df1",
+    "run-normal-jit-api-before156-profile-red.log": "27adaf69f6200cae55bcf7004e0a3783182095c8ef9a4939bec8592211a068d6"
+  },
+  "cause": "Closing base retained KNOWN BUG156 Linux no-files profile after native preview2 fixed byte-backed in-memory drops. Real960-assertion native regression and independent97-group package catalogue prove full Files contract.",
+  "change": "Set private dropKeepsFiles=true; remove stale knownbug comment. Preserve Driver shape,49-check full path and all privacy/lifetime/type assertions. No product API or native bytes change.",
+  "pure_SageFs": "bare7329a402: stalefalse mismatches3types/count44; fixedtrue matches/count49; session stopped",
+  "semantic_limit": "Parent prohibits old FCS calls/compiler XML audits after exact prior resource incidents; bounded source reads and pure SageFs used, ordinary Release/full CLI is final gate.",
+  "green_full_runs": {
+    "run-normal-jit-api-156-profile-verified.log": {
+      "sha256": "f55ecdb304bfe51d10a93292223427f965a583db8cb37e0d43593380dd2974d7",
+      "pass_markers": 170,
+      "data_transfer": [
+        "NATIVE_API I07 PASS assertions=49",
+        "NATIVE_API I07 LIFETIME PASS assertions=18"
+      ],
+      "teardown": "NATIVE_API TEARDOWN PASS groups=D09,D10,D11,CSSOM"
+    },
+    "run-normal-aot-api-156-profile-verified.log": {
+      "sha256": "e76b9d6226d1da6657b5779a37f3bc57a222addaa06b6f9d4c7da7d41348dd08",
+      "pass_markers": 170,
+      "data_transfer": [
+        "NATIVE_API I07 PASS assertions=49",
+        "NATIVE_API I07 LIFETIME PASS assertions=18"
+      ],
+      "teardown": "NATIVE_API TEARDOWN PASS groups=D09,D10,D11,CSSOM"
+    }
+  },
+  "release_build": "Normal API JIT0errors5existingFS0760warnings; AOTpublish exit0 with existing reflection/trimming warnings. No XML audit or FCS server restart."
+}

@@ -9,8 +9,14 @@ open Ranvier.Dom
 /// values are Chromium 156's (Ranvier.WebCore docs/canvas-paths-evidence/red-chromium.json). Pixels are checked by the
 /// native canvas_paths probe and the Chromium oracle, since R02 exposes no pixel read-back.
 /// </summary>
+/// <param name="create">A new canvas context service.</param>
+/// <param name="document">The document the canvases are created in.</param>
 /// <param name="errorName">The DOM exception name of a provider error, such as <c>IndexSizeError</c>.</param>
-let run (create: unit -> CanvasContextService) (document: Document) (errorName: exn -> string) =
+/// <param name="firstPointHit">
+/// Whether isPointInPath hits the first point that invalid path data keeps: true for CoreGraphics (macOS), as the
+/// Ranvier.WebCore canvas_paths probe records.
+/// </param>
+let run (create: unit -> CanvasContextService) (document: Document) (errorName: exn -> string) (firstPointHit: bool) =
     let mutable checks = 0
 
     let equal label (expected: 'T) (actual: 'T) =
@@ -83,7 +89,7 @@ let run (create: unit -> CanvasContextService) (document: Document) (errorName: 
     equal "inside the copy" true (ctx.isPointInPath (copy, 25.0, 25.0))
     equal "the copy misses a later rect" false (ctx.isPointInPath (copy, 52.0, 32.0))
     equal "the original has the later rect" true (ctx.isPointInPath (data, 52.0, 32.0))
-    equal "invalid path data is an empty path" false (ctx.isPointInPath (service.ParsePath "M 0 0 L bogus", 0.0, 0.0))
+    equal "invalid path data keeps only its first point" firstPointHit (ctx.isPointInPath (service.ParsePath "M 0 0 L bogus", 0.0, 0.0))
 
     // Fill rules.
     let nested = service.CreatePath ()

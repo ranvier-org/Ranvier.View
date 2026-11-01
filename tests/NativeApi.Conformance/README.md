@@ -20,6 +20,16 @@ npm exec --prefix tests/NativeApi.Conformance -- playwright install chromium
 node tests/NativeApi.Conformance/browser.mjs
 ```
 
+The full Chromium conformance run also captures the nine-frame A11 view-transition pixel sequence. To run that
+standalone HTML fixture by itself, without loading the Fable test bundle, use:
+
+```text
+node tests/NativeApi.Conformance/browser.mjs --view-transition-pixels-only
+```
+
+It captures real Chromium screenshots and decodes their PNG pixels. This renderer probe is independent of the
+normal/traced Fable package graph; it does not claim pixel coverage for either package route.
+
 For development, the native runner accepts the backend's existing `UseLocalRanvierWebCore`, `RanvierWebCoreRoot` and `RanvierWebCoreNativeDir` properties. Use an isolated restore configuration for unpublished contract packages; do not place local package overrides in committed configuration. `NATIVE_API_BROWSER_PACKAGE` optionally identifies an existing package.json with the pinned Playwright installation.
 
 Let Fickl perform its own browser restore. Using `--noRestore` after an ordinary native restore can combine native and Fable DOM assemblies and hide browser providers.

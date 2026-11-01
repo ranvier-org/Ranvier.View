@@ -236,13 +236,7 @@ let private runIdle () =
             host.Cycle ()
             check "idle runs after the frame" ran
 
-            if System.OperatingSystem.IsMacOS () then
-                // KNOWN BUG Ranvier.WebCore#155, not a platform difference: the macOS host bounds the idle deadline by the
-                // 50 ms cap and leaves out the pending timer. Asserts the observed deadline, so the fix fails this check;
-                // remove the case when #155 is fixed.
-                check "deadline exceeds the next timer within the 50 ms cap (known bug Ranvier.WebCore#155)" (remaining > 10.0 && remaining <= 50.0)
-            else
-                check "deadline bounded by the next timer" (remaining <= 10.0)
+            check "deadline bounded by the next timer" (remaining <= 10.0)
 
             host.ClearTimeout timer
             let unknown = host.RequestIdleCallback ignore
@@ -311,7 +305,11 @@ let private runInputState () =
                     host.Document
                     (fun () -> Ranvier.View.WebCore.InputState.forHost host)
                     Ranvier.View.WebCore.InputState.capabilities
-                    Ranvier.Dom.CapabilityState.Yes
+                    // Platform difference: macOS engine builds turn touch events off and report touch input Implemented No.
+                    (if System.OperatingSystem.IsMacOS () then
+                         Ranvier.Dom.CapabilityState.No
+                     else
+                         Ranvier.Dom.CapabilityState.Yes)
                     driver
                 |> Async.StartImmediateAsTask
 
@@ -372,6 +370,8 @@ let private runInputState () =
 /// <summary>Runs the shared pointer-input fixture with native pointer ids, lock denial and refusal, touch capacity and
 /// host-disposal checks.</summary>
 let private runPointerInput () =
+    // Platform difference: macOS engine builds turn touch events off, which leaves out the 30 touch-frame assertions.
+    let touch = not (System.OperatingSystem.IsMacOS ())
     let host = WebCoreHost.Create (320, 240)
     let session = host.Session
     let mutable native = 0
@@ -432,6 +432,7 @@ let private runPointerInput () =
                         sample.MovementX <- float dx
                         sample.MovementY <- float dy
                         send [| sample |])
+            ExactPointerLock = true
             GrantLock =
                 fun () ->
                     input (fun () ->
@@ -449,7 +450,10 @@ let private runPointerInput () =
                     host.Document
                     (Ranvier.View.WebCore.PointerInput.provider host)
                     (Ranvier.View.WebCore.PointerInput.capabilities ())
-                    Ranvier.Dom.CapabilityState.Yes
+                    (if touch then
+                         Ranvier.Dom.CapabilityState.Yes
+                     else
+                         Ranvier.Dom.CapabilityState.No)
                     driver
                 |> Async.StartImmediateAsTask
 
@@ -471,35 +475,36 @@ let private runPointerInput () =
 
             host.Document.addEventListener ("pointerdown", listener, false)
 
-            send
-                [|
-                    touchSample
-                        {
-                            Id = 5
-                            Action = 1
-                            X = 50.0
-                            Y = 50.0
-                            RadiusX = 1.0
-                            RadiusY = 1.0
-                            Angle = 0.0
-                            Force = 0.5
-                        }
-                |]
+            if touch then
+                send
+                    [|
+                        touchSample
+                            {
+                                Id = 5
+                                Action = 1
+                                X = 50.0
+                                Y = 50.0
+                                RadiusX = 1.0
+                                RadiusY = 1.0
+                                Angle = 0.0
+                                Force = 0.5
+                            }
+                    |]
 
-            send
-                [|
-                    touchSample
-                        {
-                            Id = 5
-                            Action = 2
-                            X = 50.0
-                            Y = 50.0
-                            RadiusX = 1.0
-                            RadiusY = 1.0
-                            Angle = 0.0
-                            Force = 0.5
-                        }
-                |]
+                send
+                    [|
+                        touchSample
+                            {
+                                Id = 5
+                                Action = 2
+                                X = 50.0
+                                Y = 50.0
+                                RadiusX = 1.0
+                                RadiusY = 1.0
+                                Angle = 0.0
+                                Force = 0.5
+                            }
+                    |]
 
             send
                 [|
@@ -538,7 +543,10 @@ let private runPointerInput () =
                 |]
 
             host.Document.removeEventListener ("pointerdown", listener, false)
-            expect (ids.ToArray () = [| (7, "touch"); ((1 <<< 30) + 3, "pen") |]) "Native touch and pen pointer ids"
+
+            expect
+                (ids.ToArray () = Array.append (if touch then [| (7, "touch") |] else [||]) [| ((1 <<< 30) + 3, "pen") |])
+                "Native touch and pen pointer ids"
 
             // The embedder denies a request; a request without a gesture is refused at once. A new document has no relock
             // allowance from the shared fixture's exit.
@@ -605,7 +613,7 @@ let private runPointerInput () =
 
     expect (session.LiveObjects = 0) "Pointer-input fixture leaves no live native objects"
 
-    if shared <> 61 then
+    if shared <> (if touch then 61 else 31) then
         failwith $"Pointer-input shared assertions did not run: {shared}"
 
     System.Console.WriteLine $"NATIVE_API I03_I04_I06 PASS assertions={shared}"
@@ -1390,6 +1398,8 @@ let private runBinary () =
 [<Literal>]
 let private DataTransferChecksCount = 49
 
+let private dropKeepsFiles = true
+
 let private runDataTransfer () =
     let host = WebCoreHost.Create (320, 200)
     let session = host.Session
@@ -1433,6 +1443,7 @@ let private runDataTransfer () =
 
                             Ranvier.View.WebCore.DataTransfers.drop host x y 1 (payload strings files)
                             |> ignore
+                    DropKeepsFiles = dropKeepsFiles
                     Paste =
                         fun element strings files ->
                             (unbox<Ranvier.Dom.HTMLElement> element).focus()
@@ -1582,7 +1593,13 @@ let private runDataTransfer () =
     System.GC.WaitForPendingFinalizers ()
     expect (session.LiveObjects = 0) "DataTransfer fixture leaves no live native objects"
 
-    if shared <> DataTransferChecksCount then
+    if
+        shared
+        <> (if dropKeepsFiles then
+                DataTransferChecksCount
+            else
+                DataTransferChecksCount - 5)
+    then
         failwith (
             "DataTransfer shared assertions did not run: "
             + string shared
@@ -2487,7 +2504,9 @@ let private runCanvas () =
             let count =
                 CanvasChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document
 
-            paths <- CanvasPathChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
+            paths <-
+                CanvasPathChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName (System.OperatingSystem.IsMacOS ())
+
             state <- CanvasStateChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
             paints <- CanvasPaintChecks.run (fun () -> Ranvier.View.WebCore.Canvas.forHost host) host.Document errorName
             let service = Ranvier.View.WebCore.Canvas.forHost host
@@ -2917,14 +2936,26 @@ let private runMediaCapabilities () =
         {
             Settle = fun () -> async { host.Cycle () |> ignore }
             Rejected = MediaCapabilityChecks.webkitRejected
-            // No flavor has a media engine configuration provider (the media-decoding-provider capability).
+            // Windows and Linux have no media engine configuration provider (the media-decoding-provider and
+            // media-encoding-provider capabilities), so every valid query is unsupported. Platform differences, as the
+            // Ranvier.WebCore media_capabilities probe records: macOS decoding answers come from the Cocoa decoding
+            // provider, and macOS builds WebRTC in, whose engine WebRTCProvider supports VP8 encoding.
             Answer =
-                Some
-                    {
-                        Supported = false
-                        Smooth = false
-                        PowerEfficient = false
-                    }
+                fun name ->
+                    if
+                        System.OperatingSystem.IsMacOS ()
+                        && not (name.StartsWith ("encoding ", System.StringComparison.Ordinal))
+                    then
+                        None
+                    else
+                        Some
+                            {
+                                Supported =
+                                    System.OperatingSystem.IsMacOS ()
+                                    && name.EndsWith ("webrtc vp8", System.StringComparison.Ordinal)
+                                Smooth = false
+                                PowerEfficient = false
+                            }
         }
 
     let shared =
@@ -3020,8 +3051,28 @@ let private runSnapshots () =
 
         let shared = count.GetAwaiter().GetResult()
 
-        if shared <> SnapshotChecksCount then
-            failwith $"Snapshot shared assertions did not run: {shared}"
+        // Platform difference: the macOS engine has no WEBP encoder (MIMETypeRegistry over ImageIO), so the three WEBP
+        // checks run on Windows and Linux only.
+        if
+            shared
+            <> (if System.OperatingSystem.IsMacOS () then
+                    SnapshotChecksCount - 3
+                else
+                    SnapshotChecksCount)
+        then
+            use service = Ranvier.View.WebCore.Snapshots.forHost host
+
+            let supported =
+                [
+                    Ranvier.Dom.ImageEncoding.Png
+                    Ranvier.Dom.ImageEncoding.Jpeg
+                    Ranvier.Dom.ImageEncoding.Webp
+                ]
+                |> List.map (fun encoding -> $"{encoding}={service.SupportsEncoding encoding}")
+                |> String.concat " "
+
+            failwith
+                $"Snapshot shared assertions did not run: {shared}; {supported} display-p3={service.SupportsColorSpace Ranvier.Dom.SnapshotColorSpace.DisplayP3}"
 
         System.Console.WriteLine $"NATIVE_API R12 PASS assertions={shared}"
         shared
@@ -4041,6 +4092,7 @@ let private runMediaQueries () =
                             }
                     Settle = settle
                     Native = true
+                    PointingDevice = true
                 }
 
             let count =
@@ -5206,6 +5258,11 @@ let private runCanvasText () =
                     (fun () -> Ranvier.View.WebCore.Fonts.forHost host)
                     "https://r05.test/ahem"
                     CanvasTextChecks.TextEngine.WebKit
+                    // Platform difference: Linux (WPE, FreeType) measures a 20px Ahem advance as 20 - 2^-16.
+                    (if System.OperatingSystem.IsLinux () then
+                         20.0 - 1.0 / 65536.0
+                     else
+                         20.0)
                     (fun milliseconds ->
                         async {
                             let clock = System.Diagnostics.Stopwatch.StartNew ()
@@ -6153,26 +6210,29 @@ let private runSurfaces () =
     System.Console.WriteLine "NATIVE_API SVG_SURFACES TEARDOWN PASS"
     0
 
+let private runViewTransitions () =
+    use host = WebCoreHost.Create (320, 240)
+    if not (WebCoreHost.Has "view-transitions") then
+        let rejected =
+            try
+                ViewTransitions.forHost host |> ignore
+                false
+            with :? System.NotSupportedException -> true
+        if not rejected then failwith "Slim view transitions were not safely rejected"
+        System.Console.WriteLine "NATIVE_API A11 UNSUPPORTED PASS assertions=1"
+    else
+        let nextFrame () = async {
+            host.Frame () |> ignore
+            RanvierWebCoreAbi.Native.rv_run_loop_cycle 16 |> ignore
+        }
+        let count = ViewTransitionChecks.run host.Document (fun () -> ViewTransitions.forHost host) nextFrame |> runOnHostThread
+        if count <> 35 then failwith "View-transition assertions did not run"
+        System.Console.WriteLine $"NATIVE_API A11 PASS assertions={count}"
+
 [<EntryPoint>]
 let main args =
     if Array.contains "--view-transitions-only" args then
-        use host = WebCoreHost.Create (320, 240)
-        if not (WebCoreHost.Has "view-transitions") then
-            let rejected =
-                try
-                    ViewTransitions.forHost host |> ignore
-                    false
-                with :? System.NotSupportedException -> true
-            if not rejected then failwith "Slim view transitions were not safely rejected"
-            System.Console.WriteLine "NATIVE_API A11 UNSUPPORTED PASS assertions=1"
-        else
-            let nextFrame () = async {
-                host.Frame () |> ignore
-                RanvierWebCoreAbi.Native.rv_run_loop_cycle 16 |> ignore
-            }
-            let count = ViewTransitionChecks.run host.Document (fun () -> ViewTransitions.forHost host) nextFrame |> runOnHostThread
-            if count <> 35 then failwith "View-transition assertions did not run"
-            System.Console.WriteLine $"NATIVE_API A11 PASS assertions={count}"
+        runViewTransitions ()
         0
     elif Array.contains "--locales-only" args then
         runLocales ()
@@ -6508,4 +6568,6 @@ let main args =
     else
         runSurfaces () |> ignore
         runPaint () |> ignore
-        runAll ()
+        let exitCode = runAll ()
+        if exitCode = 0 then runViewTransitions ()
+        exitCode

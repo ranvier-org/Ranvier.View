@@ -14,8 +14,8 @@ type Driver =
         /// tests/fixtures/media-capabilities-cases.json).
         /// </summary>
         Rejected: Set<string>
-        /// <summary>The answer every valid configuration has, when the engine has no media provider.</summary>
-        Answer: MediaCapabilitiesInfo option
+        /// <summary>The answer of each valid case, by case name, when the engine has no media provider.</summary>
+        Answer: string -> MediaCapabilitiesInfo option
     }
 
 let private video contentType =
@@ -136,7 +136,7 @@ let run (create: unit -> MediaCapabilitiesService) (driver: Driver) =
             | ResourceOutcome.Succeeded info ->
                 expect (label + ": resolved") (not (driver.Rejected.Contains name))
 
-                match driver.Answer with
+                match driver.Answer name with
                 | Some answer -> expect (label + ": the engine's answer") (info = answer)
                 | None -> expect (label + ": a smooth answer is supported") (info.Supported || not info.Smooth)
 

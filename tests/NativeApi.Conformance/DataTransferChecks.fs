@@ -11,6 +11,8 @@ type Driver =
         File: string -> string -> string -> File
         /// <summary>Drops the strings and Files on the element; its drop listeners have run when it returns.</summary>
         Drop: Element -> struct (string * string) array -> File array -> unit
+        /// <summary>Whether a drop's DataTransfer carries the dropped Files; false asserts a drop of strings alone.</summary>
+        DropKeepsFiles: bool
         /// <summary>Pastes the strings and Files into the focused element; its paste listeners have run when it returns.</summary>
         Paste: Element -> struct (string * string) array -> File array -> unit
     }
@@ -154,21 +156,26 @@ let run (document: Document) (driver: Driver) =
     driver.Drop target strings [| note; table |]
     equal "one drop" 1 dropped.Count
     let drop = dropped[0]
-    sequence "drop types" [| "text/plain"; "text/html"; "Files" |] drop.Types
     equal "drop text" "XY" drop.Text
     equal "drop HTML" "<i>X</i>Y" drop.Html
 
-    sequence "drop files" [| ("note.txt", "text/plain", 10.0); ("table.csv", "text/csv", 3.0) |] drop.Files
+    if driver.DropKeepsFiles then
+        sequence "drop types" [| "text/plain"; "text/html"; "Files" |] drop.Types
+        sequence "drop files" [| ("note.txt", "text/plain", 10.0); ("table.csv", "text/csv", 3.0) |] drop.Files
 
-    sequence
-        "drop items"
-        [|
-            ("string", "text/plain")
-            ("string", "text/html")
-            ("file", "text/plain")
-            ("file", "text/csv")
-        |]
-        drop.Items
+        sequence
+            "drop items"
+            [|
+                ("string", "text/plain")
+                ("string", "text/html")
+                ("file", "text/plain")
+                ("file", "text/csv")
+            |]
+            drop.Items
+    else
+        sequence "drop types without Files" [| "text/plain"; "text/html" |] drop.Types
+        sequence "drop files" [||] drop.Files
+        sequence "drop items without files" [| ("string", "text/plain"); ("string", "text/html") |] drop.Items
 
     let image = driver.File "image.png" "image/png" "png"
     driver.Paste editable [| struct ("text/plain", "PQ"); struct ("text/html", "<u>P</u>Q") |] [| image |]

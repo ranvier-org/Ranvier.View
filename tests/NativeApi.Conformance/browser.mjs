@@ -4,6 +4,7 @@ import { resolve, dirname, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { inflateSync } from 'node:zlib';
+import { runViewTransitionPixels as runViewTransitionPixelProof } from './view-transition-pixels.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), 'generated');
 const assets = { '/Ahem.ttf': resolve(dirname(fileURLToPath(import.meta.url)), 'Assets', 'Ahem.ttf') };
@@ -49,6 +50,7 @@ const submissionsOnly = process.argv.includes('--submissions-only');
 const eventDetailsOnly = process.argv.includes('--event-details-only');
 const valueFactoriesOnly = process.argv.includes('--value-factories-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
+const viewTransitionPixelsOnly = process.argv.includes('--view-transition-pixels-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
 // The fixture content at a request path: the static server and every page's request routing serve it.
@@ -174,7 +176,8 @@ const runPointerInput = async () => {
     await pointerBrowser.close();
   }
 };
-const POINTER_INPUT_ASSERTIONS = 61;
+// Linux Chromium checks the locked moves' target and position, without their movement (one assertion fewer).
+const POINTER_INPUT_ASSERTIONS = process.platform === 'linux' ? 60 : 61;
 // G02/G12 drive the viewport with device-metrics emulation, read paint size from a device-scale screenshot and
 // change activation by minimizing and restoring the window, which blurs and focuses it under emulated metrics.
 const runViewport = async () => {
@@ -420,6 +423,10 @@ const runMediaQueries = async () => {
       await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: touch, maxTouchPoints: 5 });
     });
     await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    // Linux Chromium reports a fine pointer at load and none once touch emulation is off: the page reads the settled
+    // input devices.
+    await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false });
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 200)));
     const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runMediaQueries(); } catch (error) { return { error: String(error?.message ?? error) }; } });
     if (result.media !== MEDIA_ASSERTIONS) throw new Error(`Media query assertions did not run: ${JSON.stringify(result)}`);
     console.log(`BROWSER_API G01 PASS assertions=${result.media} engine=chromium`);
@@ -583,6 +590,10 @@ const runViewTransitions = async () => {
   } finally {
     await engine.close();
   }
+};
+const runViewTransitionPixels = async () => {
+  const result = await runViewTransitionPixelProof(chromium);
+  if (result.samples.length !== 9) throw new Error(`View-transition pixel proof did not capture all nine frames: ${result.samples.length}`);
 };
 const CUSTOM_EFFECT_ASSERTIONS = 23;
 // A01 runs the Web Animations fixture in its own page.
@@ -802,6 +813,7 @@ try {
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
   else if (process.argv.includes('--view-transitions-only')) { await runViewTransitions(); process.exitCode = 0; }
+  else if (viewTransitionPixelsOnly) { await runViewTransitionPixels(); process.exitCode = 0; }
   else if (process.argv.includes('--custom-effects-only')) { await runCustomEffects(); process.exitCode = 0; }
   else if (process.argv.includes('--animations-only')) { await runAnimations(); process.exitCode = 0; }
   else if (process.argv.includes('--animation-lifecycle-only')) { await runAnimationLifecycle(); process.exitCode = 0; }
@@ -1084,6 +1096,7 @@ try {
   await runTimelines();
   await runCustomEffects();
   await runViewTransitions();
+  await runViewTransitionPixels();
   await runBlobUrls();
   await runMediaCapabilities();
   await runSnapshots();
