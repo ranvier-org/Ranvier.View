@@ -1,0 +1,20 @@
+<Project>
+  <PropertyGroup>
+    <RanvierAnalyzerHeapHardLimitBytes Condition="'$(RanvierAnalyzerHeapHardLimitBytes)' == ''">4294967296</RanvierAnalyzerHeapHardLimitBytes>
+  </PropertyGroup>
+  <Target Name="SelectRanvierAnalyzerHost" BeforeTargets="_FSharpAnalyzerAfterBuild;_AnalyzeFSharpProject">
+    <Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(RanvierAnalyzerHeapHardLimitBytes)', '^[1-9][0-9]{0,18}$'))"
+           Text="RanvierAnalyzerHeapHardLimitBytes must be a positive decimal byte count of at most 19 digits." />
+    <PropertyGroup>
+      <_RanvierAnalyzerRuntimeConfig>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(IntermediateOutputPath)', 'ranvier-analyzer-host.runtimeconfig.json'))</_RanvierAnalyzerRuntimeConfig>
+    </PropertyGroup>
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName('$(_RanvierAnalyzerRuntimeConfig)'))" />
+    <WriteLinesToFile File="$(_RanvierAnalyzerRuntimeConfig)" Encoding="UTF-8" Overwrite="true" WriteOnlyWhenDifferent="true"
+      Lines="{ &quot;runtimeOptions&quot;: { &quot;tfm&quot;: &quot;net10.0&quot;, &quot;framework&quot;: { &quot;name&quot;: &quot;Microsoft.NETCore.App&quot;, &quot;version&quot;: &quot;10.0.0&quot; }, &quot;configProperties&quot;: { &quot;System.GC.HeapHardLimit&quot;: $(RanvierAnalyzerHeapHardLimitBytes), &quot;System.Reflection.Metadata.MetadataUpdater.IsSupported&quot;: false, &quot;System.Runtime.Serialization.EnableUnsafeBinaryFormatterSerialization&quot;: false } } }" />
+    <PropertyGroup>
+      <FSharpAnalyzersExe>exec --runtimeconfig &quot;$(_RanvierAnalyzerRuntimeConfig)&quot; &quot;$(MSBuildThisFileDirectory)../tools/net10.0/any/Ranvier.Analyzers.Host.dll&quot;</FSharpAnalyzersExe>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(MSBuildThisFileDirectory)../tools/net10.0/any/Ranvier.Analyzers.Host.dll')"
+           Text="The pinned Ranvier analyzer host payload is missing from its restored package." />
+  </Target>
+</Project>

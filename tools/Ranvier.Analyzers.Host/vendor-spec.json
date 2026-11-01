@@ -1,0 +1,12 @@
+{
+  "cliPackageId": "fsharp-analyzers",
+  "cliPackageVersion": "0.41.0",
+  "cliPackageSha256": "86b817f7abd9ad2e3e0fccf79da568d231658a9461572c48f11ebbe206abd07a",
+  "cliSourceCommit": "b35c6fe24906a3bf994e8aeb9057ddab6474b589",
+  "compilerSourceCommit": "a8dd0577c5c13f43a2f57fe33b4ff11b90f6371e",
+  "compilerVersion": "43.12.402.0",
+  "compilerPublicKeyToken": "",
+  "compilerSha256": "67aa16b49b62a0e998a0867515ea061f46cde9b2c1960f9a0e622cf625ec5ff9",
+  "sourceGuardSha256": "f18c28c6eb1005157de326be2f122e054ec1f8f4ee63c23345fe8a62f2fb98d5",
+  "qualification": "Unsigned experimental vendor build. Not an official Microsoft compiler package or identity."
+}
