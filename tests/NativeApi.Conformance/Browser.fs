@@ -2224,3 +2224,17 @@ let run () =
             |}
     }
     |> Async.StartAsPromise
+
+[<Emit("new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)))")>]
+let private viewTransitionFrame () : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared same-document view-transition assertions in the browser realm.</summary>
+let runViewTransitions () =
+    async {
+        let document = document ()
+        let! count =
+            ViewTransitionChecks.run document (fun () -> BrowserViewTransitions.forDocument document)
+                (fun () -> viewTransitionFrame () |> Async.AwaitPromise)
+        return {| viewTransitions = count |}
+    }
+    |> Async.StartAsPromise
