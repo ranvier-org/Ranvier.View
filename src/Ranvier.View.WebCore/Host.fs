@@ -10,6 +10,50 @@ open Ranvier.Dom
 open Ranvier.View
 open RanvierWebCoreAbi
 
+/// <summary>One sample of a mouse, pen or touch contact, laid out as <c>RvPointerSample</c>.</summary>
+/// <remarks>
+/// <c>PointerType</c> is 0 for a mouse, 1 for a pen and 2 for touch; <c>Action</c> is 0 move, 1 down, 2 up, 3 cancel
+/// (pen and touch) and 4 stationary (touch). A NaN <c>Pressure</c> takes the engine's value for a device without
+/// pressure. <c>PointerSample.Create</c> fills <c>Size</c>.
+/// </remarks>
+[<Struct; StructLayout(LayoutKind.Sequential)>]
+type PointerSample =
+    val mutable Size: int
+    val mutable PointerType: int
+    val mutable Id: int
+    val mutable Action: int
+    val mutable X: float
+    val mutable Y: float
+    val mutable Button: int
+    val mutable Buttons: int
+    val mutable Modifiers: int
+    val mutable ClickCount: int
+    val mutable Pressure: float32
+    val mutable TangentialPressure: float32
+    val mutable TiltX: int
+    val mutable TiltY: int
+    val mutable Twist: int
+    val mutable Width: float32
+    val mutable Height: float32
+    val mutable MovementX: float
+    val mutable MovementY: float
+
+    /// <summary>A sample at <c>x</c>, <c>y</c> CSS pixels with no button, the engine's pressure and a 1-pixel
+    /// contact.</summary>
+    static member Create(pointerType: int, id: int, action: int, x: float, y: float) =
+        let mutable sample = PointerSample ()
+        sample.Size <- Marshal.SizeOf<PointerSample>()
+        sample.PointerType <- pointerType
+        sample.Id <- id
+        sample.Action <- action
+        sample.X <- x
+        sample.Y <- y
+        sample.Button <- -1
+        sample.Pressure <- Single.NaN
+        sample.Width <- 1.0f
+        sample.Height <- 1.0f
+        sample
+
 /// <summary>The wrapper classes of new node and event handles.</summary>
 module internal Factories =
     let node (session: Session) (handle: nativeint) : NativeObject =
@@ -70,14 +114,31 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let frames = Dictionary<int, float -> unit>()
     let idles = List<struct (int * (IdleDeadline -> unit))>()
     let idleTimeouts = Dictionary<int, struct (float * int)>()
-    let timeOrigin = float (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds ())
+    // The document's performance.now() when the host is constructed: the clock continues the engine's, so frame
+    // times, user timing and intersection entry times share one origin.
+    let engineNow =
+        let mutable value = 0.0
+
+        if
+            Native.rv_abi_has "intersection-entries" = 1
+            && Native.rv_host_now (handle, &value) = 0
+        then
+            value
+        else
+            0.0
+
+    let timeOrigin =
+        float (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds ())
+        - engineNow
+
     let clock = Stopwatch.StartNew ()
-    let mutable advanced = 0.0
+    let mutable advanced = engineNow
     let mutable manual = false
 
     let context = HostContext (posted, thread)
     let disposedEvent = Event<unit>()
     let screenEvent = Event<unit>()
+    let documentEvent = Event<unit>()
     let previousContext = SynchronizationContext.Current
     let mutable nextId = 1
     let mutable inInput = 0
@@ -226,7 +287,9 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         if handle = 0n then
             raise (InvalidOperationException "rv_host_create returned NULL")
 
-        Native.rv_host_load_html (handle, "<!DOCTYPE html><html><head></head><body></body></html>")
+        let initial = "<!DOCTYPE html><html><head></head><body></body></html>"
+
+        Native.rv_host_load_html (handle, Native.utf8 initial, Native.utf8Length initial)
         |> Interop.check "rv_host_load_html"
 
         let session = new Session (handle)
@@ -292,6 +355,9 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// <summary>Runs after <c>SetScreen</c> or <c>Resize</c>, which can change the screen the document reports.</summary>
     member internal _.ScreenMayHaveChanged = screenEvent.Publish
 
+    /// <summary>Runs after <c>LoadSvg</c> replaced the page document.</summary>
+    member internal _.DocumentReplaced = documentEvent.Publish
+
     /// <summary>The current page document; creation starts with an empty HTML head and body.</summary>
     member _.Document = document
 
@@ -313,10 +379,11 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         if not (WebCoreHost.Has "svg-document") then
             Interop.unsupported<unit> "svg-document"
 
-        Native.rv_host_load_svg (handle, svg)
+        Native.rv_host_load_svg (handle, Native.utf8 svg, Native.utf8Length svg)
         |> Interop.check "rv_host_load_svg"
 
         document <- unbox<Document>(session.Node (Native.rv_host_document handle))
+        documentEvent.Trigger ()
 
     /// <summary>Selects a view in the current main SVG document without changing its URL, history or <c>:target</c>.</summary>
     /// <param name="fragment">SVG fragment text, not a full URL; an empty value resets the current view.</param>
@@ -678,13 +745,36 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     /// <summary>Native key input: an <c>RV_KEY_*</c> action with <c>KeyboardEvent.key</c> and <c>code</c> values.</summary>
     member this.Key(action: int, key: string, code: string, text: string, modifiers: int, repeat: bool) =
-        this.Input ("rv_host_key", fun () -> Native.rv_host_key (handle, action, key, code, text, modifiers, (if repeat then 1 else 0)))
+        this.Input (
+            "rv_host_key",
+            fun () -> Native.rv_host_key (handle, action, key, code, Native.utf8 text, Native.utf8Length text, modifiers, (if repeat then 1 else 0))
+        )
 
     /// <summary>Presses and releases a key that types <c>text</c>.</summary>
     member this.Type(key: string, code: string, text: string) =
         this.Key (0, key, code, null, 0, false) |> ignore
         this.Key (2, key, code, text, 0, false) |> ignore
         this.Key (1, key, code, null, 0, false) |> ignore
+
+    /// <summary>
+    /// Native pointer input: one mouse or pen sample, or one sample per active contact of a touch frame, handled as the
+    /// user's. Returns whether the page or WebCore handled it.
+    /// </summary>
+    member this.Pointer(samples: PointerSample array) =
+        if isNull samples then
+            nullArg (nameof samples)
+
+        this.Input (
+            "rv_host_pointer",
+            fun () ->
+                use pinned = fixed samples
+                Native.rv_host_pointer (handle, NativeInterop.NativePtr.toNativeInt pinned, samples.Length)
+        )
+
+    /// <summary>Sets <c>Navigator.maxTouchPoints</c> of the host's documents, 0 for no touch screen.</summary>
+    member _.SetMaxTouchPoints(value: int) =
+        Native.rv_host_set_max_touch_points (handle, value)
+        |> Interop.check "rv_host_set_max_touch_points"
 
     /// <summary>Sets whether the app's window has keyboard focus; a page starts unfocused.</summary>
     member _.SetFocused(focused: bool) =
@@ -719,12 +809,15 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// within it in UTF-16 offsets. Empty text removes it.
     /// </summary>
     member this.SetComposition(text: string, selectionStart: int, selectionEnd: int) =
-        this.Input ("rv_host_ime_set_composition", fun () -> Native.rv_host_ime_set_composition (handle, text, selectionStart, selectionEnd))
+        this.Input (
+            "rv_host_ime_set_composition",
+            fun () -> Native.rv_host_ime_set_composition (handle, Native.utf8 text, Native.utf8Length text, selectionStart, selectionEnd)
+        )
         |> ignore
 
     /// <summary>Replaces the composition, or the selection when there is none, with <c>text</c>, as typed text.</summary>
     member this.CommitComposition(text: string) =
-        this.Input ("rv_host_ime_commit", fun () -> Native.rv_host_ime_commit (handle, text))
+        this.Input ("rv_host_ime_commit", fun () -> Native.rv_host_ime_commit (handle, Native.utf8 text, Native.utf8Length text))
         |> ignore
 
     /// <summary>Removes the composition without committing it.</summary>
@@ -755,9 +848,9 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// </summary>
     member _.SetClipboard(write: string -> string -> bool -> unit, read: unit -> struct (string * string) seq) =
         clipboardWrite <-
-            Native.ClipboardWrite (fun _ kind data first ->
+            Native.ClipboardWrite (fun _ kind data dataLength first ->
                 try
-                    write (Marshal.PtrToStringUTF8 kind) (Marshal.PtrToStringUTF8 data) (first <> 0)
+                    write (Marshal.PtrToStringUTF8 kind) (Marshal.PtrToStringUTF8 (data, dataLength)) (first <> 0)
                 with error ->
                     record error)
 
@@ -765,7 +858,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             Native.ClipboardRead (fun _ request ->
                 try
                     for struct (kind, data) in read () do
-                        Native.rv_clipboard_offer (request, kind, data)
+                        Native.rv_clipboard_offer (request, kind, Native.utf8 data, Native.utf8Length data)
                         |> Interop.check "rv_clipboard_offer"
                 with error ->
                     record error)

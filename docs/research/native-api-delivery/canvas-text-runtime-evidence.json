@@ -1,0 +1,61 @@
+{
+  "group": "R05 #94",
+  "status": "green (private Windows x64; not accepted)",
+  "viewsHead": "65f7392a921f87a46036f27a316e928448c48767",
+  "nativeEvidence": {
+    "file": "C:\\wk\\native-canvas-text\\docs\\canvas-text-evidence\\final-evidence.json",
+    "sha256": "1d5ed4921fd5440e06cd50a85242cfca940bf1141b729a251b489529d98a4b33"
+  },
+  "jit": {
+    "passLines": 128,
+    "baselinePassLines": 126,
+    "r05": [
+      "NATIVE_API R05 PASS assertions=80",
+      "NATIVE_API R05 TEARDOWN PASS"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "10ea95f5352bc0e4179de2f671cb226da56d4de3afbca5c958a23342dff212e9"
+  },
+  "aot": {
+    "passLines": 128,
+    "baselinePassLines": 126,
+    "r05": [
+      "NATIVE_API R05 PASS assertions=80",
+      "NATIVE_API R05 TEARDOWN PASS"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "290538f559d59ea4bd3f4932e466b19836fb1f447a59561c9c340935a41f48fd"
+  },
+  "chromium": {
+    "passLines": 92,
+    "baselinePassLines": 91,
+    "r05": [
+      "BROWSER_API R05 PASS assertions=80"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "58caa2f09ec3213ea5612b13b1ca02045034dd32d79df3e335c33abdc2bf6517"
+  },
+  "aot-canvas-repeat30.txt": [
+    "30 NATIVE_API R01 LIFETIME PASS assertions=7",
+    "30 NATIVE_API R01 PASS assertions=41",
+    "30 NATIVE_API R02 PASS assertions=43",
+    "30 NATIVE_API R03 PASS assertions=26",
+    "30 NATIVE_API R04 PASS assertions=35",
+    "30 NATIVE_API R05 PASS assertions=80",
+    "30 NATIVE_API R05 TEARDOWN PASS"
+  ],
+  "chromium-canvas-repeat30.txt": [
+    "30 BROWSER_API R01 PASS assertions=41 engine=chromium",
+    "30 BROWSER_API R02 PASS assertions=43 engine=chromium",
+    "30 BROWSER_API R03 PASS assertions=26 engine=chromium",
+    "30 BROWSER_API R04 PASS assertions=35 engine=chromium",
+    "30 BROWSER_API R05 PASS assertions=80 engine=chromium"
+  ],
+  "qualifications": [
+    "The shared CanvasTextChecks fixture checks text styles, their validation and Ahem metrics after the font set loads the face; pixels are asserted by the native canvas_text probe.",
+    "Engine differences are expected per engine: WebKit reports emHeight members, the hanging baseline at the ascent and a resolved direction; Chromium has no emHeight members (TextMeasurement None), 0.8 of the ascent and inherit.",
+    "Actual bounding boxes are compared within 1px (Chromium inflates glyph bounds by 1px).",
+    "Release kind 130 (TextMetrics) is a placeholder; root assigns the integrated number.",
+    "fontKerning, fontStretch, fontVariantCaps and textRendering are Unsupported on the native engine and not in the shared contract."
+  ]
+}

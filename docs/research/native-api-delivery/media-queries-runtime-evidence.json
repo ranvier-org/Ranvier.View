@@ -1,0 +1,57 @@
+{
+  "groups": {
+    "G01 #46": "lane-green (private, not accepted)",
+    "G15 #59": "lane-green (private, not accepted)"
+  },
+  "viewsHead": "7b569b6171d52af743483927ad91403935594df6",
+  "nativeEvidence": {
+    "file": "C:\\wk\\native-media\\docs\\media-evidence\\final-evidence.json",
+    "sha256": "f520a9231fd2ba50a9f077dafa3b312d040d46d75818602b6c5e65a31c749018"
+  },
+  "feed": "local-only Ranvier.Dom/Fable.Ranvier.Dom 0.1.0-alpha.49 and Ranvier.WebCore 0.1.0-preview.46 packed from the lane heads; root renumbers at batch integration",
+  "modes": {
+    "jit": {
+      "passLines": 122,
+      "baselinePassLines": 119,
+      "supersetOfBaseline": true,
+      "added": [
+        "NATIVE_API G01 PASS assertions=41",
+        "NATIVE_API G01/G15 LIFETIME PASS assertions=6",
+        "NATIVE_API G15 PASS assertions=41"
+      ],
+      "logSha256": "63d9cc9a858183d873ff95629769d240df2b067bbc3e8ccaf378c2a5cb47e14d"
+    },
+    "aot": {
+      "passLines": 122,
+      "baselinePassLines": 119,
+      "supersetOfBaseline": true,
+      "added": [
+        "NATIVE_API G01 PASS assertions=41",
+        "NATIVE_API G01/G15 LIFETIME PASS assertions=6",
+        "NATIVE_API G15 PASS assertions=41"
+      ],
+      "logSha256": "46dd726e48308116333a9722614ad08be140c393f6ac477bc79e6df306dfa810"
+    },
+    "chromium": {
+      "passLines": 88,
+      "baselinePassLines": 86,
+      "supersetOfBaseline": true,
+      "added": [
+        "BROWSER_API G01 PASS assertions=30 engine=chromium",
+        "BROWSER_API G15 PASS assertions=30 engine=chromium"
+      ],
+      "logSha256": "181fc26559dd313622359276b0afbb29734d7ed3f92931aad030df625796f1ba"
+    }
+  },
+  "repeats30": {
+    "aot-media-repeat30.txt": [
+      "30 NATIVE_API G01 PASS assertions=41",
+      "30 NATIVE_API G01/G15 LIFETIME PASS assertions=6",
+      "30 NATIVE_API G15 PASS assertions=41"
+    ],
+    "chromium-media-repeat30.txt": [
+      "30 BROWSER_API G01 PASS assertions=30 engine=chromium",
+      "30 BROWSER_API G15 PASS assertions=30 engine=chromium"
+    ]
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "group": "R06 #95",
+  "status": "green (private Windows x64; not accepted)",
+  "viewsHead": "fbc19f1ec955e2010e366b3cf3f6dbe45d9a140b",
+  "nativeEvidence": {
+    "file": "C:\\wk\\native-canvas-pixels\\docs\\canvas-pixels-evidence\\final-evidence.json",
+    "sha256": "9d78f4df5dccd96e4aaf16cc8f51bd3be2c3a09c4c327f5840e6c0d3068ead68"
+  },
+  "jit": {
+    "passLines": 123,
+    "baselinePassLines": 121,
+    "r06": [
+      "NATIVE_API R06 LIFETIME PASS assertions=3",
+      "NATIVE_API R06 PASS assertions=36"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "5a0198bf9256c9d1c409db38aef6010b7a5cb01de29926aea7d347cb9d7e9dfb"
+  },
+  "aot": {
+    "passLines": 123,
+    "baselinePassLines": 121,
+    "r06": [
+      "NATIVE_API R06 LIFETIME PASS assertions=3",
+      "NATIVE_API R06 PASS assertions=36"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "f7f76fde30fd71d49df96d93730d5ce718690dd29b3cbd8021dbd0669c2a812b"
+  },
+  "chromium": {
+    "passLines": 88,
+    "baselinePassLines": 87,
+    "r06": [
+      "BROWSER_API R06 PASS assertions=36"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "ab542450a4a9409c5a7e1584e02ff0278a91727fe5d9a8983a62effa406b6988"
+  },
+  "aot-pixels-repeat30.txt": [
+    "30 NATIVE_API R06 LIFETIME PASS assertions=3",
+    "30 NATIVE_API R06 PASS assertions=36"
+  ],
+  "chromium-pixels-repeat30.txt": [
+    "30 BROWSER_API R06 PASS assertions=36 engine=chromium"
+  ],
+  "qualifications": [
+    "The shared fixture checks ImageData construction, layout, byte ranges, createImageData, getImageData/putImageData round trips with a dirty rectangle and drawImage from a canvas; <img>, SVG <image> and tainting are asserted by the native canvas_pixels probe.",
+    "Kind 120 (ImageData) is a placeholder and 103 (ImageBitmap) is shared with R04; root assigns kinds at integration."
+  ]
+}

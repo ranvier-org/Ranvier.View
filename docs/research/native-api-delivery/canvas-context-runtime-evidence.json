@@ -1,0 +1,49 @@
+{
+  "group": "R01 #90",
+  "status": "green (private Windows x64; not accepted)",
+  "viewsHead": "9fdb15c09cae98a058ee80ee39ae24ba2a4f374c",
+  "nativeEvidence": {
+    "file": "C:\\wk\\native-canvas\\docs\\canvas-evidence\\final-evidence.json",
+    "sha256": "baf842299dd91b53cc2d2027c19af0bd9f4dec24b786fb6ac1530ae8f81b112b"
+  },
+  "jit": {
+    "passLines": 121,
+    "baselinePassLines": 119,
+    "r01": [
+      "NATIVE_API R01 LIFETIME PASS assertions=7",
+      "NATIVE_API R01 PASS assertions=41"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "4f79416a089e5627bc22fb0bf25b68533bbee972b70f0a75399ab6050d73a7d5"
+  },
+  "aot": {
+    "passLines": 121,
+    "baselinePassLines": 119,
+    "r01": [
+      "NATIVE_API R01 LIFETIME PASS assertions=7",
+      "NATIVE_API R01 PASS assertions=41"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "9743e85c7a925147c5807371fe5c4d8564ec2f1ae5bd811b63921b101d0c0e79"
+  },
+  "chromium": {
+    "passLines": 87,
+    "baselinePassLines": 86,
+    "r01": [
+      "BROWSER_API R01 PASS assertions=41"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "73a2dcd22e10a9164b00ed4568f7b8f82851a6ed8fb55c13ca3bc472d120205e"
+  },
+  "aot-canvas-repeat30.txt": [
+    "30 NATIVE_API R01 LIFETIME PASS assertions=7",
+    "30 NATIVE_API R01 PASS assertions=41"
+  ],
+  "chromium-canvas-repeat30.txt": [
+    "30 BROWSER_API R01 PASS assertions=41 engine=chromium"
+  ],
+  "qualifications": [
+    "The shared fixture checks context identity, profile, attributes, fillStyle and reset; pixels are asserted by the native runner (host paint) and the native canvas_context probe.",
+    "Release kinds 99-101 are placeholders; root assigns kinds at integration."
+  ]
+}

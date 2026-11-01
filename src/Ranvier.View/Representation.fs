@@ -1178,10 +1178,9 @@ type ModifierAction = Backend -> unit
 let Attribute (key, value) : ModifierAction =
     fun backend -> backend.Attribute (key, value)
 
-/// <summary>Creates an attribute modifier that removes its attribute for None.</summary>
+/// <summary>Creates an attribute modifier that removes its attribute for None or Some null.</summary>
 let OptionalAttribute (key, value: string option) : ModifierAction =
 #if !FABLE_COMPILER
-    // Fable erases Some null to None; .NET gives it the same meaning.
     let value =
         match value with
         | Some null -> None
@@ -1189,10 +1188,9 @@ let OptionalAttribute (key, value: string option) : ModifierAction =
 #endif
     fun backend -> backend.OptionalAttribute (key, value)
 
-/// <summary>Creates an attribute modifier from a tracked reader.</summary>
+/// <summary>Creates an attribute modifier from a tracked reader; a read of None or Some null removes the attribute.</summary>
 let ReactiveAttribute (key, read: unit -> string option) : ModifierAction =
 #if !FABLE_COMPILER
-    // A read of Some null is None, as under Fable.
     let read () =
         match read () with
         | Some null -> None

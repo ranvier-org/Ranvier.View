@@ -119,11 +119,7 @@ module StyleSheets =
 
                 let baseUrl =
                     match options.BaseUrl with
-                    | Some url ->
-                        if isNull url then
-                            nullArg "options.BaseUrl"
-
-                        url
+                    | Some url -> url
                     | None -> null
 
                 let mutable init = NativeDom.RvDomCSSStyleSheetInit ()

@@ -1,0 +1,51 @@
+{
+  "group": "R03 #92",
+  "status": "green (private Windows x64; not accepted)",
+  "viewsHead": "9b0741e6b1d8d2c64cc031c1e03d18d2b605d6b3",
+  "nativeEvidence": {
+    "file": "C:\\wk\\native-canvas\\docs\\canvas-state-evidence\\final-evidence.json",
+    "sha256": "bf989fdcda6701695335d9b50be430505983da992c42f72a93da7d68c04a1315"
+  },
+  "jit": {
+    "passLines": 123,
+    "baselinePassLines": 122,
+    "r03": [
+      "NATIVE_API R03 PASS assertions=26"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "269a87226a3fbb92ad83b9b3a95585f6b6421485c05a230bf5713862e05dee59"
+  },
+  "aot": {
+    "passLines": 123,
+    "baselinePassLines": 122,
+    "r03": [
+      "NATIVE_API R03 PASS assertions=26"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "3a23c596614c868fcddecd0616000f3961cbb4503b08e43ac8ed52b882e2d144"
+  },
+  "chromium": {
+    "passLines": 89,
+    "baselinePassLines": 88,
+    "r03": [
+      "BROWSER_API R03 PASS assertions=26"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "2815fca8aff8ffc5c2e892459979570f1909c7cf7f0b0fc6fc83b7eeedddf25f"
+  },
+  "aot-canvas-repeat30.txt": [
+    "30 NATIVE_API R01 LIFETIME PASS assertions=7",
+    "30 NATIVE_API R01 PASS assertions=41",
+    "30 NATIVE_API R02 PASS assertions=43",
+    "30 NATIVE_API R03 PASS assertions=26"
+  ],
+  "chromium-canvas-repeat30.txt": [
+    "30 BROWSER_API R01 PASS assertions=41 engine=chromium",
+    "30 BROWSER_API R02 PASS assertions=43 engine=chromium",
+    "30 BROWSER_API R03 PASS assertions=26 engine=chromium"
+  ],
+  "qualifications": [
+    "The shared fixture checks transforms, getTransform, setTransform, save/restore, reset, globalAlpha, composite names and filter strings; pixels, layers (RV_ERR_UNSUPPORTED) and WebKit-only composite names are asserted by the native canvas_state probe.",
+    "The baseline is the R02 run, so baselineLinesUnchanged compares every non-R03 line with R02."
+  ]
+}

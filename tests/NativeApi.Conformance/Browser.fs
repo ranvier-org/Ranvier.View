@@ -119,7 +119,7 @@ let private wait (milliseconds: int) =
 let runSvgSurfaces () =
     async {
         let target = document ()
-        let shapes = SvgShapes.run target errorName "Error" false
+        let shapes = SvgShapes.run target errorName "Error"
         let! fontData = ahem () |> Async.AwaitPromise
 
         let! text =
@@ -776,8 +776,99 @@ let runResources () =
     }
     |> Async.StartAsPromise
 
+[<Emit("fetch('/fixtures/requested/' + $0).then(r => r.text()).then(t => t === '1')")>]
+let private fontRequested (name: string) : JS.Promise<bool> = jsNative
+
+[<Emit("fetch('/fixtures/answer/' + $0 + '/' + $1).then(() => undefined)")>]
+let private fontAnswer (name: string) (mode: string) : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared T01 font set assertions over document.fonts with held fixture-server fonts.</summary>
+let runFonts () =
+    async {
+        let document = document ()
+
+        let server: Fonts.FontServer =
+            {
+                Url = fun name -> "/fixtures/held/" + name
+                Requested = fun name -> fontRequested name |> Async.AwaitPromise
+                Respond =
+                    fun name response ->
+                        let mode =
+                            match response with
+                            | Fonts.FontResponse.Font -> "font"
+                            | Fonts.FontResponse.Broken -> "broken"
+                            | Fonts.FontResponse.Missing -> "missing"
+
+                        fontAnswer name mode |> Async.AwaitPromise
+            }
+
+        use signals = BrowserCancellation.forDocument document
+
+        let! count =
+            Fonts.run document server (fun () -> BrowserFonts.forDocument document) signals wait
+
+        let! ahem =
+            fixtureBytes "/fixtures/Ahem.ttf"
+            |> Async.AwaitPromise
+
+        let! construction =
+            FontConstruction.run document server (fun () -> BrowserFonts.forDocument document) ahem wait
+
+        return
+            {|
+                fonts = count
+                fontConstruction = construction
+            |}
+    }
+    |> Async.StartAsPromise
+
 [<Emit("globalThis.__nativeApiSetActive($0)")>]
 let private setActive (active: bool) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiTouch($0)")>]
+let private touchFrame (contacts: PointerInputChecks.Contact array) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiPen($0)")>]
+let private penSample (pen: PointerInputChecks.Pen) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiClickAt($0, $1)")>]
+let private clickAt (x: int) (y: int) : JS.Promise<unit> = jsNative
+
+[<Emit("globalThis.__nativeApiMoveBy($0, $1, $2, $3)")>]
+let private moveBy (x: int) (y: int) (dx: int) (dy: int) : JS.Promise<unit> = jsNative
+
+[<Emit("new Promise(resolve => setTimeout(resolve, 150))")>]
+let private settleTasks () : JS.Promise<unit> = jsNative
+
+// Platform difference: Linux Chromium delivers a locked CDP move as several pointermoves, with movement measured from
+// the window origin and a return move (measured: 0,0; 90,80; -90,-80; 0,0 for a move by 30,20 from 60,60), and may
+// report unlocked before the granted lock (CI run 41323455589).
+[<Emit("!navigator.userAgent.includes('Linux')")>]
+let private exactPointerLock () : bool = jsNative
+
+/// <summary>Runs the shared pointer-input assertions with CDP touch, pen and mouse input.</summary>
+/// <remarks>Headless Chromium grants a pointer-lock request without asking, so granting is a no-op.</remarks>
+let runPointerInput () =
+    async {
+        let document = document ()
+
+        let driver: PointerInputChecks.Driver =
+            {
+                Touch = fun contacts -> touchFrame contacts |> Async.AwaitPromise
+                Pen = fun pen -> penSample pen |> Async.AwaitPromise
+                Click = fun x y -> clickAt x y |> Async.AwaitPromise
+                MoveBy = fun x y dx dy -> moveBy x y dx dy |> Async.AwaitPromise
+                ExactPointerLock = exactPointerLock ()
+                GrantLock = fun () -> settleTasks () |> Async.AwaitPromise
+                Settle = fun () -> settleTasks () |> Async.AwaitPromise
+            }
+
+        let! count =
+            PointerInputChecks.run document (BrowserPointerInput.provider document) (BrowserPointerInput.capabilities ()) CapabilityState.Yes driver
+
+        return {| pointerInput = count |}
+    }
+    |> Async.StartAsPromise
 
 [<Emit("globalThis.__nativeApiMouse($0, $1, $2)")>]
 let private mouse (action: string) (x: int) (y: int) : JS.Promise<unit> = jsNative
@@ -1139,6 +1230,42 @@ let runBinary () =
     }
     |> Async.StartAsPromise
 
+[<Emit("$0.dispatchEvent(new DragEvent('drop', { dataTransfer: $1, bubbles: true, cancelable: true }))")>]
+let private dispatchDrop (element: Element) (transfer: DataTransfer) : unit = jsNative
+
+[<Emit("$0.dispatchEvent(new ClipboardEvent('paste', { clipboardData: $1, bubbles: true, cancelable: true }))")>]
+let private dispatchPaste (element: Element) (transfer: DataTransfer) : unit = jsNative
+
+/// <summary>Runs the shared DataTransfer assertions over synthetic drop and paste events.</summary>
+let runDataTransfer () =
+    let document = document ()
+    use transfers = BrowserDataTransfers.forDocument document
+    use binary = BrowserBinaryValues.forDocument document
+
+    let transfer (strings: struct (string * string) array) (files: File array) =
+        let value = transfers.Create ()
+
+        for struct (kind, text) in strings do
+            value.setData (kind, text)
+
+        for file in files do
+            value.items.add file |> ignore
+
+        value
+
+    let driver: DataTransferChecks.Driver =
+        {
+            Create = fun () -> transfers.Create ()
+            File = fun name kind text -> binary.CreateFile ([| BlobPart.Text text |], name, { FileOptions.Default with Type = kind })
+            Drop = fun element strings files -> dispatchDrop element (transfer strings files)
+            DropKeepsFiles = true
+            Paste = fun element strings files -> dispatchPaste element (transfer strings files)
+        }
+
+    {|
+        dataTransfer = DataTransferChecks.run document driver
+    |}
+
 /// <summary>Runs the shared blob URL and FileReader assertions.</summary>
 let runBlobUrls () =
     async {
@@ -1155,6 +1282,48 @@ let runBlobUrls () =
             BlobUrlChecks.run (fun () -> BrowserBlobUrls.forDocument document) (fun () -> BrowserBinaryValues.forDocument document) driver
 
         return {| blobUrls = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared media capability assertions against navigator.mediaCapabilities.</summary>
+let runMediaCapabilities () =
+    async {
+        let document = document ()
+
+        let driver: MediaCapabilityChecks.Driver =
+            {
+                Settle = fun () -> Async.Sleep 1
+                Rejected = MediaCapabilityChecks.chromiumRejected
+                Answer = fun _ -> None
+            }
+
+        let! count =
+            MediaCapabilityChecks.run (fun () -> BrowserMediaCapabilities.forDocument document) driver
+
+        return {| mediaCapabilities = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared snapshot assertions: an ordinary browser context has no DOM capture.</summary>
+let runSnapshots () =
+    async {
+        let document = document ()
+        let red = document.createElement "div"
+        red.setAttribute ("style", "position:absolute;left:5px;top:4px;width:20px;height:10px;background:rgb(255,0,0)")
+        document.body.appendChild red |> ignore
+
+        let driver: SnapshotChecks.Driver =
+            {
+                Settle = fun () -> Async.Sleep 1
+                Red = red
+                DeviceScale = 1.0
+            }
+
+        let! count =
+            SnapshotChecks.run (fun () -> BrowserSnapshots.forDocument document) driver
+
+        red.remove ()
+        return {| snapshots = count |}
     }
     |> Async.StartAsPromise
 
@@ -1187,6 +1356,18 @@ let runEventDetails () =
             EventDetailChecks.run document (fun () -> BrowserEventDetails.forDocument document) driver
 
         return {| eventDetails = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared value factory assertions.</summary>
+let runValueFactories () =
+    async {
+        let document = document ()
+
+        let count =
+            ValueFactoryChecks.run document (fun () -> BrowserValueFactories.forDocument document)
+
+        return {| valueFactories = count |}
     }
     |> Async.StartAsPromise
 
@@ -1293,6 +1474,67 @@ let runScreen () =
     }
     |> Async.StartAsPromise
 
+[<Emit("window.__rvMediaStep($0, $1, $2, $3, $4, $5, $6)")>]
+let private mediaStep
+    (width: int)
+    (height: int)
+    (scale: float)
+    (colorScheme: string)
+    (reducedMotion: string)
+    (contrast: string)
+    (touch: bool)
+    : JS.Promise<unit> =
+    jsNative
+
+/// <summary>Runs the shared media query assertions (G01/G15); browser.mjs applies each step through CDP.</summary>
+let runMediaQueries () =
+    async {
+        let document = document ()
+
+        let driver: MediaQueryChecks.Driver =
+            {
+                Apply =
+                    fun step ->
+                        let p = step.Preferences
+
+                        let scheme =
+                            match p.ColorScheme with
+                            | Some ColorSchemePreference.Dark -> "dark"
+                            | Some ColorSchemePreference.Light -> "light"
+                            | None -> ""
+
+                        let motion =
+                            match p.ReducedMotion with
+                            | Some MotionPreference.Reduce -> "reduce"
+                            | Some MotionPreference.NoPreference -> "no-preference"
+                            | None -> ""
+
+                        let contrast =
+                            match p.Contrast with
+                            | Some ContrastPreference.More -> "more"
+                            | Some ContrastPreference.NoPreference -> "no-preference"
+                            | None -> ""
+
+                        mediaStep step.Width step.Height step.Scale scheme motion contrast (p.Pointer = Some PointerAccuracy.Coarse)
+                        |> Async.AwaitPromise
+                Settle =
+                    fun () ->
+                        async {
+                            for _ in 1..2 do
+                                do! viewportFrames () |> Async.AwaitPromise
+                        }
+                Native = false
+                // Platform difference: headless Chromium on Linux reports no pointing device (pointer: none).
+                PointingDevice = not (onLinux ())
+            }
+
+        let! count =
+            MediaQueryChecks.run (fun () -> BrowserMediaQueries.forDocument document) driver
+
+        return {| media = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared custom highlight assertions.</summary>
 let runHighlights () =
     let document = document ()
@@ -1302,6 +1544,73 @@ let runHighlights () =
 
     {| highlights = count |}
 
+/// <summary>Runs the shared canvas context assertions.</summary>
+let runCanvas () =
+    let document = document ()
+    let count = CanvasChecks.run (fun () -> BrowserCanvas.forDocument document) document
+
+    let paths =
+        CanvasPathChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName false
+
+    let state =
+        CanvasStateChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
+
+    let paints =
+        CanvasPaintChecks.run (fun () -> BrowserCanvas.forDocument document) document errorName
+
+    {|
+        canvas = count
+        canvasPaths = paths
+        canvasState = state
+        canvasPaints = paints
+    |}
+
+/// <summary>Runs the shared R05 canvas text assertions over the fixture server's Ahem face.</summary>
+let runCanvasText () =
+    async {
+        let document = document ()
+
+        let! count =
+            CanvasTextChecks.run
+                (fun () -> BrowserCanvas.forDocument document)
+                document
+                (fun () -> BrowserFonts.forDocument document)
+                "/fixtures/Ahem.ttf"
+                CanvasTextChecks.TextEngine.Chromium
+                20.0
+                wait
+
+        return {| canvasText = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared canvas pixel assertions.</summary>
+let runCanvasPixels () =
+    let document = document ()
+
+    let count =
+        CanvasPixelChecks.run (fun () -> BrowserCanvas.forDocument document) (fun () -> BrowserCanvasPixels.forDocument document) document errorName
+
+    {| canvasPixels = count |}
+
+/// <summary>Runs the shared canvas export assertions.</summary>
+let runCanvasExport () =
+    async {
+        let document = document ()
+        let driver: CanvasExportChecks.Driver = { Settle = fun () -> Async.Sleep 1 }
+
+        let! count =
+            CanvasExportChecks.run
+                (fun () -> BrowserCanvas.forDocument document)
+                (fun () -> BrowserCanvasPixels.forDocument document)
+                (fun () -> BrowserCanvasExport.forDocument document)
+                document
+                driver
+
+        return {| canvasExport = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared U+0000 round-trip assertions (WebCore #142).</summary>
 let runStrings () =
     let document = document ()
@@ -1310,6 +1619,15 @@ let runStrings () =
         StringChecks.run document (fun () -> BrowserEventDetails.forDocument document) (fun () -> BrowserBinaryValues.forDocument document)
 
     {| strings = count |}
+
+/// <summary>Runs the shared U+0000 event-type assertions (WebCore #145).</summary>
+let runHostStrings () =
+    let document = document ()
+
+    let count =
+        HostStringChecks.run document (fun () -> BrowserEvents.forDocument document)
+
+    {| hostStrings = count |}
 
 /// <summary>Runs the shared diagnostics assertions.</summary>
 let runDiagnostics () =
@@ -1322,6 +1640,169 @@ let runDiagnostics () =
 
 [<Emit("devicePixelRatio")>]
 let private devicePixelRatio () : float = jsNative
+
+[<Emit("(() => { window.__customEffectErrors = 0; window.addEventListener('error', e => { if (String(e.message).includes('tick failure') || String(e.error?.message).includes('tick failure')) { window.__customEffectErrors++; e.preventDefault(); } }); })()")>]
+let private watchTickErrors () : unit = jsNative
+
+[<Emit("window.__customEffectErrors")>]
+let private tickErrors () : int = jsNative
+
+/// <summary>Runs the shared custom effect fixture on the browser facade, and checks the facade's capability observation.</summary>
+let runCustomEffects () =
+    async {
+        watchTickErrors ()
+        let document = document ()
+
+        let name (error: exn) =
+            match error with
+            | AnimationException (name, _) -> name
+            | error -> errorName error
+
+        let! count =
+            CustomEffectChecks.run
+                document
+                (fun () -> BrowserCustomEffects.forDocument document)
+                (fun () -> BrowserAnimations.forDocument document)
+                (fun () -> Ranvier.Dom.ComputedStyles.forDocument document)
+                name
+                {
+                    NextFrame =
+                        fun () ->
+                            async {
+                                do! animationFrame () |> Async.AwaitPromise
+                                do! animationFrame () |> Async.AwaitPromise
+                            }
+                    RoutedErrors = tickErrors
+                }
+
+        let provider = BrowserCustomEffects.capabilityProvider document
+
+        let key =
+            Capabilities.key CapabilityCategory.PlatformFacility "animation-custom-effects"
+
+        let! observation =
+            provider.Observe key System.Threading.CancellationToken.None
+            |> Async.AwaitTask
+
+        let facts =
+            match observation with
+            | Some (value: CapabilityObservation) ->
+                [|
+                    string value.Exported.State
+                    string value.Implemented.State
+                    string value.Enabled.State
+                    string value.Permitted.State
+                    string value.Available.State
+                    value.Mechanism
+                |]
+            | None -> [||]
+
+        return
+            {|
+                customEffects = count
+                capability = facts
+            |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared Web Animations assertions on the browser's constructors.</summary>
+let runAnimations () =
+    let document = document ()
+
+    let name (error: exn) =
+        match error with
+        | AnimationException (name, _) -> name
+        | error -> errorName error
+
+    let count =
+        AnimationChecks.run
+            document
+            (fun () -> BrowserAnimations.forDocument document)
+            (fun () -> Ranvier.Dom.ComputedStyles.forDocument document)
+            name
+
+    let effects =
+        AnimationEffectChecks.run document (fun () -> Ranvier.Dom.ComputedStyles.forDocument document) name
+
+    let discovery, commits =
+        AnimationDiscoveryChecks.run document (fun () -> Ranvier.Dom.ComputedStyles.forDocument document)
+
+    {|
+        animations = count
+        effects = effects
+        discovery = discovery
+        commits = commits
+    |}
+
+[<Emit("$0.constructor.name")>]
+let private eventConstructorName (value: obj) : string = jsNative
+
+/// <summary>Runs the shared animation lifecycle assertions on the browser's promises.</summary>
+let runAnimationLifecycle () =
+    async {
+        let document = document ()
+
+        let! count =
+            AnimationLifecycleChecks.run document (fun () -> BrowserAnimations.forDocument document) { Settle = fun () -> Async.Sleep 16 }
+
+        return {| lifecycle = count |}
+    }
+    |> Async.StartAsPromise
+
+/// <summary>Runs the shared typed animation and transition event assertions.</summary>
+let runAnimationEvents () =
+    async {
+        let document = document ()
+
+        let! count =
+            AnimationEventChecks.run
+                document
+                {
+                    Settle = fun () -> Async.Sleep 16
+                    InterfaceName = fun event -> eventConstructorName (box event)
+                }
+
+        return {| events = count |}
+    }
+    |> Async.StartAsPromise
+
+[<Emit("new Promise(resolve => { let n = $0; const step = () => (--n > 0 ? requestAnimationFrame(step) : resolve()); requestAnimationFrame(step); })")>]
+let private animationFrames (count: int) : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared animation timeline assertions on the browser's timelines.</summary>
+let runTimelines () =
+    let document = document ()
+
+    let settle () =
+        animationFrames 2 |> Async.AwaitPromise
+
+    async {
+        let timelines =
+            TimelineChecks.runDocumentTimelines document (fun () -> BrowserAnimations.forDocument document)
+
+        let! scroll =
+            TimelineChecks.runScrollTimelines
+                document
+                (fun () -> BrowserTimelines.forDocument document)
+                (fun () -> Ranvier.Dom.ComputedStyles.forDocument document)
+                settle
+
+        let name (error: exn) =
+            match error with
+            | AnimationException (name, _) -> name
+            | error -> errorName error
+
+        let! view =
+            TimelineChecks.runViewTimelines document (fun () -> BrowserTimelines.forDocument document) settle name
+
+        return
+            {|
+                timelines = timelines
+                scrollTimelines = scroll
+                viewTimelines = view
+            |}
+    }
+    |> Async.StartAsPromise
 
 /// <summary>Runs the shared coordinate assertions, with an iframe's element as the foreign one.</summary>
 let runCoordinates () =
@@ -1361,6 +1842,66 @@ let runCascade () =
 
     {| cascade = count |}
 
+[<Emit("new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)))")>]
+let private resizeFrame () : JS.Promise<unit> = jsNative
+
+// Counts the window's error events and prevents their default report; returns the count reader.
+[<Emit("(() => { let n = 0; window.addEventListener('error', e => { n++; e.preventDefault(); }); return () => n; })()")>]
+let private countErrors () : unit -> int = jsNative
+
+/// <summary>Runs the shared resize observation assertions; callback exceptions reach the window's error event.</summary>
+let runResizeObservation () =
+    async {
+        let document = document ()
+        let errors = countErrors ()
+
+        let driver: ResizeObservationChecks.Driver =
+            {
+                Update = fun () -> resizeFrame () |> Async.AwaitPromise
+                Errors = errors
+                Engine = ResizeObservationChecks.Chromium
+            }
+
+        let! count =
+            ResizeObservationChecks.run
+                document
+                (fun () -> BrowserResizeObservation.forDocument document)
+                (fun () -> BrowserCancellation.forDocument document)
+                driver
+
+        return {| resize = count |}
+    }
+    |> Async.StartAsPromise
+
+[<Emit("new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(resolve, 0))))")>]
+let private intersectionFrame () : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared intersection observation assertions; Chromium delivers entries in a task after the frame
+/// that computes them.</summary>
+let runIntersectionObservation () =
+    async {
+        let document = document ()
+        let errors = countErrors ()
+
+        let driver: IntersectionObservationChecks.Driver =
+            {
+                Update = fun () -> intersectionFrame () |> Async.AwaitPromise
+                Errors = errors
+                Engine = IntersectionObservationChecks.Chromium
+            }
+
+        let! count =
+            IntersectionObservationChecks.run
+                document
+                (fun () -> BrowserIntersectionObservation.forDocument document)
+                (fun () -> Timing.forDocument document)
+                (fun () -> BrowserCancellation.forDocument document)
+                driver
+
+        return {| intersection = count |}
+    }
+    |> Async.StartAsPromise
+
 /// <summary>Runs the shared crypto assertions in a secure context.</summary>
 let runCrypto () =
     async {
@@ -1397,6 +1938,34 @@ let runDomModel () =
     async { return domModel (document ()) }
     |> Async.StartAsPromise
 
+[<Emit("new Promise(resolve => { const f = document.createElement('iframe'); f.allow = \"screen-wake-lock 'none'\"; f.src = location.href; f.onload = () => resolve(f.contentDocument); document.body.append(f); })")>]
+let private deniedFrame () : JS.Promise<Document> = jsNative
+
+/// <summary>Runs the shared wake lock fixture: the page holds the screen-wake-lock permission, and a frame whose policy disables the feature is denied.</summary>
+let private wakeLocks (document: Document) =
+    async {
+        let! frame = deniedFrame () |> Async.AwaitPromise
+        use granted = BrowserWakeLocks.forDocument document
+        use denied = BrowserWakeLocks.forDocument frame
+        use cancellation = BrowserCancellation.forDocument document
+
+        return!
+            WakeLocks.run granted denied cancellation
+            |> Async.AwaitTask
+    }
+
+/// <summary>Runs the shared notification fixture; the page holds the notifications permission.</summary>
+let private notifications (document: Document) =
+    async {
+        use service = BrowserNotifications.forDocument document
+        use badges = BrowserNotifications.badgeForDocument document
+        use cancellation = BrowserCancellation.forDocument document
+
+        return!
+            Notifications.run service badges cancellation
+            |> Async.AwaitTask
+    }
+
 /// <summary>Runs shared DOM and stylesheet assertions against the browser document.</summary>
 let run () =
     async {
@@ -1421,6 +1990,8 @@ let run () =
             |> Async.AwaitTask
 
         let! cancellationInterop = cancellationInterop document
+        let! wakeLocks = wakeLocks document
+        let! notifications = notifications document
 
         let domModelResult = domModel document
 
@@ -1601,10 +2172,12 @@ let run () =
                 capabilities = capabilities
                 cancellation = cancellation
                 cancellationInterop = cancellationInterop
+                notifications = notifications
                 customEvents = customEvents
                 traversal = domModelResult.traversal
                 traversalReentry = domModelResult.traversalReentry
                 mathml = domModelResult.mathml
+                wakeLocks = wakeLocks
                 scopeRules = scopeRules
                 nestedDeclarations = nestedDeclarations
                 importContentsReadable = importContentsReadable

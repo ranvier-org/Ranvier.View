@@ -185,8 +185,12 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
             else
                 match fn.Defaults.TryFind p.Name with
                 | Some raw ->
+                    // An enumeration entry is [values, attributes, IDL file].
+                    let entry =
+                        ctx.Input.Model.GetProperty("enumerations").GetProperty(Metadata.text "enum" mapping)
+
                     let values =
-                        ctx.Input.Model.GetProperty("enumerations").GetProperty(Metadata.text "enum" mapping).EnumerateArray()
+                        entry[0].EnumerateArray()
                         |> Seq.map _.GetString()
                         |> Seq.toArray
 
@@ -199,14 +203,14 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
                 | None -> Error $"Optional enum {p.Name} has no IDL default")
     | "int[]" when mappingKind = "enum" && nullable ->
         Input.encode ctx.Input.Model mapping inner "item"
-        |> Result.map (fun expression -> $"(match {v} with None -> null | Some item -> [| {expression} |])")
+        |> Result.map (fun expression -> matchOption inner v $"[| {expression} |]" "null")
     | "string" when inner = typeof<string> ->
         Ok (
             if nullable then
                 match fn.Defaults.TryFind p.Name with
                 | Some raw when raw.StartsWith "\"" ->
                     let fallback = sprintf "%A" (JsonSerializer.Deserialize<string> raw)
-                    $"Option.defaultValue {fallback} {v}"
+                    matchOption inner v "item" fallback
                 | _ -> $"Option.toObj {v}"
             elif mapping.GetProperty("nullable").GetBoolean() then
                 v
@@ -267,8 +271,7 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
         Ok (
             if nullable then
                 if transformInput || svgInput then
-                    let expression = reference "value"
-                    $"(match {v} with None -> 0n | Some value -> {expression})"
+                    matchOption inner v (reference "item") "0n"
                 else
                     $"Interop.handleOr {v}"
             else if transformInput || svgInput then
@@ -289,13 +292,11 @@ let private input (ctx: Context) (fn: Abi.Function) (qualified: string) (v: stri
             if
                 fn.Interface.StartsWith ("SVG", System.StringComparison.Ordinal)
                 && mappingKind = "dict"
+                && not nullable
             then
-                if nullable then
-                    $"(match {v} with None -> null | Some item when isNull (box item) -> null | Some item -> [| {expression} |])"
-                else
-                    $"(if isNull (box {v}) then null else [| {expression} |])"
+                $"(if isNull (box {v}) then null else [| {expression} |])"
             elif nullable then
-                $"(match {v} with None -> null | Some item -> [| {expression} |])"
+                matchOption inner v $"[| {expression} |]" "null"
             else
                 $"[| {expression} |]")
     | _ -> Error $"argument {p.Name}: {name ts} as {p.C}"
@@ -338,6 +339,18 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
     | None -> Error $"returns {name managed}, which has no class"
     | Some cls ->
         let root = Metadata.text "root" mapping
+        // An event-target object with its own kind (Animation) is a session object keyed by its handle, anchored to
+        // the object that returned it, so its identity and acquisition document carry over.
+        let eventTargetObject =
+            root = "EventTarget"
+            && ctx.Input.Kinds.ContainsKey (Metadata.publicInterfaceName ctx.Input.Model (Metadata.text "interface" mapping))
+
+        let root =
+            if eventTargetObject then
+                Metadata.text "interface" mapping
+            else
+                root
+
         let publicRoot = Metadata.publicInterfaceName ctx.Input.Model root
 
         let query =
@@ -346,6 +359,7 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
 
         if
             query.IsSome
+            || eventTargetObject
             || (root.StartsWith ("SVG", System.StringComparison.Ordinal)
                 && ctx.Input.Kinds.ContainsKey publicRoot)
             || List.contains
@@ -364,6 +378,11 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                     "DOMURL"
                     "URLSearchParams"
                     "URLPattern"
+                    "DataTransfer"
+                    "DataTransferItemList"
+                    "DataTransferItem"
+                    "Touch"
+                    "TouchList"
                 ]
         then
             let kind = ctx.Input.Kinds[publicRoot]
@@ -380,11 +399,17 @@ let private wrappedObject (ctx: Context) (mapping: JsonElement) (managed: Type) 
                     || root = "DOMMatrixReadOnly"
                 then
                     $"(let document = Interop.contextDocument this in let target = {create} in target.BindDocumentContext(document); target)"
+                elif root.StartsWith ("DataTransfer", System.StringComparison.Ordinal) then
+                    $"(let document = Interop.transferDocument this in let target = {create} in target.BindDocumentContext(document); target)"
                 else
                     create
 
             Ok
                 $"(unbox<{name managed}> (this.Session.Object({value}, {kind}, {owner}, System.Func<Session, nativeint, NativeObject>(fun session handle -> {create}))))"
+        elif root = "CanvasGradient" then
+            // addColorStop parses colours against a document: the gradient keeps its creator's document context.
+            Ok
+                $"(let target = this.Session.Track ({cls}(this.Session, {value})) in target.BindDocumentContext(Interop.contextDocument this); target :> {name managed})"
         else
             Ok $"(this.Session.Track ({cls}(this.Session, {value})) :> {name managed})"
 
@@ -443,7 +468,14 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
                     $"let valueOwner = {owner} in "
 
             let expression =
-                $"({capture}let handle = {value} in NativeDom.rv_dom_{root}_retain handle |> ignore; {wrapped})"
+                // An event-target object (Animation, FileReader) retains through the hand-written event target ABI.
+                let retain =
+                    if root = "event_target" then
+                        "Native.rv_event_target_retain"
+                    else
+                        $"NativeDom.rv_dom_{root}_retain"
+
+                $"({capture}let handle = {value} in {retain} handle |> ignore; {wrapped})"
 
             if mapping.GetProperty("nullable").GetBoolean() then
                 $"(if {value} = 0n then Unchecked.defaultof<{name plain}> else {expression})"
@@ -519,6 +551,12 @@ let rec private decoded (ctx: Context) (mapping: JsonElement) (managed: Type) (v
                     |> String.concat " "
 
                 Ok (wrap $"(match {value}.tag with {branches} | _ -> invalidOp \"Unknown {plain.Name} union tag from WebCore\")")
+    | "union" when (Metadata.items "subtypes" mapping).Length = 1 ->
+        // The model types a single-arm union as its arm.
+        let arm = (Metadata.items "subtypes" mapping)[0]
+
+        decoded ctx arm plain $"{value}.arm0" owner
+        |> Result.map wrap
     | _ -> Error $"Unsupported owned result {kind} as {name managed}"
 
 /// <summary>The body of a mapped member, or why it cannot be mapped.</summary>

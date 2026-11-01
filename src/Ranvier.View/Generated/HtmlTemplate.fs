@@ -2428,37 +2428,25 @@ type Groups.ButtonProperties<'inst> with
     member _.``value``<'native when 'native :> Dom.HTMLButtonElement>(source: Source<'inst, string>) : Part<'native, 'inst> =
         TemplateParts.sourceProperty (PropertyHtml.text "value") (fun (node: 'native) (value: string) -> node.``value`` <- value) source
 
-#if FABLE_COMPILER
 type Groups.CanvasProperties<'inst> with
-#if FABLE_COMPILER
-    member _.``height``<'native when 'native :> Dom.HTMLCanvasElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "height" value) value
+    member _.``height``<'native when 'native :> Dom.HTMLCanvasElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``height`` <- value) value
 
-    member _.``height``<'native when 'native :> Dom.HTMLCanvasElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "height" value) read
+    member _.``height``<'native when 'native :> Dom.HTMLCanvasElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``height`` <- value) read
 
-    member _.``height``<'native when 'native :> Dom.HTMLCanvasElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "height" value)
-            source
-#endif
+    member _.``height``<'native when 'native :> Dom.HTMLCanvasElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``height`` <- value) source
 
-#if FABLE_COMPILER
-    member _.``width``<'native when 'native :> Dom.HTMLCanvasElement>(value: float) : Part<'native, 'inst> =
-        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value) value
+    member _.``width``<'native when 'native :> Dom.HTMLCanvasElement>(value: uint32) : Part<'native, 'inst> =
+        TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``width`` <- value) value
 
-    member _.``width``<'native when 'native :> Dom.HTMLCanvasElement>(read: 'inst -> float) : Part<'native, 'inst> =
-        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value) read
+    member _.``width``<'native when 'native :> Dom.HTMLCanvasElement>(read: 'inst -> uint32) : Part<'native, 'inst> =
+        TemplateParts.readProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``width`` <- value) read
 
-    member _.``width``<'native when 'native :> Dom.HTMLCanvasElement>(source: Source<'inst, float>) : Part<'native, 'inst> =
-        TemplateParts.sourceProperty
-            PropertyHtml.browserOnly
-            (fun (node: 'native) (value: float) -> Native.setExpando (box node) "width" value)
-            source
-#endif
+    member _.``width``<'native when 'native :> Dom.HTMLCanvasElement>(source: Source<'inst, uint32>) : Part<'native, 'inst> =
+        TemplateParts.sourceProperty PropertyHtml.browserOnly (fun (node: 'native) (value: uint32) -> node.``width`` <- value) source
 
-#endif
 type Groups.DListProperties<'inst> with
     member _.``compact``<'native when 'native :> Dom.HTMLDListElement>(value: bool) : Part<'native, 'inst> =
         TemplateParts.property PropertyHtml.browserOnly (fun (node: 'native) (value: bool) -> node.``compact`` <- value) value

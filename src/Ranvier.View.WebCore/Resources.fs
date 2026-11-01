@@ -15,6 +15,7 @@ module Resources =
         | 1 -> ResourceFailure.LoadFailed (kind + " load failed")
         | 2 -> ResourceFailure.DecodeFailed (kind + " decode failed")
         | 3 -> ResourceFailure.Cancelled
+        | 5 -> ResourceFailure.Aborted "AbortError"
         | _ -> ResourceFailure.Invalidated (kind + " source, target or document changed")
 
     let private copy (response: ResourceResponse) =
@@ -314,7 +315,7 @@ module Resources =
                                 transport[url] <- response
                                 image <- Native.rv_document_create_element (host.Handle, "img")
 
-                                Native.rv_element_set_attribute (image, "src", url)
+                                Native.rv_element_set_attribute (image, "src", Native.utf8 url, Native.utf8Length url)
                                 |> Interop.check "rv_element_set_attribute"
 
                                 let transportUrl = url

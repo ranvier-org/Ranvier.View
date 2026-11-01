@@ -1,0 +1,54 @@
+{
+  "group": "R04 #93",
+  "status": "green (private Windows x64; not accepted)",
+  "viewsHead": "96457210082f2fb6032f1026f192082cef5a181d",
+  "nativeEvidence": {
+    "file": "C:\\wk\\native-canvas-r04\\docs\\canvas-paints-evidence\\final-evidence.json",
+    "sha256": "00c40d98e99f010c07c8a89fbd14ded93c4bd7a5b86d1088e6ee943870fd90e9"
+  },
+  "jit": {
+    "passLines": 124,
+    "baselinePassLines": 123,
+    "r04": [
+      "NATIVE_API R04 PASS assertions=35"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "cb58bf689114da8a18b457975754289639f3486df429a72ea39f0c104af8348f"
+  },
+  "aot": {
+    "passLines": 124,
+    "baselinePassLines": 123,
+    "r04": [
+      "NATIVE_API R04 PASS assertions=35"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "2f404b3fd2db5366bd1f459de8590ef428a5c7dd25609726999536bd85aff945"
+  },
+  "chromium": {
+    "passLines": 90,
+    "baselinePassLines": 89,
+    "r04": [
+      "BROWSER_API R04 PASS assertions=35"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "d1d286d61cf81480abc67e990808a1372de93df67775cd187593cdec9d439401"
+  },
+  "aot-canvas-repeat30.txt": [
+    "30 NATIVE_API R01 LIFETIME PASS assertions=7",
+    "30 NATIVE_API R01 PASS assertions=41",
+    "30 NATIVE_API R02 PASS assertions=43",
+    "30 NATIVE_API R03 PASS assertions=26",
+    "30 NATIVE_API R04 PASS assertions=35"
+  ],
+  "chromium-canvas-repeat30.txt": [
+    "30 BROWSER_API R01 PASS assertions=41 engine=chromium",
+    "30 BROWSER_API R02 PASS assertions=43 engine=chromium",
+    "30 BROWSER_API R03 PASS assertions=26 engine=chromium",
+    "30 BROWSER_API R04 PASS assertions=35 engine=chromium"
+  ],
+  "qualifications": [
+    "The shared fixture checks paint parameters, their validation, gradient and pattern creation and errors; pixels are asserted by the native canvas_paints probe.",
+    "Release kind 103 (ImageBitmap, shared with R06) is a placeholder; ImageBitmap has no producer yet.",
+    "The baseline is the R03 run, so baselineLinesUnchanged compares every non-R04 line with R03."
+  ]
+}

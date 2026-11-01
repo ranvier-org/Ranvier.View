@@ -32,7 +32,8 @@ let private eventSource (host: WebCoreHost) =
                 RanvierWebCoreAbi.Native.rv_host_create_event (
                     host.Handle,
                     kind,
-                    spec.Type,
+                    RanvierWebCoreAbi.Native.utf8 spec.Type,
+                    RanvierWebCoreAbi.Native.utf8Length spec.Type,
                     (if spec.Bubbles then 1 else 0),
                     (if spec.Cancelable then 1 else 0)
                 )

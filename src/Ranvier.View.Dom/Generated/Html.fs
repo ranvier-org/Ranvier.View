@@ -1149,31 +1149,25 @@ module Properties =
         let ``willValidate`` (node: #Dom.HTMLButtonElement) : bool =
             node.``willValidate``
 
-#if FABLE_COMPILER
     module HTMLCanvasElement =
-#if FABLE_COMPILER
-        let ``height`` (node: #Dom.HTMLCanvasElement) : float =
-            Native.expando (box node) "height"
+        let ``height`` (node: #Dom.HTMLCanvasElement) : uint32 =
+            node.``height``
 
-        let heightStatic<'native when 'native :> Dom.HTMLCanvasElement> (value: float) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "height" value) value
+        let heightStatic<'native when 'native :> Dom.HTMLCanvasElement> (value: uint32) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> node.``height`` <- value) value
 
-        let heightReactive<'native when 'native :> Dom.HTMLCanvasElement> (read: unit -> float) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "height" value) read
-#endif
+        let heightReactive<'native when 'native :> Dom.HTMLCanvasElement> (read: unit -> uint32) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``height`` <- value) read
 
-#if FABLE_COMPILER
-        let ``width`` (node: #Dom.HTMLCanvasElement) : float =
-            Native.expando (box node) "width"
+        let ``width`` (node: #Dom.HTMLCanvasElement) : uint32 =
+            node.``width``
 
-        let widthStatic<'native when 'native :> Dom.HTMLCanvasElement> (value: float) : Typed.Modifier<'native> =
-            Typed.staticProperty (fun (node: 'native) value -> Native.setExpando (box node) "width" value) value
+        let widthStatic<'native when 'native :> Dom.HTMLCanvasElement> (value: uint32) : Typed.Modifier<'native> =
+            Typed.staticProperty (fun (node: 'native) value -> node.``width`` <- value) value
 
-        let widthReactive<'native when 'native :> Dom.HTMLCanvasElement> (read: unit -> float) : Typed.Modifier<'native> =
-            Typed.reactiveProperty (fun (node: 'native) value -> Native.setExpando (box node) "width" value) read
-#endif
+        let widthReactive<'native when 'native :> Dom.HTMLCanvasElement> (read: unit -> uint32) : Typed.Modifier<'native> =
+            Typed.reactiveProperty (fun (node: 'native) value -> node.``width`` <- value) read
 
-#endif
     module HTMLDataElement =
         let ``value`` (node: #Dom.HTMLDataElement) : string =
             node.``value``
@@ -5962,27 +5956,23 @@ let ``canvas`` ops (modifiers: Typed.Modifier<Dom.HTMLCanvasElement> array) chil
     Typed.element ops (HtmlTag "canvas") modifiers children
 
 module Canvas =
-#if FABLE_COMPILER
-    let ``height`` (node: Dom.HTMLCanvasElement) : float =
-        Native.expando (box node) "height"
+    let ``height`` (node: Dom.HTMLCanvasElement) : uint32 =
+        node.``height``
 
-    let heightStatic (value: float) : Typed.Modifier<Dom.HTMLCanvasElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLCanvasElement) value -> Native.setExpando (box node) "height" value) value
+    let heightStatic (value: uint32) : Typed.Modifier<Dom.HTMLCanvasElement> =
+        Typed.staticProperty (fun (node: Dom.HTMLCanvasElement) value -> node.``height`` <- value) value
 
-    let heightReactive (read: unit -> float) : Typed.Modifier<Dom.HTMLCanvasElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLCanvasElement) value -> Native.setExpando (box node) "height" value) read
-#endif
+    let heightReactive (read: unit -> uint32) : Typed.Modifier<Dom.HTMLCanvasElement> =
+        Typed.reactiveProperty (fun (node: Dom.HTMLCanvasElement) value -> node.``height`` <- value) read
 
-#if FABLE_COMPILER
-    let ``width`` (node: Dom.HTMLCanvasElement) : float =
-        Native.expando (box node) "width"
+    let ``width`` (node: Dom.HTMLCanvasElement) : uint32 =
+        node.``width``
 
-    let widthStatic (value: float) : Typed.Modifier<Dom.HTMLCanvasElement> =
-        Typed.staticProperty (fun (node: Dom.HTMLCanvasElement) value -> Native.setExpando (box node) "width" value) value
+    let widthStatic (value: uint32) : Typed.Modifier<Dom.HTMLCanvasElement> =
+        Typed.staticProperty (fun (node: Dom.HTMLCanvasElement) value -> node.``width`` <- value) value
 
-    let widthReactive (read: unit -> float) : Typed.Modifier<Dom.HTMLCanvasElement> =
-        Typed.reactiveProperty (fun (node: Dom.HTMLCanvasElement) value -> Native.setExpando (box node) "width" value) read
-#endif
+    let widthReactive (read: unit -> uint32) : Typed.Modifier<Dom.HTMLCanvasElement> =
+        Typed.reactiveProperty (fun (node: Dom.HTMLCanvasElement) value -> node.``width`` <- value) read
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
     let onClick (handler: Dom.PointerEvent -> unit) : Typed.Modifier<Dom.HTMLCanvasElement> =

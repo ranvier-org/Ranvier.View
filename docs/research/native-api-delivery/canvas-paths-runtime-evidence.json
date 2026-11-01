@@ -1,0 +1,49 @@
+{
+  "group": "R02 #91",
+  "status": "green (private Windows x64; not accepted)",
+  "viewsHead": "866a2713584007d3d1d5a1061277444ae4f25924",
+  "nativeEvidence": {
+    "file": "C:\\wk\\native-canvas-r02pack\\docs\\canvas-paths-evidence\\final-evidence.json",
+    "sha256": "3d20fdfe0781af63e97ec17742a16b198462bcb0f2eebeb39875e93b64a538a0"
+  },
+  "jit": {
+    "passLines": 122,
+    "baselinePassLines": 121,
+    "r02": [
+      "NATIVE_API R02 PASS assertions=43"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "97aef5a0c9c13bc4a7bf79603bb91739b1aa47c6569f2b588e8ada991522875b"
+  },
+  "aot": {
+    "passLines": 122,
+    "baselinePassLines": 121,
+    "r02": [
+      "NATIVE_API R02 PASS assertions=43"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "6c6fa9bbca59b785d9081c8dfe4709f014445c7fa2b97eba768ec3fee376b91e"
+  },
+  "chromium": {
+    "passLines": 88,
+    "baselinePassLines": 87,
+    "r02": [
+      "BROWSER_API R02 PASS assertions=43"
+    ],
+    "baselineLinesUnchanged": true,
+    "logSha256": "6a3006e93a02751d591e00355de8a55f0f80f8c594475e387e85f821c32e1436"
+  },
+  "aot-canvas-repeat30.txt": [
+    "30 NATIVE_API R01 LIFETIME PASS assertions=7",
+    "30 NATIVE_API R01 PASS assertions=41",
+    "30 NATIVE_API R02 PASS assertions=43"
+  ],
+  "chromium-canvas-repeat30.txt": [
+    "30 BROWSER_API R01 PASS assertions=41 engine=chromium",
+    "30 BROWSER_API R02 PASS assertions=43 engine=chromium"
+  ],
+  "qualifications": [
+    "The shared fixture checks hit testing, Path2D construction and reuse, fill rules, curves, rounded rectangles and argument errors; pixels are asserted by the native canvas_paths probe.",
+    "Release kind 102 (Path2D) is a placeholder; root assigns kinds at integration."
+  ]
+}

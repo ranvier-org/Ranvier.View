@@ -17,8 +17,14 @@ const transformsOnly = process.argv.includes('--transforms-only');
 const svgOnly = process.argv.includes('--svg-only');
 const svgSurfacesOnly = process.argv.includes('--svg-surfaces-only');
 const resourcesOnly = process.argv.includes('--resources-only');
+const fontsOnly = process.argv.includes('--fonts-only');
+// T02: the shared font construction fixture's assertion count.
+const T02_CHECKS = 35;
+// T01: held font requests, answered by the fixture through /fixtures/answer/<name>/<font|broken|missing>.
+const heldFonts = new Map();
 const svgPaintOnly = process.argv.includes('--svg-paint-only');
 const inputStateOnly = process.argv.includes('--input-state-only');
+const pointerInputOnly = process.argv.includes('--pointer-input-only');
 const framesOnly = process.argv.includes('--frames-only');
 const idleOnly = process.argv.includes('--idle-only');
 const caretOnly = process.argv.includes('--caret-only');
@@ -28,15 +34,20 @@ const dialogsOnly = process.argv.includes('--dialogs-only');
 const urlsOnly = process.argv.includes('--urls-only');
 const segmentsOnly = process.argv.includes('--segments-only');
 const binaryOnly = process.argv.includes('--binary-only');
+const dataTransferOnly = process.argv.includes('--data-transfer-only');
 const cryptoOnly = process.argv.includes('--crypto-only');
 const highlightsOnly = process.argv.includes('--highlights-only');
+const canvasOnly = process.argv.includes('--canvas-only');
 const blobUrlsOnly = process.argv.includes('--blob-urls-only');
+const mediaCapabilitiesOnly = process.argv.includes('--media-capabilities-only');
+const snapshotsOnly = process.argv.includes('--snapshots-only');
 const stringsOnly = process.argv.includes('--strings-only');
 const diagnosticsOnly = process.argv.includes('--diagnostics-only');
 const cascadeOnly = process.argv.includes('--cascade-only');
 const screenOnly = process.argv.includes('--screen-only');
 const submissionsOnly = process.argv.includes('--submissions-only');
 const eventDetailsOnly = process.argv.includes('--event-details-only');
+const valueFactoriesOnly = process.argv.includes('--value-factories-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
@@ -50,7 +61,30 @@ const content = async name => {
 };
 const server = createServer(async (request, response) => {
   try {
-    const { contentType, body } = await content(decodeURIComponent(new URL(request.url, 'http://localhost').pathname));
+    const name = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+    const held = /^\/fixtures\/held\/([a-z]+)$/.exec(name);
+    if (held) {
+      heldFonts.set(held[1], response);
+      return;
+    }
+    const requested = /^\/fixtures\/requested\/([a-z]+)$/.exec(name);
+    if (requested) {
+      response.end(heldFonts.has(requested[1]) ? '1' : '0');
+      return;
+    }
+    const answer = /^\/fixtures\/answer\/([a-z]+)\/(font|broken|missing)$/.exec(name);
+    if (answer) {
+      const target = heldFonts.get(answer[1]);
+      heldFonts.set(answer[1], null);
+      if (target && answer[2] === 'missing') { target.statusCode = 404; target.end(); }
+      else if (target) {
+        target.setHeader('Content-Type', 'font/ttf');
+        target.end(answer[2] === 'font' ? await readFile(assets['/Ahem.ttf']) : 'not a font');
+      }
+      response.end();
+      return;
+    }
+    const { contentType, body } = await content(name);
     response.setHeader('Content-Type', contentType);
     response.end(body);
   } catch {
@@ -65,6 +99,8 @@ const routeFixtures = async target => {
   const port = String(server.address().port);
   await target.route(url => url.port === port, async route => {
     if (route.request().method() !== 'GET') return route.continue();
+    // T01's held font requests wait on the server for the fixture's answer.
+    if (/^\/fixtures\/(held|requested|answer)\//.test(new URL(route.request().url()).pathname)) return route.continue();
     try {
       await route.fulfill({ status: 200, ...await content(decodeURIComponent(new URL(route.request().url()).pathname)) });
     } catch {
@@ -104,6 +140,42 @@ const runInputState = async () => {
     await inputBrowser.close();
   }
 };
+// I03/I04/I06 inject touch frames, pen samples and relative mouse moves through CDP.
+const runPointerInput = async () => {
+  const pointerBrowser = await chromium.launch({ headless: true });
+  try {
+    const context = await pointerBrowser.newContext({ viewport: { width: 320, height: 240 }, hasTouch: true });
+    const page = await context.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const cdp = await context.newCDPSession(page);
+    let mouse = { x: 0, y: 0 };
+    await page.exposeFunction('__nativeApiTouch', async contacts => {
+      const points = contacts.map(c => ({ x: c.X, y: c.Y, id: c.Id, radiusX: c.RadiusX, radiusY: c.RadiusY, rotationAngle: c.Angle, force: c.Force }));
+      const changed = contacts.filter(c => c.Action !== 4);
+      const type = changed.some(c => c.Action === 3) ? 'touchCancel' : changed.some(c => c.Action === 1) ? 'touchStart'
+        : changed.some(c => c.Action === 2) ? 'touchEnd' : 'touchMove';
+      const touchPoints = type === 'touchCancel' ? [] : type === 'touchEnd' ? points.filter((_, i) => contacts[i].Action === 2) : points;
+      await cdp.send('Input.dispatchTouchEvent', { type, touchPoints });
+    });
+    await page.exposeFunction('__nativeApiPen', async p => {
+      const type = p.Action === 1 ? 'mousePressed' : p.Action === 2 ? 'mouseReleased' : 'mouseMoved';
+      const button = p.Action === 1 || p.Action === 2 ? 'left' : 'none';
+      await cdp.send('Input.dispatchMouseEvent', { type, x: p.X, y: p.Y, pointerType: 'pen', button, buttons: p.Buttons,
+        clickCount: button === 'left' ? 1 : 0, force: p.Pressure, tangentialPressure: p.Tangential, tiltX: p.TiltX, tiltY: p.TiltY, twist: p.Twist });
+      mouse = { x: p.X, y: p.Y };
+    });
+    await page.exposeFunction('__nativeApiClickAt', async (x, y) => { await page.mouse.click(x, y); mouse = { x, y }; });
+    // Chromium reports a locked move's movement from the position change; the move starts at the last position.
+    await page.exposeFunction('__nativeApiMoveBy', async (x, y, dx, dy) => { await page.mouse.move(mouse.x + dx, mouse.y + dy); mouse = { x: mouse.x + dx, y: mouse.y + dy }; });
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runPointerInput(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.pointerInput !== POINTER_INPUT_ASSERTIONS) throw new Error(`Pointer-input assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API I03_I04_I06 PASS assertions=${result.pointerInput} engine=chromium`);
+  } finally {
+    await pointerBrowser.close();
+  }
+};
+// Linux Chromium checks the locked moves' target and position, without their movement (one assertion fewer).
+const POINTER_INPUT_ASSERTIONS = process.platform === 'linux' ? 60 : 61;
 // G02/G12 drive the viewport with device-metrics emulation, read paint size from a device-scale screenshot and
 // change activation by minimizing and restoring the window, which blurs and focuses it under emulated metrics.
 const runViewport = async () => {
@@ -192,7 +264,7 @@ const runUrls = async () => {
     await urlsBrowser.close();
   }
 };
-const URL_ASSERTIONS = 189;
+const URL_ASSERTIONS = 190;
 // I11 runs the ARIA element reflection fixture in its own page.
 const runAria = async () => {
   const ariaBrowser = await chromium.launch({ headless: true });
@@ -220,7 +292,7 @@ const runSegments = async () => {
     await segmentsBrowser.close();
   }
 };
-const SEGMENT_ASSERTIONS = 219;
+const SEGMENT_ASSERTIONS = 220;
 // H11 runs the binary value fixture in its own page.
 const runBinary = async () => {
   const binaryBrowser = await chromium.launch({ headless: true });
@@ -235,6 +307,20 @@ const runBinary = async () => {
   }
 };
 const BINARY_ASSERTIONS = 102;
+// I07 runs the DataTransfer fixture in its own page.
+const runDataTransfer = async () => {
+  const transferBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await transferBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runDataTransfer(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.dataTransfer !== DATA_TRANSFER_ASSERTIONS) throw new Error(`DataTransfer assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API I07 PASS assertions=${result.dataTransfer} engine=chromium`);
+  } finally {
+    await transferBrowser.close();
+  }
+};
+const DATA_TRANSFER_ASSERTIONS = 49;
 // #144 runs the blob URL fixture in its own page.
 const runBlobUrls = async () => {
   const blobBrowser = await chromium.launch({ headless: true });
@@ -249,6 +335,34 @@ const runBlobUrls = async () => {
   }
 };
 const BLOB_URL_ASSERTIONS = 42;
+// B06 runs the media capability fixture in its own page.
+const runMediaCapabilities = async () => {
+  const mediaBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await mediaBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runMediaCapabilities(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.mediaCapabilities !== MEDIA_CAPABILITY_ASSERTIONS) throw new Error(`Media capability assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API B06 PASS assertions=${result.mediaCapabilities} engine=chromium`);
+  } finally {
+    await mediaBrowser.close();
+  }
+};
+const MEDIA_CAPABILITY_ASSERTIONS = 107;
+// R12 runs the snapshot fixture in its own page; a browser page has no DOM capture.
+const runSnapshots = async () => {
+  const snapshotBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await snapshotBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runSnapshots(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.snapshots !== SNAPSHOT_ASSERTIONS) throw new Error(`Snapshot assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R12 PASS assertions=${result.snapshots} engine=chromium capture=unavailable`);
+  } finally {
+    await snapshotBrowser.close();
+  }
+};
+const SNAPSHOT_ASSERTIONS = 6;
 // B22 runs the crypto fixture on http://127.0.0.1 (a secure context) and on http://insecure.test, which the browser
 // resolves to the same server but treats as insecure.
 const runCrypto = async () => {
@@ -292,6 +406,34 @@ const runScreen = async () => {
   }
 };
 const SCREEN_ASSERTIONS = 30;
+// G01/G15 applies each media step through CDP: device metrics, emulated media features and touch emulation for a
+// coarse pointer without hover.
+const runMediaQueries = async () => {
+  const mediaBrowser = await chromium.launch({ headless: true });
+  try {
+    const context = await mediaBrowser.newContext({ viewport: { width: 320, height: 240 } });
+    const page = await context.newPage();
+    const cdp = await context.newCDPSession(page);
+    await page.exposeFunction('__rvMediaStep', async (width, height, deviceScaleFactor, colorScheme, reducedMotion, contrast, touch) => {
+      await cdp.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor, mobile: false });
+      await cdp.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: colorScheme },
+        { name: 'prefers-reduced-motion', value: reducedMotion }, { name: 'prefers-contrast', value: contrast }] });
+      await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: touch, maxTouchPoints: 5 });
+    });
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    // Linux Chromium reports a fine pointer at load and none once touch emulation is off: the page reads the settled
+    // input devices.
+    await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false });
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 200)));
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runMediaQueries(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.media !== MEDIA_ASSERTIONS) throw new Error(`Media query assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API G01 PASS assertions=${result.media} engine=chromium`);
+    console.log(`BROWSER_API G15 PASS assertions=${result.media} engine=chromium`);
+  } finally {
+    await mediaBrowser.close();
+  }
+};
+const MEDIA_ASSERTIONS = 30;
 const CRYPTO_INSECURE_ASSERTIONS = 4;
 // T03 runs the custom highlight fixture in its own page.
 const runHighlights = async () => {
@@ -307,6 +449,61 @@ const runHighlights = async () => {
   }
 };
 const HIGHLIGHT_ASSERTIONS = 35;
+// R01 runs the canvas context fixture in its own page.
+const runCanvas = async () => {
+  const canvasBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await canvasBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runCanvas(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.canvas !== CANVAS_ASSERTIONS) throw new Error(`Canvas assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R01 PASS assertions=${result.canvas} engine=chromium`);
+    if (result.canvasPaths !== CANVAS_PATH_ASSERTIONS) throw new Error(`Canvas path assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R02 PASS assertions=${result.canvasPaths} engine=chromium`);
+    if (result.canvasState !== CANVAS_STATE_ASSERTIONS) throw new Error(`Canvas state assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R03 PASS assertions=${result.canvasState} engine=chromium`);
+    if (result.canvasPaints !== CANVAS_PAINT_ASSERTIONS) throw new Error(`Canvas paint assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R04 PASS assertions=${result.canvasPaints} engine=chromium`);
+    const text = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runCanvasText(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (text.canvasText !== CANVAS_TEXT_ASSERTIONS) throw new Error(`Canvas text assertions did not run: ${JSON.stringify(text)}`);
+    console.log(`BROWSER_API R05 PASS assertions=${text.canvasText} engine=chromium`);
+  } finally {
+    await canvasBrowser.close();
+  }
+};
+const CANVAS_ASSERTIONS = 41;
+const CANVAS_PATH_ASSERTIONS = 43;
+const CANVAS_STATE_ASSERTIONS = 26;
+const CANVAS_PAINT_ASSERTIONS = 35;
+const CANVAS_TEXT_ASSERTIONS = 80;
+// R06 runs the canvas pixel fixture in its own page.
+const runCanvasPixels = async () => {
+  const pixelsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await pixelsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runCanvasPixels(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.canvasPixels !== CANVAS_PIXEL_ASSERTIONS) throw new Error(`Canvas pixel assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R06 PASS assertions=${result.canvasPixels} engine=chromium`);
+  } finally {
+    await pixelsBrowser.close();
+  }
+};
+const CANVAS_PIXEL_ASSERTIONS = 36;
+// R07 runs the canvas export fixture in its own page.
+const runCanvasExport = async () => {
+  const exportBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await exportBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runCanvasExport(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.canvasExport !== CANVAS_EXPORT_ASSERTIONS) throw new Error(`Canvas export assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API R07 PASS assertions=${result.canvasExport} engine=chromium`);
+  } finally {
+    await exportBrowser.close();
+  }
+};
+const CANVAS_EXPORT_ASSERTIONS = 40;
 // WebCore #142 runs the U+0000 round-trip fixture in its own page.
 const runStrings = async () => {
   const stringsBrowser = await chromium.launch({ headless: true });
@@ -321,6 +518,20 @@ const runStrings = async () => {
   }
 };
 const STRING_ASSERTIONS = 18;
+// WebCore #145 runs the U+0000 event-type fixture in its own page.
+const runHostStrings = async () => {
+  const hostStringsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await hostStringsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runHostStrings(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.hostStrings !== HOST_STRING_ASSERTIONS) throw new Error(`U+0000 event-type assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API WC145 PASS assertions=${result.hostStrings} engine=chromium`);
+  } finally {
+    await hostStringsBrowser.close();
+  }
+};
+const HOST_STRING_ASSERTIONS = 5;
 // H08 runs the diagnostics fixture in its own page.
 const runDiagnostics = async () => {
   const diagnosticsBrowser = await chromium.launch({ headless: true });
@@ -349,6 +560,84 @@ const runCascade = async () => {
   }
 };
 const CASCADE_ASSERTIONS = 51;
+// A09 runs the custom effect fixture on the facade (Chromium has no CustomEffect) in its own page.
+const runCustomEffects = async () => {
+  const effectsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await effectsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runCustomEffects(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (typeof result.customEffects !== 'number') throw new Error(`Custom effect fixture failed: ${JSON.stringify(result)}`);
+    if (CUSTOM_EFFECT_ASSERTIONS !== 0 && result.customEffects !== CUSTOM_EFFECT_ASSERTIONS) throw new Error(`Custom effect assertions did not run: ${JSON.stringify(result)}`);
+    const facts = JSON.stringify(result.capability);
+    if (facts !== JSON.stringify(['No', 'Yes', 'Unknown', 'Unknown', 'Unknown', 'Ranvier facade emulation'])) throw new Error(`Custom effect facade capability is not truthful: ${facts}`);
+    console.log(`BROWSER_API A09 PASS assertions=${result.customEffects} engine=chromium facade=${facts}`);
+  } finally {
+    await effectsBrowser.close();
+  }
+};
+const CUSTOM_EFFECT_ASSERTIONS = 23;
+// A01 runs the Web Animations fixture in its own page.
+const runAnimations = async () => {
+  const animationsBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await animationsBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return (await import('/Browser.js')).runAnimations(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.animations !== ANIMATION_ASSERTIONS) throw new Error(`Web Animations assertions did not run: ${JSON.stringify(result)}`);
+    if (typeof result.animations !== 'number') throw new Error(`Web Animations fixture failed: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API A01 PASS assertions=${result.animations} engine=chromium`);
+    if (result.effects !== EFFECT_ASSERTIONS) throw new Error(`Web Animations effect assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API A02 PASS assertions=${result.effects} engine=chromium`);
+    if ((result.discovery !== DISCOVERY_ASSERTIONS || result.commits !== COMMIT_ASSERTIONS)) throw new Error(`Web Animations discovery assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API A05 PASS assertions=${result.discovery} engine=chromium`);
+    console.log(`BROWSER_API A04 PASS assertions=${result.commits} engine=chromium`);
+  } finally {
+    await animationsBrowser.close();
+  }
+};
+const ANIMATION_ASSERTIONS = 110;
+const EFFECT_ASSERTIONS = 54;
+const DISCOVERY_ASSERTIONS = 33;
+const COMMIT_ASSERTIONS = 9;
+// A03 and A10 run the animation lifecycle and event fixtures in their own pages.
+const runAnimationFixture = async (exportName, key, group, expected) => {
+  const fixtureBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await fixtureBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async (name) => { try { return await (await import('/Browser.js'))[name](); } catch (error) { return { error: String(error?.message ?? error) }; } }, exportName);
+    if (result[key] !== expected) throw new Error(`${group} assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API ${group} PASS assertions=${result[key]} engine=chromium`);
+  } finally {
+    await fixtureBrowser.close();
+  }
+};
+const ANIMATION_LIFECYCLE_ASSERTIONS = 29;
+const ANIMATION_EVENT_ASSERTIONS = 9;
+const runAnimationLifecycle = () => runAnimationFixture('runAnimationLifecycle', 'lifecycle', 'A03', ANIMATION_LIFECYCLE_ASSERTIONS);
+const runAnimationEvents = () => runAnimationFixture('runAnimationEvents', 'events', 'A10', ANIMATION_EVENT_ASSERTIONS);
+// A06 runs the animation timeline fixture in its own page.
+const runTimelines = async () => {
+  const timelinesBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await timelinesBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runTimelines(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (typeof result.timelines !== 'number') throw new Error(`Animation timeline fixture failed: ${JSON.stringify(result)}`);
+    if (TIMELINE_ASSERTIONS !== 0 && result.timelines !== TIMELINE_ASSERTIONS) throw new Error(`Animation timeline assertions did not run: ${JSON.stringify(result)}`);
+    if (SCROLL_TIMELINE_ASSERTIONS !== 0 && result.scrollTimelines !== SCROLL_TIMELINE_ASSERTIONS) throw new Error(`Scroll timeline assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API A06 PASS assertions=${result.timelines} engine=chromium`);
+    if (VIEW_TIMELINE_ASSERTIONS !== 0 && result.viewTimelines !== VIEW_TIMELINE_ASSERTIONS) throw new Error(`View timeline assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API A07 PASS assertions=${result.scrollTimelines} engine=chromium`);
+    console.log(`BROWSER_API A08 PASS assertions=${result.viewTimelines} engine=chromium`);
+  } finally {
+    await timelinesBrowser.close();
+  }
+};
+const TIMELINE_ASSERTIONS = 24;
+const SCROLL_TIMELINE_ASSERTIONS = 38;
+const VIEW_TIMELINE_ASSERTIONS = 54;
 // G14 runs the coordinate fixture in its own page.
 const runCoordinates = async () => {
   const coordinatesBrowser = await chromium.launch({ headless: true });
@@ -363,6 +652,34 @@ const runCoordinates = async () => {
   }
 };
 const COORDINATE_ASSERTIONS = 304;
+// G10 runs the resize observation fixture in its own page.
+const runResizeObservation = async () => {
+  const resizeBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await resizeBrowser.newPage({ viewport: { width: 800, height: 600 } });
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runResizeObservation(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.resize !== RESIZE_ASSERTIONS) throw new Error(`Resize observation assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API G10 PASS assertions=${result.resize} engine=chromium`);
+  } finally {
+    await resizeBrowser.close();
+  }
+};
+const RESIZE_ASSERTIONS = 34;
+// G11 runs the intersection observation fixture in its own 320x240 page.
+const runIntersectionObservation = async () => {
+  const intersectionBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await intersectionBrowser.newPage({ viewport: { width: 320, height: 240 } });
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runIntersectionObservation(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.intersection !== INTERSECTION_ASSERTIONS) throw new Error(`Intersection observation assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API G11 PASS assertions=${result.intersection} engine=chromium`);
+  } finally {
+    await intersectionBrowser.close();
+  }
+};
+const INTERSECTION_ASSERTIONS = 40;
 // D14 runs the form submission fixture in its own page; the provider keeps the page in place.
 const runSubmissions = async () => {
   const submissionsBrowser = await chromium.launch({ headless: true });
@@ -439,8 +756,23 @@ const runIdle = async () => {
 };
 const IDLE_ASSERTIONS = 14;
 let browser;
+// D17 runs the value factory fixture in its own page.
+const runValueFactories = async () => {
+  const factoriesBrowser = await chromium.launch({ headless: true });
+  try {
+    const page = await factoriesBrowser.newPage();
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runValueFactories(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+    if (result.valueFactories !== VALUE_FACTORY_ASSERTIONS) throw new Error(`Value factory assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API D17 PASS assertions=${result.valueFactories} engine=chromium`);
+  } finally {
+    await factoriesBrowser.close();
+  }
+};
+const VALUE_FACTORY_ASSERTIONS = 112;
 try {
   if (inputStateOnly) { await runInputState(); process.exitCode = 0; }
+  else if (pointerInputOnly) { await runPointerInput(); process.exitCode = 0; }
   else if (viewportOnly) { await runViewport(); process.exitCode = 0; }
   else if (formsOnly) { await runForms(); process.exitCode = 0; }
   else if (dialogsOnly) { await runDialogs(); process.exitCode = 0; }
@@ -448,16 +780,32 @@ try {
   else if (process.argv.includes('--aria-only')) { await runAria(); process.exitCode = 0; }
   else if (segmentsOnly) { await runSegments(); process.exitCode = 0; }
   else if (binaryOnly) { await runBinary(); process.exitCode = 0; }
+  else if (dataTransferOnly) { await runDataTransfer(); process.exitCode = 0; }
   else if (cryptoOnly) { await runCrypto(); process.exitCode = 0; }
   else if (highlightsOnly) { await runHighlights(); process.exitCode = 0; }
+  else if (canvasOnly) { await runCanvas(); process.exitCode = 0; }
+  else if (process.argv.includes('--canvas-pixels-only')) { await runCanvasPixels(); process.exitCode = 0; }
+  else if (process.argv.includes('--canvas-export-only')) { await runCanvasExport(); process.exitCode = 0; }
   else if (blobUrlsOnly) { await runBlobUrls(); process.exitCode = 0; }
+  else if (mediaCapabilitiesOnly) { await runMediaCapabilities(); process.exitCode = 0; }
+  else if (snapshotsOnly) { await runSnapshots(); process.exitCode = 0; }
   else if (stringsOnly) { await runStrings(); process.exitCode = 0; }
+  else if (process.argv.includes('--host-strings-only')) { await runHostStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
+  else if (process.argv.includes('--custom-effects-only')) { await runCustomEffects(); process.exitCode = 0; }
+  else if (process.argv.includes('--animations-only')) { await runAnimations(); process.exitCode = 0; }
+  else if (process.argv.includes('--animation-lifecycle-only')) { await runAnimationLifecycle(); process.exitCode = 0; }
+  else if (process.argv.includes('--animation-events-only')) { await runAnimationEvents(); process.exitCode = 0; }
+  else if (process.argv.includes('--timelines-only')) { await runTimelines(); process.exitCode = 0; }
   else if (process.argv.includes('--coordinates-only')) { await runCoordinates(); process.exitCode = 0; }
+  else if (process.argv.includes('--resize-only')) { await runResizeObservation(); process.exitCode = 0; }
+  else if (process.argv.includes('--intersection-only')) { await runIntersectionObservation(); process.exitCode = 0; }
   else if (screenOnly) { await runScreen(); process.exitCode = 0; }
+  else if (process.argv.includes('--media-only')) { await runMediaQueries(); process.exitCode = 0; }
   else if (submissionsOnly) { await runSubmissions(); process.exitCode = 0; }
   else if (eventDetailsOnly) { await runEventDetails(); process.exitCode = 0; }
+  else if (valueFactoriesOnly) { await runValueFactories(); process.exitCode = 0; }
   else if (framesOnly) { await runFrames(); process.exitCode = 0; }
   else if (idleOnly) { await runIdle(); process.exitCode = 0; }
   else if (caretOnly) { await runCaret(); process.exitCode = 0; }
@@ -498,10 +846,11 @@ try {
     return pixel[1] < 64 && pixel[2] < 64 && pixel[3] < 64;
   });
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
+  await page.context().grantPermissions(['screen-wake-lock', 'notifications'], { origin: `http://127.0.0.1:${server.address().port}` });
   const checks = await page.evaluate(async focused => {
     try {
       const fixture = await import('/Browser.js');
-      return await (focused === 'dom-model' ? fixture.runDomModel() : focused === 'resources' ? fixture.runResources() : focused === 'locales' ? fixture.runLocales() : focused === 'svg' ? fixture.runSvg() : focused === 'svg-surfaces' ? fixture.runSvgSurfaces() : focused === 'svg-paint' ? fixture.runSvgPaint() : focused === 'transforms' ? fixture.runTransforms() : focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : { ...await fixture.runSvgSurfaces(), ...await fixture.runSvgPaint(), ...await fixture.runResources(), ...await fixture.run() });
+      return await (focused === 'dom-model' ? fixture.runDomModel() : focused === 'resources' ? fixture.runResources() : focused === 'fonts' ? fixture.runFonts() : focused === 'locales' ? fixture.runLocales() : focused === 'svg' ? fixture.runSvg() : focused === 'svg-surfaces' ? fixture.runSvgSurfaces() : focused === 'svg-paint' ? fixture.runSvgPaint() : focused === 'transforms' ? fixture.runTransforms() : focused === 'matrix' ? fixture.runMatrix() : focused === 'geometry' ? fixture.runGeometry() : focused === 'style-maps' ? fixture.runStyleMaps() : focused === 'style-values' ? fixture.runStyleValues() : focused === 'custom-properties' ? fixture.runCustomProperties() : { ...await fixture.runSvgSurfaces(), ...await fixture.runSvgPaint(), ...await fixture.runResources(), ...await fixture.runFonts(), ...await fixture.run() });
     } catch (error) {
       throw new Error(JSON.stringify({
         type: error?.constructor?.name,
@@ -512,7 +861,7 @@ try {
         fields: Object.fromEntries(Object.getOwnPropertyNames(error).filter(key => key !== 'stack').map(key => [key, error[key]])),
       }));
     }
-  }, domModelOnly ? 'dom-model' : resourcesOnly ? 'resources' : localesOnly ? 'locales' : svgOnly ? 'svg' : svgSurfacesOnly ? 'svg-surfaces' : svgPaintOnly ? 'svg-paint' : transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
+  }, domModelOnly ? 'dom-model' : resourcesOnly ? 'resources' : fontsOnly ? 'fonts' : localesOnly ? 'locales' : svgOnly ? 'svg' : svgSurfacesOnly ? 'svg-surfaces' : svgPaintOnly ? 'svg-paint' : transformsOnly ? 'transforms' : matrixOnly ? 'matrix' : geometryOnly ? 'geometry' : styleMapsOnly ? 'style-maps' : styleValuesOnly ? 'style-values' : customPropertiesOnly ? 'custom-properties' : 'all');
   const checkDomModel = () => {
     if (checks.traversal !== 62 || checks.mathml !== 116) throw new Error(`DOM model assertions did not run: ${JSON.stringify(checks)}`);
     if (checks.traversalReentry !== 'InvalidStateError/InvalidStateError/unread') throw new Error(`Unexpected traversal re-entry: ${checks.traversalReentry}`);
@@ -521,6 +870,11 @@ try {
   };
   if (domModelOnly) {
     checkDomModel();
+  } else if (fontsOnly) {
+    if (checks.fonts !== 25) throw new Error(`Font set shared assertions did not run: ${JSON.stringify(checks)}`);
+    console.log(`BROWSER_API T01 PASS assertions=${checks.fonts} engine=chromium`);
+    if (checks.fontConstruction !== T02_CHECKS) throw new Error(`Font construction shared assertions did not run: ${JSON.stringify(checks)}`);
+    console.log(`BROWSER_API T02 PASS assertions=${checks.fontConstruction} engine=chromium`);
   } else if (resourcesOnly) {
     if (checks.resources !== 29) throw new Error(`Resource shared assertions did not run: ${JSON.stringify(checks)}`);
     console.log(`BROWSER_API H05 PASS assertions=${checks.resources} engine=chromium`);
@@ -594,6 +948,10 @@ try {
   console.log(`BROWSER_API S07 PASS assertions=${checks.svgAnimations} engine=chromium`);
   if (checks.resources !== 29) throw new Error(`Resource shared assertions did not run: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API H05 PASS assertions=${checks.resources} engine=chromium`);
+  if (checks.fonts !== 25) throw new Error(`Font set shared assertions did not run: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API T01 PASS assertions=${checks.fonts} engine=chromium`);
+  if (checks.fontConstruction !== T02_CHECKS) throw new Error(`Font construction shared assertions did not run: ${JSON.stringify(checks)}`);
+  console.log(`BROWSER_API T02 PASS assertions=${checks.fontConstruction} engine=chromium`);
   if(checks.transformValues!==471 || checks.transformContext!==3) throw new Error(`Typed transform shared/context assertions did not run: ${JSON.stringify(checks)}`);
   console.log(`BROWSER_API C16 PASS assertions=${checks.transformValues} engine=chromium`);
   console.log(`BROWSER_API C16 CONTEXT PASS assertions=${checks.transformContext} engine=chromium`);
@@ -617,9 +975,13 @@ try {
   console.log(`BROWSER_API H07 PASS assertions=${checks.capabilities} engine=chromium`);
   if (checks.cancellation !== 56 || checks.cancellationInterop !== 12) throw new Error(`Cancellation assertions did not run: ${checks.cancellation}/${checks.cancellationInterop}`);
   console.log(`BROWSER_API I01 PASS assertions=${checks.cancellation} interop=${checks.cancellationInterop} engine=chromium`);
+  if (checks.notifications !== 16) throw new Error(`Notification assertions did not run: ${checks.notifications}`);
+  console.log(`BROWSER_API B09 PASS assertions=${checks.notifications} engine=chromium`);
   if (checks.customEvents !== 45) throw new Error(`Custom event assertions did not run: ${checks.customEvents}`);
   console.log(`BROWSER_API I02 PASS assertions=${checks.customEvents} engine=chromium`);
   checkDomModel();
+  if (checks.wakeLocks !== 17) throw new Error(`Wake lock assertions did not run: ${checks.wakeLocks}`);
+  console.log(`BROWSER_API B10 PASS assertions=${checks.wakeLocks} engine=chromium`);
   console.log(`BROWSER_API D10_VIEW PASS assertions=${checks.viewTables} engine=chromium`);
   if (checks.viewHyperlinks !== 50) throw new Error('View hyperlink authoring assertions did not run');
   console.log(`BROWSER_API D11_VIEW_HYPERLINKS PASS assertions=${checks.viewHyperlinks} engine=chromium`);
@@ -674,7 +1036,7 @@ try {
   console.log(`BROWSER_API D12 PASS assertions=${checks.sheetElements} engine=chromium`);
   if (checks.sheetElements !== 109 || checks.failedLinkSheet !== 'replacement') throw new Error('Stylesheet/link element assertions did not run');
   console.log(`BROWSER_API D12 CAPABILITY failedLinkSheet=${checks.failedLinkSheet} engine=chromium`);
-  if (checks.construction !== 78) throw new Error('Constructed stylesheet preservation assertions did not run');
+  if (checks.construction !== 79) throw new Error('Constructed stylesheet preservation assertions did not run');
   await page.locator('#native-api-svg').focus();
   await page.keyboard.press('Tab');
   if (!await page.locator('#native-api-math').evaluate(element => element === element.ownerDocument.activeElement)) {
@@ -683,27 +1045,46 @@ try {
   console.log('BROWSER_API D09 TAB PASS engine=chromium');
   }
   }
+  if (!fontsOnly) {
   await runInputState();
+  await runPointerInput();
   await runViewport();
   await runForms();
   await runDialogs();
   await runBinary();
+  await runDataTransfer();
   await runUrls();
   await runAria();
   await runSegments();
   await runSubmissions();
   await runCrypto();
   await runHighlights();
+  await runCanvas();
+  await runCanvasPixels();
+  await runCanvasExport();
   await runStrings();
+  await runHostStrings();
   await runDiagnostics();
   await runCascade();
   await runCoordinates();
+  await runResizeObservation();
+  await runIntersectionObservation();
+  await runAnimations();
+  await runAnimationLifecycle();
+  await runAnimationEvents();
+  await runTimelines();
+  await runCustomEffects();
   await runBlobUrls();
+  await runMediaCapabilities();
+  await runSnapshots();
   await runScreen();
+  await runMediaQueries();
   await runEventDetails();
+  await runValueFactories();
   await runFrames();
   await runIdle();
   await runCaret();
+  }
   }
 } finally {
   if (browser) await browser.close();
