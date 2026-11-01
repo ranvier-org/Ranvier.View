@@ -4,6 +4,7 @@ import { resolve, dirname, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { inflateSync } from 'node:zlib';
+import { runViewTransitionPixels as runViewTransitionPixelProof } from './view-transition-pixels.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), 'generated');
 const assets = { '/Ahem.ttf': resolve(dirname(fileURLToPath(import.meta.url)), 'Assets', 'Ahem.ttf') };
@@ -49,6 +50,7 @@ const submissionsOnly = process.argv.includes('--submissions-only');
 const eventDetailsOnly = process.argv.includes('--event-details-only');
 const valueFactoriesOnly = process.argv.includes('--value-factories-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
+const viewTransitionPixelsOnly = process.argv.includes('--view-transition-pixels-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
 // The fixture content at a request path: the static server and every page's request routing serve it.
@@ -589,6 +591,10 @@ const runViewTransitions = async () => {
     await engine.close();
   }
 };
+const runViewTransitionPixels = async () => {
+  const result = await runViewTransitionPixelProof(chromium);
+  if (result.samples.length !== 9) throw new Error(`View-transition pixel proof did not capture all nine frames: ${result.samples.length}`);
+};
 const CUSTOM_EFFECT_ASSERTIONS = 23;
 // A01 runs the Web Animations fixture in its own page.
 const runAnimations = async () => {
@@ -807,6 +813,7 @@ try {
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
   else if (process.argv.includes('--view-transitions-only')) { await runViewTransitions(); process.exitCode = 0; }
+  else if (viewTransitionPixelsOnly) { await runViewTransitionPixels(); process.exitCode = 0; }
   else if (process.argv.includes('--custom-effects-only')) { await runCustomEffects(); process.exitCode = 0; }
   else if (process.argv.includes('--animations-only')) { await runAnimations(); process.exitCode = 0; }
   else if (process.argv.includes('--animation-lifecycle-only')) { await runAnimationLifecycle(); process.exitCode = 0; }
@@ -1089,6 +1096,7 @@ try {
   await runTimelines();
   await runCustomEffects();
   await runViewTransitions();
+  await runViewTransitionPixels();
   await runBlobUrls();
   await runMediaCapabilities();
   await runSnapshots();
