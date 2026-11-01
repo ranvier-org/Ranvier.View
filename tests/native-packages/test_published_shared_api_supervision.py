@@ -23,7 +23,13 @@ def pid_is_running(pid: int) -> bool:
         from ctypes import wintypes
 
         kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-        handle = kernel32.OpenProcess(0x1000, False, pid)  # SYNCHRONIZE
+        kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        kernel32.OpenProcess.restype = wintypes.HANDLE
+        kernel32.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+        kernel32.GetExitCodeProcess.restype = wintypes.BOOL
+        kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+        kernel32.CloseHandle.restype = wintypes.BOOL
+        handle = kernel32.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
         if not handle:
             return ctypes.get_last_error() not in (6, 87, 1168)
         try:
@@ -53,6 +59,53 @@ def wait_until_processes_exit(pids, timeout=5.0) -> bool:
 
 
 class PublishedSharedApiSupervisionTests(unittest.TestCase):
+    def test_pinned_git_source_preserves_binary_bytes_through_logged_extraction(self):
+        self.assertIsNotNone(
+            getattr(gate, "source_from_git", None),
+            "source extraction must preserve raw Git blob bytes",
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            repository = root / "repo"
+            repository.mkdir()
+            subprocess.run(["git", "init", "-q"], cwd=repository, check=True)
+            subprocess.run(["git", "config", "user.name", "Fixture"], cwd=repository, check=True)
+            subprocess.run(["git", "config", "user.email", "fixture@example.invalid"], cwd=repository, check=True)
+            expected = b"font\x00\xff\r\ncrlf\n"
+            (repository / "fixture.bin").write_bytes(expected)
+            subprocess.run(["git", "add", "fixture.bin"], cwd=repository, check=True)
+            subprocess.run(["git", "commit", "-qm", "binary fixture"], cwd=repository, check=True)
+            commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repository, text=True).strip()
+            log_path = root / "source.log"
+
+            def run(label, *command, raw_output=False):
+                return gate.run_logged_command(
+                    command, cwd=root, environment=os.environ.copy(), timeout_seconds=5,
+                    log_path=log_path, step={"label": label}, raw_output=raw_output,
+                )
+
+            actual = gate.source_from_git(repository, commit, "fixture.bin", run)
+            self.assertEqual(actual, expected)
+            self.assertEqual(log_path.read_bytes(), expected)
+
+    def test_checker_environment_disables_child_build_servers_without_mutating_parent(self):
+        self.assertIsNotNone(
+            getattr(gate, "checker_environment", None),
+            "checker child commands must disable detached build servers in a copied environment",
+        )
+        parent = {
+            "PATH": "parent-path",
+            "DOTNET_CLI_USE_MSBUILD_SERVER": "parent-msbuild",
+            "MSBUILDDISABLENODEREUSE": "parent-node-reuse",
+        }
+        original = parent.copy()
+        environment = gate.checker_environment(Path("consumer-out"), parent)
+        self.assertEqual(parent, original)
+        self.assertEqual(environment["PATH"], "parent-path")
+        self.assertEqual(environment["DOTNET_CLI_USE_MSBUILD_SERVER"], "0")
+        self.assertEqual(environment["MSBUILDDISABLENODEREUSE"], "1")
+        self.assertEqual(environment["NUGET_PACKAGES"], str(Path("consumer-out") / "packages"))
+
     def test_command_timeout_is_positive_and_has_a_conservative_default(self):
         self.assertIsNotNone(
             getattr(gate, "DEFAULT_COMMAND_TIMEOUT_SECONDS", None),

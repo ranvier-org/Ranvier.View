@@ -1,6 +1,7 @@
 """Run a release's shared API fixtures using only its official NuGet packages."""
 import argparse
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -101,7 +102,7 @@ def terminate_owned_process_tree(process):
     process.wait()
 
 
-def run_logged_command(command, *, cwd, environment, timeout_seconds, log_path, step):
+def run_logged_command(command, *, cwd, environment, timeout_seconds, log_path, step, raw_output=False):
     argv = list(map(str, command))
     log_path = Path(log_path)
     step.update(command=argv, log=str(log_path), timeout_seconds=timeout_seconds)
@@ -161,7 +162,10 @@ def run_logged_command(command, *, cwd, environment, timeout_seconds, log_path, 
             step['duration_seconds'] = time.monotonic() - started
         raise
 
-    output = log_path.read_text(encoding='utf-8', errors='replace')
+    output_bytes = log_path.read_bytes()
+    output = output_bytes if raw_output else io.TextIOWrapper(
+        io.BytesIO(output_bytes), encoding='utf-8', errors='replace', newline=None
+    ).read()
     duration = time.monotonic() - started
     if timed_out:
         reason = f'child command exceeded the {timeout_seconds}-second per-command deadline'
@@ -179,6 +183,25 @@ def run_logged_command(command, *, cwd, environment, timeout_seconds, log_path, 
         raise subprocess.CalledProcessError(process.returncode, argv, output=output)
     step['status'] = 'passed'
     return output
+
+
+def checker_environment(output, inherited=None):
+    environment = dict(os.environ if inherited is None else inherited)
+    environment.update(
+        NUGET_PACKAGES=str(output / 'packages'),
+        NUGET_HTTP_CACHE_PATH=str(output / 'http-cache'),
+        NATIVE_API_BROWSER_PACKAGE=str(output / 'package.json'),
+        FICKL_SERVER='0',
+        DOTNET_CLI_USE_MSBUILD_SERVER='0',
+        MSBUILDDISABLENODEREUSE='1',
+        COHORT_EXPECT_TRACE='false',
+    )
+    return environment
+
+
+def source_from_git(repository, commit, path, run):
+    label = 'source-' + hashlib.sha256(path.encode('utf-8')).hexdigest()[:12]
+    return run(label, 'git', '-C', repository, 'show', f'{commit}:{path}', raw_output=True)
 
 
 def expected_shared(profile, target):
@@ -406,10 +429,8 @@ def main():
     if output.is_relative_to(REPOSITORY):
         raise ValueError('Consumer output must be outside the source checkout to avoid inherited build settings.')
     output.mkdir(parents=True, exist_ok=False)
-    environment = dict(os.environ, NUGET_PACKAGES=str(output / 'packages'),
-                       NUGET_HTTP_CACHE_PATH=str(output / 'http-cache'),
-                       NATIVE_API_BROWSER_PACKAGE=str(output / 'package.json'), FICKL_SERVER='0',
-                       COHORT_EXPECT_TRACE=str(args.variant == 'traced').lower())
+    environment = checker_environment(output)
+    environment['COHORT_EXPECT_TRACE'] = str(args.variant == 'traced').lower()
     if os.name == 'nt':
         environment['OS'] = 'Windows_NT'
     suffix = '.Traced' if args.variant == 'traced' else ''
@@ -424,20 +445,20 @@ def main():
     previous_handlers = {signum: signal.signal(signum, handle_termination) for signum in handled_signals}
 
     def source(path):
-        label = 'source-' + hashlib.sha256(path.encode('utf-8')).hexdigest()[:12]
-        data = run(label, 'git', '-C', REPOSITORY, 'show', profile['source_commit'] + ':' + path).encode('utf-8')
+        data = source_from_git(REPOSITORY, profile['source_commit'], path, run)
         evidence['sources'][path] = hashlib.sha256(data).hexdigest()
         return data
 
-    def run(label, *command):
+    def run(label, *command, raw_output=False):
         step = {'label': label}
         evidence.setdefault('steps', []).append(step)
         result = run_logged_command(
             command, cwd=output, environment=environment,
             timeout_seconds=args.command_timeout_seconds,
-            log_path=output / (label + '.log'), step=step,
+            log_path=output / (label + '.log'), step=step, raw_output=raw_output,
         )
-        print(result, flush=True)
+        if not raw_output:
+            print(result, flush=True)
         return result
 
     try:
