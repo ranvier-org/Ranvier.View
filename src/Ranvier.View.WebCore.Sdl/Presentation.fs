@@ -317,6 +317,11 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
         member _.Dispose() =
             releasePendingEglFrame ()
 
+            egl
+            |> Option.iter (fun consumer ->
+                if not (consumer.Activate ()) then
+                    raise (PresentationNative.failure "SDL_GL_MakeCurrent"))
+
             if not (NativePtr.isNullPtr gpuTexture) then
                 SDL3.SDL_DestroyTexture gpuTexture
                 gpuTexture <- NativePtr.nullPtr
