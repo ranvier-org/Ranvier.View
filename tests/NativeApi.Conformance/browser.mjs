@@ -56,7 +56,7 @@ const server = createServer(async (request, response) => {
     const name = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
     if (name === '/fixtures/Ahem.ttf') {
       response.setHeader('Content-Type', 'font/ttf');
-      response.end(await readFile(resolve(process.env.RANVIER_WEBKIT_SOURCE || 'C:/wk/src', 'Tools/TestWebKitAPI/Resources/cocoa/Ahem.ttf')));
+      response.end(await readFile(assets['/Ahem.ttf']));
       return;
     }
     const held = /^\/fixtures\/held\/([a-z]+)$/.exec(name);
@@ -76,7 +76,7 @@ const server = createServer(async (request, response) => {
       if (target && answer[2] === 'missing') { target.statusCode = 404; target.end(); }
       else if (target) {
         target.setHeader('Content-Type', 'font/ttf');
-        target.end(answer[2] === 'font' ? await readFile(resolve(process.env.RANVIER_WEBKIT_SOURCE || 'C:/wk/src', 'Tools/TestWebKitAPI/Resources/cocoa/Ahem.ttf')) : 'not a font');
+        target.end(answer[2] === 'font' ? await readFile(assets['/Ahem.ttf']) : 'not a font');
       }
       response.end();
       return;
