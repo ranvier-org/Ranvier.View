@@ -10,13 +10,16 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--app", required=True, type=Path)
 parser.add_argument("--runtime", required=True, type=Path)
 parser.add_argument("--dotnet", default="dotnet")
+parser.add_argument("--cycles", type=int, default=3)
 args = parser.parse_args()
 environment = dict(os.environ)
 environment.update(
     LIBGL_ALWAYS_SOFTWARE="1",
     RANVIER_SMOKE="1",
     RANVIER_SMOKE_GPU="1",
-    RANVIER_SMOKE_REOPEN="1",
+    RANVIER_SMOKE_REOPEN=str(args.cycles),
+    RANVIER_SMOKE_EGL_RELEASE_RETRY="1",
+    RANVIER_SMOKE_EGL_PAIR="1",
     LD_LIBRARY_PATH=os.pathsep.join(
         [str(args.runtime.resolve()), str(args.app.resolve().parent), environment.get("LD_LIBRARY_PATH", "")]
     ),
@@ -37,6 +40,8 @@ for phase in ["before-registration", "after-registration"]:
         assert "owner retained false" in result.stdout and not counts, result.stdout
     else:
         assert "owner retained true" in result.stdout, result.stdout
-        assert len(counts) == 3 and all(count > 0 for count in counts), counts
+        assert len(counts) == args.cycles + 2 and all(count > 0 for count in counts), counts
+        assert result.stdout.count("EGL release retry smoke passed") == args.cycles + 2, result.stdout
+        assert "Two simultaneous GPU windows smoke passed" in result.stdout, result.stdout
     receipts.append({"phase": phase, "gpu_frames": counts, "result": "PASS"})
 print(json.dumps({"result": "PASS", "checks": receipts}))

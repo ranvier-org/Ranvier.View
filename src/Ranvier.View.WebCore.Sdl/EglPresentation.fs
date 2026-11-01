@@ -53,7 +53,13 @@ module private EglCohort =
 /// <remarks>The shared EGL cohort lives until process exit; this window's renderer owns its context and textures.</remarks>
 type internal EglRenderer private (renderer: nativeptr<SDL_Renderer>, window: nativeptr<SDL_Window>, context: nativeptr<SDL_GLContextState>) =
     let activate () =
-        SDLBool.op_Implicit (SDL3.SDL_GL_MakeCurrent (window, context))
+        // WebCore switches raw EGL contexts without updating SDL's cached current context.
+        SDLBool.op_Implicit (SDL3.SDL_GL_MakeCurrent (window, NativePtr.nullPtr<SDL_GLContextState>))
+        && SDLBool.op_Implicit (SDL3.SDL_GL_MakeCurrent (window, context))
+
+    /// <summary>Restores the actual consumer context after native WebCore calls.</summary>
+    member _.Activate() =
+        activate ()
 
     /// <summary>Acquires a native frame with this renderer's consumer context current.</summary>
     member _.Acquire(host: nativeint, frame: byref<nativeint>) =
@@ -98,6 +104,15 @@ type internal EglRenderer private (renderer: nativeptr<SDL_Renderer>, window: na
             RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
         else
             -5
+
+    /// <summary>Requests EGL for Linux GPU windows before SDL selects its GL backend.</summary>
+    static member Prepare() =
+        if
+            OperatingSystem.IsLinux ()
+            && WebCoreHost.Has "presentation-egl"
+        then
+            SDL3.SDL_SetHint ("SDL_VIDEO_FORCE_EGL", "1")
+            |> ignore
 
     /// <summary>Uses the process EGL cohort; the first registration must precede host creation.</summary>
     static member TryCreate(renderer: nativeptr<SDL_Renderer>) =
