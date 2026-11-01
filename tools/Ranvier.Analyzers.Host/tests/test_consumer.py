@@ -499,10 +499,12 @@ def run_external_consumer(args):
             env["DOTNET_HOST_PATH"] = str(Path(dotnet_path).resolve()) if Path(dotnet_path).exists() else str(dotnet_path)
             restore_command = [args.dotnet, "restore", str(project_path), "--configfile", str(config_path),
                                "--packages", str(cache), "--no-cache", "--force", "--verbosity", "normal"]
-            restore = run_command(restore_command, work, env, case_evidence / "restore.log", args.timeout_seconds)
-            scenario = {"name": spec["name"], "restore": restore, "build": None, "passed": False,
+            scenario = {"name": spec["name"], "restoreCommand": restore_command,
+                        "restore": None, "buildCommand": None, "build": None, "passed": False,
                         "heapProperty": spec["heapProperty"], "expectedHeapBytes": spec["expectedHeap"]}
             try:
+                restore = run_command(restore_command, work, env, case_evidence / "restore.log", args.timeout_seconds)
+                scenario["restore"] = restore
                 if restore["exitCode"] != 0 or restore["timedOut"]:
                     raise ValueError("External consumer package restore failed or timed out")
                 graph = _verify_restore_graph(project_path, plan, cache, case_evidence / "restore-graph.json")
@@ -515,6 +517,7 @@ def run_external_consumer(args):
                     payload["installedManifestSha256"] = hashlib.sha256(installed_manifest_path.read_bytes()).hexdigest()
                     record["restoredHostPayload"] = payload
                 command = build_command(args.dotnet, project_path, spec["heapProperty"])
+                scenario["buildCommand"] = command
                 build = run_command(command, work, env, case_evidence / "build.log", args.timeout_seconds)
                 scenario["build"] = build
                 build_text = _read_log(case_evidence / "build.log")
@@ -545,9 +548,10 @@ def run_external_consumer(args):
             _write_json(case_evidence / "scenario.json", scenario)
             record["scenarios"].append({"name": spec["name"], "passed": scenario["passed"],
                                          "error": scenario.get("error"),
-                                         "restoreExit": restore["exitCode"],
+                                         "restoreExit": (scenario["restore"] or {}).get("exitCode"),
                                          "buildExit": scenario["build"]["exitCode"] if scenario["build"] else None,
-                                         "timedOut": bool(restore["timedOut"] or (scenario["build"] or {}).get("timedOut"))})
+                                         "timedOut": bool((scenario["restore"] or {}).get("timedOut")
+                                                          or (scenario["build"] or {}).get("timedOut"))})
     record["passed"] = all_passed and len(record["scenarios"]) == len(_scenario_specs())
     record["temporaryWorkspaceRemoved"] = True
     _write_json(evidence / "external-consumer-proof.json", record)
@@ -664,6 +668,7 @@ class ConsumerHarnessContract(unittest.TestCase):
             timeout = run_command([sys.executable, "-c", code, str(child_pid_path)], root, env,
                                   root / "timeout.log", 0.75)
             self.assertTrue(timeout["timedOut"])
+            self.assertEqual(timeout["timeoutReason"], "child process exceeded 0.75s deadline")
             self.assertNotEqual(timeout["exitCode"], 0)
             self.assertTrue(child_pid_path.is_file())
             child_pid = int(child_pid_path.read_text())
