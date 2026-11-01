@@ -16,3 +16,15 @@ The host uses a 4 GiB managed heap limit. The MSBuild integration writes its run
 decimal byte count, for example `-p:RanvierAnalyzerHeapHardLimitBytes=6442450944`, to choose another limit for that build.
 The limit covers the managed heap; the process also uses native memory. Direct invocation uses the packaged 4 GiB default.
 The optional provenance receipt records the runtime's actual available GC memory and GC mode.
+
+To reproduce the compiler producer, install .NET SDK 10.0.403 and run
+`python build_compiler.py --work <empty-work-directory>` from this directory. The producer fetches the
+754 Git blobs in `compiler-sources.json` (24,333,291 bytes), verifies every original blob, and applies
+only the reviewed guard. It uses an isolated source/output directory and never replaces an SDK or
+global tool assembly. `--prepare-only` verifies and patches the source without invoking .NET.
+
+The producer records its source manifest, patch, command, SDK and output hash. A fresh output that
+differs from `vendor-spec.json` fails closed and must be reviewed before packaging. The qualification
+workflow retains that output and its diagnostics, then packs and tests the host on Linux and Windows
+only when the compiler identity matches. These startup/package checks do not replace the full
+analyzer suite, external-consumer tests or documented `build.fsx analyze` acceptance.
