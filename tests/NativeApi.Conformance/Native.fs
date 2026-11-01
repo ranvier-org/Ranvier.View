@@ -850,7 +850,13 @@ let private runCaret () =
                 System.Convert.ToBase64String (
                     System.IO.File.ReadAllBytes (System.IO.Path.Combine (System.AppContext.BaseDirectory, "Assets", "Ahem.ttf"))
                 )
-            Qualified = CaretOracle.nativeQualified
+            Qualified =
+                if System.OperatingSystem.IsLinux () then
+                    CaretOracle.nativeQualifiedLinux
+                elif System.OperatingSystem.IsMacOS () then
+                    CaretOracle.nativeQualifiedDarwin
+                else
+                    CaretOracle.nativeQualified
         }
 
     let mutable kept = None
@@ -2679,7 +2685,8 @@ let private runResources () =
             let pending =
                 Resources.run
                     {
-                        CorruptImageDecodes = false
+                        // ImageIO on macOS decodes the corrupt image data, as Chromium does; the PNG decoder elsewhere rejects it.
+                        CorruptImageDecodes = System.OperatingSystem.IsMacOS ()
                         TransportReleaseRequests = 1
                         ReleaseEngineCaches =
                             fun () ->

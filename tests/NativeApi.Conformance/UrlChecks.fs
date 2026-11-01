@@ -7,8 +7,8 @@ open Ranvier.Dom
 type Parser =
     /// <summary>WebKit's WTF URLParser, which follows the WHATWG URL standard in the qualified cases.</summary>
     | WebKit
-    /// <summary>Chromium 156's GURL-based parser.</summary>
-    | Chromium
+    /// <summary>Chromium 156's GURL-based parser, on Windows or on another platform.</summary>
+    | Chromium of windows: bool
 
 // Each case: input, base, then the href on WebKit and on Chromium; None is a TypeError. The cases come from the
 // Ranvier.WebCore H13 fixture (tests/fixtures/url-cases.json); the four that differ are qualified there.
@@ -43,7 +43,7 @@ let private parseCases: (string * string option * string option * string option)
         "http://example.com/\"<>`{}|^", None, Some "http://example.com/%22%3C%3E%60%7B%7D|%5E", Some "http://example.com/%22%3C%3E%60%7B%7D%7C%5E"
         same "http://us@er:p@ss@host/" None (Some "http://us%40er:p%40ss@host/")
         same "file:///C:/Windows/../x" None (Some "file:///C:/x")
-        "file:c:\\foo\\bar", None, Some "file:///c:/foo/bar", Some "file:///C:/foo/bar"
+        same "file:c:\\foo\\bar" None (Some "file:///c:/foo/bar")
         same "\\\\server\\share\\f" (Some "file:///C:/") (Some "file://server/share/f")
         "file://localhost/etc/x", None, Some "file:///etc/x", Some "file://localhost/etc/x"
         same "mailto:Someone@Example.com" None (Some "mailto:Someone@Example.com")
@@ -59,6 +59,10 @@ let private parseCases: (string * string option * string option * string option)
         same "https://x.test/\u0000" None (Some "https://x.test/")
         same "https://x.test/😀?😀" None (Some "https://x.test/%F0%9F%98%80?%F0%9F%98%80")
     ]
+
+// Chromium on Windows uppercases a file URL's drive letter: input to the href there.
+let private chromiumWindowsCases =
+    Map.ofList [ "file:c:\\foo\\bar", Some "file:///C:/foo/bar" ]
 
 // Each case: href, setter, value, then the resulting href on WebKit and on Chromium.
 let private setterCases: (string * string * string * string * string) list =
@@ -124,12 +128,16 @@ let run (create: unit -> UrlService) (errorName: exn -> string) (parser: Parser)
     let pick webkit chromium =
         match parser with
         | WebKit -> webkit
-        | Chromium -> chromium
+        | Chromium _ -> chromium
 
     use service = create ()
 
     for input, baseUrl, webkit, chromium in parseCases do
-        let expected = pick webkit chromium
+        let expected =
+            match parser, chromiumWindowsCases.TryFind input with
+            | Chromium true, Some href -> href
+            | _ -> pick webkit chromium
+
         let label = $"URL {input} against %A{baseUrl}"
         equal (label + ": canParse") expected.IsSome (service.CanParse (input, baseUrl))
 
@@ -358,7 +366,7 @@ let run (create: unit -> UrlService) (errorName: exn -> string) (parser: Parser)
     // Fable erases Some null to None, so the browser parses "x" without a base.
     match parser with
     | WebKit -> throws "a null base" (fun () -> service.Parse ("x", Some null) |> ignore)
-    | Chromium ->
+    | Chromium _ ->
         equal
             "Some null erases to None"
             None

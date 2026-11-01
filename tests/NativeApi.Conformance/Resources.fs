@@ -250,13 +250,14 @@ let run (engine: Engine) (fixture: Fixture) (create: ResourceProvider -> Resourc
 
         equal
             "corrupt image"
-            true
+            (if engine.CorruptImageDecodes then
+                 "Image 3x2"
+             else
+                 "DecodeFailed")
             (match corrupt with
-             | ResourceOutcome.Failed (ResourceFailure.DecodeFailed _) -> not engine.CorruptImageDecodes
-             | ResourceOutcome.Succeeded value ->
-                 engine.CorruptImageDecodes
-                 && (value.Width, value.Height) = (3, 2)
-             | _ -> false)
+             | ResourceOutcome.Failed (ResourceFailure.DecodeFailed _) -> "DecodeFailed"
+             | ResourceOutcome.Failed failure -> describe (box failure)
+             | ResourceOutcome.Succeeded value -> describe (box value))
 
         let element = image "https://h05.test/element.png"
         let _, _, decoded = await (fun terminal -> service.DecodeImage (element, terminal))
