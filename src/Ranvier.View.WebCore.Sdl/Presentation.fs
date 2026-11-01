@@ -31,6 +31,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     let mutable gpuFrames = 0L
     let mutable cpuFrames = 0L
     let mutable lastGpu = false
+    let mutable pendingEglFrame = 0n
 
     let device () =
         use key = fixed PresentationNative.utf8 "SDL.renderer.d3d11.device"
@@ -153,7 +154,34 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
         finally
             SDL3.SDL_DestroySurface converted
 
+    let releasePendingEglFrame () =
+        if pendingEglFrame <> 0n then
+            match egl with
+            | Some consumer ->
+                if not (consumer.Activate ()) then
+                    raise (PresentationNative.failure "SDL_GL_MakeCurrent")
+
+                let flushed = PresentationNative.ok (SDL3.SDL_FlushRenderer renderer)
+
+                if not (NativePtr.isNullPtr gpuTexture) then
+                    SDL3.SDL_DestroyTexture gpuTexture
+                    gpuTexture <- NativePtr.nullPtr
+                    gpuResource <- 0n
+
+                let released = consumer.Release pendingEglFrame
+
+                if released = 0 then
+                    pendingEglFrame <- 0n
+
+                if not flushed then
+                    raise (PresentationNative.failure "SDL_FlushRenderer")
+
+                if released <> 0 then
+                    raise (InvalidOperationException $"GPU frame release failed: {released}")
+            | None -> invalidOp "An EGL frame requires its consumer renderer"
+
     member private _.WithGpu(action: nativeptr<SDL_Texture> -> int -> int -> 'T) : 'T voption =
+        releasePendingEglFrame ()
         let mutable frame = 0n
 
         let acquired =
@@ -167,6 +195,9 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
         if acquired <> 0 then
             ValueNone
         else
+            if egl.IsSome then
+                pendingEglFrame <- frame
+
             try
                 let mutable resource = 0n
                 let mutable width, height, format = 0, 0, 0
@@ -213,23 +244,21 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                     else
                         ValueSome (action gpuTexture width height)
             finally
-                let flushed = PresentationNative.ok (SDL3.SDL_FlushRenderer renderer)
+                match egl with
+                | Some _ -> releasePendingEglFrame ()
+                | None ->
+                    let flushed = PresentationNative.ok (SDL3.SDL_FlushRenderer renderer)
+                    let released = RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
 
-                if egl.IsSome && not (NativePtr.isNullPtr gpuTexture) then
-                    SDL3.SDL_DestroyTexture gpuTexture
-                    gpuTexture <- NativePtr.nullPtr
-                    gpuResource <- 0n
+                    if not flushed then
+                        raise (PresentationNative.failure "SDL_FlushRenderer")
 
-                let released =
-                    match egl with
-                    | Some consumer -> consumer.Release frame
-                    | None -> RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
+                    if released <> 0 then
+                        raise (InvalidOperationException $"GPU frame release failed: {released}")
 
-                if not flushed then
-                    raise (PresentationNative.failure "SDL_FlushRenderer")
-
-                if released <> 0 then
-                    raise (InvalidOperationException $"GPU frame release failed: {released}")
+    /// <summary>Retries a retained EGL frame before disposing its consumer context; failure preserves ownership.</summary>
+    member _.ReleasePending() =
+        releasePendingEglFrame ()
 
     /// <summary>Requires a full CPU repaint after viewport or display-scale changes.</summary>
     member _.Invalidate() =
@@ -286,6 +315,8 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
     interface IDisposable with
         member _.Dispose() =
+            releasePendingEglFrame ()
+
             if not (NativePtr.isNullPtr gpuTexture) then
                 SDL3.SDL_DestroyTexture gpuTexture
                 gpuTexture <- NativePtr.nullPtr
