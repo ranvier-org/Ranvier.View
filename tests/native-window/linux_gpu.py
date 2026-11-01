@@ -40,6 +40,7 @@ for phase in ["before-registration", "after-registration"]:
         assert "owner retained false" in result.stdout and not counts, result.stdout
     else:
         assert "owner retained true" in result.stdout, result.stdout
+        assert "EGL window disposal retry smoke passed" in result.stdout, result.stdout
         assert len(counts) == args.cycles + 2 and all(count > 0 for count in counts), counts
         assert result.stdout.count("EGL release retry smoke passed") == args.cycles + 2, result.stdout
         assert "Two simultaneous GPU windows smoke passed" in result.stdout, result.stdout

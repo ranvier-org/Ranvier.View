@@ -99,6 +99,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let mutable composing = false
     let mutable cursor = -1
     let mutable disposed = false
+    let mutable pageDisposed = false
 
     // The window's display, which the host's screen follows through a core effect on the window's own graph.
     let readDisplay () =
@@ -466,7 +467,9 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             |> Option.iter (fun host -> (host :> IDisposable).Dispose())
 
             egl
-            |> Option.iter (fun consumer -> consumer.Activate () |> ignore)
+            |> Option.iter (fun consumer ->
+                if not (consumer.Activate ()) then
+                    raise (Sdl.failure "SDL_GL_MakeCurrent"))
 
             SDL3.SDL_DestroyRenderer drawing
             SDL3.SDL_DestroyWindow window
@@ -574,21 +577,24 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         member _.Dispose() =
             if not disposed then
                 presenter.ReleasePending ()
-                disposed <- true
 
-                if accessibilityAttached then
-                    WindowAccessibility.detach host
-                    accessibilityAttached <- false
+                if not pageDisposed then
+                    if accessibilityAttached then
+                        WindowAccessibility.detach host
+                        accessibilityAttached <- false
 
-                if not (isNull displayFeed) then
-                    displayFeed.Dispose ()
+                    if not (isNull displayFeed) then
+                        displayFeed.Dispose ()
 
-                (graph :> IDisposable).Dispose()
-                (presenter :> IDisposable).Dispose()
-                (host :> IDisposable).Dispose()
+                    (graph :> IDisposable).Dispose()
+                    (presenter :> IDisposable).Dispose()
+                    (host :> IDisposable).Dispose()
+                    pageDisposed <- true
 
                 egl
-                |> Option.iter (fun consumer -> consumer.Activate () |> ignore)
+                |> Option.iter (fun consumer ->
+                    if not (consumer.Activate ()) then
+                        raise (Sdl.failure "SDL_GL_MakeCurrent"))
 
                 for created in cursors.Values do
                     SDL3.SDL_DestroyCursor (NativePtr.ofNativeInt created)
@@ -597,6 +603,8 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 SDL3.SDL_DestroyRenderer renderer
                 SDL3.SDL_DestroyWindow window
                 SDL3.SDL_QuitSubSystem SDL_InitFlags.SDL_INIT_VIDEO
+
+                disposed <- true
 
 /// <summary>Opens SDL3 windows showing WebCore pages.</summary>
 module Window =
