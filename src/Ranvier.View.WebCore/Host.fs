@@ -903,6 +903,67 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     static member Has(feature: string) =
         Native.rv_abi_has feature = 1
 
+    member private this.DiagnosticStatus(feature: string, operation: string, action: unit -> int) =
+        this.EnsureActive ()
+
+        if not (WebCoreHost.Has feature) then
+            raise (NotSupportedException $"The native library does not provide {feature}")
+
+        action () |> Interop.check operation
+
+    /// <summary>Enables or disables the host's bounded rendering trace.</summary>
+    /// <remarks>Call on the host thread. A change of state clears queued events.</remarks>
+    /// <exception cref="T:System.NotSupportedException">The native provider has no host tracing.</exception>
+    member this.SetRenderingTrace(enabled: bool) =
+        this.DiagnosticStatus ("host-tracing", "rv_host_trace_enable", fun () -> Native.rv_host_trace_enable (handle, if enabled then 1 else 0))
+
+    /// <summary>Removes the queued rendering events and returns them with the dropped count.</summary>
+    /// <remarks>Times are monotonic nanoseconds; intervals can overlap. Call on the host thread.</remarks>
+    /// <exception cref="T:System.NotSupportedException">The native provider has no host tracing.</exception>
+    member this.DrainRenderingTrace() : Native.HostTraceEvent array * uint64 =
+        let events = Array.zeroCreate<Native.HostTraceEvent> 256
+        let pinned = GCHandle.Alloc (events, GCHandleType.Pinned)
+
+        try
+            let mutable written = 0
+            let mutable dropped = 0UL
+
+            this.DiagnosticStatus (
+                "host-tracing",
+                "rv_host_trace_drain",
+                fun () -> Native.rv_host_trace_drain (handle, pinned.AddrOfPinnedObject (), events.Length, &written, &dropped)
+            )
+
+            Array.truncate written events, dropped
+        finally
+            pinned.Free ()
+
+    /// <summary>Enables or disables recording of native presentation failures.</summary>
+    /// <remarks>Call on the host thread. A change of state clears the last record.</remarks>
+    /// <exception cref="T:System.NotSupportedException">The native provider has no host error records.</exception>
+    member this.SetErrorRecording(enabled: bool) =
+        this.DiagnosticStatus ("host-errors", "rv_host_error_enable", fun () -> Native.rv_host_error_enable (handle, if enabled then 1 else 0))
+
+    /// <summary>Removes and returns the latest native presentation failure, if any.</summary>
+    /// <remarks>Only the latest failure is retained. Call on the host thread.</remarks>
+    /// <exception cref="T:System.NotSupportedException">The native provider has no host error records.</exception>
+    member this.TakeHostError() : Native.HostErrorRecord voption =
+        let records = Array.zeroCreate<Native.HostErrorRecord> 1
+        let pinned = GCHandle.Alloc (records, GCHandleType.Pinned)
+
+        try
+            let mutable present = 0
+
+            this.DiagnosticStatus (
+                "host-errors",
+                "rv_host_error_take",
+                fun () -> Native.rv_host_error_take (handle, pinned.AddrOfPinnedObject (), &present)
+            )
+
+            if present = 0 then ValueNone else ValueSome records[0]
+        finally
+            pinned.Free ()
+
     member private this.EditHistory(command: int) : bool =
         this.EnsureActive ()
 

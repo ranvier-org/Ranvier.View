@@ -325,6 +325,20 @@ let private styleAndPopoverChecks (host: WebCoreHost) =
 let main _ =
     use host = WebCoreHost.Create (320, 200)
     let blank = paint host
+
+    if
+        WebCoreHost.Has "host-tracing"
+        && WebCoreHost.Has "host-errors"
+    then
+        host.SetRenderingTrace true
+        host.SetErrorRecording true
+        paint host |> ignore
+        let events, dropped = host.DrainRenderingTrace ()
+        check "native diagnostics are available" (events.Length > 0 && dropped = 0UL) "trace missing or overflowed"
+        check "successful painting has no error" (host.TakeHostError () |> ValueOption.isNone) "unexpected host error"
+        host.SetRenderingTrace false
+        host.SetErrorRecording false
+
     use graph = new Graph ()
     let container = host.Document.createElement "div"
     host.Document.body.appendChild container |> ignore
