@@ -48,14 +48,14 @@ jobs:
       - uses: actions/cache@v4
         id: compiler
         with:
-          path: artifacts/analyzer-bootstrap/compiler/source/artifacts/bin/FSharp.Compiler.Service/Release/netstandard2.0/FSharp.Compiler.Service.dll
-          key: analyzer-compiler-${{ runner.os }}-${{ hashFiles('global.json', 'tools/Ranvier.Analyzers.Host/vendor-spec.json', 'tools/Ranvier.Analyzers.Host/compiler-sources.json', 'tools/Ranvier.Analyzers.Host/compiler.patch') }}
+          path: artifacts/analyzer-compiler/source/artifacts/bin/FSharp.Compiler.Service/Release/netstandard2.0/FSharp.Compiler.Service.dll
+          key: analyzer-compiler-v2-${{ runner.os }}-${{ hashFiles('global.json', 'tools/Ranvier.Analyzers.Host/vendor-spec.json', 'tools/Ranvier.Analyzers.Host/compiler-sources.json', 'tools/Ranvier.Analyzers.Host/compiler.patch') }}
       - name: Build the pinned compiler when absent
         if: steps.compiler.outputs.cache-hit != 'true'
-        run: python3 tools/Ranvier.Analyzers.Host/build_compiler.py --work artifacts/analyzer-bootstrap/compiler
+        run: python3 tools/Ranvier.Analyzers.Host/build_compiler.py --work artifacts/analyzer-compiler
       - name: Build the source-fresh private Host and analyzer pair
         run: |
-          compiler="$GITHUB_WORKSPACE/artifacts/analyzer-bootstrap/compiler/source/artifacts/bin/FSharp.Compiler.Service/Release/netstandard2.0/FSharp.Compiler.Service.dll"
+          compiler="$GITHUB_WORKSPACE/artifacts/analyzer-compiler/source/artifacts/bin/FSharp.Compiler.Service/Release/netstandard2.0/FSharp.Compiler.Service.dll"
           dotnet pack tools/Ranvier.Analyzers.Host/Ranvier.Analyzers.Host.csproj -c Release --nologo -o artifacts/analyzer-bootstrap/feed "-p:RanvierPatchedCompilerPath=$compiler" "-p:RepositoryCommit=$GITHUB_SHA"
           python3 - <<'PY'
           import runpy
@@ -68,6 +68,17 @@ jobs:
         run: |
           python3 tools/Ranvier.Analyzers.Host/tests/test_host.py --host-directory tools/Ranvier.Analyzers.Host/bin/Release/net10.0
           python3 -I tests/native-packages/test_analyzer_ci_bootstrap.py
+      - name: Retain compiler identity and build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-analyzer-compiler-diagnostics-${{ github.sha }}
+          path: |
+            artifacts/analyzer-compiler/*.json
+            artifacts/analyzer-compiler/*.log
+            artifacts/analyzer-compiler/source/artifacts/bin/FSharp.Compiler.Service/Release/netstandard2.0/FSharp.Compiler.Service.dll
+          if-no-files-found: ignore
+          retention-days: 3
       - uses: actions/upload-artifact@v4
         with:
           name: ci-analyzer-host-${{ github.sha }}
