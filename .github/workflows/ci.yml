@@ -17,19 +17,15 @@ jobs:
       - name: Enable Japanese on this disposable runner
         shell: pwsh
         run: |
-          $ErrorActionPreference = 'Continue'
+          $ErrorActionPreference = 'Stop'
           Get-WinUserLanguageList | ConvertTo-Json -Depth 8 | Out-File ime-before.json -Encoding utf8
           Get-WindowsCapability -Online | Where-Object Name -Like 'Language.Basic~~~ja-JP*' | ConvertTo-Json -Depth 4 | Out-File ime-capability-before.json -Encoding utf8
-          $capability = Get-WindowsCapability -Online | Where-Object Name -Like 'Language.Basic~~~ja-JP*' | Select-Object -First 1
-          if ($capability -and $capability.State -ne 'Installed') {
-            Add-WindowsCapability -Online -Name $capability.Name | Out-File ime-install.log -Encoding utf8
-          }
           $languages = Get-WinUserLanguageList
-          if (-not ($languages.LanguageTag -contains 'ja-JP')) { $languages.Add('ja-JP') }
+          if (-not ($languages.LanguageTag | Where-Object { $_ -like 'ja*' })) { $languages.Add('ja-JP') }
           Set-WinUserLanguageList $languages -Force
           $after = Get-WinUserLanguageList
           $after | ConvertTo-Json -Depth 8 | Out-File ime-after.json -Encoding utf8
-          if (-not ($after.LanguageTag -contains 'ja-JP')) { throw 'Japanese language profile was not provisioned' }
+          if (-not ($after | Where-Object { $_.LanguageTag -like 'ja*' -and $_.InputMethodTips -match '03B5835F-F03C-411B-9CE2-AA23E1171E36' })) { throw 'Japanese TIP was not provisioned' }
       - name: Restore the same SDL runtime used by View
         shell: pwsh
         run: dotnet restore tests/Ranvier.View.WebCore.Tests/Ranvier.View.WebCore.Tests.fsproj
