@@ -35,10 +35,21 @@ bind(user, 'ActivateKeyboardLayout', P, [P, U])
 bind(user, 'SetForegroundWindow', C.c_bool, [P])
 bind(user, 'GetForegroundWindow', P, [])
 bind(user, 'keybd_event', None, [C.c_ubyte, C.c_ubyte, U, C.c_size_t])
+bind(user, 'MapVirtualKeyExW', U, [U, U, P])
+bind(user, 'CreateWindowExW', P, [U, C.c_wchar_p, C.c_wchar_p, U, I, I, I, I, P, P, P, P])
+bind(user, 'DestroyWindow', C.c_bool, [P])
+bind(user, 'SetFocus', P, [P])
+bind(user, 'GetFocus', P, [])
+bind(user, 'GetWindowTextLengthW', I, [P])
+bind(user, 'GetWindowTextW', I, [P, C.c_wchar_p, I])
+bind(user, 'PeekMessageW', C.c_bool, [P, P, U, U, U])
+bind(user, 'TranslateMessage', C.c_bool, [P])
+bind(user, 'DispatchMessageW', C.c_ssize_t, [P])
 bind(imm, 'ImmGetContext', P, [P])
 bind(imm, 'ImmSetOpenStatus', C.c_bool, [P, C.c_bool])
 bind(imm, 'ImmGetOpenStatus', C.c_bool, [P])
 bind(imm, 'ImmSetConversionStatus', C.c_bool, [P, U, U])
+bind(imm, 'ImmGetConversionStatus', C.c_bool, [P, C.POINTER(U), C.POINTER(U)])
 bind(imm, 'ImmReleaseContext', C.c_bool, [P, P])
 
 class Guid(C.Structure):
@@ -116,12 +127,17 @@ try:
     result['imeOpenSet'] = bool(imm.ImmSetOpenStatus(context, True))
     result['conversionSet'] = bool(imm.ImmSetConversionStatus(context, 9, 0))
     result['imeOpen'] = bool(imm.ImmGetOpenStatus(context))
+    conversion, sentence = U(), U()
+    result['conversionRead'] = bool(imm.ImmGetConversionStatus(context, C.byref(conversion), C.byref(sentence)))
+    result['conversionMode'] = hex(conversion.value)
+    result['sentenceMode'] = hex(sentence.value)
     imm.ImmReleaseContext(hwnd, context)
     def type_keys():
         time.sleep(2)
         for key in [0x4b, 0x41, 0x4e, 0x41, 0x20, 0x20, 0x0d]:
-            user.keybd_event(key, 0, 0, 0)
-            user.keybd_event(key, 0, 2, 0)
+            scan = user.MapVirtualKeyExW(key, 0, layout)
+            user.keybd_event(key, scan, 0, 0)
+            user.keybd_event(key, scan, 2, 0)
             time.sleep(.25)
     sender = threading.Thread(target=type_keys)
     sender.start()
@@ -137,6 +153,43 @@ try:
         time.sleep(.01)
     sender.join()
     result['foregroundStillOwned'] = user.GetForegroundWindow() == hwnd
+    sdl.SDL_StopTextInput(window)
+    edit = user.CreateWindowExW(0, 'EDIT', '', 0x10cf0080, 100, 100, 500, 100, None, None, None, None)
+    if not edit:
+        raise OSError(C.get_last_error(), 'CreateWindowExW EDIT')
+    try:
+        result['editForegroundGranted'] = bool(user.SetForegroundWindow(edit))
+        user.SetFocus(edit)
+        result['editFocused'] = user.GetFocus() == edit
+        edit_context = imm.ImmGetContext(edit)
+        if not edit_context:
+            raise RuntimeError('EDIT IME context unavailable')
+        imm.ImmSetOpenStatus(edit_context, True)
+        imm.ImmSetConversionStatus(edit_context, 9, 0)
+        edit_conversion, edit_sentence = U(), U()
+        result['editOpen'] = bool(imm.ImmGetOpenStatus(edit_context))
+        result['editConversionRead'] = bool(imm.ImmGetConversionStatus(edit_context, C.byref(edit_conversion), C.byref(edit_sentence)))
+        result['editConversionMode'] = hex(edit_conversion.value)
+        result['editSentenceMode'] = hex(edit_sentence.value)
+        imm.ImmReleaseContext(edit, edit_context)
+        sender = threading.Thread(target=type_keys)
+        sender.start()
+        message = C.create_string_buffer(128)
+        deadline = time.monotonic() + 12
+        while time.monotonic() < deadline:
+            while user.PeekMessageW(message, None, 0, 0, 1):
+                user.TranslateMessage(message)
+                user.DispatchMessageW(message)
+            time.sleep(.01)
+        sender.join()
+        length = user.GetWindowTextLengthW(edit)
+        text = C.create_unicode_buffer(length + 1)
+        user.GetWindowTextW(edit, text, length + 1)
+        result['editText'] = text.value
+        result['editNonAscii'] = any(ord(c) > 127 for c in text.value)
+        result['editForegroundStillOwned'] = user.GetForegroundWindow() == edit
+    finally:
+        user.DestroyWindow(edit)
     result['nonAsciiPreedit'] = any(e['type'] == '0x302' and any(ord(c) > 127 for c in e['text']) for e in result['events'])
     result['nonAsciiCommit'] = any(e['type'] == '0x303' and any(ord(c) > 127 for c in e['text']) for e in result['events'])
     result['qualified'] = (active_status == 0 and str(active.clsid) == str(japanese)
