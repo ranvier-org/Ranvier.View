@@ -21,6 +21,7 @@ def bind(lib, name, result, arguments):
 
 P, U, I = C.c_void_p, C.c_uint32, C.c_int
 bind(sdl, 'SDL_Init', C.c_bool, [U])
+bind(sdl, 'SDL_SetHint', C.c_bool, [C.c_char_p, C.c_char_p])
 bind(sdl, 'SDL_CreateWindow', P, [C.c_char_p, I, I, C.c_uint64])
 bind(sdl, 'SDL_GetWindowProperties', U, [P])
 bind(sdl, 'SDL_GetPointerProperty', P, [U, C.c_char_p, P])
@@ -43,6 +44,8 @@ bind(user, 'SetFocus', P, [P])
 bind(user, 'GetFocus', P, [])
 bind(user, 'GetWindowTextLengthW', I, [P])
 bind(user, 'GetWindowTextW', I, [P, C.c_wchar_p, I])
+bind(user, 'SetWindowLongPtrW', C.c_ssize_t, [P, I, C.c_ssize_t])
+bind(user, 'CallWindowProcW', C.c_ssize_t, [P, P, U, C.c_size_t, C.c_ssize_t])
 bind(user, 'PeekMessageW', C.c_bool, [P, P, U, U, U])
 bind(user, 'TranslateMessage', C.c_bool, [P])
 bind(user, 'DispatchMessageW', C.c_ssize_t, [P])
@@ -92,6 +95,9 @@ try:
     com_initialized = com_status >= 0
     if not com_initialized:
         raise RuntimeError('STA COM initialization failed')
+    result['compositionHint'] = bool(sdl.SDL_SetHint(b'SDL_IME_IMPLEMENTED_UI', b'composition'))
+    if not result['compositionHint']:
+        raise RuntimeError('SDL rejected the Window composition hint')
     if not sdl.SDL_Init(0x20):
         raise RuntimeError('SDL_Init: ' + sdl.SDL_GetError().decode(errors='replace'))
     window = sdl.SDL_CreateWindow(b'Ranvier IME171 runner probe', 500, 200, 0)
@@ -200,6 +206,17 @@ try:
     if not edit:
         raise OSError(C.get_last_error(), 'CreateWindowExW EDIT')
     try:
+        result['editImeMessages'] = []
+        callback_type = C.WINFUNCTYPE(C.c_ssize_t, P, U, C.c_size_t, C.c_ssize_t)
+        previous_proc = P()
+        @callback_type
+        def edit_proc(target, message, wparam, lparam):
+            if message in (0x010D, 0x010E, 0x010F, 0x0282):
+                result['editImeMessages'].append({'message': hex(message), 'wparam': hex(wparam), 'lparam': hex(lparam & 0xffffffffffffffff)})
+            return user.CallWindowProcW(previous_proc, target, message, wparam, lparam)
+        previous_proc = P(user.SetWindowLongPtrW(edit, -4, C.cast(edit_proc, P).value))
+        if not previous_proc:
+            raise OSError(C.get_last_error(), 'subclass native EDIT')
         result['editForegroundGranted'] = bool(user.SetForegroundWindow(edit))
         user.SetFocus(edit)
         result['editFocused'] = user.GetFocus() == edit
@@ -232,12 +249,13 @@ try:
         user.GetWindowTextW(edit, text, length + 1)
         result['editText'] = text.value
         result['editNonAscii'] = any(ord(c) > 127 for c in text.value)
+        result['editPreedit'] = any(m['message'] == '0x10f' and (int(m['lparam'], 16) & 8) for m in result['editImeMessages'])
         result['editForegroundStillOwned'] = user.GetForegroundWindow() == edit
     finally:
         user.DestroyWindow(edit)
     result['nonAsciiPreedit'] = any(e['type'] == '0x302' and any(ord(c) > 127 for c in e['text']) for e in result['events'])
     result['nonAsciiCommit'] = any(e['type'] == '0x303' and any(ord(c) > 127 for c in e['text']) for e in result['events'])
-    result['qualified'] = (result['profileVerified'] and result['editNonAscii'] and result['editForegroundStillOwned']
+    result['qualified'] = (result['profileVerified'] and result['editNonAscii'] and result['editPreedit'] and result['editForegroundStillOwned']
                            and result['foregroundStillOwned']
                            and result['nonAsciiPreedit'] and result['nonAsciiCommit'])
 except Exception as error:
