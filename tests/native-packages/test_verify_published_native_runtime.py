@@ -16,7 +16,7 @@ SPEC = importlib.util.spec_from_file_location('published_native_runtime', SCRIPT
 VERIFY = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(VERIFY)
 
-VERSION = '0.1.1-preview.2'
+VERSION = '0.1.1-preview.3'
 VIEW = 'Ranvier.View.WebCore.Sdl.Traced'
 VIEW_VERSION = '0.1.0-test.1'
 SLIM = 'Ranvier.WebCore.Native.win-x64'
@@ -153,9 +153,9 @@ class RuntimeVerification(unittest.TestCase):
         fixture = ET.parse(root / 'tests/native-packages/Directory.Build.props').getroot()
         backend_version = backend.findtext(".//RanvierWebCoreNativeVersion")
         consumer_version = fixture.findtext(".//NativeRuntimePackageVersion")
-        self.assertEqual(backend_version, '0.1.1-preview.2')
-        self.assertEqual(consumer_version, '0.1.1-preview.2')
-        self.assertEqual(VERSION, '0.1.1-preview.2')
+        self.assertEqual(backend_version, '0.1.1-preview.3')
+        self.assertEqual(consumer_version, '0.1.1-preview.3')
+        self.assertEqual(VERSION, '0.1.1-preview.3')
         self.assertEqual(ABI, 60)
         self.assertEqual(backend.find(".//RanvierWebCoreNativeVersion").attrib.get('Condition'),
                          "'$(RanvierWebCoreNativeVersion)' == ''")
@@ -165,7 +165,7 @@ class RuntimeVerification(unittest.TestCase):
                       backend_text)
         self.assertIn("<ItemGroup Condition=\"'$(RanvierWebCoreNativeDir)' == ''\">", backend_text)
         sdl_readme = (root / 'src/Ranvier.View.WebCore.Sdl/README.md').read_text(encoding='utf-8')
-        self.assertEqual(sdl_readme.count('Version="[0.1.1-preview.2]"'), 2)
+        self.assertEqual(sdl_readme.count('Version="[0.1.1-preview.3]"'), 2)
         self.assertIn("<NativeRuntimePackageVersion Condition=\"'$(NativeRuntimePackageVersion)' == ''\">",
                       (root / 'tests/native-packages/Directory.Build.props').read_text(encoding='utf-8'))
 
