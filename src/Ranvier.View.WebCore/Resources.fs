@@ -311,7 +311,11 @@ module Resources =
                                 ()
                             | Ok response ->
                                 transportNext <- transportNext + 1L
-                                url <- $"https://ranvier-resource.invalid/{transportNext}"
+
+                                url <-
+                                    "https://ranvier-resource.invalid/"
+                                    + transportNext.ToString (Globalization.CultureInfo.CurrentCulture)
+
                                 transport[url] <- response
                                 image <- Native.rv_document_create_element (host.Handle, "img")
 
