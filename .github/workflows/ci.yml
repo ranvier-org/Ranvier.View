@@ -363,6 +363,10 @@ jobs:
           global-json-file: global.json
       - name: Build and pack the libraries untraced and traced, with Fable sources, and the analyzers
         run: dotnet fsi build.fsx -- pack
+      - name: Test native-delivery package selection
+        run: python3 -I tests/native-packages/test_native_delivery_packages.py
+      - name: Select the native-delivery package artifacts
+        run: python3 -I .github/scripts/native_delivery_packages.py --directory bin --excluded-directory artifacts/native-delivery-excluded --report artifacts/native-delivery-packages.json
       - uses: actions/upload-artifact@v7
         with:
           name: nuget-packages
