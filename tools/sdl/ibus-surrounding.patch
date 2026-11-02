@@ -1,0 +1,152 @@
+diff --git a/src/core/linux/SDL_ibus.c b/src/core/linux/SDL_ibus.c
+index 1002679a6..cb4d19667 100644
+--- a/src/core/linux/SDL_ibus.c
++++ b/src/core/linux/SDL_ibus.c
+@@ -57,6 +57,12 @@ static bool ibus_is_portal_interface = false;
+ static char *ibus_addr_file = NULL;
+ static int inotify_fd = -1, inotify_wd = -1;
+ 
++/* Ranvier extension: SDL remains the sole owner of this IBus context. */
++static char *ranvier_surrounding;
++static Uint32 ranvier_cursor, ranvier_anchor;
++static bool ranvier_last_send_ok;
++static bool IBus_SendSurrounding(void);
++
+ static Uint32 IBus_ModState(void)
+ {
+     Uint32 ibus_mods = 0;
+@@ -221,6 +227,11 @@ static DBusHandlerResult IBus_MessageHandler(DBusConnection *conn, DBusMessage *
+ {
+     SDL_DBusContext *dbus = (SDL_DBusContext *)user_data;
+ 
++    if (dbus->message_is_signal(msg, ibus_input_interface, "RequireSurroundingText")) {
++        IBus_SendSurrounding();
++        return DBUS_HANDLER_RESULT_HANDLED;
++    }
++
+     if (dbus->message_is_signal(msg, ibus_input_interface, "CommitText")) {
+         DBusMessageIter iter;
+         const char *text;
+@@ -410,6 +421,9 @@ static void SDLCALL IBus_SetCapabilities(void *data, const char *name, const cha
+ 
+     if (IBus_CheckConnection(dbus)) {
+         Uint32 caps = IBUS_CAP_FOCUS;
++        if (ranvier_surrounding) {
++            caps |= IBUS_CAP_SURROUNDING_TEXT;
++        }
+ 
+         if (hint && SDL_strstr(hint, "composition")) {
+             caps |= IBUS_CAP_PREEDIT_TEXT;
+@@ -423,6 +437,80 @@ static void SDLCALL IBus_SetCapabilities(void *data, const char *name, const cha
+     }
+ }
+ 
++static bool IBus_SendSurrounding(void)
++{
++    SDL_DBusContext *dbus = SDL_DBus_GetContext();
++    DBusMessage *message;
++    DBusMessageIter args, variant, object, dictionary, attributes, attr_object, attr_dictionary, attr_array;
++    const char *text_name = "IBusText", *attribute_name = "IBusAttrList";
++    bool ok;
++
++    if (!ranvier_surrounding || !input_ctx_path || !IBus_CheckConnection(dbus)) {
++        return false;
++    }
++    message = dbus->message_new_method_call(ibus_service, input_ctx_path, ibus_input_interface, "SetSurroundingText");
++    if (!message) {
++        return false;
++    }
++    dbus->message_iter_init_append(message, &args);
++    ok = dbus->message_iter_open_container(&args, DBUS_TYPE_VARIANT, "(sa{sv}sv)", &variant)
++        && dbus->message_iter_open_container(&variant, DBUS_TYPE_STRUCT, NULL, &object)
++        && dbus->message_iter_append_basic(&object, DBUS_TYPE_STRING, &text_name)
++        && dbus->message_iter_open_container(&object, DBUS_TYPE_ARRAY, "{sv}", &dictionary)
++        && dbus->message_iter_close_container(&object, &dictionary)
++        && dbus->message_iter_append_basic(&object, DBUS_TYPE_STRING, &ranvier_surrounding)
++        && dbus->message_iter_open_container(&object, DBUS_TYPE_VARIANT, "(sa{sv}av)", &attributes)
++        && dbus->message_iter_open_container(&attributes, DBUS_TYPE_STRUCT, NULL, &attr_object)
++        && dbus->message_iter_append_basic(&attr_object, DBUS_TYPE_STRING, &attribute_name)
++        && dbus->message_iter_open_container(&attr_object, DBUS_TYPE_ARRAY, "{sv}", &attr_dictionary)
++        && dbus->message_iter_close_container(&attr_object, &attr_dictionary)
++        && dbus->message_iter_open_container(&attr_object, DBUS_TYPE_ARRAY, "v", &attr_array)
++        && dbus->message_iter_close_container(&attr_object, &attr_array)
++        && dbus->message_iter_close_container(&attributes, &attr_object)
++        && dbus->message_iter_close_container(&object, &attributes)
++        && dbus->message_iter_close_container(&variant, &object)
++        && dbus->message_iter_close_container(&args, &variant)
++        && dbus->message_iter_append_basic(&args, DBUS_TYPE_UINT32, &ranvier_cursor)
++        && dbus->message_iter_append_basic(&args, DBUS_TYPE_UINT32, &ranvier_anchor)
++        && dbus->connection_send(ibus_conn, message, NULL);
++    if (ok) {
++        dbus->connection_flush(ibus_conn);
++    }
++    dbus->message_unref(message);
++    return ok;
++}
++
++__attribute__((visibility("default"))) bool SDLCALL SDL_Ranvier_SetIbusSurrounding(SDL_Window *window, const char *text, Uint32 cursor, Uint32 anchor)
++{
++    SDL_DBusContext *dbus = SDL_DBus_GetContext();
++    char *copy = NULL;
++    bool capability_changed;
++
++    if (!window || window != SDL_GetKeyboardFocus() || !input_ctx_path || !IBus_CheckConnection(dbus)) {
++        return false;
++    }
++    if (text && ranvier_surrounding && !SDL_strcmp(text, ranvier_surrounding)
++        && cursor == ranvier_cursor && anchor == ranvier_anchor) {
++        return ranvier_last_send_ok || (ranvier_last_send_ok = IBus_SendSurrounding());
++    }
++    capability_changed = !!text != !!ranvier_surrounding;
++    if (text) {
++        copy = SDL_strdup(text);
++        if (!copy) {
++            return false;
++        }
++    }
++    SDL_free(ranvier_surrounding);
++    ranvier_surrounding = copy;
++    ranvier_cursor = cursor;
++    ranvier_anchor = anchor;
++    if (capability_changed) {
++        IBus_SetCapabilities(NULL, NULL, NULL, SDL_GetHint(SDL_HINT_IME_IMPLEMENTED_UI));
++    }
++    ranvier_last_send_ok = !text || IBus_SendSurrounding();
++    return ranvier_last_send_ok;
++}
++
+ static bool IBus_SetupConnection(SDL_DBusContext *dbus, const char *addr)
+ {
+     const char *client_name = "SDL3_Application";
+@@ -602,6 +690,8 @@ bool SDL_IBus_Init(void)
+ 
+ void SDL_IBus_Quit(void)
+ {
++    SDL_free(ranvier_surrounding);
++    ranvier_surrounding = NULL;
+     SDL_DBusContext *dbus;
+ 
+     if (input_ctx_path) {
+@@ -651,6 +741,10 @@ static void IBus_SimpleMessage(const char *method)
+ 
+ void SDL_IBus_SetFocus(bool focused)
+ {
++    if (!focused) {
++        SDL_free(ranvier_surrounding);
++        ranvier_surrounding = NULL;
++    }
+     const char *method = focused ? "FocusIn" : "FocusOut";
+     IBus_SimpleMessage(method);
+ }
+diff --git a/src/dynapi/SDL_dynapi.sym b/src/dynapi/SDL_dynapi.sym
+index 34131187f..3b5d96666 100644
+--- a/src/dynapi/SDL_dynapi.sym
++++ b/src/dynapi/SDL_dynapi.sym
+@@ -1316,6 +1316,7 @@ SDL3_0.0.0 {
+     SDL_GetOpenHarmonyInternalStoragePath;
+     SDL_RequestOpenHarmonyPermission;
+     SDL_GetAudioDeviceProperties;
++    SDL_Ranvier_SetIbusSurrounding;
+     # extra symbols go here (don't modify this line)
+   local: *;
+ };
