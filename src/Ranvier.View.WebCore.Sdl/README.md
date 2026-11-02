@@ -35,6 +35,23 @@ SDL submits its drawing, including readback, and before renderer teardown.
 The `accessibility-uia` capability attaches the page's Windows UI Automation tree to the SDL window. It
 detaches before page or window disposal. The bridge uses native COM and also works in a NativeAOT app.
 
+## Linux input methods
+
+SDL forwards composition and committed text to the focused page. For an X11 application that needs IBus
+surrounding text, an optional patched SDL build selects SDL's direct IBus context when
+`SDL_RANVIER_IBUS=1` is set before the first SDL window is created. Query
+`window.ImeSurroundingAvailable` to determine whether surrounding text is currently available. It is false
+when the context is unavailable or cleared, including while a password field is focused. If direct IBus
+cannot initialize, X11 falls back to XIM; that fallback does not provide this extension.
+
+The optional `Ranvier.View.WebCore.Sdl.Ibus` package and its SDL build are currently private qualification
+artifacts, not published packages. [The SDL build and packaging instructions](../../tools/sdl/README.md)
+describe the pinned source, prerequisites, explicit `linux-x64` publish target, and current limitations.
+Wayland text-input-v3 and XIM do not use this direct-IBus extension; single-file publish and other
+architectures have not been qualified for the optional package.
+
+## Platform support
+
 Experimental, on Windows x64, Windows ARM64, Linux x64 and macOS arm64 (macOS 26), like the backend.
 WebCore's run loop and SDL's event pump share the process main thread on macOS, with the same
 `Window.Step` implementation.
