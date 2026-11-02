@@ -1,6 +1,9 @@
 [<AutoOpen>]
 module Ranvier.View.Representation
 
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type Tag =
     | Div
     | Button
@@ -9,10 +12,48 @@ type Tag =
     | Option
     | HtmlTag of string
 
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.union context depth precedence (box (this)) (fun n0 ->
+            match this with
+            | Tag.Div -> "Div", []
+            | Tag.Button -> "Button", []
+            | Tag.Input -> "Input", []
+            | Tag.Select -> "Select", []
+            | Tag.Option -> "Option", []
+            | Tag.HtmlTag (v0_0) -> "HtmlTag", [ Some (fun p -> NativeDisplay.text context n0 (v0_0)) ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
+
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type BrowserPolicy =
     | Reject
     | Omit
 
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.union context depth precedence (box (this)) (fun n0 ->
+            match this with
+            | BrowserPolicy.Reject -> "Reject", []
+            | BrowserPolicy.Omit -> "Omit", [])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
+
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type Setup =
     {
         OnCleanup: (unit -> unit) -> unit
@@ -38,6 +79,21 @@ type Setup =
         CreateId: unit -> string
     }
 
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "OnCleanup", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).OnCleanup)))
+                "CreateId", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).CreateId)))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
+
 /// <summary>
 /// <c>setup</c> with a <c>CreateId</c> that issues positional ids in the window open in <c>identity</c>, and raises
 /// once another window is open or none is.
@@ -51,11 +107,29 @@ let ownSetup (identity: IdentityScope) (setup: Setup) : Setup =
 
 /// <summary>The items of a keyed region, with the key of each item; list items keep the caller's references.</summary>
 [<NoEquality; NoComparison>]
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type KeyedItems =
     {
         Read: unit -> obj array
         Key: System.Func<obj, obj>
     }
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "Read", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Read)))
+                "Key", (fun () -> NativeDisplay.opaque context n0 "<System.Func<System.Object,System.Object>>" (box ((this).Key)))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 /// <summary>Constructors and accessors of <c>KeyedItems</c>.</summary>
 module KeyedItems =
@@ -84,6 +158,9 @@ module KeyedItems =
 
 /// <summary>The failure an error view receives.</summary>
 [<NoEquality; NoComparison>]
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type BoundaryFailure =
     {
         /// <summary>The first exception of the failure that replaced the boundary's content.</summary>
@@ -92,16 +169,51 @@ type BoundaryFailure =
         Retry: unit -> unit
     }
 
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "Error", (fun () -> NativeDisplay.exceptionValue context n0 ((this).Error))
+                "Retry", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Retry)))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
+
 /// <summary>The state of a boundary that its content reads.</summary>
 [<NoEquality; NoComparison>]
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type BoundaryStatus =
     {
         /// <summary>A tracked reader: true after the first reveal while a binding under the boundary waits for a pending read.</summary>
         IsPending: unit -> bool
     }
 
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "IsPending", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).IsPending)))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
+
 /// <summary>What a placed hook does with its element.</summary>
 [<RequireQualifiedAccess>]
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type PlacedKind =
     /// <summary>Runs code against the element.</summary>
     | Mounted
@@ -115,6 +227,24 @@ type PlacedKind =
     | Exit
     /// <summary>Measures the element before and after the region passes under it.</summary>
     | Reflow
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.union context depth precedence (box (this)) (fun n0 ->
+            match this with
+            | PlacedKind.Mounted -> "Mounted", []
+            | PlacedKind.Lent -> "Lent", []
+            | PlacedKind.Widget -> "Widget", []
+            | PlacedKind.Motion -> "Motion", []
+            | PlacedKind.Exit -> "Exit", []
+            | PlacedKind.Reflow -> "Reflow", [])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 /// <summary>
 /// The part name of a placed hook in a browser-capability error; null for a motion, exit or reflow hook; the server omits
@@ -193,13 +323,34 @@ type Reflow =
 
 /// <summary>The element a document head entry stands for.</summary>
 [<RequireQualifiedAccess>]
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type HeadKind =
     | Title
     | Meta
     | Link
 
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.union context depth precedence (box (this)) (fun n0 ->
+            match this with
+            | HeadKind.Title -> "Title", []
+            | HeadKind.Meta -> "Meta", []
+            | HeadKind.Link -> "Link", [])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
+
 /// <summary>A document head entry bound to one instance.</summary>
 [<NoEquality; NoComparison>]
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type HeadEntry =
     {
         Kind: HeadKind
@@ -211,6 +362,47 @@ type HeadEntry =
         /// <summary>The reader of a title entry; null for a meta or link entry.</summary>
         Title: unit -> string
     }
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "Kind", (fun () -> (NativeDisplay.known context n0 ((this).Kind) (fun retained -> retained.NativeDisplay (context, n0, 3))))
+                "Key", (fun () -> NativeDisplay.text context n0 ((this).Key))
+                "Attributes",
+                (fun () ->
+                    NativeDisplay.array
+                        context
+                        n0
+                        (fun c120 d120 p120 (item120: (System.String * System.String)) ->
+                            (let (t121_0, t121_1) = item120 in
+
+                             NativeDisplay.tuple c120 d120 (box (item120)) (fun n121 ->
+                                 [ NativeDisplay.text c120 n121 (t121_0); NativeDisplay.text c120 n121 (t121_1) ])))
+                        ((this).Attributes))
+                "Readers",
+                (fun () ->
+                    NativeDisplay.array
+                        context
+                        n0
+                        (fun c124 d124 p124 (item124: (System.String * (unit -> option<System.String>))) ->
+                            (let (t125_0, t125_1) = item124 in
+
+                             NativeDisplay.tuple c124 d124 (box (item124)) (fun n125 ->
+                                 [
+                                     NativeDisplay.text c124 n125 (t125_0)
+                                     NativeDisplay.opaque c124 n125 "<function>" (box (t125_1))
+                                 ])))
+                        ((this).Readers))
+                "Title", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Title)))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 let private validNameCharacters underscore (value: string) =
     let mutable valid = true
@@ -792,12 +984,32 @@ and [<AbstractClass>] TemplateDefinition internal () =
     member val Compiled: obj = null with get, set
 
 /// <summary>The three views of a boundary, each rendered through the backend it receives.</summary>
+#if !FABLE_COMPILER
+and [<System.Diagnostics.DebuggerDisplay("{ToString(),nq}"); NoEquality; NoComparison>] BoundaryViews =
+#else
 and [<NoEquality; NoComparison>] BoundaryViews =
+#endif
     {
         Pending: Backend -> unit
         Failed: BoundaryFailure -> Backend -> unit
         Content: BoundaryStatus -> Backend -> unit
     }
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "Pending", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Pending)))
+                "Failed", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Failed)))
+                "Content", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Content)))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 /// <summary>
 /// The server backend: writes HTML to <c>sink</c>. Under <c>Reject</c> a browser-only part raises; under <c>Omit</c> it
@@ -1210,6 +1422,9 @@ let browserModifier hook : ModifierAction =
 let listenModifier eventName handler : ModifierAction =
     fun backend -> backend.Listen (eventName, handler)
 
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type Operations<'view> =
     {
         Empty: 'view
@@ -1227,6 +1442,29 @@ type Operations<'view> =
         /// <summary>Renders the content under a boundary: the pending view until the content's bindings have values, the error view after a failure under the content.</summary>
         Boundary: 'view * (BoundaryFailure -> 'view) * (BoundaryStatus -> 'view) -> 'view
     }
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "Empty", (fun () -> NativeDisplay.opaque context n0 "<view>" (box ((this).Empty)))
+                "Text", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Text)))
+                "Fragment", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Fragment)))
+                "Element", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Element)))
+                "Bind", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Bind)))
+                "Keyed", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Keyed)))
+                "Switch", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Switch)))
+                "Component", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Component)))
+                "Embed", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Embed)))
+                "Boundary", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Boundary)))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 module Keyed =
     let private create (ops: Operations<'view>) (key: 'item -> 'key) (read: unit -> 'item array) (render: (unit -> 'item) -> 'view) =
@@ -1305,6 +1543,9 @@ module Branch =
         ops.Switch readObjects (fun current -> render (fun () -> unbox (current ())))
 
 module Tree =
+#if !FABLE_COMPILER
+    [<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
     type View =
         private
         | Empty
@@ -1315,6 +1556,63 @@ module Tree =
         | Keyed of KeyedItems * ((unit -> obj) -> View)
         | Component of (Setup -> View)
         | Embed of (Backend -> unit)
+
+#if !FABLE_COMPILER
+        member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+            NativeDisplay.union context depth precedence (box (this)) (fun n0 ->
+                match this with
+                | View.Empty -> "Empty", []
+                | View.Text (v0_0) -> "Text", [ Some (fun p -> NativeDisplay.text context n0 (v0_0)) ]
+                | View.Fragment (v0_0) ->
+                    "Fragment",
+                    [
+                        Some (fun p ->
+                            NativeDisplay.array
+                                context
+                                n0
+                                (fun c145 d145 p145 (item145: View) ->
+                                    (NativeDisplay.known c145 d145 (item145) (fun retained -> retained.NativeDisplay (c145, d145, p145))))
+                                (v0_0))
+                    ]
+                | View.Element (v0_0, v0_1, v0_2) ->
+                    "Element",
+                    [
+                        Some (fun p -> (NativeDisplay.known context n0 (v0_0) (fun retained -> retained.NativeDisplay (context, n0, p))))
+                        Some (fun p ->
+                            NativeDisplay.array
+                                context
+                                n0
+                                (fun c148 d148 p148 (item148: (Backend -> unit)) -> NativeDisplay.opaque c148 d148 "<function>" (box (item148)))
+                                (v0_1))
+                        Some (fun p ->
+                            NativeDisplay.array
+                                context
+                                n0
+                                (fun c150 d150 p150 (item150: View) ->
+                                    (NativeDisplay.known c150 d150 (item150) (fun retained -> retained.NativeDisplay (c150, d150, p150))))
+                                (v0_2))
+                    ]
+                | View.Bind (v0_0, v0_1) ->
+                    "Bind",
+                    [
+                        Some (fun p -> NativeDisplay.opaque context n0 "<function>" (box (v0_0)))
+                        Some (fun p -> NativeDisplay.opaque context n0 "<function>" (box (v0_1)))
+                    ]
+                | View.Keyed (v0_0, v0_1) ->
+                    "Keyed",
+                    [
+                        Some (fun p -> (NativeDisplay.known context n0 (v0_0) (fun retained -> retained.NativeDisplay (context, n0, p))))
+                        Some (fun p -> NativeDisplay.opaque context n0 "<function>" (box (v0_1)))
+                    ]
+                | View.Component (v0_0) -> "Component", [ Some (fun p -> NativeDisplay.opaque context n0 "<function>" (box (v0_0))) ]
+                | View.Embed (v0_0) -> "Embed", [ Some (fun p -> NativeDisplay.opaque context n0 "<function>" (box (v0_0))) ])
+
+        override this.ToString() =
+            if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+                sprintf "%+A" this
+            else
+                NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
     let rec run view (backend: Backend) =
         match view with

@@ -20,6 +20,7 @@
     <RanvierExactSiblingVersions>true</RanvierExactSiblingVersions>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="NativeDisplay.fs" />
     <Compile Include="Native.fs" />
     <Compile Include="Lifetime.fs" />
     <Compile Include="Scope.fs" />
@@ -36,6 +37,7 @@
     <Compile Include="Server.fs" />
     <Compile Include="Page.fs" />
     <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="NativeDisplay.LICENSE.txt" Pack="true" PackagePath="\" />
     <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
   <ItemGroup>
@@ -62,6 +64,7 @@
     <InternalsVisibleTo Include="Ranvier.View.Twin.Tests" />
     <InternalsVisibleTo Include="Ranvier.View.WebCore" />
     <InternalsVisibleTo Include="Ranvier.View.WebCore.Tests" />
+    <InternalsVisibleTo Include="Ranvier.View.WebCore.AotSmoke" />
   </ItemGroup>
   <ItemGroup Condition="'$(RanvierTrace)' == 'true'">
     <AssemblyMetadata Include="RanvierTrace" Value="true" />

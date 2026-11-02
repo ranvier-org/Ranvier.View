@@ -7,7 +7,22 @@ open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.WebCore
 
-type Counter = { Count: Signal<int> }
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
+type Counter =
+    {
+        Count: Signal<int>
+    }
+#if !FABLE_COMPILER
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        elif isNull (box this.Count) then
+            "{ Count = null }"
+        else
+            "{ Count = <Ranvier.Signal<int>> }"
+#endif
 
 let private counter =
     Component.define (fun _ (start: int) -> { Count = Api.createSignal start }) (fun t ->
@@ -26,6 +41,126 @@ let private check (name: string) (ok: bool) (detail: string) =
     else
         failures <- failures + 1
         Console.WriteLine ("FAIL " + name + ": " + detail)
+
+let private nativeDisplayChecks () =
+    let nullModel = { Count = Unchecked.defaultof<_> }
+    let modelText = nullModel.ToString ()
+    check "native smoke model diagnostics retain null" (modelText = "{ Count = null }") modelText
+
+    let capability =
+        {
+            CapabilityKey.Category = CapabilityCategory.Abi
+            Name = "abi"
+        }
+
+    let capabilityText = capability.ToString ()
+    check "capability diagnostics retain fields" (capabilityText = "{ Category = Abi\n  Name = \"abi\" }") capabilityText
+
+    let nodes =
+        TemplateNode.FragmentNode [| TemplateNode.TextNode "a"; TemplateNode.TextNode "λ" |]
+
+    let nodeText = nodes.ToString ()
+    check "template diagnostics retain typed arrays" (nodeText = "FragmentNode [|TextNode \"a\"; TextNode \"λ\"|]") nodeText
+
+    let window =
+        {
+            IdentityWindow.Parent = Unchecked.defaultof<_>
+            Kind = 1
+            A = 2
+            B = 3
+            Path = Unchecked.defaultof<_>
+            Issued = 4
+            Window = 5
+        }
+
+    let windowText = window.ToString ()
+
+    check
+        "private record diagnostics retain fields without recursion"
+        (windowText.Contains "Issued = 4"
+         && windowText.Contains "Window = 5")
+        windowText
+
+    if not System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+        let mutable unexpectedCalls = 0
+
+        let unexpected () =
+            unexpectedCalls <- unexpectedCalls + 1
+            failwith "a diagnostic executed user code"
+
+        let slot =
+            {
+                Slot.Target = SlotTarget.TextTarget
+                Mode = SlotMode.DirectMode
+                Read = Func<obj, obj>(fun _ -> unexpected ())
+                Same = Func<obj, obj, bool>(fun _ _ -> unexpected ())
+            }
+
+        let slotText = slot.ToString ()
+
+        check
+            "native diagnostics retain fields beside delegates"
+            (slotText.Contains "Target = TextTarget"
+             && slotText.Contains "<System.Func<System.Object,System.Object>>")
+            slotText
+
+        let nullSlot = { slot with Read = null; Same = null }
+        let nullText = nullSlot.ToString ()
+
+        check
+            "native diagnostics retain null delegates"
+            (nullText.Contains "Read = null"
+             && nullText.Contains "Same = null")
+            nullText
+
+        let status =
+            {
+                BoundaryStatus.IsPending = fun () -> unexpected ()
+            }
+
+        let statusText = status.ToString ()
+        check "native diagnostics do not invoke functions" (statusText = "{ IsPending = <function> }") statusText
+
+        let opaque =
+            { new obj() with
+                override _.ToString() =
+                    unexpected ()
+            }
+
+        let part: Part<obj, obj> =
+            Part.StaticProperty (Unchecked.defaultof<PortableProperty>, opaque)
+
+        let partText = part.ToString ()
+
+        check
+            "native diagnostics retain cases beside opaque payloads"
+            (partText.Contains "StaticProperty"
+             && partText.Contains "<System.Object>")
+            partText
+
+        let error =
+            { new InvalidOperationException("native diagnostic detail") with
+                override _.ToString() =
+                    unexpected ()
+            }
+
+        let failure =
+            {
+                BoundaryFailure.Error = error
+                Retry = fun () -> unexpected ()
+            }
+
+        let failureText = failure.ToString ()
+
+        check
+            "native exception diagnostics retain known details"
+            (failureText.Contains "native diagnostic detail"
+             && failureText.Contains "Type ="
+             && failureText.Contains "HResult ="
+             && failureText.Contains "InnerException =")
+            failureText
+
+        check "native diagnostics never execute opaque user code" (unexpectedCalls = 0) (string unexpectedCalls)
 
 let private paint (host: WebCoreHost) =
     let struct (width, height) = host.PaintSize
@@ -181,4 +316,5 @@ let main _ =
     hydrationChecks host
     styleAndPopoverChecks host
     check "no ABI21 listener errors" (host.Errors.Count = 0) (string host.Errors.Count)
+    nativeDisplayChecks ()
     failures

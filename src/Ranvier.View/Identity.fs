@@ -67,6 +67,9 @@ type InstancePath private (parent: InstancePath, step: string, a: int, b: int) =
 
 /// <summary>The window of an enclosing setup, held while a setup nested inside it runs.</summary>
 [<NoEquality; NoComparison>]
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type internal IdentityWindow =
     {
         Parent: InstancePath
@@ -77,6 +80,26 @@ type internal IdentityWindow =
         Issued: int
         Window: int
     }
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "Parent", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.View.InstancePath>" (box ((this).Parent)))
+                "Kind", (fun () -> NativeDisplay.int32 context n0 ((this).Kind))
+                "A", (fun () -> NativeDisplay.int32 context n0 ((this).A))
+                "B", (fun () -> NativeDisplay.int32 context n0 ((this).B))
+                "Path", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.View.InstancePath>" (box ((this).Path)))
+                "Issued", (fun () -> NativeDisplay.int32 context n0 ((this).Issued))
+                "Window", (fun () -> NativeDisplay.int32 context n0 ((this).Window))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 /// <summary>
 /// The ids of one render or one mount. A template instance's setup runs inside a window opened by <c>Enter</c>, and its

@@ -457,3 +457,5 @@ let mvuParent = Component.ofMembers<MvuParent, _> ()
 | all three rows, against an explicit entry holding their three twins | +869 B |
 
 Unused sugar costs 0 B. The emitted sugar modules contain 0 `curry`, `uncurry` or `partialApply`. The tables and raw files are in the [measurements note](https://github.com/ranvier-org/Ranvier/blob/master/docs/research/2026-10-20-view-sugar-v2.md).
+
+NativeAOT diagnostics for the native application's view state use typed case, field and container formatting. Ordinary JIT and Fable displays retain F# structural formatting. Native displays retain known values and nulls; function values use `<function>`, while delegates and opaque user values use stable markers for their declared types. Formatting never invokes those callbacks or an unknown `ToString`. Exception leaves retain the actual type, message, HResult and inner exception tree through direct APIs. Native output retains the 80-column layout and bounded depth, collection length and node budget.

@@ -694,6 +694,9 @@ type private RegionErrors(report: exn list -> unit) =
             this.Report errors
             raise error
 
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type private Entry =
     {
         Node: Node
@@ -702,6 +705,31 @@ type private Entry =
         Relocate: unit -> unit
         Restore: (unit -> unit) option
     }
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "Node", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.Dom.Node>" (box ((this).Node)))
+                "EndNode", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.Dom.Node>" (box ((this).EndNode)))
+                "Validate", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Validate)))
+                "Relocate", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Relocate)))
+                "Restore",
+                (fun () ->
+                    NativeDisplay.option
+                        context
+                        n0
+                        3
+                        (fun c42 d42 p42 (item42: (unit -> unit)) -> NativeDisplay.opaque c42 d42 "<function>" (box (item42)))
+                        ((this).Restore))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 /// <summary>
 /// The nodes a mount owns in its host: its boundary entries <c>first</c> and <c>last</c>, and between them its roots
@@ -1173,6 +1201,9 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
             raise (AggregateException ("Range release failed", errors))
 
 /// <summary>How a keyed region's markers join the mount's range.</summary>
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type private RegionPlacement =
     /// <summary>Markers created for an authored list at the range's top level.</summary>
     | NewRegion
@@ -1180,6 +1211,21 @@ type private RegionPlacement =
     | RootRegion
     /// <summary>Markers inside an element.</summary>
     | NestedRegion
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.union context depth precedence (box (this)) (fun n0 ->
+            match this with
+            | RegionPlacement.NewRegion -> "NewRegion", []
+            | RegionPlacement.RootRegion -> "RootRegion", []
+            | RegionPlacement.NestedRegion -> "NestedRegion", [])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 /// <summary>Arm selections are equal when both are null, or when their keys (<c>fst</c>) are equal under <c>=</c>.</summary>
 let private sameArm =

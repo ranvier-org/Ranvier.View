@@ -27,6 +27,9 @@ let isRcdata (tagName: string) =
 /// <summary>The parts of a definition whose parse depends on the elements enclosing the definition.</summary>
 /// <remarks>A path lists tags from a root of the definition, joined by <c>/</c>; null marks an absent element.</remarks>
 [<NoEquality; NoComparison>]
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type RootSummary =
     {
         /// <summary>The tags of the element roots, inlined children's roots included, in document order.</summary>
@@ -39,6 +42,25 @@ type RootSummary =
         /// </summary>
         Closers: string array
     }
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "RootTags",
+                (fun () ->
+                    NativeDisplay.array context n0 (fun c5 d5 p5 (item5: System.String) -> NativeDisplay.text c5 d5 (item5)) ((this).RootTags))
+                "TextRoot", (fun () -> NativeDisplay.boolean context n0 ((this).TextRoot))
+                "Closers",
+                (fun () -> NativeDisplay.array context n0 (fun c8 d8 p8 (item8: System.String) -> NativeDisplay.text c8 d8 (item8)) ((this).Closers))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 /// <summary>The ancestors, outermost first, and <c>last</c>, joined by <c>/</c>.</summary>
 let path (ancestors: string list) (last: string) =
@@ -247,6 +269,9 @@ let continuesItem tag =
 /// every element between them is of <c>Continues</c>.
 /// </summary>
 [<NoEquality; NoComparison>]
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type Scope =
     {
         Rule: string
@@ -254,6 +279,23 @@ type Scope =
         Target: string -> bool
         Continues: string -> bool
     }
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "Rule", (fun () -> NativeDisplay.text context n0 ((this).Rule))
+                "Closes", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Closes)))
+                "Target", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Target)))
+                "Continues", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Continues)))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 let private isItem tag =
     tag = "dd" || tag = "dt"
