@@ -39,3 +39,16 @@ in the vendor manifest and source-build receipt; embedded source/debug data is r
 The workflow retains that output and its diagnostics, then packs and tests the host on Linux and Windows
 only when the compiler identity matches. These startup/package checks do not replace the full
 analyzer suite, external-consumer tests or documented `build.fsx analyze` acceptance.
+
+The repository's `build.fsx analyze` command resolves the restored host and its runtime configuration
+through `SelectRanvierAnalyzerHost`, then invokes that host with separate process arguments. Host
+receipts include the actual arguments and working directory so qualification can verify every
+project in each group. The provider test executable copies the same compiler from the restored
+Host package; its optional `RANVIER_ANALYZER_TEST_COMPILER_SHA256` and
+`RANVIER_ANALYZER_TEST_PROVENANCE_DIR` settings verify and record the compiler loaded inside the
+test process before running the unfiltered suite.
+
+Repository qualification preserves the checked-in Cloudsmith mappings and uses exact private
+package mappings in a fresh cache. The workflow privately packs the four DOM alpha.55 dependencies
+from Core `e613ea27ecf4fa5a1e2cc935a1adbfc3d093f5c2`; those build receipts do not prove public
+publication or replace the later public-package acceptance run.

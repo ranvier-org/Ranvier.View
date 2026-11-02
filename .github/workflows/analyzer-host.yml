@@ -5,10 +5,18 @@ on:
     branches: [codex/project2-analyzer14]
     paths:
       - 'tools/Ranvier.Analyzers.Host/**'
+      - 'tools/Ranvier.Analyzers/**'
+      - 'tools/Ranvier.Analyzers.Tests/**'
+      - 'build.fsx'
+      - 'Directory.Build.*'
       - '.github/workflows/analyzer-host.yml'
   pull_request:
     paths:
       - 'tools/Ranvier.Analyzers.Host/**'
+      - 'tools/Ranvier.Analyzers/**'
+      - 'tools/Ranvier.Analyzers.Tests/**'
+      - 'build.fsx'
+      - 'Directory.Build.*'
       - '.github/workflows/analyzer-host.yml'
 
 permissions:
@@ -45,6 +53,65 @@ jobs:
           path: |
             artifacts/analyzer-compiler/*.json
             artifacts/analyzer-compiler/*.log
+          retention-days: 3
+
+  core-dependencies:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ranvier-org/Ranvier
+          ref: e613ea27ecf4fa5a1e2cc935a1adbfc3d093f5c2
+          path: .ci/ranvier
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.403'
+      - name: Pack the pinned private DOM dependency closure
+        shell: pwsh
+        working-directory: .ci/ranvier
+        run: |
+          $source = (git rev-parse HEAD).Trim()
+          if ($source -ne 'e613ea27ecf4fa5a1e2cc935a1adbfc3d093f5c2') { throw 'Unexpected Core source revision' }
+          $feed = Join-Path $env:GITHUB_WORKSPACE 'artifacts/core-feed'
+          foreach ($traced in @('false', 'true')) {
+            $outputs = Join-Path $env:GITHUB_WORKSPACE "artifacts/core-build-$traced"
+            foreach ($project in @('src/Ranvier.Dom/Ranvier.Dom.fsproj', 'src/Fable.Ranvier.Dom/Fable.Ranvier.Dom.fsproj')) {
+              dotnet pack $project -c Release --nologo "-p:RanvierTrace=$traced" --artifacts-path $outputs -o $feed
+              if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            }
+          }
+          if (git status --porcelain --untracked-files=no) { throw 'Core packing changed tracked source files' }
+      - name: Record actual private dependency package identities
+        shell: python {0}
+        run: |
+          import hashlib
+          import json
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+          import zipfile
+          expected = {'Ranvier.Dom', 'Fable.Ranvier.Dom', 'Ranvier.Dom.Traced', 'Fable.Ranvier.Dom.Traced'}
+          packages = []
+          for path in sorted(Path('artifacts/core-feed').glob('*.nupkg')):
+              with zipfile.ZipFile(path) as archive:
+                  names = [name for name in archive.namelist() if name.endswith('.nuspec')]
+                  if len(names) != 1:
+                      raise ValueError('Expected one dependency nuspec')
+                  root = ET.fromstring(archive.read(names[0]))
+                  values = {node.tag.rsplit('}', 1)[-1]: node.text for node in root.iter()}
+              if values['id'] not in expected or values['version'] != '0.1.0-alpha.55':
+                  raise ValueError('Unexpected private dependency package identity')
+              packages.append({'id': values['id'], 'version': values['version'], 'file': path.name, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()})
+          if len(packages) != 4 or {package['id'] for package in packages} != expected:
+              raise ValueError('The four-package private DOM closure is incomplete')
+          Path('artifacts/core-feed/manifest.json').write_text(json.dumps({'source': 'e613ea27ecf4fa5a1e2cc935a1adbfc3d093f5c2', 'publicQualification': False, 'packages': packages}, indent=2), encoding='utf-8')
+      - name: Retain the private dependency closure
+        uses: actions/upload-artifact@v4
+        with:
+          name: analyzer-core-dependencies-${{ github.sha }}
+          path: artifacts/core-feed/
           retention-days: 3
 
   host:
@@ -111,4 +178,123 @@ jobs:
         with:
           name: analyzer-host-${{ matrix.os }}-${{ github.sha }}
           path: artifacts/feed/*.nupkg
+          retention-days: 3
+
+  analyze:
+    needs: [host, core-dependencies]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        group: [library, view, examples]
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/artifacts/nuget
+      RestoreConfigFile: ${{ github.workspace }}/artifacts/analyzer-feed.NuGet.Config
+      DOTNET_CLI_USE_MSBUILD_SERVER: '0'
+      MSBUILDDISABLENODEREUSE: '1'
+      RANVIER_ANALYZER_HOST_PROVENANCE_DIR: ${{ github.workspace }}/artifacts/analyzer-group-provenance
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.403'
+      - uses: actions/download-artifact@v4
+        with:
+          name: analyzer-host-${{ matrix.os }}-${{ github.sha }}
+          path: artifacts/feed
+      - uses: actions/download-artifact@v4
+        with:
+          name: analyzer-core-dependencies-${{ github.sha }}
+          path: artifacts/core-feed
+      - name: Configure the exact qualification packages
+        shell: python {0}
+        run: |
+          import runpy
+          helper = runpy.run_path('tools/Ranvier.Analyzers.Host/tests/write_repository_nuget_config.py', run_name='repository_configuration')
+          from pathlib import Path
+          feeds = [{'key': 'private-analyzers', 'path': 'artifacts/feed', 'packageIds': ['Ranvier.Analyzers', 'Ranvier.Analyzers.Host']}, {'key': 'private-dom', 'path': 'artifacts/core-feed', 'packageIds': ['Ranvier.Dom', 'Fable.Ranvier.Dom', 'Ranvier.Dom.Traced', 'Fable.Ranvier.Dom.Traced']}]
+          helper['build_repository_config'](Path('nuget.config'), Path('artifacts/analyzer-feed.NuGet.Config'), feeds)
+      - name: Run the full repository analyzer group
+        run: |
+          New-Item -ItemType Directory -Force artifacts/analyzers | Out-Null
+          dotnet fsi build.fsx -- analyze --group ${{ matrix.group }} --build 2>&1 | Tee-Object -FilePath artifacts/analyzers/group.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify actual host identity and SARIF
+        run: |
+          python tools/Ranvier.Analyzers.Host/tests/test_verify_analyzer_group.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/Ranvier.Analyzers.Host/tests/verify_analyzer_group.py --group ${{ matrix.group }} --project-manifest tools/Ranvier.Analyzers.Host/tests/fixtures/analyzer-groups/${{ matrix.group }}.json --project-root . --report artifacts/analyzers/ranvier-${{ matrix.group }}.sarif --feed artifacts/feed --cache "$env:NUGET_PACKAGES" --provenance-dir "$env:RANVIER_ANALYZER_HOST_PROVENANCE_DIR" --evidence-dir artifacts/analyzer-group-verified --output artifacts/analyzer-group-verified/summary.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Retain full-group evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analyzer-group-${{ matrix.os }}-${{ matrix.group }}-${{ github.sha }}
+          path: |
+            artifacts/analyzers/
+            artifacts/analyzer-group-provenance/
+            artifacts/analyzer-group-verified/
+          if-no-files-found: warn
+          retention-days: 3
+
+  providers:
+    needs: [host, core-dependencies]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/artifacts/nuget
+      RestoreConfigFile: ${{ github.workspace }}/artifacts/analyzer-feed.NuGet.Config
+      DOTNET_CLI_USE_MSBUILD_SERVER: '0'
+      MSBUILDDISABLENODEREUSE: '1'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.403'
+      - uses: actions/download-artifact@v4
+        with:
+          name: analyzer-host-${{ matrix.os }}-${{ github.sha }}
+          path: artifacts/feed
+      - uses: actions/download-artifact@v4
+        with:
+          name: analyzer-core-dependencies-${{ github.sha }}
+          path: artifacts/core-feed
+      - name: Configure the exact qualification packages
+        shell: python {0}
+        run: |
+          import runpy
+          helper = runpy.run_path('tools/Ranvier.Analyzers.Host/tests/write_repository_nuget_config.py', run_name='repository_configuration')
+          from pathlib import Path
+          feeds = [{'key': 'private-analyzers', 'path': 'artifacts/feed', 'packageIds': ['Ranvier.Analyzers', 'Ranvier.Analyzers.Host']}, {'key': 'private-dom', 'path': 'artifacts/core-feed', 'packageIds': ['Ranvier.Dom', 'Fable.Ranvier.Dom', 'Ranvier.Dom.Traced', 'Fable.Ranvier.Dom.Traced']}]
+          helper['build_repository_config'](Path('nuget.config'), Path('artifacts/analyzer-feed.NuGet.Config'), feeds)
+      - name: Verify the provider qualification controls
+        run: python tools/Ranvier.Analyzers.Host/tests/test_provider_qualification.py
+      - name: Build the complete provider test executable
+        run: |
+          dotnet build tools/Ranvier.Analyzers.Tests/Ranvier.Analyzers.Tests.fsproj -c Release --nologo -v q
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Qualify all 234 tests with the actual compiler identity
+        run: |
+          $compilerSha = (Get-Content tools/Ranvier.Analyzers.Host/vendor-spec.json -Raw | ConvertFrom-Json).compilerSha256
+          python tools/Ranvier.Analyzers.Host/tests/run_provider_qualification.py --dotnet dotnet --project tools/Ranvier.Analyzers.Tests/Ranvier.Analyzers.Tests.fsproj --evidence-dir "${{ runner.temp }}/ranvier-provider-proof" --compiler-sha256 $compilerSha
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Retain full provider evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analyzer-providers-${{ matrix.os }}-${{ github.sha }}
+          path: ${{ runner.temp }}/ranvier-provider-proof
+          if-no-files-found: warn
           retention-days: 3

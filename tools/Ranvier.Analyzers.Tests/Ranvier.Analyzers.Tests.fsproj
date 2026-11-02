@@ -31,6 +31,7 @@
         <PackageReference Include="YoloDev.Expecto.TestSdk" Version="0.15.5" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
         <PackageReference Include="FSharp.Analyzers.SDK.Testing" Version="0.41.0" />
+        <PackageReference Include="Ranvier.Analyzers.Host" Version="[0.1.0-preview.1]" PrivateAssets="all" IncludeAssets="none" GeneratePathProperty="true" />
         <PackageReference Update="FSharp.Core" Version="10.1.402" />
     </ItemGroup>
     <ItemGroup>
@@ -47,4 +48,11 @@
     <ItemGroup Condition="'$(UseLocalRanvier)' != 'true'">
         <AssemblyMetadata Include="RanvierCoreProject" Value="$(NuGetPackageRoot)ranvier$(RanvierPackageSuffix.ToLowerInvariant())/$(RanvierVersion)/fable/Ranvier.fsproj" />
     </ItemGroup>
+    <Target Name="StageProviderCompiler" AfterTargets="Build">
+        <PropertyGroup>
+            <_ProviderCompiler>$(PkgRanvier_Analyzers_Host)/tools/net10.0/any/FSharp.Compiler.Service.dll</_ProviderCompiler>
+        </PropertyGroup>
+        <Error Condition="!Exists('$(_ProviderCompiler)')" Text="The provider tests require the restored Ranvier analyzer host compiler." />
+        <Copy SourceFiles="$(_ProviderCompiler)" DestinationFiles="$(TargetDir)FSharp.Compiler.Service.dll" />
+    </Target>
 </Project>

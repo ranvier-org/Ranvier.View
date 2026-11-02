@@ -11,7 +11,7 @@ internal static class Bootstrap
     {
         try
         {
-            VerifyCompiler();
+            VerifyCompiler(args);
         }
         catch (Exception error)
         {
@@ -22,7 +22,7 @@ internal static class Bootstrap
         return global::Program.main(args);
     }
 
-    private static void VerifyCompiler()
+    private static void VerifyCompiler(string[] arguments)
     {
         var hostAssembly = Assembly.GetExecutingAssembly();
         using var resource = hostAssembly.GetManifestResourceStream("Ranvier.Analyzers.Host.VendorManifest.json")
@@ -46,6 +46,8 @@ internal static class Bootstrap
             var receipt = new
             {
                 processId = Environment.ProcessId,
+                workingDirectory = Environment.CurrentDirectory,
+                arguments,
                 hostAssemblyPath = hostAssembly.Location,
                 hostAssemblyVersion = hostAssembly.GetName().Version?.ToString(),
                 hostAssemblySha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(hostAssembly.Location))).ToLowerInvariant(),

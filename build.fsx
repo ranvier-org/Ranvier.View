@@ -372,16 +372,32 @@ module Stage =
                 }
                 stage $"run analyzers over the {name} projects" {
                     run (fun _ -> Directory.CreateDirectory(Path.Combine(Spec.root, "artifacts/analyzers")) |> ignore)
-                    run (
-                        Cmd.ofList
-                            "dotnet"
-                            ([ "fsharp-analyzers"; "--project" ]
+                    run (fun _ ->
+                        let selection =
+                            capture "dotnet"
+                                [ "msbuild"; Spec.analyzers; "-nologo"; "-verbosity:quiet"; "-property:Configuration=Release"
+                                  "-target:SelectRanvierAnalyzerHost"
+                                  "-getProperty:_RanvierAnalyzerHostPath,_RanvierAnalyzerRuntimeConfig" ]
+                        use metadata = Text.Json.JsonDocument.Parse(selection)
+                        let properties = metadata.RootElement.GetProperty("Properties")
+                        let host = properties.GetProperty("_RanvierAnalyzerHostPath").GetString()
+                        let runtimeConfig = properties.GetProperty("_RanvierAnalyzerRuntimeConfig").GetString()
+                        if String.IsNullOrWhiteSpace host || String.IsNullOrWhiteSpace runtimeConfig then
+                            failwith "The restored Ranvier analyzer host did not supply its invocation paths."
+                        let info = ProcessStartInfo("dotnet", WorkingDirectory = Spec.root, UseShellExecute = false)
+                        let arguments =
+                            ([ "exec"; "--runtimeconfig"; runtimeConfig; host; "--project" ]
                              @ projects
                              @ [ "--exclude-files"; "**/Generated/**"
                                  "--analyzers-path"; "tools/Ranvier.Analyzers/bin/Release/net10.0"
                                  "-c"; "Release"; "--fail-on-type-errors"; "--treat-as-error"; "RAN*"; "--code-root"; "."
                                  "--report"; $"artifacts/analyzers/ranvier-{name}.sarif" ])
-                    )
+                        for argument in arguments do
+                            info.ArgumentList.Add argument
+                        use proc = Process.Start info
+                        proc.WaitForExit()
+                        if proc.ExitCode <> 0 then
+                            failwith $"The owned Ranvier analyzer host exited with {proc.ExitCode} for {name}.")
                 }
         }
     }
