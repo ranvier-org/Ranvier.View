@@ -75,6 +75,24 @@ host.Paint pixels // RGBA, row by row
 
 All calls go on the thread that created the host.
 
+### Native file picker
+
+On Windows, an SDL window can use the system file dialog for `<input type="file">`:
+
+```fsharp
+open Ranvier.View.WebCore
+open Ranvier.View.WebCore.Sdl
+
+use window = Window.Create ("Files", 800, 600)
+use picker = WindowsFilePickers.install window.Host window.NativeHandle
+while window.Step () do ()
+```
+
+Install it only when `WindowsFilePickers.available` and `WebCoreHost.Has "file-picker"` are true. The provider
+supports single and multiple files and extension filters. Directory requests are cancelled; MIME-only filters show
+all files. Disposing the provider or removing its input dismisses an open dialog. Applications on other platforms
+can install their own provider with `FilePickers.install`.
+
 `CssQueries.forHost host` provides document-scoped `CSS.supports` queries through the engine parser.
 `ComputedStyles.forHost host` returns live, read-only declarations for an element or pseudo-element
 through the shared `Ranvier.Dom.ComputedStyleService` contract. Both providers borrow the host and
