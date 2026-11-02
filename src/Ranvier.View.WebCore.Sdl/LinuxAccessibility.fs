@@ -33,6 +33,9 @@ module private AtspiNative =
             Release: Release
         }
 
+        override _.ToString() =
+            "AT-SPI provider API"
+
     let api =
         lazy
             if not (OperatingSystem.IsLinux ()) then
