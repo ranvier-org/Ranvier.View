@@ -2232,9 +2232,11 @@ let private viewTransitionFrame () : JS.Promise<unit> = jsNative
 let runViewTransitions () =
     async {
         let document = document ()
+
         let! count =
-            ViewTransitionChecks.run document (fun () -> BrowserViewTransitions.forDocument document)
-                (fun () -> viewTransitionFrame () |> Async.AwaitPromise)
+            ViewTransitionChecks.run document (fun () -> BrowserViewTransitions.forDocument document) (fun () ->
+                viewTransitionFrame () |> Async.AwaitPromise)
+
         return {| viewTransitions = count |}
     }
     |> Async.StartAsPromise
