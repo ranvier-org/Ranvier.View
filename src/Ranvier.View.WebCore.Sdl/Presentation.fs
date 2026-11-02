@@ -374,12 +374,13 @@ module internal WindowAccessibility =
 
     /// <summary>Detaches before disposing the page or destroying its native window.</summary>
     let detach (host: WebCoreHost) =
-        let result = RanvierWebCoreAbi.Native.rv_host_detach_uia host.Handle
+        if not host.Session.IsDisposed then
+            let result = RanvierWebCoreAbi.Native.rv_host_detach_uia host.Handle
 
-        if result <> 0 then
-            raise (
-                InvalidOperationException (
-                    "UI Automation detachment failed: "
-                    + result.ToString ()
+            if result <> 0 then
+                raise (
+                    InvalidOperationException (
+                        "UI Automation detachment failed: "
+                        + result.ToString ()
+                    )
                 )
-            )
