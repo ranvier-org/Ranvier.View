@@ -5,7 +5,7 @@
     <PublishAot>true</PublishAot>
     <IsPackable>false</IsPackable>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <NativeRuntimePackageVersion Condition="'$(NativeRuntimePackageVersion)' == ''">0.1.1-preview.5</NativeRuntimePackageVersion>
+    <NativeRuntimePackageVersion Condition="'$(NativeRuntimePackageVersion)' == ''">0.1.1-preview.6</NativeRuntimePackageVersion>
     <UsePublishedGpu Condition="'$(UsePublishedGpu)' == ''">false</UsePublishedGpu>
     <RestoreConfigFile>$(MSBuildThisFileDirectory)NuGet.Config</RestoreConfigFile>
     <DefineConstants Condition="'$(RanvierPackageSuffix)' == '.Traced'">$(DefineConstants);RANVIER_TRACE</DefineConstants>
