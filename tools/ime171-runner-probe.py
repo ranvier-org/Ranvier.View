@@ -5,12 +5,14 @@ from pathlib import Path
 import sys
 import threading
 import time
+import uuid
 
 runtime = Path(os.environ['IME_SDL_DLL']).resolve()
 os.add_dll_directory(str(runtime.parent))
 sdl = C.CDLL(str(runtime))
 user = C.WinDLL('user32', use_last_error=True)
 imm = C.WinDLL('imm32', use_last_error=True)
+ole = C.WinDLL('ole32', use_last_error=True)
 
 def bind(lib, name, result, arguments):
     fn = getattr(lib, name)
@@ -39,6 +41,26 @@ bind(imm, 'ImmGetOpenStatus', C.c_bool, [P])
 bind(imm, 'ImmSetConversionStatus', C.c_bool, [P, U, U])
 bind(imm, 'ImmReleaseContext', C.c_bool, [P, P])
 
+class Guid(C.Structure):
+    _fields_ = [('a', U), ('b', C.c_uint16), ('c', C.c_uint16), ('d', C.c_ubyte * 8)]
+    @classmethod
+    def parse(cls, value):
+        return cls.from_buffer_copy(uuid.UUID(value).bytes_le)
+    def __str__(self):
+        return str(uuid.UUID(bytes_le=bytes(self)))
+
+class Profile(C.Structure):
+    _fields_ = [('kind', U), ('lang', C.c_uint16), ('clsid', Guid), ('profile', Guid),
+                ('category', Guid), ('substitute', P), ('caps', U), ('keyboard', P), ('flags', U)]
+
+def com_method(obj, index, result, *arguments):
+    table = C.cast(obj, C.POINTER(C.POINTER(P))).contents
+    return C.WINFUNCTYPE(result, P, *arguments)(table[index])
+
+bind(ole, 'CoInitializeEx', C.c_long, [P, U])
+bind(ole, 'CoCreateInstance', C.c_long, [C.POINTER(Guid), P, U, C.POINTER(Guid), C.POINTER(P)])
+bind(ole, 'CoUninitialize', None, [])
+
 class TextEvent(C.Structure):
     _fields_ = [('type', U), ('reserved', U), ('timestamp', C.c_uint64), ('window', U),
                 ('text', C.c_char_p), ('start', I), ('length', I)]
@@ -46,7 +68,14 @@ class TextEvent(C.Structure):
 result = {'runtime': str(runtime), 'events': [], 'errors': []}
 output = Path(os.environ.get('IME_RESULT', 'ime171-result.json'))
 window = None
+manager = P()
+com_initialized = False
 try:
+    com_status = ole.CoInitializeEx(None, 2)
+    result['comInitialize'] = hex(com_status & 0xffffffff)
+    com_initialized = com_status >= 0
+    if not com_initialized:
+        raise RuntimeError('STA COM initialization failed')
     if not sdl.SDL_Init(0x20):
         raise RuntimeError('SDL_Init: ' + sdl.SDL_GetError().decode(errors='replace'))
     layout = user.LoadKeyboardLayoutW('00000411', 1)
@@ -54,6 +83,23 @@ try:
         raise OSError(C.get_last_error(), 'LoadKeyboardLayoutW')
     result['layout'] = hex(layout)
     user.ActivateKeyboardLayout(layout, 0)
+    clsid = Guid.parse('33c53a50-f456-4884-b049-85fd643ecfed')
+    iid = Guid.parse('71c6e74c-0f28-11d8-a82a-00065b84435c')
+    japanese = Guid.parse('03b5835f-f03c-411b-9ce2-aa23e1171e36')
+    profile_id = Guid.parse('a76c93d9-5523-4e90-aafa-4db112f9ac76')
+    category = Guid.parse('34745c63-b2f0-4784-8b67-5e12c8701a31')
+    status = ole.CoCreateInstance(C.byref(clsid), None, 1, C.byref(iid), C.byref(manager))
+    result['profileManager'] = hex(status & 0xffffffff)
+    if status < 0:
+        raise RuntimeError('TSF profile manager unavailable')
+    activate = com_method(manager, 3, C.c_long, U, C.c_uint16, C.POINTER(Guid), C.POINTER(Guid), P, U)
+    status = activate(manager, 1, 0x411, C.byref(japanese), C.byref(profile_id), None, 0x10000005)
+    result['activateProfile'] = hex(status & 0xffffffff)
+    get_active = com_method(manager, 10, C.c_long, C.POINTER(Guid), C.POINTER(Profile))
+    active = Profile()
+    active_status = get_active(manager, C.byref(category), C.byref(active))
+    result['activeProfile'] = {'status': hex(active_status & 0xffffffff), 'language': hex(active.lang),
+                               'clsid': str(active.clsid), 'profile': str(active.profile), 'flags': active.flags}
     window = sdl.SDL_CreateWindow(b'Ranvier IME171 runner probe', 500, 200, 0)
     if not window:
         raise RuntimeError('SDL_CreateWindow: ' + sdl.SDL_GetError().decode(errors='replace'))
@@ -93,7 +139,9 @@ try:
     result['foregroundStillOwned'] = user.GetForegroundWindow() == hwnd
     result['nonAsciiPreedit'] = any(e['type'] == '0x302' and any(ord(c) > 127 for c in e['text']) for e in result['events'])
     result['nonAsciiCommit'] = any(e['type'] == '0x303' and any(ord(c) > 127 for c in e['text']) for e in result['events'])
-    result['qualified'] = result['nonAsciiPreedit'] and result['nonAsciiCommit']
+    result['qualified'] = (active_status == 0 and str(active.clsid) == str(japanese)
+                           and str(active.profile) == str(profile_id)
+                           and result['nonAsciiPreedit'] and result['nonAsciiCommit'])
 except Exception as error:
     result['errors'].append(repr(error))
 finally:
@@ -101,6 +149,10 @@ finally:
         sdl.SDL_StopTextInput(window)
         sdl.SDL_DestroyWindow(window)
     sdl.SDL_Quit()
+    if manager:
+        com_method(manager, 2, C.c_ulong)(manager)
+    if com_initialized:
+        ole.CoUninitialize()
     output.write_text(json.dumps(result, indent=2, ensure_ascii=True))
     print(json.dumps(result, indent=2, ensure_ascii=True))
 sys.exit(0 if result.get('qualified') else 1)
