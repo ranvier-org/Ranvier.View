@@ -53,7 +53,7 @@
 **Files:** `tools/Ranvier.Analyzers.Host/tests/test_consumer.py`, public qualification workflow wiring, analyzer documentation.
 
 - [ ] Review the outside-root public-source proposal, correcting unsigned-versus-repository-signed package comparison before adoption.
-- [ ] Require NuGet.org-only source configuration and a fresh per-scenario package cache; reject private feeds in the restored assets graph.
+- [ ] Require NuGet.org-only source configuration and a fresh package cache per four-scenario invocation, revalidating signatures and payloads after each restore; reject private feeds in the restored assets graph.
 - [ ] Verify public packages using official NuGet signature verification and compare every original payload entry, identity and Host manifest with the tested pair. Reject added non-signature entries, removed entries, duplicate names and changed payload bytes.
 - [ ] Execute all four existing package-only consumer scenarios on Windows and Linux against the public pair, retaining actual loaded compiler identity, GC settings, diagnostics, signature output and package-content comparison evidence.
 - [ ] Publish the matching source changes through the accepted stack, update documentation to the actual package versions, and close View#14 only after independent public acceptance. Private DOM dependency qualification does not prove the separate full native/Core/View release cohort.
