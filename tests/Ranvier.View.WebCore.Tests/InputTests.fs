@@ -37,6 +37,35 @@ let tests =
     testList
         "Input"
         [
+            hostCase "editor undo and redo route through native transaction history"
+            <| fun host ->
+                if not (WebCoreHost.Has "editing-undo") then
+                    Expect.throwsT<NotSupportedException> (fun () -> host.Undo () |> ignore) "old native library reports unavailable undo"
+                    Expect.throwsT<NotSupportedException> (fun () -> host.Redo () |> ignore) "old native library reports unavailable redo"
+                else
+                    Expect.isFalse (host.Undo ()) "empty editor history is not handled"
+                    let element = host.Document.createElement "input"
+                    let input = element :?> HTMLInputElement
+                    input.value <- "original"
+                    host.Document.body.appendChild element |> ignore
+                    host.SetFocused true
+                    input.focus ()
+                    input.select ()
+                    host.CommitComposition "edited"
+                    Expect.equal input.value "edited" "native user edit"
+
+                    let cancel (event: Event) =
+                        event.preventDefault ()
+
+                    input.addEventListener ("beforeinput", cancel)
+                    Expect.isTrue (host.Undo ()) "canceled undo still consumes the command"
+                    Expect.equal input.value "edited" "beforeinput cancellation preserves text"
+                    input.removeEventListener ("beforeinput", cancel)
+                    Expect.isTrue (host.Undo ()) "retry retains the editor transaction"
+                    Expect.equal input.value "original" "undo restored the selection"
+                    Expect.isTrue (host.Redo ()) "redo is handled"
+                    Expect.equal input.value "edited" "redo restored the edit"
+
             hostCase "listener dictionaries preserve capture once passive and removal"
             <| fun host ->
                 let parent = host.Document.createElement "div"
