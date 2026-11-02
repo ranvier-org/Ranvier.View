@@ -50,7 +50,7 @@ test process before running the unfiltered suite.
 
 Repository qualification preserves the checked-in Cloudsmith mappings and uses exact private
 package mappings in a fresh cache. The workflow privately packs the four DOM alpha.55 dependencies
-from Core `e613ea27ecf4fa5a1e2cc935a1adbfc3d093f5c2`; those build receipts do not prove public
+from Core `54f004b3baa4136777998b65e0f9941d78151224`; those build receipts do not prove public
 publication or replace the later public-package acceptance run.
 
 The two `candidate-consumers` jobs both restore the Ubuntu-built package pair, so publication has
