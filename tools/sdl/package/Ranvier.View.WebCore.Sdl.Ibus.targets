@@ -1,0 +1,17 @@
+<Project>
+  <PropertyGroup>
+    <_RanvierIbusSdl>$(MSBuildThisFileDirectory)../tools/linux-x64/libSDL3.so</_RanvierIbusSdl>
+  </PropertyGroup>
+  <Target Name="ValidateRanvierIbusSdlPublish" BeforeTargets="Publish"
+          Condition="'$(RuntimeIdentifier)' == 'linux-x64' And '$(PublishSingleFile)' == 'true'">
+    <Error Text="The optional IBus SDL runtime does not yet support single-file publish." />
+  </Target>
+  <Target Name="CopyRanvierIbusSdlToBuild" AfterTargets="CopyFilesToOutputDirectory"
+          Condition="'$(RuntimeIdentifier)' == 'linux-x64' And '$(IsCrossTargetingBuild)' != 'true'">
+    <Copy SourceFiles="$(_RanvierIbusSdl)" DestinationFiles="$(TargetDir)libSDL3.so" />
+  </Target>
+  <Target Name="CopyRanvierIbusSdlToPublish" AfterTargets="Publish"
+          Condition="'$(RuntimeIdentifier)' == 'linux-x64' And '$(IsCrossTargetingBuild)' != 'true'">
+    <Copy SourceFiles="$(_RanvierIbusSdl)" DestinationFiles="$(PublishDir)libSDL3.so" />
+  </Target>
+</Project>
