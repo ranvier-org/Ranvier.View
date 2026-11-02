@@ -7,14 +7,14 @@ bridge and optional AT-SPI window lease; their cached native tokens, coordinates
 native state. It adds no core ownership, scheduling or reconciliation primitive.
 
 `tools/native-cohort347/graph.json` records the source/package graph and remaining actual runtime inputs. The View
-baseline is PR66 source `0bc82b87`, including public Dom alpha.56, CSS alpha.2, UIA cleanup and source-fresh analyzer
+baseline is PR66 source `63feeec5`, including public Dom alpha.56, CSS alpha.2, separate CSS add-on alpha.1, UIA cleanup and source-fresh analyzer
 fixes. Public Dom alpha.56's normal/traced nuspecs depend on FSharp.Core, and its Fable variants additionally depend
 on Fable.Core. They do not pin native interop, so this preparation requires no new Core version or Core Native pin.
 
 The SDL bridge directly calls the new surrounding/delete bindings. Compile it against the canonical 347-binding
-interop, preserving the original344 signatures and the surrounding344/delete345/style346 tail. The privately staged
+interop, preserving the original 344 signatures and the surrounding 344/delete 345/style 346 tail. The privately staged
 `Ranvier.WebCore` `0.0.0-private347.1` comes from the exact da11 source archive and is unpublished. It is an API/source
-checkpoint only. The final native source/version/hash stays unset until the ABI metadata correction, reviewed0068
+checkpoint only. The final native source/version/hash stays unset until the ABI metadata correction, reviewed 0068
 worker-first-owner fix and reusable GPU oracle are integrated and a matching producer is qualified. Update the final
 source pin and use a new private package version when those inputs change; never overwrite a prior package/cache.
 
@@ -55,6 +55,6 @@ and unavailable-bus controls on the same exact normal/traced consumer graph. Kee
 runtime's package/hash and upstream pin distinct from the renderer/provider.
 
 Actual Windows and Linux x64 native/provider/managed cohort tests remain separate from source preparation. ARM64
-requires its matching actual347 native producer, provider/protocol, real Window/Host and strict NativeAOT evidence;
+requires its matching actual 347 native producer, provider/protocol, real Window/Host and strict NativeAOT evidence;
 the existing ARM provider preparation is statically unarmed. No producer dispatch, public version allocation or
 runtime acceptance is performed by this managed source preparation.

@@ -1,6 +1,6 @@
 {
   "scope": "managed source and compile preparation; no matched native runtime acceptance",
-  "viewBase": "0bc82b87cb1ca23e3d227440d5504c2024a6eec6",
+  "viewBase": "63feeec54998d9ba8e79bf5adfff5c69db3d2ba8",
   "sdlReviewedSource": "57d950148dd931c0d2e9cac7c0ae31f11c412ef3",
   "accessibilityReviewedSource": "0bd9d12b4c96fe80d6f8fdecedc9d8c8643cd73c",
   "publicPackages": {
@@ -8,7 +8,8 @@
     "Ranvier.Dom.Traced": "0.1.0-alpha.56",
     "Fable.Ranvier.Dom": "0.1.0-alpha.56",
     "Fable.Ranvier.Dom.Traced": "0.1.0-alpha.56",
-    "Ranvier.CssVersion": "0.1.1-alpha.2"
+    "Ranvier.CssVersion": "0.1.1-alpha.2",
+    "Ranvier.CssAddonsVersion": "0.1.1-alpha.1"
   },
   "interopPreparation": {
     "id": "Ranvier.WebCore",
