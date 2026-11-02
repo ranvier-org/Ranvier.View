@@ -7,9 +7,31 @@ open System.Text
 open RanvierWebCoreAbi
 
 /// <summary>The result returned by an application's native file picker.</summary>
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type FilePickerResult =
     | Selected of paths: string array
     | Cancelled
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: Ranvier.View.NativeDisplay.Context, depth: int, precedence: int) =
+        Ranvier.View.NativeDisplay.union context depth precedence (box this) (fun nested ->
+            match this with
+            | Selected paths ->
+                "Selected",
+                [
+                    Some (fun _ ->
+                        Ranvier.View.NativeDisplay.array context nested (fun c d _ path -> Ranvier.View.NativeDisplay.text c d path) paths)
+                ]
+            | Cancelled -> "Cancelled", [])
+
+    override this.ToString() =
+        if RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            Ranvier.View.NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 /// <summary>A file-control request owned by the host that opened it.</summary>
 /// <remarks>Complete on the host thread. Completion returns false when the control or request is no longer live.</remarks>
@@ -32,9 +54,30 @@ type FilePickerRequest
         complete result
 
 /// <summary>A picker opening or the invalidation of a previously opened request.</summary>
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type FilePickerEvent =
     | Show of FilePickerRequest
     | Invalidate of requestId: uint64
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: Ranvier.View.NativeDisplay.Context, depth: int, precedence: int) =
+        Ranvier.View.NativeDisplay.union context depth precedence (box this) (fun nested ->
+            match this with
+            | Show request ->
+                "Show",
+                [
+                    Some (fun _ -> Ranvier.View.NativeDisplay.opaque context nested "Ranvier.View.WebCore.FilePickerRequest" (box request))
+                ]
+            | Invalidate id -> "Invalidate", [ Some (fun _ -> Ranvier.View.NativeDisplay.uint64 context nested id) ])
+
+    override this.ToString() =
+        if RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            Ranvier.View.NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
 type internal FilePickerCallback = delegate of context: nativeint * request: uint64 * action: int * flags: int -> unit
@@ -179,7 +222,7 @@ module FilePickers =
                 if not disposed then
                     host.PostToOwner (fun () -> deliver id action flags))
 
-        Native.rv_host_set_file_picker_handler (host.Handle, Marshal.GetFunctionPointerForDelegate callback, 0n)
+        Native.rv_host_set_file_picker_handler (host.Handle, Marshal.GetFunctionPointerForDelegate<FilePickerCallback> callback, 0n)
         |> Interop.check "rv_host_set_file_picker_handler"
 
         installed.Add (host, token)
