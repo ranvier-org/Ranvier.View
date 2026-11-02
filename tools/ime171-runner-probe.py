@@ -32,6 +32,7 @@ bind(sdl, 'SDL_Quit', None, [])
 bind(sdl, 'SDL_GetError', C.c_char_p, [])
 bind(user, 'LoadKeyboardLayoutW', P, [C.c_wchar_p, U])
 bind(user, 'ActivateKeyboardLayout', P, [P, U])
+bind(user, 'GetKeyboardLayout', P, [U])
 bind(user, 'SetForegroundWindow', C.c_bool, [P])
 bind(user, 'GetForegroundWindow', P, [])
 bind(user, 'keybd_event', None, [C.c_ubyte, C.c_ubyte, U, C.c_size_t])
@@ -76,6 +77,10 @@ class TextEvent(C.Structure):
     _fields_ = [('type', U), ('reserved', U), ('timestamp', C.c_uint64), ('window', U),
                 ('text', C.c_char_p), ('start', I), ('length', I)]
 
+class CandidateEvent(C.Structure):
+    _fields_ = [('type', U), ('reserved', U), ('timestamp', C.c_uint64), ('window', U),
+                ('candidates', C.POINTER(C.c_char_p)), ('count', I), ('selected', I), ('horizontal', C.c_bool)]
+
 result = {'runtime': str(runtime), 'events': [], 'errors': []}
 output = Path(os.environ.get('IME_RESULT', 'ime171-result.json'))
 window = None
@@ -89,6 +94,17 @@ try:
         raise RuntimeError('STA COM initialization failed')
     if not sdl.SDL_Init(0x20):
         raise RuntimeError('SDL_Init: ' + sdl.SDL_GetError().decode(errors='replace'))
+    window = sdl.SDL_CreateWindow(b'Ranvier IME171 runner probe', 500, 200, 0)
+    if not window:
+        raise RuntimeError('SDL_CreateWindow: ' + sdl.SDL_GetError().decode(errors='replace'))
+    hwnd = sdl.SDL_GetPointerProperty(sdl.SDL_GetWindowProperties(window), b'SDL.window.win32.hwnd', None)
+    if not hwnd:
+        raise RuntimeError('SDL window HWND unavailable')
+    result['foregroundGranted'] = bool(user.SetForegroundWindow(hwnd))
+    user.SetFocus(hwnd)
+    result['windowFocused'] = user.GetFocus() == hwnd and user.GetForegroundWindow() == hwnd
+    if not result['windowFocused']:
+        raise RuntimeError('SDL window did not obtain keyboard focus')
     layout = user.LoadKeyboardLayoutW('00000411', 1)
     if not layout:
         raise OSError(C.get_last_error(), 'LoadKeyboardLayoutW')
@@ -104,20 +120,34 @@ try:
     if status < 0:
         raise RuntimeError('TSF profile manager unavailable')
     activate = com_method(manager, 3, C.c_long, U, C.c_uint16, C.POINTER(Guid), C.POINTER(Guid), P, U)
-    status = activate(manager, 1, 0x411, C.byref(japanese), C.byref(profile_id), None, 0x10000005)
+    status = activate(manager, 1, 0x411, C.byref(japanese), C.byref(profile_id), None, 0x10000001)
     result['activateProfile'] = hex(status & 0xffffffff)
     get_active = com_method(manager, 10, C.c_long, C.POINTER(Guid), C.POINTER(Profile))
     active = Profile()
     active_status = get_active(manager, C.byref(category), C.byref(active))
     result['activeProfile'] = {'status': hex(active_status & 0xffffffff), 'language': hex(active.lang),
                                'clsid': str(active.clsid), 'profile': str(active.profile), 'flags': active.flags}
-    window = sdl.SDL_CreateWindow(b'Ranvier IME171 runner probe', 500, 200, 0)
-    if not window:
-        raise RuntimeError('SDL_CreateWindow: ' + sdl.SDL_GetError().decode(errors='replace'))
-    hwnd = sdl.SDL_GetPointerProperty(sdl.SDL_GetWindowProperties(window), b'SDL.window.win32.hwnd', None)
-    if not hwnd:
-        raise RuntimeError('SDL window HWND unavailable')
-    result['foregroundGranted'] = bool(user.SetForegroundWindow(hwnd))
+    current_layout = user.GetKeyboardLayout(0) or 0
+    result['activeHkl'] = hex(current_layout)
+    result['profileVerified'] = (status == 0 and active_status == 0 and active.lang == 0x411
+                                 and str(active.clsid) == str(japanese) and str(active.profile) == str(profile_id)
+                                 and (active.flags & 3) == 3 and (current_layout & 0xffff) == 0x411)
+    if not result['profileVerified']:
+        raise RuntimeError('Japanese TIP and Japanese keyboard layout are not both active')
+    layout = current_layout
+    def verify_profile(stage, expected_hwnd):
+        current = Profile()
+        profile_status = get_active(manager, C.byref(category), C.byref(current))
+        hkl = user.GetKeyboardLayout(0) or 0
+        observed = {'status': hex(profile_status & 0xffffffff), 'language': hex(current.lang),
+                    'clsid': str(current.clsid), 'profile': str(current.profile), 'flags': current.flags,
+                    'hkl': hex(hkl), 'focused': user.GetFocus() == expected_hwnd,
+                    'foreground': user.GetForegroundWindow() == expected_hwnd}
+        result[stage] = observed
+        if not (profile_status == 0 and current.lang == 0x411 and str(current.clsid) == str(japanese)
+                and str(current.profile) == str(profile_id) and (current.flags & 3) == 3
+                and (hkl & 0xffff) == 0x411 and observed['focused'] and observed['foreground']):
+            raise RuntimeError(stage + ' lost the Japanese profile, layout or keyboard focus')
     if not sdl.SDL_StartTextInput(window):
         raise RuntimeError('SDL_StartTextInput: ' + sdl.SDL_GetError().decode(errors='replace'))
     context = imm.ImmGetContext(hwnd)
@@ -132,13 +162,18 @@ try:
     result['conversionMode'] = hex(conversion.value)
     result['sentenceMode'] = hex(sentence.value)
     imm.ImmReleaseContext(hwnd, context)
+    if not (result['imeOpen'] and result['conversionRead'] and (conversion.value & 9) == 9):
+        raise RuntimeError('SDL IME did not enter native Hiragana conversion mode')
+    keys = [0x4b, 0x41, 0x4e, 0x41, 0x20, 0x20, 0x0d]
+    result['keyScancodes'] = [{'virtualKey': hex(key), 'scanCode': hex(user.MapVirtualKeyExW(key, 0, layout))} for key in keys]
     def type_keys():
         time.sleep(2)
-        for key in [0x4b, 0x41, 0x4e, 0x41, 0x20, 0x20, 0x0d]:
+        for key in keys:
             scan = user.MapVirtualKeyExW(key, 0, layout)
             user.keybd_event(key, scan, 0, 0)
             user.keybd_event(key, scan, 2, 0)
             time.sleep(.25)
+    verify_profile('sdlBeforeKeys', hwnd)
     sender = threading.Thread(target=type_keys)
     sender.start()
     event = C.create_string_buffer(128)
@@ -150,6 +185,13 @@ try:
                 result['events'].append({'type': hex(entry.type), 'text': entry.text.decode('utf-8', errors='replace') if entry.text else '',
                                          'start': entry.start if entry.type == 0x302 else None,
                                          'length': entry.length if entry.type == 0x302 else None})
+            elif entry.type == 0x307:
+                candidates = CandidateEvent.from_buffer(event)
+                count = max(0, min(candidates.count, 64))
+                values = [candidates.candidates[i].decode('utf-8', errors='replace') if candidates.candidates[i] else ''
+                          for i in range(count)] if candidates.candidates else []
+                result['events'].append({'type': hex(entry.type), 'candidates': values,
+                                         'selected': candidates.selected, 'horizontal': bool(candidates.horizontal)})
         time.sleep(.01)
     sender.join()
     result['foregroundStillOwned'] = user.GetForegroundWindow() == hwnd
@@ -172,6 +214,9 @@ try:
         result['editConversionMode'] = hex(edit_conversion.value)
         result['editSentenceMode'] = hex(edit_sentence.value)
         imm.ImmReleaseContext(edit, edit_context)
+        if not (result['editFocused'] and result['editOpen'] and result['editConversionRead'] and (edit_conversion.value & 9) == 9):
+            raise RuntimeError('EDIT did not obtain focus and native Hiragana conversion mode')
+        verify_profile('editBeforeKeys', edit)
         sender = threading.Thread(target=type_keys)
         sender.start()
         message = C.create_string_buffer(128)
@@ -192,8 +237,8 @@ try:
         user.DestroyWindow(edit)
     result['nonAsciiPreedit'] = any(e['type'] == '0x302' and any(ord(c) > 127 for c in e['text']) for e in result['events'])
     result['nonAsciiCommit'] = any(e['type'] == '0x303' and any(ord(c) > 127 for c in e['text']) for e in result['events'])
-    result['qualified'] = (active_status == 0 and str(active.clsid) == str(japanese)
-                           and str(active.profile) == str(profile_id)
+    result['qualified'] = (result['profileVerified'] and result['editNonAscii'] and result['editForegroundStillOwned']
+                           and result['foregroundStillOwned']
                            and result['nonAsciiPreedit'] and result['nonAsciiCommit'])
 except Exception as error:
     result['errors'].append(repr(error))

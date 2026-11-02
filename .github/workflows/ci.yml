@@ -27,7 +27,9 @@ jobs:
           $languages = Get-WinUserLanguageList
           if (-not ($languages.LanguageTag -contains 'ja-JP')) { $languages.Add('ja-JP') }
           Set-WinUserLanguageList $languages -Force
-          Get-WinUserLanguageList | ConvertTo-Json -Depth 8 | Out-File ime-after.json -Encoding utf8
+          $after = Get-WinUserLanguageList
+          $after | ConvertTo-Json -Depth 8 | Out-File ime-after.json -Encoding utf8
+          if (-not ($after.LanguageTag -contains 'ja-JP')) { throw 'Japanese language profile was not provisioned' }
       - name: Restore the same SDL runtime used by View
         shell: pwsh
         run: dotnet restore tests/Ranvier.View.WebCore.Tests/Ranvier.View.WebCore.Tests.fsproj
