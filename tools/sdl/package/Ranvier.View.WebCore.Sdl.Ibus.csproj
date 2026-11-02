@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <PackageId>Ranvier.View.WebCore.Sdl.Ibus</PackageId>
+    <Version>0.1.0-local.5</Version>
+    <Authors>Ranvier</Authors>
+    <Description>Opt-in SDL direct IBus surrounding-text runtime for Linux x64.</Description>
+    <PackageIcon></PackageIcon>
+    <PackageReadmeFile></PackageReadmeFile>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="Ranvier.View.WebCore.Sdl.Ibus.targets" Pack="true" PackagePath="buildTransitive/" />
+    <None Include="SDL-LICENSE.txt" Pack="true" PackagePath="licenses/SDL-LICENSE.txt" />
+    <None Include="$(IbusSdlLibrary)" Pack="true" PackagePath="tools/linux-x64/libSDL3.so" />
+  </ItemGroup>
+  <Target Name="RequireIbusSdlLibrary" BeforeTargets="Pack">
+    <Error Condition="'$(IbusSdlLibrary)' == '' Or !Exists('$(IbusSdlLibrary)')" Text="Set IbusSdlLibrary to the qualified patched Linux x64 SDL shared library." />
+  </Target>
+</Project>
