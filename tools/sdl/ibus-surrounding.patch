@@ -1,8 +1,32 @@
+diff --git a/src/core/linux/SDL_dbus.c b/src/core/linux/SDL_dbus.c
+index 33a4467c1..8474ae09f 100644
+--- a/src/core/linux/SDL_dbus.c
++++ b/src/core/linux/SDL_dbus.c
+@@ -103,6 +103,7 @@ static bool LoadDBUSSyms(void)
+     SDL_DBUS_SYM(dbus_bool_t (*)(int), type_is_fixed);
+     SDL_DBUS_SYM(dbus_bool_t (*)(DBusMessage *, const char *, const char *), message_is_signal);
+     SDL_DBUS_SYM(dbus_bool_t (*)(DBusMessage *, const char *), message_has_path);
++    SDL_DBUS_SYM(dbus_bool_t (*)(DBusMessage *, const char *), message_has_sender);
+     SDL_DBUS_SYM(DBusMessage *(*)(const char *, const char *, const char *, const char *), message_new_method_call);
+     SDL_DBUS_SYM(DBusMessage *(*)(const char *, const char *, const char *), message_new_signal);
+     SDL_DBUS_SYM(void (*)(DBusMessage *, dbus_bool_t), message_set_no_reply);
+diff --git a/src/core/linux/SDL_dbus.h b/src/core/linux/SDL_dbus.h
+index 28cd7ce14..b37ce916b 100644
+--- a/src/core/linux/SDL_dbus.h
++++ b/src/core/linux/SDL_dbus.h
+@@ -76,6 +76,7 @@ typedef struct SDL_DBusContext
+     dbus_bool_t (*type_is_fixed)(int);
+     dbus_bool_t (*message_is_signal)(DBusMessage *, const char *, const char *);
+     dbus_bool_t (*message_has_path)(DBusMessage *, const char *);
++    dbus_bool_t (*message_has_sender)(DBusMessage *, const char *);
+     DBusMessage *(*message_new_method_call)(const char *, const char *, const char *, const char *);
+     DBusMessage *(*message_new_signal)(const char *, const char *, const char *);
+     void (*message_set_no_reply)(DBusMessage *, dbus_bool_t);
 diff --git a/src/core/linux/SDL_ibus.c b/src/core/linux/SDL_ibus.c
-index 1002679a6..cb4d19667 100644
+index 1002679a6..5fd2a8b27 100644
 --- a/src/core/linux/SDL_ibus.c
 +++ b/src/core/linux/SDL_ibus.c
-@@ -57,6 +57,12 @@ static bool ibus_is_portal_interface = false;
+@@ -57,6 +57,16 @@ static bool ibus_is_portal_interface = false;
  static char *ibus_addr_file = NULL;
  static int inotify_fd = -1, inotify_wd = -1;
  
@@ -10,12 +34,16 @@ index 1002679a6..cb4d19667 100644
 +static char *ranvier_surrounding;
 +static Uint32 ranvier_cursor, ranvier_anchor;
 +static bool ranvier_last_send_ok;
++static bool ranvier_delete_blocked;
++static Uint64 ranvier_token;
++static char *ranvier_sender;
++static Uint32 ranvier_delete_event;
 +static bool IBus_SendSurrounding(void);
 +
  static Uint32 IBus_ModState(void)
  {
      Uint32 ibus_mods = 0;
-@@ -221,6 +227,11 @@ static DBusHandlerResult IBus_MessageHandler(DBusConnection *conn, DBusMessage *
+@@ -221,6 +231,41 @@ static DBusHandlerResult IBus_MessageHandler(DBusConnection *conn, DBusMessage *
  {
      SDL_DBusContext *dbus = (SDL_DBusContext *)user_data;
  
@@ -24,10 +52,40 @@ index 1002679a6..cb4d19667 100644
 +        return DBUS_HANDLER_RESULT_HANDLED;
 +    }
 +
++    if (dbus->message_is_signal(msg, ibus_input_interface, "DeleteSurroundingText")) {
++        if (!ranvier_sender || !input_ctx_path || !dbus->message_has_sender(msg, ranvier_sender)
++            || !dbus->message_has_path(msg, input_ctx_path)) {
++            return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
++        }
++        Sint32 offset;
++        Uint32 count;
++        SDL_Window *window = SDL_GetKeyboardFocus();
++        if (window && ranvier_surrounding && ranvier_token && ranvier_delete_event
++            && dbus->message_get_args(msg, NULL, DBUS_TYPE_INT32, &offset, DBUS_TYPE_UINT32, &count, DBUS_TYPE_INVALID)) {
++            SDL_Event event;
++            SDL_zero(event);
++            event.user.type = ranvier_delete_event;
++            event.user.windowID = SDL_GetWindowID(window);
++            event.user.code = offset;
++            event.user.data1 = (void *)(uintptr_t)count;
++            event.user.data2 = (void *)(uintptr_t)ranvier_token;
++            if (!SDL_PushEvent(&event)) {
++                ranvier_delete_blocked = true;
++            }
++        } else {
++            ranvier_delete_blocked = true;
++        }
++        return DBUS_HANDLER_RESULT_HANDLED;
++    }
++
++    if (dbus->message_is_signal(msg, ibus_input_interface, "CommitText") && ranvier_delete_blocked) {
++        return DBUS_HANDLER_RESULT_HANDLED;
++    }
++
      if (dbus->message_is_signal(msg, ibus_input_interface, "CommitText")) {
          DBusMessageIter iter;
          const char *text;
-@@ -410,6 +421,9 @@ static void SDLCALL IBus_SetCapabilities(void *data, const char *name, const cha
+@@ -410,6 +455,9 @@ static void SDLCALL IBus_SetCapabilities(void *data, const char *name, const cha
  
      if (IBus_CheckConnection(dbus)) {
          Uint32 caps = IBUS_CAP_FOCUS;
@@ -37,7 +95,7 @@ index 1002679a6..cb4d19667 100644
  
          if (hint && SDL_strstr(hint, "composition")) {
              caps |= IBUS_CAP_PREEDIT_TEXT;
-@@ -423,6 +437,80 @@ static void SDLCALL IBus_SetCapabilities(void *data, const char *name, const cha
+@@ -423,6 +471,93 @@ static void SDLCALL IBus_SetCapabilities(void *data, const char *name, const cha
      }
  }
  
@@ -84,7 +142,15 @@ index 1002679a6..cb4d19667 100644
 +    return ok;
 +}
 +
-+__attribute__((visibility("default"))) bool SDLCALL SDL_Ranvier_SetIbusSurrounding(SDL_Window *window, const char *text, Uint32 cursor, Uint32 anchor)
++__attribute__((visibility("default"))) Uint32 SDLCALL SDL_Ranvier_GetIbusDeleteEventType(void)
++{
++    if (!ranvier_delete_event && sizeof(void *) >= sizeof(Uint64)) {
++        ranvier_delete_event = SDL_RegisterEvents(1);
++    }
++    return ranvier_delete_event;
++}
++
++__attribute__((visibility("default"))) bool SDLCALL SDL_Ranvier_SetIbusSurrounding(SDL_Window *window, const char *text, Uint32 cursor, Uint32 anchor, Uint64 token)
 +{
 +    SDL_DBusContext *dbus = SDL_DBus_GetContext();
 +    char *copy = NULL;
@@ -93,6 +159,11 @@ index 1002679a6..cb4d19667 100644
 +    if (!window || window != SDL_GetKeyboardFocus() || !input_ctx_path || !IBus_CheckConnection(dbus)) {
 +        return false;
 +    }
++    if (text && (!token || !ranvier_delete_event || !ranvier_sender)) {
++        return false;
++    }
++    ranvier_token = text ? token : 0;
++    ranvier_delete_blocked = false;
 +    if (text && ranvier_surrounding && !SDL_strcmp(text, ranvier_surrounding)
 +        && cursor == ranvier_cursor && anchor == ranvier_anchor) {
 +        return ranvier_last_send_ok || (ranvier_last_send_ok = IBus_SendSurrounding());
@@ -118,35 +189,268 @@ index 1002679a6..cb4d19667 100644
  static bool IBus_SetupConnection(SDL_DBusContext *dbus, const char *addr)
  {
      const char *client_name = "SDL3_Application";
-@@ -602,6 +690,8 @@ bool SDL_IBus_Init(void)
+@@ -475,6 +610,15 @@ static bool IBus_SetupConnection(SDL_DBusContext *dbus, const char *addr)
+     }
+ 
+     if (result) {
++        DBusMessage *owner_reply = NULL;
++        const char *owner = NULL;
++        SDL_free(ranvier_sender);
++        ranvier_sender = NULL;
++        if (SDL_DBus_CallMethodOnConnection(ibus_conn, &owner_reply, DBUS_SERVICE_DBUS, DBUS_PATH_DBUS, DBUS_INTERFACE_DBUS, "GetNameOwner",
++                DBUS_TYPE_STRING, &ibus_service, DBUS_TYPE_INVALID, DBUS_TYPE_STRING, &owner, DBUS_TYPE_INVALID)) {
++            ranvier_sender = SDL_strdup(owner);
++        }
++        SDL_DBus_FreeReply(&owner_reply);
+         char matchstr[128];
+         (void)SDL_snprintf(matchstr, sizeof(matchstr), "type='signal',interface='%s'", ibus_input_interface);
+         SDL_free(input_ctx_path);
+@@ -602,6 +746,12 @@ bool SDL_IBus_Init(void)
  
  void SDL_IBus_Quit(void)
  {
 +    SDL_free(ranvier_surrounding);
 +    ranvier_surrounding = NULL;
++    ranvier_token = 0;
++    ranvier_delete_blocked = false;
++    SDL_free(ranvier_sender);
++    ranvier_sender = NULL;
      SDL_DBusContext *dbus;
  
      if (input_ctx_path) {
-@@ -651,6 +741,10 @@ static void IBus_SimpleMessage(const char *method)
+@@ -628,13 +778,15 @@ void SDL_IBus_Quit(void)
+     ibus_input_interface = NULL;
+     ibus_is_portal_interface = false;
+ 
+-    if (inotify_fd > 0 && inotify_wd > 0) {
+-        inotify_rm_watch(inotify_fd, inotify_wd);
+-        inotify_wd = -1;
++    if (inotify_fd >= 0) {
++        if (inotify_wd >= 0) {
++            inotify_rm_watch(inotify_fd, inotify_wd);
++            inotify_wd = -1;
++        }
++        close(inotify_fd);
++        inotify_fd = -1;
+     }
+ 
+-    // !!! FIXME: should we close(inotify_fd) here?
+-
+     SDL_RemoveHintCallback(SDL_HINT_IME_IMPLEMENTED_UI, IBus_SetCapabilities, NULL);
+ 
+     SDL_zero(ibus_cursor_rect);
+@@ -651,6 +803,12 @@ static void IBus_SimpleMessage(const char *method)
  
  void SDL_IBus_SetFocus(bool focused)
  {
 +    if (!focused) {
 +        SDL_free(ranvier_surrounding);
 +        ranvier_surrounding = NULL;
++        ranvier_token = 0;
++        ranvier_delete_blocked = false;
 +    }
      const char *method = focused ? "FocusIn" : "FocusOut";
      IBus_SimpleMessage(method);
  }
+diff --git a/src/core/linux/SDL_ime.c b/src/core/linux/SDL_ime.c
+index 9c971b584..34c9ff573 100644
+--- a/src/core/linux/SDL_ime.c
++++ b/src/core/linux/SDL_ime.c
+@@ -93,6 +93,9 @@ bool SDL_IME_Init(void)
+         }
+ 
+         // uhoh, the IME implementation's init failed! Disable IME support.
++        if (SDL_IME_Quit_Real) {
++            SDL_IME_Quit_Real();
++        }
+         SDL_IME_Init_Real = NULL;
+         SDL_IME_Quit_Real = NULL;
+         SDL_IME_SetFocus_Real = NULL;
 diff --git a/src/dynapi/SDL_dynapi.sym b/src/dynapi/SDL_dynapi.sym
-index 34131187f..3b5d96666 100644
+index 34131187f..c50476b25 100644
 --- a/src/dynapi/SDL_dynapi.sym
 +++ b/src/dynapi/SDL_dynapi.sym
-@@ -1316,6 +1316,7 @@ SDL3_0.0.0 {
+@@ -1316,6 +1316,8 @@ SDL3_0.0.0 {
      SDL_GetOpenHarmonyInternalStoragePath;
      SDL_RequestOpenHarmonyPermission;
      SDL_GetAudioDeviceProperties;
 +    SDL_Ranvier_SetIbusSurrounding;
++    SDL_Ranvier_GetIbusDeleteEventType;
      # extra symbols go here (don't modify this line)
    local: *;
  };
+diff --git a/src/video/x11/SDL_x11events.c b/src/video/x11/SDL_x11events.c
+index dbfe50424..a346e7dd1 100644
+--- a/src/video/x11/SDL_x11events.c
++++ b/src/video/x11/SDL_x11events.c
+@@ -29,6 +29,9 @@
+ #include <limits.h> // For INT_MAX
+ 
+ #include "SDL_x11video.h"
++#ifdef SDL_USE_IME
++#include "../../core/linux/SDL_ime.h"
++#endif
+ #include "SDL_x11pen.h"
+ #include "SDL_x11touch.h"
+ #include "SDL_x11xinput2.h"
+@@ -598,6 +601,11 @@ static void X11_DispatchFocusIn(SDL_VideoDevice *_this, SDL_WindowData *data)
+     SDL_Log("window 0x%lx: Dispatching FocusIn", data->xwindow);
+ #endif
+     SDL_SetKeyboardFocus(data->window);
++#ifdef SDL_USE_IME
++    if (((SDL_VideoData *)_this->internal)->ranvier_direct_ime) {
++        SDL_IME_SetFocus(true);
++    }
++#endif
+     X11_ReconcileKeyboardState(_this);
+ #ifdef X_HAVE_UTF8_STRING
+     if (data->ic) {
+@@ -619,6 +627,11 @@ static void X11_DispatchFocusOut(SDL_VideoDevice *_this, SDL_WindowData *data)
+      * window, and the focus lost event for this window will have already
+      * been dispatched anyway. */
+     if (data->window == SDL_GetKeyboardFocus()) {
++#ifdef SDL_USE_IME
++        if (((SDL_VideoData *)_this->internal)->ranvier_direct_ime) {
++            SDL_IME_SetFocus(false);
++        }
++#endif
+         SDL_SetKeyboardFocus(NULL);
+     }
+ #ifdef X_HAVE_UTF8_STRING
+@@ -1110,6 +1123,12 @@ void X11_HandleKeyEvent(SDL_VideoDevice *_this, SDL_WindowData *windowdata, SDL_
+ 
+     if (SDL_TextInputActive(windowdata->window)) {
+         // filter events catches XIM events and sends them to the correct handler
++#ifdef SDL_USE_IME
++        if (videodata->ranvier_direct_ime) {
++            XLookupStringAsUTF8(&xevent->xkey, text, sizeof(text) - 1, &keysym, NULL);
++            handled_by_ime = SDL_IME_ProcessKeyEvent((Uint32)keysym, keycode, pressed);
++        } else
++#endif
+         if (X11_XFilterEvent(xevent, None)) {
+ #ifdef DEBUG_XEVENTS
+             SDL_Log("Filtered event type = %d display = %p window = 0x%lx",
+@@ -1301,7 +1320,7 @@ static void X11_DispatchEvent(SDL_VideoDevice *_this, XEvent *xevent)
+ 
+     // filter events catches XIM events and sends them to the correct handler
+     // Key press/release events are filtered in X11_HandleKeyEvent()
+-    if (xevent->type != KeyPress && xevent->type != KeyRelease) {
++    if (xevent->type != KeyPress && xevent->type != KeyRelease && !videodata->ranvier_direct_ime) {
+         if (X11_XFilterEvent(xevent, None)) {
+ #ifdef DEBUG_XEVENTS
+             SDL_Log("Filtered event type = %d display = %p window = 0x%lx",
+@@ -2374,6 +2393,11 @@ void X11_PumpEvents(SDL_VideoDevice *_this)
+     XEvent xevent;
+     int i;
+ 
++#ifdef SDL_USE_IME
++    if (data->ranvier_direct_ime) {
++        SDL_IME_PumpEvents();
++    }
++#endif
+     /* Check if a display had the mode changed and is waiting for a window to asynchronously become
+      * fullscreen. If there is no fullscreen window past the elapsed timeout, revert the mode switch.
+      */
+diff --git a/src/video/x11/SDL_x11keyboard.c b/src/video/x11/SDL_x11keyboard.c
+index b1fb94c07..5a77108c6 100644
+--- a/src/video/x11/SDL_x11keyboard.c
++++ b/src/video/x11/SDL_x11keyboard.c
+@@ -23,6 +23,9 @@
+ #ifdef SDL_VIDEO_DRIVER_X11
+ 
+ #include "SDL_x11video.h"
++#ifdef SDL_USE_IME
++#include "../../core/linux/SDL_ime.h"
++#endif
+ 
+ #include "../../events/SDL_keyboard_c.h"
+ #include "../../events/SDL_scancode_tables_c.h"
+@@ -235,9 +238,17 @@ bool X11_InitKeyboard(SDL_VideoDevice *_this)
+                                                               &data->keyboard.core.keysyms_per_key);
+     }
+ 
++#ifdef SDL_USE_IME
++    const char *direct_ime = SDL_getenv("SDL_RANVIER_IBUS");
++    const char *im_module = SDL_getenv("SDL_IM_MODULE");
++    const char *xmodifiers = SDL_getenv("XMODIFIERS");
++    const bool another_ime = (im_module && SDL_strcmp(im_module, "ibus") != 0)
++        || (!im_module && xmodifiers && SDL_strstr(xmodifiers, "@im=fcitx"));
++    data->ranvier_direct_ime = direct_ime && SDL_strcmp(direct_ime, "1") == 0 && !another_ime && SDL_IME_Init();
++#endif
+     // Open a connection to the X input manager
+ #ifdef X_HAVE_UTF8_STRING
+-    if (SDL_X11_HAVE_UTF8) {
++    if (!data->ranvier_direct_ime && SDL_X11_HAVE_UTF8) {
+         if (!X11_InitIM(data)) {
+             X11_XRegisterIMInstantiateCallback(data->display, NULL, NULL, NULL, im_instantiate_handler, (XPointer)data);
+         }
+@@ -577,11 +588,16 @@ void X11_QuitKeyboard(SDL_VideoDevice *_this)
+ {
+     SDL_VideoData *data = _this->internal;
+ 
++#ifdef SDL_USE_IME
++    if (data->ranvier_direct_ime) {
++        SDL_IME_Quit();
++    }
++#endif
+ #ifdef X_HAVE_UTF8_STRING
+     if (data->im) {
+         X11_XCloseIM(data->im);
+         data->im = NULL;
+-    } else {
++    } else if (!data->ranvier_direct_ime) {
+         X11_XUnregisterIMInstantiateCallback(data->display, NULL, NULL, NULL, im_instantiate_handler, (XPointer)data);
+     }
+ #endif // X_HAVE_UTF8_STRING
+@@ -880,6 +896,13 @@ static void X11_ResetXIM(SDL_VideoDevice *_this, SDL_Window *window)
+ 
+ bool X11_StartTextInput(SDL_VideoDevice *_this, SDL_Window *window, SDL_PropertiesID props)
+ {
++#ifdef SDL_USE_IME
++    SDL_VideoData *video = _this->internal;
++    if (video->ranvier_direct_ime) {
++        SDL_IME_Reset();
++        SDL_IME_SetFocus(window == SDL_GetKeyboardFocus());
++    } else
++#endif
+     X11_ResetXIM(_this, window);
+ 
+     return X11_UpdateTextInputArea(_this, window);
+@@ -887,12 +910,25 @@ bool X11_StartTextInput(SDL_VideoDevice *_this, SDL_Window *window, SDL_Properti
+ 
+ bool X11_StopTextInput(SDL_VideoDevice *_this, SDL_Window *window)
+ {
++#ifdef SDL_USE_IME
++    SDL_VideoData *video = _this->internal;
++    if (video->ranvier_direct_ime) {
++        SDL_IME_Reset();
++    } else
++#endif
+     X11_ResetXIM(_this, window);
+     return true;
+ }
+ 
+ bool X11_UpdateTextInputArea(SDL_VideoDevice *_this, SDL_Window *window)
+ {
++#ifdef SDL_USE_IME
++    SDL_VideoData *video = _this->internal;
++    if (video->ranvier_direct_ime) {
++        SDL_IME_UpdateTextInputArea(window);
++        return true;
++    }
++#endif
+ #ifdef X_HAVE_UTF8_STRING
+     SDL_WindowData *data = window->internal;
+ 
+diff --git a/src/video/x11/SDL_x11video.h b/src/video/x11/SDL_x11video.h
+index 9887e50da..6a3020e73 100644
+--- a/src/video/x11/SDL_x11video.h
++++ b/src/video/x11/SDL_x11video.h
+@@ -49,6 +49,7 @@ struct SDL_VideoData
+     Display *request_display;
+     pid_t pid;
+     XIM im;
++    bool ranvier_direct_ime;
+     Uint64 screensaver_activity;
+     int numwindows;
+     SDL_WindowData **windowlist;

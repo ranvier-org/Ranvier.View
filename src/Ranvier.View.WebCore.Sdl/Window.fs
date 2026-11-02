@@ -128,6 +128,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let mutable closed = false
     let mutable composing = false
     let mutable pendingCompositionClear = false
+    let mutable suppressImeText = false
     let mutable cursor = -1
     let mutable disposed = false
     let mutable pageDisposed = false
@@ -325,6 +326,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         | SDL_EventType.SDL_EVENT_WINDOW_SHOWN when event.window.windowID = id -> host.SetVisible true
         | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_GAINED when event.window.windowID = id -> host.SetFocused true
         | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST when event.window.windowID = id ->
+            suppressImeText <- false
             if composing then
                 composing <- false
                 pendingCompositionClear <- false
@@ -451,6 +453,20 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
             host.Wheel (css wheel.mouse_x, css wheel.mouse_y, wheel.x * wheelStep * direction, -wheel.y * wheelStep * direction, modifiers ())
             |> ignore
+        | _ when surrounding.EventType <> 0u && event.``type`` = surrounding.EventType && event.user.windowID = id ->
+            let deletion = event.user
+            let token = uint64 (unativeint deletion.data2)
+            let count = uint32 (unativeint deletion.data1)
+            match surrounding.Delete (token, deletion.code, count) with
+            | 1 -> ()
+            | 2 ->
+                composing <- false
+                pendingCompositionClear <- false
+                suppressImeText <- true
+            | _ ->
+                suppressImeText <- true
+        | SDL_EventType.SDL_EVENT_KEY_DOWN when event.key.windowID = id && suppressImeText ->
+            suppressImeText <- false
         | SDL_EventType.SDL_EVENT_KEY_DOWN
         | SDL_EventType.SDL_EVENT_KEY_UP when event.key.windowID = id && not composing ->
             let press = event.key
@@ -465,7 +481,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 Sdl.ok press.repeat
             )
             |> ignore
-        | SDL_EventType.SDL_EVENT_TEXT_INPUT when event.text.windowID = id ->
+        | SDL_EventType.SDL_EVENT_TEXT_INPUT when event.text.windowID = id && not suppressImeText ->
             let typed = Sdl.text event.text.text
 
             if composing then
@@ -476,7 +492,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 // RV_KEY_CHAR, between the key's RV_KEY_DOWN and RV_KEY_UP, as SDL sends text between them.
                 host.Key (2, typed, "", typed, modifiers (), false)
                 |> ignore
-        | SDL_EventType.SDL_EVENT_TEXT_EDITING when event.edit.windowID = id ->
+        | SDL_EventType.SDL_EVENT_TEXT_EDITING when event.edit.windowID = id && not suppressImeText ->
             let edit = event.edit
             let composition = Sdl.text edit.text
 
@@ -693,7 +709,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// <summary>Whether the window has been asked to close.</summary>
     member _.Closed = closed
 
-    /// <summary>Whether the focused window's SDL input backend accepted the last surrounding-text update.</summary>
+    /// <summary>Whether the focused window's SDL input backend has valid surrounding text.</summary>
     member _.ImeSurroundingAvailable = surrounding.Available
 
     /// <summary>Asks the window to close: the next <c>Step</c> returns false.</summary>

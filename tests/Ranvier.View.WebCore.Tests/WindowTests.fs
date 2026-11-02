@@ -608,6 +608,8 @@ let tests =
                 Expect.equal (SurroundingText.scalarOffset text 2) None "a split surrogate is unavailable"
                 Expect.equal (SurroundingText.scalarOffset ("a" + string (char 0xd800)) 1) None "invalid UTF-16 is unavailable"
                 Expect.equal (SurroundingText.scalarOffset "a\000b" 1) None "NUL cannot be sent through IBus"
+                Expect.equal (SurroundingText.deleteRange "A😀BC" 2u -1 1u) (Some (1, 3)) "a scalar deletion spans the whole surrogate pair"
+                Expect.equal (SurroundingText.deleteRange "abc" 0u -1 1u) None "a deletion before the context is rejected"
             }
 
             test "pen samples retain axes and cancel an active contact" {
