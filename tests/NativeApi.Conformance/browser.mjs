@@ -673,15 +673,23 @@ const runCoordinates = async () => {
 const COORDINATE_ASSERTIONS = 304;
 // G10 runs the resize observation fixture in its own page.
 const runResizeObservation = async () => {
-  const resizeBrowser = await chromium.launch({ headless: true });
-  try {
-    const page = await resizeBrowser.newPage({ viewport: { width: 800, height: 600 } });
-    await page.goto(`http://127.0.0.1:${server.address().port}/`);
-    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runResizeObservation(); } catch (error) { return { error: String(error?.message ?? error) }; } });
-    if (result.resize !== RESIZE_ASSERTIONS) throw new Error(`Resize observation assertions did not run: ${JSON.stringify(result)}`);
-    console.log(`BROWSER_API G10 PASS assertions=${result.resize} engine=chromium`);
-  } finally {
-    await resizeBrowser.close();
+  for (const scale of [1, 1.5, 2]) {
+    const resizeBrowser = await chromium.launch({ headless: true, args: [`--force-device-scale-factor=${scale}`] });
+    try {
+      const context = await resizeBrowser.newContext({ viewport: { width: 800, height: 600 }, deviceScaleFactor: scale });
+      try {
+        const page = await context.newPage();
+        await page.goto(`http://127.0.0.1:${server.address().port}/`);
+        const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runResizeObservation(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+        if (result.resize !== (scale === 1 ? RESIZE_ASSERTIONS : 0) || result.deviceScale !== scale || result.deviceResize !== 52)
+          throw new Error(`Resize observation assertions did not run at scale ${scale}: ${JSON.stringify(result)}`);
+        console.log(`BROWSER_API G10 PASS assertions=${result.resize} deviceAssertions=${result.deviceResize} scale=${scale} engine=chromium`);
+      } finally {
+        await context.close();
+      }
+    } finally {
+      await resizeBrowser.close();
+    }
   }
 };
 const RESIZE_ASSERTIONS = 34;
