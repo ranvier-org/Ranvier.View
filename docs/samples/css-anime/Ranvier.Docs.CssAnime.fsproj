@@ -12,9 +12,9 @@
         <ProjectReference Include="$(RanvierCssRoot)/src/Ranvier.Css.Bindings/Ranvier.Css.Bindings.fsproj" />
     </ItemGroup>
     <ItemGroup Condition="'$(UseLocalRanvierCss)' != 'true'">
-        <PackageReference Include="Ranvier.Css.Bindings" Version="$(RanvierCssVersion)" />
+        <PackageReference Include="Ranvier.Css.Bindings" Version="$(RanvierCssAddonsVersion)" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Ranvier.Css.View" Version="$(RanvierCssVersion)" />
+        <PackageReference Include="Ranvier.Css.View" Version="$(RanvierCssAddonsVersion)" />
     </ItemGroup>
 </Project>
