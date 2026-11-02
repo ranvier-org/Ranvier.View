@@ -71,6 +71,22 @@ let private nativeDisplayChecks () =
     let invalidText = invalidDisplay.ToString ()
     check "native display diagnostics retain unknown orientation" (invalidText.Contains "Orientation = 7") invalidText
 
+    let originalCulture = System.Globalization.CultureInfo.CurrentCulture
+
+    try
+        System.Globalization.CultureInfo.CurrentCulture <- System.Globalization.CultureInfo.GetCultureInfo "ar-SA"
+
+        let negativeDisplay =
+            { display with
+                Orientation = enum<ScreenOrientationType> -1
+            }
+
+        let negativeText = negativeDisplay.ToString ()
+        let expected = (-1).ToString(System.Globalization.CultureInfo.CurrentCulture)
+        check "unknown orientation uses current culture" (negativeText.Contains ("Orientation = " + expected)) negativeText
+    finally
+        System.Globalization.CultureInfo.CurrentCulture <- originalCulture
+
     let nullModel = { Count = Unchecked.defaultof<_> }
     let modelText = nullModel.ToString ()
     check "native smoke model diagnostics retain null" (modelText = "{ Count = null }") modelText

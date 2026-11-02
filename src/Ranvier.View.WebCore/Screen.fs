@@ -30,7 +30,7 @@ type DisplayScreen =
                 | 1 -> "PortraitSecondary"
                 | 2 -> "LandscapePrimary"
                 | 3 -> "LandscapeSecondary"
-                | value -> value.ToString (System.Globalization.CultureInfo.InvariantCulture)
+                | value -> value.ToString (System.Globalization.CultureInfo.CurrentCulture)
 
             Ranvier.View.NativeDisplay.format (fun context depth _ ->
                 Ranvier.View.NativeDisplay.record context depth (box this) (fun nested ->
