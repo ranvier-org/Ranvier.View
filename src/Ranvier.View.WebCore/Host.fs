@@ -851,6 +851,31 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     static member Has(feature: string) =
         Native.rv_abi_has feature = 1
 
+    member private this.EditHistory(command: int) : bool =
+        this.EnsureActive ()
+
+        if not (WebCoreHost.Has "editing-undo") then
+            raise (NotSupportedException "The native library has no editor undo history")
+
+        this.Input ("rv_host_edit", fun () -> Native.rv_host_edit (handle, command))
+
+    /// <summary>Requests undo of the focused native editor's latest transaction.</summary>
+    /// <returns>True when the editor handled the command; false when its history is empty.</returns>
+    /// <remarks>
+    /// Call on the host thread. A canceled beforeinput still counts as handled. Document replacement resets editor history.
+    /// Application history stays separate.
+    /// </remarks>
+    /// <exception cref="T:System.NotSupportedException">Native undo is unavailable, or history replay is already active.</exception>
+    member this.Undo() : bool =
+        this.EditHistory 6
+
+    /// <summary>Requests redo of the focused native editor's latest undone transaction.</summary>
+    /// <returns>True when the editor handled the command; false when its redo history is empty.</returns>
+    /// <remarks>Call on the host thread. A canceled beforeinput still counts as handled. New edits clear redo history.</remarks>
+    /// <exception cref="T:System.NotSupportedException">Native redo is unavailable, or history replay is already active.</exception>
+    member this.Redo() : bool =
+        this.EditHistory 7
+
     /// <summary>
     /// Sets the input method's composition in the focused editable element: the text being composed, with the selection
     /// within it in UTF-16 offsets. Empty text removes it.
