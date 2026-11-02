@@ -10,6 +10,10 @@ let main argv =
             let checks = Support.onHostThread CleanupFaultChecks.runEgl
             Console.WriteLine ("EGL_CLEANUP_CHECKS=" + checks.ToString ())
             0
+        elif argv = [| "--accessibility-linux" |] then
+            let checks = Support.onHostThread AtspiWindowChecks.run
+            Console.WriteLine ("ATSPI_WINDOW_CHECKS=" + checks.ToString ())
+            0
         else
             runTestsInAssemblyWithCLIArgs [ Sequenced ] argv
 

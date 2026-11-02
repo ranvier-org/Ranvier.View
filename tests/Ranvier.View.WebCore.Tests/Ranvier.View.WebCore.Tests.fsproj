@@ -15,6 +15,7 @@
         <Compile Include="../MutationObservation/WindowCleanupChecks.fs" Link="WindowCleanupChecks.fs" />
         <Compile Include="CleanupFaultChecks.fs" />
         <Compile Include="WindowCleanupTests.fs" />
+        <Compile Include="AtspiWindowChecks.fs" />
         <Compile Include="ObjectTests.fs" />
         <Compile Include="HostTests.fs" />
         <Compile Include="MountTests.fs" />
