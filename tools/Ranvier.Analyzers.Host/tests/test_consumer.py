@@ -27,9 +27,13 @@ from unittest import mock
 REPO_ROOT = Path(__file__).resolve().parents[3]
 FIXTURE_MARKER = 'test "fixed buffers preserve calls and diagnostics across their whole scope"'
 PUBLIC_RANVIER_VERSION = "0.1.1-preview.1"
+PUBLIC_ANALYZERS_VERSION = "0.1.1-preview.2"
+PUBLIC_HOST_VERSION = "0.1.0-preview.1"
 HOST_PACKAGE_ID = "Ranvier.Analyzers.Host"
 ANALYZERS_PACKAGE_ID = "Ranvier.Analyzers"
 NUGET_SOURCE = "https://api.nuget.org/v3/index.json"
+NUGET_REPOSITORY_CERT_SHA256 = "1F4B311D9ACC115C8DC8018B5A49E00FCE6DA8E2855F9F014CA6F34570BC482D"
+NUGET_SIGNATURE_MEMBER = ".signature.p7s"
 DEFAULT_TIMEOUT_SECONDS = 540
 DEFAULT_SDK_VERSION = "10.0.403"
 CHILD_ENVIRONMENT_OVERRIDES = (
@@ -129,21 +133,24 @@ def discover_private_packages(feed):
     return PrivatePackagePlan(analyzers, host, normalized_version, manifest)
 
 
-def write_nuget_config(feed, destination):
-    feed = Path(feed).resolve()
+def write_nuget_config(feed, destination, public_source=False):
     destination = Path(destination)
     config = ET.Element("configuration")
     sources = ET.SubElement(config, "packageSources")
     ET.SubElement(sources, "clear")
-    ET.SubElement(sources, "add", key="ranvier-analyzer-feed", value=str(feed))
-    ET.SubElement(sources, "add", key="nuget.org", value=NUGET_SOURCE)
-    mapping = ET.SubElement(config, "packageSourceMapping")
-    ET.SubElement(mapping, "clear")
-    private = ET.SubElement(mapping, "packageSource", key="ranvier-analyzer-feed")
-    ET.SubElement(private, "package", pattern=ANALYZERS_PACKAGE_ID)
-    ET.SubElement(private, "package", pattern=HOST_PACKAGE_ID)
-    public = ET.SubElement(mapping, "packageSource", key="nuget.org")
-    ET.SubElement(public, "package", pattern="*")
+    if public_source:
+        ET.SubElement(sources, "add", key="nuget.org", value=NUGET_SOURCE)
+    else:
+        feed = Path(feed).resolve()
+        ET.SubElement(sources, "add", key="ranvier-analyzer-feed", value=str(feed))
+        ET.SubElement(sources, "add", key="nuget.org", value=NUGET_SOURCE)
+        mapping = ET.SubElement(config, "packageSourceMapping")
+        ET.SubElement(mapping, "clear")
+        private = ET.SubElement(mapping, "packageSource", key="ranvier-analyzer-feed")
+        ET.SubElement(private, "package", pattern=ANALYZERS_PACKAGE_ID)
+        ET.SubElement(private, "package", pattern=HOST_PACKAGE_ID)
+        public = ET.SubElement(mapping, "packageSource", key="nuget.org")
+        ET.SubElement(public, "package", pattern="*")
     destination.parent.mkdir(parents=True, exist_ok=True)
     ET.ElementTree(config).write(destination, encoding="utf-8", xml_declaration=True)
     return destination
@@ -361,7 +368,7 @@ def _asset_libraries(project):
     return assets, libraries, package_folders
 
 
-def _verify_restore_graph(project, plan, cache, evidence_path):
+def _verify_restore_graph(project, plan, cache, evidence_path, expected_sources=None):
     assets, libraries, package_folders = _asset_libraries(project)
     expected = {
         f"{ANALYZERS_PACKAGE_ID}/{plan.analyzers.version}".casefold(),
@@ -374,12 +381,112 @@ def _verify_restore_graph(project, plan, cache, evidence_path):
     cache = Path(cache).resolve()
     if not package_folders or any(folder != cache for folder in package_folders):
         raise ValueError(f"Restore used package folders outside the fresh cache: {package_folders}")
+    restore_sources = sorted(assets.get("project", {}).get("restore", {}).get("sources", {}))
+    if expected_sources is not None and set(restore_sources) != set(expected_sources):
+        raise ValueError(f"Restore used sources {restore_sources}; expected only {sorted(expected_sources)}")
     graph = {"assetsPath": str((Path(project).parent / "obj/project.assets.json").resolve()),
              "packageFolders": [str(folder) for folder in package_folders],
              "libraries": sorted(libraries),
              "required": sorted(expected)}
+    if expected_sources is not None:
+        graph["sources"] = restore_sources
     _write_json(evidence_path, graph)
     return graph
+
+
+def _compare_public_package_payload(expected_path, restored_path):
+    with zipfile.ZipFile(expected_path) as expected, zipfile.ZipFile(restored_path) as restored:
+        expected_names = expected.namelist()
+        restored_names = restored.namelist()
+        if len(expected_names) != len(set(expected_names)) or len(restored_names) != len(set(restored_names)):
+            raise ValueError("Package contains duplicate archive members")
+        if NUGET_SIGNATURE_MEMBER in expected_names:
+            raise ValueError("The --host-feed candidate must be an unsigned package artifact")
+        if restored_names.count(NUGET_SIGNATURE_MEMBER) != 1:
+            raise ValueError("Public package must contain exactly one NuGet repository signature")
+        expected_payload = set(expected_names)
+        restored_payload = set(restored_names) - {NUGET_SIGNATURE_MEMBER}
+        if restored_payload != expected_payload:
+            raise ValueError("Public package archive members differ beyond the repository signature")
+        changed = [name for name in sorted(expected_payload)
+                   if expected.read(name) != restored.read(name)]
+        if changed:
+            raise ValueError(f"Public package payload differs from --host-feed expectation: {changed}")
+        return {"payloadMembers": len(expected_payload),
+                "repositorySignatureMember": NUGET_SIGNATURE_MEMBER}
+
+
+def _validate_repository_signature_output(output):
+    required = (
+        "Signature type: Repository",
+        f"Service index: {NUGET_SOURCE}",
+        "Subject Name: CN=NuGet.org Repository by Microsoft",
+        f"SHA256 hash: {NUGET_REPOSITORY_CERT_SHA256}",
+        "Successfully verified package",
+    )
+    missing = [text for text in required if text not in output]
+    if missing:
+        raise ValueError(f"NuGet repository signature verification did not prove the expected signer: {missing}")
+
+
+def verify_repository_signature(dotnet, package_path, evidence_dir, timeout_seconds):
+    package_path = Path(package_path).resolve()
+    evidence_dir = Path(evidence_dir)
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    log_path = evidence_dir / f"{package_path.stem}-nuget-verify.log"
+    command = [dotnet, "nuget", "verify", str(package_path), "--all",
+               "--certificate-fingerprint", NUGET_REPOSITORY_CERT_SHA256,
+               "-v", "detailed", "--force-english-output"]
+    result = run_command(command, package_path.parent, os.environ.copy(), log_path, timeout_seconds)
+    if result["exitCode"] != 0 or result["timedOut"]:
+        raise ValueError(f"NuGet signature verification failed for {package_path}: {result}")
+    output = log_path.read_text(encoding="utf-8", errors="replace")
+    _validate_repository_signature_output(output)
+    return {"command": command, "log": str(log_path.resolve()),
+            "logSha256": hashlib.sha256(log_path.read_bytes()).hexdigest(),
+            "packageSha256": hashlib.sha256(package_path.read_bytes()).hexdigest(),
+            "verifiedRepositoryCertificateSha256": NUGET_REPOSITORY_CERT_SHA256}
+
+
+def _verify_public_package_cache(cache, plan, evidence_path, dotnet, timeout_seconds):
+    expected_versions = {ANALYZERS_PACKAGE_ID.casefold(): PUBLIC_ANALYZERS_VERSION,
+                         HOST_PACKAGE_ID.casefold(): PUBLIC_HOST_VERSION}
+    checks = []
+    for package in (plan.analyzers, plan.host):
+        expected_version = expected_versions[package.package_id.casefold()]
+        if package.version != expected_version:
+            raise ValueError(f"Public qualification expects {package.package_id} {expected_version}; "
+                             f"host-feed contains {package.version}")
+        package_root = Path(cache) / package.package_id.casefold() / package.version.casefold()
+        restored_packages = list(package_root.glob("*.nupkg"))
+        if len(restored_packages) != 1:
+            raise ValueError(f"Expected one restored public package under {package_root}; found {len(restored_packages)}")
+        payload_comparison = _compare_public_package_payload(package.path, restored_packages[0])
+        restored_package, _ = _nuspec_from_package(restored_packages[0])
+        if (restored_package.package_id.casefold(), restored_package.version) != (
+                package.package_id.casefold(), expected_version):
+            raise ValueError(f"Restored package identity mismatch for {package.package_id}")
+        signature = verify_repository_signature(dotnet, restored_packages[0],
+                                               Path(evidence_path).parent / "signatures",
+                                               timeout_seconds)
+        checks.append({"id": package.package_id, "version": package.version,
+                       "source": NUGET_SOURCE,
+                       "publicPackageSha256": hashlib.sha256(restored_packages[0].read_bytes()).hexdigest(),
+                       "expectedUnsignedPackageSha256": hashlib.sha256(package.path.read_bytes()).hexdigest(),
+                       "payloadComparison": payload_comparison,
+                       "signatureVerification": signature,
+                       "expectedPackage": str(package.path.resolve())})
+
+    host = plan.host
+    host_root = Path(cache) / HOST_PACKAGE_ID.casefold() / host.version.casefold()
+    cached_manifest = host_root / "tools/net10.0/any/vendor-manifest.json"
+    with zipfile.ZipFile(host.path) as archive:
+        expected_manifest = archive.read("tools/net10.0/any/vendor-manifest.json")
+    if not cached_manifest.is_file() or cached_manifest.read_bytes() != expected_manifest:
+        raise ValueError("Restored public host manifest differs from --host-feed expectation")
+    _write_json(evidence_path, {"restoreSource": NUGET_SOURCE, "packages": checks,
+                                "hostManifestSha256": hashlib.sha256(expected_manifest).hexdigest()})
+    return checks
 
 
 def _installed_host_assets(cache, plan):
@@ -459,21 +566,37 @@ def run_external_consumer(args):
     evidence.mkdir(parents=True, exist_ok=True)
     feed = Path(args.host_feed).resolve()
     plan = discover_private_packages(feed)
+    public_source = bool(getattr(args, "public_source", False))
+    if public_source and (plan.analyzers.version != PUBLIC_ANALYZERS_VERSION
+                         or plan.host.version != PUBLIC_HOST_VERSION):
+        raise ValueError("Public qualification requires the exact Host and Analyzer versions selected for release")
     fingerprint = feed_fingerprint(feed)
-    config_path = write_nuget_config(feed, evidence / "NuGet.Config")
+    config_path = write_nuget_config(feed, evidence / "NuGet.Config", public_source=public_source)
     negative_fixture, positive_fixture = external_fixtures(repo_root)
     record = {"feedFingerprintSha256": fingerprint,
               "sdkVersion": args.sdk_version,
-              "privatePackages": [{"id": plan.analyzers.package_id, "version": plan.analyzers.version,
-                                   "file": plan.analyzers.path.name, "sha256": hashlib.sha256(plan.analyzers.path.read_bytes()).hexdigest()},
-                                  {"id": plan.host.package_id, "version": plan.host.version,
-                                   "file": plan.host.path.name, "sha256": hashlib.sha256(plan.host.path.read_bytes()).hexdigest()}],
               "publicCoreReference": {"id": "Ranvier", "version": PUBLIC_RANVIER_VERSION},
-              "sourceMapping": {"privateFeedIds": [ANALYZERS_PACKAGE_ID, HOST_PACKAGE_ID], "publicFeed": NUGET_SOURCE},
               "fixtureHashes": {"negative": hashlib.sha256(negative_fixture.encode()).hexdigest(),
                                 "positive": hashlib.sha256(positive_fixture.encode()).hexdigest()},
               "nugetConfigPath": str(config_path.resolve()), "scenarios": []}
-    _write_json(evidence / "private-feed-manifest.json", record["privatePackages"])
+    if public_source:
+        record["restoreMode"] = "public-nuget"
+        record["expectedPackageInputRole"] = "comparison-only; not configured as a restore source"
+    expected_packages = [{"id": plan.analyzers.package_id, "version": plan.analyzers.version,
+                          "file": plan.analyzers.path.name,
+                          "sha256": hashlib.sha256(plan.analyzers.path.read_bytes()).hexdigest()},
+                         {"id": plan.host.package_id, "version": plan.host.version,
+                          "file": plan.host.path.name,
+                          "sha256": hashlib.sha256(plan.host.path.read_bytes()).hexdigest()}]
+    if public_source:
+        record["expectedPublicPackages"] = expected_packages
+        record["restoreSources"] = [NUGET_SOURCE]
+        _write_json(evidence / "public-package-expectations.json", expected_packages)
+    else:
+        record["privatePackages"] = expected_packages
+        record["sourceMapping"] = {"privateFeedIds": [ANALYZERS_PACKAGE_ID, HOST_PACKAGE_ID],
+                                   "publicFeed": NUGET_SOURCE}
+        _write_json(evidence / "private-feed-manifest.json", expected_packages)
     host_manifest_path = evidence / "host-vendor-manifest.json"
     with zipfile.ZipFile(plan.host.path) as package:
         host_manifest_bytes = package.read("tools/net10.0/any/vendor-manifest.json")
@@ -518,8 +641,14 @@ def run_external_consumer(args):
                 scenario["restore"] = restore
                 if restore["exitCode"] != 0 or restore["timedOut"]:
                     raise ValueError("External consumer package restore failed or timed out")
-                graph = _verify_restore_graph(project_path, plan, cache, case_evidence / "restore-graph.json")
+                expected_sources = [NUGET_SOURCE] if public_source else None
+                graph = _verify_restore_graph(project_path, plan, cache,
+                                              case_evidence / "restore-graph.json", expected_sources)
                 scenario["restoreGraph"] = graph
+                if public_source:
+                    scenario["publicPackageChecks"] = _verify_public_package_cache(
+                        cache, plan, case_evidence / "public-package-checks.json",
+                        args.dotnet, args.timeout_seconds)
                 if payload is None:
                     payload = _installed_host_assets(cache, plan)
                     installed_manifest_path = evidence / "restored-host-vendor-manifest.json"
@@ -597,6 +726,158 @@ class ConsumerHarnessContract(unittest.TestCase):
         self.assertEqual(mapping["ranvier-analyzer-feed"], ["Ranvier.Analyzers", "Ranvier.Analyzers.Host"])
         self.assertEqual(mapping["nuget.org"], ["*"])
         self.assertTrue(sources["ranvier-analyzer-feed"].endswith("host-feed"))
+
+    def test_public_nuget_config_has_only_nuget_org_and_no_private_mapping(self):
+        with tempfile.TemporaryDirectory(prefix="consumer-public-config-test-") as temporary:
+            root = Path(temporary)
+            expected_pair = root / "expected-package-pair"
+            expected_pair.mkdir()
+            config_path = write_nuget_config(expected_pair, root / "NuGet.Config", public_source=True)
+            config = ET.parse(config_path).getroot()
+            config_text = config_path.read_text(encoding="utf-8")
+        sources = {item.attrib["key"]: item.attrib["value"]
+                   for item in config.findall("./packageSources/add")}
+        self.assertEqual(sources, {"nuget.org": NUGET_SOURCE})
+        self.assertIsNotNone(config.find("./packageSources/clear"))
+        self.assertIsNone(config.find("./packageSourceMapping"))
+        self.assertNotIn(str(expected_pair), config_text)
+
+    def test_public_restore_graph_rejects_non_nuget_sources(self):
+        with tempfile.TemporaryDirectory(prefix="consumer-public-graph-test-") as temporary:
+            root = Path(temporary)
+            feed = root / "expected-pair"
+            feed.mkdir()
+            create_fake_feed(feed)
+            plan = discover_private_packages(feed)
+            cache = root / "cache"
+            cache.mkdir()
+            project_dir = root / "consumer"
+            (project_dir / "obj").mkdir(parents=True)
+            project = project_dir / "Fixture.fsproj"
+            project.write_text("<Project />", encoding="utf-8")
+            libraries = {f"{package_id}/{version}": {"type": "package"}
+                         for package_id, version in (("Ranvier", PUBLIC_RANVIER_VERSION),
+                                                     (ANALYZERS_PACKAGE_ID, plan.analyzers.version),
+                                                     (HOST_PACKAGE_ID, plan.host.version))}
+            assets = {"libraries": libraries, "packageFolders": {str(cache): {}},
+                      "project": {"restore": {"sources": {NUGET_SOURCE: {}, str(feed): {}}}}}
+            (project_dir / "obj/project.assets.json").write_text(json.dumps(assets), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "Restore used sources"):
+                _verify_restore_graph(project, plan, cache, root / "graph.json", [NUGET_SOURCE])
+
+    def test_public_package_allows_only_official_repository_signature_delta(self):
+        with tempfile.TemporaryDirectory(prefix="consumer-public-package-test-") as temporary:
+            root = Path(temporary)
+            feed = root / "expected-pair"
+            feed.mkdir()
+            create_fake_feed(feed)
+            plan = discover_private_packages(feed)
+            cache = root / "cache"
+            cache.mkdir()
+            for package in (plan.analyzers, plan.host):
+                package_root = cache / package.package_id.casefold() / package.version.casefold()
+                package_root.mkdir(parents=True)
+                restored_path = package_root / package.path.name
+                with zipfile.ZipFile(package.path) as source, zipfile.ZipFile(restored_path, "w") as signed:
+                    for name in source.namelist():
+                        signed.writestr(name, source.read(name))
+                    signed.writestr(NUGET_SIGNATURE_MEMBER, b"synthetic signature fixture")
+                with zipfile.ZipFile(package.path) as archive:
+                    archive.extractall(package_root)
+            signature_result = {"verifiedRepositoryCertificateSha256": NUGET_REPOSITORY_CERT_SHA256}
+            with mock.patch(__name__ + ".verify_repository_signature", return_value=signature_result) as verify:
+                checks = _verify_public_package_cache(
+                    cache, plan, root / "package-checks.json", "dotnet", 10)
+            self.assertEqual([item["id"] for item in checks], [ANALYZERS_PACKAGE_ID, HOST_PACKAGE_ID])
+            self.assertTrue(all(item["source"] == NUGET_SOURCE for item in checks))
+            self.assertTrue(all(item["payloadComparison"]["repositorySignatureMember"] == NUGET_SIGNATURE_MEMBER
+                                for item in checks))
+            self.assertEqual(verify.call_count, 2)
+
+            analyzer_nupkg = next((cache / ANALYZERS_PACKAGE_ID.casefold()
+                                   / plan.analyzers.version.casefold()).glob("*.nupkg"))
+            altered = analyzer_nupkg.with_name("altered.nupkg")
+            with zipfile.ZipFile(analyzer_nupkg) as source, zipfile.ZipFile(altered, "w") as changed:
+                for name in source.namelist():
+                    data = source.read(name)
+                    if name == f"{ANALYZERS_PACKAGE_ID}.nuspec":
+                        data += b"<!-- changed payload -->"
+                    changed.writestr(name, data)
+            altered.replace(analyzer_nupkg)
+            with mock.patch(__name__ + ".verify_repository_signature", return_value=signature_result):
+                with self.assertRaisesRegex(ValueError, "payload differs"):
+                    _verify_public_package_cache(cache, plan, root / "changed-checks.json", "dotnet", 10)
+
+    def test_public_package_rejects_missing_or_multiple_repository_signatures(self):
+        with tempfile.TemporaryDirectory(prefix="consumer-public-signature-test-") as temporary:
+            root = Path(temporary)
+            expected = root / "expected.nupkg"
+            restored = root / "restored.nupkg"
+            _write_fake_package(expected, "Example", "1.0.0", {"payload.txt": b"same"})
+            with zipfile.ZipFile(expected) as source, zipfile.ZipFile(restored, "w") as archive:
+                for name in source.namelist():
+                    archive.writestr(name, source.read(name))
+            with self.assertRaisesRegex(ValueError, "exactly one NuGet repository signature"):
+                _compare_public_package_payload(expected, restored)
+            with zipfile.ZipFile(restored, "a") as archive:
+                archive.writestr(NUGET_SIGNATURE_MEMBER, b"signature-a")
+                archive.writestr(NUGET_SIGNATURE_MEMBER, b"signature-b")
+            with self.assertRaisesRegex(ValueError, "duplicate archive members"):
+                _compare_public_package_payload(expected, restored)
+
+    def test_repository_signature_verifier_requires_nuget_org_repository_signer(self):
+        valid = ("Signature type: Repository\\n"
+                 f"Service index: {NUGET_SOURCE}\\n"
+                 "Subject Name: CN=NuGet.org Repository by Microsoft\\n"
+                 f"SHA256 hash: {NUGET_REPOSITORY_CERT_SHA256}\\n"
+                 "Successfully verified package")
+        _validate_repository_signature_output(valid)
+        for invalid in (valid.replace("Signature type: Repository", "Signature type: Author"),
+                        valid.replace(NUGET_SOURCE, "https://example.invalid/v3/index.json"),
+                        valid.replace(NUGET_REPOSITORY_CERT_SHA256, "00" * 32),
+                        valid.replace("CN=NuGet.org Repository by Microsoft", "CN=Other signer")):
+            with self.subTest(output=invalid):
+                with self.assertRaisesRegex(ValueError, "expected signer"):
+                    _validate_repository_signature_output(invalid)
+
+    def test_repository_signature_verifier_runs_all_checks_with_pinned_certificate(self):
+        output = ("Signature type: Repository\n"
+                  f"Service index: {NUGET_SOURCE}\n"
+                  "Subject Name: CN=NuGet.org Repository by Microsoft\n"
+                  f"SHA256 hash: {NUGET_REPOSITORY_CERT_SHA256}\n"
+                  "Successfully verified package")
+        with tempfile.TemporaryDirectory(prefix="consumer-signature-command-test-") as temporary:
+            root = Path(temporary)
+            package = root / "candidate.nupkg"
+            package.write_bytes(b"test-package")
+            def successful_verifier(command, cwd, env, log_path, timeout_seconds):
+                Path(log_path).write_text(output, encoding="utf-8")
+                return {"exitCode": 0, "timedOut": False}
+            with mock.patch(__name__ + ".run_command", side_effect=successful_verifier) as run:
+                result = verify_repository_signature("dotnet", package, root / "evidence", 30)
+            command = run.call_args.args[0]
+            self.assertEqual(command[:3], ["dotnet", "nuget", "verify"])
+            self.assertIn("--all", command)
+            self.assertEqual(command[command.index("--certificate-fingerprint") + 1],
+                             NUGET_REPOSITORY_CERT_SHA256)
+            self.assertIn("-v", command)
+            self.assertEqual(result["verifiedRepositoryCertificateSha256"],
+                             NUGET_REPOSITORY_CERT_SHA256)
+
+    def test_repository_signature_verifier_fails_closed_on_command_failure(self):
+        with tempfile.TemporaryDirectory(prefix="consumer-signature-failure-test-") as temporary:
+            package = Path(temporary) / "candidate.nupkg"
+            package.write_bytes(b"test-package")
+            for result in ({"exitCode": 1, "timedOut": False},
+                           {"exitCode": -1, "timedOut": True}):
+                with self.subTest(result=result):
+                    with mock.patch(__name__ + ".run_command", return_value=result):
+                        with self.assertRaisesRegex(ValueError, "signature verification failed"):
+                            verify_repository_signature("dotnet", package, Path(temporary) / "evidence", 1)
+
+    def test_public_mode_keeps_the_same_four_external_scenarios(self):
+        self.assertEqual([scenario["name"] for scenario in _scenario_specs()],
+                         ["positive-default-4g", "positive-override-2g", "invalid-heap-zero", "negative-ran010"])
 
     def test_feed_pair_checks_nuspec_dependency_version_and_payload(self):
         with tempfile.TemporaryDirectory(prefix="consumer-feed-test-") as temporary:
@@ -742,7 +1023,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run-external", action="store_true")
     parser.add_argument("--host-feed", type=Path, required=True,
-                        help="Directory containing exactly one Ranvier.Analyzers and Host nupkg")
+                        help="Expected package pair for byte/manifest verification; also the restore source in private mode")
+    parser.add_argument("--public-source", action="store_true",
+                        help="Restore only from NuGet.org using a fresh cache; --host-feed is verification input only")
     parser.add_argument("--evidence-dir", type=Path, required=True,
                         help="Persistent evidence directory outside the source checkout")
     parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)

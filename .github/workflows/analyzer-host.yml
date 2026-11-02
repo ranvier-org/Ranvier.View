@@ -2,7 +2,7 @@ name: Analyzer host qualification
 
 on:
   push:
-    branches: [codex/project2-analyzer14]
+    branches: [main, master, codex/project2-analyzer14]
     paths:
       - 'tools/Ranvier.Analyzers.Host/**'
       - 'tools/Ranvier.Analyzers/**'
@@ -152,6 +152,8 @@ jobs:
         run: python tools/Ranvier.Analyzers.Host/tests/test_package.py --package artifacts/feed/Ranvier.Analyzers.Host.0.1.0-preview.1.nupkg --upstream-package artifacts/nuget/fsharp-analyzers/0.41.0/fsharp-analyzers.0.41.0.nupkg
       - name: Verify the external-consumer harness
         run: python tools/Ranvier.Analyzers.Host/tests/test_consumer.py
+      - name: Verify publication source and package identity controls
+        run: python tools/Ranvier.Analyzers.Host/tests/test_publication.py
       - name: Prepare the isolated analyzer feed configuration
         shell: python {0}
         run: |

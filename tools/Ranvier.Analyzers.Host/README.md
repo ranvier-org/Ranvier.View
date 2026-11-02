@@ -52,3 +52,20 @@ Repository qualification preserves the checked-in Cloudsmith mappings and uses e
 package mappings in a fresh cache. The workflow privately packs the four DOM alpha.55 dependencies
 from Core `e613ea27ecf4fa5a1e2cc935a1adbfc3d093f5c2`; those build receipts do not prove public
 publication or replace the later public-package acceptance run.
+
+The two `candidate-consumers` jobs both restore the Ubuntu-built package pair, so publication has
+one artifact identity across Windows and Linux. The existing trusted `publish.yml` workflow accepts
+only a successful same-repository main/master release qualification with all fourteen jobs present
+and successful. Before obtaining NuGet credentials it verifies that both candidate receipts describe
+the actual package bytes, exact compiler manifest and all four consumer scenarios. Host is published
+before Analyzers; an unexpected existing version fails instead of silently skipping an upload.
+
+Public acceptance uses the same expected pair as comparison input, with `test_consumer.py
+--run-external --public-source --host-feed <expected-pair> --evidence-dir <outside-checkout>`.
+The expected directory is absent from the restore sources. Each platform restores only from
+NuGet.org into a fresh cache and checks the source graph, actual Host/compiler execution and all four
+consumer scenarios. NuGet.org adds a repository signature, so acceptance compares every original ZIP
+member and permits only the added `.signature.p7s`; official `dotnet nuget verify --all` must also
+prove the pinned NuGet.org repository signer. A changed payload, extra archive member, duplicate
+member, untrusted signature or private restore source fails acceptance. Public indexing and consumer
+evidence are retained separately from the private qualification.
