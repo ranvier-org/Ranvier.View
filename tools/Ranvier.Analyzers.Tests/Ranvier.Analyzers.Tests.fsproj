@@ -43,10 +43,10 @@
     <!-- The core project whose Core.fs the budget test times: the sibling checkout in local mode, otherwise the Fable
          project in the restored Ranvier package. -->
     <ItemGroup Condition="'$(UseLocalRanvier)' == 'true'">
-        <AssemblyMetadata Include="RanvierCoreProject" Value="$(RanvierRoot)/src/Ranvier/Ranvier.fsproj" />
+        <AssemblyMetadata Include="RanvierCoreProject" Value="$([MSBuild]::NormalizePath('$(RanvierRoot)', 'src', 'Ranvier', 'Ranvier.fsproj'))" />
     </ItemGroup>
     <ItemGroup Condition="'$(UseLocalRanvier)' != 'true'">
-        <AssemblyMetadata Include="RanvierCoreProject" Value="$(NuGetPackageRoot)ranvier$(RanvierPackageSuffix.ToLowerInvariant())/$(RanvierVersion)/fable/Ranvier.fsproj" />
+        <AssemblyMetadata Include="RanvierCoreProject" Value="$([MSBuild]::NormalizePath('$(NuGetPackageRoot)', 'ranvier$(RanvierPackageSuffix.ToLowerInvariant())', '$(RanvierVersion)', 'fable', 'Ranvier.fsproj'))" />
     </ItemGroup>
     <Target Name="StageProviderCompiler" AfterTargets="Build">
         <PropertyGroup>
