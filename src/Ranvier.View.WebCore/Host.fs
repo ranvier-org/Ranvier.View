@@ -181,6 +181,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let mutable clipboardRead: Native.ClipboardRead = null
     let mutable document: Document = Unchecked.defaultof<_>
     let mutable disposed = false
+    let mutable destroyNative = Native.rv_host_destroy
     let mutable viewportWidth = width
     let mutable viewportHeight = height
     let mutable deviceScale = 1.0f
@@ -1130,6 +1131,14 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 ValueSome native.Expandos
             | _ -> ValueNone
 
+    /// <summary>Wraps native destruction for per-host forwarding and ownership controls.</summary>
+    member internal _.SetNativeDestroy(destroy: nativeint -> unit) =
+        destroyNative <- destroy
+
+    /// <summary>Adds an installation to the host's normal cleanup ownership.</summary>
+    member internal _.AddCleanupInstallation(installation: IDisposable) =
+        installed <- installation :: installed
+
     interface IDisposable with
         member _.Dispose() =
             if not disposed then
@@ -1165,7 +1174,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                         record error
                 finally
                     try
-                        cleanup.Attempt (fun () -> Native.rv_host_destroy handle)
+                        cleanup.Attempt (fun () -> destroyNative handle)
                     finally
                         GC.KeepAlive frameCallback
 

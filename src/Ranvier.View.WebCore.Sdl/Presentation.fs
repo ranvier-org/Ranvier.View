@@ -270,6 +270,9 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     member _.ReleasePending() =
         releasePendingEglFrame ()
 
+    /// <summary>The retained native EGL frame, or zero after successful release.</summary>
+    member _.PendingEglFrame = pendingEglFrame
+
     /// <summary>Requires a full CPU repaint after viewport or display-scale changes.</summary>
     member _.Invalidate() =
         fullPaint <- true

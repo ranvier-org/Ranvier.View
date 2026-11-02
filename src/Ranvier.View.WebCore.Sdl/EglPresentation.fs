@@ -70,6 +70,8 @@ module private FailedConstruction =
 /// <summary>Imports Linux EGL frames into an SDL GLES renderer on its owner thread.</summary>
 /// <remarks>The shared EGL cohort lives until process exit; this window's renderer owns its context and textures.</remarks>
 type internal EglRenderer private (renderer: nativeptr<SDL_Renderer>, window: nativeptr<SDL_Window>, context: nativeptr<SDL_GLContextState>) =
+    let mutable releaseNative = RanvierWebCoreAbi.Native.rv_gpu_frame_release
+
     let activate () =
         // WebCore switches raw EGL contexts without updating SDL's cached current context.
         SDLBool.op_Implicit (SDL3.SDL_GL_MakeCurrent (window, NativePtr.nullPtr<SDL_GLContextState>))
@@ -126,10 +128,11 @@ type internal EglRenderer private (renderer: nativeptr<SDL_Renderer>, window: na
 
     /// <summary>Releases after all imported textures are destroyed and this consumer's GPU work is submitted.</summary>
     member _.Release(frame: nativeint) =
-        if activate () then
-            RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
-        else
-            -5
+        if activate () then releaseNative frame else -5
+
+    /// <summary>Wraps native frame release for per-renderer failure and retry controls.</summary>
+    member _.SetFrameRelease(release: nativeint -> int) =
+        releaseNative <- release
 
     /// <summary>Requests EGL for Linux GPU windows before SDL selects its GL backend.</summary>
     static member Prepare() =
