@@ -6,10 +6,15 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <IsPackable>false</IsPackable>
     <IsAotCompatible>true</IsAotCompatible>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
+    <IlcTreatWarningsAsErrors>true</IlcTreatWarningsAsErrors>
+    <OtherFlags>$(OtherFlags) --reflectionfree</OtherFlags>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="CleanupChecks.fs" />
     <Compile Include="ObservationChecks.fs" />
+    <Compile Include="WindowCleanupChecks.fs" />
     <Compile Include="Managed.fs" />
     <ProjectReference Include="../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />
     <ProjectReference Include="../../src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj" />
