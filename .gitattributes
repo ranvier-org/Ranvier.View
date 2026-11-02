@@ -2,4 +2,5 @@ tools/Ranvier.Dom.Generate/*.json text eol=lf
 tools/Ranvier.Analyzers.Host/compiler.patch text eol=lf
 tests/Ranvier.View.Twin.Tests/dumps/*.txt text eol=lf
 tests/Ranvier.View.Twin.Tests/dumps/*.json text eol=lf
+tests/NativeApi.Conformance/Assets/resize-observation-native-t2.json text eol=lf
 docs/research/2026-10-21-dom-twin/*.diff text eol=lf whitespace=-blank-at-eol

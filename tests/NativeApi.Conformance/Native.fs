@@ -3891,7 +3891,7 @@ let private runResizeObservation () =
         let supported = WebCoreHost.Has "resize-device-pixel-content-box"
 
         let count =
-            ResizeDevicePixelChecks.run deviceHost.Document create update scale supported
+            ResizeDevicePixelChecks.run deviceHost.Document create update scale supported true
             |> Async.StartImmediateAsTask
             |> fun task -> task.GetAwaiter().GetResult()
 

@@ -1876,7 +1876,7 @@ let runResizeObservation () =
                 async.Return 0
 
         let! deviceCount =
-            ResizeDevicePixelChecks.run document (fun () -> BrowserResizeObservation.forDocument document) driver.Update scale true
+            ResizeDevicePixelChecks.run document (fun () -> BrowserResizeObservation.forDocument document) driver.Update scale true false
 
         return
             {|
