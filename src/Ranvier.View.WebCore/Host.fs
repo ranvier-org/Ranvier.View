@@ -683,6 +683,58 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
         struct (width, height)
 
+    /// <summary>Binds a native D3D11 texture to an element's composited content.</summary>
+    /// <param name="target">A composited element in the host's current document, such as one with <c>will-change:transform</c>.</param>
+    /// <param name="texture">An RGBA8 UNORM, single-mip, single-sample NT-shared keyed-mutex texture; zero unbinds.</param>
+    /// <remarks>
+    /// Call on the host thread. Input bytes are premultiplied sRGB. The producer acquires key 0, renders and flushes,
+    /// then releases key 1 before each frame; composition returns key 0. The host retains the texture until unbound or the element/document ends.
+    /// </remarks>
+    /// <exception cref="T:System.NotSupportedException">The runtime has no D3D11 texture input, or the texture cannot be shared.</exception>
+    member this.BindD3D11Texture(target: Element, texture: nativeint) =
+        this.EnsureActive ()
+
+        if not (WebCoreHost.Has "texture-input-d3d11") then
+            raise (NotSupportedException "The native library has no D3D11 texture input")
+
+        Native.rv_host_bind_d3d11_texture (handle, Interop.handle target, texture)
+        |> Interop.check "rv_host_bind_d3d11_texture"
+
+    /// <summary>Binds an EGLImage to an element's composited content on the Linux GPU backend.</summary>
+    /// <param name="target">A composited element in the host's current document, such as one with <c>will-change:transform</c>.</param>
+    /// <param name="image">An RGBA8 premultiplied sRGB image from the configured EGL display; zero unbinds.</param>
+    /// <param name="flipY">True for GL bottom-row-first content; false for top-row-first content.</param>
+    /// <remarks>
+    /// Call on the host thread with the producer context current. After a successful bind the caller may destroy the image handle.
+    /// Finish producer writes with <c>glFinish</c> before each host frame and keep the image storage unchanged during composition.
+    /// </remarks>
+    /// <exception cref="T:System.NotSupportedException">The runtime has no EGL image input, or the image cannot be imported.</exception>
+    member this.BindEglImage(target: Element, image: nativeint, flipY: bool) =
+        this.EnsureActive ()
+
+        if not (WebCoreHost.Has "texture-input-egl") then
+            raise (NotSupportedException "The native library has no EGL image input")
+
+        Native.rv_host_bind_egl_image (handle, Interop.handle target, image, (if flipY then 1 else 0))
+        |> Interop.check "rv_host_bind_egl_image"
+
+    /// <summary>Requests a frame after the producer publishes new pixels to the element's bound native texture.</summary>
+    /// <remarks>Call on the host thread after producer synchronization. The base DOM backing is retained.</remarks>
+    /// <exception cref="T:System.NotSupportedException">Native texture input is unavailable, or the target has no bound texture.</exception>
+    member this.NativeTextureChanged(target: Element) =
+        this.EnsureActive ()
+
+        if
+            not (
+                WebCoreHost.Has "texture-input-d3d11"
+                || WebCoreHost.Has "texture-input-egl"
+            )
+        then
+            raise (NotSupportedException "The native library has no native texture input")
+
+        Native.rv_host_native_texture_changed (handle, Interop.handle target)
+        |> Interop.check "rv_host_native_texture_changed"
+
     /// <summary>Lays out and paints the page into <c>rgba</c>, unpremultiplied RGBA8 of <c>PaintSize</c>.</summary>
     member _.Paint(rgba: byte array) =
         Native.rv_host_paint_rgba (handle, rgba, rgba.Length)
