@@ -85,17 +85,27 @@ let tests =
                         | Show request -> request
                         | _ -> failtest "expected a second picker request"
 
+                    Expect.isTrue (second.Complete Cancelled) "cancellation completes a live request"
+                    Expect.equal (input :?> HTMLInputElement).files.length 1u "cancellation retains the selected file"
+                    clickOn host input
+                    host.Cycle ()
+
+                    let removed =
+                        match events[events.Count - 1] with
+                        | Show request -> request
+                        | _ -> failtest "expected a request before removal"
+
                     input.remove ()
                     host.Cycle ()
 
                     Expect.isTrue
                         (events
                          |> Seq.exists (function
-                             | Invalidate id -> id = second.Id
+                             | Invalidate id -> id = removed.Id
                              | _ -> false))
                         "removing the input invalidates the provider"
 
-                    Expect.isFalse (second.Complete Cancelled) "invalidated requests reject completion"
+                    Expect.isFalse (removed.Complete Cancelled) "invalidated requests reject completion"
                     host.Document.body.appendChild input |> ignore
                     host.Cycle ()
                     clickOn host input
