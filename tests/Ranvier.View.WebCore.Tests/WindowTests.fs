@@ -234,6 +234,110 @@ let tests =
                     steps window 1
                     Expect.equal (graph.Run (fun () -> count.Value)) (before + 1) "touch down reaches the page"
 
+            windowCase "an XIM clear followed by committed text ends the composition with its result"
+            <| fun window ->
+                let input = window.Host.Document.createElement "input" :?> HTMLInputElement
+                input.setAttribute ("style", "position:absolute;left:0;top:0;width:100px;height:40px")
+                input.value <- "abc"
+
+                window.Host.Document.body.appendChild input
+                |> ignore
+
+                window.Host.SetFocused true
+                window.Host.Click (20, 20) |> ignore
+                input.setSelectionRange (1u, 2u)
+                let ended = ResizeArray<string>()
+                input.addEventListener ("compositionend", fun (event: Event) -> ended.Add ((event :?> CompositionEvent).data))
+
+                let target =
+                    SDL3.SDL_GetWindowID (NativePtr.ofNativeInt<SDL_Window> window.SdlWindow)
+
+                use editing = fixed (Sdl.utf8 "かな")
+                use empty = fixed (Sdl.utf8 "")
+                use committed = fixed (Sdl.utf8 "仮名")
+                let mutable event = SDL_Event ()
+                event.edit.``type`` <- SDL_EventType.SDL_EVENT_TEXT_EDITING
+                event.edit.windowID <- target
+                event.edit.text <- editing
+                event.edit.start <- 2
+                event.edit.length <- 0
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "preedit queued"
+                event.edit.text <- empty
+                event.edit.start <- 0
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "preedit clear queued"
+                event.text.``type`` <- SDL_EventType.SDL_EVENT_TEXT_INPUT
+                event.text.windowID <- target
+                event.text.text <- committed
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "commit queued"
+                steps window 1
+                Expect.equal input.value "a仮名c" "the result replaces the selected text"
+                Expect.sequenceEqual ended [| "仮名" |] "compositionend contains the committed result"
+
+            windowCase "an unaccompanied IME clear cancels at the end of the event turn"
+            <| fun window ->
+                let input = window.Host.Document.createElement "input" :?> HTMLInputElement
+                input.setAttribute ("style", "position:absolute;left:0;top:0;width:100px;height:40px")
+                input.value <- "abc"
+
+                window.Host.Document.body.appendChild input
+                |> ignore
+
+                window.Host.SetFocused true
+                window.Host.Click (20, 20) |> ignore
+                input.setSelectionRange (1u, 2u)
+                let ended = ResizeArray<string>()
+                input.addEventListener ("compositionend", fun (event: Event) -> ended.Add ((event :?> CompositionEvent).data))
+
+                let target =
+                    SDL3.SDL_GetWindowID (NativePtr.ofNativeInt<SDL_Window> window.SdlWindow)
+
+                use editing = fixed (Sdl.utf8 "かな")
+                use empty = fixed (Sdl.utf8 "")
+                let mutable event = SDL_Event ()
+                event.edit.``type`` <- SDL_EventType.SDL_EVENT_TEXT_EDITING
+                event.edit.windowID <- target
+                event.edit.text <- editing
+                event.edit.start <- 2
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "preedit queued"
+                event.edit.text <- empty
+                event.edit.start <- 0
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "cancel queued"
+                steps window 1
+                Expect.equal input.value "ac" "the uncommitted preedit is removed"
+                Expect.sequenceEqual ended [| "" |] "cancellation ends the composition"
+
+            windowCase "focus loss cancels an active composition"
+            <| fun window ->
+                let input = window.Host.Document.createElement "input" :?> HTMLInputElement
+                input.setAttribute ("style", "position:absolute;left:0;top:0;width:100px;height:40px")
+                input.value <- "abc"
+
+                window.Host.Document.body.appendChild input
+                |> ignore
+
+                window.Host.SetFocused true
+                window.Host.Click (20, 20) |> ignore
+                input.setSelectionRange (1u, 2u)
+                let ended = ResizeArray<string>()
+                input.addEventListener ("compositionend", fun (event: Event) -> ended.Add ((event :?> CompositionEvent).data))
+
+                let target =
+                    SDL3.SDL_GetWindowID (NativePtr.ofNativeInt<SDL_Window> window.SdlWindow)
+
+                use editing = fixed (Sdl.utf8 "かな")
+                let mutable event = SDL_Event ()
+                event.edit.``type`` <- SDL_EventType.SDL_EVENT_TEXT_EDITING
+                event.edit.windowID <- target
+                event.edit.text <- editing
+                event.edit.start <- 2
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "preedit queued"
+                event.window.``type`` <- SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST
+                event.window.windowID <- target
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "focus loss queued"
+                steps window 1
+                Expect.equal input.value "ac" "focus loss removes the uncommitted preedit"
+                Expect.sequenceEqual ended [| "" |] "focus loss ends the composition"
+
             windowCase "another window receives queued close requests"
             <| fun window ->
                 use other =
@@ -476,6 +580,9 @@ let tests =
             test "input method offsets count code points as UTF-16" {
                 Expect.equal (Sdl.utf16Offset "a😀b" 2) 3 "a surrogate pair is two units"
                 Expect.equal (Sdl.utf16Offset "abc" 9) 3 "an offset past the end clamps"
+                Expect.equal (Sdl.compositionOffset true "a😀b" 3) 3 "Windows SDL already reports UTF-16 units"
+                Expect.equal (Sdl.compositionOffset false "a😀b" 2) 3 "X11 SDL reports Unicode characters"
+                Expect.equal (Sdl.compositionOffset true "a😀b" 9) 4 "a Windows offset clamps at the end"
             }
 
             test "touch frames retain stationary contacts and cancel on focus loss" {
