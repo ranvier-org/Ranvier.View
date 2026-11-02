@@ -98,6 +98,30 @@ let tests =
     testList
         "IHost"
         [
+            testCase "host diagnostics expose bounded native records"
+            <| fun () ->
+                onHostThread (fun () ->
+                    use host = WebCoreHost.Create (16, 16)
+
+                    if
+                        WebCoreHost.Has "host-tracing"
+                        && WebCoreHost.Has "host-errors"
+                    then
+                        host.SetRenderingTrace true
+                        host.SetErrorRecording true
+                        host.Paint (Array.zeroCreate (16 * 16 * 4))
+                        let events, dropped = host.DrainRenderingTrace ()
+                        Expect.isGreaterThan events.Length 0 "paint produces trace events"
+                        Expect.equal dropped 0UL "the short trace fits in the buffer"
+
+                        Expect.isTrue
+                            (events
+                             |> Array.exists (fun event -> event.phase = 3))
+                            "paint is recorded"
+
+                        Expect.isTrue (host.TakeHostError () |> ValueOption.isNone) "a successful frame has no error"
+                        host.SetRenderingTrace false
+                        host.SetErrorRecording false)
             // tests/abi/abi_layouts.py in Ranvier.WebCore checks the C layout of RvWindowMetrics: 32 bytes.
             testCase "WindowMetrics mirrors RvWindowMetrics"
             <| fun () ->
