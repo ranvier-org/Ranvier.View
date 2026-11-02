@@ -119,6 +119,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let pens = PenSamples ()
     let touchInput = WebCoreHost.Has "touch-input"
     let penInput = WebCoreHost.Has "pointer-input"
+    let surrounding = SurroundingText.Bridge (NativePtr.toNativeInt window, host)
     let presenter = new Presenter (renderer, host, egl)
     let mutable accessibilityAttached = false
     let mutable fullPaint = true
@@ -558,6 +559,10 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             composing <- false
             host.CancelComposition ()
 
+    member private _.RefreshSurrounding() =
+        if alive () then
+            surrounding.Refresh ()
+
     static member private CreateCore(title: string, width: int, height: int, hidden: bool option, renderer: string option) : Window =
         EglRenderer.RetryFailedConstruction ()
         EglRenderer.Prepare ()
@@ -688,6 +693,9 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// <summary>Whether the window has been asked to close.</summary>
     member _.Closed = closed
 
+    /// <summary>Whether the focused window's SDL input backend accepted the last surrounding-text update.</summary>
+    member _.ImeSurroundingAvailable = surrounding.Available
+
     /// <summary>Asks the window to close: the next <c>Step</c> returns false.</summary>
     member _.Close() =
         closed <- true
@@ -717,6 +725,10 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
         if not closed then
             host.EnsureActive ()
+
+            for target in windows.Snapshot () do
+                target.RefreshSurrounding ()
+
             let longest = defaultArg timeout 50
 
             let wait =
@@ -732,10 +744,12 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             if Sdl.ok (SDL3.SDL_WaitEventTimeout (&&event, wait)) then
                 for target in windows.Snapshot () do
                     target.Dispatch event
+                    target.RefreshSurrounding ()
 
                 while alive () && Sdl.ok (SDL3.SDL_PollEvent &&event) do
                     for target in windows.Snapshot () do
                         target.Dispatch event
+                        target.RefreshSurrounding ()
 
                 for target in windows.Snapshot () do
                     target.FlushComposition ()
@@ -817,6 +831,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                                 (presenter :> IDisposable).Dispose()
                                 cleanupCompleted "presenter")
                             (fun () ->
+                                surrounding.Clear ()
                                 (host :> IDisposable).Dispose()
                                 cleanupCompleted "host")
                         |]

@@ -602,6 +602,14 @@ let tests =
                 Expect.isEmpty (touches.Cancel 0) "cancel clears the frame"
             }
 
+            test "IME surrounding offsets preserve scalar boundaries" {
+                let text = "前😀中後"
+                Expect.equal (SurroundingText.scalarOffset text 3) (Some 2u) "a surrogate pair counts once"
+                Expect.equal (SurroundingText.scalarOffset text 2) None "a split surrogate is unavailable"
+                Expect.equal (SurroundingText.scalarOffset ("a" + string (char 0xd800)) 1) None "invalid UTF-16 is unavailable"
+                Expect.equal (SurroundingText.scalarOffset "a\000b" 1) None "NUL cannot be sent through IBus"
+            }
+
             test "pen samples retain axes and cancel an active contact" {
                 let pens = PenSamples ()
 
