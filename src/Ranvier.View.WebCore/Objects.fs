@@ -378,7 +378,9 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
             session.QueueRelease (kind, handle)
 
     override _.ToString() =
-        $"{session.KindName kind} 0x{handle:x}"
+        session.KindName kind
+        + " 0x"
+        + handle.ToString ("x", Globalization.CultureInfo.InvariantCulture)
 
 /// <summary>
 /// The managed objects of one WebCore host: the node and event table, the owner claims that keep objects alive, and the
