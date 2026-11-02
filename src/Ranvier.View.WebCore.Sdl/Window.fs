@@ -90,6 +90,14 @@ module internal Sdl =
 
         min offset text.Length
 
+    /// <summary>Converts an SDL editing offset to a UTF-16 offset for WebCore.</summary>
+    let compositionOffset windows (text: string) index =
+        // SDL's Windows IME forwards WCHAR offsets; X11 reports character offsets.
+        if windows then
+            min (max 0 index) text.Length
+        else
+            utf16Offset text index
+
 /// <summary>
 /// An SDL3 window showing a <c>WebCoreHost</c>'s page: it paints the page into a texture when the page asks for a frame
 /// and forwards the window's mouse, keyboard, input method and focus events to it. All calls go on the thread that
@@ -118,6 +126,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let mutable toCss = 1.0f
     let mutable closed = false
     let mutable composing = false
+    let mutable pendingCompositionClear = false
     let mutable cursor = -1
     let mutable disposed = false
     let mutable pageDisposed = false
@@ -316,12 +325,13 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST when event.window.windowID = id ->
             if composing then
                 composing <- false
+                pendingCompositionClear <- false
                 host.CancelComposition ()
 
-            if touchInput then
+            if touchInput && alive () then
                 sendPointers (touches.Cancel (modifiers ()))
 
-            if penInput then
+            if penInput && alive () then
                 for sample in pens.Cancel (modifiers ()) do
                     sendPointers [| sample |]
 
@@ -458,6 +468,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
             if composing then
                 composing <- false
+                pendingCompositionClear <- false
                 host.CommitComposition typed
             else
                 // RV_KEY_CHAR, between the key's RV_KEY_DOWN and RV_KEY_UP, as SDL sends text between them.
@@ -469,26 +480,32 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
             if String.IsNullOrEmpty composition then
                 if composing then
-                    composing <- false
-                    host.SetComposition ("", 0, 0)
+                    pendingCompositionClear <- true
             else
+                if pendingCompositionClear then
+                    pendingCompositionClear <- false
+                    composing <- false
+                    host.CancelComposition ()
+
                 composing <- true
 
                 let first =
                     if edit.start < 0 then
                         composition.Length
                     else
-                        Sdl.utf16Offset composition edit.start
+                        Sdl.compositionOffset (OperatingSystem.IsWindows ()) composition edit.start
 
                 let last =
                     if edit.start < 0 || edit.length < 0 then
                         first
                     else
-                        Sdl.utf16Offset composition (edit.start + edit.length)
+                        Sdl.compositionOffset (OperatingSystem.IsWindows ()) composition (edit.start + edit.length)
 
-                host.SetComposition (composition, first, last)
+                if alive () then
+                    host.SetComposition (composition, first, last)
 
-            placeInputMethod ()
+            if alive () then
+                placeInputMethod ()
         | _ -> ()
 
     do
@@ -533,6 +550,12 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     member private _.Dispatch(event: SDL_Event) =
         if alive () then
             dispatch event
+
+    member private _.FlushComposition() =
+        if pendingCompositionClear && alive () then
+            pendingCompositionClear <- false
+            composing <- false
+            host.CancelComposition ()
 
     static member private CreateCore(title: string, width: int, height: int, hidden: bool option, renderer: string option) : Window =
         EglRenderer.RetryFailedConstruction ()
@@ -712,6 +735,9 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 while alive () && Sdl.ok (SDL3.SDL_PollEvent &&event) do
                     for target in windows.Snapshot () do
                         target.Dispatch event
+
+                for target in windows.Snapshot () do
+                    target.FlushComposition ()
 
             if alive () then
                 host.Cycle ()
