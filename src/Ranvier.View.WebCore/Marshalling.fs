@@ -70,6 +70,8 @@ type internal InputScope() =
 
             pins.Clear ()
             strings.Clear ()
+
             for callback in transitionCallbacks do
                 NativeDom.rv_dom_view_transition_update_callback_release callback
+
             transitionCallbacks.Clear ()
