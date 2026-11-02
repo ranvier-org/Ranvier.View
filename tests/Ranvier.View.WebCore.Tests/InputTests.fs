@@ -157,6 +157,30 @@ let tests =
                                  | _ -> false))
                             "host teardown dismisses the dialog")
 
+            hostCase "disposing a picker provider during selection does not invalidate the completed request"
+            <| fun host ->
+                if WebCoreHost.Has "file-picker" then
+                    let events = ResizeArray<FilePickerEvent> ()
+                    use provider = FilePickers.install host events.Add
+                    let input = host.Document.createElement "input"
+                    input.setAttribute ("type", "file")
+                    host.Document.body.appendChild input |> ignore
+                    let changed (_: Event) = provider.Dispose ()
+                    input.addEventListener ("change", changed, AddEventListenerOptions ())
+                    host.Cycle ()
+                    clickOn host input
+                    host.Cycle ()
+                    let request =
+                        match events[0] with
+                        | Show value -> value
+                        | _ -> failtest "expected a picker request"
+                    let path = IO.Path.GetTempFileName ()
+                    try
+                        Expect.isTrue (request.Complete (Selected [| path |])) "selection completes"
+                        Expect.isFalse (events |> Seq.exists (function Invalidate id -> id = request.Id | _ -> false)) "a completed selection is not invalidated"
+                    finally
+                        IO.File.Delete path
+
             hostCase "listener dictionaries preserve capture once passive and removal"
             <| fun host ->
                 let parent = host.Document.createElement "div"
