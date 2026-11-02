@@ -150,3 +150,15 @@ passed all four normal/traced Slim/GPU jobs. Both apps ran under JIT and NativeA
 eight visible Counter runs passed clipboard/backbuffer and independent UIA checks. Each GPU Counter
 recorded two shared frames; Slim Counters recorded zero. NativeAOT stdout/stderr logs are preserved as
 artifacts. Every selected native/resource file matches its public package manifest (24 Slim or 26 GPU).
+
+### Optional Linux accessibility
+
+An optional `libRanvierWebCoreAtspi.so` sidecar mirrors the native `rv_ax_*` tree through the desktop AT-SPI bus.
+It uses the existing host loop and stays outside the renderer library. Place the matching module beside the app or
+on its native library search path. The provider discovers `AT_SPI_BUS_ADDRESS` or `org.a11y.Bus` on the session bus;
+`Window.AccessibilityAttached` is false when the module or desktop service is unavailable.
+
+The Window owns the provider lease through the Host's cleanup installations. Direct Host disposal and Window disposal
+release it before destroying the native page. SDL movement and display-scale changes update its geometry. X11 exposes
+physical screen positions; Wayland reports screen coordinates unsupported while window coordinates remain available.
+All operations run on the host owner thread. This integration does not replace Windows UI Automation.

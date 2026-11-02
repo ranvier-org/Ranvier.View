@@ -60,7 +60,11 @@ module private AtspiNative =
     let geometry (window: nativeptr<SDL_Window>) =
         let mutable geometry = AtspiGeometry ()
         geometry.Size <- uint32 (Marshal.SizeOf<AtspiGeometry>())
-        geometry.Scale <- max 1.0e-6 (float (SDL3.SDL_GetWindowDisplayScale window))
+
+        geometry.Scale <-
+            match SDL3.SDL_GetWindowDisplayScale window with
+            | scale when scale > 0.0f -> float scale
+            | _ -> 1.0
 
         if SDL3.SDL_GetCurrentVideoDriver () = "x11" then
             let mutable x, y = 0, 0
