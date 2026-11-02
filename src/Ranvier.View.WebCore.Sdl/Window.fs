@@ -98,7 +98,7 @@ module internal Sdl =
 /// <remarks>All windows use the thread admitted by the first <c>Create</c>, including after every window has closed.</remarks>
 [<Sealed>]
 type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option) as this =
-    static let owner = WindowOwner ()
+    static let owner = WebCoreHost.Owner
     static let windows = WindowRegistry<Window>()
     // CSS pixels a wheel tick scrolls.
     static let wheelStep = 40.0f
@@ -107,6 +107,10 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     let id = SDL3.SDL_GetWindowID window
     let cursors = Dictionary<SDL_SystemCursor, nativeint>()
+    let touches = TouchFrames ()
+    let pens = PenSamples ()
+    let touchInput = WebCoreHost.Has "touch-input"
+    let penInput = WebCoreHost.Has "pointer-input"
     let presenter = new Presenter (renderer, host, egl)
     let mutable accessibilityAttached = false
     let mutable fullPaint = true
@@ -117,6 +121,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let mutable cursor = -1
     let mutable disposed = false
     let mutable pageDisposed = false
+    let mutable maxTouchPoints = 0
 
     let alive () =
         not closed
@@ -208,6 +213,34 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let modifiers () =
         Keys.modifiers (SDL3.SDL_GetModState ())
 
+    let sendPointers (samples: PointerSample array) =
+        if samples.Length > 0 && alive () then
+            host.Pointer samples |> ignore
+
+    let penButtons (state: SDL_PenInputFlags) =
+        (if state.HasFlag SDL_PenInputFlags.SDL_PEN_INPUT_DOWN then
+             1
+         else
+             0)
+        ||| (if state.HasFlag SDL_PenInputFlags.SDL_PEN_INPUT_BUTTON_1 then
+                 2
+             else
+                 0)
+        ||| (if state.HasFlag SDL_PenInputFlags.SDL_PEN_INPUT_BUTTON_2 then
+                 4
+             else
+                 0)
+
+    let pen id action x y button state axis =
+        let sample =
+            pens.Update (uint32 id, action, float (x * toCss), float (y * toCss), button, penButtons state, modifiers (), axis)
+
+        sendPointers [| sample |]
+
+    let syntheticMouse (id: SDL_MouseID) =
+        (touchInput && id = SDL3.SDL_TOUCH_MOUSEID)
+        || (penInput && id = SDL3.SDL_PEN_MOUSEID)
+
     let updateCursor () =
         let next = host.Cursor
 
@@ -285,13 +318,92 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 composing <- false
                 host.CancelComposition ()
 
-            host.SetFocused false
+            if touchInput then
+                sendPointers (touches.Cancel (modifiers ()))
+
+            if penInput then
+                for sample in pens.Cancel (modifiers ()) do
+                    sendPointers [| sample |]
+
+            if alive () then
+                host.SetFocused false
+        | SDL_EventType.SDL_EVENT_FINGER_DOWN
+        | SDL_EventType.SDL_EVENT_FINGER_UP
+        | SDL_EventType.SDL_EVENT_FINGER_MOTION
+        | SDL_EventType.SDL_EVENT_FINGER_CANCELED when touchInput && event.tfinger.windowID = id ->
+            let finger = event.tfinger
+            let mutable width = 0
+            let mutable height = 0
+
+            SDL3.SDL_GetWindowSize (window, &&width, &&height)
+            |> ignore
+
+            let action =
+                match enum<SDL_EventType>(int event.``type``) with
+                | SDL_EventType.SDL_EVENT_FINGER_DOWN -> 1
+                | SDL_EventType.SDL_EVENT_FINGER_UP -> 2
+                | SDL_EventType.SDL_EVENT_FINGER_CANCELED -> 3
+                | _ -> 0
+
+            let frame =
+                touches.Update (
+                    uint64 finger.touchID,
+                    uint64 finger.fingerID,
+                    action,
+                    float (finger.x * float32 width * toCss),
+                    float (finger.y * float32 height * toCss),
+                    finger.pressure,
+                    modifiers ()
+                )
+
+            if touches.Count > maxTouchPoints then
+                maxTouchPoints <- touches.Count
+                host.SetMaxTouchPoints maxTouchPoints
+
+            sendPointers frame
+        | SDL_EventType.SDL_EVENT_PEN_MOTION when penInput && event.pmotion.windowID = id ->
+            let motion = event.pmotion
+            pen motion.which 0 motion.x motion.y -1 motion.pen_state None
+        | SDL_EventType.SDL_EVENT_PEN_DOWN
+        | SDL_EventType.SDL_EVENT_PEN_UP when penInput && event.ptouch.windowID = id ->
+            let touch = event.ptouch
+            pen touch.which (if Sdl.ok touch.down then 1 else 2) touch.x touch.y 0 touch.pen_state None
+        | SDL_EventType.SDL_EVENT_PEN_BUTTON_DOWN
+        | SDL_EventType.SDL_EVENT_PEN_BUTTON_UP when penInput && event.pbutton.windowID = id ->
+            let button = event.pbutton
+
+            let mapped =
+                match button.button with
+                | 1uy -> 2
+                | 2uy -> 1
+                | _ -> -1
+
+            pen
+                button.which
+                (if mapped < 0 then 0
+                 elif Sdl.ok button.down then 1
+                 else 2)
+                button.x
+                button.y
+                mapped
+                button.pen_state
+                None
+        | SDL_EventType.SDL_EVENT_PEN_AXIS when penInput && event.paxis.windowID = id ->
+            let axis = event.paxis
+            pen axis.which 0 axis.x axis.y -1 axis.pen_state (Some (axis.axis, axis.value))
+        | SDL_EventType.SDL_EVENT_PEN_PROXIMITY_OUT when penInput && event.pproximity.windowID = id ->
+            match pens.Leave (uint32 event.pproximity.which, modifiers ()) with
+            | ValueSome sample -> sendPointers [| sample |]
+            | ValueNone -> ()
         | SDL_EventType.SDL_EVENT_WINDOW_MOUSE_LEAVE when event.window.windowID = id ->
             host.Mouse (0, -1, -1, -1, 0, modifiers ())
             |> ignore
 
             updateCursor ()
-        | SDL_EventType.SDL_EVENT_MOUSE_MOTION when event.motion.windowID = id ->
+        | SDL_EventType.SDL_EVENT_MOUSE_MOTION when
+            event.motion.windowID = id
+            && not (syntheticMouse event.motion.which)
+            ->
             let motion = event.motion
 
             host.Mouse (0, css motion.x, css motion.y, held motion.state, 0, modifiers ())
@@ -299,7 +411,10 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
             updateCursor ()
         | SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN
-        | SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP when event.button.windowID = id ->
+        | SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP when
+            event.button.windowID = id
+            && not (syntheticMouse event.button.which)
+            ->
             let press = event.button
 
             match int press.button with
@@ -419,13 +534,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         if alive () then
             dispatch event
 
-    /// <summary>
-    /// Opens a window of <c>width</c> by <c>height</c> in the platform's window units, CSS pixels at the display's
-    /// scale, with an empty page. <c>hidden</c> keeps it off screen; <c>renderer</c> names an SDL render driver, such
-    /// as "software".
-    /// </summary>
-    static member Create(title: string, width: int, height: int, ?hidden: bool, ?renderer: string) : Window =
-        owner.Ensure ()
+    static member private CreateCore(title: string, width: int, height: int, hidden: bool option, renderer: string option) : Window =
         EglRenderer.RetryFailedConstruction ()
         EglRenderer.Prepare ()
         // The page draws the input method's composition itself; the platform draws the candidates.
@@ -514,6 +623,19 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 EglRenderer.RetainFailedConstruction cleanup
 
             reraise ()
+
+    /// <summary>
+    /// Opens a window of <c>width</c> by <c>height</c> in the platform's window units, CSS pixels at the display's
+    /// scale, with an empty page. <c>hidden</c> keeps it off screen; <c>renderer</c> names an SDL render driver, such
+    /// as "software".
+    /// </summary>
+    static member Create(title: string, width: int, height: int, ?hidden: bool, ?renderer: string) : Window =
+        owner.Enter ()
+
+        try
+            Window.CreateCore (title, width, height, hidden, renderer)
+        finally
+            owner.Exit ()
 
     /// <summary>The window's page.</summary>
     member _.Host = host
