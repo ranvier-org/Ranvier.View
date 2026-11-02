@@ -122,6 +122,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let surrounding = SurroundingText.Bridge (NativePtr.toNativeInt window, host)
     let presenter = new Presenter (renderer, host, egl)
     let mutable accessibilityAttached = false
+    let mutable linuxAccessibility: LinuxAccessibility option = None
     let mutable fullPaint = true
     let mutable exposed = true
     let mutable toCss = 1.0f
@@ -216,6 +217,10 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         toCss <- density / scale
         host.SetDeviceScale scale
         host.Resize (max 1 (int (float32 width / scale)), max 1 (int (float32 height / scale)))
+
+        linuxAccessibility
+        |> Option.iter (fun bridge -> bridge.Update ())
+
         presenter.Invalidate ()
         fullPaint <- true
 
@@ -312,6 +317,12 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             && not (isNull (box displaySignal))
             ->
             displaySignal.Value <- displayReader ()
+
+            linuxAccessibility
+            |> Option.iter (fun bridge -> bridge.Update ())
+        | SDL_EventType.SDL_EVENT_WINDOW_MOVED when event.window.windowID = id ->
+            linuxAccessibility
+            |> Option.iter (fun bridge -> bridge.Update ())
         | SDL_EventType.SDL_EVENT_QUIT -> closed <- true
         | SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED when event.window.windowID = id -> closed <- true
         | SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED
@@ -541,6 +552,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             displayFeed <- owner :> IDisposable
 
         accessibilityAttached <- WindowAccessibility.attach host window
+        linuxAccessibility <- LinuxAccessibility.TryCreate (host, window)
         SDL3.SDL_StartTextInput window |> ignore
 
         if WebCoreHost.Has "clipboard" then
@@ -791,8 +803,18 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// <summary>The number of presentation attempts that took the CPU path.</summary>
     member internal _.CpuFramesPresented = presenter.CpuFramesPresented
 
-    /// <summary>Whether Windows UI Automation is attached to the window.</summary>
-    member internal _.AccessibilityAttached = accessibilityAttached
+    /// <summary>Whether Windows UI Automation or the optional Linux AT-SPI provider is attached.</summary>
+    /// <remarks>The Linux provider requires its native module and an accessible desktop bus. Unavailable providers return false.</remarks>
+    member _.AccessibilityAttached =
+        not host.Session.IsDisposed
+        && (accessibilityAttached
+            || (linuxAccessibility
+                |> Option.exists (fun bridge -> bridge.Attached)))
+
+    /// <summary>Whether the optional native AT-SPI token still belongs to this window.</summary>
+    member internal _.AtspiLeaseActive =
+        linuxAccessibility
+        |> Option.exists (fun bridge -> bridge.Attached)
 
     /// <summary>The display the host's screen follows, as the window last read it.</summary>
     member internal _.Display = displaySignal.Value
@@ -828,6 +850,9 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                     PageCleanup.run
                         [|
                             (fun () ->
+                                linuxAccessibility
+                                |> Option.iter (fun bridge -> (bridge :> IDisposable).Dispose())
+
                                 if accessibilityAttached then
                                     try
                                         WindowAccessibility.detach host
