@@ -130,6 +130,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let mutable cursor = -1
     let mutable disposed = false
     let mutable pageDisposed = false
+    let mutable cleanupCompleted: string -> unit = ignore
     let mutable maxTouchPoints = 0
 
     let alive () =
@@ -770,6 +771,21 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     member internal _.SetDisplayReader(reader: unit -> DisplayScreen voption) =
         displayReader <- reader
 
+    /// <summary>Observes completed page cleanup phases on this window's owner thread.</summary>
+    member internal _.SetCleanupCompleted(callback: string -> unit) =
+        cleanupCompleted <- callback
+
+    /// <summary>Wraps this window's native EGL frame release; false means its renderer uses another transport.</summary>
+    member internal _.SetEglFrameRelease(release: nativeint -> int) =
+        match egl with
+        | Some consumer ->
+            consumer.SetFrameRelease release
+            true
+        | None -> false
+
+    /// <summary>The actual frame retained until its EGL consumer can release it.</summary>
+    member internal _.PendingEglFrame = presenter.PendingEglFrame
+
     interface IDisposable with
         member _.Dispose() =
             if not disposed then
@@ -786,13 +802,23 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                                     try
                                         WindowAccessibility.detach host
                                     finally
-                                        accessibilityAttached <- false)
+                                        accessibilityAttached <- false
+
+                                cleanupCompleted "accessibility")
                             (fun () ->
                                 if not (isNull displayFeed) then
-                                    displayFeed.Dispose ())
-                            (fun () -> (graph :> IDisposable).Dispose())
-                            (fun () -> (presenter :> IDisposable).Dispose())
-                            (fun () -> (host :> IDisposable).Dispose())
+                                    displayFeed.Dispose ()
+
+                                cleanupCompleted "display")
+                            (fun () ->
+                                (graph :> IDisposable).Dispose()
+                                cleanupCompleted "graph")
+                            (fun () ->
+                                (presenter :> IDisposable).Dispose()
+                                cleanupCompleted "presenter")
+                            (fun () ->
+                                (host :> IDisposable).Dispose()
+                                cleanupCompleted "host")
                         |]
                         (fun () ->
                             pageDisposed <- true
