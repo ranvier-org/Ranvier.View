@@ -1,0 +1,54 @@
+{
+  "scope": "managed source and compile preparation; no matched native runtime acceptance",
+  "viewBase": "0bc82b87cb1ca23e3d227440d5504c2024a6eec6",
+  "sdlReviewedSource": "57d950148dd931c0d2e9cac7c0ae31f11c412ef3",
+  "accessibilityReviewedSource": "0bd9d12b4c96fe80d6f8fdecedc9d8c8643cd73c",
+  "publicPackages": {
+    "Ranvier.Dom": "0.1.0-alpha.56",
+    "Ranvier.Dom.Traced": "0.1.0-alpha.56",
+    "Fable.Ranvier.Dom": "0.1.0-alpha.56",
+    "Fable.Ranvier.Dom.Traced": "0.1.0-alpha.56",
+    "Ranvier.CssVersion": "0.1.1-alpha.2"
+  },
+  "interopPreparation": {
+    "id": "Ranvier.WebCore",
+    "version": "0.0.0-private347.1",
+    "published": false,
+    "signatureSource": "da11d1ef7e64fe1785a7d7c5784127f65493da53",
+    "sourceArchiveSha256": "63e72cd3e0b714441dbb595f3e5b8bddaa4880ef1d0ccb6ca9ce6ccb657f5214",
+    "abi": 63,
+    "handwrittenDeclarations": 347,
+    "preservedPrefix": 344,
+    "tail": ["rv_host_ime_surrounding", "rv_host_ime_delete_surrounding", "rv_ax_text_style_run"],
+    "hostRuntimeSupplied": false
+  },
+  "finalNativeRuntime": {
+    "source": null,
+    "version": null,
+    "hostSha256ByRid": {},
+    "requiredAbi": 63,
+    "requiredHandwrittenExports": 347,
+    "pending": ["reviewed ABI package metadata correction", "reviewed 0068 worker-first-owner fix and reusable GPU producer oracle", "matched producer and independent cohort qualification"]
+  },
+  "optionalProvider": {
+    "publicId": "Ranvier.WebCore.Accessibility.Atspi",
+    "publicVersion": null,
+    "providerSha256ByRid": {},
+    "qualifiedRidPolicy": ["linux-x64"],
+    "arm64Qualified": false,
+    "unavailableControls": ["module absent", "accessibility bus unavailable"]
+  },
+  "optionalSdlIbus": {
+    "upstreamSource": "ea7a2dabfd1ab6b0a5720568ffd207f5825e47f1",
+    "privateId": "Ranvier.View.WebCore.Sdl.Ibus",
+    "privateVersion": "0.1.0-local.5",
+    "publicVersion": null,
+    "qualifiedBackendScope": "existing private X11/IBus proof only; final347 replay required"
+  },
+  "modes": ["normal", "traced"],
+  "futureRuntimeMatrix": [
+    {"rid": "win-x64", "checks": ["real UIA and SDL Window/Host lifecycle", "selected composition and surrounding deletion", "worker-first-owner and GPU lifecycle", "strict NativeAOT and normal/traced analyzer graph"]},
+    {"rid": "linux-x64", "checks": ["real X11/IBus input", "provider present/missing/no-bus", "three real Windows and three direct Hosts with non-BMP style checks", "strict NativeAOT and normal/traced analyzer graph"]},
+    {"rid": "linux-arm64", "state": "unqualified; do not arm without matching actual native host/provider and managed proof", "checks": ["actual ARM64 source/ABI/hash gate", "real provider/protocol/Window lifecycle", "strict normal/traced NativeAOT"]}
+  ]
+}
