@@ -76,7 +76,7 @@ class AnalyzerBootstrap(unittest.TestCase):
     def test_ci_analyzer_restores_require_the_shared_bootstrap_before_building(self):
         text = (ROOT / '.github/workflows/ci.yml').read_text()
         import re
-        for job in ['analyzer-tests', 'analyze', 'packages']:
+        for job in ['views', 'analyze', 'packages']:
             with self.subTest(job=job):
                 match = re.search(r'(?ms)^  ' + job + r':\n(.*?)(?=^  [A-Za-z0-9_-]+:|\Z)', text)
                 self.assertIsNotNone(match)
@@ -84,8 +84,7 @@ class AnalyzerBootstrap(unittest.TestCase):
                 self.assertIn('needs: analyzer-bootstrap', block)
                 self.assertLess(block.index('uses: ./.github/actions/use-analyzer-bootstrap'), block.index('run: dotnet'))
         views = re.search(r'(?ms)^  views:\n(.*?)(?=^  [A-Za-z0-9_-]+:|\Z)', text).group(1)
-        self.assertNotIn('needs: analyzer-bootstrap', views)
-        self.assertNotIn('arms, analyzers]', views)
+        self.assertIn('group: [view, sugar, anime, motion, hydration, arms, analyzers]', views)
 
 
 if __name__ == '__main__':

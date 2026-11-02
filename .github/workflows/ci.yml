@@ -78,12 +78,13 @@ jobs:
   # Each group is a `test --group` shard of build.fsx: the same checks as local development.
   views:
     name: Views (${{ matrix.group }})
+    needs: analyzer-bootstrap
     runs-on: ubuntu-latest
     timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        group: [view, sugar, anime, motion, hydration, arms]
+        group: [view, sugar, anime, motion, hydration, arms, analyzers]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -97,11 +98,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '26'
-      - uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ matrix.group }}-${{ hashFiles('**/*.fsproj', '**/Directory.Build.*', 'nuget.config', '.config/dotnet-tools.json') }}
-          restore-keys: nuget-${{ runner.os }}-${{ matrix.group }}-
+      - uses: ./.github/actions/use-analyzer-bootstrap
       # The counters suites compile core with RanvierCounters=true, which the published Ranvier package omits.
       - name: Check out the native Core revision (DOM alpha.55)
         if: matrix.group == 'view' || matrix.group == 'arms'
@@ -125,22 +122,6 @@ jobs:
             examples/*/playwright-report/
             examples/*/test-results/
           if-no-files-found: ignore
-
-  analyzer-tests:
-    name: Views (analyzers)
-    needs: analyzer-bootstrap
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - uses: actions/setup-dotnet@v6
-        with:
-          global-json-file: global.json
-      - uses: ./.github/actions/use-analyzer-bootstrap
-      - name: Run the unchanged analyzer test group
-        run: dotnet fsi build.fsx -- test --group analyzers
 
   # The analyzers over the repository's projects, one group per leg, every RAN code an error.
   analyze:
@@ -458,12 +439,12 @@ jobs:
 
   result:
     name: CI result
-    needs: [views, analyzer-bootstrap, analyzer-tests, analyze, webcore, webcore-gpu, webcore-macos, webcore-linux, native-api-browser, packages, format]
+    needs: [views, analyzer-bootstrap, analyze, webcore, webcore-gpu, webcore-macos, webcore-linux, native-api-browser, packages, format]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - env:
-          RESULTS: ${{ needs.views.result }} ${{ needs['analyzer-bootstrap'].result }} ${{ needs['analyzer-tests'].result }} ${{ needs.analyze.result }} ${{ needs.webcore.result }} ${{ needs['native-api-browser'].result }} ${{ needs.packages.result }} ${{ needs.format.result }}
+          RESULTS: ${{ needs.views.result }} ${{ needs['analyzer-bootstrap'].result }} ${{ needs.analyze.result }} ${{ needs.webcore.result }} ${{ needs['native-api-browser'].result }} ${{ needs.packages.result }} ${{ needs.format.result }}
           PLATFORM_RESULTS: ${{ needs['webcore-macos'].result }} ${{ needs['webcore-linux'].result }}
           LIGHT: ${{ github.event_name == 'pull_request' && !startsWith(github.head_ref, 'codex/batch-') && !contains(github.event.pull_request.labels.*.name, 'full-matrix') }}
           GPU_ENABLED: ${{ github.event_name == 'workflow_dispatch' && inputs.gpu_runtime_version != '' }}
