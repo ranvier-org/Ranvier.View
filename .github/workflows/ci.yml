@@ -369,6 +369,11 @@ jobs:
         run: python3 -I .github/scripts/native_delivery_packages.py --directory bin --excluded-directory artifacts/native-delivery-excluded --report artifacts/native-delivery-packages.json
       - uses: actions/upload-artifact@v7
         with:
+          name: native-delivery-package-selection
+          path: artifacts/native-delivery-packages.json
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        with:
           name: nuget-packages
           path: bin/*.nupkg
           if-no-files-found: error

@@ -42,6 +42,11 @@ jobs:
           github-token: ${{ github.token }}
       - name: Select the native-delivery package artifacts
         run: python3 -I .github/scripts/native_delivery_packages.py --directory bin --excluded-directory artifacts/native-delivery-excluded --report artifacts/native-delivery-packages.json --require-view-cohort
+      - uses: actions/upload-artifact@v7
+        with:
+          name: native-delivery-publication-selection
+          path: artifacts/native-delivery-packages.json
+          if-no-files-found: error
       - name: Authenticate to NuGet with trusted publishing
         id: login
         uses: NuGet/login@v1
