@@ -43,6 +43,34 @@ let private check (name: string) (ok: bool) (detail: string) =
         Console.WriteLine ("FAIL " + name + ": " + detail)
 
 let private nativeDisplayChecks () =
+    let display =
+        {
+            DisplayScreen.Width = 1920
+            Height = 1080
+            UsableLeft = -2
+            UsableTop = 3
+            UsableWidth = 1918
+            UsableHeight = 1040
+            ColorDepth = 24
+            Orientation = ScreenOrientationType.LandscapePrimary
+        }
+
+    let displayText = display.ToString ()
+
+    check
+        "native display diagnostics retain screen fields"
+        (displayText.Contains "UsableLeft = -2"
+         && displayText.Contains "Orientation = LandscapePrimary")
+        displayText
+
+    let invalidDisplay =
+        { display with
+            Orientation = enum<ScreenOrientationType> 7
+        }
+
+    let invalidText = invalidDisplay.ToString ()
+    check "native display diagnostics retain unknown orientation" (invalidText.Contains "Orientation = 7") invalidText
+
     let nullModel = { Count = Unchecked.defaultof<_> }
     let modelText = nullModel.ToString ()
     check "native smoke model diagnostics retain null" (modelText = "{ Count = null }") modelText

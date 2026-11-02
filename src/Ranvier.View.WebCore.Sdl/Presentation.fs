@@ -14,8 +14,8 @@ module private PresentationNative =
     let ok (value: SDLBool) =
         SDLBool.op_Implicit value
 
-    let failure operation =
-        InvalidOperationException $"{operation} failed: {SDL3.SDL_GetError ()}"
+    let failure (operation: string) =
+        InvalidOperationException (operation + " failed: " + SDL3.SDL_GetError ())
 
 /// <summary>CPU and shared GPU textures presented on the host and SDL owner thread.</summary>
 type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option) =
@@ -177,7 +177,12 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                     raise (PresentationNative.failure "SDL_FlushRenderer")
 
                 if released <> 0 then
-                    raise (InvalidOperationException $"GPU frame release failed: {released}")
+                    raise (
+                        InvalidOperationException (
+                            "GPU frame release failed: "
+                            + released.ToString ()
+                        )
+                    )
             | None -> invalidOp "An EGL frame requires its consumer renderer"
 
     member private _.WithGpu(action: nativeptr<SDL_Texture> -> int -> int -> 'T) : 'T voption =
@@ -254,7 +259,12 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                         raise (PresentationNative.failure "SDL_FlushRenderer")
 
                     if released <> 0 then
-                        raise (InvalidOperationException $"GPU frame release failed: {released}")
+                        raise (
+                            InvalidOperationException (
+                                "GPU frame release failed: "
+                                + released.ToString ()
+                            )
+                        )
 
     /// <summary>Retries a retained EGL frame before disposing its consumer context; failure preserves ownership.</summary>
     member _.ReleasePending() =
@@ -350,7 +360,12 @@ module internal WindowAccessibility =
             elif result = -9 then
                 false
             else
-                raise (InvalidOperationException $"UI Automation attachment failed: {result}")
+                raise (
+                    InvalidOperationException (
+                        "UI Automation attachment failed: "
+                        + result.ToString ()
+                    )
+                )
         else
             false
 
@@ -359,4 +374,9 @@ module internal WindowAccessibility =
         let result = RanvierWebCoreAbi.Native.rv_host_detach_uia host.Handle
 
         if result <> 0 then
-            raise (InvalidOperationException $"UI Automation detachment failed: {result}")
+            raise (
+                InvalidOperationException (
+                    "UI Automation detachment failed: "
+                    + result.ToString ()
+                )
+            )

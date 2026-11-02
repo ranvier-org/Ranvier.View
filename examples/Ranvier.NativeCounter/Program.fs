@@ -11,11 +11,30 @@ open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.WebCore.Sdl
 
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
 type State =
     {
         Count: Signal<int>
         Name: Signal<string>
     }
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            let count =
+                if isNull (box this.Count) then
+                    "null"
+                else
+                    "<Ranvier.Signal<int>>"
+
+            let name =
+                if isNull (box this.Name) then
+                    "null"
+                else
+                    "<Ranvier.Signal<string>>"
+
+            "{ Count = " + count + "\n  Name = " + name + " }"
 
 let private app =
     Component.define
@@ -35,7 +54,12 @@ let private app =
                             t.Attrs.attribute ("style", "font-size:32px;padding:8px 24px;align-self:flex-start")
                             t.Events.on ("click", fun state _ -> state.Count.Value <- state.Count.Value + 1)
                         |]
-                        [| t.text (fun state -> $"Clicked {state.Count.Value} times") |]
+                        [|
+                            t.text (fun state ->
+                                "Clicked "
+                                + state.Count.Value.ToString ()
+                                + " times")
+                        |]
                     t.input
                         [|
                             t.Attrs.attribute ("placeholder", "Your name")
@@ -121,7 +145,7 @@ let private eglReleaseRetrySmoke (window: Window) =
     then
         failwith "The retained EGL frame was lost or not released before retry"
 
-    printfn "EGL release retry smoke passed"
+    Console.WriteLine "EGL release retry smoke passed"
 
 let private eglWindowDisposeRetrySmoke () =
     use window = Window.create ("Ranvier disposal retry", 80, 60)
@@ -161,7 +185,7 @@ let private eglWindowDisposeRetrySmoke () =
         failwith "Window.Dispose destroyed the host before releasing its frame"
 
     (window :> IDisposable).Dispose()
-    printfn "EGL window disposal retry smoke passed"
+    Console.WriteLine "EGL window disposal retry smoke passed"
 
 let private smoke (window: Window) (beforeClose: unit -> unit) =
     if Environment.GetEnvironmentVariable "RANVIER_SMOKE_EGL_RELEASE_RETRY" = "1" then
@@ -313,14 +337,25 @@ let private smoke (window: Window) (beforeClose: unit -> unit) =
             if not tornDown then
                 failwith "The UIA probe did not verify window teardown"
 
-            printf "%s" output
+            Console.Write output
         finally
             if not probe.HasExited then
                 probe.Kill ()
                 probe.WaitForExit (5000) |> ignore
 
-    printfn
-        $"Native counter smoke passed: SDL backbuffer {width}x{height}, display scale {scale}, GPU frames {gpuFrames}, UIA attached {accessibility}, text/plain clipboard"
+    Console.WriteLine (
+        "Native counter smoke passed: SDL backbuffer "
+        + string width
+        + "x"
+        + string height
+        + ", display scale "
+        + string scale
+        + ", GPU frames "
+        + string gpuFrames
+        + ", UIA attached "
+        + string accessibility
+        + ", text/plain clipboard"
+    )
 
     window.Close ()
 
@@ -352,7 +387,7 @@ let private runTwoSmoke () =
         secondMount.Dispose ()
         firstMount.Dispose ()
 
-    printfn "Two simultaneous GPU windows smoke passed"
+    Console.WriteLine "Two simultaneous GPU windows smoke passed"
 
 let private eglFailureSmoke beforeRegistration =
     if not (OperatingSystem.IsLinux ()) then
