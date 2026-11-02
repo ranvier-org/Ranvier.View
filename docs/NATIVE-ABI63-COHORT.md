@@ -7,7 +7,7 @@ bridge and optional AT-SPI window lease; their cached native tokens, coordinates
 native state. It adds no core ownership, scheduling or reconciliation primitive.
 
 `tools/native-cohort347/graph.json` records the source/package graph and remaining actual runtime inputs. The View
-baseline is PR66 source `63feeec5`, including public Dom alpha.56, CSS alpha.2, separate CSS add-on alpha.1, UIA cleanup and source-fresh analyzer
+baseline is PR66 source `3e435b3`, including public Dom alpha.56, CSS alpha.2, separate CSS add-on alpha.1, UIA cleanup and source-fresh analyzer
 fixes. Public Dom alpha.56's normal/traced nuspecs depend on FSharp.Core, and its Fable variants additionally depend
 on Fable.Core. They do not pin native interop, so this preparation requires no new Core version or Core Native pin.
 
