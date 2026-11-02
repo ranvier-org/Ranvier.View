@@ -211,7 +211,15 @@ let elementById (id: string) : Element =
 /// </summary>
 [<Sealed>]
 type SameValueZero private () =
+    static let optionValue = typeof<obj option>.GetProperty("Value")
+    static let valueOptionValue = typeof<obj voption>.GetProperty("Value")
+    static let valueOptionIsSome = typeof<obj voption>.GetProperty("IsSome")
+
     static member val Instance = SameValueZero ()
+
+    static member private ReadOptionProperty(value: obj, property: System.Reflection.PropertyInfo) =
+        let actual = value.GetType().GetMemberWithSameMetadataDefinitionAs property :?> System.Reflection.PropertyInfo
+        actual.GetValue value
 
     static member internal Normal(value: obj) : obj =
         match value with
@@ -242,13 +250,13 @@ type SameValueZero private () =
                 t.IsGenericType
                 && t.GetGenericTypeDefinition () = typedefof<option<_>>
             then
-                SameValueZero.Normal (t.GetProperty("Value").GetValue value)
+                SameValueZero.Normal (SameValueZero.ReadOptionProperty(value, optionValue))
             elif
                 t.IsGenericType
                 && t.GetGenericTypeDefinition () = typedefof<voption<_>>
             then
-                if (t.GetProperty "IsSome").GetValue value :?> bool then
-                    SameValueZero.Normal (t.GetProperty("Value").GetValue value)
+                if SameValueZero.ReadOptionProperty(value, valueOptionIsSome) :?> bool then
+                    SameValueZero.Normal (SameValueZero.ReadOptionProperty(value, valueOptionValue))
                 else
                     null
             else
