@@ -100,6 +100,7 @@
         <Compile Include="Coordinates.fs" />
         <Compile Include="ResizeObservation.fs" />
         <Compile Include="IntersectionObservation.fs" />
+        <Compile Include="MutationObservation.fs" />
         <Compile Include="Viewport.fs" />
         <Compile Include="MediaQueries.fs" />
         <Compile Include="ViewportScroll.fs" />

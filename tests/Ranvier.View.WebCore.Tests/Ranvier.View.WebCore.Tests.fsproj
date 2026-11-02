@@ -10,6 +10,8 @@
         <Compile Include="Support.fs" />
         <Compile Include="../MutationObservation/CleanupChecks.fs" Link="CleanupChecks.fs" />
         <Compile Include="CleanupTests.fs" />
+        <Compile Include="../MutationObservation/ObservationChecks.fs" Link="ObservationChecks.fs" />
+        <Compile Include="MutationObservationTests.fs" />
         <Compile Include="ObjectTests.fs" />
         <Compile Include="HostTests.fs" />
         <Compile Include="MountTests.fs" />

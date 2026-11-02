@@ -1,0 +1,7 @@
+The default managed fixture uses the public mutation-observation service and the canonical generated interop. It requires a native image advertising `mutation-observation`; an older image fails the capability assertion. `--pure-only` runs cleanup and ABI marshalling controls without loading native code and is not native conformance acceptance.
+
+`dotnet run -c Release --project tests/MutationObservation/Managed.fsproj` runs the complete fixture. Publish the same project with NativeAOT and execute it for the AOT variant. The ordinary WebCore Expecto project includes the same checks in its default test set.
+
+Records prefer the wrapper most recently supplied to Observe, then a known live wrapper on the owner thread. Existing per-session caches can already contain two wrappers after adoption; this fixture preserves that limitation instead of promising universal reference identity across those preexisting duplicates. New wrappers use a known live originating session. Unknown document ownership raises an explicit error after releasing the record batch; it is never guessed from the observing host. Node wrappers keep their ordinary originating-session lifetime even after adoption.
+
+Cleanup requests may originate on another thread. Ordinary Observe, Disconnect and TakeRecords calls retain the provider's owner-thread requirement. Automatic native closure releases the external observer token as well as its context lease; a callback already admitted may finish before final context release.
