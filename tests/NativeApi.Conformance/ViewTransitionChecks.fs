@@ -13,7 +13,14 @@ let run (document: Document) (create: unit -> ViewTransitionService) (nextFrame:
             checks <- checks + 1
 
             if actual <> expected then
-                failwith label
+#if FABLE_COMPILER
+                failwithf "%s: expected %A, got %A" label expected actual
+#else
+                if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+                    failwithf "%s: expected %A, got %A" label expected actual
+                else
+                    failwith label
+#endif
 
         let frames count =
             async {
