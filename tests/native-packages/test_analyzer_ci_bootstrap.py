@@ -114,6 +114,9 @@ class AnalyzerBootstrap(unittest.TestCase):
             for item in ET.parse(project).getroot().iter('PackageReference'):
                 if item.get('Include') in ('Ranvier.Css.Bindings', 'Ranvier.Css.View'):
                     self.assertEqual(item.get('Version'), '$(RanvierCssAddonsVersion)')
+        generated = (ROOT / 'fable/Ranvier.Anime.Tests/typecheck.mjs').read_text()
+        self.assertEqual(generated.count('Version="$(RanvierCssAddonsVersion)"'), 2)
+        self.assertNotIn('Version="$(RanvierCssVersion)"', generated)
 
 
 if __name__ == '__main__':
