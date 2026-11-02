@@ -96,7 +96,8 @@ module internal Sdl =
 /// created it, which is the host's thread.
 /// </summary>
 [<Sealed>]
-type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option) =
+type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option) as this =
+    static let windows = WindowRegistry<Window>()
     // CSS pixels a wheel tick scrolls.
     static let wheelStep = 40.0f
     // RV_CURSOR_NONE.
@@ -404,6 +405,17 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         then
             host.SetFocused true
 
+        windows.Add (uint32 id, this)
+
+    member private _.Dispatch(event: SDL_Event) =
+        if
+            not closed
+            && not disposed
+            && not pageDisposed
+            && not host.Session.IsDisposed
+        then
+            dispatch event
+
     /// <summary>
     /// Opens a window of <c>width</c> by <c>height</c> in the platform's window units, CSS pixels at the display's
     /// scale, with an empty page. <c>hidden</c> keeps it off screen; <c>renderer</c> names an SDL render driver, such
@@ -546,8 +558,13 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// sooner or a frame is wanted, for window events and dispatches them to the page, cycles the host, then presents a
     /// frame if the page asked for one. Returns false once the window has been asked to close.
     /// </summary>
+    /// <remarks>Drains SDL's global event queue for all live Ranvier windows. An application that owns the SDL event pump runs its own loop instead.</remarks>
     member this.Step(?timeout: int) : bool =
+        if not host.Session.IsOwnerThread then
+            invalidOp "An SDL window is stepped on the thread that created it"
+
         if not closed then
+            host.EnsureActive ()
             let longest = defaultArg timeout 50
 
             let wait =
@@ -561,10 +578,12 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             let mutable event = SDL_Event ()
 
             if Sdl.ok (SDL3.SDL_WaitEventTimeout (&&event, wait)) then
-                dispatch event
+                for target in windows.Snapshot () do
+                    target.Dispatch event
 
                 while Sdl.ok (SDL3.SDL_PollEvent &&event) do
-                    dispatch event
+                    for target in windows.Snapshot () do
+                        target.Dispatch event
 
             host.Cycle ()
 
@@ -620,7 +639,9 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                             (fun () -> (presenter :> IDisposable).Dispose())
                             (fun () -> (host :> IDisposable).Dispose())
                         |]
-                        (fun () -> pageDisposed <- true)
+                        (fun () ->
+                            pageDisposed <- true
+                            windows.Remove (uint32 id))
 
                 egl
                 |> Option.iter (fun consumer ->
