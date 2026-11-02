@@ -32,18 +32,18 @@ let private checkStyle (host: WebCoreHost) =
         try
             let mutable start = -1
             let mutable finish = -1
-            let mutable length = -1
+            let length = [| -1 |]
             let bytes = Array.zeroCreate<byte> 16
 
             let status =
-                RanvierWebCoreAbi.Native.rv_ax_text_style_run (accessible, 2, "font-weight", &start, &finish, bytes, bytes.Length, &length)
+                RanvierWebCoreAbi.Native.rv_ax_text_style_run (accessible, 2, "font-weight", &start, &finish, bytes, bytes.Length, length)
 
             if
                 status <> 0
                 || start <> 1
                 || finish <> 4
-                || length <> 3
-                || System.Text.Encoding.UTF8.GetString (bytes, 0, length)
+                || length[0] <> 3
+                || System.Text.Encoding.UTF8.GetString (bytes, 0, length[0])
                    <> "700"
             then
                 invalidOp "The actual native non-BMP style run differs from the frozen renderer contract."
