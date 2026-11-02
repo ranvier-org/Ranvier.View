@@ -21,8 +21,8 @@ let private snapshot name (entry: ResizeObserverEntry) =
             sizes entry.DevicePixelContentBoxSize
         |]
 
-/// <summary>Runs the eight measured device-pixel cases, or verifies rejection by a capability-false runtime.</summary>
-let run (document: Document) (create: unit -> ResizeObservationService) (update: unit -> Async<unit>) scale supported =
+/// <summary>Checks Chromium device sizes and per-engine CSS sizes, or verifies rejection by a capability-false runtime.</summary>
+let run (document: Document) (create: unit -> ResizeObservationService) (update: unit -> Async<unit>) scale supported nativeCss =
     async {
         let mutable checks = 0
 
@@ -145,7 +145,15 @@ let run (document: Document) (create: unit -> ResizeObservationService) (update:
                     expect (case.Name + " entry count") (entries.Count = case.Entries.Length)
 
                     for index in 0 .. case.Entries.Length - 1 do
-                        let eo, et, expected = case.Entries[index]
+                        let eo, et, chromium = case.Entries[index]
+                        let no, nt, css = case.NativeCss[index]
+
+                        let expected =
+                            if nativeCss then
+                                Array.append css chromium[8..9]
+                            else
+                                chromium
+
                         let ao, at, actual = entries[index]
 
                         expect
@@ -158,6 +166,10 @@ let run (document: Document) (create: unit -> ResizeObservationService) (update:
                              + String.Join (",", actual))
                             (eo = ao
                              && et = at
+                             && no = eo
+                             && nt = et
+                             && css.Length = 8
+                             && expected.Length = 10
                              && expected.Length = actual.Length
                              && Array.forall2 (fun e a -> abs (e - a) < 0.000001) expected actual)
                 else
