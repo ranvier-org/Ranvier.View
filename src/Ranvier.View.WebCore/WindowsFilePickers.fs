@@ -79,7 +79,7 @@ module internal WindowsFileDialog =
                 cancelled)
 
     let paths (buffer: nativeint) maximum =
-        let parts = ResizeArray<string> ()
+        let parts = ResizeArray<string>()
         let mutable offset = 0
         let mutable finished = false
 
@@ -140,9 +140,9 @@ module internal WindowsFileDialog =
         let filterBuffer = Marshal.StringToHGlobalUni (filter request.Extensions)
 
         try
-            Marshal.Copy (Array.zeroCreate<byte> (65536 * 2), 0, buffer, 65536 * 2)
+            Marshal.Copy (Array.zeroCreate<byte>(65536 * 2), 0, buffer, 65536 * 2)
             let mutable options = OpenFileName ()
-            options.Size <- uint32 (Marshal.SizeOf<OpenFileName> ())
+            options.Size <- uint32 (Marshal.SizeOf<OpenFileName>())
             options.Owner <- owner
             options.Filter <- filterBuffer
             options.FilterIndex <- 1u
@@ -211,7 +211,7 @@ module WindowsFilePickers =
         then
             invalidArg (nameof ownerWindow) "A live window owned by this process is required"
 
-        let pending = Dictionary<uint64, WindowsFileDialog.State> ()
+        let pending = Dictionary<uint64, WindowsFileDialog.State>()
         let mutable disposed = false
 
         let provider event =
@@ -273,4 +273,5 @@ module WindowsFilePickers =
                     for state in pending.Values do
                         state.Cancel ()
 
-                    pending.Clear () }
+                    pending.Clear ()
+        }

@@ -215,6 +215,7 @@ let f (p: Projection<int, int>) = p |> Projection.fold (fun s v -> s + v) 0
                 let file = index "module Fixture\nlet convert (value: int64) = nativeint value\n"
                 let call = file.Calls |> Array.exactlyOne
                 Expect.equal call.Callee.CompiledName "ToIntPtr" "the numeric conversion still names its operator"
+
                 match call.Arguments with
                 | [ Value argument ] -> Expect.equal argument.DisplayName "value" "the original typed argument"
                 | _ -> failtest "the numeric conversion lost its typed argument"
@@ -242,7 +243,9 @@ let pin (bytes: byte[]) =
                 let signals = callsOf "createSignal" file
 
                 Expect.sequenceEqual
-                    (signals |> Array.map (fun site -> site.Range.StartLine) |> Array.sort)
+                    (signals
+                     |> Array.map (fun site -> site.Range.StartLine)
+                     |> Array.sort)
                     [ 6; 8; 9; 12 ]
                     "calls before, in the initializer, in the fixed body and after it"
 

@@ -84,7 +84,7 @@ type internal FilePickerCallback = delegate of context: nativeint * request: uin
 
 /// <summary>Connects a native file-control picker to an application provider.</summary>
 module FilePickers =
-    let private installed = ConditionalWeakTable<WebCoreHost, obj> ()
+    let private installed = ConditionalWeakTable<WebCoreHost, obj>()
 
     /// <summary>Installs one provider for a host, returning its registration.</summary>
     /// <remarks>Show and engine invalidation are delivered on a later host turn. Disposal invalidates an open request
@@ -154,7 +154,7 @@ module FilePickers =
                         invalidArg "paths" "Paths cannot contain null"
 
                     let bytes = paths |> Array.map Encoding.UTF8.GetBytes
-                    let pins = ResizeArray<GCHandle> ()
+                    let pins = ResizeArray<GCHandle>()
 
                     try
                         for data in bytes do
@@ -254,4 +254,5 @@ module FilePickers =
             member _.Dispose() =
                 if not disposed then
                     host.EnsureActive ()
-                    close () }
+                    close ()
+        }

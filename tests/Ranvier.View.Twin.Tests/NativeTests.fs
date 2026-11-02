@@ -25,41 +25,43 @@ let private sameValueZeroCases () : (string * obj * obj * bool) array =
     let structure = { Number = 42; Text = "value" }
     let callback = fun (value: int) -> value + 1
 
-    [| "char/string", box 'a', box "a", true
-       "ordinal-string", box "a", box "A", false
-       "int/double", box 42, box 42., true
-       "float32-roundtrip", box 1.1f, box 1.1, true
-       "decimal/double", box 1.1m, box 1.1, true
-       "enum/double", box System.DayOfWeek.Monday, box 1., true
-       "int64/double", box 42L, box 42., false
-       "uint64/double", box 42UL, box 42., false
-       "bool/number", box true, box 1, false
-       "nan", box System.Double.NaN, box System.Double.NaN, true
-       "signed-zero", box -0., box 0., true
-       "none/null", box (None: int option), null, true
-       "vnone-int/null", box (ValueNone: int voption), null, true
-       "vnone-record/null", box (ValueNone: Row voption), null, true
-       "some-int/raw", box (Some 42), box 42, true
-       "vsome-int/raw", box (ValueSome 42), box 42, true
-       "some-enum/raw", box (Some System.DayOfWeek.Monday), box 1., true
-       "some-int64/raw", box (Some 42L), box 42L, true
-       "some-null/null", box (Some (null: obj)), null, true
-       "vsome-null/null", box (ValueSome (null: obj)), null, true
-       "some-none/null", box (Some (None: int option)), null, true
-       "nested-some/raw", box (Some (Some 42)), box 42, true
-       "mixed-nested/raw", box (ValueSome (Some (ValueSome structure))), box structure, true
-       "same-reference", box reference, box reference, true
-       "some-reference/raw", box (Some reference), box reference, true
-       "vsome-reference/raw", box (ValueSome reference), box reference, true
-       "some-function/raw", box (Some callback), box callback, true
-       "vsome-function/raw", box (ValueSome callback), box callback, true
-       "record-reference", box rowA, box rowB, false
-       "some-record-reference", box (Some rowA), box (Some rowB), false
-       "struct-value", box structure, box structure, true
-       "some-struct/raw", box (Some structure), box structure, true
-       "vsome-struct/raw", box (ValueSome structure), box structure, true
-       "arrays-reference", box [| 1; 2 |], box [| 1; 2 |], false
-       "some-like-not-option", box (SomeLike (box 42)), box 42, false |]
+    [|
+        "char/string", box 'a', box "a", true
+        "ordinal-string", box "a", box "A", false
+        "int/double", box 42, box 42., true
+        "float32-roundtrip", box 1.1f, box 1.1, true
+        "decimal/double", box 1.1m, box 1.1, true
+        "enum/double", box System.DayOfWeek.Monday, box 1., true
+        "int64/double", box 42L, box 42., false
+        "uint64/double", box 42UL, box 42., false
+        "bool/number", box true, box 1, false
+        "nan", box System.Double.NaN, box System.Double.NaN, true
+        "signed-zero", box -0., box 0., true
+        "none/null", box (None: int option), null, true
+        "vnone-int/null", box (ValueNone: int voption), null, true
+        "vnone-record/null", box (ValueNone: Row voption), null, true
+        "some-int/raw", box (Some 42), box 42, true
+        "vsome-int/raw", box (ValueSome 42), box 42, true
+        "some-enum/raw", box (Some System.DayOfWeek.Monday), box 1., true
+        "some-int64/raw", box (Some 42L), box 42L, true
+        "some-null/null", box (Some (null: obj)), null, true
+        "vsome-null/null", box (ValueSome (null: obj)), null, true
+        "some-none/null", box (Some (None: int option)), null, true
+        "nested-some/raw", box (Some (Some 42)), box 42, true
+        "mixed-nested/raw", box (ValueSome (Some (ValueSome structure))), box structure, true
+        "same-reference", box reference, box reference, true
+        "some-reference/raw", box (Some reference), box reference, true
+        "vsome-reference/raw", box (ValueSome reference), box reference, true
+        "some-function/raw", box (Some callback), box callback, true
+        "vsome-function/raw", box (ValueSome callback), box callback, true
+        "record-reference", box rowA, box rowB, false
+        "some-record-reference", box (Some rowA), box (Some rowB), false
+        "struct-value", box structure, box structure, true
+        "some-struct/raw", box (Some structure), box structure, true
+        "vsome-struct/raw", box (ValueSome structure), box structure, true
+        "arrays-reference", box [| 1; 2 |], box [| 1; 2 |], false
+        "some-like-not-option", box (SomeLike (box 42)), box 42, false
+    |]
 
 [<Tests>]
 let tests =
