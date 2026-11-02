@@ -95,8 +95,10 @@ module internal Sdl =
 /// and forwards the window's mouse, keyboard, input method and focus events to it. All calls go on the thread that
 /// created it, which is the host's thread.
 /// </summary>
+/// <remarks>All windows use the thread admitted by the first <c>Create</c>, including after every window has closed.</remarks>
 [<Sealed>]
 type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option) as this =
+    static let owner = WindowOwner ()
     static let windows = WindowRegistry<Window>()
     // CSS pixels a wheel tick scrolls.
     static let wheelStep = 40.0f
@@ -115,6 +117,12 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let mutable cursor = -1
     let mutable disposed = false
     let mutable pageDisposed = false
+
+    let alive () =
+        not closed
+        && not disposed
+        && not pageDisposed
+        && not host.Session.IsDisposed
 
     // The window's display, which the host's screen follows through a core effect on the window's own graph.
     let readDisplay () =
@@ -408,12 +416,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         windows.Add (uint32 id, this)
 
     member private _.Dispatch(event: SDL_Event) =
-        if
-            not closed
-            && not disposed
-            && not pageDisposed
-            && not host.Session.IsDisposed
-        then
+        if alive () then
             dispatch event
 
     /// <summary>
@@ -422,6 +425,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// as "software".
     /// </summary>
     static member Create(title: string, width: int, height: int, ?hidden: bool, ?renderer: string) : Window =
+        owner.Ensure ()
         EglRenderer.RetryFailedConstruction ()
         EglRenderer.Prepare ()
         // The page draws the input method's composition itself; the platform draws the candidates.
@@ -560,6 +564,8 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// </summary>
     /// <remarks>Drains SDL's global event queue for all live Ranvier windows. An application that owns the SDL event pump runs its own loop instead.</remarks>
     member this.Step(?timeout: int) : bool =
+        owner.Ensure ()
+
         if not host.Session.IsOwnerThread then
             invalidOp "An SDL window is stepped on the thread that created it"
 
@@ -581,19 +587,20 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 for target in windows.Snapshot () do
                     target.Dispatch event
 
-                while Sdl.ok (SDL3.SDL_PollEvent &&event) do
+                while alive () && Sdl.ok (SDL3.SDL_PollEvent &&event) do
                     for target in windows.Snapshot () do
                         target.Dispatch event
 
-            host.Cycle ()
+            if alive () then
+                host.Cycle ()
 
             if
-                not closed
+                alive ()
                 && (host.FrameRequested || fullPaint || exposed)
             then
                 this.Present ()
 
-        not closed
+        alive ()
 
     /// <summary>The rendered page's physical dimensions and top-down RGBA bytes.</summary>
     member internal _.ReadPixels() : struct (int * int * byte array) =

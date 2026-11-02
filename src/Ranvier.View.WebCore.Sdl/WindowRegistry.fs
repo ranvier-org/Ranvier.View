@@ -2,6 +2,20 @@ namespace Ranvier.View.WebCore.Sdl
 
 open System
 open System.Collections.Generic
+open System.Threading
+
+/// <summary>The process-lifetime thread admission for SDL windows.</summary>
+[<Sealed>]
+type internal WindowOwner() =
+    let mutable thread = 0
+
+    /// <summary>Rejects a different owner before an SDL operation starts.</summary>
+    member _.Ensure() =
+        let current = Environment.CurrentManagedThreadId
+        let previous = Interlocked.CompareExchange (&thread, current, 0)
+
+        if previous <> 0 && previous <> current then
+            invalidOp "SDL windows use the same native thread throughout the process"
 
 /// <summary>Owner-thread weak window registrations with strong dispatch snapshots.</summary>
 [<Sealed>]
