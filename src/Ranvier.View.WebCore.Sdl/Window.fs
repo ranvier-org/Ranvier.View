@@ -10,6 +10,20 @@ open Ranvier
 open Ranvier.Dom
 open Ranvier.View.WebCore
 
+/// <summary>Finishes every page phase before marking the page closed and propagating its first failure.</summary>
+module internal PageCleanup =
+    /// <summary>Attempts every phase and marks the page closed even when a phase fails.</summary>
+    let run (phases: (unit -> unit) array) (markClosed: unit -> unit) =
+        let cleanup = Cleanup ()
+
+        try
+            for phase in phases do
+                cleanup.Attempt phase
+        finally
+            markClosed ()
+
+        cleanup.Finish ()
+
 module internal Sdl =
     let ok (value: SDLBool) : bool =
         SDLBool.op_Implicit value
@@ -588,17 +602,22 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 presenter.ReleasePending ()
 
                 if not pageDisposed then
-                    if accessibilityAttached then
-                        WindowAccessibility.detach host
-                        accessibilityAttached <- false
-
-                    if not (isNull displayFeed) then
-                        displayFeed.Dispose ()
-
-                    (graph :> IDisposable).Dispose()
-                    (presenter :> IDisposable).Dispose()
-                    (host :> IDisposable).Dispose()
-                    pageDisposed <- true
+                    PageCleanup.run
+                        [|
+                            (fun () ->
+                                if accessibilityAttached then
+                                    try
+                                        WindowAccessibility.detach host
+                                    finally
+                                        accessibilityAttached <- false)
+                            (fun () ->
+                                if not (isNull displayFeed) then
+                                    displayFeed.Dispose ())
+                            (fun () -> (graph :> IDisposable).Dispose())
+                            (fun () -> (presenter :> IDisposable).Dispose())
+                            (fun () -> (host :> IDisposable).Dispose())
+                        |]
+                        (fun () -> pageDisposed <- true)
 
                 egl
                 |> Option.iter (fun consumer ->

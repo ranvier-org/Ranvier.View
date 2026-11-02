@@ -955,27 +955,36 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                     raise (InvalidOperationException "A WebCore host is disposed on the thread that created it")
 
                 disposed <- true
-                idles.Clear ()
-                idleTimeouts.Clear ()
-
-                for item in installed do
-                    item.Dispose ()
-
-                installed <- []
-
-                if obj.ReferenceEquals (SynchronizationContext.Current, context) then
-                    SynchronizationContext.SetSynchronizationContext previousContext
-
-                Native.rv_host_set_frame_callback (handle, 0n, 0n)
-                |> ignore
-
-                Events.RemoveAll session
-                session.Dispose ()
+                let cleanup = Cleanup ()
 
                 try
-                    disposedEvent.Trigger ()
-                with error ->
-                    record error
+                    idles.Clear ()
+                    idleTimeouts.Clear ()
+                    let installations = installed
+                    installed <- []
 
-                Native.rv_host_destroy handle
-                GC.KeepAlive frameCallback
+                    for item in installations do
+                        cleanup.Attempt item.Dispose
+
+                    cleanup.Attempt (fun () ->
+                        if obj.ReferenceEquals (SynchronizationContext.Current, context) then
+                            SynchronizationContext.SetSynchronizationContext previousContext)
+
+                    cleanup.Attempt (fun () ->
+                        Native.rv_host_set_frame_callback (handle, 0n, 0n)
+                        |> ignore)
+
+                    cleanup.Attempt (fun () -> Events.RemoveAll session)
+                    cleanup.Attempt session.Dispose
+
+                    try
+                        disposedEvent.Trigger ()
+                    with error ->
+                        record error
+                finally
+                    try
+                        cleanup.Attempt (fun () -> Native.rv_host_destroy handle)
+                    finally
+                        GC.KeepAlive frameCallback
+
+                cleanup.Finish ()
