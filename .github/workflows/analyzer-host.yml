@@ -180,6 +180,40 @@ jobs:
           path: artifacts/feed/*.nupkg
           retention-days: 3
 
+  candidate-consumers:
+    needs: host
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    env:
+      DOTNET_CLI_USE_MSBUILD_SERVER: '0'
+      MSBUILDDISABLENODEREUSE: '1'
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.403'
+      - uses: actions/download-artifact@v4
+        with:
+          name: analyzer-host-ubuntu-latest-${{ github.sha }}
+          path: artifacts/candidate-feed
+      - name: Verify the same candidate package pair on both platforms
+        run: python tools/Ranvier.Analyzers.Host/tests/test_consumer.py --run-external --host-feed artifacts/candidate-feed --evidence-dir "${{ runner.temp }}/ranvier-analyzer-candidate-proof" --dotnet dotnet --sdk-version 10.0.403
+      - name: Retain candidate consumer evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analyzer-candidate-consumers-${{ matrix.os }}-${{ github.sha }}
+          path: ${{ runner.temp }}/ranvier-analyzer-candidate-proof
+          if-no-files-found: warn
+          retention-days: 3
+
   analyze:
     needs: [host, core-dependencies]
     runs-on: ${{ matrix.os }}
