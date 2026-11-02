@@ -2655,6 +2655,8 @@ let private runCanvasExport () =
                     Settle = fun () -> async { host.Cycle () |> ignore }
                 }
 
+            use cancellation = new System.Threading.CancellationTokenSource ()
+
             let count =
                 CanvasExportChecks.run
                     (fun () -> Ranvier.View.WebCore.Canvas.forHost host)
@@ -2662,15 +2664,13 @@ let private runCanvasExport () =
                     (fun () -> Ranvier.View.WebCore.CanvasExport.forHost host)
                     host.Document
                     driver
-                |> Async.StartImmediateAsTask
+                |> fun work -> Async.StartImmediateAsTask (work, cancellationToken = cancellation.Token)
 
-            let timeout = System.Diagnostics.Stopwatch.StartNew ()
-
-            while not count.IsCompleted
-                  && timeout.ElapsedMilliseconds < 120000L do
-                host.Cycle () |> ignore
-
-            count.GetAwaiter().GetResult()
+            try
+                R07Wait.run 120000L (fun () -> host.Cycle () |> ignore) count
+            with :? System.TimeoutException ->
+                cancellation.Cancel ()
+                reraise ()
         finally
             (host :> System.IDisposable).Dispose()
 

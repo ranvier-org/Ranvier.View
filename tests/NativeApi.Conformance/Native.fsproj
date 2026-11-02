@@ -118,6 +118,7 @@
     <Compile Include="CustomEffectChecks.fs" />
     <Compile Include="ViewTransitionChecks.fs" />
     <Compile Include="../UserTiming/Native.fs" Link="UserTimingNative.fs" />
+    <Compile Include="R07Wait.fs" />
     <Compile Include="Native.fs" />
     <ProjectReference Include="../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />
     <ProjectReference Include="$(NativeApiContractRoot)/src/Ranvier.Dom/Ranvier.Dom.fsproj" Condition="'$(NativeApiContractRoot)' != ''" />
