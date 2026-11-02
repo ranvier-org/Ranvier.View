@@ -66,14 +66,6 @@ module CanvasExport =
 
     let private completions = Completions ()
 
-    // The native encodings are the RV_IMAGE_ENCODING_* values.
-    let private nativeEncoding =
-        function
-        | ImageEncoding.Rgba8 -> 0
-        | ImageEncoding.Png -> 1
-        | ImageEncoding.Jpeg -> 2
-        | ImageEncoding.Webp -> 3
-
     /// <summary>A canvas export service for the document <c>host</c> shows at each call.</summary>
     /// <remarks>Raises NotSupportedException when the native library lacks the canvas export functions.</remarks>
     /// <param name="host">The live host whose creating thread runs every operation.</param>
@@ -125,7 +117,7 @@ module CanvasExport =
             let mutable length = 0L
 
             let status =
-                Native.rv_canvas_encode (handle, nativeEncoding encoding, quality, null, 0L, &length)
+                Native.rv_canvas_encode (handle, NativeImageEncoding.code encoding, quality, null, 0L, &length)
                 |> supported encoding
 
             if status = 0 then
@@ -136,7 +128,7 @@ module CanvasExport =
 
                 let bytes = Array.zeroCreate<byte>(int length)
 
-                Native.rv_canvas_encode (handle, nativeEncoding encoding, quality, bytes, int64 bytes.Length, &length)
+                Native.rv_canvas_encode (handle, NativeImageEncoding.code encoding, quality, bytes, int64 bytes.Length, &length)
                 |> Interop.check "HTMLCanvasElement.toBlob"
 
                 bytes
@@ -173,7 +165,14 @@ module CanvasExport =
                 let handle = native (box canvas) "canvas"
 
                 Interop.text "HTMLCanvasElement.toDataURL" (fun buffer capacity length ->
-                    Native.rv_canvas_to_data_url (handle, nativeEncoding encoding, CanvasExportContract.quality quality, buffer, capacity, length)
+                    Native.rv_canvas_to_data_url (
+                        handle,
+                        NativeImageEncoding.code encoding,
+                        CanvasExportContract.quality quality,
+                        buffer,
+                        capacity,
+                        length
+                    )
                     |> supported encoding)
 
             member _.ToBlob(canvas, encoding, quality) =
@@ -182,7 +181,7 @@ module CanvasExport =
                 let handle = native (box canvas) "canvas"
                 let result = [| 0n |]
 
-                Native.rv_canvas_to_blob (handle, nativeEncoding encoding, CanvasExportContract.quality quality, result)
+                Native.rv_canvas_to_blob (handle, NativeImageEncoding.code encoding, CanvasExportContract.quality quality, result)
                 |> supported encoding
                 |> Interop.check "HTMLCanvasElement.toBlob"
 
