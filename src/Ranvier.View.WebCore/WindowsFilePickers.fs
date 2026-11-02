@@ -157,7 +157,7 @@ module internal WindowsFileDialog =
                 ||| 0x00000008u
                 ||| (if request.Multiple then 0x00000200u else 0u)
 
-            options.Hook <- Marshal.GetFunctionPointerForDelegate hook
+            options.Hook <- Marshal.GetFunctionPointerForDelegate<OpenFileHook> hook
             let accepted = openFile &options <> 0
             let error = if accepted then 0u else CommDlgExtendedError ()
             let cancelled = state.Finish ()
