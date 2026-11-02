@@ -100,6 +100,25 @@ published counter with `RANVIER_SMOKE=1` for its bounded visible-window check. K
 `WebKit.resources` from the publish folder beside the executable. The app is native; the WebCore libraries
 and resources remain separate files.
 
+### Size-oriented publishing
+
+For a smaller NativeAOT executable, opt in to the .NET SDK's size optimization at publish time:
+
+```sh
+dotnet publish examples/Ranvier.NativeCounter -c Release -r win-x64 -p:OptimizationPreference=Size -o artifacts/native-aot/counter-size
+```
+
+Apply the same property to your own application's project and target RID. The default publish remains unchanged;
+size optimization can trade execution speed for a smaller executable, so measure your own workload.
+
+In a matched Windows x64 Release comparison using public Ranvier.Dom alpha.55, View source `5435298` and the
+private ABI 62 GPU native runtime `590e299`, the Counter executable changed from 6,450,176 to 5,701,120 bytes
+(−11.61%). The backend smoke executable changed from 6,181,376 to 5,463,040 bytes (−11.62%). Both profiles
+passed the same Counter and 30-check smoke runs with NativeAOT warnings treated as errors. The 89,778,897-byte
+WebCore native payload was identical in both profiles; the Counter runtime files excluding symbols and XML
+documentation therefore fell from 99,350,737 to 98,601,681 bytes (−0.75%). These are measurements of one
+private Windows GPU cohort, not a size guarantee for other runtimes, applications or platforms.
+
 Both apps published and ran on Windows x64 locally and in
 [Windows](https://github.com/ranvier-org/Ranvier.View/actions/runs/40649337023/job/122686137299) and
 [macOS arm64](https://github.com/ranvier-org/Ranvier.View/actions/runs/40649337023/job/122686137302) CI.

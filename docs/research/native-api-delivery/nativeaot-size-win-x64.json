@@ -1,0 +1,35 @@
+{
+  "scope": "Matched strict NativeAOT Windows x64 Release profile comparison; the size profile is opt-in.",
+  "viewSource": "54352988890d7e4484d7f0bc49b6dbc9688c90fe",
+  "core": "Ranvier.Dom 0.1.0-alpha.55",
+  "coreDomSha256": "c9b58dd32f9f217d312581a6d2b008fa9c03b1a42ecd6da650c7a74830289987",
+  "nativeSource": "590e2998df71e17245e6ea4ea2f15fa3c012f8b9",
+  "nativeProfile": "Private ABI 62 GPU host, win-x64",
+  "nativeHostSha256": "5f68e029c7dd4033f38b73667f635361b45451b2546cfdfbb87356fda140583e",
+  "nativePayloadBytes": 89778897,
+  "strictFlags": ["IlcTreatWarningsAsErrors=true", "ILLinkTreatWarningsAsErrors=true"],
+  "sizeProfileProperty": "OptimizationPreference=Size",
+  "sizeIlcFlags": ["--Os", "--dehydrate"],
+  "counter": {
+    "defaultExecutableBytes": 6450176,
+    "defaultExecutableSha256": "0f982b01439ce4ac66d40ce3ea188b59f5074587105d611b68a67876ae4ed883",
+    "sizeExecutableBytes": 5701120,
+    "sizeExecutableSha256": "221c2dd94fb88c324e0d309a47620f4c40ee3eea4a5215b9ad6af007a410f3f9",
+    "defaultRuntimeBytesExcludingSymbolsAndXml": 99350737,
+    "sizeRuntimeBytesExcludingSymbolsAndXml": 98601681,
+    "runtimeCheck": "Both profiles passed the visible SDL counter smoke, GPU frames, UIA attachment and text/plain clipboard."
+  },
+  "smoke": {
+    "defaultExecutableBytes": 6181376,
+    "defaultExecutableSha256": "3be76c33a1bb4075bdb082be90be2977b82b6e88150715b2ce410cb5026d0362",
+    "sizeExecutableBytes": 5463040,
+    "sizeExecutableSha256": "3c5ec40064064b4237fd5287fec61937ec37626f17e8dd2db67e280c47d23e2d",
+    "runtimeCheck": "Both profiles passed all 30 native backend smoke controls."
+  },
+  "limitations": [
+    "The native payload is unchanged and dominates the runtime footprint.",
+    "Both executables have an empty PE CLR directory; no performance benchmark is claimed.",
+    "The exact results are specific to this source and private runtime cohort.",
+    "The reachable scan graph contains no direct authored PrintFormat caller in either baseline application."
+  ]
+}
