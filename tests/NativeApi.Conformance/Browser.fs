@@ -1860,16 +1860,30 @@ let runResizeObservation () =
                 Update = fun () -> resizeFrame () |> Async.AwaitPromise
                 Errors = errors
                 Engine = ResizeObservationChecks.Chromium
+                DevicePixelSupported = true
             }
 
-        let! count =
-            ResizeObservationChecks.run
-                document
-                (fun () -> BrowserResizeObservation.forDocument document)
-                (fun () -> BrowserCancellation.forDocument document)
-                driver
+        let scale = devicePixelRatio ()
 
-        return {| resize = count |}
+        let! count =
+            if scale = 1. then
+                ResizeObservationChecks.run
+                    document
+                    (fun () -> BrowserResizeObservation.forDocument document)
+                    (fun () -> BrowserCancellation.forDocument document)
+                    driver
+            else
+                async.Return 0
+
+        let! deviceCount =
+            ResizeDevicePixelChecks.run document (fun () -> BrowserResizeObservation.forDocument document) driver.Update scale true
+
+        return
+            {|
+                resize = count
+                deviceResize = deviceCount
+                deviceScale = scale
+            |}
     }
     |> Async.StartAsPromise
 

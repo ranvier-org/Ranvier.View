@@ -103,7 +103,14 @@ let install (host: IHost) : System.IDisposable =
                 let current = System.Environment.CurrentManagedThreadId
 
                 if current <> thread then
-                    raise (System.InvalidOperationException $"A DOM host installed on thread {thread} was disposed on thread {current}")
+                    raise (
+                        System.InvalidOperationException (
+                            "A DOM host installed on thread "
+                            + thread.ToString (System.Globalization.CultureInfo.CurrentCulture)
+                            + " was disposed on thread "
+                            + current.ToString (System.Globalization.CultureInfo.CurrentCulture)
+                        )
+                    )
 
                 if HostSlot.Depth <> depth then
                     raise (System.InvalidOperationException "A DOM host was disposed while a later installation is current")
@@ -525,7 +532,14 @@ let arrayAt (items: 'T array) (index: int) : 'T =
 /// <summary>Writes an element; a .NET array cannot grow, so an index past the end raises.</summary>
 let arraySet (items: 'T array) (index: int) (value: 'T) : unit =
     if index < 0 || index >= items.Length then
-        raise (System.InvalidOperationException $"A .NET array of length {items.Length} cannot grow to index {index}")
+        raise (
+            System.InvalidOperationException (
+                "A .NET array of length "
+                + items.Length.ToString (System.Globalization.CultureInfo.CurrentCulture)
+                + " cannot grow to index "
+                + index.ToString (System.Globalization.CultureInfo.CurrentCulture)
+            )
+        )
 
     items[index] <- value
 

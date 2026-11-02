@@ -2005,14 +2005,14 @@ and [<Sealed>] private ViewBoundary
         parentPath: InstancePath,
         region: int,
         mountView:
-            (unit -> obj)
-                -> ((unit -> obj) -> Backend -> unit)
-                -> ViewScope
-                -> Placement
-                -> InstancePath
-                -> int
-                -> int
-                -> TemplateDom.HydrationCursor
+            (struct ((unit -> obj) *
+            ((unit -> obj) -> Backend -> unit) *
+            ViewScope *
+            Placement *
+            InstancePath *
+            int *
+            int *
+            TemplateDom.HydrationCursor))
                 -> Row,
         hydration: TemplateDom.HydrationCursor,
         hydrationCursor: unit -> TemplateDom.HydrationCursor,
@@ -2155,7 +2155,7 @@ and [<Sealed>] private ViewBoundary
         try
             row <-
                 Api.runWithOwner site.Owner (fun () ->
-                    mountView noItem (fun _ backend -> render backend) outer viewContainer parentPath region (site.NextRow ()) cursor)
+                    mountView (struct (noItem, (fun _ backend -> render backend), outer, viewContainer, parentPath, region, site.NextRow (), cursor)))
 
             if not (isNull cursor) then
                 checkEnd row cursor
@@ -2334,15 +2334,16 @@ and [<Sealed>] private ViewBoundary
             try
                 content <-
                     Api.runWithOwner site.Owner (fun () ->
-                        mountView
-                            noItem
-                            (fun _ backend -> views.Content status backend)
-                            (this :> ViewScope)
-                            contentContainer
-                            parentPath
-                            region
-                            row
-                            cursor)
+                        mountView (
+                            struct (noItem,
+                                    (fun _ backend -> views.Content status backend),
+                                    (this :> ViewScope),
+                                    contentContainer,
+                                    parentPath,
+                                    region,
+                                    row,
+                                    cursor)
+                        ))
             with error ->
                 failure <- Some error
         finally
@@ -4375,7 +4376,7 @@ and internal MountState
                 parentContainer,
                 parentPath,
                 region,
-                (fun current render scope target parentPath region row cursor ->
+                (fun struct (current, render, scope, target, parentPath, region, row, cursor) ->
                     this.MountRow (current, render, scope, target, parentPath, region, row, cursor, regionStart)),
                 regionCursor,
                 (fun () -> this.HydrationCursor),
