@@ -10,6 +10,37 @@ open Ranvier.Dom
 open Ranvier.View
 open RanvierWebCoreAbi
 
+/// <summary>Reserves the process-lifetime native host thread.</summary>
+[<Sealed>]
+type internal NativeOwner() =
+    let mutable thread = 0
+    let mutable depth = 0
+    let mutable committed = false
+
+    /// <summary>Rejects a different owner before a native operation starts.</summary>
+    member _.Ensure() =
+        let current = Environment.CurrentManagedThreadId
+        let previous = Interlocked.CompareExchange (&thread, current, 0)
+
+        if previous <> 0 && previous <> current then
+            invalidOp "Native hosts and SDL windows use the same native thread throughout the process"
+
+    /// <summary>Reserves the owner for a creation attempt.</summary>
+    member this.Enter() =
+        this.Ensure ()
+        depth <- depth + 1
+
+    /// <summary>Retains the owner after native host initialization begins.</summary>
+    member _.Commit() =
+        committed <- true
+
+    /// <summary>Ends an attempt and releases an uncommitted reservation.</summary>
+    member _.Exit() =
+        depth <- depth - 1
+
+        if depth = 0 && not committed then
+            Interlocked.Exchange (&thread, 0) |> ignore
+
 /// <summary>One sample of a mouse, pen or touch contact, laid out as <c>RvPointerSample</c>.</summary>
 /// <remarks>
 /// <c>PointerType</c> is 0 for a mouse, 1 for a pen and 2 for touch; <c>Action</c> is 0 move, 1 down, 2 up, 3 cancel
@@ -106,6 +137,7 @@ type internal HostContext(posted: ConcurrentQueue<struct (SendOrPostCallback * o
 /// </remarks>
 [<Sealed>]
 type WebCoreHost private (handle: nativeint, session: Session, width: int, height: int) =
+    static let nativeOwner = NativeOwner ()
     let thread = Environment.CurrentManagedThreadId
     let microtasks = Queue<unit -> unit>()
     let posted = ConcurrentQueue<struct (SendOrPostCallback * obj)>()
@@ -268,11 +300,10 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         else
             original args
 
-    /// <summary>Creates a page of <c>width</c> by <c>height</c> CSS pixels and installs it on the current thread.</summary>
-    /// <exception cref="T:System.InvalidOperationException">
-    /// The native library lacks generated DOM support or the SVG transport required by ABI 29.
-    /// </exception>
-    static member Create(width: int, height: int) : WebCoreHost =
+    /// <summary>The shared thread admission for native hosts and their windows.</summary>
+    static member internal Owner = nativeOwner
+
+    static member private CreateCore(width: int, height: int) : WebCoreHost =
         if
             Native.rv_abi_version () < 29
             || Native.rv_abi_has "dom-generated" <> 1
@@ -285,6 +316,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 )
             )
 
+        nativeOwner.Commit ()
         let handle = Native.rv_host_create (width, height)
 
         if handle = 0n then
@@ -302,6 +334,18 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         let host = new WebCoreHost (handle, session, width, height)
         host.Install ()
         host
+
+    /// <summary>Creates a page of <c>width</c> by <c>height</c> CSS pixels and installs it on the current thread.</summary>
+    /// <exception cref="T:System.InvalidOperationException">
+    /// The native library lacks generated DOM support or the SVG transport required by ABI 29.
+    /// </exception>
+    static member Create(width: int, height: int) : WebCoreHost =
+        nativeOwner.Enter ()
+
+        try
+            WebCoreHost.CreateCore (width, height)
+        finally
+            nativeOwner.Exit ()
 
     member private this.Install() =
         document <- unbox<Document>(session.Node (Native.rv_host_document handle))

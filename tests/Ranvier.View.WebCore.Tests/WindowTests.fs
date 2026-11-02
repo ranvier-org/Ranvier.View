@@ -22,6 +22,15 @@ let private square =
             |]
             [| t.text (fun (count: Signal<int>) -> string count.Value) |])
 
+let private pointerSquare =
+    Component.define (fun _ (count: Signal<int>) -> count) (fun t ->
+        t.button
+            [|
+                t.Attrs.attribute ("style", "position:absolute;left:0;top:0;width:100px;height:100px")
+                t.Events.on ("pointerdown", fun (count: Signal<int>) (_: Event) -> count.Value <- count.Value + 1)
+            |]
+            [||])
+
 // A hidden window drawn by SDL's software renderer, so the test needs no GPU, on the WebCore host thread.
 let private windowCase (name: string) (body: Window -> unit) =
     testCase name (fun () ->
@@ -74,6 +83,30 @@ let tests =
     testList
         "Window"
         [
+            testCase "a bare host owns the first window admission" (fun () ->
+                onHostThread (fun () ->
+                    use host = WebCoreHost.Create (80, 60)
+                    let mutable failure: exn = null
+
+                    let other =
+                        Threading.Thread (
+                            Threading.ThreadStart (fun () ->
+                                try
+                                    use unexpected =
+                                        Window.Create ("wrong owner", 80, 60, hidden = true, renderer = "software")
+
+                                    ()
+                                with error ->
+                                    failure <- error)
+                        )
+
+                    other.Start ()
+                    Expect.isTrue (other.Join 5000) "the other thread finishes"
+                    Expect.isTrue (failure :? InvalidOperationException) "the other thread is rejected"
+                    Expect.stringContains failure.Message "same native thread" "rejection happens at admission"
+                    use window = Window.Create ("owner", 80, 60, hidden = true, renderer = "software")
+                    Expect.isTrue (window.Step 0) "the host owner can create and pump a window"))
+
             windowCase "a mounted component reaches the window's texture"
             <| fun window ->
                 use graph = new Graph ()
@@ -158,6 +191,48 @@ let tests =
                 press window SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP 50.0f 50.0f
                 steps window 2
                 Expect.equal (graph.Run (fun () -> count.Value)) 1 "the click handler ran"
+
+            windowCase "SDL pen and touch events reach the page"
+            <| fun window ->
+                use graph = new Graph ()
+                let count = graph.Run (fun () -> Api.createSignal 0)
+                use _mounted = mount window.Host graph pointerSquare count
+                steps window 2
+
+                let target =
+                    SDL3.SDL_GetWindowID (NativePtr.ofNativeInt<SDL_Window> window.SdlWindow)
+
+                if WebCoreHost.Has "pointer-input" then
+                    let mutable event = SDL_Event ()
+                    event.ptouch.``type`` <- SDL_EventType.SDL_EVENT_PEN_DOWN
+                    event.ptouch.windowID <- target
+                    event.ptouch.which <- LanguagePrimitives.EnumOfValue 42u
+                    event.ptouch.x <- 40.0f
+                    event.ptouch.y <- 30.0f
+                    event.ptouch.down <- SDLBool.op_Implicit true
+                    event.ptouch.pen_state <- SDL_PenInputFlags.SDL_PEN_INPUT_DOWN
+                    Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "pen event queued"
+                    steps window 1
+                    Expect.equal (graph.Run (fun () -> count.Value)) 1 "pen down reaches the page"
+                    event.ptouch.``type`` <- SDL_EventType.SDL_EVENT_PEN_UP
+                    event.ptouch.down <- SDLBool.op_Implicit false
+                    event.ptouch.pen_state <- LanguagePrimitives.EnumOfValue 0u
+                    Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "pen release queued"
+                    steps window 1
+
+                if WebCoreHost.Has "touch-input" then
+                    let before = graph.Run (fun () -> count.Value)
+                    let mutable event = SDL_Event ()
+                    event.tfinger.``type`` <- SDL_EventType.SDL_EVENT_FINGER_DOWN
+                    event.tfinger.windowID <- target
+                    event.tfinger.touchID <- LanguagePrimitives.EnumOfValue 7UL
+                    event.tfinger.fingerID <- LanguagePrimitives.EnumOfValue 9UL
+                    event.tfinger.x <- 0.2f
+                    event.tfinger.y <- 0.2f
+                    event.tfinger.pressure <- 0.7f
+                    Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "touch event queued"
+                    steps window 1
+                    Expect.equal (graph.Run (fun () -> count.Value)) (before + 1) "touch down reaches the page"
 
             windowCase "another window receives queued close requests"
             <| fun window ->
@@ -287,6 +362,58 @@ let tests =
                 Expect.isEmpty (registry.Snapshot ()) "snapshot prunes the dead entry"
             }
 
+            test "failed window admission permits another thread until native initialization" {
+                let owner = NativeOwner ()
+                owner.Enter ()
+                owner.Enter ()
+                owner.Exit ()
+                let mutable rejected = false
+
+                let attempt =
+                    Threading.Thread (
+                        Threading.ThreadStart (fun () ->
+                            try
+                                owner.Enter ()
+                            with :? InvalidOperationException ->
+                                rejected <- true)
+                    )
+
+                attempt.Start ()
+                Expect.isTrue (attempt.Join 5000) "the concurrent attempt finishes"
+                Expect.isTrue rejected "a nested failed attempt retains the outer reservation"
+                owner.Exit ()
+                let mutable accepted = false
+
+                let retry =
+                    Threading.Thread (
+                        Threading.ThreadStart (fun () ->
+                            owner.Enter ()
+                            accepted <- true
+                            owner.Exit ())
+                    )
+
+                retry.Start ()
+                Expect.isTrue (retry.Join 5000) "the retry finishes"
+                Expect.isTrue accepted "a failed creation releases its tentative owner"
+                owner.Enter ()
+                owner.Commit ()
+                owner.Exit ()
+                let mutable committedRejected = false
+
+                let other =
+                    Threading.Thread (
+                        Threading.ThreadStart (fun () ->
+                            try
+                                owner.Enter ()
+                            with :? InvalidOperationException ->
+                                committedRejected <- true)
+                    )
+
+                other.Start ()
+                Expect.isTrue (other.Join 5000) "the committed admission check finishes"
+                Expect.isTrue committedRejected "native initialization retains its owner"
+            }
+
             windowCase "a second thread cannot start another native window"
             <| fun window ->
                 steps window 2
@@ -349,5 +476,37 @@ let tests =
             test "input method offsets count code points as UTF-16" {
                 Expect.equal (Sdl.utf16Offset "a😀b" 2) 3 "a surrogate pair is two units"
                 Expect.equal (Sdl.utf16Offset "abc" 9) 3 "an offset past the end clamps"
+            }
+
+            test "touch frames retain stationary contacts and cancel on focus loss" {
+                let touches = TouchFrames ()
+                let first = touches.Update (1UL, 2UL, 1, 40.0, 30.0, 0.7f, 0)
+                let second = touches.Update (1UL, 3UL, 1, 20.0, 10.0, 1.2f, 0)
+                Expect.equal first.Length 1 "down emits its contact"
+                Expect.equal second.Length 2 "the frame contains both contacts"
+                Expect.equal second[0].Action 4 "the earlier contact is stationary"
+                Expect.equal second[1].Pressure 1.0f "pressure is normalized"
+                let released = touches.Update (1UL, 2UL, 2, 42.0, 30.0, 0.0f, 0)
+                Expect.equal released[1].Id first[0].Id "the same contact keeps its identifier"
+                Expect.equal released[1].MovementX 2.0 "movement is in CSS pixels"
+                let cancelled = touches.Cancel 0
+                Expect.equal cancelled.Length 1 "the remaining contact is cancelled"
+                Expect.equal cancelled[0].Action 3 "focus loss sends cancellation"
+                Expect.isEmpty (touches.Cancel 0) "cancel clears the frame"
+            }
+
+            test "pen samples retain axes and cancel an active contact" {
+                let pens = PenSamples ()
+
+                let pressure =
+                    pens.Update (42u, 0, 10.0, 20.0, -1, 0, 0, Some (SDL_PenAxis.SDL_PEN_AXIS_PRESSURE, 0.8f))
+
+                let down = pens.Update (42u, 1, 12.0, 20.0, 0, 1, 0, None)
+                Expect.equal down.Id pressure.Id "the pen keeps its identifier"
+                Expect.equal down.Pressure 0.8f "pressure survives the next event"
+                Expect.equal down.MovementX 2.0 "movement is in CSS pixels"
+                let cancelled = pens.Cancel 0
+                Expect.equal cancelled.Length 1 "the active pen is cancelled"
+                Expect.equal cancelled[0].Action 3 "the contact ends"
             }
         ]

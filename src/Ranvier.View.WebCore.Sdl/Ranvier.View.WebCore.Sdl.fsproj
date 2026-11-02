@@ -25,6 +25,7 @@
         <Compile Include="EglPresentation.fs" />
         <Compile Include="Presentation.fs" />
         <Compile Include="WindowRegistry.fs" />
+        <Compile Include="TouchFrames.fs" />
         <Compile Include="Window.fs" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />
