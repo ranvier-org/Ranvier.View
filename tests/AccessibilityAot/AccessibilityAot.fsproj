@@ -5,11 +5,15 @@
         <IsPackable>false</IsPackable>
         <PublishAot>true</PublishAot>
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
+        <DefineConstants Condition="'$(AccessibilityStyleTrial)' == 'true'">$(DefineConstants);ATSPI_STYLE_TRIAL</DefineConstants>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <WarningsAsErrors>$(WarningsAsErrors);IL2026;IL2046;IL2050;IL2055;IL2060;IL2062;IL2067;IL2070;IL2072;IL2075;IL2077;IL2080;IL2090;IL2091;IL2104;IL2121;IL3050</WarningsAsErrors>
     </PropertyGroup>
     <ItemGroup>
         <Compile Include="Program.fs" />
         <ProjectReference Include="../../src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(AccessibilityAtspiPackageVersion)' != ''">
+        <PackageReference Include="Ranvier.Private.Accessibility.Atspi.Qualification" Version="$(AccessibilityAtspiPackageVersion)" />
     </ItemGroup>
 </Project>
