@@ -86,6 +86,18 @@ class AnalyzerBootstrap(unittest.TestCase):
         views = re.search(r'(?ms)^  views:\n(.*?)(?=^  [A-Za-z0-9_-]+:|\Z)', text).group(1)
         self.assertIn('group: [view, sugar, anime, motion, hydration, arms, analyzers]', views)
 
+    def test_cold_bootstrap_uses_the_reviewed_compiler_workspace(self):
+        import re
+        qualification = (ROOT / '.github/workflows/analyzer-host.yml').read_text()
+        ci = (ROOT / '.github/workflows/ci.yml').read_text()
+        bootstrap = re.search(r'(?ms)^  analyzer-bootstrap:\n(.*?)(?=^  [A-Za-z0-9_-]+:|\Z)', ci).group(1)
+        qualified_work = re.search(r'build_compiler.py --work (\S+)', qualification).group(1)
+        bootstrap_work = re.search(r'build_compiler.py --work (\S+)', bootstrap).group(1)
+        self.assertEqual(bootstrap_work, qualified_work)
+        compiler = qualified_work + '/source/artifacts/bin/FSharp.Compiler.Service/Release/netstandard2.0/FSharp.Compiler.Service.dll'
+        self.assertIn('path: ' + compiler, bootstrap)
+        self.assertIn('compiler="$GITHUB_WORKSPACE/' + compiler + '"', bootstrap)
+
 
 if __name__ == '__main__':
     unittest.main()
