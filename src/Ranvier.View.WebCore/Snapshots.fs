@@ -201,7 +201,12 @@ module Snapshots =
                             with error ->
                                 ResourceOutcome.Failed (ResourceFailure.LoadFailed error.Message)
                         else
-                            ResourceOutcome.Failed (ResourceFailure.LoadFailed $"The snapshot ended with outcome {outcome}")
+                            ResourceOutcome.Failed (
+                                ResourceFailure.LoadFailed (
+                                    "The snapshot ended with outcome "
+                                    + outcome.ToString (Globalization.CultureInfo.CurrentCulture)
+                                )
+                            )
 
                     release ()
                     arbiter.Settle settled |> ignore)
