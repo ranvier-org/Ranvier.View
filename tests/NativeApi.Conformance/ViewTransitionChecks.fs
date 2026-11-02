@@ -13,7 +13,7 @@ let run (document: Document) (create: unit -> ViewTransitionService) (nextFrame:
             checks <- checks + 1
 
             if actual <> expected then
-                failwithf "%s: expected %A, got %A" label expected actual
+                failwith label
 
         let frames count =
             async {
