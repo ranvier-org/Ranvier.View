@@ -77,10 +77,7 @@ type Probe =
             NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
 #endif
 
-#if !FABLE_COMPILER
 and [<System.Diagnostics.DebuggerDisplay("{ToString(),nq}"); NoEquality; NoComparison>] BoundaryProbeState =
-#else
-#endif
     | Ready
     | Pending of waiting: int * revealed: bool
     | Failed of error: exn * generation: int

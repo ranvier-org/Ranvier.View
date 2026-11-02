@@ -218,7 +218,9 @@ type SameValueZero private () =
     static member val Instance = SameValueZero ()
 
     static member private ReadOptionProperty(value: obj, property: System.Reflection.PropertyInfo) =
-        let actual = value.GetType().GetMemberWithSameMetadataDefinitionAs property :?> System.Reflection.PropertyInfo
+        let actual =
+            value.GetType().GetMemberWithSameMetadataDefinitionAs property :?> System.Reflection.PropertyInfo
+
         actual.GetValue value
 
     static member internal Normal(value: obj) : obj =
@@ -250,13 +252,13 @@ type SameValueZero private () =
                 t.IsGenericType
                 && t.GetGenericTypeDefinition () = typedefof<option<_>>
             then
-                SameValueZero.Normal (SameValueZero.ReadOptionProperty(value, optionValue))
+                SameValueZero.Normal (SameValueZero.ReadOptionProperty (value, optionValue))
             elif
                 t.IsGenericType
                 && t.GetGenericTypeDefinition () = typedefof<voption<_>>
             then
-                if SameValueZero.ReadOptionProperty(value, valueOptionIsSome) :?> bool then
-                    SameValueZero.Normal (SameValueZero.ReadOptionProperty(value, valueOptionValue))
+                if SameValueZero.ReadOptionProperty (value, valueOptionIsSome) :?> bool then
+                    SameValueZero.Normal (SameValueZero.ReadOptionProperty (value, valueOptionValue))
                 else
                     null
             else

@@ -1,0 +1,20 @@
+name: Use the source-built analyzer Host
+description: Verify this run's Host and configure its isolated private restore route
+runs:
+  using: composite
+  steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: ci-analyzer-host-${{ github.sha }}
+        path: artifacts/analyzer-bootstrap/feed
+    - name: Verify the source-built Host and preserve repository NuGet routes
+      shell: bash
+      run: >-
+        python3 .github/scripts/analyzer_ci_feed.py configure
+        --feed artifacts/analyzer-bootstrap/feed --source "${{ github.sha }}"
+        --output artifacts/analyzer-bootstrap/restore.NuGet.Config
+    - name: Use the exact Host without a stale global-cache copy
+      shell: bash
+      run: |
+        echo "RestoreConfigFile=$GITHUB_WORKSPACE/artifacts/analyzer-bootstrap/restore.NuGet.Config" >> "$GITHUB_ENV"
+        echo "NUGET_PACKAGES=$GITHUB_WORKSPACE/artifacts/analyzer-bootstrap/nuget" >> "$GITHUB_ENV"

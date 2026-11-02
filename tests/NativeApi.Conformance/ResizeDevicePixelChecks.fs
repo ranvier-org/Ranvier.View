@@ -4,6 +4,67 @@ open System
 open System.Collections.Generic
 open Ranvier.Dom
 
+let private entryMatches
+    nativeCss
+    ((eo, et, chromium): ResizeDevicePixelData.Entry)
+    ((no, nt, css): ResizeDevicePixelData.Entry)
+    ((ao, at, actual): ResizeDevicePixelData.Entry)
+    =
+    eo = ao
+    && et = at
+    && no = eo
+    && nt = et
+    && chromium.Length = 10
+    && css.Length = 8
+    && actual.Length = 10
+    && Array.forall2 (fun e a -> abs (e - a) < 0.000001) (if nativeCss then css else chromium[0..7]) actual[0..7]
+    && chromium[8] = actual[8]
+    && chromium[9] = actual[9]
+
+/// <summary>Rejects mutated CSS, device pixels and observer/target identities in both fixture domains.</summary>
+let verifyFixtureDomains () =
+    let mutable checks = 0
+    let mutable rows = 0
+
+    let expect label condition =
+        checks <- checks + 1
+
+        if not condition then
+            failwith label
+
+    for scale in [ 1.; 1.5; 2. ] do
+        for case in ResizeDevicePixelData.cases scale do
+            expect "CSS and device checkpoints cover the same entries" (case.Entries.Length = case.NativeCss.Length)
+
+            for index in 0 .. case.Entries.Length - 1 do
+                rows <- rows + 1
+                let (owner, target, chromium) as expected = case.Entries[index]
+                let (_, _, css) as native = case.NativeCss[index]
+
+                for nativeCss in [ false; true ] do
+                    let actual =
+                        if nativeCss then
+                            Array.append css chromium[8..9]
+                        else
+                            Array.copy chromium
+
+                    expect "matching domain checkpoint" (entryMatches nativeCss expected native (owner, target, actual))
+
+                    for field in 0..9 do
+                        let changed = Array.copy actual
+
+                        changed[field] <-
+                            changed[field]
+                            + (if field < 8 then 1. / 64. else 0.000000001)
+
+                        expect "changed CSS/device field must fail" (not (entryMatches nativeCss expected native (owner, target, changed)))
+
+                    expect "wrong observer rejected" (not (entryMatches nativeCss expected native (owner + "!", target, actual)))
+                    expect "wrong target rejected" (not (entryMatches nativeCss expected native (owner, target + "!", actual)))
+
+    expect "complete 105 entry checkpoint" (rows = 105)
+    checks
+
 let private snapshot name (entry: ResizeObserverEntry) =
     let sizes (values: ResizeObserverSize array) =
         values
@@ -21,8 +82,10 @@ let private snapshot name (entry: ResizeObserverEntry) =
             sizes entry.DevicePixelContentBoxSize
         |]
 
-/// <summary>Runs the eight measured device-pixel cases, or verifies rejection by a capability-false runtime.</summary>
-let run (document: Document) (create: unit -> ResizeObservationService) (update: unit -> Async<unit>) scale supported =
+/// <summary>Checks Chromium device sizes and per-engine CSS sizes, or verifies rejection by a capability-false runtime.</summary>
+let run (document: Document) (create: unit -> ResizeObservationService) (update: unit -> Async<unit>) scale supported nativeCss =
+    verifyFixtureDomains () |> ignore
+
     async {
         let mutable checks = 0
 
@@ -145,8 +208,7 @@ let run (document: Document) (create: unit -> ResizeObservationService) (update:
                     expect (case.Name + " entry count") (entries.Count = case.Entries.Length)
 
                     for index in 0 .. case.Entries.Length - 1 do
-                        let eo, et, expected = case.Entries[index]
-                        let ao, at, actual = entries[index]
+                        let _, _, actual = entries[index]
 
                         expect
                             (case.Name
@@ -156,10 +218,7 @@ let run (document: Document) (create: unit -> ResizeObservationService) (update:
                              + string scale
                              + ": "
                              + String.Join (",", actual))
-                            (eo = ao
-                             && et = at
-                             && expected.Length = actual.Length
-                             && Array.forall2 (fun e a -> abs (e - a) < 0.000001) expected actual)
+                            (entryMatches nativeCss case.Entries[index] case.NativeCss[index] entries[index])
                 else
                     expect (case.Name + " exercises the unsupported box") (rejected > 0)
 
