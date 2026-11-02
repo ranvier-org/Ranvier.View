@@ -37,6 +37,21 @@ let tests =
     testList
         "Input"
         [
+            testCase "Windows picker decodes single and multiple file selections"
+            <| fun () ->
+                let buffer = Runtime.InteropServices.Marshal.StringToHGlobalUni ("C:\\files\000one.txt\000two.txt\000\000")
+                try
+                    let paths = WindowsFileDialog.paths buffer 64
+                    Expect.sequenceEqual paths [| IO.Path.Combine ("C:\\files", "one.txt"); IO.Path.Combine ("C:\\files", "two.txt") |] "multiple selection paths"
+                finally
+                    Runtime.InteropServices.Marshal.FreeHGlobal buffer
+
+            testCase "Windows picker cancellation before dialog creation is retained"
+            <| fun () ->
+                let state = WindowsFileDialog.State ()
+                state.Cancel ()
+                Expect.isTrue (state.Finish ()) "early invalidation survives dialog creation"
+
             hostCase "file picker provider delivers and invalidates the original request"
             <| fun host ->
                 if WebCoreHost.Has "file-picker" then

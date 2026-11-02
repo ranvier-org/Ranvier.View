@@ -110,6 +110,7 @@
         <Compile Include="WakeLocks.fs" />
         <Compile Include="Notifications.fs" />
         <Compile Include="FilePickers.fs" />
+        <Compile Include="WindowsFilePickers.fs" />
         <Compile Include="Animations.fs" />
         <Compile Include="Timelines.fs" />
         <Compile Include="CustomEffects.fs" />
