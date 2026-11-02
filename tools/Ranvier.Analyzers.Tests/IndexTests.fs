@@ -211,6 +211,46 @@ let f (p: Projection<int, int>) = p |> Projection.fold (fun s v -> s + v) 0
                 Expect.isTrue (obj.ReferenceEquals (Index.ofFile tree, Index.ofFile tree)) "the cached index"
             }
 
+            test "ordinary native integer conversions remain typed calls" {
+                let file = index "module Fixture\nlet convert (value: int64) = nativeint value\n"
+                let call = file.Calls |> Array.exactlyOne
+                Expect.equal call.Callee.CompiledName "ToIntPtr" "the numeric conversion still names its operator"
+                match call.Arguments with
+                | [ Value argument ] -> Expect.equal argument.DisplayName "value" "the original typed argument"
+                | _ -> failtest "the numeric conversion lost its typed argument"
+            }
+
+            test "fixed buffers preserve calls and diagnostics across their whole scope" {
+                let source =
+                    """module Fixture
+#nowarn "9"
+open Ranvier
+open Microsoft.FSharp.NativeInterop
+let pin (bytes: byte[]) =
+    let before = createSignal 1
+    let address =
+        use pointer = fixed (let seed = createSignal 2 in bytes)
+        let inside = createSignal 3
+        let owned = createMemo (fun _ -> createEffect ignore; 1)
+        NativePtr.toNativeInt pointer
+    let after = createSignal 4
+    address
+"""
+
+                let context = context (ranvier.Force ()) source
+                let file = Index.ofFile context.TypedTree.Value
+                let signals = callsOf "createSignal" file
+
+                Expect.sequenceEqual
+                    (signals |> Array.map (fun site -> site.Range.StartLine) |> Array.sort)
+                    [ 6; 8; 9; 12 ]
+                    "calls before, in the initializer, in the fixed body and after it"
+
+                let findings = run Analyzers.ran010Cli context
+                Expect.equal (findings |> List.map _.Code) [ "RAN010" ] "the owned node inside the fixed body"
+                Expect.equal findings.Head.Range.StartLine 10 "the diagnostic stays at the inner creator"
+            }
+
             test "the index and every rule survive unusual shapes" {
                 let context = context (ranvier.Force ()) unusual
                 Index.ofFile context.TypedTree.Value |> ignore

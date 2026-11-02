@@ -14,52 +14,40 @@ module Spec =
 
     /// The packed libraries in dependency order. Each packs untraced and again as its `.Traced` package.
     let sources =
-        [
-            "src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj"
-            "src/Ranvier.View/Ranvier.View.fsproj"
-            "src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj"
-            "src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj"
-            "src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj"
-            "src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj"
-        ]
+        [ "src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj"
+          "src/Ranvier.View/Ranvier.View.fsproj"
+          "src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj"
+          "src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj"
+          "src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj"
+          "src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj" ]
 
     let analyzers = "tools/Ranvier.Analyzers/Ranvier.Analyzers.fsproj"
 
     /// The projects `analyze` checks, by group. Fable-only projects are left out.
     let analyzedGroups =
-        [
-            "library",
-            [
-                "src/Fable.Ranvier/Fable.Ranvier.fsproj"
-                "src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj"
-            ]
-            "view",
-            [
-                "src/Ranvier.View/Ranvier.View.fsproj"
-                "src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj"
-                "src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj"
-                "experiments/Ranvier.View.Arms/Ranvier.View.Arms.fsproj"
-                "examples/Fable.Ranvier.Playground/Playground.fsproj"
-                "examples/Fable.Ranvier.Playground/tests/DomTests.fsproj"
-                "docs/samples/view/Ranvier.Docs.ViewSamples.fsproj"
-            ]
-            "examples",
-            [
-                "examples/Ranvier.Motion/Motion.fsproj"
-                "examples/Ranvier.Motion/Server/ServerChecks.fsproj"
-                "examples/Ranvier.Motion/tests/MotionTests.fsproj"
-                "examples/Ranvier.Hydration/Shared.fsproj"
-                "examples/Ranvier.Hydration/Server/Server.fsproj"
-            ]
-        ]
+        [ "library",
+          [ "src/Fable.Ranvier/Fable.Ranvier.fsproj"
+            "src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj" ]
+          "view",
+          [ "src/Ranvier.View/Ranvier.View.fsproj"
+            "src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj"
+            "src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj"
+            "experiments/Ranvier.View.Arms/Ranvier.View.Arms.fsproj"
+            "examples/Fable.Ranvier.Playground/Playground.fsproj"
+            "examples/Fable.Ranvier.Playground/tests/DomTests.fsproj"
+            "docs/samples/view/Ranvier.Docs.ViewSamples.fsproj" ]
+          "examples",
+          [ "examples/Ranvier.Motion/Motion.fsproj"
+            "examples/Ranvier.Motion/Server/ServerChecks.fsproj"
+            "examples/Ranvier.Motion/tests/MotionTests.fsproj"
+            "examples/Ranvier.Hydration/Shared.fsproj"
+            "examples/Ranvier.Hydration/Server/Server.fsproj" ] ]
 
     /// The browser examples the docs site copies under examples/.
     let browserExamples =
-        [
-            "examples/Ranvier.Motion"
-            "examples/Fable.Ranvier.Playground"
-            "examples/Ranvier.Hydration"
-        ]
+        [ "examples/Ranvier.Motion"
+          "examples/Fable.Ranvier.Playground"
+          "examples/Ranvier.Hydration" ]
 
     let groups =
         [ "all"; "view"; "sugar"; "anime"; "motion"; "hydration"; "arms"; "analyzers" ]
@@ -68,7 +56,7 @@ module Spec =
         use manifest =
             Text.Json.JsonDocument.Parse (File.ReadAllText (Path.Combine (root, ".config/dotnet-tools.json")))
 
-        manifest.RootElement.GetProperty("tools").EnumerateObject()
+        manifest.RootElement.GetProperty("tools").EnumerateObject ()
         |> Seq.map (fun tool -> tool.Name, tool.Value.GetRawText ())
         |> Seq.toList
 
@@ -163,14 +151,12 @@ module Stage =
                     run (
                         Cmd.ofList
                             "dotnet"
-                            [
-                                "tool"
-                                "restore"
-                                "--tool-manifest"
-                                Path.Combine (Spec.root, ".config/.tool-restore", name + ".json")
-                                "--verbosity"
-                                "q"
-                            ]
+                            [ "tool"
+                              "restore"
+                              "--tool-manifest"
+                              Path.Combine (Spec.root, ".config/.tool-restore", name + ".json")
+                              "--verbosity"
+                              "q" ]
                     )
                 }
         }
@@ -215,7 +201,7 @@ module Stage =
                         // Tracked sources in batches, so each command stays under the Windows command-line limit.
                         let files =
                             (capture "git" [ "ls-files"; "*.fs" ])
-                                .Split(
+                                .Split (
                                     '\n',
                                     StringSplitOptions.RemoveEmptyEntries
                                     ||| StringSplitOptions.TrimEntries
@@ -407,21 +393,19 @@ module Stage =
 
                             capture
                                 "dotnet"
-                                [
-                                    "fickl"
-                                    $"{checks}/Discovery.fsproj"
-                                    "--outDir"
-                                    $"{checks}/out"
-                                    "-c"
-                                    "Release"
-                                    "--noCache"
-                                ]
+                                [ "fickl"
+                                  $"{checks}/Discovery.fsproj"
+                                  "--outDir"
+                                  $"{checks}/out"
+                                  "-c"
+                                  "Release"
+                                  "--noCache" ]
                             |> ignore
 
                             let fable = capture "node" [ $"{checks}/out/Main.js" ]
 
                             let lines (text: string) =
-                                text.Replace("\r\n", "\n").TrimEnd()
+                                text.Replace("\r\n", "\n").TrimEnd ()
 
                             if lines net <> lines fable then
                                 failwith $"The discovery app's output differs between .NET and Fable.\n.NET:\n{net}\nFable:\n{fable}"
@@ -566,17 +550,15 @@ module Stage =
                             run (
                                 Cmd.ofList
                                     "dotnet"
-                                    [
-                                        "new"
-                                        "sln"
-                                        "--format"
-                                        "slnx"
-                                        "--name"
-                                        name
-                                        "--output"
-                                        "artifacts/analyzers/build"
-                                        "--force"
-                                    ]
+                                    [ "new"
+                                      "sln"
+                                      "--format"
+                                      "slnx"
+                                      "--name"
+                                      name
+                                      "--output"
+                                      "artifacts/analyzers/build"
+                                      "--force" ]
                             )
 
                             run (
@@ -589,15 +571,13 @@ module Stage =
                             run (
                                 Cmd.ofList
                                     "dotnet"
-                                    [
-                                        "build"
-                                        $"artifacts/analyzers/build/{name}.slnx"
-                                        "-c"
-                                        "Release"
-                                        "-m"
-                                        "-v"
-                                        "q"
-                                    ]
+                                    [ "build"
+                                      $"artifacts/analyzers/build/{name}.slnx"
+                                      "-c"
+                                      "Release"
+                                      "-m"
+                                      "-v"
+                                      "q" ]
                             )
                         }
 
@@ -606,13 +586,38 @@ module Stage =
                                 Directory.CreateDirectory (Path.Combine (Spec.root, "artifacts/analyzers"))
                                 |> ignore)
 
-                            run (
-                                Cmd.ofList
-                                    "dotnet"
-                                    ([ "fsharp-analyzers"; "--project" ]
+                            run (fun _ ->
+                                let selection =
+                                    capture
+                                        "dotnet"
+                                        [ "msbuild"
+                                          Spec.analyzers
+                                          "-nologo"
+                                          "-verbosity:quiet"
+                                          "-property:Configuration=Release"
+                                          "-target:SelectRanvierAnalyzerHost"
+                                          "-getProperty:_RanvierAnalyzerHostPath,_RanvierAnalyzerRuntimeConfig" ]
+
+                                use metadata = Text.Json.JsonDocument.Parse (selection)
+                                let properties = metadata.RootElement.GetProperty ("Properties")
+                                let host = properties.GetProperty("_RanvierAnalyzerHostPath").GetString ()
+
+                                let runtimeConfig =
+                                    properties.GetProperty("_RanvierAnalyzerRuntimeConfig").GetString ()
+
+                                if
+                                    String.IsNullOrWhiteSpace host
+                                    || String.IsNullOrWhiteSpace runtimeConfig
+                                then
+                                    failwith "The restored Ranvier analyzer host did not supply its invocation paths."
+
+                                let info =
+                                    ProcessStartInfo ("dotnet", WorkingDirectory = Spec.root, UseShellExecute = false)
+
+                                let arguments =
+                                    ([ "exec"; "--runtimeconfig"; runtimeConfig; host; "--project" ]
                                      @ projects
-                                     @ [
-                                         "--exclude-files"
+                                     @ [ "--exclude-files"
                                          "**/Generated/**"
                                          "--analyzers-path"
                                          "tools/Ranvier.Analyzers/bin/Release/net10.0"
@@ -624,9 +629,16 @@ module Stage =
                                          "--code-root"
                                          "."
                                          "--report"
-                                         $"artifacts/analyzers/ranvier-{name}.sarif"
-                                     ])
-                            )
+                                         $"artifacts/analyzers/ranvier-{name}.sarif" ])
+
+                                for argument in arguments do
+                                    info.ArgumentList.Add argument
+
+                                use proc = Process.Start info
+                                proc.WaitForExit ()
+
+                                if proc.ExitCode <> 0 then
+                                    failwith $"The owned Ranvier analyzer host exited with {proc.ExitCode} for {name}.")
                         }
                 }
         }
@@ -654,8 +666,7 @@ module Stage =
     /// <remarks>The traced packs restore and build again after every untraced pack.</remarks>
     let pack =
         input {
-            let! clean =
-                Baked.Stages.cleanWith (InputSpec.ret false) [] [ "bin/*.nupkg"; "bin/*.snupkg" ]
+            let! clean = Baked.Stages.cleanWith (InputSpec.ret false) [] [ "bin/*.nupkg"; "bin/*.snupkg" ]
 
             and! untraced = packWith false
             and! traced = packWith true

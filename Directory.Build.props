@@ -64,6 +64,7 @@
     -->
     <ItemGroup Condition="'$(RanvierAnalyze)' == 'true'">
         <PackageReference Include="FSharp.Analyzers.Build" Version="0.5.0" PrivateAssets="all" IncludeAssets="build" />
+        <PackageReference Include="Ranvier.Analyzers.Host" Version="[0.1.0-preview.1]" PrivateAssets="all" IncludeAssets="build" GeneratePathProperty="true" />
     </ItemGroup>
 
 </Project>

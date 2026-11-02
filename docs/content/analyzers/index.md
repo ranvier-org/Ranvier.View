@@ -4,16 +4,16 @@ order: 1
 ---
 
 :::info
-`Ranvier.Analyzers` is published on NuGet at `0.1.1-preview.1`. Reference it and set `RanvierAnalyze`:
+The `Ranvier.Analyzers` candidate at `0.1.1-preview.2` restores its pinned analyzer host automatically. Reference it and set `RanvierAnalyze`:
 
 ```xml
-<PackageReference Include="Ranvier.Analyzers" Version="0.1.1-preview.1" PrivateAssets="all" />
+<PackageReference Include="Ranvier.Analyzers" Version="0.1.1-preview.2" PrivateAssets="all" />
 <PropertyGroup>
   <RanvierAnalyze>true</RanvierAnalyze>
 </PropertyGroup>
 ```
 
-with the CLI in the tool manifest: `dotnet tool install fsharp-analyzers --version 0.41.0`.
+The host requires the .NET 10 SDK and includes the source pin, patch and licenses for its unsigned compiler fix.
 :::
 
 `Ranvier.Analyzers` reports mistakes at their source ranges during a build. Each rule below has a

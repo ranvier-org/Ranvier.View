@@ -39,6 +39,18 @@ def identities(directory):
 
 
 class NativeDeliveryPackagesTests(unittest.TestCase):
+    def test_analyzer_pair_is_reserved_for_its_qualified_publication_route(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            directory = self.seed(root)
+            package(directory / 'renamed-host.nupkg', 'Ranvier.Analyzers.Host')
+            package(directory / 'renamed-analyzer.nupkg', 'Ranvier.Analyzers')
+            package(directory / 'unrelated.nupkg', 'Ranvier.Analyzers.Extension')
+            result = self.run_filter(root, require_complete=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(identities(directory), set(NATIVE_VIEW) | {'Ranvier.Analyzers.Extension'})
+            self.assertEqual(identities(root / 'excluded'), set(ANIME) | {'Ranvier.Analyzers', 'Ranvier.Analyzers.Host'})
+
     def seed(self, root):
         directory = root / 'bin'
         directory.mkdir()

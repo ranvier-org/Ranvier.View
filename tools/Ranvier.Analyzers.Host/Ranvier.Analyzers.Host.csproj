@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Ranvier.Analyzers.Host</AssemblyName>
+    <PackageId>Ranvier.Analyzers.Host</PackageId>
+    <Version>0.1.0-preview.1</Version>
+    <Description>Ranvier's isolated F# analyzer host with a pinned compiler expression-conversion fix.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <UseAppHost>false</UseAppHost>
+    <IsPackable>true</IsPackable>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <VendorRoot>$(BaseIntermediateOutputPath)vendor/</VendorRoot>
+    <RanvierPythonExecutable Condition="'$(RanvierPythonExecutable)' == '' and $([MSBuild]::IsOSPlatform('Windows'))">python</RanvierPythonExecutable>
+    <RanvierPythonExecutable Condition="'$(RanvierPythonExecutable)' == ''">python3</RanvierPythonExecutable>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);CollectHostPayload</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageDownload Include="fsharp-analyzers" Version="[0.41.0]" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+    <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="/" Visible="false" />
+    <None Include="build/Ranvier.Analyzers.Host.targets" Pack="true" PackagePath="build/" />
+    <None Include="build/Ranvier.Analyzers.Host.targets" Pack="true" PackagePath="buildTransitive/" />
+  </ItemGroup>
+  <Target Name="PrepareVendorPayload" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="'$(RanvierPatchedCompilerPath)' == ''" Text="The host producer requires RanvierPatchedCompilerPath from the pinned compiler build; consumers restore the completed host package." />
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="&quot;$(RanvierPythonExecutable)&quot; &quot;$(MSBuildThisFileDirectory)prepare_vendor.py&quot; --package-root &quot;$([System.IO.Path]::GetFullPath('$(NuGetPackageRoot)/.'))&quot; --compiler &quot;$(RanvierPatchedCompilerPath)&quot; --output &quot;$(VendorRoot)&quot;" />
+    <ItemGroup>
+      <_VendorAssembly Include="$(VendorRoot)*.dll" />
+      <Reference Include="%(_VendorAssembly.Filename)">
+        <HintPath>%(_VendorAssembly.FullPath)</HintPath>
+        <Private>true</Private>
+      </Reference>
+      <_VendorData Include="$(VendorRoot)**/*" Exclude="$(VendorRoot)*.dll" />
+      <None Include="@(_VendorData)">
+        <Link>%(_VendorData.RecursiveDir)%(_VendorData.Filename)%(_VendorData.Extension)</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <EmbeddedResource Include="$(VendorRoot)vendor-manifest.json" LogicalName="Ranvier.Analyzers.Host.VendorManifest.json" />
+    </ItemGroup>
+  </Target>
+  <Target Name="StageVendorPayload" AfterTargets="Build">
+    <ItemGroup>
+      <_VendorPayload Include="$(VendorRoot)**/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_VendorPayload)" DestinationFiles="@(_VendorPayload->'$(TargetDir)%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+  <Target Name="CollectHostPayload" DependsOnTargets="Build">
+    <ItemGroup>
+      <_HostPayload Include="$(TargetDir)**/*" />
+      <TfmSpecificPackageFile Include="@(_HostPayload)" PackagePath="tools/net10.0/any/" />
+    </ItemGroup>
+  </Target>
+</Project>

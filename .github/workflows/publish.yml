@@ -2,7 +2,7 @@ name: Publish NuGet
 
 on:
   workflow_run:
-    workflows: [CI]
+    workflows: [CI, Analyzer host qualification]
     branches: [main, master]
     types: [completed]
 
@@ -17,10 +17,12 @@ concurrency:
 jobs:
   publish:
     if: >-
+      github.event.workflow_run.name == 'CI' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_repository.full_name == github.repository &&
-      startsWith(github.event.workflow_run.head_commit.message, 'chore: release ')
+      (startsWith(github.event.workflow_run.head_commit.message, 'chore: release ') ||
+       startsWith(github.event.workflow_run.head_commit.message, 'chore(release): '))
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -55,4 +57,157 @@ jobs:
       - name: Publish packages validated by CI
         env:
           NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
-        run: dotnet nuget push 'bin/*.nupkg' --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          import runpy
+          import subprocess
+          harness = runpy.run_path('tools/Ranvier.Analyzers.Host/tests/test_consumer.py', run_name='publication_filter')
+          analyzer_ids = {'ranvier.analyzers', 'ranvier.analyzers.host'}
+          for path in sorted(Path('bin').glob('*.nupkg')):
+              package, _ = harness['_nuspec_from_package'](path)
+              if package.package_id.casefold() in analyzer_ids:
+                  print(f'{package.package_id} is owned by the separate analyzer qualification publication route')
+                  continue
+              subprocess.run(['dotnet', 'nuget', 'push', str(path), '--source', 'https://api.nuget.org/v3/index.json',
+                              '--api-key', os.environ['NUGET_API_KEY'], '--skip-duplicate'], check=True)
+          PY
+
+  publish-analyzers:
+    if: >-
+      github.event.workflow_run.name == 'Analyzer host qualification' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      (github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'master') &&
+      (startsWith(github.event.workflow_run.head_commit.message, 'chore: release ') ||
+       startsWith(github.event.workflow_run.head_commit.message, 'chore(release): '))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      QUALIFICATION_RUN: ${{ github.event.workflow_run.id }}
+      QUALIFICATION_SOURCE: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.403'
+      - uses: actions/download-artifact@v8
+        with:
+          name: analyzer-host-ubuntu-latest-${{ github.event.workflow_run.head_sha }}
+          path: artifacts/publication/feed
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: analyzer-candidate-consumers-ubuntu-latest-${{ github.event.workflow_run.head_sha }}
+          path: artifacts/publication/candidate-proofs/ubuntu-latest
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: analyzer-candidate-consumers-windows-latest-${{ github.event.workflow_run.head_sha }}
+          path: artifacts/publication/candidate-proofs/windows-latest
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Verify the complete qualification and exact candidate pair
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:QUALIFICATION_RUN" > artifacts/publication/run.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:QUALIFICATION_RUN/jobs?per_page=100" > artifacts/publication/jobs.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/Ranvier.Analyzers.Host/tests/test_publication.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/Ranvier.Analyzers.Host/tests/verify_publication.py --run-json artifacts/publication/run.json --jobs-json artifacts/publication/jobs.json --source "$env:QUALIFICATION_SOURCE" --feed artifacts/publication/feed --vendor-spec tools/Ranvier.Analyzers.Host/vendor-spec.json --candidate-proofs artifacts/publication/candidate-proofs --output artifacts/publication/verified.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Retain publication identity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analyzer-publication-${{ github.event.workflow_run.head_sha }}
+          path: |
+            artifacts/publication/run.json
+            artifacts/publication/jobs.json
+            artifacts/publication/verified.json
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Authenticate to NuGet with trusted publishing
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER || 'shayan.habibi' }}
+      - name: Publish the qualified Host before its analyzer
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push artifacts/publication/feed/Ranvier.Analyzers.Host.0.1.0-preview.1.nupkg --source https://api.nuget.org/v3/index.json --api-key "$env:NUGET_API_KEY"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet nuget push artifacts/publication/feed/Ranvier.Analyzers.0.1.1-preview.2.nupkg --source https://api.nuget.org/v3/index.json --api-key "$env:NUGET_API_KEY"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  qualify-public-analyzers:
+    needs: publish-analyzers
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.403'
+      - uses: actions/download-artifact@v8
+        with:
+          name: analyzer-host-ubuntu-latest-${{ github.event.workflow_run.head_sha }}
+          path: artifacts/expected-pair
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Wait for the exact public package versions to be indexed
+        run: |
+          $packages = @(
+            @{ Id = 'ranvier.analyzers.host'; Version = '0.1.0-preview.1' },
+            @{ Id = 'ranvier.analyzers'; Version = '0.1.1-preview.2' }
+          )
+          foreach ($package in $packages) {
+            $indexed = $false
+            for ($attempt = 0; $attempt -lt 20; $attempt++) {
+              try {
+                $index = Invoke-RestMethod "https://api.nuget.org/v3-flatcontainer/$($package.Id)/index.json" -TimeoutSec 20
+                if ($index.versions -contains $package.Version) { $indexed = $true; break }
+              } catch { Write-Host "Public index not ready for $($package.Id): $($_.Exception.Message)" }
+              Start-Sleep -Seconds 30
+            }
+            if (-not $indexed) { throw "Timed out waiting for $($package.Id) $($package.Version) on NuGet.org" }
+          }
+      - name: Verify fresh public-only package consumers and repository signatures
+        run: |
+          python tools/Ranvier.Analyzers.Host/tests/test_consumer.py --run-external --public-source --host-feed artifacts/expected-pair --evidence-dir "${{ runner.temp }}/ranvier-public-analyzer-proof" --dotnet dotnet --sdk-version 10.0.403
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Retain public consumer acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: analyzer-public-consumers-${{ matrix.os }}-${{ github.event.workflow_run.head_sha }}
+          path: ${{ runner.temp }}/ranvier-public-analyzer-proof
+          if-no-files-found: warn
+          retention-days: 30

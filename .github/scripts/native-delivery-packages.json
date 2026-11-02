@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "scope": "Native View/DOM/WebCore/SDL delivery; Anime publication is separate.",
+  "scope": "Native View/DOM/WebCore/SDL delivery; Anime and qualified analyzer publication are separate.",
   "required_view_package_ids": [
     "Ranvier.View",
     "Ranvier.View.Traced",
@@ -31,6 +31,8 @@
     "Ranvier.View.Anime",
     "Ranvier.View.Anime.Traced",
     "Fable.Ranvier.Anime",
-    "Fable.Ranvier.Anime.Traced"
+    "Fable.Ranvier.Anime.Traced",
+    "Ranvier.Analyzers",
+    "Ranvier.Analyzers.Host"
   ]
 }

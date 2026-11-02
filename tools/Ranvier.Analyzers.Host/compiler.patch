@@ -1,0 +1,13 @@
+--- a/src/Compiler/Symbols/Exprs.fs
++++ b/src/Compiler/Symbols/Exprs.fs
+@@ -820,6 +820,10 @@
+                     | None, None -> argTy1
+                 let op = binaryOp g m argTy1 argTy2 resTy arg1 arg2
+                 ConvExprPrim cenv env op
++
++            | TOp.ILAsm (([ AI_conv DT_I ] as instrs), _), tyargs, [arg]
++                when isByrefTy g (tyOfExpr g arg) ->
++                E.ILAsm(sprintf "%+A" instrs, ConvTypes cenv tyargs, [ConvExpr cenv env arg])
+ 
+             | TOp.ILAsm ([ ILConvertOp convertOp1; ILConvertOp convertOp2 ], _), _, [arg] -> 
+                 let ty1 = tyOfExpr g arg
