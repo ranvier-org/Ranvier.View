@@ -24,7 +24,11 @@ module FormData =
 
             FormDataEntryValue.String text
         | NativeDom.RV_DOM_UNION_FILE_OR_USV_STRING_FILE -> FormDataEntryValue.File (file union.arm0)
-        | other -> invalidOp $"WebCore returned the unknown FormData entry tag {other}"
+        | other ->
+            invalidOp (
+                "WebCore returned the unknown FormData entry tag "
+                + other.ToString (Globalization.CultureInfo.CurrentCulture)
+            )
 
     let inline private sequence<'T, 'U when 'T: struct> (items: nativeint) (count: int) ([<InlineIfLambda>] read: 'T -> 'U) =
         if count < 0 || (count > 0 && items = 0n) then
