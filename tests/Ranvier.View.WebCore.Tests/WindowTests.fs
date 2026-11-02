@@ -287,6 +287,46 @@ let tests =
                 Expect.isEmpty (registry.Snapshot ()) "snapshot prunes the dead entry"
             }
 
+            windowCase "a second thread cannot start another native window"
+            <| fun window ->
+                steps window 2
+                let mutable failure: exn = null
+
+                let requester =
+                    Threading.Thread (
+                        Threading.ThreadStart (fun () ->
+                            try
+                                use unexpected =
+                                    Window.Create ("Wrong owner", 80, 60, hidden = true, renderer = "software")
+
+                                ()
+                            with error ->
+                                failure <- error)
+                    )
+
+                requester.Start ()
+                Expect.isTrue (requester.Join 5000) "the rejected creation terminates"
+                Expect.isTrue (failure :? InvalidOperationException) "a second native owner is rejected"
+                Expect.stringContains failure.Message "same native thread" "creation reports the owner-thread contract"
+                Expect.isFalse window.Host.Session.IsDisposed "the original host stays live"
+                closeRequest window
+                Expect.isFalse (window.Step 0) "the owner still receives queued events"
+
+            windowCase "disposing the pumping window in a display callback ends its step"
+            <| fun window ->
+                steps window 2
+
+                window.SetDisplayReader (fun () ->
+                    (window :> IDisposable).Dispose()
+                    ValueNone)
+
+                let mutable event = SDL_Event ()
+                event.display.``type`` <- SDL_EventType.SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED
+                event.display.displayID <- SDL3.SDL_GetPrimaryDisplay ()
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "the display event is queued"
+                Expect.isFalse (window.Step 0) "a disposed window stops without cycling its destroyed host"
+                Expect.isTrue window.Host.Session.IsDisposed "the callback finished page teardown"
+
             test "keys map to DOM codes and names" {
                 Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_A) "KeyA" "a letter"
                 Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_0) "Digit0" "zero"
