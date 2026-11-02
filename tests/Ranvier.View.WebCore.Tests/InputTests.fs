@@ -37,6 +37,116 @@ let tests =
     testList
         "Input"
         [
+            hostCase "file picker provider delivers and invalidates the original request"
+            <| fun host ->
+                if WebCoreHost.Has "file-picker" then
+                    let events = ResizeArray<FilePickerEvent> ()
+                    use provider = FilePickers.install host events.Add
+                    Expect.throws (fun () -> FilePickers.install host ignore |> ignore) "one provider owns a host"
+                    let input = host.Document.createElement "input"
+                    input.setAttribute ("type", "file")
+                    input.setAttribute ("accept", ".txt,image/png")
+                    input.setAttribute ("multiple", "")
+                    host.Document.body.appendChild input |> ignore
+                    host.Cycle ()
+                    clickOn host input
+                    Expect.isEmpty (List.ofSeq events) "provider is not called inside native input"
+                    host.Cycle ()
+
+                    let first =
+                        match events[0] with
+                        | Show request -> request
+                        | _ -> failtest "expected a picker request"
+
+                    Expect.isTrue first.Multiple "multiple selection is reported"
+                    Expect.sequenceEqual first.MimeTypes [| "image/png" |] "MIME filter"
+                    Expect.sequenceEqual first.Extensions [| ".txt" |] "extension filter"
+
+                    Expect.throws
+                        (fun () ->
+                            first.Complete (Selected [| "relative.txt" |])
+                            |> ignore)
+                        "relative paths are rejected"
+
+                    let path = IO.Path.GetTempFileName ()
+
+                    try
+                        Expect.isTrue (first.Complete (Selected [| path |])) "selection completes the live request"
+                        Expect.equal (input :?> HTMLInputElement).files.length 1u "selected file reaches the original input"
+                        Expect.isFalse (first.Complete Cancelled) "a request completes only once"
+                    finally
+                        IO.File.Delete path
+
+                    clickOn host input
+                    host.Cycle ()
+
+                    let second =
+                        match events[events.Count - 1] with
+                        | Show request -> request
+                        | _ -> failtest "expected a second picker request"
+
+                    input.remove ()
+                    host.Cycle ()
+
+                    Expect.isTrue
+                        (events
+                         |> Seq.exists (function
+                             | Invalidate id -> id = second.Id
+                             | _ -> false))
+                        "removing the input invalidates the provider"
+
+                    Expect.isFalse (second.Complete Cancelled) "invalidated requests reject completion"
+                    host.Document.body.appendChild input |> ignore
+                    host.Cycle ()
+                    clickOn host input
+                    host.Cycle ()
+
+                    let third =
+                        match events[events.Count - 1] with
+                        | Show request -> request
+                        | _ -> failtest "expected a third picker request"
+
+                    provider.Dispose ()
+
+                    Expect.isTrue
+                        (events
+                         |> Seq.exists (function
+                             | Invalidate id -> id = third.Id
+                             | _ -> false))
+                        "disposing the provider dismisses its dialog"
+
+                    use replacement = FilePickers.install host ignore
+                    ()
+
+            testCase "disposing the host invalidates an open file picker"
+            <| fun () ->
+                onHostThread (fun () ->
+                    use host = WebCoreHost.Create (320, 240)
+
+                    if WebCoreHost.Has "file-picker" then
+                        let events = ResizeArray<FilePickerEvent> ()
+                        use provider = FilePickers.install host events.Add
+                        let input = host.Document.createElement "input"
+                        input.setAttribute ("type", "file")
+                        host.Document.body.appendChild input |> ignore
+                        host.Cycle ()
+                        clickOn host input
+                        host.Cycle ()
+
+                        let request =
+                            match events[0] with
+                            | Show request -> request
+                            | _ -> failtest "expected a picker request"
+
+                        (host :> IDisposable).Dispose ()
+
+                        Expect.isTrue
+                            (events
+                             |> Seq.exists (function
+                                 | Invalidate id -> id = request.Id
+                                 | _ -> false))
+                            "host teardown dismisses the dialog")
+
             hostCase "listener dictionaries preserve capture once passive and removal"
             <| fun host ->
                 let parent = host.Document.createElement "div"
