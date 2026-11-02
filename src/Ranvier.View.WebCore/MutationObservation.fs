@@ -335,43 +335,48 @@ module MutationObservation =
             let mutable state: State option = None
 
             try
-                let value = GCHandle.FromIntPtr(context).Target :?> State
-                state <- Some value
-                let session = value.Session
-                session.ScriptDepth <- session.ScriptDepth + 1
-
                 try
-                    value.Dispatch records
-                finally
-                    session.ScriptDepth <- session.ScriptDepth - 1
+                    let value = GCHandle.FromIntPtr(context).Target :?> State
+                    state <- Some value
+                    let session = value.Session
+                    session.ScriptDepth <- session.ScriptDepth + 1
 
-                    if
-                        session.ScriptDepth = 0
-                        && not session.IsDisposed
-                        && not (isNull session.AfterListener)
-                    then
-                        session.AfterListener.Invoke ()
-            with error ->
-                state
-                |> Option.iter (fun value -> value.Session.ListenerErrors.Add error))
+                    try
+                        value.Dispatch records
+                    finally
+                        session.ScriptDepth <- session.ScriptDepth - 1
+
+                        if
+                            session.ScriptDepth = 0
+                            && not session.IsDisposed
+                            && not (isNull session.AfterListener)
+                        then
+                            session.AfterListener.Invoke ()
+                with error ->
+                    state
+                    |> Option.iter (fun value -> value.Session.ListenerErrors.Add error)
+            finally
+                GC.KeepAlive state)
 
     let private release =
         Native.MutationContextRelease (fun context ->
             let mutable state: State option = None
 
             try
-                let handle = GCHandle.FromIntPtr context
-                let value = handle.Target :?> State
-                state <- Some value
-
                 try
-                    value.ClosedByNative ()
-                finally
-                    handle.Free ()
-                    GC.KeepAlive value
-            with error ->
-                state
-                |> Option.iter (fun value -> value.Session.ListenerErrors.Add error))
+                    let handle = GCHandle.FromIntPtr context
+                    let value = handle.Target :?> State
+                    state <- Some value
+
+                    try
+                        value.ClosedByNative ()
+                    finally
+                        handle.Free ()
+                with error ->
+                    state
+                    |> Option.iter (fun value -> value.Session.ListenerErrors.Add error)
+            finally
+                GC.KeepAlive state)
 
     let private runPointer =
         Marshal.GetFunctionPointerForDelegate<Native.MutationCallback> run

@@ -599,6 +599,9 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     interface IDisposable with
         member _.Dispose() =
             if not disposed then
+                if not host.Session.IsOwnerThread then
+                    invalidOp "An SDL window is disposed on the thread that created it"
+
                 presenter.ReleasePending ()
 
                 if not pageDisposed then

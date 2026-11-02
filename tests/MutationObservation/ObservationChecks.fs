@@ -282,6 +282,27 @@ let runNative () =
         "Character-data targets and type survive copying"
 
     observer.Disconnect ()
+    let foreignDocument = foreign.Document
+    check (isNull foreignDocument.ownerDocument) "A Document target has no ownerDocument"
+
+    observer.Observe (
+        foreignDocument,
+        { MutationObserverOptions.Default with
+            ChildList = true
+        }
+    )
+
+    let comment = foreignDocument.createComment "document-target"
+    foreignDocument.appendChild comment |> ignore
+    let documentRecords = observer.TakeRecords ()
+
+    check
+        (documentRecords.Length = 1
+         && obj.ReferenceEquals (documentRecords[0].Target, foreignDocument))
+        "Document routing preserves the supplied wrapper without querying a null owner"
+
+    foreignDocument.removeChild comment |> ignore
+    observer.Disconnect ()
 
     let duplicate =
         host.Session.Node (Native.rv_node_retain (pointer child)) :> obj :?> Node
@@ -303,10 +324,56 @@ let runNative () =
     foreign.Document.body.appendChild child |> ignore
     child.setAttribute ("adopted", "back")
 
+    let back = observer.TakeRecords ()
+
     check
-        (observer.TakeRecords ()
-         |> Array.forall (fun record -> obj.ReferenceEquals (record.Target, child)))
+        (back.Length = 1
+         && back
+            |> Array.forall (fun record -> obj.ReferenceEquals (record.Target, child)))
         "Adoption back preserves the explicitly observed wrapper"
+
+    let rawHost = Native.rv_host_create (80, 60)
+    check (rawHost <> 0n) "The unknown-origin control uses a real native host"
+
+    try
+        let rawBody = Native.rv_document_body rawHost
+
+        try
+            let rawWrapper = host.Session.Node (Native.rv_node_retain rawBody)
+
+            use unknown =
+                service.Create (fun _ _ -> failwith "An unknown origin was silently routed")
+
+            unknown.Observe (
+                box rawWrapper :?> Node,
+                { MutationObserverOptions.Default with
+                    ChildList = true
+                }
+            )
+
+            let rawChild = Native.rv_document_create_element (rawHost, "span")
+
+            try
+                Native.rv_node_append_child (rawBody, rawChild)
+                |> Interop.check "unknown-origin append"
+            finally
+                Native.rv_node_release rawChild
+
+            let mutable rejected = false
+
+            try
+                unknown.TakeRecords () |> ignore
+            with :? InvalidOperationException as error ->
+                rejected <- error.Message.Contains "no known live originating"
+
+            check rejected "Unknown document ownership is explicit instead of guessing the observing session"
+            check (unknown.TakeRecords().Length = 0) "A failed materialization still drains and releases its owned batch"
+            unknown.Dispose ()
+            rawWrapper.Detach ()
+        finally
+            Native.rv_node_release rawBody
+    finally
+        Native.rv_host_destroy rawHost
 
     let callbackError = InvalidOperationException "mutation callback"
     use failing = service.Create (fun _ _ -> raise callbackError)
@@ -406,5 +473,52 @@ let runNative () =
 
         named "InvalidStateError" (fun () -> retiringService.Create (fun _ _ -> ()) |> ignore)
 
+    let retired =
+        Collections.Generic.Dictionary<nativeint, WeakReference<NativeObject>>()
+
+    let mutable reused = 0
+
+    for _ in 1..32 do
+        let recycling = WebCoreHost.Create (40, 40)
+        let wrapper = box recycling.Document.body :?> NativeObject
+        let address = wrapper.Handle
+
+        match retired.TryGetValue address with
+        | true, weak ->
+            reused <- reused + 1
+
+            match weak.TryGetTarget () with
+            | true, previous -> check (not (obj.ReferenceEquals (previous, wrapper))) "A recycled address never resurrects a disposed wrapper"
+            | _ -> ()
+        | _ -> ()
+
+        check
+            (Session.TryKnownNode address
+             |> Option.exists (fun value -> obj.ReferenceEquals (value, wrapper)))
+            "The registry resolves the current live wrapper"
+
+        (recycling :> IDisposable).Dispose()
+
+        check
+            (wrapper.Handle = 0n
+             && (Session.TryKnownNode address).IsNone)
+            "Disposed sessions are removed before later address reuse"
+
+        retired[address] <- WeakReference<NativeObject>(wrapper)
+
+    Console.WriteLine (
+        "Native node addresses actually reused="
+        + reused.ToString ()
+    )
+
+    (foreign :> IDisposable).Dispose()
+
+    check
+        (drained[1].OldValue = Some ""
+         && drained[2].OldValue = Some "a\000b")
+        "Copied record strings survive originating host disposal"
+
+    check (pointer drained[0].Target = 0n) "Retained record nodes follow their originating session's ordinary lifetime"
+    GC.KeepAlive drained
     check (host.Errors.Count = 0 && foreign.Errors.Count = 0) "All remaining host error routes are empty"
     checks
