@@ -7,6 +7,22 @@ open System.Runtime.CompilerServices
 open Ranvier
 open RanvierWebCoreAbi
 
+/// <summary>Attempts independent cleanup phases and rethrows the first failure with its original stack.</summary>
+type internal Cleanup() =
+    let mutable first: Runtime.ExceptionServices.ExceptionDispatchInfo option = None
+
+    /// <summary>Runs one phase, retaining its failure without preventing later phases.</summary>
+    member _.Attempt(action: unit -> unit) =
+        try
+            action ()
+        with error ->
+            if first.IsNone then
+                first <- Some (Runtime.ExceptionServices.ExceptionDispatchInfo.Capture error)
+
+    /// <summary>Rethrows the first phase failure after cleanup has finished.</summary>
+    member _.Finish() =
+        first |> Option.iter (fun error -> error.Throw ())
+
 /// <summary>The release function of a handle, by the root of its interface.</summary>
 module internal Kind =
     [<Literal>]
@@ -347,11 +363,15 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
     /// <summary>Releases the reference now, on the host thread.</summary>
     member internal this.Detach() =
         if handle <> 0n then
-            Session.Release (kind, handle)
+            if not session.IsOwnerThread then
+                invalidOp "Native objects are released on their host thread"
+
+            let owned = handle
             handle <- 0n
             lifetimeAnchors.Clear ()
             contextDocument <- null
             GC.SuppressFinalize this
+            Session.Release (kind, owned)
 
     override _.Finalize() =
         if handle <> 0n then
@@ -364,7 +384,10 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
 /// The managed objects of one WebCore host: the node and event table, the owner claims that keep objects alive, and the
 /// queue of releases from collected objects.
 /// </summary>
-and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
+and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) as this =
+    static let knownSessions =
+        new System.Threading.ThreadLocal<ResizeArray<WeakReference<Session>>> (fun () -> ResizeArray ())
+
     let table = Dictionary<nativeint, WeakReference<NativeObject>>()
 
     let objectTable =
@@ -376,7 +399,87 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
     let claims = ConditionalWeakTable<Owner, HashSet<NativeObject>>()
     let errors = List<exn>()
     let mutable disposed = false
+    let mutable closing = false
     let mutable released = 0
+    let ownerThread = Environment.CurrentManagedThreadId
+    let cleanupGate = obj ()
+    let ownerCleanup = ConcurrentQueue<unit -> unit>()
+
+    do
+        knownSessions.Value.RemoveAll (fun weak ->
+            match weak.TryGetTarget () with
+            | true, session -> session.IsDisposed
+            | _ -> true)
+        |> ignore
+
+        knownSessions.Value.Add (WeakReference<Session>(this))
+
+    /// <summary>Whether this session has released its native objects.</summary>
+    member internal _.IsDisposed = disposed || closing
+
+    /// <summary>Whether the current thread owns this session's native objects.</summary>
+    member internal _.IsOwnerThread = Environment.CurrentManagedThreadId = ownerThread
+
+    /// <summary>Queues cleanup before shutdown; rejection leaves ownership with the caller.</summary>
+    member internal _.QueueOwnerCleanup(action: unit -> unit) =
+        lock cleanupGate (fun () ->
+            if disposed || closing then
+                false
+            else
+                ownerCleanup.Enqueue action
+                true)
+
+    member private _.DrainOwnerCleanup() =
+        let mutable action = Unchecked.defaultof<unit -> unit>
+
+        while ownerCleanup.TryDequeue (&action) do
+            try
+                action ()
+            with error ->
+                errors.Add error
+
+    member private _.FindKnownNode(handle: nativeint) =
+        if disposed || closing || handle = 0n then
+            None
+        else
+            match table.TryGetValue handle with
+            | true, weak ->
+                match weak.TryGetTarget () with
+                | true, value when value.Kind = Kind.Node && value.Handle = handle -> Some value
+                | _ -> None
+            | _ -> None
+
+    /// <summary>The live node wrapper known on this host thread, preserving identity after adoption.</summary>
+    static member internal TryKnownNode(handle: nativeint) : NativeObject option =
+        knownSessions.Value.RemoveAll (fun weak ->
+            match weak.TryGetTarget () with
+            | true, session -> session.IsDisposed
+            | _ -> true)
+        |> ignore
+
+        knownSessions.Value
+        |> Seq.tryPick (fun weak ->
+            match weak.TryGetTarget () with
+            | true, session -> session.FindKnownNode handle
+            | _ -> None)
+
+    /// <summary>The live host session whose current document has this native address.</summary>
+    static member internal TryDocumentOwner(document: nativeint) : Session option =
+        if document = 0n then
+            None
+        else
+            knownSessions.Value
+            |> Seq.tryPick (fun weak ->
+                match weak.TryGetTarget () with
+                | true, session when session.IsOwnerThread && not session.IsDisposed ->
+                    let current = Native.rv_host_document session.Host
+
+                    try
+                        if current = document then Some session else None
+                    finally
+                        if current <> 0n then
+                            Native.rv_node_release current
+                | _ -> None)
 
     static member internal Release(kind: int, handle: nativeint) =
         match kind with
@@ -670,7 +773,11 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
             releases.Enqueue (struct (kind, handle))
 
     /// <summary>Releases the references of collected objects; runs on the host thread.</summary>
-    member _.Drain() =
+    member this.Drain() =
+        if not this.IsOwnerThread then
+            invalidOp "A native session drains on its host thread"
+
+        this.DrainOwnerCleanup ()
         let mutable item = Unchecked.defaultof<_>
 
         while releases.TryDequeue (&item) do
@@ -699,7 +806,12 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
 
     /// <summary>Releases every reference, live objects included; their handles read zero afterwards.</summary>
     member this.Dispose() =
-        if not disposed then
+        if not this.IsOwnerThread then
+            invalidOp "A native session is disposed on its host thread"
+
+        if not disposed && not closing then
+            lock cleanupGate (fun () -> closing <- true)
+
             let live =
                 Seq.append table.Values others
                 |> Seq.choose (fun weak ->
@@ -708,19 +820,34 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) =
                     | _ -> None)
                 |> Seq.toArray
 
-            GC.Collect ()
-            GC.WaitForPendingFinalizers ()
-            this.Drain ()
-            disposed <- true
+            let cleanup = Cleanup ()
 
-            for target in live do
-                target.Detach ()
+            try
+                cleanup.Attempt (fun () ->
+                    GC.Collect ()
+                    GC.WaitForPendingFinalizers ()
+                    this.Drain ())
 
-            table.Clear ()
-            objectTable.Clear ()
-            others.Clear ()
-            held.Clear ()
-            GC.KeepAlive live
+                for target in live do
+                    cleanup.Attempt target.Detach
+            finally
+                disposed <- true
+
+                knownSessions.Value.RemoveAll (fun weak ->
+                    match weak.TryGetTarget () with
+                    | true, session ->
+                        obj.ReferenceEquals (session, this)
+                        || session.IsDisposed
+                    | _ -> true)
+                |> ignore
+
+                table.Clear ()
+                objectTable.Clear ()
+                others.Clear ()
+                held.Clear ()
+                GC.KeepAlive live
+
+            cleanup.Finish ()
 
     interface IDisposable with
         member this.Dispose() =
