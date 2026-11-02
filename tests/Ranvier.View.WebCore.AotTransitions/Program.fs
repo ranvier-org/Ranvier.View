@@ -12,7 +12,9 @@ let main _ =
     let nextFrame () =
         async {
             host.Frame () |> ignore
-            RanvierWebCoreAbi.Native.rv_run_loop_cycle 16 |> ignore
+
+            RanvierWebCoreAbi.Native.rv_run_loop_cycle 16
+            |> ignore
         }
 
     let count =
