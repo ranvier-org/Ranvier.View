@@ -358,7 +358,9 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
             session.QueueRelease (kind, handle)
 
     override _.ToString() =
-        $"{session.KindName kind} 0x{handle:x}"
+        session.KindName kind
+        + " 0x"
+        + handle.ToString ("x", Globalization.CultureInfo.InvariantCulture)
 
 /// <summary>
 /// The managed objects of one WebCore host: the node and event table, the owner claims that keep objects alive, and the
@@ -773,13 +775,28 @@ module internal Interop =
 
     /// <summary>The exception for a failed status of the operation <c>name</c>.</summary>
     let failure (name: string) (status: int) : exn =
+        let displayName = if isNull name then "" else name
+
         match status with
         | -3 -> WebCoreDomException (lastException 0, lastException 1)
-        | -11 -> InvalidCastException $"{name}: the object does not implement the member's interface"
-        | -9 -> NotSupportedException $"{name} is not supported by this WebCore build"
-        | -2 -> InvalidOperationException $"{name} was called off the host thread"
-        | -1 -> ArgumentNullException (name, $"{name} received a null argument")
-        | other -> InvalidOperationException $"{name} returned status {other}"
+        | -11 ->
+            InvalidCastException (
+                displayName
+                + ": the object does not implement the member's interface"
+            )
+        | -9 ->
+            NotSupportedException (
+                displayName
+                + " is not supported by this WebCore build"
+            )
+        | -2 -> InvalidOperationException (displayName + " was called off the host thread")
+        | -1 -> ArgumentNullException (name, displayName + " received a null argument")
+        | other ->
+            InvalidOperationException (
+                displayName
+                + " returned status "
+                + other.ToString (Globalization.CultureInfo.CurrentCulture)
+            )
 
     [<Sealed; AbstractClass>]
     type private Callbacks =

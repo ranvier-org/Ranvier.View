@@ -278,8 +278,11 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             || Native.rv_abi_has "dom-generated" <> 1
         then
             raise (
-                InvalidOperationException
-                    $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks this backend's SVG paint, filter and resource transport (ABI 29)"
+                InvalidOperationException (
+                    "RanvierWebCoreHost ABI "
+                    + (Native.rv_abi_version ()).ToString(Globalization.CultureInfo.CurrentCulture)
+                    + " lacks this backend's SVG paint, filter and resource transport (ABI 29)"
+                )
             )
 
         let handle = Native.rv_host_create (width, height)
