@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "armed": false,
+  "managedSource": null,
+  "nativeSource": null,
+  "providerSource": null,
+  "webkitSource": null,
+  "versions": {
+    "view": null,
+    "native": null,
+    "provider": null,
+    "core": "0.1.1-preview.1",
+    "dom": "0.1.0-alpha.56",
+    "css": "0.1.1-alpha.2",
+    "cssAddons": "0.1.1-alpha.1"
+  },
+  "rids": {
+    "win-x64": {"hostSha256": null},
+    "linux-x64": {"hostSha256": null, "providerSha256": null},
+    "linux-arm64": {"hostSha256": null, "providerSha256": null}
+  },
+  "pendingNativeFixtureSource": "541ca21f16b1d0399e9c6eec6b0a27e58915c1b4",
+  "limitations": "No final producer allocation or ARM qualification. Source pins compare manifest claims; they do not authenticate a binary's build provenance."
+}

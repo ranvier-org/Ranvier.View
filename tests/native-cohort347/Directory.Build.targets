@@ -1,0 +1,7 @@
+<Project>
+  <Target Name="ValidateCohortConsumer" BeforeTargets="CollectPackageReferences;PrepareForBuild">
+    <Error Condition="'$(CohortViewVersion)' == ''" Text="The exact allocated public View version is required." />
+    <Error Condition="'$(CohortSuffix)' != '' and '$(CohortSuffix)' != '.Traced'" Text="Select normal or traced packages explicitly." />
+    <Error Condition="'$(CohortLinux)' == 'true' and '$(CohortProviderVersion)' == ''" Text="The exact public provider version is required on Linux." />
+  </Target>
+</Project>
