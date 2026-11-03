@@ -1,0 +1,50 @@
+name: Confirm published analyzer consumers
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  consumer:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.403'
+      - name: Verify the original qualified producer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $run = gh api repos/ranvier-org/Ranvier.View/actions/runs/41557769299 | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0 -or $run.head_sha -ne '6b1119c8dbcefc683194dec510859f1137d1e96a' -or $run.event -ne 'push' -or $run.status -ne 'completed' -or $run.conclusion -ne 'success') { throw 'The original qualification run does not match the reviewed producer.' }
+      - uses: actions/download-artifact@v8
+        with:
+          name: analyzer-host-ubuntu-latest-6b1119c8dbcefc683194dec510859f1137d1e96a
+          path: artifacts/expected-pair
+          run-id: 41557769299
+          github-token: ${{ github.token }}
+      - name: Verify fresh public consumers and repository signatures
+        run: |
+          python tools/Ranvier.Analyzers.Host/tests/test_consumer.py --run-external --public-source --host-feed artifacts/expected-pair --evidence-dir "$env:RUNNER_TEMP/ranvier-public-analyzer-proof" --dotnet dotnet --sdk-version 10.0.403
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Retain public consumer evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: analyzer-public-confirmation-${{ matrix.os }}-${{ github.sha }}
+          path: ${{ runner.temp }}/ranvier-public-analyzer-proof
+          if-no-files-found: warn
