@@ -506,6 +506,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// <summary>Cancels a timer; an unknown or finished id does nothing.</summary>
     member this.ClearTimeout(id: int) =
         this.EnsureActive ()
+
         match timerKeys.TryGetValue id with
         | true, key ->
             timers.Remove key |> ignore
@@ -805,6 +806,24 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         Native.rv_host_bind_egl_image (handle, Interop.handle target, image, (if flipY then 1 else 0))
         |> Interop.check "rv_host_bind_egl_image"
 
+    /// <summary>Binds a macOS IOSurface to an element's composited content.</summary>
+    /// <param name="target">A connected composited element in this host's current document.</param>
+    /// <param name="surface">A nonplanar premultiplied BGRA8 sRGB IOSurfaceRef; zero unbinds.</param>
+    /// <param name="flipY">True for bottom-row-first content; false for top-row-first content.</param>
+    /// <remarks>
+    /// Call on the host thread after producer GPU writes complete. The host retains the surface until replacement, unbind or document teardown,
+    /// or the next frame after target removal. Complete later writes before notifying the host; keep storage unchanged during frame acquisition.
+    /// </remarks>
+    /// <exception cref="T:System.NotSupportedException">The runtime has no IOSurface input, or the surface cannot be imported.</exception>
+    member this.BindIOSurface(target: Element, surface: nativeint, flipY: bool) =
+        this.EnsureActive ()
+
+        if not (WebCoreHost.Has "iosurface-input") then
+            raise (NotSupportedException "The native library has no IOSurface input")
+
+        Native.rv_host_bind_iosurface (handle, Interop.handle target, surface, (if flipY then 1 else 0))
+        |> Interop.check "rv_host_bind_iosurface"
+
     /// <summary>Requests a frame after the producer publishes new pixels to the element's bound native texture.</summary>
     /// <remarks>Call on the host thread after producer synchronization. The base DOM backing is retained.</remarks>
     /// <exception cref="T:System.NotSupportedException">Native texture input is unavailable, or the target has no bound texture.</exception>
@@ -815,6 +834,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             not (
                 WebCoreHost.Has "texture-input-d3d11"
                 || WebCoreHost.Has "texture-input-egl"
+                || WebCoreHost.Has "iosurface-input"
             )
         then
             raise (NotSupportedException "The native library has no native texture input")
@@ -949,6 +969,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// <summary>The milliseconds until the next timer is due, zero when one is overdue, or None when none is set.</summary>
     member this.NextTimerDelay: float voption =
         this.EnsureActive ()
+
         if timers.Count = 0 then
             ValueNone
         else

@@ -341,6 +341,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_GAINED when event.window.windowID = id -> host.SetFocused true
         | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST when event.window.windowID = id ->
             suppressImeText <- false
+
             if composing then
                 composing <- false
                 pendingCompositionClear <- false
@@ -467,20 +468,23 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
             host.Wheel (css wheel.mouse_x, css wheel.mouse_y, wheel.x * wheelStep * direction, -wheel.y * wheelStep * direction, modifiers ())
             |> ignore
-        | _ when surrounding.EventType <> 0u && event.``type`` = surrounding.EventType && event.user.windowID = id ->
+        | _ when
+            surrounding.EventType <> 0u
+            && event.``type`` = surrounding.EventType
+            && event.user.windowID = id
+            ->
             let deletion = event.user
             let token = uint64 (unativeint deletion.data2)
             let count = uint32 (unativeint deletion.data1)
+
             match surrounding.Delete (token, deletion.code, count) with
             | 1 -> ()
             | 2 ->
                 composing <- false
                 pendingCompositionClear <- false
                 suppressImeText <- true
-            | _ ->
-                suppressImeText <- true
-        | SDL_EventType.SDL_EVENT_KEY_DOWN when event.key.windowID = id && suppressImeText ->
-            suppressImeText <- false
+            | _ -> suppressImeText <- true
+        | SDL_EventType.SDL_EVENT_KEY_DOWN when event.key.windowID = id && suppressImeText -> suppressImeText <- false
         | SDL_EventType.SDL_EVENT_KEY_DOWN
         | SDL_EventType.SDL_EVENT_KEY_UP when event.key.windowID = id && not composing ->
             let press = event.key
@@ -639,6 +643,12 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                     SDL3.SDL_CreateRenderer (window, NativePtr.nullPtr<byte>)
                 else
                     accelerated
+            | None when
+                OperatingSystem.IsMacOS ()
+                && WebCoreHost.Has "iosurface-frames"
+                ->
+                use name = fixed Sdl.utf8 "metal"
+                SDL3.SDL_CreateRenderer (window, name)
             | None when
                 OperatingSystem.IsLinux ()
                 && WebCoreHost.Has "presentation-egl"
@@ -843,6 +853,17 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     /// <summary>The actual frame retained until its EGL consumer can release it.</summary>
     member internal _.PendingEglFrame = presenter.PendingEglFrame
+
+    /// <summary>The IOSurface frame retained until its Metal consumer finishes and native release succeeds.</summary>
+    member internal _.PendingIOSurfaceFrame = presenter.PendingIOSurfaceFrame
+
+    /// <summary>Wraps this window's actual Metal queue completion for failure and retry controls.</summary>
+    member internal _.SetIOSurfaceCompletion(wrapper: (unit -> unit) -> unit) =
+        presenter.SetIOSurfaceCompletion wrapper
+
+    /// <summary>Wraps this window's native IOSurface release for failure and retry controls.</summary>
+    member internal _.SetIOSurfaceFrameRelease(release: nativeint -> int) =
+        presenter.SetIOSurfaceFrameRelease release
 
     interface IDisposable with
         member _.Dispose() =
