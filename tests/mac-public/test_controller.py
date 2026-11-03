@@ -73,10 +73,33 @@ class PublicGraph(unittest.TestCase):
 
 class Verdicts(unittest.TestCase):
     def test_actual_unfiltered_summary_and_empty_negative(self):
-        self.assertEqual(support.jit_summary('1543 passed, 4 ignored, 0 failed, 0 errored'), [1543, 4, 0, 0])
+        inventory = {'total': 3, 'ignoredCeiling': 1, 'names': ['a', 'b', 'c'], 'allowedIgnored': ['c']}
+        text = '2 passed, 1 ignored, 0 failed, 0 errored\nPassed: 2\n\ta\n\tb\nIgnored: 1\n\tc\nFailed: 0\nErrored: 0'
+        self.assertEqual(support.jit_summary(text, inventory), [2, 1, 0, 0])
         for text in ['0 passed, 0 ignored, 0 failed, 0 errored', 'PASS', '4 passed, 0 ignored, 1 failed, 0 errored']:
             with self.assertRaises(ValueError):
-                support.jit_summary(text)
+                support.jit_summary(text, inventory)
+
+    def test_truncated_discovery_duplicate_and_ignore_inflation_reject(self):
+        inventory = {'total': 3, 'ignoredCeiling': 1, 'names': ['a', 'b', 'c'], 'allowedIgnored': ['c']}
+        positive = '2 passed, 1 ignored, 0 failed, 0 errored\nPassed: 2\n\ta\n\tb\nIgnored: 1\n\tc\nFailed: 0\nErrored: 0'
+        for text in [positive.replace('\tb\n', '\ta\n'), positive.replace('\tc\n', '\tunknown\n'),
+                     positive.replace('\tb\n', '\ttemporary\n').replace('\tc\n', '\tb\n').replace('\ttemporary\n', '\tc\n'),
+                     positive.replace('2 passed', '1 passed').replace('Passed: 2\n\ta\n\tb', 'Passed: 1\n\ta'),
+                     '1 passed, 2 ignored, 0 failed, 0 errored\nPassed: 1\n\ta\nIgnored: 2\n\tb\n\tc\nFailed: 0\nErrored: 0']:
+            with self.assertRaises(ValueError):
+                support.jit_summary(text, inventory)
+
+    def test_inventory_pin_is_current_exact_source_and_bounded_policy(self):
+        config = json.loads((HERE / 'inputs.json').read_text())
+        path = HERE / config['jitInventory']['path']
+        self.assertEqual(support.sha(path), config['jitInventory']['sha256'])
+        inventory = json.loads(path.read_text())
+        self.assertEqual(inventory['sourceCommit'], config['viewCommit'])
+        self.assertEqual(len(inventory['names']), 849)
+        self.assertEqual(len(set(inventory['names'])), 849)
+        self.assertEqual(inventory['ignoredCeiling'], 16)
+        self.assertEqual(len(inventory['allowedIgnored']), 16)
 
     def test_strict_native_generation_rejects_warnings_and_always_throw(self):
         support.strict_publish('Generating native code\n0 Warning(s)')

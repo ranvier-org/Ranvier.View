@@ -112,6 +112,12 @@ def main():
         record['controllerInputHashes'] = dict(sources)
         if any(sha(HERE / name) != digest for name, digest in config['fixtureHashes'].items()):
             raise ValueError('Reviewed lifecycle fixture changed')
+        inventory_path = HERE / config['jitInventory']['path']
+        if inventory_path.parent != HERE or sha(inventory_path) != config['jitInventory']['sha256']:
+            raise ValueError('Reviewed source test inventory changed')
+        inventory = json.loads(inventory_path.read_text())
+        if inventory['sourceCommit'] != config['viewCommit']:
+            raise ValueError('Test inventory is for another source checkpoint')
         if (HERE / 'CleanupFaultChecks.fs').read_bytes().replace(b'\r\n', b'\n') != (
                 view / 'tests/Ranvier.View.WebCore.Tests/CleanupFaultChecks.fs').read_bytes().replace(b'\r\n', b'\n'):
             raise ValueError('Cleanup fixture is not the matching source version')
@@ -167,7 +173,8 @@ def main():
                         before = runtime_identity(entries[0].parent, native, assets['dlls'])
                         try:
                             text = run('run-jit-' + mode, ['dotnet', entries[0], '--summary'], entries[0].parent, timeout=1200, env=env)
-                            row['summary'] = jit_summary(text)
+                            row['summary'] = jit_summary(text, inventory)
+                            row['testInventorySha256'] = config['jitInventory']['sha256']
                         finally:
                             after = runtime_identity(entries[0].parent, native, assets['dlls'])
                             row.update(runtimeBefore=before, runtimeAfter=after)

@@ -1,5 +1,6 @@
 """Admission and process supervision for the public Slim Mac consumer."""
 import hashlib
+from collections import Counter
 import json
 import os
 from pathlib import Path
@@ -121,14 +122,34 @@ def runtime_identity(directory, native, managed=None):
     return result
 
 
-def jit_summary(text):
+def jit_summary(text, inventory):
     text = re.sub(r'\x1b\[[0-9;?]*[A-Za-z]', '', text)
     rows = re.findall(r'(\d+) passed,\s*(\d+) ignored,\s*(\d+) failed,\s*(\d+) errored', text)
     if len(rows) != 1:
         raise ValueError('Missing/ambiguous actual unfiltered test summary')
     counts = list(map(int, rows[0]))
-    if counts[0] <= 0 or counts[2:] != [0, 0]:
+    if counts[0] < inventory['total'] - inventory['ignoredCeiling'] or counts[1] > inventory['ignoredCeiling'] or counts[2:] != [0, 0]:
         raise ValueError('Unfiltered suite did not pass: ' + repr(counts))
+    sections, current = {}, None
+    for line in text.splitlines():
+        match = re.match(r'^(Passed|Ignored|Failed|Errored):\s*(\d+)', line)
+        if match:
+            current = match[1]
+            if current in sections:
+                raise ValueError('Duplicate summary section')
+            sections[current] = {'count': int(match[2]), 'names': []}
+        elif current and line.startswith('\t'):
+            sections[current]['names'].append(line[1:])
+    if list(sections) != ['Passed', 'Ignored', 'Failed', 'Errored']:
+        raise ValueError('Full named unfiltered summary is missing')
+    for label, count in zip(sections, counts):
+        if sections[label]['count'] != count or len(sections[label]['names']) != count:
+            raise ValueError('Summary counts do not equal actual named cases')
+    names = sections['Passed']['names'] + sections['Ignored']['names']
+    if len(names) != inventory['total'] or Counter(names) != Counter(inventory['names']):
+        raise ValueError('Actual test inventory differs from the qualified source')
+    if not set(sections['Ignored']['names']) <= set(inventory['allowedIgnored']):
+        raise ValueError('Unexpected ignored native case')
     return counts
 
 

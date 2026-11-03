@@ -66,5 +66,9 @@
   "fixtureFormattingOnly": [
     "LifecycleChecks.fs",
     "LifecycleMain.fs"
-  ]
+  ],
+  "jitInventory": {
+    "path": "jit-inventory.json",
+    "sha256": "a15bd1b8a7dc391e8eee36cd066c662ed00a2f06f0dd5e86edf3d6c5bfb052a3"
+  }
 }
