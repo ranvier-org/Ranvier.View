@@ -37,6 +37,53 @@ let tests =
     testList
         "Input"
         [
+            testCase "every input rejects a foreign thread and a disposed host"
+            <| fun () ->
+                onHostThread (fun () ->
+                    use host = WebCoreHost.Create (320, 240)
+                    let pointer = PointerSample.Create (0, 1, 0, 10.0, 10.0)
+
+                    let operations =
+                        [|
+                            "mouse", fun () -> host.Mouse (0, 10, 10, -1, 0, 0) |> ignore
+                            "click", fun () -> host.Click (10, 10) |> ignore
+                            "wheel", fun () -> host.Wheel (10, 10, 0.0f, 1.0f, 0) |> ignore
+                            "key",
+                            fun () ->
+                                host.Key (0, "a", "KeyA", null, 0, false)
+                                |> ignore
+                            "type", fun () -> host.Type ("a", "KeyA", "a")
+                            "pointer", fun () -> host.Pointer [| pointer |] |> ignore
+                        |]
+
+                    let failures = ResizeArray<exn>()
+                    let mutable checkedInputs = 0
+
+                    let worker =
+                        Threading.Thread (
+                            Threading.ThreadStart (fun () ->
+                                for name, operation in operations do
+                                    try
+                                        Expect.throwsT<InvalidOperationException> operation (name + " requires the owner thread")
+                                        checkedInputs <- checkedInputs + 1
+                                    with error ->
+                                        failures.Add error)
+                        )
+
+                    worker.IsBackground <- true
+                    worker.Start ()
+                    Expect.isTrue (worker.Join 5000) "foreign-thread admission checks terminate"
+
+                    for failure in failures do
+                        raise failure
+
+                    Expect.equal checkedInputs operations.Length "every input admission was checked"
+                    host.Click (10, 10) |> ignore
+                    (host :> IDisposable).Dispose()
+
+                    for name, operation in operations do
+                        Expect.throwsT<ObjectDisposedException> operation (name + " rejects the disposed host"))
+
             hostCase "editor undo and redo route through native transaction history"
             <| fun host ->
                 if not (WebCoreHost.Has "editing-undo") then
