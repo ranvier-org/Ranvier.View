@@ -8,7 +8,9 @@ tests only. No public or ARM consumer run has been dispatched or qualified by th
 
 Before changing the disabled job, fill a reviewed input JSON with the actual public View/Native/provider versions,
 managed/Native/provider/WebKit source pins and the selected RID's independently checked host and provider hashes. Preserve
-Core preview.1, DOM alpha.56, CSS alpha.2 and CSS add-ons alpha.1. The provider follows the matching Native version.
+Core preview.1, DOM alpha.57, CSS alpha.2 and CSS add-ons alpha.1. DOM alpha.57 is allocated from
+`c9fbaf890a99f2df878968a770c2f3f8c593cdef`; its public publisher and byte/signature audit are still pending.
+This pin preparation does not establish public availability. The provider follows the matching Native version.
 Keep the complete five-RID native aggregate dependency graph; this consumer matrix executes only the three named
 RIDs and does not qualify Windows ARM64 or macOS by implication.
 

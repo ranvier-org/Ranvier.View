@@ -11,7 +11,7 @@
     "native": "0.1.1-preview.9",
     "provider": null,
     "core": "0.1.1-preview.1",
-    "dom": "0.1.0-alpha.56",
+    "dom": "0.1.0-alpha.57",
     "css": "0.1.1-alpha.2",
     "cssAddons": "0.1.1-alpha.1"
   },

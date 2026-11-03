@@ -34,7 +34,7 @@
         <RanvierQueryVersion>0.1.1-preview.1</RanvierQueryVersion>
         <RanvierCssVersion>0.1.1-alpha.2</RanvierCssVersion>
         <RanvierCssAddonsVersion>0.1.1-alpha.1</RanvierCssAddonsVersion>
-        <RanvierDomVersion>0.1.0-alpha.56</RanvierDomVersion>
+        <RanvierDomVersion>0.1.0-alpha.57</RanvierDomVersion>
         <RanvierTrace Condition="'$(RanvierTrace)' == '' and '$(Configuration)' == 'Debug'">true</RanvierTrace>
         <RanvierPackageSuffix Condition="'$(RanvierTrace)' == 'true'">.Traced</RanvierPackageSuffix>
     </PropertyGroup>

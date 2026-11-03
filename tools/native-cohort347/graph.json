@@ -6,11 +6,12 @@
   "candidateVersions": {"view": "0.1.46", "backend": "0.1.0-alpha.46"},
   "sdlReviewedSource": "57d950148dd931c0d2e9cac7c0ae31f11c412ef3",
   "accessibilityReviewedSource": "0bd9d12b4c96fe80d6f8fdecedc9d8c8643cd73c",
-  "publicPackages": {
-    "Ranvier.Dom": "0.1.0-alpha.56",
-    "Ranvier.Dom.Traced": "0.1.0-alpha.56",
-    "Fable.Ranvier.Dom": "0.1.0-alpha.56",
-    "Fable.Ranvier.Dom.Traced": "0.1.0-alpha.56",
+  "domSuccessor": {"source": "c9fbaf890a99f2df878968a770c2f3f8c593cdef", "version": "0.1.0-alpha.57", "status": "allocated; public publisher and byte/signature audit pending"},
+  "targetPackages": {
+    "Ranvier.Dom": "0.1.0-alpha.57",
+    "Ranvier.Dom.Traced": "0.1.0-alpha.57",
+    "Fable.Ranvier.Dom": "0.1.0-alpha.57",
+    "Fable.Ranvier.Dom.Traced": "0.1.0-alpha.57",
     "Ranvier.CssVersion": "0.1.1-alpha.2",
     "Ranvier.CssAddonsVersion": "0.1.1-alpha.1"
   },

@@ -25,7 +25,7 @@ def cohort():
     return dict(schemaVersion=1, armed=True, managedSource='1'*40, nativeSource='2'*40,
                 providerSource='3'*40, webkitSource='4'*40,
                 versions=dict(view='0.1.99', backend='0.1.0-alpha.99', native='0.1.1-preview.99', provider='0.1.1-preview.99',
-                              core='0.1.1-preview.1', dom='0.1.0-alpha.56', css='0.1.1-alpha.2', cssAddons='0.1.1-alpha.1'),
+                              core='0.1.1-preview.1', dom='0.1.0-alpha.57', css='0.1.1-alpha.2', cssAddons='0.1.1-alpha.1'),
                 rids={'win-x64':dict(hostSha256='a'*64), 'linux-x64':dict(hostSha256='b'*64,providerSha256='c'*64),
                       'linux-arm64':dict(hostSha256='d'*64,providerSha256='e'*64)})
 
@@ -51,7 +51,7 @@ class CohortPolicyTests(unittest.TestCase):
             with self.subTest(version=bad),self.assertRaises(ValueError): gate.load_cohort(value)
 
     def test_provider_version_and_public_dependency_minimums_cannot_drift(self):
-        for key,bad in [('provider','0.1.1-preview.98'),('core','0.1.1-preview.2'),('dom','0.1.0-alpha.55'),('css','0.1.1-alpha.1'),('cssAddons','0.1.1-alpha.2')]:
+        for key,bad in [('provider','0.1.1-preview.98'),('core','0.1.1-preview.2'),('dom','0.1.0-alpha.56'),('css','0.1.1-alpha.1'),('cssAddons','0.1.1-alpha.2')]:
             value=cohort(); value['versions'][key]=bad
             with self.subTest(key=key),self.assertRaises(ValueError): gate.load_cohort(value)
 
