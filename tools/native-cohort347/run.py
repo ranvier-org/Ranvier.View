@@ -13,7 +13,7 @@ spec.loader.exec_module(supervision)
 
 
 def run(cohort_path,rid,mode,output,dotnet='dotnet'):
-    cohort=verify.load_cohort(json.loads(Path(cohort_path).read_text(encoding='utf-8')))
+    cohort=verify.load_cohort(json.loads(Path(cohort_path).read_text(encoding='utf-8')),rid)
     output=Path(output).resolve()
     if output.exists(): raise ValueError('Use a new owned output/cache directory.')
     output.mkdir(parents=True)
@@ -36,9 +36,9 @@ def run(cohort_path,rid,mode,output,dotnet='dotnet'):
             publish=output/execution
             artifacts=output/('build-'+execution)
             argv=[dotnet,'publish',str(verify.ROOT/'tests/native-cohort347/Consumer.fsproj'),'-c','Release','-r',rid,'-m:1','/nr:false',
-                  '-p:PublishAot='+str(aot).lower(),'-p:CohortViewVersion='+cohort['versions']['view'],
+                  '-p:PublishAot='+str(aot).lower(),'-p:CohortBackendVersion='+cohort['versions']['backend'],
                   '-p:CohortSuffix='+('.Traced' if mode=='traced' else ''),'-p:CohortLinux='+str(rid.startswith('linux-')).lower(),
-                  '-p:CohortProviderVersion='+cohort['versions']['provider'],'-p:RestorePackagesPath='+str(output/'packages'),
+                  '-p:CohortProviderVersion='+(cohort['versions'].get('provider') or ''),'-p:RestorePackagesPath='+str(output/'packages'),
                   '-p:RestoreConfigFile='+str(config),'--artifacts-path',str(artifacts),'-o',str(publish)]
             command('publish-'+execution,argv)
             matches=list(artifacts.rglob('project.assets.json'))

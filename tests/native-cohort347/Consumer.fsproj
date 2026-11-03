@@ -5,7 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../AccessibilityAot/Program.fs" Link="Program.fs" />
-    <PackageReference Include="Ranvier.View.WebCore.Sdl$(CohortSuffix)" Version="$(CohortViewVersion)" />
+    <PackageReference Include="Ranvier.View.WebCore.Sdl$(CohortSuffix)" Version="$(CohortBackendVersion)" />
     <PackageReference Include="Ranvier.WebCore.Accessibility.Atspi" Version="$(CohortProviderVersion)" Condition="'$(CohortLinux)' == 'true'" />
     <PackageReference Update="FSharp.Core" Version="10.1.401" />
   </ItemGroup>

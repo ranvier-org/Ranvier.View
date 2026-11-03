@@ -22,27 +22,30 @@ def full_hash(value,length,label):
         raise ValueError(label+' requires a full lowercase hash.')
 
 
-def load_cohort(value):
+def load_cohort(value,rid=None):
     if value.get('schemaVersion')!=1 or value.get('armed') is not True:
         raise ValueError('The final cohort is unarmed.')
     for key in ['managedSource','nativeSource','providerSource','webkitSource']:
         full_hash(value.get(key),40,key)
     versions=value['versions']
-    for key in ['view','native','provider']:
+    if rid is not None and rid not in RIDS: raise ValueError('Unsupported consumer RID.')
+    for key in ['view','backend','native','provider']:
         version=versions.get(key)
+        if key=='provider' and version is None and rid=='win-x64': continue
         if (not isinstance(version,str) or not re.fullmatch(r'\d+\.\d+\.\d+(?:-[A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*)?',version)
                 or re.search(r'(?:^|[.-])(?:private\w*|local\w*|ci)(?:[.-]|$)',version,re.I)):
             raise ValueError(key+' requires an exact allocated public version.')
-    if versions['provider']!=versions['native']:
+    if versions.get('provider') is not None and versions['provider']!=versions['native']:
         raise ValueError('Provider and Native versions must match their coordinated cohort.')
     expected=dict(core='0.1.1-preview.1',dom='0.1.0-alpha.56',css='0.1.1-alpha.2',cssAddons='0.1.1-alpha.1')
     if any(versions.get(key)!=value for key,value in expected.items()):
         raise ValueError('Keep the reviewed public Core/DOM/CSS versions.')
     if set(value['rids'])!=RIDS:
         raise ValueError('Supply all three consumer RIDs; ARM is not inferred from x64.')
-    for rid,record in value['rids'].items():
-        full_hash(record.get('hostSha256'),64,rid+' host')
-        if rid.startswith('linux-'): full_hash(record.get('providerSha256'),64,rid+' provider')
+    for item_rid,record in value['rids'].items():
+        if rid is None or item_rid==rid:
+            full_hash(record.get('hostSha256'),64,item_rid+' host')
+            if item_rid.startswith('linux-'): full_hash(record.get('providerSha256'),64,item_rid+' provider')
     return value
 
 
@@ -67,7 +70,7 @@ def repository_claim(root,expected):
 
 
 def verify_graph(assets,cohort,rid,traced):
-    load_cohort(cohort)
+    load_cohort(cohort,rid)
     if rid not in RIDS: raise ValueError('Unsupported consumer RID.')
     if any(value.get('type')=='project' for value in assets['libraries'].values()):
         raise ValueError('Public acceptance cannot use source project references.')
@@ -77,14 +80,14 @@ def verify_graph(assets,cohort,rid,traced):
     if len(targets)!=1: raise ValueError('Restore exactly one selected RID target.')
     selected=targets[0]; suffix='.Traced' if traced else ''; versions=cohort['versions']
     for name in ['Ranvier.View','Ranvier.View.Dom','Ranvier.View.WebCore','Ranvier.View.WebCore.Sdl','Ranvier','Ranvier.Dom']:
-        version=versions['core'] if name=='Ranvier' else versions['dom'] if name=='Ranvier.Dom' else versions['view']
+        version=versions['core'] if name=='Ranvier' else versions['dom'] if name=='Ranvier.Dom' else versions['backend'] if '.WebCore' in name else versions['view']
         published.matching_entry(selected,name+suffix,version)
         if any(key.rsplit('/',1)[0].casefold()==(name+('' if traced else '.Traced')).casefold() for key in selected):
             raise ValueError('Mixed normal/traced graph.')
         if name.startswith('Ranvier.View'):
             repository_claim(restored_package(assets,name+suffix,version),cohort['managedSource'])
     for owner,dependency,version in [('Ranvier.View.Dom','Ranvier.Dom'+suffix,versions['dom']),('Ranvier.View.WebCore','Ranvier.WebCore',versions['native'])]:
-        _,entry=published.matching_entry(selected,owner+suffix,versions['view'])
+        _,entry=published.matching_entry(selected,owner+suffix,versions['backend'] if '.WebCore' in owner else versions['view'])
         if entry.get('dependencies',{}).get(dependency)!=version:
             raise ValueError('The package minimum must be correct without a higher direct override.')
     published.matching_entry(selected,'Ranvier.WebCore',versions['native'])

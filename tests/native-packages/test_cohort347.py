@@ -2,6 +2,7 @@
 from copy import deepcopy
 import hashlib
 import importlib.util
+import inspect
 import json
 from pathlib import Path
 import sys
@@ -23,7 +24,7 @@ else:
 def cohort():
     return dict(schemaVersion=1, armed=True, managedSource='1'*40, nativeSource='2'*40,
                 providerSource='3'*40, webkitSource='4'*40,
-                versions=dict(view='0.1.0-alpha.99', native='0.1.1-preview.99', provider='0.1.1-preview.99',
+                versions=dict(view='0.1.99', backend='0.1.0-alpha.99', native='0.1.1-preview.99', provider='0.1.1-preview.99',
                               core='0.1.1-preview.1', dom='0.1.0-alpha.56', css='0.1.1-alpha.2', cssAddons='0.1.1-alpha.1'),
                 rids={'win-x64':dict(hostSha256='a'*64), 'linux-x64':dict(hostSha256='b'*64,providerSha256='c'*64),
                       'linux-arm64':dict(hostSha256='d'*64,providerSha256='e'*64)})
@@ -82,10 +83,22 @@ class CohortPolicyTests(unittest.TestCase):
         self.assertIn('if: ${{ false }}',text)
         self.assertIn('linux-arm64',text)
         self.assertIn('mode: [normal, traced]',text)
-        self.assertIn('rid: [win-x64, linux-x64, linux-arm64]',text)
+        self.assertIn('rid: [win-x64, linux-x64]',text)
+        self.assertIn('rid: linux-arm64',text)
+        self.assertEqual(text.count('if: ${{ false }}'),2)
         self.assertNotIn('NuGet/login',text)
         self.assertNotIn('dotnet nuget push',text)
         self.assertIn('test_cohort347.py',text)
+
+    def test_arm_gap_does_not_arm_arm_or_block_independent_x64_guards(self):
+        self.assertIn('rid',inspect.signature(gate.load_cohort).parameters,'Selected-RID validation is missing.')
+        value=cohort(); value['rids']['linux-arm64']['providerSha256']=None
+        self.assertEqual(gate.load_cohort(value,'win-x64'),value)
+        self.assertEqual(gate.load_cohort(value,'linux-x64'),value)
+        with self.assertRaises(ValueError): gate.load_cohort(value,'linux-arm64')
+        value['versions']['provider']=None
+        self.assertEqual(gate.load_cohort(value,'win-x64'),value)
+        with self.assertRaises(ValueError): gate.load_cohort(value,'linux-x64')
 
     def test_consumer_uses_public_sdl_without_direct_higher_core_or_interop_override(self):
         path=ROOT/'tests/native-cohort347/Consumer.fsproj'
@@ -143,7 +156,7 @@ class PublicGraphTests(unittest.TestCase):
             deps={}
             if name=='Ranvier.View.Dom': deps['Ranvier.Dom'+suffix]=versions['dom']
             if name=='Ranvier.View.WebCore': deps['Ranvier.WebCore']=versions['native']
-            package(name+suffix,versions['view'],dependencies=deps)
+            package(name+suffix,versions['backend'] if '.WebCore' in name else versions['view'],dependencies=deps)
         package('Ranvier'+suffix,versions['core'])
         package('Ranvier.Dom'+suffix,versions['dom'])
         package('Ranvier.WebCore',versions['native'],commit=value['nativeSource'])

@@ -2,11 +2,11 @@ name: Final ABI63 public consumer preparation
 
 on:
   pull_request:
-    paths: ['tools/native-cohort347/**', 'tests/native-cohort347/**', 'tests/native-packages/test_cohort347.py', '.github/workflows/native-cohort347.yml']
+    paths: ['tools/native-cohort347/**', 'tests/native-cohort347/**', 'tests/native-packages/test_cohort347.py', '.github/workflows/native-cohort347*.yml']
   workflow_dispatch:
     inputs:
       cohort_file:
-        description: Reviewed repository JSON with allocated public versions, exact source pins and per-RID runtime hashes
+        description: Reviewed JSON with allocated public versions, source pins and per-RID hashes
         type: string
         required: true
         default: tools/native-cohort347/inputs/unarmed.json
@@ -30,57 +30,22 @@ jobs:
       fail-fast: false
       matrix:
         mode: [normal, traced]
-        rid: [win-x64, linux-x64, linux-arm64]
-        include:
-          - {rid: win-x64, runner: windows-2025}
-          - {rid: linux-x64, runner: ubuntu-24.04}
-          - {rid: linux-arm64, runner: ubuntu-24.04-arm}
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: '10.0.403'
-      - name: Install actual Linux consumer prerequisites
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clang zlib1g-dev xvfb dbus-x11 at-spi2-core libglib2.0-bin fonts-dejavu-core
-          sudo apt-get install -y libharfbuzz-icu0 libicu74 libjpeg-turbo8 libepoxy0 libgcrypt20 libsoup-3.0-0 libtasn1-6 libxkbcommon0 libxml2 libpng16-16t64 libsqlite3-0 libwebp7 libwebpdemux2 libwebpmux3 zlib1g libfreetype6 libfontconfig1 libwoff1 libdrm2 libegl1 libgles2 liblcms2-2 libatomic1
-      - name: Validate explicit arming inputs before any public restore
-        shell: python {0}
-        env:
-          COHORT_FILE: ${{ inputs.cohort_file }}
-        run: |
-          import json, os, runpy
-          from pathlib import Path
-          path = Path(os.environ['COHORT_FILE']).resolve()
-          root = Path('tools/native-cohort347/inputs').resolve()
-          if not path.is_relative_to(root) or path.suffix != '.json':
-              raise ValueError('Select a reviewed repository cohort input JSON.')
-          gate = runpy.run_path('tools/native-cohort347/verify.py', run_name='cohort_policy')
-          gate['load_cohort'](json.loads(path.read_text()))
-      - name: Actual Windows public JIT and strict NativeAOT consumer
-        if: runner.os == 'Windows'
-        env:
-          COHORT_FILE: ${{ inputs.cohort_file }}
-          COHORT_RID: ${{ matrix.rid }}
-          COHORT_MODE: ${{ matrix.mode }}
-        run: python tools/native-cohort347/run.py --cohort "$env:COHORT_FILE" --rid "$env:COHORT_RID" --mode "$env:COHORT_MODE" --output "$env:RUNNER_TEMP/cohort347-$env:COHORT_MODE"
-      - name: Actual Linux public JIT and strict NativeAOT consumers and controls
-        if: runner.os == 'Linux'
-        env:
-          COHORT_FILE: ${{ inputs.cohort_file }}
-          COHORT_RID: ${{ matrix.rid }}
-          COHORT_MODE: ${{ matrix.mode }}
-        run: xvfb-run -a python3 tools/native-cohort347/run.py --cohort "$COHORT_FILE" --rid "$COHORT_RID" --mode "$COHORT_MODE" --output "$RUNNER_TEMP/cohort347-$COHORT_MODE"
-      - name: Retain first failure and exact public graph/runtime evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: public-cohort347-${{ matrix.rid }}-${{ matrix.mode }}
-          path: ${{ runner.temp }}/cohort347-${{ matrix.mode }}/
-          retention-days: 3
+        rid: [win-x64, linux-x64]
+    uses: ./.github/workflows/native-cohort347-run.yml
+    with:
+      cohort_file: ${{ inputs.cohort_file }}
+      rid: ${{ matrix.rid }}
+      mode: ${{ matrix.mode }}
+
+  arm64-consumers:
+    if: ${{ false }}
+    needs: policy
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [normal, traced]
+    uses: ./.github/workflows/native-cohort347-run.yml
+    with:
+      cohort_file: ${{ inputs.cohort_file }}
+      rid: linux-arm64
+      mode: ${{ matrix.mode }}

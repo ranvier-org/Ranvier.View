@@ -1,6 +1,9 @@
 {
   "scope": "managed source and compile preparation; no matched native runtime acceptance",
   "viewBase": "b3e435b37790e4ff3a6aa5592a24066a7a379af7",
+  "integratedMain": "6b1119c8dbcefc683194dec510859f1137d1e96a",
+  "implementationCheckpoint": "caf2f145b7aa3cbec2707c06a6105189d71e20ba",
+  "candidateVersions": {"view": "0.1.46", "backend": "0.1.0-alpha.46"},
   "sdlReviewedSource": "57d950148dd931c0d2e9cac7c0ae31f11c412ef3",
   "accessibilityReviewedSource": "0bd9d12b4c96fe80d6f8fdecedc9d8c8643cd73c",
   "publicPackages": {
@@ -13,10 +16,11 @@
   },
   "interopPreparation": {
     "id": "Ranvier.WebCore",
-    "version": "0.0.0-private347.1",
+    "version": "0.1.1-preview.8",
     "published": false,
-    "signatureSource": "da11d1ef7e64fe1785a7d7c5784127f65493da53",
-    "sourceArchiveSha256": "63e72cd3e0b714441dbb595f3e5b8bddaa4880ef1d0ccb6ca9ce6ccb657f5214",
+    "signatureSource": "b3073f604a4fba7a1a565d2893ff5791c603b759",
+    "sourceArchiveSha256": "e9fa8a3e1c5fbb992c1d8c4123cecdf7e2ad02dc1568513c80ea59ba15c76f63",
+    "buildScope": "allocated version privately built in an isolated feed; public payload identity remains unqualified",
     "abi": 63,
     "handwrittenDeclarations": 347,
     "preservedPrefix": 344,
@@ -24,16 +28,17 @@
     "hostRuntimeSupplied": false
   },
   "finalNativeRuntime": {
-    "source": null,
-    "version": null,
+    "source": "b3073f604a4fba7a1a565d2893ff5791c603b759",
+    "version": "0.1.1-preview.8",
     "hostSha256ByRid": {},
     "requiredAbi": 63,
     "requiredHandwrittenExports": 347,
-    "pending": ["reviewed ABI package metadata correction", "reviewed 0068 worker-first-owner fix and reusable GPU producer oracle", "matched producer and independent cohort qualification"]
+    "pending": ["matched P8 producer/public package payloads", "independent actual runtime/consumer qualification"]
   },
   "optionalProvider": {
     "publicId": "Ranvier.WebCore.Accessibility.Atspi",
     "publicVersion": null,
+    "proposedMatchingVersion": "0.1.1-preview.8",
     "providerSha256ByRid": {},
     "qualifiedRidPolicy": ["linux-x64"],
     "arm64Qualified": false,
