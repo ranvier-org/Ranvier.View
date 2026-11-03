@@ -1,0 +1,88 @@
+name: Current View46 public Mac Slim consumer
+
+on:
+  push:
+    branches: [codex/project2-view46-mac-public]
+  workflow_dispatch:
+    inputs:
+      view_source:
+        description: Exact independently qualified View source commit from tests/mac-public/inputs.json
+        type: string
+        required: true
+      inputs_sha256:
+        description: Independently reviewed tests/mac-public/inputs.json SHA256
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: view46-public-mac-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  public-slim:
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      DOTNET_CLI_USE_MSBUILD_SERVER: '0'
+      MSBUILDDISABLENODEREUSE: '1'
+      NUGET_PACKAGES: ${{ runner.temp }}/view46-controller-nuget
+      VIEW_SOURCE: ${{ inputs.view_source }}
+      INPUTS_SHA256: ${{ inputs.inputs_sha256 }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Resolve the reviewed immutable input fields
+        id: pins
+        shell: bash
+        run: |
+          python3 -I - <<'PY'
+          import hashlib,json,os,pathlib,re
+          p=pathlib.Path('tests/mac-public/inputs.json')
+          value=json.loads(p.read_text())
+          source=os.environ.get('VIEW_SOURCE') or value['viewCommit']
+          digest=os.environ.get('INPUTS_SHA256') or hashlib.sha256(p.read_bytes()).hexdigest()
+          assert re.fullmatch('[0-9a-f]{40}',source) and source==value['viewCommit']
+          assert re.fullmatch('[0-9a-f]{64}',digest) and digest==hashlib.sha256(p.read_bytes()).hexdigest()
+          assert value['viewSourceReview']=='QUALIFIED'
+          with open(os.environ['GITHUB_OUTPUT'],'a',encoding='utf-8') as f:
+              f.write('view_source='+source+'\ninputs_sha256='+digest+'\n')
+          PY
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.pins.outputs.view_source }}
+          path: artifacts/mac-public-source
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.403'
+      - name: Run both unfiltered source suites and both strict lifecycle AOT consumers
+        run: >-
+          python3 -I tests/mac-public/qualify.py --execute
+          --inputs tests/mac-public/inputs.json --inputs-sha256 "${{ steps.pins.outputs.inputs_sha256 }}"
+          --view-root artifacts/mac-public-source --work "$RUNNER_TEMP/view46-mac-public"
+      - name: Retain all route outcomes and replay inputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: view46-public-mac-${{ github.run_id }}
+          retention-days: 3
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/view46-mac-public/*.json
+            ${{ runner.temp }}/view46-mac-public/*.log
+            ${{ runner.temp }}/view46-mac-public/*.binlog
+            ${{ runner.temp }}/view46-mac-public/*.zip
+            ${{ runner.temp }}/view46-mac-public/NuGet.Config
+            ${{ runner.temp }}/view46-mac-public/native.nupkg
+            ${{ runner.temp }}/view46-mac-public/app/*.fsproj
+            ${{ runner.temp }}/view46-mac-public/publish-*/**
+            ${{ runner.temp }}/view46-mac-public/jit-*/bin/**
+            ${{ runner.temp }}/view46-mac-public/jit-*/obj/**/project.assets.json
+            ${{ runner.temp }}/view46-mac-public/aot-*/obj/**/project.assets.json

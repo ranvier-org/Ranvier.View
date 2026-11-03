@@ -1,0 +1,70 @@
+{
+  "scope": "Current View46 source with public Core58/InteropP11/NativeP11 Slim Mac26ARM; not published View46, GPU or ABI64 qualification.",
+  "viewCommit": "5e02890a97c71dca8e69e103bb087f256de3fd09",
+  "sdk": "10.0.403",
+  "fsharpCore": "10.1.403",
+  "native": {
+    "url": "https://api.nuget.org/v3-flatcontainer/ranvier.webcore.native.osx-arm64/0.1.1-preview.11/ranvier.webcore.native.osx-arm64.0.1.1-preview.11.nupkg",
+    "id": "Ranvier.WebCore.Native.osx-arm64",
+    "version": "0.1.1-preview.11",
+    "sha256": "010be9d6d02c3ff9473f1eeb1e18957604ccbfc9979a3d3d9091ac5bd5fb8085",
+    "manifest": {
+      "flavor": "slim",
+      "rid": "osx-arm64",
+      "version": "0.1.1-preview.11",
+      "webkit": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
+      "abi": 63,
+      "source": {
+        "commit": "8b8db298eba294876c27bd9a3200881f872684df",
+        "dirty": false,
+        "builder": "ci"
+      },
+      "total_bytes": 89302256,
+      "files": [
+        {
+          "name": "libJavaScriptCore.dylib",
+          "bytes": 15711488,
+          "sha256": "83c5cfbcec82dee7aa5bbcda7172cfecc8a03f9f64acc5c10d893437ec747eec"
+        },
+        {
+          "name": "libRanvierWebCoreHost.dylib",
+          "bytes": 1200640,
+          "sha256": "435838afcb206fe45ee8407330199d669bc336f0f1d98cd82ef2fa435771daa5"
+        },
+        {
+          "name": "libWebCore.dylib",
+          "bytes": 69565216,
+          "sha256": "45f6b38720f01dfe092037549f885a9d5fca4e062cf0b34e38a09fc62a1c8232"
+        },
+        {
+          "name": "libWebGPU.dylib",
+          "bytes": 2824912,
+          "sha256": "63c482619e72d38719bb98bcc48e1297e7c58dd793192aae2d0cc847c6101bcb"
+        }
+      ]
+    }
+  },
+  "coreVersion": "0.1.1-preview.1",
+  "domVersion": "0.1.0-alpha.58",
+  "domPackageSha256": {
+    "normal": "3888a085a01676f95e59cb5a0a91449daf99a7ee05f00ff8f1883547990f0658",
+    "traced": "663ef00ed6fddbc022ab09a619cf902c7ca78c26f0b068246611c338d3e8392e"
+  },
+  "interopVersion": "0.1.1-preview.11",
+  "interopPackageSha256": "761136a5f618755ebbfa698afe4a2fbdd5893bc28812fbfd274633b7c674577b",
+  "viewSourceReview": "QUALIFIED",
+  "fixtureHashes": {
+    "CleanupFaultChecks.fs": "14fc3b014f445d8b8c48e89b54de3ad38fda51bc4628b466b16882810cf4729c",
+    "LifecycleChecks.fs": "34a10222d78c461b56cf0978bf433bf6a4223cb225b9e5c4d82e012ea8add738",
+    "LifecycleMain.fs": "65efbdcc1b0a926d070592899adb07ba5c5baa4376634b98ca9d908e12ab8eba"
+  },
+  "fixtureOriginalHashes": {
+    "CleanupFaultChecks.fs": "14fc3b014f445d8b8c48e89b54de3ad38fda51bc4628b466b16882810cf4729c",
+    "LifecycleChecks.fs": "797f74d0e9879be048afbbf1b2ece03a23df78f65f03e422c02c6d793417b09d",
+    "LifecycleMain.fs": "00fb5028292d8df0ca3dc7282b7d2ecda352d9a5ff48d560ac550d5c4835d74f"
+  },
+  "fixtureFormattingOnly": [
+    "LifecycleChecks.fs",
+    "LifecycleMain.fs"
+  ]
+}
