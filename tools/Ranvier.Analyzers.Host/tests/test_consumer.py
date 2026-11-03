@@ -368,7 +368,7 @@ def _asset_libraries(project):
     return assets, libraries, package_folders
 
 
-def _verify_restore_graph(project, plan, cache, evidence_path, expected_sources=None):
+def _verify_restore_graph(project, plan, cache, evidence_path, expected_sources=None, sdk_fallbacks=()):
     assets, libraries, package_folders = _asset_libraries(project)
     expected = {
         f"{ANALYZERS_PACKAGE_ID}/{plan.analyzers.version}".casefold(),
@@ -382,14 +382,29 @@ def _verify_restore_graph(project, plan, cache, evidence_path, expected_sources=
     if not package_folders or any(folder != cache for folder in package_folders):
         raise ValueError(f"Restore used package folders outside the fresh cache: {package_folders}")
     restore_sources = sorted(assets.get("project", {}).get("restore", {}).get("sources", {}))
-    if expected_sources is not None and set(restore_sources) != set(expected_sources):
-        raise ValueError(f"Restore used sources {restore_sources}; expected only {sorted(expected_sources)}")
+    package_sources = {}
+    if expected_sources is not None:
+        fallback_paths = {Path(path).resolve() for path in sdk_fallbacks}
+        unexpected = [source for source in restore_sources
+                      if source not in expected_sources and Path(source).resolve() not in fallback_paths]
+        if unexpected or not set(expected_sources).issubset(restore_sources):
+            raise ValueError(f"Restore used sources {restore_sources}; expected only {sorted(expected_sources)} and SDK fallbacks")
+        for key, library in libraries.items():
+            if library.get("type") != "package":
+                continue
+            package_id, version = key.rsplit("/", 1)
+            metadata = json.loads((cache / package_id / version / ".nupkg.metadata").read_text(encoding="utf-8"))
+            source = metadata.get("source", "")
+            if source not in expected_sources and not (package_id == "fsharp.core" and Path(source).resolve() in fallback_paths):
+                raise ValueError(f"Unexpected package source for {key}: {source}")
+            package_sources[key] = source
     graph = {"assetsPath": str((Path(project).parent / "obj/project.assets.json").resolve()),
              "packageFolders": [str(folder) for folder in package_folders],
              "libraries": sorted(libraries),
              "required": sorted(expected)}
     if expected_sources is not None:
         graph["sources"] = restore_sources
+        graph["packageSources"] = package_sources
     _write_json(evidence_path, graph)
     return graph
 
@@ -642,8 +657,11 @@ def run_external_consumer(args):
                 if restore["exitCode"] != 0 or restore["timedOut"]:
                     raise ValueError("External consumer package restore failed or timed out")
                 expected_sources = [NUGET_SOURCE] if public_source else None
+                sdk_root = Path(dotnet_path).resolve().parent
+                sdk_fallbacks = [sdk_root / "library-packs",
+                                 sdk_root / "sdk" / args.sdk_version / "FSharp" / "library-packs"] if public_source else ()
                 graph = _verify_restore_graph(project_path, plan, cache,
-                                              case_evidence / "restore-graph.json", expected_sources)
+                                              case_evidence / "restore-graph.json", expected_sources, sdk_fallbacks)
                 scenario["restoreGraph"] = graph
                 if public_source:
                     scenario["publicPackageChecks"] = _verify_public_package_cache(
@@ -764,6 +782,37 @@ class ConsumerHarnessContract(unittest.TestCase):
             (project_dir / "obj/project.assets.json").write_text(json.dumps(assets), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "Restore used sources"):
                 _verify_restore_graph(project, plan, cache, root / "graph.json", [NUGET_SOURCE])
+
+    def test_public_restore_graph_allows_only_sdk_fsharp_fallback(self):
+        with tempfile.TemporaryDirectory(prefix="consumer-sdk-source-test-") as temporary:
+            root = Path(temporary)
+            feed = root / "feed"
+            feed.mkdir()
+            create_fake_feed(feed)
+            plan = discover_private_packages(feed)
+            cache = root / "cache"
+            cache.mkdir()
+            project = root / "consumer" / "Fixture.fsproj"
+            (project.parent / "obj").mkdir(parents=True)
+            sdk = root / "sdk" / "10.0.403" / "FSharp" / "library-packs"
+            sdk.mkdir(parents=True)
+            packages = (("Ranvier", PUBLIC_RANVIER_VERSION), (ANALYZERS_PACKAGE_ID, plan.analyzers.version),
+                        (HOST_PACKAGE_ID, plan.host.version), ("FSharp.Core", "10.0.403"))
+            libraries = {f"{name}/{version}": {"type": "package"} for name, version in packages}
+            for name, version in packages:
+                directory = cache / name.lower() / version.lower()
+                directory.mkdir(parents=True)
+                source = str(sdk) if name == "FSharp.Core" else NUGET_SOURCE
+                (directory / ".nupkg.metadata").write_text(json.dumps({"source": source}), encoding="utf-8")
+            assets = {"libraries": libraries, "packageFolders": {str(cache): {}},
+                      "project": {"restore": {"sources": {NUGET_SOURCE: {}, str(sdk): {}}}}}
+            (project.parent / "obj/project.assets.json").write_text(json.dumps(assets), encoding="utf-8")
+            _verify_restore_graph(project, plan, cache, root / "graph.json", [NUGET_SOURCE], [sdk])
+            self.assertEqual(json.loads((root / "graph.json").read_text(encoding="utf-8"))["packageSources"]["fsharp.core/10.0.403"], str(sdk))
+            bad = cache / "ranvier" / PUBLIC_RANVIER_VERSION.lower() / ".nupkg.metadata"
+            bad.write_text(json.dumps({"source": str(sdk)}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "package source"):
+                _verify_restore_graph(project, plan, cache, root / "graph.json", [NUGET_SOURCE], [sdk])
 
     def test_public_package_allows_only_official_repository_signature_delta(self):
         with tempfile.TemporaryDirectory(prefix="consumer-public-package-test-") as temporary:
