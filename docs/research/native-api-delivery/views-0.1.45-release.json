@@ -1,0 +1,23 @@
+{
+  "source": "449a485e760f147c10a30aa103f01aaff824c50e",
+  "viewVersion": "0.1.45",
+  "webCoreVersion": "0.1.0-alpha.45",
+  "nativeVersion": "0.1.1-preview.7",
+  "nativeAbi": 62,
+  "domVersion": "0.1.0-alpha.56",
+  "cssVersion": "0.1.1-alpha.2",
+  "scope": "Eight normal and traced View, View.Dom, View.WebCore and View.WebCore.Sdl packages; analyzer Host and analyzer use their separately qualified publisher.",
+  "qualification": {
+    "pullRequest": 66,
+    "head": "b3e435b37790e4ff3a6aa5592a24066a7a379af7",
+    "ciRun": 41548517509,
+    "analyzerRun": 41548517538,
+    "nativePackages": "All ten preview.7 native and interop package payloads were verified against their producers and NuGet repository signatures.",
+    "strictNativeAot": "Normal and traced source-linked retained applications passed against public DOM alpha.56, CSS alpha.2 and the official Windows GPU payload. The retained harness uses documented fixture-only normalizations."
+  },
+  "openLimitations": [
+    "The official Windows native runtime can fail during first-owner worker-thread teardown; issue 260 remains open.",
+    "The original Windows and Linux x64 GPU clipping gate failures remain recorded. Artifact publication used explicit profile-specific full-image qualification.",
+    "Public View package consumers and the size-profile package check require post-publication verification."
+  ]
+}
