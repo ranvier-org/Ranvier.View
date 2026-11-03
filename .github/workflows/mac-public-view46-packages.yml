@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: view46-package-mac-${{ github.ref }}
@@ -27,7 +28,7 @@ jobs:
     env:
       DOTNET_CLI_USE_MSBUILD_SERVER: '0'
       MSBUILDDISABLENODEREUSE: '1'
-      INPUTS_SHA256: ${{ inputs.inputs_sha256 || '4493adc813ab58dfac5353c99520e9945e2d227d8e0bece262d6ed471dea15f1' }}
+      INPUTS_SHA256: ${{ inputs.inputs_sha256 || 'db5eb77f3987c254d312f0b3e0b925daa73cc5c6da313c4ff2261ea5c9283251' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -40,10 +41,18 @@ jobs:
           dotnet-version: '10.0.403'
       - name: Controller admission tests
         run: python3 -I tests/mac-packages/test_packages.py
+      - uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '13240808000'
+          run-id: '41658242080'
+          github-token: ${{ github.token }}
+          merge-multiple: true
+          path: artifacts/reuse-jit
       - name: Consume audited public packages in both modes
         run: >-
           python3 -I tests/mac-packages/qualify.py --execute
           --inputs tests/mac-packages/inputs.json --inputs-sha256 "$INPUTS_SHA256"
+          --reuse-jit artifacts/reuse-jit
           --controller-commit "$GITHUB_SHA" --work "$RUNNER_TEMP/view46-mac-packages"
       - name: Retain all outcomes and replay bytes
         if: always()
@@ -58,6 +67,7 @@ jobs:
             ${{ runner.temp }}/view46-mac-packages/*.log
             ${{ runner.temp }}/view46-mac-packages/*.binlog
             ${{ runner.temp }}/view46-mac-packages/*.zip
+            ${{ runner.temp }}/view46-mac-packages/*.nupkg
             ${{ runner.temp }}/view46-mac-packages/NuGet.Config
             ${{ runner.temp }}/view46-mac-packages/app-*/*.fsproj
             ${{ runner.temp }}/view46-mac-packages/run-*/**

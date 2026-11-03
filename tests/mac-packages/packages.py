@@ -29,9 +29,14 @@ def expected_packages(config, mode):
     return result
 
 
-def admit_graph(data, config, mode):
-    if set(data['project']['restore']['sources']) != {PUBLIC}:
-        raise ValueError('Package-only consumer requires the sole public NuGet source')
+def sdk_source(value, directory):
+    return directory is not None and Path(value).is_absolute() and Path(value).resolve() == directory.resolve()
+
+
+def admit_graph(data, config, mode, sdk_library_packs=None):
+    sources = data['project']['restore']['sources']
+    if PUBLIC not in sources or any(s != PUBLIC and not sdk_source(s, sdk_library_packs) for s in sources):
+        raise ValueError('Unexpected restore source outside public NuGet and the pinned SDK infrastructure')
     expected = expected_packages(config, mode)
     native = {r['id'].lower(): r for r in config['nativePackagePins']}
     found = {}
@@ -60,20 +65,32 @@ def admit_graph(data, config, mode):
     return found, {**expected, **native, 'fsharp.core': {'sha256': config['fsharpCorePackageSha256']}}, targets[0]
 
 
-def validate_packages(data, config, mode, cache):
-    found, expected, target = admit_graph(data, config, mode)
-    rows, dlls = [], {}
+def validate_packages(data, config, mode, cache, sdk_library_packs=None, public_fsharp=None):
+    found, expected, target = admit_graph(data, config, mode, sdk_library_packs)
+    rows, dlls, framework_assets = [], {}, {}
     for lower, key in found.items():
         folder = (cache / data['libraries'][key]['path']).resolve(strict=True)
         if not folder.is_relative_to(cache.resolve()):
             raise ValueError('Cache path escaped')
         path = folder / (key.replace('/', '.').lower() + '.nupkg')
         metadata = json.loads((folder / '.nupkg.metadata').read_text())
-        if metadata['source'] != PUBLIC:
+        framework = lower == 'fsharp.core' and sdk_source(metadata['source'], sdk_library_packs)
+        if metadata['source'] != PUBLIC and not framework:
             raise ValueError('Expected public NuGet source: ' + key)
         digest = sha(path)
         pinned = expected.get(lower, {}).get('sha256')
-        if pinned and pinned != digest:
+        infrastructure = None
+        if framework:
+            packages = [p for p in sdk_library_packs.glob('*.nupkg') if p.name.lower() == key.replace('/', '.').lower() + '.nupkg']
+            if len(packages) != 1 or sha(packages[0]) != digest or public_fsharp is None or sha(public_fsharp) != pinned:
+                raise ValueError('FSharp.Core does not match the installed SDK and pinned public package')
+            with zipfile.ZipFile(path) as sdk, zipfile.ZipFile(public_fsharp) as public:
+                sdk_members = {n: hashlib.sha256(sdk.read(n)).hexdigest() for n in sdk.namelist() if n.endswith('.dll')}
+                public_members = {n: hashlib.sha256(public.read(n)).hexdigest() for n in public.namelist() if n.endswith('.dll')}
+            if not sdk_members or sdk_members != public_members:
+                raise ValueError('SDK FSharp.Core DLL/resource bytes differ from public package')
+            infrastructure = {'sdkPackageSha256': digest, 'publicPackageSha256': pinned, 'equalDllAndResourceMembers': sdk_members}
+        elif pinned and pinned != digest:
             raise ValueError('Audited public package bytes differ: ' + key)
         members = target.get(key, {}).get('runtime', {})
         with zipfile.ZipFile(path) as zipped:
@@ -83,10 +100,16 @@ def validate_packages(data, config, mode, cache):
                     if name in dlls:
                         raise ValueError('Ambiguous runtime DLL: ' + name)
                     dlls[name] = hashlib.sha256(zipped.read(member)).hexdigest()
+                    if lower == 'fsharp.core':
+                        framework_assets[name] = member
+            if lower == 'fsharp.core':
+                for member, row in target[key].get('resource', {}).items():
+                    dlls[row['locale'] + '/' + Path(member).name] = hashlib.sha256(zipped.read(member)).hexdigest()
+                    framework_assets[row['locale'] + '/' + Path(member).name] = member
         rows.append({'id': key, 'sha256': digest, 'package': str(path), 'metadata': metadata,
-                     'runtimeAssets': list(members)})
+                     'runtimeAssets': list(members), 'frameworkInfrastructure': infrastructure})
     required = {'Ranvier.dll', 'Ranvier.Dom.dll', 'Ranvier.WebCore.dll', 'FSharp.Core.dll',
                 'Ranvier.View.dll', 'Ranvier.View.Dom.dll', 'Ranvier.View.WebCore.dll', 'Ranvier.View.WebCore.Sdl.dll', 'SDL3-CS.dll'}
-    if dlls.keys() != required:
+    if {name for name in dlls if '/' not in name} != required:
         raise ValueError('Missing/extra actual public runtime DLLs: ' + repr(dlls.keys()))
-    return {'packages': rows, 'dlls': dlls}
+    return {'packages': rows, 'dlls': dlls, 'frameworkAssets': framework_assets}

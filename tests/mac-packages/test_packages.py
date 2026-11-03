@@ -10,7 +10,7 @@ import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from packages import admit_graph, expected_packages, validate_packages
-from qualify import lifecycle, project, retained
+from qualify import framework_overlay, lifecycle, project, retained
 
 CONFIG = json.loads(Path(__file__).with_name('inputs.json').read_text())
 
@@ -146,7 +146,7 @@ class PackageAdmission(unittest.TestCase):
     def test_sdk_additional_feed_rejected(self):
         data = assets('normal')
         data['project']['restore']['sources']['/sdk/10.0.403/FSharp/library-packs'] = {}
-        with self.assertRaisesRegex(ValueError, 'sole public'):
+        with self.assertRaisesRegex(ValueError, 'Unexpected restore source'):
             admit_graph(data, CONFIG, 'normal')
 
     def test_fsharp_public_package_bytes_required(self):
@@ -157,6 +157,30 @@ class PackageAdmission(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'bytes differ: FSharp.Core'):
                 validate_packages(data, config, 'normal', root)
 
+    def test_sdk_framework_requires_matching_sdk_and_all_public_dlls(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            cache = root / 'cache'
+            config, data = cache_fixture(cache)
+            sdk = root / 'sdk/10.0.403/FSharp/library-packs'
+            sdk.mkdir(parents=True)
+            cached = cache / 'fsharp.core/10.1.403/fsharp.core.10.1.403.nupkg'
+            public = root / 'public.nupkg'
+            public.write_bytes(cached.read_bytes())
+            installed = sdk / 'FSharp.Core.10.1.403.nupkg'
+            installed.write_bytes(cached.read_bytes())
+            data['project']['restore']['sources'][str(sdk)] = {}
+            (cached.parent / '.nupkg.metadata').write_text(json.dumps({'source': str(sdk)}))
+            result = validate_packages(data, config, 'normal', cache, sdk, public)
+            self.assertTrue(next(r for r in result['packages'] if r['id'].startswith('FSharp.Core/'))['frameworkInfrastructure'])
+            with self.assertRaises(ValueError):
+                validate_packages(data, config, 'normal', cache, root / 'wrong-sdk', public)
+            with zipfile.ZipFile(cached, 'a') as z:
+                z.writestr('lib/netstandard2.0/ru/FSharp.Core.resources.dll', b'wrong')
+            installed.write_bytes(cached.read_bytes())
+            with self.assertRaisesRegex(ValueError, 'resource bytes differ'):
+                validate_packages(data, config, 'normal', cache, sdk, public)
+
     def test_evidence_selection_matches_uploaded_categories(self):
         for name in ['run-jit-normal/libWebCore.dylib', 'run-aot-traced/Ranvier.View.WebCore.Tests',
                      'jit-normal/obj/Consumer/project.assets.json', 'aot-traced/bin/Consumer/.hidden.json',
@@ -165,6 +189,24 @@ class PackageAdmission(unittest.TestCase):
             self.assertTrue(retained(Path(name)), name)
         for name in ['cache-normal/ranvier/metadata.json', 'evidence.json', 'aot-normal/obj/native/object.o']:
             self.assertFalse(retained(Path(name)), name)
+
+    def test_framework_overlay_keeps_consumer_and_products_exact(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            out = root / 'runtime'
+            out.mkdir()
+            (out / 'FSharp.Core.dll').write_bytes(b'sdk framework')
+            (out / 'Ranvier.View.WebCore.Tests.dll').write_bytes(b'original consumer')
+            (out / 'Ranvier.View.dll').write_bytes(b'original public product')
+            package = root / 'framework.nupkg'
+            with zipfile.ZipFile(package, 'w') as z:
+                z.writestr('lib/netstandard2.1/FSharp.Core.dll', b'public framework')
+            assets = {'frameworkAssets': {'FSharp.Core.dll': 'lib/netstandard2.1/FSharp.Core.dll'},
+                      'dlls': {'FSharp.Core.dll': hashlib.sha256(b'public framework').hexdigest()}}
+            row = framework_overlay(out, package, assets)
+            self.assertTrue(row['consumerAndProductBytesUnchanged'])
+            self.assertEqual((out / 'Ranvier.View.WebCore.Tests.dll').read_bytes(), b'original consumer')
+            self.assertEqual((out / 'Ranvier.View.dll').read_bytes(), b'original public product')
 
 
 if __name__ == '__main__':

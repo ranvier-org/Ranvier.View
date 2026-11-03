@@ -4,9 +4,13 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
+import shutil
 import sys
 import traceback
+import urllib.request
 import xml.etree.ElementTree as ET
+import zipfile
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -14,6 +18,7 @@ FIXTURES = ROOT / 'tests/mac-public'
 sys.path.insert(0, str(FIXTURES))
 sys.path.insert(0, str(HERE))
 from packages import expected_packages, validate_packages
+from reuse import admit_reuse
 from support import Runner, atomic_json, runtime_identity, sha, source_identity, strict_publish, text_sha
 
 
@@ -39,7 +44,7 @@ def project(directory, mode, config):
     return path
 
 
-def graph(artifact, mode, cache, config):
+def graph(artifact, mode, cache, config, sdk_packs, public_fsharp):
     paths = list((artifact / 'obj/Consumer').rglob('project.assets.json'))
     if len(paths) != 1:
         raise ValueError('Missing/ambiguous standalone consumer assets')
@@ -53,7 +58,7 @@ def graph(artifact, mode, cache, config):
         metadata.append({'id': name, 'metadata': json.loads(path.read_text()) if path.is_file() else None})
     atomic_json(artifact / 'public-package-admission.json', {'assetsSha256': sha(paths[0]),
         'restoreSources': data['project']['restore']['sources'], 'packageMetadata': metadata})
-    result = validate_packages(data, config, mode, cache)
+    result = validate_packages(data, config, mode, cache, sdk_packs, public_fsharp)
     result.update(assetsSha256=sha(paths[0]), libraries=data['libraries'], project=data['project'])
     return result
 
@@ -66,11 +71,31 @@ def lifecycle(text, dynamic):
     return {'host': 7, 'window': 35, 'common': 49, 'dynamicCodeSupported': dynamic}
 
 
+def framework_overlay(output, public, assets):
+    before = {p.relative_to(output).as_posix(): sha(p) for p in output.rglob('*') if p.is_file()}
+    expected, rows = dict(before), []
+    with zipfile.ZipFile(public) as zipped:
+        for name, member in assets['frameworkAssets'].items():
+            path = output / name
+            parts = Path(name).parts
+            if (not path.is_file() or '..' in parts or Path(name).is_absolute()
+                    or not (name == 'FSharp.Core.dll' or (len(parts) == 2 and parts[1] == 'FSharp.Core.resources.dll'))):
+                raise ValueError('Framework overlay does not name an existing output')
+            old = sha(path)
+            path.write_bytes(zipped.read(member))
+            expected[name] = assets['dlls'][name]
+            rows.append({'name': name, 'originalSdkSha256': old, 'publicSha256': sha(path)})
+    after = {p.relative_to(output).as_posix(): sha(p) for p in output.rglob('*') if p.is_file()}
+    if after != expected:
+        raise ValueError('Framework-only overlay changed other JIT output bytes')
+    return {'frameworkFiles': rows, 'consumerAndProductBytesUnchanged': True}
+
+
 def retained(path):
     if path.parts[0].startswith('cache-') or path.name in {'evidence.json', 'evidence.json.tmp'}:
         return False
     return (path.parts[0].startswith('run-') or path.suffix == '.json'
-            or (len(path.parts) == 1 and path.suffix in {'.log', '.binlog', '.zip', '.Config'})
+            or (len(path.parts) == 1 and path.suffix in {'.log', '.binlog', '.zip', '.Config', '.nupkg'})
             or (path.parts[0].startswith('app-') and path.suffix == '.fsproj'))
 
 
@@ -81,6 +106,7 @@ def main():
     parser.add_argument('--controller-commit', required=True)
     parser.add_argument('--work', type=Path, required=True)
     parser.add_argument('--execute', action='store_true')
+    parser.add_argument('--reuse-jit', type=Path, required=True)
     args = parser.parse_args()
     if sha(args.inputs) != args.inputs_sha256:
         raise ValueError('Reviewed package inputs changed')
@@ -105,6 +131,7 @@ def main():
         environment.pop(name, None)
     run = Runner(work, record, save, environment)
     inputs = {}
+    reuse_inputs = {}
     native = {r['name']: r['sha256'] for r in config['native']['manifest']['files']}
     native['libSDL3.dylib'] = config['sdl']['dylibSha256']
     try:
@@ -120,6 +147,21 @@ def main():
         if run('sdk', ['dotnet', '--version'], work) != config['sdk']:
             raise ValueError('Wrong SDK')
         run('dotnet-info', ['dotnet', '--info'], work)
+        sdk_rows = re.findall('^' + re.escape(config['sdk']) + r' \[(.+)\]$', run('sdk-list', ['dotnet', '--list-sdks'], work), re.M)
+        if len(sdk_rows) != 1:
+            raise ValueError('Actual pinned SDK directory missing/ambiguous')
+        sdk_packs = (Path(sdk_rows[0]) / config['sdk'] / 'FSharp/library-packs').resolve(strict=True)
+        public_fsharp = work / 'fsharp-core-public.nupkg'
+        with urllib.request.urlopen('https://api.nuget.org/v3-flatcontainer/fsharp.core/' + config['fsharpCore'] + '/fsharp.core.' + config['fsharpCore'] + '.nupkg', timeout=60) as response:
+            data = response.read(8 * 1024 ** 2 + 1)
+        if len(data) > 8 * 1024 ** 2:
+            raise ValueError('Public framework package exceeds budget')
+        public_fsharp.write_bytes(data)
+        if sha(public_fsharp) != config['fsharpCorePackageSha256']:
+            raise ValueError('Pinned public framework package differs')
+        record['sdkLibraryPacks'] = str(sdk_packs)
+        reused, reuse_inputs = admit_reuse(args.reuse_jit.resolve(strict=True), config)
+        record['reusedJit'] = reused
         run('xcode', ['xcodebuild', '-version'], work)
         (work / 'NuGet.Config').write_text('<configuration><packageSources><clear/><add key="public" value="https://api.nuget.org/v3/index.json"/></packageSources></configuration>', encoding='utf-8')
         run('source-archive', ['git', 'archive', '--format=zip', '--output=' + str(work / 'controller-source.zip'),
@@ -138,15 +180,19 @@ def main():
                 output = work / ('run-' + kind + '-' + mode)
                 try:
                     if kind == 'jit':
-                        run('build-jit-' + mode, ['dotnet', 'build', app, '-c', 'Release', '-r', 'osx-arm64',
-                            '-p:PublishAot=false', '-p:SelfContained=false', '-m:1', '/nr:false', '--artifacts-path', artifact,
-                            '-bl:' + str(work / ('jit-' + mode + '.binlog')), '-o', output, *common], work, env=env)
+                        shutil.copytree(args.reuse_jit / ('run-jit-' + mode), output)
+                        row['reusedOriginalJitBuild'] = config['reuseJit']['controllerCommit']
+                        run('restore-jit-' + mode, ['dotnet', 'msbuild', app, '-t:Restore', '-p:Configuration=Release',
+                            '-p:RuntimeIdentifier=osx-arm64', '-p:PublishAot=false', '-p:SelfContained=false',
+                            '-p:ArtifactsPath=' + str(artifact), '-p:UseArtifactsOutput=true', '-m:1', '/nr:false', *common], work, env=env)
                     else:
                         run('restore-aot-' + mode, ['dotnet', 'msbuild', app, '-t:Restore', '-p:Configuration=Release',
                             '-p:RuntimeIdentifier=osx-arm64', '-p:PublishAot=true', '-p:SelfContained=true',
                             '-p:ArtifactsPath=' + str(artifact), '-p:UseArtifactsOutput=true', '-m:1', '/nr:false', *common], work, env=env)
-                    assets = graph(artifact, mode, cache, config)
+                    assets = graph(artifact, mode, cache, config, sdk_packs, public_fsharp)
                     row['graph'] = assets
+                    if kind == 'jit':
+                        row['frameworkOverlay'] = framework_overlay(output, public_fsharp, assets)
                     if kind == 'aot':
                         text = run('publish-aot-' + mode, ['dotnet', 'publish', app, '-c', 'Release', '-r', 'osx-arm64',
                             '--self-contained', 'true', '--no-restore', '-p:PublishAot=true', '-m:1', '/nr:false',
@@ -187,7 +233,8 @@ def main():
             record['sourceUnchanged'] = source_identity(ROOT, args.controller_commit) == args.controller_commit
             record['inputsUnchanged'] = bool(inputs) and all(sha(p) == digest for p, digest in inputs.items())
             record['allChildrenReaped'] = all(r.get('reaped') for r in record['commands'])
-            if not all(record.get(n) for n in ['sourceUnchanged', 'inputsUnchanged', 'allChildrenReaped']):
+            record['reuseInputsUnchanged'] = bool(reuse_inputs) and all(sha(p) == digest for p, digest in reuse_inputs.items())
+            if not all(record.get(n) for n in ['sourceUnchanged', 'inputsUnchanged', 'allChildrenReaped', 'reuseInputsUnchanged']):
                 record['status'] = 'FAIL'
         except Exception as error:
             record.update(status='FAIL', finalIdentityError=repr(error))

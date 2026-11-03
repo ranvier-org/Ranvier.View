@@ -147,5 +147,13 @@
     "packageSha256": "c5450151ffb6abf479d9cf6d36f331ff53ae3fbd4c6335f4ca86e6e104963568",
     "dylibSha256": "ed551fb95c4d17a15c2973d3608740bf1a84ab7910c4fbc71f51002eac5963a5"
   },
-  "fsharpCorePackageSha256": "51827d6e1dc7c57a809cb0a9da4d456ef5a0b5a583a73d9bc9324ee82bb3cabf"
+  "fsharpCorePackageSha256": "51827d6e1dc7c57a809cb0a9da4d456ef5a0b5a583a73d9bc9324ee82bb3cabf",
+  "reuseJit": {
+    "runId": 41658242080,
+    "artifactId": 13240808000,
+    "artifactDigest": "e535a702989b8c786b4ed06fc75b3f40de99a9c7732fd8eb57492f260846389e",
+    "controllerCommit": "7bf9f16555b3cb8c0d74b8e62c32e9beda1a31a8",
+    "receiptSha256": "3c6c8690912c91db74ae26e936c0cf0ca0a82b47baa46d350191b3de99bd0902",
+    "evidenceSha256": "ea98343aea972b489453818207e4778a8f0061b71537724c37b7ff1ca4ce16db"
+  }
 }
