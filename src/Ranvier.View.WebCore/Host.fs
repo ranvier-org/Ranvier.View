@@ -548,10 +548,13 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// objects, runs posted work and due timers, each followed by the microtasks it queued, then an idle period when
     /// no frame is requested.
     /// </summary>
-    member _.Cycle(?milliseconds: int) =
+    member this.Cycle(?milliseconds: int) =
+        this.EnsureActive ()
+
         Native.rv_run_loop_cycle (defaultArg milliseconds 0)
         |> ignore
 
+        this.EnsureActive ()
         session.Drain ()
         let mutable item = Unchecked.defaultof<_>
 
@@ -638,7 +641,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// Runs a frame: the animation frame callbacks queued before it, then WebCore's rendering update. The app paints
     /// afterwards.
     /// </summary>
-    member _.Frame() =
+    member this.Frame() =
+        this.EnsureActive ()
         Volatile.Write (&frameRequested, 0)
         let now = now ()
         let callbacks = Seq.toArray frames.Values
@@ -652,13 +656,17 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
             runMicrotasks ()
 
+        this.EnsureActive ()
+
         Native.rv_host_update handle
         |> Interop.check "rv_host_update"
 
     // Window
 
     /// <summary>Sets the viewport to <c>width</c> by <c>height</c> CSS pixels.</summary>
-    member _.Resize(width: int, height: int) =
+    member this.Resize(width: int, height: int) =
+        this.EnsureActive ()
+
         Native.rv_host_resize (handle, width, height)
         |> Interop.check "rv_host_resize"
 
@@ -675,7 +683,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// taller than wide. The orientation angle follows from the orientation on the natural landscape orientation.
     /// Raises NotSupportedException for values outside the native contract.
     /// </remarks>
-    member _.SetScreen
+    member this.SetScreen
         (
             width: int,
             height: int,
@@ -686,6 +694,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             colorDepth: int,
             orientation: ScreenOrientationType
         ) =
+        this.EnsureActive ()
+
         let values =
             [|
                 36
@@ -712,14 +722,17 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         screenEvent.Trigger ()
 
     /// <summary>Sets the device pixels per CSS pixel, from 0.25 to 8; <c>PaintSize</c> scales with it.</summary>
-    member _.SetDeviceScale(scale: float32) =
+    member this.SetDeviceScale(scale: float32) =
+        this.EnsureActive ()
+
         Native.rv_host_set_device_scale (handle, scale)
         |> Interop.check "rv_host_set_device_scale"
 
         deviceScale <- scale
 
     /// <summary>The size in device pixels of the image <c>Paint</c> writes.</summary>
-    member _.PaintSize =
+    member this.PaintSize =
+        this.EnsureActive ()
         let mutable width = 0
         let mutable height = 0
 
@@ -781,12 +794,15 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         |> Interop.check "rv_host_native_texture_changed"
 
     /// <summary>Lays out and paints the page into <c>rgba</c>, unpremultiplied RGBA8 of <c>PaintSize</c>.</summary>
-    member _.Paint(rgba: byte array) =
+    member this.Paint(rgba: byte array) =
+        this.EnsureActive ()
+
         Native.rv_host_paint_rgba (handle, rgba, rgba.Length)
         |> Interop.check "rv_host_paint_rgba"
 
     /// <summary>The conservative repaint area since the last paint, in CSS pixels, or None.</summary>
-    member _.DirtyRect: struct (int * int * int * int) voption =
+    member this.DirtyRect: struct (int * int * int * int) voption =
+        this.EnsureActive ()
         let mutable x = 0
         let mutable y = 0
         let mutable width = 0
@@ -802,6 +818,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// None when nothing was invalidated.
     /// </summary>
     member this.PaintDirty(rgba: byte array) =
+        this.EnsureActive ()
+
         match this.DirtyRect with
         | ValueSome (struct (x, y, width, height)) as dirty ->
             Native.rv_host_paint_rgba_rect (handle, rgba, rgba.Length, x, y, width, height)
@@ -873,23 +891,31 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         )
 
     /// <summary>Sets <c>Navigator.maxTouchPoints</c> of the host's documents, 0 for no touch screen.</summary>
-    member _.SetMaxTouchPoints(value: int) =
+    member this.SetMaxTouchPoints(value: int) =
+        this.EnsureActive ()
+
         Native.rv_host_set_max_touch_points (handle, value)
         |> Interop.check "rv_host_set_max_touch_points"
 
     /// <summary>Sets whether the app's window has keyboard focus; a page starts unfocused.</summary>
-    member _.SetFocused(focused: bool) =
+    member this.SetFocused(focused: bool) =
+        this.EnsureActive ()
+
         Native.rv_host_set_focused (handle, (if focused then 1 else 0))
         |> Interop.check "rv_host_set_focused"
 
     /// <summary>Sets whether the page is visible, as the app's window is shown, or minimized, hidden or occluded.</summary>
     /// <remarks>A page starts visible. A change queues <c>visibilitychange</c>; a hidden page defers <c>resize</c>.</remarks>
-    member _.SetVisible(visible: bool) =
+    member this.SetVisible(visible: bool) =
+        this.EnsureActive ()
+
         Native.rv_host_set_visible (handle, (if visible then 1 else 0))
         |> Interop.check "rv_host_set_visible"
 
     /// <summary>The <c>RV_CURSOR_*</c> value for the mouse's position.</summary>
-    member _.Cursor = Native.rv_host_cursor handle
+    member this.Cursor =
+        this.EnsureActive ()
+        Native.rv_host_cursor handle
 
     /// <summary>The milliseconds until the next timer is due, zero when one is overdue, or None when none is set.</summary>
     member _.NextTimerDelay: float voption =
@@ -1016,7 +1042,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// The bounds of the composition's first line, or of the caret, in CSS pixels, where an input method places its
     /// candidate window, or None when there is neither.
     /// </summary>
-    member _.CompositionRect: struct (int * int * int * int) voption =
+    member this.CompositionRect: struct (int * int * int * int) voption =
+        this.EnsureActive ()
         let mutable x = 0
         let mutable y = 0
         let mutable width = 0
@@ -1033,7 +1060,9 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// Moves the page's clipboard data through the app: <c>write</c> takes each copied type and its data, with
     /// <c>true</c> for the first type of a copy, and <c>read</c> returns the types and data a paste takes.
     /// </summary>
-    member _.SetClipboard(write: string -> string -> bool -> unit, read: unit -> struct (string * string) seq) =
+    member this.SetClipboard(write: string -> string -> bool -> unit, read: unit -> struct (string * string) seq) =
+        this.EnsureActive ()
+
         clipboardWrite <-
             Native.ClipboardWrite (fun _ kind data dataLength first ->
                 try
