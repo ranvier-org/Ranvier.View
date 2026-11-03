@@ -9,6 +9,7 @@ on:
       - 'tools/Ranvier.Analyzers.Tests/**'
       - 'build.fsx'
       - 'Directory.Build.*'
+      - 'docs/research/native-api-delivery/views-0.1.45-release.json'
       - '.github/workflows/analyzer-host.yml'
   pull_request:
     paths:
@@ -17,6 +18,7 @@ on:
       - 'tools/Ranvier.Analyzers.Tests/**'
       - 'build.fsx'
       - 'Directory.Build.*'
+      - 'docs/research/native-api-delivery/views-0.1.45-release.json'
       - '.github/workflows/analyzer-host.yml'
 
 permissions:
