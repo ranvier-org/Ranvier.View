@@ -6,7 +6,17 @@
   "candidateVersions": {"view": "0.1.46", "backend": "0.1.0-alpha.46"},
   "sdlReviewedSource": "57d950148dd931c0d2e9cac7c0ae31f11c412ef3",
   "accessibilityReviewedSource": "0bd9d12b4c96fe80d6f8fdecedc9d8c8643cd73c",
-  "domSuccessor": {"source": "c9fbaf890a99f2df878968a770c2f3f8c593cdef", "version": "0.1.0-alpha.57", "status": "allocated; public publisher and byte/signature audit pending"},
+  "domSuccessor": {
+    "source": "c9fbaf890a99f2df878968a770c2f3f8c593cdef",
+    "version": "0.1.0-alpha.57",
+    "status": "public; independently signature-verified and payload-matched to the exact CI producer; final View46 graph acceptance remains separate",
+    "publicPackageSha256": {
+      "Ranvier.Dom": "2b83892de7752c7f28443dedc4c7609ae3ac7b47d4cd1251ae82ee05b9b8b353",
+      "Ranvier.Dom.Traced": "39d5552dd75a43f038b2317e611253a6db37b0e463fdbeeca4a8b65fe31a7bd2",
+      "Fable.Ranvier.Dom": "26a11f64ea9625b3982e0950f0993298a179c1b795504cce6c7fe95176e331f1",
+      "Fable.Ranvier.Dom.Traced": "2fc543e33300583934880d4316c15b06c9c58f56496e42d65ebc625840b8ec94"
+    }
+  },
   "targetPackages": {
     "Ranvier.Dom": "0.1.0-alpha.57",
     "Ranvier.Dom.Traced": "0.1.0-alpha.57",
