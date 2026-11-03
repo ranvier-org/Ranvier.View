@@ -260,5 +260,27 @@ class PublicGraphTests(unittest.TestCase):
                 gate.verify_output(assets,output,value,'linux-x64',False)
             (output/'libRanvierWebCoreAtspi.so').write_bytes((provider/'runtimes/linux-x64/native/libRanvierWebCoreAtspi.so').read_bytes())
 
+    def test_aggregate_uses_exact_selected_rid_record_and_preserves_claim_boundary(self):
+        assets,value,output,_,provider=self.output_fixture()
+        flat=json.loads((provider/'provider-manifest.json').read_text())
+        manifest=dict(schemaVersion=2,id=flat['id'],version=flat['version'],nativeVersion=value['versions']['native'],abi=63,
+                      callerClaimedNativeSourceRevision=value['nativeSource'],callerClaimedProviderSourceRevision=value['providerSource'],
+                      sourceProvenance='unverified-caller-claim',requiredCapability='accessibility-text-style',hostBundled=False,
+                      runtimes={'linux-x64':{key:flat[key] for key in ['rid','abi','callerClaimedProviderSourceRevision','hostSha256','providerSha256']}},
+                      payloads={'runtimes/linux-x64/native/libRanvierWebCoreAtspi.so':flat['providerSha256']})
+        path=provider/'provider-manifest.json'; path.write_text(json.dumps(manifest))
+        with patch.object(gate,'verify_header',return_value=['fixture']*344+gate.TAIL):
+            self.assertEqual(gate.verify_output(assets,output,value,'linux-x64',False)['declarations'],347)
+        for mode in ['missing-rid','source','false-provenance','payload','global-abi']:
+            changed=deepcopy(manifest)
+            if mode=='missing-rid': changed['runtimes']={}
+            if mode=='source': changed['callerClaimedNativeSourceRevision']='9'*40
+            if mode=='false-provenance': changed['sourceProvenance']='verified'
+            if mode=='payload': changed['payloads']['runtimes/linux-x64/native/libRanvierWebCoreAtspi.so']='9'*64
+            if mode=='global-abi': changed['abi']=62
+            path.write_text(json.dumps(changed))
+            with self.subTest(mode=mode),patch.object(gate,'verify_header',return_value=[]),self.assertRaises(ValueError):
+                gate.verify_output(assets,output,value,'linux-x64',False)
+
 
 if __name__=='__main__': unittest.main()

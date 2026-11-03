@@ -9,6 +9,8 @@
   "nativeTag": "v0.1.1-preview.8",
   "nativeAbi": 63,
   "nativeDeclarations": 347,
+  "producerState": "P8 Linux GPU x64/ARM64 Host compilation failed on libstdc++14 optional emplace; immutable tag retained. Successor source/version remains coordinated separately.",
+  "successorNativeVersion": null,
   "coreVersion": "0.1.1-preview.1",
   "domVersion": "0.1.0-alpha.56",
   "cssVersion": "0.1.1-alpha.2",

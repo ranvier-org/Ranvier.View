@@ -167,6 +167,26 @@ def verify_output(assets,output,cohort,rid,traced):
         if asset not in published.active_assets(entry): raise ValueError('Provider is not selected for this RID.')
         cache=restored_package(assets,PROVIDER,provider_version)
         provider=json.loads(published.contained_file(cache,'provider-manifest.json').read_text(encoding='utf-8'))
+        if provider.get('schemaVersion')==2:
+            if (type(provider.get('abi')) is not int or provider['abi']!=63 or provider.get('nativeVersion')!=version or provider.get('callerClaimedNativeSourceRevision')!=cohort['nativeSource']
+                    or provider.get('callerClaimedProviderSourceRevision')!=cohort['providerSource']
+                    or provider.get('sourceProvenance')!='unverified-caller-claim'
+                    or provider.get('requiredCapability')!='accessibility-text-style' or provider.get('hostBundled') is not False):
+                raise ValueError('Aggregate provider cohort/source-claim contracts differ.')
+            runtimes=provider.get('runtimes')
+            if not isinstance(runtimes,dict) or rid not in runtimes or not set(runtimes)<={'linux-x64','linux-arm64'}:
+                raise ValueError('The aggregate has no selected supported RID record.')
+            for item_rid,record in runtimes.items():
+                if type(record.get('abi')) is not int or (record.get('rid'),record['abi'],record.get('callerClaimedProviderSourceRevision'))!=(item_rid,63,cohort['providerSource']):
+                    raise ValueError('Aggregate RID/source/ABI contracts differ.')
+                for field in ['hostSha256','providerSha256']: full_hash(record.get(field),64,'Aggregate '+field)
+            payloads=provider.get('payloads')
+            if not isinstance(payloads,dict) or not payloads: raise ValueError('Aggregate payload hashes are missing.')
+            for name,expected in payloads.items():
+                full_hash(expected,64,'Aggregate payload')
+                if hashlib.sha256(published.contained_file(cache,name).read_bytes()).hexdigest()!=expected:
+                    raise ValueError('Aggregate SDK/native payload bytes differ.')
+            provider={**provider,**runtimes[rid]}
         if type(provider.get('abi')) is not int or (provider.get('id'),provider.get('version'),provider.get('rid'),provider['abi'])!=(PROVIDER,provider_version,rid,63):
             raise ValueError('Provider identity/RID/ABI differs.')
         if provider.get('callerClaimedProviderSourceRevision')!=cohort['providerSource'] or provider.get('hostSha256')!=cohort['rids'][rid]['hostSha256']:

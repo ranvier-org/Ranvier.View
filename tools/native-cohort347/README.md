@@ -30,6 +30,10 @@ Source strings in nuspecs and manifests remain producer/caller claims. Comparing
 does not authenticate build provenance. Independent producer receipts and the public publisher's artifact/signature
 checks remain authoritative. The verifier does not infer provenance from a label or an ABI number.
 
+The provider aggregate's schema2 `runtimes` records are selected by the actual RID. Global Native/source/capability
+contracts and all recorded payload bytes are checked before comparing the selected module/Host hashes. This does
+not treat an unselected RID as executed or upgrade a source claim to authenticated provenance.
+
 Each armed job publishes and checks both JIT and strict NativeAOT outputs, verifies all 347 real exports in a separate
 process and executes the actual consumer. Linux runs provider-present, module-absent and unavailable-bus controls on
 an owned accessibility bus/registry, with three Windows, three direct Hosts and non-BMP style checks. It compares the
