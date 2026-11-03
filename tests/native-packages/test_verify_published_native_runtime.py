@@ -16,13 +16,13 @@ SPEC = importlib.util.spec_from_file_location('published_native_runtime', SCRIPT
 VERIFY = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(VERIFY)
 
-VERSION = '0.1.1-preview.7'
+VERSION = '0.1.1-preview.11'
 VIEW = 'Ranvier.View.WebCore.Sdl.Traced'
 VIEW_VERSION = '0.1.0-test.1'
 SLIM = 'Ranvier.WebCore.Native.win-x64'
 GPU = 'Ranvier.WebCore.Native.Gpu.win-x64'
 RIDS = ['linux-x64', 'linux-arm64', 'osx-arm64', 'win-arm64', 'win-x64']
-ABI = 62
+ABI = 63
 
 
 def write_json(path, value):
@@ -153,10 +153,10 @@ class RuntimeVerification(unittest.TestCase):
         fixture = ET.parse(root / 'tests/native-packages/Directory.Build.props').getroot()
         backend_version = backend.findtext(".//RanvierWebCoreNativeVersion")
         consumer_version = fixture.findtext(".//NativeRuntimePackageVersion")
-        self.assertEqual(backend_version, '0.1.1-preview.7')
-        self.assertEqual(consumer_version, '0.1.1-preview.7')
-        self.assertEqual(VERSION, '0.1.1-preview.7')
-        self.assertEqual(ABI, 62)
+        self.assertEqual(backend_version, '0.1.1-preview.11')
+        self.assertEqual(consumer_version, '0.1.1-preview.11')
+        self.assertEqual(VERSION, '0.1.1-preview.11')
+        self.assertEqual(ABI, 63)
         self.assertEqual(backend.find(".//RanvierWebCoreNativeVersion").attrib.get('Condition'),
                          "'$(RanvierWebCoreNativeVersion)' == ''")
         backend_text = (root / 'src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj').read_text(encoding='utf-8')
@@ -165,7 +165,9 @@ class RuntimeVerification(unittest.TestCase):
                       backend_text)
         self.assertIn("<ItemGroup Condition=\"'$(RanvierWebCoreNativeDir)' == ''\">", backend_text)
         sdl_readme = (root / 'src/Ranvier.View.WebCore.Sdl/README.md').read_text(encoding='utf-8')
-        self.assertEqual(sdl_readme.count('Version="[0.1.1-preview.7]"'), 2)
+        self.assertEqual(sdl_readme.count('Version="[0.1.1-preview.11]"'), 2)
+        sdl_version = ET.parse(root / 'src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj').getroot().findtext('.//Version')
+        self.assertIn(f'dotnet add package Ranvier.View.WebCore.Sdl --version {sdl_version}', sdl_readme)
         self.assertIn("<NativeRuntimePackageVersion Condition=\"'$(NativeRuntimePackageVersion)' == ''\">",
                       (root / 'tests/native-packages/Directory.Build.props').read_text(encoding='utf-8'))
 
