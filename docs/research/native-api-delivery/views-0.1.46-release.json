@@ -1,0 +1,25 @@
+{
+  "scope": "Release preparation; package publication and public consumer qualification are pending.",
+  "viewSourceReview": "5e02890a97c71dca8e69e103bb087f256de3fd09",
+  "mergedSource": "3fe45e3d60f8cfa51df681ac708633e7ae936ac4",
+  "nativeVersion": "0.1.1-preview.11",
+  "nativeSource": "8b8db298eba294876c27bd9a3200881f872684df",
+  "domVersion": "0.1.0-alpha.58",
+  "domSource": "59c68218e1e4f6b6bbde1afb8f8502a3ee587abc",
+  "packages": {
+    "Ranvier.View": "0.1.46",
+    "Ranvier.View.Traced": "0.1.46",
+    "Ranvier.View.Dom": "0.1.46",
+    "Ranvier.View.Dom.Traced": "0.1.46",
+    "Ranvier.View.WebCore": "0.1.0-alpha.46",
+    "Ranvier.View.WebCore.Traced": "0.1.0-alpha.46",
+    "Ranvier.View.WebCore.Sdl": "0.1.0-alpha.46",
+    "Ranvier.View.WebCore.Sdl.Traced": "0.1.0-alpha.46"
+  },
+  "qualification": {
+    "windows": "Source46bed; normal/traced JIT Slim/GPU and strict lifecycle AOT against public DOM58/P11. Formatting-only 5e source compared separately.",
+    "linux": "Source46bed; normal/traced JIT Slim/GPU and strict lifecycle AOT against public DOM58/P11.",
+    "macos": "Source5e; normal/traced unfiltered JIT and strict lifecycle AOT against public DOM58/P11 Slim on macOS 26 ARM. Separate runs retain the initial traced guard failure.",
+    "limitations": "Source-built View evidence does not establish published View46, optional-provider consumer, macOS 15 or experimental ABI64 GPU qualification."
+  }
+}
