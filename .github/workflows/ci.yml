@@ -111,12 +111,12 @@ jobs:
           node-version: '26'
       - uses: ./.github/actions/use-analyzer-bootstrap
       # The counters suites compile core with RanvierCounters=true, which the published Ranvier package omits.
-      - name: Check out the native Core revision (DOM alpha.57)
+      - name: Check out the native Core revision (DOM alpha.58)
         if: matrix.group == 'view' || matrix.group == 'arms'
         uses: actions/checkout@v7
         with:
           repository: ranvier-org/Ranvier
-          ref: c9fbaf890a99f2df878968a770c2f3f8c593cdef
+          ref: c2a7cbe0ed2732da2cf868df719e737f61d3a2f6
           path: .ci/ranvier
           persist-credentials: false
       - name: Reference the core source for the counters suites

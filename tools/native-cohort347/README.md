@@ -1,29 +1,27 @@
 # Final ABI63 public consumer arming
 
 This lane prepares public package checks for `win-x64`, `linux-x64` and `linux-arm64`, each normal and traced.
-Both x64 and ARM64 consumer jobs are statically disabled. `inputs/unarmed.json` records allocated Native P10 and the
+Both x64 and ARM64 consumer jobs are statically disabled. `inputs/unarmed.json` records allocated Native P11 and the
 proposed View46 version families, with provider allocation, managed source and actual runtime hashes incomplete.
 Neither a dispatch nor an input value can enable a job. The pull-request job runs hermetic policy
 tests only. No public or ARM consumer run has been dispatched or qualified by this preparation.
 
 Before changing the disabled job, fill a reviewed input JSON with the actual public View/Native/provider versions,
 managed/Native/provider/WebKit source pins and the selected RID's independently checked host and provider hashes. Preserve
-Core preview.1, DOM alpha.57, CSS alpha.2 and CSS add-ons alpha.1. DOM alpha.57 is allocated from
-`c9fbaf890a99f2df878968a770c2f3f8c593cdef`; all four public DOM/Fable DOM normal/traced packages have passed
-independent NuGet signature verification and payload comparison with the exact CI producer. `graph.json` records
-their signed-package hashes. That distribution audit is separate from final View46 graph/runtime acceptance.
+Core preview.1, DOM alpha.58, CSS alpha.2 and CSS add-ons alpha.1. DOM alpha.58 includes the intersection
+diagnostic fix from `5e95b1993b745cd9bc9211edd85be7a49f9d3e58`; its release and independent signed-package audit
+remain pending. Public DOM alpha.57 hashes remain in `graph.json` as historical evidence.
 The provider follows the matching Native version.
 Keep the complete five-RID native aggregate dependency graph; this consumer matrix executes only the three named
 RIDs and does not qualify Windows ARM64 or macOS by implication.
 
-Native P10 source `233c8045c9384e5eb97e8688ca0ed0caa11a8f17` includes the Cocoa IME cancellation fix and the reviewed
-optional provider packaging/ordinary-consumer corrections. Its complete ABI63/347 header, interop sources and native
-provider sources are byte-identical to reviewed P9; packaging normalizes SDK text and the consumer handles schema2.
+Native P11 source `8b8db298eba294876c27bd9a3200881f872684df` includes the reviewed view-transition closure fix.
+Its Slim packages have been audited; the GPU producer and final consumer qualification remain pending.
 Source equivalence does not authenticate a package or qualify a new Host binary. The wheel and clipboard fixtures retain reviewed
 `541ca21f16b1d0399e9c6eec6b0a27e58915c1b4`; the link-drop fixture adopts platform-specific expectations from
 `333c806ae4e5269e88be26d73778c01425de6b8d`. These native fixtures are not copied into View. Source adoption does not replace actual
 matched producer/catalogue/IME receipts. Actual private P9 x64/ARM provider and managed qualification is retained in
-`graph.json`; it is not relabeled as P10. Matching P10 qualification remains required for the disabled jobs.
+`graph.json`; it is not relabeled as P11. Matching P11 qualification remains required for the disabled jobs.
 Missing final public ARM provider hashes do not enable ARM or block the
 independent x64 guard. An input JSON cannot substitute for passing producer/independent runtime receipts.
 

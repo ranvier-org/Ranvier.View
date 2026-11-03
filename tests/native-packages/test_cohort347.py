@@ -25,7 +25,7 @@ def cohort():
     return dict(schemaVersion=1, armed=True, managedSource='1'*40, nativeSource='2'*40,
                 providerSource='3'*40, webkitSource='4'*40,
                 versions=dict(view='0.1.99', backend='0.1.0-alpha.99', native='0.1.1-preview.99', provider='0.1.1-preview.99',
-                              core='0.1.1-preview.1', dom='0.1.0-alpha.57', css='0.1.1-alpha.2', cssAddons='0.1.1-alpha.1'),
+                              core='0.1.1-preview.1', dom='0.1.0-alpha.58', css='0.1.1-alpha.2', cssAddons='0.1.1-alpha.1'),
                 rids={'win-x64':dict(hostSha256='a'*64), 'linux-x64':dict(hostSha256='b'*64,providerSha256='c'*64),
                       'linux-arm64':dict(hostSha256='d'*64,providerSha256='e'*64)})
 
@@ -39,17 +39,23 @@ class CohortPolicyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'unarmed'):
             gate.load_cohort(value)
 
-    def test_allocated_p10_target_does_not_relabel_private_p9_qualification(self):
+    def test_allocated_p11_target_does_not_relabel_private_p9_qualification(self):
         inputs=json.loads((ROOT/'tools/native-cohort347/inputs/unarmed.json').read_text())
         graph=json.loads((ROOT/'tools/native-cohort347/graph.json').read_text())
         plan=json.loads((ROOT/'docs/research/native-api-delivery/views-0.1.46-plan.json').read_text())
         project=ET.parse(ROOT/'src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj').getroot()
-        self.assertEqual(project.find('.//RanvierWebCoreNativeVersion').text,'0.1.1-preview.10')
-        self.assertEqual(inputs['versions']['native'],'0.1.1-preview.10')
-        self.assertEqual(inputs['nativeSource'],'233c8045c9384e5eb97e8688ca0ed0caa11a8f17')
+        self.assertEqual(project.find('.//RanvierWebCoreNativeVersion').text,'0.1.1-preview.11')
+        self.assertEqual(inputs['versions']['native'],'0.1.1-preview.11')
+        self.assertEqual(inputs['nativeSource'],'8b8db298eba294876c27bd9a3200881f872684df')
+        self.assertEqual(inputs['providerSource'],inputs['nativeSource'])
         self.assertEqual(plan['nativeVersion'],inputs['versions']['native'])
         self.assertEqual(plan['nativeSource'],inputs['nativeSource'])
-        self.assertEqual(plan['domVersion'],'0.1.0-alpha.57')
+        self.assertEqual(plan['domVersion'],'0.1.0-alpha.58')
+        self.assertEqual(graph['domSuccessor']['version'],inputs['versions']['dom'])
+        self.assertEqual(graph['domSuccessor']['publicPackageSha256'],{})
+        self.assertEqual(graph['historicalPublicDom57']['version'],'0.1.0-alpha.57')
+        self.assertEqual(graph['finalNativeRuntime']['source'],inputs['nativeSource'])
+        self.assertEqual(graph['finalNativeRuntime']['version'],inputs['versions']['native'])
         self.assertFalse(inputs['armed'])
         self.assertIsNone(inputs['versions']['provider'])
         self.assertEqual(graph['finalNativeRuntime']['hostSha256ByRid'],{})

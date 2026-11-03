@@ -7,9 +7,15 @@
   "sdlReviewedSource": "57d950148dd931c0d2e9cac7c0ae31f11c412ef3",
   "accessibilityReviewedSource": "0bd9d12b4c96fe80d6f8fdecedc9d8c8643cd73c",
   "domSuccessor": {
+    "source": "c2a7cbe0ed2732da2cf868df719e737f61d3a2f6",
+    "version": "0.1.0-alpha.58",
+    "status": "version-only PR head; merge, public package signature and payload audit pending",
+    "publicPackageSha256": {}
+  },
+  "historicalPublicDom57": {
     "source": "c9fbaf890a99f2df878968a770c2f3f8c593cdef",
     "version": "0.1.0-alpha.57",
-    "status": "public; independently signature-verified and payload-matched to the exact CI producer; final View46 graph acceptance remains separate",
+    "status": "public; independently signature-verified and payload-matched to the exact CI producer",
     "publicPackageSha256": {
       "Ranvier.Dom": "2b83892de7752c7f28443dedc4c7609ae3ac7b47d4cd1251ae82ee05b9b8b353",
       "Ranvier.Dom.Traced": "39d5552dd75a43f038b2317e611253a6db37b0e463fdbeeca4a8b65fe31a7bd2",
@@ -18,10 +24,10 @@
     }
   },
   "targetPackages": {
-    "Ranvier.Dom": "0.1.0-alpha.57",
-    "Ranvier.Dom.Traced": "0.1.0-alpha.57",
-    "Fable.Ranvier.Dom": "0.1.0-alpha.57",
-    "Fable.Ranvier.Dom.Traced": "0.1.0-alpha.57",
+    "Ranvier.Dom": "0.1.0-alpha.58",
+    "Ranvier.Dom.Traced": "0.1.0-alpha.58",
+    "Fable.Ranvier.Dom": "0.1.0-alpha.58",
+    "Fable.Ranvier.Dom.Traced": "0.1.0-alpha.58",
     "Ranvier.CssVersion": "0.1.1-alpha.2",
     "Ranvier.CssAddonsVersion": "0.1.1-alpha.1"
   },
@@ -39,17 +45,17 @@
     "hostRuntimeSupplied": false
   },
   "finalNativeRuntime": {
-    "source": "233c8045c9384e5eb97e8688ca0ed0caa11a8f17",
-    "version": "0.1.1-preview.10",
+    "source": "8b8db298eba294876c27bd9a3200881f872684df",
+    "version": "0.1.1-preview.11",
     "hostSha256ByRid": {},
     "requiredAbi": 63,
     "requiredHandwrittenExports": 347,
-    "pending": ["matched P10 producer/public package payloads", "independent actual runtime/consumer qualification"]
+    "pending": ["matched P11 GPU producer/public package payloads", "independent actual runtime/consumer qualification"]
   },
   "optionalProvider": {
     "publicId": "Ranvier.WebCore.Accessibility.Atspi",
     "publicVersion": null,
-    "proposedMatchingVersion": "0.1.1-preview.10",
+    "proposedMatchingVersion": "0.1.1-preview.11",
     "providerSha256ByRid": {},
     "runtimeTargets": ["linux-x64", "linux-arm64"],
     "publicGraphQualified": false,

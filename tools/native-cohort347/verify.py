@@ -37,7 +37,7 @@ def load_cohort(value,rid=None):
             raise ValueError(key+' requires an exact allocated public version.')
     if versions.get('provider') is not None and versions['provider']!=versions['native']:
         raise ValueError('Provider and Native versions must match their coordinated cohort.')
-    expected=dict(core='0.1.1-preview.1',dom='0.1.0-alpha.57',css='0.1.1-alpha.2',cssAddons='0.1.1-alpha.1')
+    expected=dict(core='0.1.1-preview.1',dom='0.1.0-alpha.58',css='0.1.1-alpha.2',cssAddons='0.1.1-alpha.1')
     if any(versions.get(key)!=value for key,value in expected.items()):
         raise ValueError('Keep the reviewed public Core/DOM/CSS versions.')
     if set(value['rids'])!=RIDS:
