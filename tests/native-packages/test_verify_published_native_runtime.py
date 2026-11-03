@@ -31,13 +31,17 @@ def write_json(path, value):
 
 
 class PackageFixture:
-    def __init__(self, root, flavor='slim'):
+    def __init__(self, root, flavor='slim', rid='win-x64', abi=ABI):
         self.root = root
         self.cache = root / 'cache'
         self.output = root / 'output'
         self.output.mkdir()
         self.assets_path = root / 'project.assets.json'
         self.flavor = flavor
+        self.rid = rid
+        self.abi = abi
+        slim = 'Ranvier.WebCore.Native.' + rid
+        gpu = 'Ranvier.WebCore.Native.Gpu.' + rid
         self.manifests = {}
         self.package_roots = {}
         libraries = {}
@@ -55,15 +59,17 @@ class PackageFixture:
             libraries[package] = {'type': 'package', 'path': package.lower()}
             target[package] = {'type': 'package'}
             base[package] = {'type': 'package'}
-        for package, kind in [(SLIM, 'slim'), (GPU, 'gpu')]:
+        for package, kind in [(slim, 'slim'), (gpu, 'gpu')]:
             if kind == 'gpu' and flavor != 'gpu':
                 continue
             key = package + '/' + VERSION
             package_root = self.cache / key.lower()
-            native = package_root / 'runtimes/win-x64/native'
-            names = ['RanvierWebCoreHost.dll', 'WebCore.dll'] + [f'WebKit.resources/data/{i:03}.bin' for i in range(315)]
+            native = package_root / f'runtimes/{rid}/native'
+            names = (['libRanvierWebCoreHost.dylib', 'libWebCore.dylib', 'libJavaScriptCore.dylib', 'libWTF.dylib']
+                     if rid == 'osx-arm64' else ['RanvierWebCoreHost.dll', 'WebCore.dll'])
+            names += [f'WebKit.resources/data/{i:03}.bin' for i in range(315)]
             if kind == 'gpu':
-                names += ['libEGL.dll', 'libGLESv2.dll']
+                names += ['libEGL.dylib', 'libGLESv2.dylib'] if rid == 'osx-arm64' else ['libEGL.dll', 'libGLESv2.dll']
             records = []
             for index, name in enumerate(names):
                 content = f'{kind}:{index:04}'.encode()
@@ -75,7 +81,7 @@ class PackageFixture:
                     destination = self.output / name
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     destination.write_bytes(content)
-            manifest = {'flavor': kind, 'rid': 'win-x64', 'version': VERSION, 'webkit': 'b' * 40, 'abi': ABI,
+            manifest = {'flavor': kind, 'rid': rid, 'version': VERSION, 'webkit': 'b' * 40, 'abi': abi,
                         'source': {'dirty': False, 'commit': 'a' * 40}, 'files': records, 'total_bytes': sum(record['bytes'] for record in records)}
             self.manifests[kind] = manifest
             self.package_roots[kind] = package_root
@@ -83,11 +89,11 @@ class PackageFixture:
             write_json(package_root / '.nupkg.metadata', {'source': 'https://api.nuget.org/v3/index.json'})
             libraries[key] = {'type': 'package', 'path': key.lower()}
             active = kind == flavor
-            payload = {'runtimes/win-x64/native/' + record['name']: {} for record in records}
+            payload = {f'runtimes/{rid}/native/' + record['name']: {} for record in records}
             build = {'buildTransitive/' + package + '.targets': {}}
             target[key] = {'type': 'package', **({'native': payload, 'build': build} if active else {})}
             base[key] = {'type': 'package', **({'runtimeTargets': payload, 'build': build} if active else {})}
-        self.assets = {'targets': {'net10.0': base, 'net10.0/win-x64': target}, 'libraries': libraries, 'packageFolders': {str(self.cache): {}}}
+        self.assets = {'targets': {'net10.0': base, 'net10.0/' + rid: target}, 'libraries': libraries, 'packageFolders': {str(self.cache): {}}}
 
     def save(self):
         write_json(self.assets_path, self.assets)
@@ -97,7 +103,8 @@ class PackageFixture:
     def verify(self):
         self.save()
         return VERIFY.verify_runtime(self.assets_path, self.output, native_version=VERSION,
-                                     view_package=VIEW, view_version=VIEW_VERSION, flavor=self.flavor, abi=ABI)
+                                     view_package=VIEW, view_version=VIEW_VERSION, flavor=self.flavor, abi=self.abi,
+                                     **({'rid': self.rid} if self.rid != 'win-x64' else {}))
 
 
 class RuntimeVerification(unittest.TestCase):
@@ -176,6 +183,48 @@ class RuntimeVerification(unittest.TestCase):
 
     def test_gpu_suppression_and_matching_release_cohort(self):
         self.assertEqual(self.fixture('gpu').verify()['files'], 319)
+
+    def test_mac64_slim_and_gpu_validate_complete_matching_public_payloads(self):
+        for kind, count in [('slim', 319), ('gpu', 321)]:
+            root = self.root / kind
+            root.mkdir()
+            result = PackageFixture(root, kind, 'osx-arm64', 64).verify()
+            self.assertEqual((result['rid'], result['abi'], result['files']), ('osx-arm64', 64, count))
+
+    def test_mac64_rejects_wrong_rid_abi_slim_assets_and_mismatched_engine_source(self):
+        for index, mutation in enumerate(['rid', 'abi', 'slim', 'source']):
+            root = self.root / str(index)
+            root.mkdir()
+            fixture = PackageFixture(root, 'gpu', 'osx-arm64', 64)
+            if mutation in ('rid', 'abi'):
+                fixture.manifests['gpu'][mutation] = 'win-x64' if mutation == 'rid' else 63
+            elif mutation == 'slim':
+                fixture.assets['targets']['net10.0']['Ranvier.WebCore.Native.osx-arm64/' + VERSION]['native'] = {'unexpected.dylib': {}}
+            else:
+                fixture.manifests['slim']['source']['commit'] = 'c' * 40
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                fixture.verify()
+
+    def test_mac64_rejects_missing_angle_output_library(self):
+        fixture = PackageFixture(self.root, 'gpu', 'osx-arm64', 64)
+        (fixture.output / 'libGLESv2.dylib').unlink()
+        with self.assertRaisesRegex(ValueError, 'missing'):
+            fixture.verify()
+
+    def test_mac64_slim_rejects_unlisted_gpu_output_library(self):
+        fixture = PackageFixture(self.root, 'slim', 'osx-arm64', 64)
+        (fixture.output / 'libEGL.dylib').write_bytes(b'unlisted')
+        with self.assertRaisesRegex(ValueError, 'Unexpected GPU'):
+            fixture.verify()
+
+    def test_mixed_view_modes_in_any_graph_are_rejected(self):
+        for index, package in enumerate(['Ranvier.View.WebCore', 'Ranvier.View.WebCore.Sdl', 'Ranvier.View.Dom', 'Ranvier.Dom']):
+            root = self.root / str(index)
+            root.mkdir()
+            fixture = PackageFixture(root, 'gpu', 'osx-arm64', 64)
+            fixture.assets['targets']['net10.0'][package.upper() + '/0.1.0-test.1'] = {'type': 'package'}
+            with self.subTest(package=package), self.assertRaisesRegex(ValueError, 'opposing'):
+                fixture.verify()
 
     def test_last_resource_hash_is_checked_even_when_size_matches(self):
         fixture = self.fixture()
