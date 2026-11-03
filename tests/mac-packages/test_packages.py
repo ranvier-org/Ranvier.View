@@ -19,7 +19,8 @@ def assets(mode):
     rows = {**expected_packages(CONFIG, mode), **{r['id'].lower(): r for r in CONFIG['nativePackagePins']}}
     libraries = {r['id'] + '/' + r['version']: {'type': 'package'} for r in rows.values()}
     libraries['FSharp.Core/' + CONFIG['fsharpCore']] = {'type': 'package'}
-    return {'libraries': libraries, 'targets': {'net10.0/osx-arm64': {}}}
+    return {'libraries': libraries, 'targets': {'net10.0/osx-arm64': {}},
+            'project': {'restore': {'sources': {'https://api.nuget.org/v3/index.json': {}}}}}
 
 
 def cache_fixture(root):
@@ -50,6 +51,7 @@ def cache_fixture(root):
     config['domPackageSha256']['normal'] = digests['ranvier.dom']
     config['interopPackageSha256'] = digests['ranvier.webcore']
     config['sdl']['packageSha256'] = digests['ppy.sdl3-cs']
+    config['fsharpCorePackageSha256'] = digests['fsharp.core']
     return config, data
 
 
@@ -102,6 +104,7 @@ class PackageAdmission(unittest.TestCase):
             with tempfile.TemporaryDirectory() as directory:
                 xml = ET.parse(project(Path(directory) / 'app', mode, CONFIG))
                 self.assertFalse(xml.findall('.//ProjectReference'))
+                self.assertEqual(xml.findtext('.//DisableImplicitLibraryPacksFolder'), 'true')
                 actual = {r.attrib['Include'].lower(): r.attrib['Version'] for r in xml.findall('.//PackageReference') if 'Include' in r.attrib}
                 self.assertEqual(actual, {n: '[' + r['version'] + ']' for n, r in expected_packages(CONFIG, mode).items()})
 
@@ -138,6 +141,20 @@ class PackageAdmission(unittest.TestCase):
             config, data = cache_fixture(root)
             (root / 'ranvier.view/0.1.46/.nupkg.metadata').write_text(json.dumps({'source': '/local/feed'}))
             with self.assertRaisesRegex(ValueError, 'public NuGet'):
+                validate_packages(data, config, 'normal', root)
+
+    def test_sdk_additional_feed_rejected(self):
+        data = assets('normal')
+        data['project']['restore']['sources']['/sdk/10.0.403/FSharp/library-packs'] = {}
+        with self.assertRaisesRegex(ValueError, 'sole public'):
+            admit_graph(data, CONFIG, 'normal')
+
+    def test_fsharp_public_package_bytes_required(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            config, data = cache_fixture(root)
+            config['fsharpCorePackageSha256'] = '0' * 64
+            with self.assertRaisesRegex(ValueError, 'bytes differ: FSharp.Core'):
                 validate_packages(data, config, 'normal', root)
 
     def test_evidence_selection_matches_uploaded_categories(self):

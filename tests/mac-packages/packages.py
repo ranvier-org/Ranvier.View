@@ -30,6 +30,8 @@ def expected_packages(config, mode):
 
 
 def admit_graph(data, config, mode):
+    if set(data['project']['restore']['sources']) != {PUBLIC}:
+        raise ValueError('Package-only consumer requires the sole public NuGet source')
     expected = expected_packages(config, mode)
     native = {r['id'].lower(): r for r in config['nativePackagePins']}
     found = {}
@@ -55,7 +57,7 @@ def admit_graph(data, config, mode):
     targets = [target for name, target in data['targets'].items() if name == 'net10.0/osx-arm64']
     if len(targets) != 1:
         raise ValueError('Require actual net10.0/osx-arm64 dependency resolution')
-    return found, {**expected, **native}, targets[0]
+    return found, {**expected, **native, 'fsharp.core': {'sha256': config['fsharpCorePackageSha256']}}, targets[0]
 
 
 def validate_packages(data, config, mode, cache):

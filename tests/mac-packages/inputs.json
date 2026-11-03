@@ -146,5 +146,6 @@
     "version": "2026.1002.1",
     "packageSha256": "c5450151ffb6abf479d9cf6d36f331ff53ae3fbd4c6335f4ca86e6e104963568",
     "dylibSha256": "ed551fb95c4d17a15c2973d3608740bf1a84ab7910c4fbc71f51002eac5963a5"
-  }
+  },
+  "fsharpCorePackageSha256": "51827d6e1dc7c57a809cb0a9da4d456ef5a0b5a583a73d9bc9324ee82bb3cabf"
 }

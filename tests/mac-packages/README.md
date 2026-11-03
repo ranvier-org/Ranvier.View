@@ -4,6 +4,8 @@ This consumer builds only three existing lifecycle fixture files. It restores th
 normal or traced public View46 package family, Core DOM58/runtime preview1,
 Interop preview11 and the matching public Native preview11 Slim package into an
 owned NuGet.org cache. It does not reference provider source projects.
+The consumer disables the SDK's implicit FSharp library-packs feed and pins the
+public FSharp.Core package bytes; the actual graph must list only NuGet.org.
 
 The immutable input file records all eight audited View package hashes, both DOM
 hashes, Interop and the native package closure. Every route verifies its actual

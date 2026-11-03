@@ -27,7 +27,7 @@ jobs:
     env:
       DOTNET_CLI_USE_MSBUILD_SERVER: '0'
       MSBUILDDISABLENODEREUSE: '1'
-      INPUTS_SHA256: ${{ inputs.inputs_sha256 || 'a543470446f824cfcf5260cb9b4536a8a5e8e4942761f766eb0f1b0f461773ab' }}
+      INPUTS_SHA256: ${{ inputs.inputs_sha256 || '4493adc813ab58dfac5353c99520e9945e2d227d8e0bece262d6ed471dea15f1' }}
     steps:
       - uses: actions/checkout@v7
         with:

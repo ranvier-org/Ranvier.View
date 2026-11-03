@@ -23,7 +23,8 @@ def project(directory, mode, config):
     properties = ET.SubElement(xml, 'PropertyGroup')
     for key, value in dict(TargetFramework='net10.0', OutputType='Exe', AssemblyName='Ranvier.View.WebCore.Tests',
                            IsPackable='false', GenerateDocumentationFile='false', IlcTreatWarningsAsErrors='true',
-                           ILLinkTreatWarningsAsErrors='true', TrimmerSingleWarn='false').items():
+                           ILLinkTreatWarningsAsErrors='true', TrimmerSingleWarn='false',
+                           DisableImplicitLibraryPacksFolder='true').items():
         ET.SubElement(properties, key).text = value
     items = ET.SubElement(xml, 'ItemGroup')
     for name in config['fixtureHashes']:
@@ -43,6 +44,15 @@ def graph(artifact, mode, cache, config):
     if len(paths) != 1:
         raise ValueError('Missing/ambiguous standalone consumer assets')
     data = json.loads(paths[0].read_text())
+    metadata = []
+    for name, row in data['libraries'].items():
+        folder = (cache / row['path']).resolve()
+        if not folder.is_relative_to(cache.resolve()):
+            raise ValueError('Package diagnostic path escaped')
+        path = folder / '.nupkg.metadata'
+        metadata.append({'id': name, 'metadata': json.loads(path.read_text()) if path.is_file() else None})
+    atomic_json(artifact / 'public-package-admission.json', {'assetsSha256': sha(paths[0]),
+        'restoreSources': data['project']['restore']['sources'], 'packageMetadata': metadata})
     result = validate_packages(data, config, mode, cache)
     result.update(assetsSha256=sha(paths[0]), libraries=data['libraries'], project=data['project'])
     return result
