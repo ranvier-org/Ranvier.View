@@ -1,0 +1,79 @@
+{
+  "status": "unmerged version candidate; publication and final public qualification pending",
+  "implementationSource": "99c0bbe937d1872de86a4e00516d357e1cdcf7a7",
+  "qualifiedSourceLeaf": "a66bb3ab891bd5f6ea1afaba1ae0077b8d4d0638",
+  "consumerControlsSource": "79751ca07492f9c2916c1ee8373abe330bb63273",
+  "scope": "NativeAOT-safe diagnostic formatting for CommitFailure and Typed.Modifier; four durable native smoke checks",
+  "proposedVersions": {
+    "view": "0.1.47",
+    "backend": "0.1.0-alpha.47"
+  },
+  "publicationIds": [
+    "Ranvier.View",
+    "Ranvier.View.Traced",
+    "Ranvier.View.Dom",
+    "Ranvier.View.Dom.Traced",
+    "Ranvier.View.WebCore",
+    "Ranvier.View.WebCore.Traced",
+    "Ranvier.View.WebCore.Sdl",
+    "Ranvier.View.WebCore.Sdl.Traced"
+  ],
+  "unchangedPins": {
+    "core": "0.1.1-preview.1",
+    "dom": "0.1.0-alpha.58",
+    "css": "0.1.1-alpha.2",
+    "cssAddons": "0.1.1-alpha.1",
+    "native": "0.1.1-preview.11",
+    "nativeSource": "8b8db298eba294876c27bd9a3200881f872684df",
+    "nativeAbi": 63,
+    "nativeDeclarations": 347,
+    "anime": "0.1.45"
+  },
+  "publisher": {
+    "workflow": ".github/workflows/publish.yml",
+    "producerWorkflow": "CI",
+    "producerEvent": "push",
+    "branch": "main",
+    "requiredCommitPrefix": "chore: release ",
+    "artifact": "nuget-packages",
+    "selectionPolicy": ".github/scripts/native-delivery-packages.json",
+    "authentication": "existing NuGet/login@v1 trusted publisher",
+    "newWorkflowOrTrustRequired": false,
+    "dispatchOrPublicationPerformedByThisPlan": false
+  },
+  "publicReadback": {
+    "producerRun": null,
+    "publisherRun": null,
+    "signedPackageHashes": null,
+    "required": "Independently verify all eight NuGet signatures and match every payload member to the exact CI artifact before declaring the new graph public."
+  },
+  "qualification": {
+    "consumerSdk": "10.0.403",
+    "effectiveFSharpCore": "10.1.403",
+    "packageOnly": true,
+    "ranvierSourceProjectFallbackAllowed": false,
+    "boundaryEqualityFixture": {
+      "programSha256": "aba67af0460c4d0c2224c3bf817d64eeca8cccb4075f3e72524b5769b4d60775",
+      "groups": 25,
+      "assertions": 89,
+      "nativeBoundaryGroups": 16,
+      "nativeEqualityGroups": 4,
+      "pureCoreGroups": 5,
+      "profiles": ["win-x64 normal", "win-x64 traced", "linux-x64 normal", "linux-x64 traced"],
+      "required": "Fresh exact public View47/Core58/P11 restore, strict zero-IL NativeAOT publish and actual native execution with dynamic code disabled; validate package hashes, raw asset graphs, selected Host and unchanged runtime inputs."
+    },
+    "trackedSmoke": {
+      "source": "tests/Ranvier.View.WebCore.AotSmoke/Program.fs",
+      "checks": 34,
+      "required": "Run the updated smoke through the published package route in both modes, preserving the native formatter checks and actual renderer interactions."
+    },
+    "acceptanceOwner": "independent QA/merger",
+    "publicGraphQualified": false
+  },
+  "scopeLimits": [
+    "The accepted private causal packages remain bound to pre-format source; the final source smoke and Fable/analyzer checks are separately retained.",
+    "This plan does not relabel public View46 evidence as View47 or claim whole-library rooting.",
+    "Anime and analyzer publication remain excluded by the existing native package selection policy.",
+    "No Native engine build, ABI change, Core/CSS version increase or default optional-provider dependency is introduced."
+  ]
+}
