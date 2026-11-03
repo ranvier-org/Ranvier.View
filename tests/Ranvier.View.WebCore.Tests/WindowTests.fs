@@ -83,6 +83,18 @@ let tests =
     testList
         "Window"
         [
+            windowCase "fractional display scale covers the full pixel extent"
+            <| fun window ->
+                for pixelsWide, pixelsHigh, scale in [ 498, 352, 1.25f; 497, 351, 1.5f; 501, 353, 2.0f; 500, 360, 1.0f ] do
+                    window.Host.SetDeviceScale scale
+                    window.Host.Resize (Sdl.viewportExtent pixelsWide scale, Sdl.viewportExtent pixelsHigh scale)
+                    let struct (paintWidth, paintHeight) = window.Host.PaintSize
+
+                    Expect.isTrue
+                        (paintWidth >= pixelsWide
+                         && paintHeight >= pixelsHigh)
+                        "the painted surface covers every output pixel"
+
             testCase "a bare host owns the first window admission" (fun () ->
                 onHostThread (fun () ->
                     use host = WebCoreHost.Create (80, 60)

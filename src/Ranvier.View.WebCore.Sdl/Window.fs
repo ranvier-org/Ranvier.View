@@ -28,6 +28,9 @@ module internal Sdl =
     let ok (value: SDLBool) : bool =
         SDLBool.op_Implicit value
 
+    let viewportExtent pixels scale =
+        max 1 (int (MathF.Ceiling (float32 pixels / scale)))
+
     /// <summary>NUL-terminated UTF-8, for SDL's byte pointer overloads.</summary>
     let utf8 (text: string) =
         Encoding.UTF8.GetBytes (text + "\000")
@@ -216,7 +219,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
         toCss <- density / scale
         host.SetDeviceScale scale
-        host.Resize (max 1 (int (float32 width / scale)), max 1 (int (float32 height / scale)))
+        host.Resize (Sdl.viewportExtent width scale, Sdl.viewportExtent height scale)
 
         linuxAccessibility
         |> Option.iter (fun bridge -> bridge.Update ())
