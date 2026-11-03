@@ -88,6 +88,8 @@
     <Compile Include="CascadeChecks.fs" />
     <Compile Include="CoordinateChecks.fs" />
     <Compile Include="ResizeObservationChecks.fs" />
+    <Compile Include="ResizeDevicePixelData.fs" />
+    <Compile Include="ResizeDevicePixelChecks.fs" />
     <Compile Include="IntersectionObservationChecks.fs" />
     <Compile Include="ScreenChecks.fs" />
     <Compile Include="MediaQueryChecks.fs" />
@@ -103,6 +105,7 @@
     <Compile Include="AnimationEventChecks.fs" />
     <Compile Include="TimelineChecks.fs" />
     <Compile Include="CustomEffectChecks.fs" />
+    <Compile Include="ViewTransitionChecks.fs" />
     <Compile Include="Browser.fs" />
     <PackageReference Include="Fable.Ranvier.Dom" Version="$(RanvierDomVersion)" Condition="'$(NativeApiContractRoot)' == ''" />
     <ProjectReference Include="$(NativeApiContractRoot)/src/Fable.Ranvier.Dom/Fable.Ranvier.Dom.fsproj" Condition="'$(NativeApiContractRoot)' != ''" />

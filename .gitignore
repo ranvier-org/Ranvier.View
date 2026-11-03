@@ -31,3 +31,4 @@ test-results/
 /fable/Ranvier.Anime.Tests/generated-types/
 artifacts/
 /.config/.tool-restore/
+__pycache__/

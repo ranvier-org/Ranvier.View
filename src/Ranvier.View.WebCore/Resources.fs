@@ -186,7 +186,15 @@ module Resources =
             if status <> 0 then
                 completions.Remove key
 
-                arbiter.Settle (ResourceOutcome.Failed (ResourceFailure.LoadFailed $"{kind} start returned {status}"))
+                arbiter.Settle (
+                    ResourceOutcome.Failed (
+                        ResourceFailure.LoadFailed (
+                            kind
+                            + " start returned "
+                            + status.ToString (Globalization.CultureInfo.CurrentCulture)
+                        )
+                    )
+                )
                 |> ignore
 
             operation
@@ -311,7 +319,11 @@ module Resources =
                                 ()
                             | Ok response ->
                                 transportNext <- transportNext + 1L
-                                url <- $"https://ranvier-resource.invalid/{transportNext}"
+
+                                url <-
+                                    "https://ranvier-resource.invalid/"
+                                    + transportNext.ToString (Globalization.CultureInfo.CurrentCulture)
+
                                 transport[url] <- response
                                 image <- Native.rv_document_create_element (host.Handle, "img")
 

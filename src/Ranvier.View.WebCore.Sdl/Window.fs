@@ -10,6 +10,20 @@ open Ranvier
 open Ranvier.Dom
 open Ranvier.View.WebCore
 
+/// <summary>Finishes every page phase before marking the page closed and propagating its first failure.</summary>
+module internal PageCleanup =
+    /// <summary>Attempts every phase and marks the page closed even when a phase fails.</summary>
+    let run (phases: (unit -> unit) array) (markClosed: unit -> unit) =
+        let cleanup = Cleanup ()
+
+        try
+            for phase in phases do
+                cleanup.Attempt phase
+        finally
+            markClosed ()
+
+        cleanup.Finish ()
+
 module internal Sdl =
     let ok (value: SDLBool) : bool =
         SDLBool.op_Implicit value
@@ -76,13 +90,24 @@ module internal Sdl =
 
         min offset text.Length
 
+    /// <summary>Converts an SDL editing offset to a UTF-16 offset for WebCore.</summary>
+    let compositionOffset windows (text: string) index =
+        // SDL's Windows IME forwards WCHAR offsets; X11 reports character offsets.
+        if windows then
+            min (max 0 index) text.Length
+        else
+            utf16Offset text index
+
 /// <summary>
 /// An SDL3 window showing a <c>WebCoreHost</c>'s page: it paints the page into a texture when the page asks for a frame
 /// and forwards the window's mouse, keyboard, input method and focus events to it. All calls go on the thread that
 /// created it, which is the host's thread.
 /// </summary>
+/// <remarks>All windows use the thread admitted by the first <c>Create</c>, including after every window has closed.</remarks>
 [<Sealed>]
-type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Renderer>, host: WebCoreHost) =
+type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option) as this =
+    static let owner = WebCoreHost.Owner
+    static let windows = WindowRegistry<Window>()
     // CSS pixels a wheel tick scrolls.
     static let wheelStep = 40.0f
     // RV_CURSOR_NONE.
@@ -90,15 +115,29 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     let id = SDL3.SDL_GetWindowID window
     let cursors = Dictionary<SDL_SystemCursor, nativeint>()
-    let presenter = new Presenter (renderer, host)
+    let touches = TouchFrames ()
+    let pens = PenSamples ()
+    let touchInput = WebCoreHost.Has "touch-input"
+    let penInput = WebCoreHost.Has "pointer-input"
+    let presenter = new Presenter (renderer, host, egl)
     let mutable accessibilityAttached = false
     let mutable fullPaint = true
     let mutable exposed = true
     let mutable toCss = 1.0f
     let mutable closed = false
     let mutable composing = false
+    let mutable pendingCompositionClear = false
     let mutable cursor = -1
     let mutable disposed = false
+    let mutable pageDisposed = false
+    let mutable cleanupCompleted: string -> unit = ignore
+    let mutable maxTouchPoints = 0
+
+    let alive () =
+        not closed
+        && not disposed
+        && not pageDisposed
+        && not host.Session.IsDisposed
 
     // The window's display, which the host's screen follows through a core effect on the window's own graph.
     let readDisplay () =
@@ -184,6 +223,34 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let modifiers () =
         Keys.modifiers (SDL3.SDL_GetModState ())
 
+    let sendPointers (samples: PointerSample array) =
+        if samples.Length > 0 && alive () then
+            host.Pointer samples |> ignore
+
+    let penButtons (state: SDL_PenInputFlags) =
+        (if state.HasFlag SDL_PenInputFlags.SDL_PEN_INPUT_DOWN then
+             1
+         else
+             0)
+        ||| (if state.HasFlag SDL_PenInputFlags.SDL_PEN_INPUT_BUTTON_1 then
+                 2
+             else
+                 0)
+        ||| (if state.HasFlag SDL_PenInputFlags.SDL_PEN_INPUT_BUTTON_2 then
+                 4
+             else
+                 0)
+
+    let pen id action x y button state axis =
+        let sample =
+            pens.Update (uint32 id, action, float (x * toCss), float (y * toCss), button, penButtons state, modifiers (), axis)
+
+        sendPointers [| sample |]
+
+    let syntheticMouse (id: SDL_MouseID) =
+        (touchInput && id = SDL3.SDL_TOUCH_MOUSEID)
+        || (penInput && id = SDL3.SDL_PEN_MOUSEID)
+
     let updateCursor () =
         let next = host.Cursor
 
@@ -259,15 +326,95 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST when event.window.windowID = id ->
             if composing then
                 composing <- false
+                pendingCompositionClear <- false
                 host.CancelComposition ()
 
-            host.SetFocused false
+            if touchInput && alive () then
+                sendPointers (touches.Cancel (modifiers ()))
+
+            if penInput && alive () then
+                for sample in pens.Cancel (modifiers ()) do
+                    sendPointers [| sample |]
+
+            if alive () then
+                host.SetFocused false
+        | SDL_EventType.SDL_EVENT_FINGER_DOWN
+        | SDL_EventType.SDL_EVENT_FINGER_UP
+        | SDL_EventType.SDL_EVENT_FINGER_MOTION
+        | SDL_EventType.SDL_EVENT_FINGER_CANCELED when touchInput && event.tfinger.windowID = id ->
+            let finger = event.tfinger
+            let mutable width = 0
+            let mutable height = 0
+
+            SDL3.SDL_GetWindowSize (window, &&width, &&height)
+            |> ignore
+
+            let action =
+                match enum<SDL_EventType>(int event.``type``) with
+                | SDL_EventType.SDL_EVENT_FINGER_DOWN -> 1
+                | SDL_EventType.SDL_EVENT_FINGER_UP -> 2
+                | SDL_EventType.SDL_EVENT_FINGER_CANCELED -> 3
+                | _ -> 0
+
+            let frame =
+                touches.Update (
+                    uint64 finger.touchID,
+                    uint64 finger.fingerID,
+                    action,
+                    float (finger.x * float32 width * toCss),
+                    float (finger.y * float32 height * toCss),
+                    finger.pressure,
+                    modifiers ()
+                )
+
+            if touches.Count > maxTouchPoints then
+                maxTouchPoints <- touches.Count
+                host.SetMaxTouchPoints maxTouchPoints
+
+            sendPointers frame
+        | SDL_EventType.SDL_EVENT_PEN_MOTION when penInput && event.pmotion.windowID = id ->
+            let motion = event.pmotion
+            pen motion.which 0 motion.x motion.y -1 motion.pen_state None
+        | SDL_EventType.SDL_EVENT_PEN_DOWN
+        | SDL_EventType.SDL_EVENT_PEN_UP when penInput && event.ptouch.windowID = id ->
+            let touch = event.ptouch
+            pen touch.which (if Sdl.ok touch.down then 1 else 2) touch.x touch.y 0 touch.pen_state None
+        | SDL_EventType.SDL_EVENT_PEN_BUTTON_DOWN
+        | SDL_EventType.SDL_EVENT_PEN_BUTTON_UP when penInput && event.pbutton.windowID = id ->
+            let button = event.pbutton
+
+            let mapped =
+                match button.button with
+                | 1uy -> 2
+                | 2uy -> 1
+                | _ -> -1
+
+            pen
+                button.which
+                (if mapped < 0 then 0
+                 elif Sdl.ok button.down then 1
+                 else 2)
+                button.x
+                button.y
+                mapped
+                button.pen_state
+                None
+        | SDL_EventType.SDL_EVENT_PEN_AXIS when penInput && event.paxis.windowID = id ->
+            let axis = event.paxis
+            pen axis.which 0 axis.x axis.y -1 axis.pen_state (Some (axis.axis, axis.value))
+        | SDL_EventType.SDL_EVENT_PEN_PROXIMITY_OUT when penInput && event.pproximity.windowID = id ->
+            match pens.Leave (uint32 event.pproximity.which, modifiers ()) with
+            | ValueSome sample -> sendPointers [| sample |]
+            | ValueNone -> ()
         | SDL_EventType.SDL_EVENT_WINDOW_MOUSE_LEAVE when event.window.windowID = id ->
             host.Mouse (0, -1, -1, -1, 0, modifiers ())
             |> ignore
 
             updateCursor ()
-        | SDL_EventType.SDL_EVENT_MOUSE_MOTION when event.motion.windowID = id ->
+        | SDL_EventType.SDL_EVENT_MOUSE_MOTION when
+            event.motion.windowID = id
+            && not (syntheticMouse event.motion.which)
+            ->
             let motion = event.motion
 
             host.Mouse (0, css motion.x, css motion.y, held motion.state, 0, modifiers ())
@@ -275,7 +422,10 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
             updateCursor ()
         | SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN
-        | SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP when event.button.windowID = id ->
+        | SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP when
+            event.button.windowID = id
+            && not (syntheticMouse event.button.which)
+            ->
             let press = event.button
 
             match int press.button with
@@ -319,6 +469,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
             if composing then
                 composing <- false
+                pendingCompositionClear <- false
                 host.CommitComposition typed
             else
                 // RV_KEY_CHAR, between the key's RV_KEY_DOWN and RV_KEY_UP, as SDL sends text between them.
@@ -330,26 +481,32 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
             if String.IsNullOrEmpty composition then
                 if composing then
-                    composing <- false
-                    host.SetComposition ("", 0, 0)
+                    pendingCompositionClear <- true
             else
+                if pendingCompositionClear then
+                    pendingCompositionClear <- false
+                    composing <- false
+                    host.CancelComposition ()
+
                 composing <- true
 
                 let first =
                     if edit.start < 0 then
                         composition.Length
                     else
-                        Sdl.utf16Offset composition edit.start
+                        Sdl.compositionOffset (OperatingSystem.IsWindows ()) composition edit.start
 
                 let last =
                     if edit.start < 0 || edit.length < 0 then
                         first
                     else
-                        Sdl.utf16Offset composition (edit.start + edit.length)
+                        Sdl.compositionOffset (OperatingSystem.IsWindows ()) composition (edit.start + edit.length)
 
-                host.SetComposition (composition, first, last)
+                if alive () then
+                    host.SetComposition (composition, first, last)
 
-            placeInputMethod ()
+            if alive () then
+                placeInputMethod ()
         | _ -> ()
 
     do
@@ -389,12 +546,21 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         then
             host.SetFocused true
 
-    /// <summary>
-    /// Opens a window of <c>width</c> by <c>height</c> in the platform's window units, CSS pixels at the display's
-    /// scale, with an empty page. <c>hidden</c> keeps it off screen; <c>renderer</c> names an SDL render driver, such
-    /// as "software".
-    /// </summary>
-    static member Create(title: string, width: int, height: int, ?hidden: bool, ?renderer: string) : Window =
+        windows.Add (uint32 id, this)
+
+    member private _.Dispatch(event: SDL_Event) =
+        if alive () then
+            dispatch event
+
+    member private _.FlushComposition() =
+        if pendingCompositionClear && alive () then
+            pendingCompositionClear <- false
+            composing <- false
+            host.CancelComposition ()
+
+    static member private CreateCore(title: string, width: int, height: int, hidden: bool option, renderer: string option) : Window =
+        EglRenderer.RetryFailedConstruction ()
+        EglRenderer.Prepare ()
         // The page draws the input method's composition itself; the platform draws the candidates.
         (use name = fixed Sdl.utf8 "SDL_IME_IMPLEMENTED_UI"
          use value = fixed Sdl.utf8 "composition"
@@ -437,6 +603,12 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                     SDL3.SDL_CreateRenderer (window, NativePtr.nullPtr<byte>)
                 else
                     accelerated
+            | None when
+                OperatingSystem.IsLinux ()
+                && WebCoreHost.Has "presentation-egl"
+                ->
+                use name = fixed Sdl.utf8 "opengles2"
+                SDL3.SDL_CreateRenderer (window, name)
             | None -> SDL3.SDL_CreateRenderer (window, NativePtr.nullPtr<byte>)
 
         if NativePtr.isNullPtr drawing then
@@ -446,20 +618,48 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             raise error
 
         SDL3.SDL_SetRenderVSync (drawing, 1) |> ignore
+        let cleanupEgl = EglRenderer.Capture drawing
         let mutable page = None
+        let mutable egl = None
 
         try
+            egl <- EglRenderer.TryCreate drawing
             let host = WebCoreHost.Create (width, height)
             page <- Some host
-            new Window (window, drawing, host)
+            new Window (window, drawing, host, egl)
         with _ ->
             page
             |> Option.iter (fun host -> (host :> IDisposable).Dispose())
 
-            SDL3.SDL_DestroyRenderer drawing
-            SDL3.SDL_DestroyWindow window
-            SDL3.SDL_QuitSubSystem SDL_InitFlags.SDL_INIT_VIDEO
+            let cleanup () =
+                if
+                    cleanupEgl
+                    |> Option.forall (fun consumer -> consumer.Activate ())
+                then
+                    SDL3.SDL_DestroyRenderer drawing
+                    SDL3.SDL_DestroyWindow window
+                    SDL3.SDL_QuitSubSystem SDL_InitFlags.SDL_INIT_VIDEO
+                    true
+                else
+                    false
+
+            if not (cleanup ()) then
+                EglRenderer.RetainFailedConstruction cleanup
+
             reraise ()
+
+    /// <summary>
+    /// Opens a window of <c>width</c> by <c>height</c> in the platform's window units, CSS pixels at the display's
+    /// scale, with an empty page. <c>hidden</c> keeps it off screen; <c>renderer</c> names an SDL render driver, such
+    /// as "software".
+    /// </summary>
+    static member Create(title: string, width: int, height: int, ?hidden: bool, ?renderer: string) : Window =
+        owner.Enter ()
+
+        try
+            Window.CreateCore (title, width, height, hidden, renderer)
+        finally
+            owner.Exit ()
 
     /// <summary>The window's page.</summary>
     member _.Host = host
@@ -508,8 +708,15 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// sooner or a frame is wanted, for window events and dispatches them to the page, cycles the host, then presents a
     /// frame if the page asked for one. Returns false once the window has been asked to close.
     /// </summary>
+    /// <remarks>Drains SDL's global event queue for all live Ranvier windows. An application that owns the SDL event pump runs its own loop instead.</remarks>
     member this.Step(?timeout: int) : bool =
+        owner.Ensure ()
+
+        if not host.Session.IsOwnerThread then
+            invalidOp "An SDL window is stepped on the thread that created it"
+
         if not closed then
+            host.EnsureActive ()
             let longest = defaultArg timeout 50
 
             let wait =
@@ -523,20 +730,26 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             let mutable event = SDL_Event ()
 
             if Sdl.ok (SDL3.SDL_WaitEventTimeout (&&event, wait)) then
-                dispatch event
+                for target in windows.Snapshot () do
+                    target.Dispatch event
 
-                while Sdl.ok (SDL3.SDL_PollEvent &&event) do
-                    dispatch event
+                while alive () && Sdl.ok (SDL3.SDL_PollEvent &&event) do
+                    for target in windows.Snapshot () do
+                        target.Dispatch event
 
-            host.Cycle ()
+                for target in windows.Snapshot () do
+                    target.FlushComposition ()
+
+            if alive () then
+                host.Cycle ()
 
             if
-                not closed
+                alive ()
                 && (host.FrameRequested || fullPaint || exposed)
             then
                 this.Present ()
 
-        not closed
+        alive ()
 
     /// <summary>The rendered page's physical dimensions and top-down RGBA bytes.</summary>
     member internal _.ReadPixels() : struct (int * int * byte array) =
@@ -544,6 +757,9 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     /// <summary>The number of shared GPU frames presented to the window.</summary>
     member internal _.GpuFramesPresented = presenter.GpuFramesPresented
+
+    /// <summary>The number of presentation attempts that took the CPU path.</summary>
+    member internal _.CpuFramesPresented = presenter.CpuFramesPresented
 
     /// <summary>Whether Windows UI Automation is attached to the window.</summary>
     member internal _.AccessibilityAttached = accessibilityAttached
@@ -555,21 +771,63 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     member internal _.SetDisplayReader(reader: unit -> DisplayScreen voption) =
         displayReader <- reader
 
+    /// <summary>Observes completed page cleanup phases on this window's owner thread.</summary>
+    member internal _.SetCleanupCompleted(callback: string -> unit) =
+        cleanupCompleted <- callback
+
+    /// <summary>Wraps this window's native EGL frame release; false means its renderer uses another transport.</summary>
+    member internal _.SetEglFrameRelease(release: nativeint -> int) =
+        match egl with
+        | Some consumer ->
+            consumer.SetFrameRelease release
+            true
+        | None -> false
+
+    /// <summary>The actual frame retained until its EGL consumer can release it.</summary>
+    member internal _.PendingEglFrame = presenter.PendingEglFrame
+
     interface IDisposable with
         member _.Dispose() =
             if not disposed then
-                disposed <- true
+                if not host.Session.IsOwnerThread then
+                    invalidOp "An SDL window is disposed on the thread that created it"
 
-                if accessibilityAttached then
-                    WindowAccessibility.detach host
-                    accessibilityAttached <- false
+                presenter.ReleasePending ()
 
-                if not (isNull displayFeed) then
-                    displayFeed.Dispose ()
+                if not pageDisposed then
+                    PageCleanup.run
+                        [|
+                            (fun () ->
+                                if accessibilityAttached then
+                                    try
+                                        WindowAccessibility.detach host
+                                    finally
+                                        accessibilityAttached <- false
 
-                (graph :> IDisposable).Dispose()
-                (presenter :> IDisposable).Dispose()
-                (host :> IDisposable).Dispose()
+                                cleanupCompleted "accessibility")
+                            (fun () ->
+                                if not (isNull displayFeed) then
+                                    displayFeed.Dispose ()
+
+                                cleanupCompleted "display")
+                            (fun () ->
+                                (graph :> IDisposable).Dispose()
+                                cleanupCompleted "graph")
+                            (fun () ->
+                                (presenter :> IDisposable).Dispose()
+                                cleanupCompleted "presenter")
+                            (fun () ->
+                                (host :> IDisposable).Dispose()
+                                cleanupCompleted "host")
+                        |]
+                        (fun () ->
+                            pageDisposed <- true
+                            windows.Remove (uint32 id))
+
+                egl
+                |> Option.iter (fun consumer ->
+                    if not (consumer.Activate ()) then
+                        raise (Sdl.failure "SDL_GL_MakeCurrent"))
 
                 for created in cursors.Values do
                     SDL3.SDL_DestroyCursor (NativePtr.ofNativeInt created)
@@ -578,6 +836,8 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 SDL3.SDL_DestroyRenderer renderer
                 SDL3.SDL_DestroyWindow window
                 SDL3.SDL_QuitSubSystem SDL_InitFlags.SDL_INIT_VIDEO
+
+                disposed <- true
 
 /// <summary>Opens SDL3 windows showing WebCore pages.</summary>
 module Window =

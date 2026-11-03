@@ -7,7 +7,22 @@ open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.WebCore
 
-type Counter = { Count: Signal<int> }
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
+type Counter =
+    {
+        Count: Signal<int>
+    }
+#if !FABLE_COMPILER
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        elif isNull (box this.Count) then
+            "{ Count = null }"
+        else
+            "{ Count = <Ranvier.Signal<int>> }"
+#endif
 
 let private counter =
     Component.define (fun _ (start: int) -> { Count = Api.createSignal start }) (fun t ->
@@ -26,6 +41,170 @@ let private check (name: string) (ok: bool) (detail: string) =
     else
         failures <- failures + 1
         Console.WriteLine ("FAIL " + name + ": " + detail)
+
+let private nativeDisplayChecks () =
+    let display =
+        {
+            DisplayScreen.Width = 1920
+            Height = 1080
+            UsableLeft = -2
+            UsableTop = 3
+            UsableWidth = 1918
+            UsableHeight = 1040
+            ColorDepth = 24
+            Orientation = ScreenOrientationType.LandscapePrimary
+        }
+
+    let displayText = display.ToString ()
+
+    check
+        "native display diagnostics retain screen fields"
+        (displayText.Contains "UsableLeft = -2"
+         && displayText.Contains "Orientation = LandscapePrimary")
+        displayText
+
+    let invalidDisplay =
+        { display with
+            Orientation = enum<ScreenOrientationType> 7
+        }
+
+    let invalidText = invalidDisplay.ToString ()
+    check "native display diagnostics retain unknown orientation" (invalidText.Contains "Orientation = 7") invalidText
+
+    let originalCulture = System.Globalization.CultureInfo.CurrentCulture
+
+    try
+        System.Globalization.CultureInfo.CurrentCulture <- System.Globalization.CultureInfo.GetCultureInfo "ar-SA"
+
+        let negativeDisplay =
+            { display with
+                Orientation = enum<ScreenOrientationType> -1
+            }
+
+        let negativeText = negativeDisplay.ToString ()
+        let expected = (-1).ToString(System.Globalization.CultureInfo.CurrentCulture)
+        check "unknown orientation uses current culture" (negativeText.Contains ("Orientation = " + expected)) negativeText
+    finally
+        System.Globalization.CultureInfo.CurrentCulture <- originalCulture
+
+    let nullModel = { Count = Unchecked.defaultof<_> }
+    let modelText = nullModel.ToString ()
+    check "native smoke model diagnostics retain null" (modelText = "{ Count = null }") modelText
+
+    let capability =
+        {
+            CapabilityKey.Category = CapabilityCategory.Abi
+            Name = "abi"
+        }
+
+    let capabilityText = capability.ToString ()
+    check "capability diagnostics retain fields" (capabilityText = "{ Category = Abi\n  Name = \"abi\" }") capabilityText
+
+    let nodes =
+        TemplateNode.FragmentNode [| TemplateNode.TextNode "a"; TemplateNode.TextNode "λ" |]
+
+    let nodeText = nodes.ToString ()
+    check "template diagnostics retain typed arrays" (nodeText = "FragmentNode [|TextNode \"a\"; TextNode \"λ\"|]") nodeText
+
+    let window =
+        {
+            IdentityWindow.Parent = Unchecked.defaultof<_>
+            Kind = 1
+            A = 2
+            B = 3
+            Path = Unchecked.defaultof<_>
+            Issued = 4
+            Window = 5
+        }
+
+    let windowText = window.ToString ()
+
+    check
+        "private record diagnostics retain fields without recursion"
+        (windowText.Contains "Issued = 4"
+         && windowText.Contains "Window = 5")
+        windowText
+
+    if not System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+        let mutable unexpectedCalls = 0
+
+        let unexpected () =
+            unexpectedCalls <- unexpectedCalls + 1
+            failwith "a diagnostic executed user code"
+
+        let slot =
+            {
+                Slot.Target = SlotTarget.TextTarget
+                Mode = SlotMode.DirectMode
+                Read = Func<obj, obj>(fun _ -> unexpected ())
+                Same = Func<obj, obj, bool>(fun _ _ -> unexpected ())
+            }
+
+        let slotText = slot.ToString ()
+
+        check
+            "native diagnostics retain fields beside delegates"
+            (slotText.Contains "Target = TextTarget"
+             && slotText.Contains "<System.Func<System.Object,System.Object>>")
+            slotText
+
+        let nullSlot = { slot with Read = null; Same = null }
+        let nullText = nullSlot.ToString ()
+
+        check
+            "native diagnostics retain null delegates"
+            (nullText.Contains "Read = null"
+             && nullText.Contains "Same = null")
+            nullText
+
+        let status =
+            {
+                BoundaryStatus.IsPending = fun () -> unexpected ()
+            }
+
+        let statusText = status.ToString ()
+        check "native diagnostics do not invoke functions" (statusText = "{ IsPending = <function> }") statusText
+
+        let opaque =
+            { new obj() with
+                override _.ToString() =
+                    unexpected ()
+            }
+
+        let part: Part<obj, obj> =
+            Part.StaticProperty (Unchecked.defaultof<PortableProperty>, opaque)
+
+        let partText = part.ToString ()
+
+        check
+            "native diagnostics retain cases beside opaque payloads"
+            (partText.Contains "StaticProperty"
+             && partText.Contains "<System.Object>")
+            partText
+
+        let error =
+            { new InvalidOperationException("native diagnostic detail") with
+                override _.ToString() =
+                    unexpected ()
+            }
+
+        let failure =
+            {
+                BoundaryFailure.Error = error
+                Retry = fun () -> unexpected ()
+            }
+
+        let failureText = failure.ToString ()
+
+        check
+            "native exception diagnostics retain known details"
+            (failureText.Contains "native diagnostic detail"
+             && failureText.Contains "Type ="
+             && failureText.Contains "HResult ="
+             && failureText.Contains "InnerException =")
+            failureText
+
+        check "native diagnostics never execute opaque user code" (unexpectedCalls = 0) (string unexpectedCalls)
 
 let private paint (host: WebCoreHost) =
     let struct (width, height) = host.PaintSize
@@ -146,6 +325,20 @@ let private styleAndPopoverChecks (host: WebCoreHost) =
 let main _ =
     use host = WebCoreHost.Create (320, 200)
     let blank = paint host
+
+    if
+        WebCoreHost.Has "host-tracing"
+        && WebCoreHost.Has "host-errors"
+    then
+        host.SetRenderingTrace true
+        host.SetErrorRecording true
+        paint host |> ignore
+        let events, dropped = host.DrainRenderingTrace ()
+        check "native diagnostics are available" (events.Length > 0 && dropped = 0UL) "trace missing or overflowed"
+        check "successful painting has no error" (host.TakeHostError () |> ValueOption.isNone) "unexpected host error"
+        host.SetRenderingTrace false
+        host.SetErrorRecording false
+
     use graph = new Graph ()
     let container = host.Document.createElement "div"
     host.Document.body.appendChild container |> ignore
@@ -181,4 +374,5 @@ let main _ =
     hydrationChecks host
     styleAndPopoverChecks host
     check "no ABI21 listener errors" (host.Errors.Count = 0) (string host.Errors.Count)
+    nativeDisplayChecks ()
     failures

@@ -10,6 +10,37 @@ open Ranvier.Dom
 open Ranvier.View
 open RanvierWebCoreAbi
 
+/// <summary>Reserves the process-lifetime native host thread.</summary>
+[<Sealed>]
+type internal NativeOwner() =
+    let mutable thread = 0
+    let mutable depth = 0
+    let mutable committed = false
+
+    /// <summary>Rejects a different owner before a native operation starts.</summary>
+    member _.Ensure() =
+        let current = Environment.CurrentManagedThreadId
+        let previous = Interlocked.CompareExchange (&thread, current, 0)
+
+        if previous <> 0 && previous <> current then
+            invalidOp "Native hosts and SDL windows use the same native thread throughout the process"
+
+    /// <summary>Reserves the owner for a creation attempt.</summary>
+    member this.Enter() =
+        this.Ensure ()
+        depth <- depth + 1
+
+    /// <summary>Retains the owner after native host initialization begins.</summary>
+    member _.Commit() =
+        committed <- true
+
+    /// <summary>Ends an attempt and releases an uncommitted reservation.</summary>
+    member _.Exit() =
+        depth <- depth - 1
+
+        if depth = 0 && not committed then
+            Interlocked.Exchange (&thread, 0) |> ignore
+
 /// <summary>One sample of a mouse, pen or touch contact, laid out as <c>RvPointerSample</c>.</summary>
 /// <remarks>
 /// <c>PointerType</c> is 0 for a mouse, 1 for a pen and 2 for touch; <c>Action</c> is 0 move, 1 down, 2 up, 3 cancel
@@ -106,6 +137,7 @@ type internal HostContext(posted: ConcurrentQueue<struct (SendOrPostCallback * o
 /// </remarks>
 [<Sealed>]
 type WebCoreHost private (handle: nativeint, session: Session, width: int, height: int) =
+    static let nativeOwner = NativeOwner ()
     let thread = Environment.CurrentManagedThreadId
     let microtasks = Queue<unit -> unit>()
     let posted = ConcurrentQueue<struct (SendOrPostCallback * obj)>()
@@ -149,6 +181,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let mutable clipboardRead: Native.ClipboardRead = null
     let mutable document: Document = Unchecked.defaultof<_>
     let mutable disposed = false
+    let mutable destroyNative = Native.rv_host_destroy
     let mutable viewportWidth = width
     let mutable viewportHeight = height
     let mutable deviceScale = 1.0f
@@ -268,20 +301,23 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         else
             original args
 
-    /// <summary>Creates a page of <c>width</c> by <c>height</c> CSS pixels and installs it on the current thread.</summary>
-    /// <exception cref="T:System.InvalidOperationException">
-    /// The native library lacks generated DOM support or the SVG transport required by ABI 29.
-    /// </exception>
-    static member Create(width: int, height: int) : WebCoreHost =
+    /// <summary>The shared thread admission for native hosts and their windows.</summary>
+    static member internal Owner = nativeOwner
+
+    static member private CreateCore(width: int, height: int) : WebCoreHost =
         if
             Native.rv_abi_version () < 29
             || Native.rv_abi_has "dom-generated" <> 1
         then
             raise (
-                InvalidOperationException
-                    $"RanvierWebCoreHost ABI {Native.rv_abi_version ()} lacks this backend's SVG paint, filter and resource transport (ABI 29)"
+                InvalidOperationException (
+                    "RanvierWebCoreHost ABI "
+                    + (Native.rv_abi_version ()).ToString(Globalization.CultureInfo.CurrentCulture)
+                    + " lacks this backend's SVG paint, filter and resource transport (ABI 29)"
+                )
             )
 
+        nativeOwner.Commit ()
         let handle = Native.rv_host_create (width, height)
 
         if handle = 0n then
@@ -299,6 +335,18 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         let host = new WebCoreHost (handle, session, width, height)
         host.Install ()
         host
+
+    /// <summary>Creates a page of <c>width</c> by <c>height</c> CSS pixels and installs it on the current thread.</summary>
+    /// <exception cref="T:System.InvalidOperationException">
+    /// The native library lacks generated DOM support or the SVG transport required by ABI 29.
+    /// </exception>
+    static member Create(width: int, height: int) : WebCoreHost =
+        nativeOwner.Enter ()
+
+        try
+            WebCoreHost.CreateCore (width, height)
+        finally
+            nativeOwner.Exit ()
 
     member private this.Install() =
         document <- unbox<Document>(session.Node (Native.rv_host_document handle))
@@ -680,6 +728,58 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
         struct (width, height)
 
+    /// <summary>Binds a native D3D11 texture to an element's composited content.</summary>
+    /// <param name="target">A composited element in the host's current document, such as one with <c>will-change:transform</c>.</param>
+    /// <param name="texture">An RGBA8 UNORM, single-mip, single-sample NT-shared keyed-mutex texture; zero unbinds.</param>
+    /// <remarks>
+    /// Call on the host thread. Input bytes are premultiplied sRGB. The producer acquires key 0, renders and flushes,
+    /// then releases key 1 before each frame; composition returns key 0. The host retains the texture until unbound or the element/document ends.
+    /// </remarks>
+    /// <exception cref="T:System.NotSupportedException">The runtime has no D3D11 texture input, or the texture cannot be shared.</exception>
+    member this.BindD3D11Texture(target: Element, texture: nativeint) =
+        this.EnsureActive ()
+
+        if not (WebCoreHost.Has "texture-input-d3d11") then
+            raise (NotSupportedException "The native library has no D3D11 texture input")
+
+        Native.rv_host_bind_d3d11_texture (handle, Interop.handle target, texture)
+        |> Interop.check "rv_host_bind_d3d11_texture"
+
+    /// <summary>Binds an EGLImage to an element's composited content on the Linux GPU backend.</summary>
+    /// <param name="target">A composited element in the host's current document, such as one with <c>will-change:transform</c>.</param>
+    /// <param name="image">An RGBA8 premultiplied sRGB image from the configured EGL display; zero unbinds.</param>
+    /// <param name="flipY">True for GL bottom-row-first content; false for top-row-first content.</param>
+    /// <remarks>
+    /// Call on the host thread with the producer context current. After a successful bind the caller may destroy the image handle.
+    /// Finish producer writes with <c>glFinish</c> before each host frame and keep the image storage unchanged during composition.
+    /// </remarks>
+    /// <exception cref="T:System.NotSupportedException">The runtime has no EGL image input, or the image cannot be imported.</exception>
+    member this.BindEglImage(target: Element, image: nativeint, flipY: bool) =
+        this.EnsureActive ()
+
+        if not (WebCoreHost.Has "texture-input-egl") then
+            raise (NotSupportedException "The native library has no EGL image input")
+
+        Native.rv_host_bind_egl_image (handle, Interop.handle target, image, (if flipY then 1 else 0))
+        |> Interop.check "rv_host_bind_egl_image"
+
+    /// <summary>Requests a frame after the producer publishes new pixels to the element's bound native texture.</summary>
+    /// <remarks>Call on the host thread after producer synchronization. The base DOM backing is retained.</remarks>
+    /// <exception cref="T:System.NotSupportedException">Native texture input is unavailable, or the target has no bound texture.</exception>
+    member this.NativeTextureChanged(target: Element) =
+        this.EnsureActive ()
+
+        if
+            not (
+                WebCoreHost.Has "texture-input-d3d11"
+                || WebCoreHost.Has "texture-input-egl"
+            )
+        then
+            raise (NotSupportedException "The native library has no native texture input")
+
+        Native.rv_host_native_texture_changed (handle, Interop.handle target)
+        |> Interop.check "rv_host_native_texture_changed"
+
     /// <summary>Lays out and paints the page into <c>rgba</c>, unpremultiplied RGBA8 of <c>PaintSize</c>.</summary>
     member _.Paint(rgba: byte array) =
         Native.rv_host_paint_rgba (handle, rgba, rgba.Length)
@@ -803,6 +903,92 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// <summary>Whether the native library has <c>feature</c>, a name <c>rv_abi_has</c> takes, such as "ime".</summary>
     static member Has(feature: string) =
         Native.rv_abi_has feature = 1
+
+    member private this.DiagnosticStatus(feature: string, operation: string, action: unit -> int) =
+        this.EnsureActive ()
+
+        if not (WebCoreHost.Has feature) then
+            raise (NotSupportedException $"The native library does not provide {feature}")
+
+        action () |> Interop.check operation
+
+    /// <summary>Enables or disables the host's bounded rendering trace.</summary>
+    /// <remarks>Call on the host thread. A change of state clears queued events.</remarks>
+    /// <exception cref="T:System.NotSupportedException">The native provider has no host tracing.</exception>
+    member this.SetRenderingTrace(enabled: bool) =
+        this.DiagnosticStatus ("host-tracing", "rv_host_trace_enable", fun () -> Native.rv_host_trace_enable (handle, if enabled then 1 else 0))
+
+    /// <summary>Removes the queued rendering events and returns them with the dropped count.</summary>
+    /// <remarks>Times are monotonic nanoseconds; intervals can overlap. Call on the host thread.</remarks>
+    /// <exception cref="T:System.NotSupportedException">The native provider has no host tracing.</exception>
+    member this.DrainRenderingTrace() : Native.HostTraceEvent array * uint64 =
+        let events = Array.zeroCreate<Native.HostTraceEvent> 256
+        let pinned = GCHandle.Alloc (events, GCHandleType.Pinned)
+
+        try
+            let mutable written = 0
+            let mutable dropped = 0UL
+
+            this.DiagnosticStatus (
+                "host-tracing",
+                "rv_host_trace_drain",
+                fun () -> Native.rv_host_trace_drain (handle, pinned.AddrOfPinnedObject (), events.Length, &written, &dropped)
+            )
+
+            Array.truncate written events, dropped
+        finally
+            pinned.Free ()
+
+    /// <summary>Enables or disables recording of native presentation failures.</summary>
+    /// <remarks>Call on the host thread. A change of state clears the last record.</remarks>
+    /// <exception cref="T:System.NotSupportedException">The native provider has no host error records.</exception>
+    member this.SetErrorRecording(enabled: bool) =
+        this.DiagnosticStatus ("host-errors", "rv_host_error_enable", fun () -> Native.rv_host_error_enable (handle, if enabled then 1 else 0))
+
+    /// <summary>Removes and returns the latest native presentation failure, if any.</summary>
+    /// <remarks>Only the latest failure is retained. Call on the host thread.</remarks>
+    /// <exception cref="T:System.NotSupportedException">The native provider has no host error records.</exception>
+    member this.TakeHostError() : Native.HostErrorRecord voption =
+        let records = Array.zeroCreate<Native.HostErrorRecord> 1
+        let pinned = GCHandle.Alloc (records, GCHandleType.Pinned)
+
+        try
+            let mutable present = 0
+
+            this.DiagnosticStatus (
+                "host-errors",
+                "rv_host_error_take",
+                fun () -> Native.rv_host_error_take (handle, pinned.AddrOfPinnedObject (), &present)
+            )
+
+            if present = 0 then ValueNone else ValueSome records[0]
+        finally
+            pinned.Free ()
+
+    member private this.EditHistory(command: int) : bool =
+        this.EnsureActive ()
+
+        if not (WebCoreHost.Has "editing-undo") then
+            raise (NotSupportedException "The native library has no editor undo history")
+
+        this.Input ("rv_host_edit", fun () -> Native.rv_host_edit (handle, command))
+
+    /// <summary>Requests undo of the focused native editor's latest transaction.</summary>
+    /// <returns>True when the editor handled the command; false when its history is empty.</returns>
+    /// <remarks>
+    /// Call on the host thread. A canceled beforeinput still counts as handled. Document replacement resets editor history.
+    /// Application history stays separate.
+    /// </remarks>
+    /// <exception cref="T:System.NotSupportedException">Native undo is unavailable, or history replay is already active.</exception>
+    member this.Undo() : bool =
+        this.EditHistory 6
+
+    /// <summary>Requests redo of the focused native editor's latest undone transaction.</summary>
+    /// <returns>True when the editor handled the command; false when its redo history is empty.</returns>
+    /// <remarks>Call on the host thread. A canceled beforeinput still counts as handled. New edits clear redo history.</remarks>
+    /// <exception cref="T:System.NotSupportedException">Native redo is unavailable, or history replay is already active.</exception>
+    member this.Redo() : bool =
+        this.EditHistory 7
 
     /// <summary>
     /// Sets the input method's composition in the focused editable element: the text being composed, with the selection
@@ -945,6 +1131,14 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 ValueSome native.Expandos
             | _ -> ValueNone
 
+    /// <summary>Wraps native destruction for per-host forwarding and ownership controls.</summary>
+    member internal _.SetNativeDestroy(destroy: nativeint -> unit) =
+        destroyNative <- destroy
+
+    /// <summary>Adds an installation to the host's normal cleanup ownership.</summary>
+    member internal _.AddCleanupInstallation(installation: IDisposable) =
+        installed <- installation :: installed
+
     interface IDisposable with
         member _.Dispose() =
             if not disposed then
@@ -952,27 +1146,36 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                     raise (InvalidOperationException "A WebCore host is disposed on the thread that created it")
 
                 disposed <- true
-                idles.Clear ()
-                idleTimeouts.Clear ()
-
-                for item in installed do
-                    item.Dispose ()
-
-                installed <- []
-
-                if obj.ReferenceEquals (SynchronizationContext.Current, context) then
-                    SynchronizationContext.SetSynchronizationContext previousContext
-
-                Native.rv_host_set_frame_callback (handle, 0n, 0n)
-                |> ignore
-
-                Events.RemoveAll session
-                session.Dispose ()
+                let cleanup = Cleanup ()
 
                 try
-                    disposedEvent.Trigger ()
-                with error ->
-                    record error
+                    idles.Clear ()
+                    idleTimeouts.Clear ()
+                    let installations = installed
+                    installed <- []
 
-                Native.rv_host_destroy handle
-                GC.KeepAlive frameCallback
+                    for item in installations do
+                        cleanup.Attempt item.Dispose
+
+                    cleanup.Attempt (fun () ->
+                        if obj.ReferenceEquals (SynchronizationContext.Current, context) then
+                            SynchronizationContext.SetSynchronizationContext previousContext)
+
+                    cleanup.Attempt (fun () ->
+                        Native.rv_host_set_frame_callback (handle, 0n, 0n)
+                        |> ignore)
+
+                    cleanup.Attempt (fun () -> Events.RemoveAll session)
+                    cleanup.Attempt session.Dispose
+
+                    try
+                        disposedEvent.Trigger ()
+                    with error ->
+                        record error
+                finally
+                    try
+                        cleanup.Attempt (fun () -> destroyNative handle)
+                    finally
+                        GC.KeepAlive frameCallback
+
+                cleanup.Finish ()

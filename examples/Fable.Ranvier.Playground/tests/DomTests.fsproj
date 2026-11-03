@@ -13,6 +13,7 @@
     <Compile Include="ComparerCases.fs" />
     <Compile Include="DomChecks.fs" />
     <Compile Include="ScheduledChecks.fs" />
+    <Compile Include="../../../src/Ranvier.View/NativeDisplay.fs" Link="NativeDisplay.fs" />
     <Compile Include="../../../src/Ranvier.View/Native.fs" Link="Native.fs" />
     <Compile Include="../../../src/Ranvier.View.Dom/DomRuntime.fs" Link="DomRuntime.fs" />
     <Compile Include="../../../src/Ranvier.View/Lifetime.fs" Link="Lifetime.fs" />

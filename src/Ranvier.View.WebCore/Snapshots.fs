@@ -59,13 +59,6 @@ module Snapshots =
 
     let private completions = Completions ()
 
-    let private encodingCode encoding =
-        match encoding with
-        | ImageEncoding.Rgba8 -> 0
-        | ImageEncoding.Png -> 1
-        | ImageEncoding.Jpeg -> 2
-        | ImageEncoding.Webp -> 3
-
     let private encodingFacility encoding =
         match encoding with
         | ImageEncoding.Rgba8 -> None
@@ -160,7 +153,7 @@ module Snapshots =
                      0)
 
             value.Scale <- defaultArg options.Scale 0.0
-            value.Encoding <- encodingCode options.Encoding
+            value.Encoding <- NativeImageEncoding.code options.Encoding
             value.Quality <- defaultArg options.Quality -1.0
 
             match options.Crop with
@@ -208,7 +201,12 @@ module Snapshots =
                             with error ->
                                 ResourceOutcome.Failed (ResourceFailure.LoadFailed error.Message)
                         else
-                            ResourceOutcome.Failed (ResourceFailure.LoadFailed $"The snapshot ended with outcome {outcome}")
+                            ResourceOutcome.Failed (
+                                ResourceFailure.LoadFailed (
+                                    "The snapshot ended with outcome "
+                                    + outcome.ToString (Globalization.CultureInfo.CurrentCulture)
+                                )
+                            )
 
                     release ()
                     arbiter.Settle settled |> ignore)

@@ -12,6 +12,14 @@ type CommitFailure =
     | CollectAndContinue
     | FailFastCancel
 
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.union context depth precedence (box (this)) (fun n0 ->
+            match this with
+            | CommitFailure.CollectAndContinue -> "CollectAndContinue", []
+            | CommitFailure.FailFastCancel -> "FailFastCancel", [])
+#endif
+
 type Slot internal (owner: obj, scope: ViewScope) =
     member internal _.Owner = owner
     member internal _.Scope = scope
@@ -201,10 +209,53 @@ type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) a
 
             pending.Clear ()
 
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type Scheduling =
     | Synchronous
     | Queued of Queue
 
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.union context depth precedence (box (this)) (fun n0 ->
+            match this with
+            | Scheduling.Synchronous -> "Synchronous", []
+            | Scheduling.Queued (v0_0) ->
+                "Queued",
+                [
+                    Some (fun p -> NativeDisplay.opaque context n0 "<Ranvier.View.Dom.Scheduling.Queue>" (box (v0_0)))
+                ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
+
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type CommitMode =
     | SynchronousCommits
     | QueuedCommits of CommitFailure * ((unit -> unit) -> unit)
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.union context depth precedence (box (this)) (fun n0 ->
+            match this with
+            | CommitMode.SynchronousCommits -> "SynchronousCommits", []
+            | CommitMode.QueuedCommits (v0_0, v0_1) ->
+                "QueuedCommits",
+                [
+                    Some (fun p -> (NativeDisplay.known context n0 (v0_0) (fun retained -> retained.NativeDisplay (context, n0, p))))
+                    Some (fun p -> NativeDisplay.opaque context n0 "<function>" (box (v0_1)))
+                ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif

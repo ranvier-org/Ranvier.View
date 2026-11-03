@@ -11,6 +11,9 @@ open Ranvier.View.Dom.Scheduling
 open Ranvier.View.Dom.Mounting
 
 /// <summary>The client's settings for hydrating server HTML.</summary>
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type HydrationOptions =
     {
         /// <summary>The root prefix of the ids <c>Setup.CreateId</c> returns; must match the server's.</summary>
@@ -18,6 +21,21 @@ type HydrationOptions =
         /// <summary>Whether a structural mismatch raises from <c>hydrate</c>.</summary>
         Strict: bool
     }
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "IdPrefix", (fun () -> NativeDisplay.text context n0 ((this).IdPrefix))
+                "Strict", (fun () -> NativeDisplay.boolean context n0 ((this).Strict))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 module HydrationOptions =
     /// <summary>The prefix of <c>Server.Options.defaults</c>, with mismatches re-rendered and reported.</summary>

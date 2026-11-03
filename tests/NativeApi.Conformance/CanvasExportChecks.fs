@@ -134,11 +134,24 @@ let run
                     export.CreateImageBitmap (bitmapSource, options, (fun value -> outcome <- Some value))
 
                 expect (label + ": not delivered inside the call") outcome.IsNone
-                let mutable turns = 0
+#if FABLE_COMPILER
+                let deadline = DateTime.UtcNow.AddSeconds 2.0
 
-                while outcome.IsNone && turns < 400 do
+                let expired () =
+                    DateTime.UtcNow >= deadline
+#else
+                let timer = System.Diagnostics.Stopwatch.StartNew ()
+
+                let expired () =
+                    timer.ElapsedMilliseconds >= 2000L
+#endif
+
+                while outcome.IsNone && not (expired ()) do
                     do! driver.Settle ()
-                    turns <- turns + 1
+#if !FABLE_COMPILER
+                    if outcome.IsNone then
+                        System.Threading.Thread.Sleep 1
+#endif
 
                 return outcome
             }

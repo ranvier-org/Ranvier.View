@@ -1,0 +1,10 @@
+{
+  "group": "library",
+  "projects": [
+    "src/Fable.Ranvier/Fable.Ranvier.fsproj",
+    "src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj"
+  ],
+  "excludeFiles": [
+    "**/Generated/**"
+  ]
+}

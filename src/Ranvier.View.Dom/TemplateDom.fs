@@ -37,6 +37,9 @@ let StateGraph = 3
 let StateNodes = 4
 
 /// <summary>How a region mounts its rows.</summary>
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type RegionKind =
     /// <summary>One row per keyed item; new rows are created before removed rows retire.</summary>
     | ListRows
@@ -46,6 +49,22 @@ type RegionKind =
     | ViewHole
     /// <summary>A boundary: the region's single item's value is its <c>BoundaryViews</c>, read once.</summary>
     | BoundaryContent
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.union context depth precedence (box (this)) (fun n0 ->
+            match this with
+            | RegionKind.ListRows -> "ListRows", []
+            | RegionKind.SelectedArm -> "SelectedArm", []
+            | RegionKind.ViewHole -> "ViewHole", []
+            | RegionKind.BoundaryContent -> "BoundaryContent", [])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 /// <summary>
 /// A server node that differs from the node the template expects at <c>Path</c>: <c>root</c> for a missing or unclosed
@@ -283,6 +302,9 @@ let rec internal failuresBesides (excluded: exn) (error: exn) : exn list =
         [ error ]
 
 /// <summary>The server node a collected node of a template adopts.</summary>
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type Expectation =
     /// <summary>An element of the tag, compared without case.</summary>
     | ExpectElement of tag: string
@@ -291,7 +313,29 @@ type Expectation =
     /// <summary>The start marker of a region of the kind.</summary>
     | ExpectRegion of RegionKind
 
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.union context depth precedence (box (this)) (fun n0 ->
+            match this with
+            | Expectation.ExpectElement (v0_0) -> "ExpectElement", [ Some (fun p -> NativeDisplay.text context n0 (v0_0)) ]
+            | Expectation.ExpectText -> "ExpectText", []
+            | Expectation.ExpectRegion (v0_0) ->
+                "ExpectRegion",
+                [
+                    Some (fun p -> (NativeDisplay.known context n0 (v0_0) (fun retained -> retained.NativeDisplay (context, n0, p))))
+                ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
+
 [<NoEquality; NoComparison>]
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type CompiledRegion =
     {
         /// <summary>The node index of the region's start marker.</summary>
@@ -309,9 +353,34 @@ type CompiledRegion =
         Row: RegionRow
     }
 
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "Marker", (fun () -> NativeDisplay.int32 context n0 ((this).Marker))
+                "Owner", (fun () -> NativeDisplay.int32 context n0 ((this).Owner))
+                "Index", (fun () -> NativeDisplay.int32 context n0 ((this).Index))
+                "RootLevel", (fun () -> NativeDisplay.boolean context n0 ((this).RootLevel))
+                "Kind", (fun () -> (NativeDisplay.known context n0 ((this).Kind) (fun retained -> retained.NativeDisplay (context, n0, 3))))
+                "Items", (fun () -> NativeDisplay.opaque context n0 "<System.Func<System.Object,array<System.Object>>>" (box ((this).Items)))
+                "Key", (fun () -> NativeDisplay.opaque context n0 "<System.Func<System.Object,System.Object>>" (box ((this).Key)))
+                "Render", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Render)))
+                "Row", (fun () -> (NativeDisplay.known context n0 ((this).Row) (fun retained -> retained.NativeDisplay (context, n0, 3))))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
+
 /// <summary>A definition compiled for the DOM: a skeleton, the walk to its dynamic nodes, and its slot tables.</summary>
 /// <remarks>A single-root skeleton is the root node itself and its walk starts at the root; otherwise the skeleton is a fragment of <c>RootCount</c> roots. The root compiled form lists the regions and inlined children of every depth.</remarks>
 [<NoEquality; NoComparison>]
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type Compiled =
     {
         Skeleton: Node
@@ -339,7 +408,171 @@ type Compiled =
         Hash: Lazy<string>
     }
 
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "Skeleton", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.Dom.Node>" (box ((this).Skeleton)))
+                "RootCount", (fun () -> NativeDisplay.int32 context n0 ((this).RootCount))
+                "Walk",
+                (fun () ->
+                    NativeDisplay.array context n0 (fun c49 d49 p49 (item49: System.Int32) -> NativeDisplay.int32 c49 d49 (item49)) ((this).Walk))
+                "NodeCount", (fun () -> NativeDisplay.int32 context n0 ((this).NodeCount))
+                "RenderSlots",
+                (fun () ->
+                    NativeDisplay.array
+                        context
+                        n0
+                        (fun c52 d52 p52 (item52: (System.Int32 * Ranvier.View.Template.Slot)) ->
+                            (let (t53_0, t53_1) = item52 in
+
+                             NativeDisplay.tuple c52 d52 (box (item52)) (fun n53 ->
+                                 [
+                                     NativeDisplay.int32 c52 n53 (t53_0)
+                                     (NativeDisplay.known c52 n53 (t53_1) (fun retained -> retained.NativeDisplay (c52, n53, 3)))
+                                 ])))
+                        ((this).RenderSlots))
+                "IsolatedSlots",
+                (fun () ->
+                    NativeDisplay.array
+                        context
+                        n0
+                        (fun c56 d56 p56 (item56: (System.Int32 * Ranvier.View.Template.Slot)) ->
+                            (let (t57_0, t57_1) = item56 in
+
+                             NativeDisplay.tuple c56 d56 (box (item56)) (fun n57 ->
+                                 [
+                                     NativeDisplay.int32 c56 n57 (t57_0)
+                                     (NativeDisplay.known c56 n57 (t57_1) (fun retained -> retained.NativeDisplay (c56, n57, 3)))
+                                 ])))
+                        ((this).IsolatedSlots))
+                "Properties",
+                (fun () ->
+                    NativeDisplay.array
+                        context
+                        n0
+                        (fun c60 d60 p60 (item60: (System.Int32 * Ranvier.View.Template.PortableProperty * System.Object)) ->
+                            (let (t61_0, t61_1, t61_2) = item60 in
+
+                             NativeDisplay.tuple c60 d60 (box (item60)) (fun n61 ->
+                                 [
+                                     NativeDisplay.int32 c60 n61 (t61_0)
+                                     (NativeDisplay.known c60 n61 (t61_1) (fun retained -> retained.NativeDisplay (c60, n61, 3)))
+                                     NativeDisplay.opaque c60 n61 "<System.Object>" (box (t61_2))
+                                 ])))
+                        ((this).Properties))
+                "Events",
+                (fun () ->
+                    NativeDisplay.array
+                        context
+                        n0
+                        (fun c65 d65 p65 (item65: (System.Int32 * System.String * System.Func<System.Object, System.Object, unit>)) ->
+                            (let (t66_0, t66_1, t66_2) = item65 in
+
+                             NativeDisplay.tuple c65 d65 (box (item65)) (fun n66 ->
+                                 [
+                                     NativeDisplay.int32 c65 n66 (t66_0)
+                                     NativeDisplay.text c65 n66 (t66_1)
+                                     NativeDisplay.opaque
+                                         c65
+                                         n66
+                                         "<System.Func<System.Object,System.Object,Microsoft.FSharp.Core.Unit>>"
+                                         (box (t66_2))
+                                 ])))
+                        ((this).Events))
+                "Placed",
+                (fun () ->
+                    NativeDisplay.array
+                        context
+                        n0
+                        (fun
+                            c70
+                            d70
+                            p70
+                            (item70:
+                                (System.Int32 *
+                                Ranvier.View.Representation.PlacedKind *
+                                System.Func<System.Object, System.Object, System.Object, System.Object>)) ->
+                            (let (t71_0, t71_1, t71_2) = item70 in
+
+                             NativeDisplay.tuple c70 d70 (box (item70)) (fun n71 ->
+                                 [
+                                     NativeDisplay.int32 c70 n71 (t71_0)
+                                     (NativeDisplay.known c70 n71 (t71_1) (fun retained -> retained.NativeDisplay (c70, n71, 3)))
+                                     NativeDisplay.opaque
+                                         c70
+                                         n71
+                                         "<System.Func<System.Object,System.Object,System.Object,System.Object>>"
+                                         (box (t71_2))
+                                 ])))
+                        ((this).Placed))
+                "Heads",
+                (fun () ->
+                    NativeDisplay.array
+                        context
+                        n0
+                        (fun c75 d75 p75 (item75: (Ranvier.View.Template.HeadTemplate * System.Int32)) ->
+                            (let (t76_0, t76_1) = item75 in
+
+                             NativeDisplay.tuple c75 d75 (box (item75)) (fun n76 ->
+                                 [
+                                     (NativeDisplay.known c75 n76 (t76_0) (fun retained -> retained.NativeDisplay (c75, n76, 3)))
+                                     NativeDisplay.int32 c75 n76 (t76_1)
+                                 ])))
+                        ((this).Heads))
+                "EventNames",
+                (fun () ->
+                    NativeDisplay.array
+                        context
+                        n0
+                        (fun c79 d79 p79 (item79: System.String) -> NativeDisplay.text c79 d79 (item79))
+                        ((this).EventNames))
+                "Dispatch",
+                (fun () ->
+                    NativeDisplay.opaque
+                        context
+                        n0
+                        "<System.Func<array<System.Object>,Ranvier.Dom.Node,System.Object,Microsoft.FSharp.Core.Unit>>"
+                        (box ((this).Dispatch)))
+                "Regions",
+                (fun () ->
+                    NativeDisplay.array
+                        context
+                        n0
+                        (fun c82 d82 p82 (item82: CompiledRegion) ->
+                            (NativeDisplay.known c82 d82 (item82) (fun retained -> retained.NativeDisplay (c82, d82, p82))))
+                        ((this).Regions))
+                "Children",
+                (fun () ->
+                    NativeDisplay.array
+                        context
+                        n0
+                        (fun c84 d84 p84 (item84: CompiledChild) ->
+                            (NativeDisplay.known c84 d84 (item84) (fun retained -> retained.NativeDisplay (c84, d84, p84))))
+                        ((this).Children))
+                "Expect",
+                (fun () ->
+                    NativeDisplay.array
+                        context
+                        n0
+                        (fun c86 d86 p86 (item86: Expectation) ->
+                            (NativeDisplay.known c86 d86 (item86) (fun retained -> retained.NativeDisplay (c86, d86, p86))))
+                        ((this).Expect))
+                "Hash", (fun () -> NativeDisplay.opaque context n0 "<System.Lazy<System.String>>" (box ((this).Hash)))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
+
+#if !FABLE_COMPILER
+and [<System.Diagnostics.DebuggerDisplay("{ToString(),nq}"); NoEquality; NoComparison>] CompiledChild =
+#else
 and [<NoEquality; NoComparison>] CompiledChild =
+#endif
     {
         Definition: TemplateComponent
         Props: Func<obj, obj>
@@ -350,6 +583,24 @@ and [<NoEquality; NoComparison>] CompiledChild =
         /// <summary>The child's slot and event tables, indexed from <c>Offset</c>; its skeleton is null and its walk empty.</summary>
         Tables: Compiled
     }
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "Definition", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.View.Template.TemplateComponent>" (box ((this).Definition)))
+                "Props", (fun () -> NativeDisplay.opaque context n0 "<System.Func<System.Object,System.Object>>" (box ((this).Props)))
+                "Owner", (fun () -> NativeDisplay.int32 context n0 ((this).Owner))
+                "Offset", (fun () -> NativeDisplay.int32 context n0 ((this).Offset))
+                "Tables", (fun () -> (NativeDisplay.known context n0 ((this).Tables) (fun retained -> retained.NativeDisplay (context, n0, 3))))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 /// <summary>Compiles child-index paths, in document order, into walk opcodes ending each path with <c>Collect</c>.</summary>
 let walkProgram (paths: int array array) : int array =
@@ -491,7 +742,18 @@ let private validateParsed (content: DocumentFragment) (walk: int array) (target
     let parsedRoots = int content.childNodes.length
 
     if parsedRoots <> rootCount then
+#if FABLE_COMPILER
         raise (restructured $"expected %d{rootCount} root nodes, parsed %d{parsedRoots}")
+#else
+        raise (
+            restructured (
+                "expected "
+                + rootCount.ToString (System.Globalization.CultureInfo.InvariantCulture)
+                + " root nodes, parsed "
+                + parsedRoots.ToString (System.Globalization.CultureInfo.InvariantCulture)
+            )
+        )
+#endif
 
     let mutable cursor: Node = content :> Node
     let mutable count = 0
@@ -524,7 +786,20 @@ let private validateParsed (content: DocumentFragment) (walk: int array) (target
                         cursor.nodeName.ToLowerInvariant ()
 
                 let at = path |> Array.map string |> String.concat "/"
+#if FABLE_COMPILER
                 raise (restructured $"the dynamic node at path {at} should be {expected} but is {found}")
+#else
+                raise (
+                    restructured (
+                        "the dynamic node at path "
+                        + at
+                        + " should be "
+                        + expected
+                        + " but is "
+                        + found
+                    )
+                )
+#endif
 
             count <- count + 1
         elif not (isNull (box cursor)) then

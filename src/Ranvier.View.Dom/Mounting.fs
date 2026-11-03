@@ -694,6 +694,9 @@ type private RegionErrors(report: exn list -> unit) =
             this.Report errors
             raise error
 
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type private Entry =
     {
         Node: Node
@@ -702,6 +705,31 @@ type private Entry =
         Relocate: unit -> unit
         Restore: (unit -> unit) option
     }
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "Node", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.Dom.Node>" (box ((this).Node)))
+                "EndNode", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.Dom.Node>" (box ((this).EndNode)))
+                "Validate", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Validate)))
+                "Relocate", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Relocate)))
+                "Restore",
+                (fun () ->
+                    NativeDisplay.option
+                        context
+                        n0
+                        3
+                        (fun c42 d42 p42 (item42: (unit -> unit)) -> NativeDisplay.opaque c42 d42 "<function>" (box (item42)))
+                        ((this).Restore))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 /// <summary>
 /// The nodes a mount owns in its host: its boundary entries <c>first</c> and <c>last</c>, and between them its roots
@@ -1173,6 +1201,9 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
             raise (AggregateException ("Range release failed", errors))
 
 /// <summary>How a keyed region's markers join the mount's range.</summary>
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type private RegionPlacement =
     /// <summary>Markers created for an authored list at the range's top level.</summary>
     | NewRegion
@@ -1180,6 +1211,21 @@ type private RegionPlacement =
     | RootRegion
     /// <summary>Markers inside an element.</summary>
     | NestedRegion
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.union context depth precedence (box (this)) (fun n0 ->
+            match this with
+            | RegionPlacement.NewRegion -> "NewRegion", []
+            | RegionPlacement.RootRegion -> "RootRegion", []
+            | RegionPlacement.NestedRegion -> "NestedRegion", [])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 /// <summary>Arm selections are equal when both are null, or when their keys (<c>fst</c>) are equal under <c>=</c>.</summary>
 let private sameArm =
@@ -2005,14 +2051,14 @@ and [<Sealed>] private ViewBoundary
         parentPath: InstancePath,
         region: int,
         mountView:
-            (unit -> obj)
-                -> ((unit -> obj) -> Backend -> unit)
-                -> ViewScope
-                -> Placement
-                -> InstancePath
-                -> int
-                -> int
-                -> TemplateDom.HydrationCursor
+            (struct ((unit -> obj) *
+            ((unit -> obj) -> Backend -> unit) *
+            ViewScope *
+            Placement *
+            InstancePath *
+            int *
+            int *
+            TemplateDom.HydrationCursor))
                 -> Row,
         hydration: TemplateDom.HydrationCursor,
         hydrationCursor: unit -> TemplateDom.HydrationCursor,
@@ -2155,7 +2201,7 @@ and [<Sealed>] private ViewBoundary
         try
             row <-
                 Api.runWithOwner site.Owner (fun () ->
-                    mountView noItem (fun _ backend -> render backend) outer viewContainer parentPath region (site.NextRow ()) cursor)
+                    mountView (struct (noItem, (fun _ backend -> render backend), outer, viewContainer, parentPath, region, site.NextRow (), cursor)))
 
             if not (isNull cursor) then
                 checkEnd row cursor
@@ -2334,15 +2380,16 @@ and [<Sealed>] private ViewBoundary
             try
                 content <-
                     Api.runWithOwner site.Owner (fun () ->
-                        mountView
-                            noItem
-                            (fun _ backend -> views.Content status backend)
-                            (this :> ViewScope)
-                            contentContainer
-                            parentPath
-                            region
-                            row
-                            cursor)
+                        mountView (
+                            struct (noItem,
+                                    (fun _ backend -> views.Content status backend),
+                                    (this :> ViewScope),
+                                    contentContainer,
+                                    parentPath,
+                                    region,
+                                    row,
+                                    cursor)
+                        ))
             with error ->
                 failure <- Some error
         finally
@@ -4375,7 +4422,7 @@ and internal MountState
                 parentContainer,
                 parentPath,
                 region,
-                (fun current render scope target parentPath region row cursor ->
+                (fun struct (current, render, scope, target, parentPath, region, row, cursor) ->
                     this.MountRow (current, render, scope, target, parentPath, region, row, cursor, regionStart)),
                 regionCursor,
                 (fun () -> this.HydrationCursor),

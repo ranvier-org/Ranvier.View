@@ -1,23 +1,215 @@
 """Run a release's shared API fixtures using only its official NuGet packages."""
 import argparse
+from contextlib import ExitStack
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
 import re
+import shutil
+import signal
 import subprocess
 import struct
 import sys
+import time
 import xml.etree.ElementTree as ET
 
 REPOSITORY = Path(__file__).resolve().parents[1]
 OFFICIAL = 'https://api.nuget.org/v3/index.json'
 FIXTURES = 'tests/NativeApi.Conformance/'
+DEFAULT_COMMAND_TIMEOUT_SECONDS = 1200
+PROCESS_TERMINATION_GRACE_SECONDS = 1.0
 
 
 def configure_console():
     for stream in [sys.stdout, sys.stderr]:
         stream.reconfigure(encoding='utf-8')
+
+
+def parse_positive_seconds(value):
+    try:
+        seconds = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError('must be a positive number of seconds') from error
+    if seconds <= 0:
+        raise argparse.ArgumentTypeError('must be a positive number of seconds')
+    return seconds
+
+
+def make_argument_parser():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--profile', type=Path, required=True)
+    parser.add_argument('--output', type=Path, required=True, help='New directory; existing directories are refused.')
+    parser.add_argument('--variant', choices=['normal', 'traced'], required=True)
+    parser.add_argument('--target', choices=['native', 'browser'], required=True)
+    parser.add_argument(
+        '--command-timeout-seconds', type=parse_positive_seconds,
+        default=DEFAULT_COMMAND_TIMEOUT_SECONDS,
+        help=f'per-command deadline in seconds (default: {DEFAULT_COMMAND_TIMEOUT_SECONDS})',
+    )
+    return parser
+
+
+def wait_for_child(process, timeout_seconds):
+    return process.wait(timeout=timeout_seconds)
+
+
+def terminate_owned_process_tree(process):
+    if os.name == 'nt':
+        taskkill = Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32/taskkill.exe'
+        executable = str(taskkill) if taskkill.is_file() else shutil.which('taskkill')
+        if executable is None:
+            raise RuntimeError('taskkill.exe is unavailable; cannot terminate the owned child process tree')
+        try:
+            result = subprocess.run(
+                [executable, '/PID', str(process.pid), '/T', '/F'],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False, timeout=10,
+                creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0),
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+            raise RuntimeError(f'failed to terminate owned process tree for PID {process.pid}: {error}') from error
+        if result.returncode != 0:
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+            raise RuntimeError(
+                f'taskkill failed to terminate owned process tree for PID {process.pid}: exit {result.returncode}'
+            )
+        try:
+            process.wait(timeout=10)
+        except subprocess.TimeoutExpired as error:
+            process.kill()
+            process.wait()
+            raise RuntimeError(f'owned process PID {process.pid} remained after taskkill /T') from error
+        return
+
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        process.wait()
+        return
+    try:
+        process.wait(timeout=PROCESS_TERMINATION_GRACE_SECONDS)
+    except subprocess.TimeoutExpired:
+        pass
+    try:
+        os.killpg(process.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    process.wait()
+
+
+def run_logged_command(command, *, cwd, environment, timeout_seconds, log_path, step, raw_output=False):
+    argv = list(map(str, command))
+    log_path = Path(log_path)
+    step.update(command=argv, log=str(log_path), timeout_seconds=timeout_seconds)
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    started = time.monotonic()
+    process = None
+    timed_out = False
+
+    try:
+        with ExitStack() as logs:
+            log_file = logs.enter_context(log_path.open('wb'))
+            if raw_output:
+                stderr_log_path = log_path.with_name(log_path.name + '.stderr.log')
+                step['stderr_log'] = str(stderr_log_path)
+                stderr_file = logs.enter_context(stderr_log_path.open('wb'))
+            else:
+                stderr_file = subprocess.STDOUT
+            options = {
+                'cwd': cwd,
+                'env': environment,
+                'stdout': log_file,
+                'stderr': stderr_file,
+            }
+            if os.name == 'nt':
+                options['creationflags'] = getattr(subprocess, 'CREATE_NEW_PROCESS_GROUP', 0)
+            else:
+                options['start_new_session'] = True
+            process = subprocess.Popen(argv, **options)
+            step['pid'] = process.pid
+            try:
+                wait_for_child(process, timeout_seconds)
+            except subprocess.TimeoutExpired:
+                timed_out = True
+                try:
+                    terminate_owned_process_tree(process)
+                except Exception as error:
+                    step.update(
+                        status='timed_out',
+                        duration_seconds=time.monotonic() - started,
+                        timeout_reason=f'exceeded {timeout_seconds} seconds; process-tree termination failed: {error}',
+                        process_tree_termination_error=str(error),
+                    )
+                    raise RuntimeError(step['timeout_reason']) from error
+            except BaseException as error:
+                try:
+                    terminate_owned_process_tree(process)
+                except Exception as termination_error:
+                    step['process_tree_termination_error'] = str(termination_error)
+                    step['status'] = 'interruption_cleanup_failed'
+                else:
+                    step['status'] = 'interrupted'
+                step['duration_seconds'] = time.monotonic() - started
+                step['interruption_reason'] = f'{type(error).__name__}: {error}'
+                raise
+    except BaseException as error:
+        if process is not None and process.poll() is None:
+            try:
+                terminate_owned_process_tree(process)
+            except Exception as termination_error:
+                step['process_tree_termination_error'] = str(termination_error)
+        if 'status' not in step:
+            step['status'] = 'failed'
+            step['failure_reason'] = f'{type(error).__name__}: {error}'
+            step['duration_seconds'] = time.monotonic() - started
+        raise
+
+    output_bytes = log_path.read_bytes()
+    output = output_bytes if raw_output else io.TextIOWrapper(
+        io.BytesIO(output_bytes), encoding='utf-8', errors='replace', newline=None
+    ).read()
+    duration = time.monotonic() - started
+    if timed_out:
+        reason = f'child command exceeded the {timeout_seconds}-second per-command deadline'
+        step.update(
+            status='timed_out',
+            exit_code=process.returncode,
+            duration_seconds=duration,
+            timeout_reason=reason,
+        )
+        raise subprocess.TimeoutExpired(argv, timeout_seconds, output=output)
+
+    step.update(exit_code=process.returncode, duration_seconds=duration)
+    if process.returncode != 0:
+        step['status'] = 'failed'
+        raise subprocess.CalledProcessError(process.returncode, argv, output=output)
+    step['status'] = 'passed'
+    return output
+
+
+def checker_environment(output, inherited=None):
+    environment = dict(os.environ if inherited is None else inherited)
+    environment.update(
+        NUGET_PACKAGES=str(output / 'packages'),
+        NUGET_HTTP_CACHE_PATH=str(output / 'http-cache'),
+        NATIVE_API_BROWSER_PACKAGE=str(output / 'package.json'),
+        FICKL_SERVER='0',
+        DOTNET_CLI_USE_MSBUILD_SERVER='0',
+        MSBUILDDISABLENODEREUSE='1',
+        COHORT_EXPECT_TRACE='false',
+    )
+    return environment
+
+
+def source_from_git(repository, commit, path, run):
+    label = 'source-' + hashlib.sha256(path.encode('utf-8')).hexdigest()[:12]
+    return run(label, 'git', '-C', repository, 'show', f'{commit}:{path}', raw_output=True)
 
 
 def expected_shared(profile, target):
@@ -59,7 +251,7 @@ def validate_profile(profile):
             raise ValueError('Module assertions must name both targets.')
         for target, expected in modules.items():
             if (not isinstance(expected, dict) or not expected
-                    or any(not re.fullmatch('[A-Z0-9_]+', name) or type(value) is not int or value <= 0
+                    or any(not re.fullmatch(r'[A-Z0-9_]+(?:[ /][A-Z0-9_]+)*', name) or type(value) is not int or value <= 0
                            for name, value in expected.items())
                     or sum(expected.values()) != expected_shared(profile, target)):
                 raise ValueError('Module assertion counts must match the target total.')
@@ -89,6 +281,39 @@ def compile_items(project):
 
 def compile_names(project):
     return [name for _, name in compile_items(project)]
+
+
+def content_items(project):
+    items = []
+    for item in ET.fromstring(project).iter('None'):
+        copy = item.get('CopyToOutputDirectory')
+        if copy not in ['Always', 'PreserveNewest', 'IfDifferent']:
+            continue
+        include = item.get('Include', '')
+        if (not re.fullmatch(r'[A-Za-z0-9_./-]+', include) or include.startswith('/')
+                or any(part in ['', '.', '..'] for part in include.split('/'))):
+            raise ValueError('Fixture content must stay inside its source directory.')
+        items.append((include, copy))
+    return items
+
+
+def stage_browser_runtime(source, output):
+    pending = ['package.json', 'package-lock.json', 'browser.mjs']
+    copied = set()
+    while pending:
+        name = pending.pop(0)
+        if name in copied:
+            continue
+        if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:mjs|json)', name):
+            raise ValueError('Browser helper modules must stay in the fixture directory.')
+        content = source(FIXTURES + name)
+        (output / name).write_bytes(content)
+        copied.add(name)
+        if name.endswith('.mjs'):
+            for imported in re.findall(r"(?:\bfrom\s*|\bimport\s*)['\"](\.[^'\"\r\n]+)['\"]", content.decode()):
+                if not imported.startswith('./') or not imported.endswith('.mjs'):
+                    raise ValueError('Browser helper modules must stay in the fixture directory.')
+                pending.append(imported[2:])
 
 
 def verify_nuspec(source, commit):
@@ -202,11 +427,7 @@ def verify_aot_publish(publication, executable):
 
 def main():
     configure_console()
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--profile', type=Path, required=True)
-    parser.add_argument('--output', type=Path, required=True, help='New directory; existing directories are refused.')
-    parser.add_argument('--variant', choices=['normal', 'traced'], required=True)
-    parser.add_argument('--target', choices=['native', 'browser'], required=True)
+    parser = make_argument_parser()
     args = parser.parse_args()
     profile = json.loads(args.profile.read_text(encoding='utf-8'))
     validate_profile(profile)
@@ -216,27 +437,37 @@ def main():
     if output.is_relative_to(REPOSITORY):
         raise ValueError('Consumer output must be outside the source checkout to avoid inherited build settings.')
     output.mkdir(parents=True, exist_ok=False)
-    environment = dict(os.environ, NUGET_PACKAGES=str(output / 'packages'),
-                       NUGET_HTTP_CACHE_PATH=str(output / 'http-cache'),
-                       NATIVE_API_BROWSER_PACKAGE=str(output / 'package.json'), FICKL_SERVER='0',
-                       COHORT_EXPECT_TRACE=str(args.variant == 'traced').lower())
+    environment = checker_environment(output)
+    environment['COHORT_EXPECT_TRACE'] = str(args.variant == 'traced').lower()
     if os.name == 'nt':
         environment['OS'] = 'Windows_NT'
     suffix = '.Traced' if args.variant == 'traced' else ''
     evidence = {'profile': profile, 'variant': args.variant, 'target': args.target, 'sources': {}}
 
+    def handle_termination(signum, _frame):
+        raise InterruptedError(f'received signal {signum}')
+
+    handled_signals = [signal.SIGTERM]
+    if hasattr(signal, 'SIGBREAK'):
+        handled_signals.append(signal.SIGBREAK)
+    previous_handlers = {signum: signal.signal(signum, handle_termination) for signum in handled_signals}
+
     def source(path):
-        data = subprocess.check_output(['git', 'show', profile['source_commit'] + ':' + path], cwd=REPOSITORY)
+        data = source_from_git(REPOSITORY, profile['source_commit'], path, run)
         evidence['sources'][path] = hashlib.sha256(data).hexdigest()
         return data
 
-    def run(label, *command):
-        result = subprocess.run(list(map(str, command)), cwd=output, env=environment,
-                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding='utf-8', errors='replace')
-        (output / (label + '.log')).write_text(result.stdout, encoding='utf-8')
-        print(result.stdout, flush=True)
-        result.check_returncode()
-        return result.stdout
+    def run(label, *command, raw_output=False):
+        step = {'label': label}
+        evidence.setdefault('steps', []).append(step)
+        result = run_logged_command(
+            command, cwd=output, environment=environment,
+            timeout_seconds=args.command_timeout_seconds,
+            log_path=output / (label + '.log'), step=step, raw_output=raw_output,
+        )
+        if not raw_output:
+            print(result, flush=True)
+        return result
 
     try:
         config = output / 'NuGet.Config'
@@ -245,10 +476,17 @@ def main():
                           '<package pattern="*"/></packageSource></packageSourceMapping></configuration>')
         (output / 'global.json').write_bytes(source('global.json'))
         name = 'Native' if args.target == 'native' else 'Browser'
-        compiled = compile_items(source(FIXTURES + name + '.fsproj'))
+        fixture_project = source(FIXTURES + name + '.fsproj')
+        compiled = compile_items(fixture_project)
+        content_project = fixture_project if args.target == 'native' else source(FIXTURES + 'Native.fsproj')
+        content = content_items(content_project)
         names = [filename for _, filename in compiled]
         for path, filename in compiled:
             (output / filename).write_bytes(source(path))
+        for filename, _ in content:
+            destination = output / filename
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(source(FIXTURES + filename))
         properties = '<OutputType>Exe</OutputType><RuntimeIdentifier>win-x64</RuntimeIdentifier><PublishAot>true</PublishAot>' if args.target == 'native' else ''
         if args.target == 'native':
             trace = REPOSITORY / 'tests/native-packages/SharedTraceProbe.fs'
@@ -259,6 +497,8 @@ def main():
             evidence['native_runner_precheck'] = 'OfficialTraceProbe.verify () before original entry point'
             names.insert(0, trace.name)
         items = '\n'.join(f'    <Compile Include="{filename}" />' for filename in names)
+        items += '\n' + '\n'.join(f'    <None Include="{filename}" CopyToOutputDirectory="{copy}" CopyToPublishDirectory="{copy}" />'
+                                 for filename, copy in content)
         project = output / 'Consumer.fsproj'
         project.write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework>'
                            '<AssemblyName>' + ('OfficialViewConsumer' if args.target == 'native' else 'Browser')
@@ -294,8 +534,7 @@ def main():
             (output / '.config').mkdir()
             (output / '.config/dotnet-tools.json').write_text(json.dumps(tools))
             run('tools', 'dotnet', 'tool', 'restore', '--configfile', config)
-            for filename in ['package.json', 'package-lock.json', 'browser.mjs']:
-                (output / filename).write_bytes(source(FIXTURES + filename))
+            stage_browser_runtime(source, output)
             run('npm', 'npm.cmd' if os.name == 'nt' else 'npm', 'ci')
             run('chromium-install', 'npx.cmd' if os.name == 'nt' else 'npx', 'playwright', 'install', 'chromium')
             command = ['dotnet', 'fickl', project, '--outDir', output / 'generated', '--configuration', 'Release',
@@ -308,7 +547,11 @@ def main():
         evidence['passed'] = True
         print(f'OFFICIAL_SHARED_API PASS {args.variant} {args.target} assertions={expected_shared(profile, args.target)}', flush=True)
     finally:
-        (output / 'evidence.json').write_text(json.dumps(evidence, indent=2), encoding='utf-8')
+        try:
+            (output / 'evidence.json').write_text(json.dumps(evidence, indent=2), encoding='utf-8')
+        finally:
+            for signum, handler in previous_handlers.items():
+                signal.signal(signum, handler)
 
 
 if __name__ == '__main__':

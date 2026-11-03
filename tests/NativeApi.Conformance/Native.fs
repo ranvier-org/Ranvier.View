@@ -1398,9 +1398,7 @@ let private runBinary () =
 [<Literal>]
 let private DataTransferChecksCount = 49
 
-// KNOWN BUG Ranvier.WebCore#156, not a platform difference: Linux (WPE) drops carry no Files, which asserts five
-// fewer checks. Remove the case when #156 is fixed.
-let private dropKeepsFiles = not (System.OperatingSystem.IsLinux ())
+let private dropKeepsFiles = true
 
 let private runDataTransfer () =
     let host = WebCoreHost.Create (320, 200)
@@ -3750,6 +3748,7 @@ let private runResizeObservation () =
                     Update = fun () -> async { host.Frame () }
                     Errors = fun () -> host.Errors.Count
                     Engine = ResizeObservationChecks.Native
+                    DevicePixelSupported = WebCoreHost.Has "resize-device-pixel-content-box"
                 }
 
             let count =
@@ -3865,11 +3864,55 @@ let private runResizeObservation () =
          && entry.BorderBoxSize.Length = 1)
         "An entry held past host disposal keeps its copied values"
 
-    if shared <> ResizeObservationChecksCount then
+    let expectedShared =
+        if WebCoreHost.Has "resize-device-pixel-content-box" then
+            ResizeObservationChecksCount - 1
+        else
+            ResizeObservationChecksCount
+
+    if shared <> expectedShared then
         failwith $"Resize observation shared assertions did not run: {shared}"
 
     System.Console.WriteLine $"NATIVE_API G10 PASS assertions={shared}"
     System.Console.WriteLine $"NATIVE_API G10 LIFETIME PASS assertions={lifetime}"
+
+    let mutable deviceChecks = 0
+
+    for scale in [ 1.; 1.5; 2. ] do
+        use deviceHost = WebCoreHost.Create (800, 600)
+        deviceHost.SetDeviceScale (float32 scale)
+
+        let create () =
+            Ranvier.View.WebCore.ResizeObservation.forHost deviceHost
+
+        let update () =
+            async { deviceHost.Frame () }
+
+        let supported = WebCoreHost.Has "resize-device-pixel-content-box"
+
+        let count =
+            ResizeDevicePixelChecks.run deviceHost.Document create update scale supported true
+            |> Async.StartImmediateAsTask
+            |> fun task -> task.GetAwaiter().GetResult()
+
+        if count <> (if supported then 52 else 32) then
+            failwith "The measured device-pixel cases did not all run"
+
+        deviceChecks <- deviceChecks + count
+        System.Console.WriteLine $"NATIVE_API G10 DEVICE PASS scale={scale} supported={supported} assertions={count}"
+
+        if supported && scale = 1. then
+            let count =
+                ResizeDevicePixelChecks.runScaleChanges deviceHost.Document create update (float32 >> deviceHost.SetDeviceScale)
+                |> Async.StartImmediateAsTask
+                |> fun task -> task.GetAwaiter().GetResult()
+
+            deviceChecks <- deviceChecks + count
+            System.Console.WriteLine $"NATIVE_API G10 SCALE-CHANGE PASS assertions={count}"
+
+    if deviceChecks = 0 then
+        failwith "Device-pixel resize assertions did not run"
+
     shared
 
 /// <summary>Runs the shared intersection observation fixture with thread, root, document replacement and teardown
@@ -6212,9 +6255,45 @@ let private runSurfaces () =
     System.Console.WriteLine "NATIVE_API SVG_SURFACES TEARDOWN PASS"
     0
 
+let private runViewTransitions () =
+    use host = WebCoreHost.Create (320, 240)
+
+    if not (WebCoreHost.Has "view-transitions") then
+        let rejected =
+            try
+                ViewTransitions.forHost host |> ignore
+                false
+            with :? System.NotSupportedException ->
+                true
+
+        if not rejected then
+            failwith "Slim view transitions were not safely rejected"
+
+        System.Console.WriteLine "NATIVE_API A11 UNSUPPORTED PASS assertions=1"
+    else
+        let nextFrame () =
+            async {
+                host.Frame () |> ignore
+
+                RanvierWebCoreAbi.Native.rv_run_loop_cycle 16
+                |> ignore
+            }
+
+        let count =
+            ViewTransitionChecks.run host.Document (fun () -> ViewTransitions.forHost host) nextFrame
+            |> runOnHostThread
+
+        if count <> 35 then
+            failwith "View-transition assertions did not run"
+
+        System.Console.WriteLine $"NATIVE_API A11 PASS assertions={count}"
+
 [<EntryPoint>]
 let main args =
-    if Array.contains "--locales-only" args then
+    if Array.contains "--view-transitions-only" args then
+        runViewTransitions ()
+        0
+    elif Array.contains "--locales-only" args then
         runLocales ()
     elif Array.contains "--svg-surfaces-only" args then
         runSurfaces ()
@@ -6548,4 +6627,9 @@ let main args =
     else
         runSurfaces () |> ignore
         runPaint () |> ignore
-        runAll ()
+        let exitCode = runAll ()
+
+        if exitCode = 0 then
+            runViewTransitions ()
+
+        exitCode

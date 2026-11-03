@@ -1,8 +1,10 @@
 module Ranvier.View.WebCore.Tests.PaintTests
 
+open System
 open Expecto
 open Ranvier
 open Ranvier.View
+open Ranvier.View.WebCore
 open Ranvier.View.WebCore.Tests.Support
 
 let private label =
@@ -69,6 +71,29 @@ let tests =
     testList
         "Paint"
         [
+            hostCase "native texture bindings retain explicit backend capability and unbind contracts"
+            <| fun host ->
+                let target = host.Document.createElement "div"
+                host.Document.body.appendChild target |> ignore
+
+                if WebCoreHost.Has "texture-input-d3d11" then
+                    host.BindD3D11Texture (target, 0n)
+                else
+                    Expect.throwsT<NotSupportedException>
+                        (fun () -> host.BindD3D11Texture (target, 0n))
+                        "a previous runtime is rejected before the new native entry point"
+
+                if WebCoreHost.Has "texture-input-egl" then
+                    host.BindEglImage (target, 0n, false)
+                else
+                    Expect.throwsT<NotSupportedException>
+                        (fun () -> host.BindEglImage (target, 0n, false))
+                        "an unavailable transport is rejected before the new native entry point"
+
+                Expect.throwsT<NotSupportedException>
+                    (fun () -> host.NativeTextureChanged target)
+                    "an element without a bound texture cannot publish a frame"
+
             paintCase 1.0f "a mounted component paints and a signal write changes the pixels"
             paintCase 1.25f "a fractional-scale dirty repaint clears the previous glyph's overhang"
             paintCase 1.2f "a non-grid fractional-scale repaint matches the full canvas"

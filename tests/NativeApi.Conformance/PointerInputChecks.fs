@@ -379,6 +379,29 @@ let run (document: Document) (provider: PointerInputProvider) (capabilities: Cap
         let service = PointerInput.lock provider document
         let changes = List<PointerLockChange>()
         let subscription = service.Subscribe changes.Add
+
+        let waitForChange predicate =
+            async {
+#if FABLE_COMPILER
+                let deadline = DateTime.UtcNow.AddSeconds 2.0
+
+                let expired () =
+                    DateTime.UtcNow >= deadline
+#else
+                let timer = System.Diagnostics.Stopwatch.StartNew ()
+
+                let expired () =
+                    timer.ElapsedMilliseconds >= 2000L
+#endif
+                while not (changes |> Seq.exists predicate)
+                      && not (expired ()) do
+                    do! driver.Settle ()
+#if !FABLE_COMPILER
+                    if not (changes |> Seq.exists predicate) then
+                        System.Threading.Thread.Sleep 1
+#endif
+            }
+
         let requests = List<Result<unit, PointerLockRefusal>>()
         let onDown = fun (_: Event) -> requests.Add (service.Request (t, false))
         t.addEventListener ("mousedown", onDown, false)
@@ -386,7 +409,11 @@ let run (document: Document) (provider: PointerInputProvider) (capabilities: Cap
         t.removeEventListener ("mousedown", onDown, false)
         equal "gesture request accepted" [| Ok () |] (requests.ToArray ())
         do! driver.GrantLock ()
-        do! driver.Settle ()
+
+        do!
+            waitForChange (function
+                | PointerLockChange.Locked _ -> true
+                | _ -> false)
 
         match service.Current () with
         | PointerLockState.Locked element -> equal "locked on #t" "pointer-t" (element.getAttribute "id")
@@ -430,7 +457,11 @@ let run (document: Document) (provider: PointerInputProvider) (capabilities: Cap
 
         equal "lock is not pointer capture" false (t.hasPointerCapture 1)
         service.Exit ()
-        do! driver.Settle ()
+
+        do!
+            waitForChange (function
+                | PointerLockChange.Unlocked -> true
+                | _ -> false)
 
         equal
             "unlock change"

@@ -7,6 +7,9 @@ open Ranvier.View.Representation
 open Ranvier.View.Template
 
 /// <summary>The settings of one server render.</summary>
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type Options =
     {
         /// <summary>Whether a browser-only part raises (<c>Reject</c>) or is dropped (<c>Omit</c>).</summary>
@@ -16,6 +19,63 @@ type Options =
         /// <summary>The options of the request graph.</summary>
         GraphOptions: GraphOptions
     }
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "Policy", (fun () -> (NativeDisplay.known context n0 ((this).Policy) (fun retained -> retained.NativeDisplay (context, n0, 3))))
+                "IdPrefix", (fun () -> NativeDisplay.text context n0 ((this).IdPrefix))
+                "GraphOptions",
+                (fun () ->
+                    NativeDisplay.record context n0 (box ((this).GraphOptions)) (fun n183 ->
+                        [
+                            "Equality",
+                            (fun () -> NativeDisplay.opaque context n183 "<Ranvier.IEqualityPolicy>" (box (((this).GraphOptions).Equality)))
+                            "FlightPolicy",
+                            (fun () ->
+                                NativeDisplay.union context n183 3 (box (((this).GraphOptions).FlightPolicy)) (fun n185 ->
+                                    match ((this).GraphOptions).FlightPolicy with
+                                    | Ranvier.FlightPolicy.CancelPrevious -> "CancelPrevious", []
+                                    | Ranvier.FlightPolicy.KeepLatest -> "KeepLatest", []
+                                    | Ranvier.FlightPolicy.Queue -> "Queue", []
+                                    | Ranvier.FlightPolicy.FinishCurrent -> "FinishCurrent", []
+                                    | Ranvier.FlightPolicy.Drop -> "Drop", []
+                                    | Ranvier.FlightPolicy.DropWhilePending -> "DropWhilePending", []))
+                            "ThreadAffinity",
+                            (fun () ->
+                                NativeDisplay.union context n183 3 (box (((this).GraphOptions).ThreadAffinity)) (fun n186 ->
+                                    match ((this).GraphOptions).ThreadAffinity with
+                                    | Ranvier.ThreadAffinity.Guarded -> "Guarded", []
+                                    | Ranvier.ThreadAffinity.Unchecked -> "Unchecked", []
+                                    | Ranvier.ThreadAffinity.Serialised -> "Serialised", []))
+                            "Dispatcher",
+                            (fun () ->
+                                NativeDisplay.option
+                                    context
+                                    n183
+                                    3
+                                    (fun c187 d187 p187 (item187: Ranvier.IGraphDispatcher) ->
+                                        NativeDisplay.opaque c187 d187 "<Ranvier.IGraphDispatcher>" (box (item187)))
+                                    (((this).GraphOptions).Dispatcher))
+                            "Journal",
+                            (fun () ->
+                                NativeDisplay.option
+                                    context
+                                    n183
+                                    3
+                                    (fun c189 d189 p189 (item189: Ranvier.IInputJournal) ->
+                                        NativeDisplay.opaque c189 d189 "<Ranvier.IInputJournal>" (box (item189)))
+                                    (((this).GraphOptions).Journal))
+                        ]))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 module Options =
     let defaults =
@@ -311,7 +371,18 @@ type ModuleScript =
     /// </summary>
     | Inline of text: string
 
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.union context depth precedence (box (this)) (fun n0 ->
+            match this with
+            | ModuleScript.Src (v0_0) -> "Src", [ Some (fun p -> NativeDisplay.text context n0 (v0_0)) ]
+            | ModuleScript.Inline (v0_0) -> "Inline", [ Some (fun p -> NativeDisplay.text context n0 (v0_0)) ])
+#endif
+
 /// <summary>The HTML document <c>renderDocument</c> writes around a component.</summary>
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type DocumentShell =
     {
         /// <summary>The <c>lang</c> attribute of <c>&lt;html&gt;</c>; <c>None</c> or <c>Some null</c> omits it.</summary>
@@ -341,6 +412,84 @@ type DocumentShell =
         /// <summary>The attributes of <c>&lt;body&gt;</c>; an <c>id</c> joins the document's ids.</summary>
         BodyAttributes: (string * string) list
     }
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
+        NativeDisplay.record context depth (box (this)) (fun n0 ->
+            [
+                "Lang",
+                (fun () ->
+                    NativeDisplay.option
+                        context
+                        n0
+                        3
+                        (fun c158 d158 p158 (item158: System.String) -> NativeDisplay.text c158 d158 (item158))
+                        ((this).Lang))
+                "HostId", (fun () -> NativeDisplay.text context n0 ((this).HostId))
+                "State",
+                (fun () ->
+                    NativeDisplay.list
+                        context
+                        n0
+                        (fun c161 d161 p161 (item161: (System.String * System.String)) ->
+                            (let (t162_0, t162_1) = item161 in
+
+                             NativeDisplay.tuple c161 d161 (box (item161)) (fun n162 ->
+                                 [ NativeDisplay.text c161 n162 (t162_0); NativeDisplay.text c161 n162 (t162_1) ])))
+                        ((this).State))
+                "Stylesheets",
+                (fun () ->
+                    NativeDisplay.list
+                        context
+                        n0
+                        (fun c165 d165 p165 (item165: System.String) -> NativeDisplay.text c165 d165 (item165))
+                        ((this).Stylesheets))
+                "Scripts",
+                (fun () ->
+                    NativeDisplay.list
+                        context
+                        n0
+                        (fun c167 d167 p167 (item167: ModuleScript) ->
+                            (NativeDisplay.known c167 d167 (item167) (fun retained -> retained.NativeDisplay (c167, d167, p167))))
+                        ((this).Scripts))
+                "Nonce",
+                (fun () ->
+                    NativeDisplay.option
+                        context
+                        n0
+                        3
+                        (fun c169 d169 p169 (item169: System.String) -> NativeDisplay.text c169 d169 (item169))
+                        ((this).Nonce))
+                "HtmlAttributes",
+                (fun () ->
+                    NativeDisplay.list
+                        context
+                        n0
+                        (fun c171 d171 p171 (item171: (System.String * System.String)) ->
+                            (let (t172_0, t172_1) = item171 in
+
+                             NativeDisplay.tuple c171 d171 (box (item171)) (fun n172 ->
+                                 [ NativeDisplay.text c171 n172 (t172_0); NativeDisplay.text c171 n172 (t172_1) ])))
+                        ((this).HtmlAttributes))
+                "BodyAttributes",
+                (fun () ->
+                    NativeDisplay.list
+                        context
+                        n0
+                        (fun c175 d175 p175 (item175: (System.String * System.String)) ->
+                            (let (t176_0, t176_1) = item175 in
+
+                             NativeDisplay.tuple c175 d175 (box (item175)) (fun n176 ->
+                                 [ NativeDisplay.text c175 n176 (t176_0); NativeDisplay.text c175 n176 (t176_1) ])))
+                        ((this).BodyAttributes))
+            ])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+#endif
 
 module DocumentShell =
     /// <summary>A document with the host id <c>app</c> and every other field empty.</summary>

@@ -22,6 +22,15 @@ let private square =
             |]
             [| t.text (fun (count: Signal<int>) -> string count.Value) |])
 
+let private pointerSquare =
+    Component.define (fun _ (count: Signal<int>) -> count) (fun t ->
+        t.button
+            [|
+                t.Attrs.attribute ("style", "position:absolute;left:0;top:0;width:100px;height:100px")
+                t.Events.on ("pointerdown", fun (count: Signal<int>) (_: Event) -> count.Value <- count.Value + 1)
+            |]
+            [||])
+
 // A hidden window drawn by SDL's software renderer, so the test needs no GPU, on the WebCore host thread.
 let private windowCase (name: string) (body: Window -> unit) =
     testCase name (fun () ->
@@ -55,11 +64,49 @@ let private press (window: Window) (kind: SDL_EventType) x y =
     if not (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event): bool) then
         failwithf "SDL_PushEvent failed: %s" (SDL3.SDL_GetError ())
 
+let private closeRequest (window: Window) =
+    let mutable event = SDL_Event ()
+    event.window.``type`` <- SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED
+    event.window.windowID <- SDL3.SDL_GetWindowID (NativePtr.ofNativeInt<SDL_Window> window.SdlWindow)
+
+    if not (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event): bool) then
+        failwith "SDL_PushEvent rejected the close request"
+
+[<Runtime.CompilerServices.MethodImpl(Runtime.CompilerServices.MethodImplOptions.NoInlining)>]
+let private registerEphemeral (registry: WindowRegistry<obj>) =
+    let value = obj ()
+    registry.Add (7u, value)
+    WeakReference<obj> value
+
 [<Tests>]
 let tests =
     testList
         "Window"
         [
+            testCase "a bare host owns the first window admission" (fun () ->
+                onHostThread (fun () ->
+                    use host = WebCoreHost.Create (80, 60)
+                    let mutable failure: exn = null
+
+                    let other =
+                        Threading.Thread (
+                            Threading.ThreadStart (fun () ->
+                                try
+                                    use unexpected =
+                                        Window.Create ("wrong owner", 80, 60, hidden = true, renderer = "software")
+
+                                    ()
+                                with error ->
+                                    failure <- error)
+                        )
+
+                    other.Start ()
+                    Expect.isTrue (other.Join 5000) "the other thread finishes"
+                    Expect.isTrue (failure :? InvalidOperationException) "the other thread is rejected"
+                    Expect.stringContains failure.Message "same native thread" "rejection happens at admission"
+                    use window = Window.Create ("owner", 80, 60, hidden = true, renderer = "software")
+                    Expect.isTrue (window.Step 0) "the host owner can create and pump a window"))
+
             windowCase "a mounted component reaches the window's texture"
             <| fun window ->
                 use graph = new Graph ()
@@ -145,6 +192,372 @@ let tests =
                 steps window 2
                 Expect.equal (graph.Run (fun () -> count.Value)) 1 "the click handler ran"
 
+            windowCase "SDL pen and touch events reach the page"
+            <| fun window ->
+                use graph = new Graph ()
+                let count = graph.Run (fun () -> Api.createSignal 0)
+                use _mounted = mount window.Host graph pointerSquare count
+                steps window 2
+
+                let target =
+                    SDL3.SDL_GetWindowID (NativePtr.ofNativeInt<SDL_Window> window.SdlWindow)
+
+                if WebCoreHost.Has "pointer-input" then
+                    let mutable event = SDL_Event ()
+                    event.ptouch.``type`` <- SDL_EventType.SDL_EVENT_PEN_DOWN
+                    event.ptouch.windowID <- target
+                    event.ptouch.which <- LanguagePrimitives.EnumOfValue 42u
+                    event.ptouch.x <- 40.0f
+                    event.ptouch.y <- 30.0f
+                    event.ptouch.down <- SDLBool.op_Implicit true
+                    event.ptouch.pen_state <- SDL_PenInputFlags.SDL_PEN_INPUT_DOWN
+                    Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "pen event queued"
+                    steps window 1
+                    Expect.equal (graph.Run (fun () -> count.Value)) 1 "pen down reaches the page"
+                    event.ptouch.``type`` <- SDL_EventType.SDL_EVENT_PEN_UP
+                    event.ptouch.down <- SDLBool.op_Implicit false
+                    event.ptouch.pen_state <- LanguagePrimitives.EnumOfValue 0u
+                    Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "pen release queued"
+                    steps window 1
+
+                if WebCoreHost.Has "touch-input" then
+                    let before = graph.Run (fun () -> count.Value)
+                    let mutable event = SDL_Event ()
+                    event.tfinger.``type`` <- SDL_EventType.SDL_EVENT_FINGER_DOWN
+                    event.tfinger.windowID <- target
+                    event.tfinger.touchID <- LanguagePrimitives.EnumOfValue 7UL
+                    event.tfinger.fingerID <- LanguagePrimitives.EnumOfValue 9UL
+                    event.tfinger.x <- 0.2f
+                    event.tfinger.y <- 0.2f
+                    event.tfinger.pressure <- 0.7f
+                    Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "touch event queued"
+                    steps window 1
+                    Expect.equal (graph.Run (fun () -> count.Value)) (before + 1) "touch down reaches the page"
+
+            windowCase "an XIM clear followed by committed text ends the composition with its result"
+            <| fun window ->
+                let input = window.Host.Document.createElement "input" :?> HTMLInputElement
+                input.setAttribute ("style", "position:absolute;left:0;top:0;width:100px;height:40px")
+                input.value <- "abc"
+
+                window.Host.Document.body.appendChild input
+                |> ignore
+
+                window.Host.SetFocused true
+                window.Host.Click (20, 20) |> ignore
+                input.setSelectionRange (1u, 2u)
+                let ended = ResizeArray<string>()
+                input.addEventListener ("compositionend", fun (event: Event) -> ended.Add ((event :?> CompositionEvent).data))
+
+                let target =
+                    SDL3.SDL_GetWindowID (NativePtr.ofNativeInt<SDL_Window> window.SdlWindow)
+
+                use editing = fixed (Sdl.utf8 "かな")
+                use empty = fixed (Sdl.utf8 "")
+                use committed = fixed (Sdl.utf8 "仮名")
+                let mutable event = SDL_Event ()
+                event.edit.``type`` <- SDL_EventType.SDL_EVENT_TEXT_EDITING
+                event.edit.windowID <- target
+                event.edit.text <- editing
+                event.edit.start <- 2
+                event.edit.length <- 0
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "preedit queued"
+                event.edit.text <- empty
+                event.edit.start <- 0
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "preedit clear queued"
+                event.text.``type`` <- SDL_EventType.SDL_EVENT_TEXT_INPUT
+                event.text.windowID <- target
+                event.text.text <- committed
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "commit queued"
+                steps window 1
+                Expect.equal input.value "a仮名c" "the result replaces the selected text"
+                Expect.sequenceEqual ended [| "仮名" |] "compositionend contains the committed result"
+
+            windowCase "an unaccompanied IME clear cancels at the end of the event turn"
+            <| fun window ->
+                let input = window.Host.Document.createElement "input" :?> HTMLInputElement
+                input.setAttribute ("style", "position:absolute;left:0;top:0;width:100px;height:40px")
+                input.value <- "abc"
+
+                window.Host.Document.body.appendChild input
+                |> ignore
+
+                window.Host.SetFocused true
+                window.Host.Click (20, 20) |> ignore
+                input.setSelectionRange (1u, 2u)
+                let ended = ResizeArray<string>()
+                input.addEventListener ("compositionend", fun (event: Event) -> ended.Add ((event :?> CompositionEvent).data))
+
+                let target =
+                    SDL3.SDL_GetWindowID (NativePtr.ofNativeInt<SDL_Window> window.SdlWindow)
+
+                use editing = fixed (Sdl.utf8 "かな")
+                use empty = fixed (Sdl.utf8 "")
+                let mutable event = SDL_Event ()
+                event.edit.``type`` <- SDL_EventType.SDL_EVENT_TEXT_EDITING
+                event.edit.windowID <- target
+                event.edit.text <- editing
+                event.edit.start <- 2
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "preedit queued"
+                event.edit.text <- empty
+                event.edit.start <- 0
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "cancel queued"
+                steps window 1
+                Expect.equal input.value "ac" "the uncommitted preedit is removed"
+                Expect.sequenceEqual ended [| "" |] "cancellation ends the composition"
+
+            windowCase "focus loss cancels an active composition"
+            <| fun window ->
+                let input = window.Host.Document.createElement "input" :?> HTMLInputElement
+                input.setAttribute ("style", "position:absolute;left:0;top:0;width:100px;height:40px")
+                input.value <- "abc"
+
+                window.Host.Document.body.appendChild input
+                |> ignore
+
+                window.Host.SetFocused true
+                window.Host.Click (20, 20) |> ignore
+                input.setSelectionRange (1u, 2u)
+                let ended = ResizeArray<string>()
+                input.addEventListener ("compositionend", fun (event: Event) -> ended.Add ((event :?> CompositionEvent).data))
+
+                let target =
+                    SDL3.SDL_GetWindowID (NativePtr.ofNativeInt<SDL_Window> window.SdlWindow)
+
+                use editing = fixed (Sdl.utf8 "かな")
+                let mutable event = SDL_Event ()
+                event.edit.``type`` <- SDL_EventType.SDL_EVENT_TEXT_EDITING
+                event.edit.windowID <- target
+                event.edit.text <- editing
+                event.edit.start <- 2
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "preedit queued"
+                event.window.``type`` <- SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST
+                event.window.windowID <- target
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "focus loss queued"
+                steps window 1
+                Expect.equal input.value "ac" "focus loss removes the uncommitted preedit"
+                Expect.sequenceEqual ended [| "" |] "focus loss ends the composition"
+
+            windowCase "another window receives queued close requests"
+            <| fun window ->
+                use other =
+                    Window.Create ("Second window", 100, 80, hidden = true, renderer = "software")
+
+                steps window 2
+                steps other 2
+                closeRequest other
+                steps window 1
+                Expect.isTrue other.Closed "the target window receives its close request"
+                Expect.isFalse window.Closed "the pumping window stays open"
+
+            windowCase "another window receives queued pointer input"
+            <| fun window ->
+                use other =
+                    Window.Create ("Second window", 100, 80, hidden = true, renderer = "software")
+
+                use graph = new Graph ()
+                let count = graph.Run (fun () -> Api.createSignal 0)
+                use _mounted = mount other.Host graph square count
+                steps other 2
+                steps window 2
+                press other SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN 30.0f 30.0f
+                press other SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP 30.0f 30.0f
+                steps window 1
+                Expect.equal (graph.Run (fun () -> count.Value)) 1 "the target window receives the click"
+
+            windowCase "global display events update every live window"
+            <| fun window ->
+                use other =
+                    Window.Create ("Second window", 100, 80, hidden = true, renderer = "software")
+
+                steps window 2
+                steps other 2
+
+                let display width =
+                    {
+                        Width = width
+                        Height = 600
+                        UsableLeft = 0
+                        UsableTop = 0
+                        UsableWidth = width
+                        UsableHeight = 600
+                        ColorDepth = 24
+                        Orientation = ScreenOrientationType.LandscapePrimary
+                    }
+
+                window.SetDisplayReader (fun () -> ValueSome (display 800))
+                other.SetDisplayReader (fun () -> ValueSome (display 1200))
+                let mutable event = SDL_Event ()
+                event.display.``type`` <- SDL_EventType.SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED
+                event.display.displayID <- SDL3.SDL_GetPrimaryDisplay ()
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "the display event is queued"
+                steps window 1
+                use first = Screen.forHost window.Host
+                use second = Screen.forHost other.Host
+                Expect.equal (first.Read ()).Width 800 "the first host follows its display"
+                Expect.equal (second.Read ()).Width 1200 "the second host follows its display"
+
+            windowCase "an off-thread step cannot consume another window's event"
+            <| fun window ->
+                use other =
+                    Window.Create ("Second window", 100, 80, hidden = true, renderer = "software")
+
+                steps window 2
+                steps other 2
+                closeRequest other
+                let mutable failure: exn = null
+
+                let requester =
+                    Threading.Thread (
+                        Threading.ThreadStart (fun () ->
+                            try
+                                window.Step 0 |> ignore
+                            with error ->
+                                failure <- error)
+                    )
+
+                requester.Start ()
+                Expect.isTrue (requester.Join 5000) "the rejected request terminates"
+                Expect.isTrue (failure :? InvalidOperationException) "the owner-thread guard rejects the request"
+                steps other 1
+                Expect.isTrue other.Closed "the rejected step leaves the global queue intact"
+
+            windowCase "a dispatch snapshot skips a window closed by an earlier callback"
+            <| fun window ->
+                use other =
+                    Window.Create ("Closing window", 100, 80, hidden = true, renderer = "software")
+
+                steps window 2
+                steps other 2
+                let mutable otherReads = 0
+                let display = window.Display
+
+                other.SetDisplayReader (fun () ->
+                    otherReads <- otherReads + 1
+                    display)
+
+                window.SetDisplayReader (fun () ->
+                    (other :> IDisposable).Dispose()
+                    display)
+
+                let mutable event = SDL_Event ()
+                event.display.``type`` <- SDL_EventType.SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED
+                event.display.displayID <- SDL3.SDL_GetPrimaryDisplay ()
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "the display event is queued"
+                steps window 1
+                Expect.isTrue other.Host.Session.IsDisposed "the earlier callback closed the other page"
+                Expect.equal otherReads 0 "the closed target is rechecked before dispatch"
+
+                use replacement =
+                    Window.Create ("Replacement window", 100, 80, hidden = true, renderer = "software")
+
+                closeRequest replacement
+                steps window 1
+                Expect.isTrue replacement.Closed "a new window receives its events after the old registration closes"
+
+            test "window registrations keep no dead window alive" {
+                let registry = WindowRegistry<obj>()
+                let weak = registerEphemeral registry
+                GC.Collect ()
+                GC.WaitForPendingFinalizers ()
+                GC.Collect ()
+                let mutable value = Unchecked.defaultof<obj>
+                Expect.isFalse (weak.TryGetTarget &value) "the registry holds a weak reference"
+                Expect.isEmpty (registry.Snapshot ()) "snapshot prunes the dead entry"
+            }
+
+            test "failed window admission permits another thread until native initialization" {
+                let owner = NativeOwner ()
+                owner.Enter ()
+                owner.Enter ()
+                owner.Exit ()
+                let mutable rejected = false
+
+                let attempt =
+                    Threading.Thread (
+                        Threading.ThreadStart (fun () ->
+                            try
+                                owner.Enter ()
+                            with :? InvalidOperationException ->
+                                rejected <- true)
+                    )
+
+                attempt.Start ()
+                Expect.isTrue (attempt.Join 5000) "the concurrent attempt finishes"
+                Expect.isTrue rejected "a nested failed attempt retains the outer reservation"
+                owner.Exit ()
+                let mutable accepted = false
+
+                let retry =
+                    Threading.Thread (
+                        Threading.ThreadStart (fun () ->
+                            owner.Enter ()
+                            accepted <- true
+                            owner.Exit ())
+                    )
+
+                retry.Start ()
+                Expect.isTrue (retry.Join 5000) "the retry finishes"
+                Expect.isTrue accepted "a failed creation releases its tentative owner"
+                owner.Enter ()
+                owner.Commit ()
+                owner.Exit ()
+                let mutable committedRejected = false
+
+                let other =
+                    Threading.Thread (
+                        Threading.ThreadStart (fun () ->
+                            try
+                                owner.Enter ()
+                            with :? InvalidOperationException ->
+                                committedRejected <- true)
+                    )
+
+                other.Start ()
+                Expect.isTrue (other.Join 5000) "the committed admission check finishes"
+                Expect.isTrue committedRejected "native initialization retains its owner"
+            }
+
+            windowCase "a second thread cannot start another native window"
+            <| fun window ->
+                steps window 2
+                let mutable failure: exn = null
+
+                let requester =
+                    Threading.Thread (
+                        Threading.ThreadStart (fun () ->
+                            try
+                                use unexpected =
+                                    Window.Create ("Wrong owner", 80, 60, hidden = true, renderer = "software")
+
+                                ()
+                            with error ->
+                                failure <- error)
+                    )
+
+                requester.Start ()
+                Expect.isTrue (requester.Join 5000) "the rejected creation terminates"
+                Expect.isTrue (failure :? InvalidOperationException) "a second native owner is rejected"
+                Expect.stringContains failure.Message "same native thread" "creation reports the owner-thread contract"
+                Expect.isFalse window.Host.Session.IsDisposed "the original host stays live"
+                closeRequest window
+                Expect.isFalse (window.Step 0) "the owner still receives queued events"
+
+            windowCase "disposing the pumping window in a display callback ends its step"
+            <| fun window ->
+                steps window 2
+
+                window.SetDisplayReader (fun () ->
+                    (window :> IDisposable).Dispose()
+                    ValueNone)
+
+                let mutable event = SDL_Event ()
+                event.display.``type`` <- SDL_EventType.SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED
+                event.display.displayID <- SDL3.SDL_GetPrimaryDisplay ()
+                Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "the display event is queued"
+                Expect.isFalse (window.Step 0) "a disposed window stops without cycling its destroyed host"
+                Expect.isTrue window.Host.Session.IsDisposed "the callback finished page teardown"
+
             test "keys map to DOM codes and names" {
                 Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_A) "KeyA" "a letter"
                 Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_0) "Digit0" "zero"
@@ -167,5 +580,40 @@ let tests =
             test "input method offsets count code points as UTF-16" {
                 Expect.equal (Sdl.utf16Offset "a😀b" 2) 3 "a surrogate pair is two units"
                 Expect.equal (Sdl.utf16Offset "abc" 9) 3 "an offset past the end clamps"
+                Expect.equal (Sdl.compositionOffset true "a😀b" 3) 3 "Windows SDL already reports UTF-16 units"
+                Expect.equal (Sdl.compositionOffset false "a😀b" 2) 3 "X11 SDL reports Unicode characters"
+                Expect.equal (Sdl.compositionOffset true "a😀b" 9) 4 "a Windows offset clamps at the end"
+            }
+
+            test "touch frames retain stationary contacts and cancel on focus loss" {
+                let touches = TouchFrames ()
+                let first = touches.Update (1UL, 2UL, 1, 40.0, 30.0, 0.7f, 0)
+                let second = touches.Update (1UL, 3UL, 1, 20.0, 10.0, 1.2f, 0)
+                Expect.equal first.Length 1 "down emits its contact"
+                Expect.equal second.Length 2 "the frame contains both contacts"
+                Expect.equal second[0].Action 4 "the earlier contact is stationary"
+                Expect.equal second[1].Pressure 1.0f "pressure is normalized"
+                let released = touches.Update (1UL, 2UL, 2, 42.0, 30.0, 0.0f, 0)
+                Expect.equal released[1].Id first[0].Id "the same contact keeps its identifier"
+                Expect.equal released[1].MovementX 2.0 "movement is in CSS pixels"
+                let cancelled = touches.Cancel 0
+                Expect.equal cancelled.Length 1 "the remaining contact is cancelled"
+                Expect.equal cancelled[0].Action 3 "focus loss sends cancellation"
+                Expect.isEmpty (touches.Cancel 0) "cancel clears the frame"
+            }
+
+            test "pen samples retain axes and cancel an active contact" {
+                let pens = PenSamples ()
+
+                let pressure =
+                    pens.Update (42u, 0, 10.0, 20.0, -1, 0, 0, Some (SDL_PenAxis.SDL_PEN_AXIS_PRESSURE, 0.8f))
+
+                let down = pens.Update (42u, 1, 12.0, 20.0, 0, 1, 0, None)
+                Expect.equal down.Id pressure.Id "the pen keeps its identifier"
+                Expect.equal down.Pressure 0.8f "pressure survives the next event"
+                Expect.equal down.MovementX 2.0 "movement is in CSS pixels"
+                let cancelled = pens.Cancel 0
+                Expect.equal cancelled.Length 1 "the active pen is cancelled"
+                Expect.equal cancelled[0].Action 3 "the contact ends"
             }
         ]

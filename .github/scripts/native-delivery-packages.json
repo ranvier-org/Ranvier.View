@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "scope": "Native View/DOM/WebCore/SDL delivery; Anime and qualified analyzer publication are separate.",
+  "required_view_package_ids": [
+    "Ranvier.View",
+    "Ranvier.View.Traced",
+    "Ranvier.View.Dom",
+    "Ranvier.View.Dom.Traced",
+    "Ranvier.View.WebCore",
+    "Ranvier.View.WebCore.Traced",
+    "Ranvier.View.WebCore.Sdl",
+    "Ranvier.View.WebCore.Sdl.Traced"
+  ],
+  "external_required_package_ids": [
+    "Ranvier.WebCore",
+    "Ranvier.WebCore.Native",
+    "Ranvier.WebCore.Native.win-x64",
+    "Ranvier.WebCore.Native.win-arm64",
+    "Ranvier.WebCore.Native.linux-x64",
+    "Ranvier.WebCore.Native.linux-arm64",
+    "Ranvier.WebCore.Native.osx-arm64",
+    "Ranvier.WebCore.Native.Gpu.win-x64",
+    "Ranvier.WebCore.Native.Gpu.linux-x64",
+    "Ranvier.WebCore.Native.Gpu.linux-arm64",
+    "Ranvier.Dom",
+    "Ranvier.Dom.Traced",
+    "Fable.Ranvier.Dom",
+    "Fable.Ranvier.Dom.Traced"
+  ],
+  "excluded_package_ids": [
+    "Ranvier.View.Anime",
+    "Ranvier.View.Anime.Traced",
+    "Fable.Ranvier.Anime",
+    "Fable.Ranvier.Anime.Traced",
+    "Ranvier.Analyzers",
+    "Ranvier.Analyzers.Host"
+  ]
+}

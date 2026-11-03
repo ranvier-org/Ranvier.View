@@ -1,5 +1,22 @@
 # Shared native API conformance
 
+The G10 device-pixel resize fixture runs eight measured scenarios at scales 1, 1.5 and 2 (52 assertions per scale).
+It checks position-only notifications, transforms, fractional padding/borders, nested offsets and SVG viewBox/writing modes.
+Native uses `WebCoreHost.SetDeviceScale`; Chromium uses a separate renderer process and context for each actual device scale.
+The native fixture also changes scale on a live host and checks that only the device-pixel observer fires while CSS dimensions stay fixed.
+Runtimes without `resize-device-pixel-content-box` retain option rejection and empty entry sizes (32 fallback assertions per scale).
+This fallback proof does not qualify a capability-true runtime. Existing G10 ordering, zoom and callback-error checks still run.
+
+All 105 entries retain strict log, count, identity and Chromium device-size checks. Their eight CSS fields use the
+Chromium oracle in the browser and the independently retained native T2 snapshot on native. The snapshot is
+`Assets/resize-observation-native-t2.json` (source `81da3662`, package `9200a671`, host `c59c46d4`). It has 26 pre-existing
+CSS differences from Chromium in these cases; actual P3 and P4 content/border observations reproduce the same values.
+This fixture proves device parity and unchanged CSS values, without claiming universal CSS parity.
+
+`generate-resize-device-fixture.py --cases <resize-observation-cases.json> --oracle <resize-observation-oracle.json> --native-css Assets/resize-observation-native-t2.json --output ResizeDevicePixelData.fs`
+regenerates the measurements from the retained Chromium and native inputs. The generated file records their hashes;
+the native snapshot also records its exact source, package and host hashes.
+
 The fixtures execute the same typed assertions through shared DOM contracts on native WebCore and a real Chromium document. The integrated Core18/Views8 candidate passes 3,293 shared checks on Windows JIT and NativeAOT, and 3,306 in Chromium. The H02 slice contributes 180 shared checks and a separate 181-check deterministic run. Native H02 lifetime/frame-clock/concurrency coverage adds 25 checks and 500 duplicate-name marks; its native teardown count is zero. Earlier groups retain their own lifetime, context, CSS.escape oracle and real Tab-traversal checks. Current proof is a private Native17-backed candidate; official package and other-platform acceptance remain separate.
 
 From the repository root, with the matching DOM and native packages published:
@@ -19,6 +36,16 @@ npm ci --prefix tests/NativeApi.Conformance
 npm exec --prefix tests/NativeApi.Conformance -- playwright install chromium
 node tests/NativeApi.Conformance/browser.mjs
 ```
+
+The full Chromium conformance run also captures the nine-frame A11 view-transition pixel sequence. To run that
+standalone HTML fixture by itself, without loading the Fable test bundle, use:
+
+```text
+node tests/NativeApi.Conformance/browser.mjs --view-transition-pixels-only
+```
+
+It captures real Chromium screenshots and decodes their PNG pixels. This renderer probe is independent of the
+normal/traced Fable package graph; it does not claim pixel coverage for either package route.
 
 For development, the native runner accepts the backend's existing `UseLocalRanvierWebCore`, `RanvierWebCoreRoot` and `RanvierWebCoreNativeDir` properties. Use an isolated restore configuration for unpublished contract packages; do not place local package overrides in committed configuration. `NATIVE_API_BROWSER_PACKAGE` optionally identifies an existing package.json with the pinned Playwright installation.
 

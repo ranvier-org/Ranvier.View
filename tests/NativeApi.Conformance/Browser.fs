@@ -1860,16 +1860,30 @@ let runResizeObservation () =
                 Update = fun () -> resizeFrame () |> Async.AwaitPromise
                 Errors = errors
                 Engine = ResizeObservationChecks.Chromium
+                DevicePixelSupported = true
             }
 
-        let! count =
-            ResizeObservationChecks.run
-                document
-                (fun () -> BrowserResizeObservation.forDocument document)
-                (fun () -> BrowserCancellation.forDocument document)
-                driver
+        let scale = devicePixelRatio ()
 
-        return {| resize = count |}
+        let! count =
+            if scale = 1. then
+                ResizeObservationChecks.run
+                    document
+                    (fun () -> BrowserResizeObservation.forDocument document)
+                    (fun () -> BrowserCancellation.forDocument document)
+                    driver
+            else
+                async.Return 0
+
+        let! deviceCount =
+            ResizeDevicePixelChecks.run document (fun () -> BrowserResizeObservation.forDocument document) driver.Update scale true false
+
+        return
+            {|
+                resize = count
+                deviceResize = deviceCount
+                deviceScale = scale
+            |}
     }
     |> Async.StartAsPromise
 
@@ -2222,5 +2236,21 @@ let run () =
                 sheetElements = sheetElements
                 failedLinkSheet = failedLinkSheet
             |}
+    }
+    |> Async.StartAsPromise
+
+[<Emit("new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)))")>]
+let private viewTransitionFrame () : JS.Promise<unit> = jsNative
+
+/// <summary>Runs the shared same-document view-transition assertions in the browser realm.</summary>
+let runViewTransitions () =
+    async {
+        let document = document ()
+
+        let! count =
+            ViewTransitionChecks.run document (fun () -> BrowserViewTransitions.forDocument document) (fun () ->
+                viewTransitionFrame () |> Async.AwaitPromise)
+
+        return {| viewTransitions = count |}
     }
     |> Async.StartAsPromise

@@ -6,7 +6,7 @@ open Ranvier.Dom
 
 /// <summary>The engine whose resize observation the fixture expects.</summary>
 type Engine =
-    /// <summary>The native host: no device-pixel content box (Ranvier.WebCore#146), observers in first-observe order,
+    /// <summary>The native host: observers in first-observe order,
     /// and a zoomed element's contentRect origin in zoomed pixels.</summary>
     | Native
     /// <summary>Chromium: the specification's construction order and unzoomed origin.</summary>
@@ -20,6 +20,8 @@ type Driver =
         /// <summary>The number of callback exceptions the host has reported.</summary>
         Errors: unit -> int
         Engine: Engine
+        /// <summary>The loaded runtime's independently queried device-pixel capability.</summary>
+        DevicePixelSupported: bool
     }
 
 let private Css =
@@ -161,8 +163,8 @@ let run (document: Document) (create: unit -> ResizeObservationService) (cancell
             truth "border-box supported" (service.Supports ResizeObserverBox.BorderBox)
 
             truth
-                "device-pixel-content-box support follows the engine"
-                (service.Supports ResizeObserverBox.DevicePixelContentBox = (driver.Engine = Chromium))
+                "device-pixel-content-box support follows the runtime capability"
+                (service.Supports ResizeObserverBox.DevicePixelContentBox = driver.DevicePixelSupported)
 
             // Each box option: one initial notification with every target, in observation order.
             let zoomOrigin = if driver.Engine = Native then "4,20" else "2,10"
@@ -199,7 +201,6 @@ let run (document: Document) (create: unit -> ResizeObservationService) (cancell
 
                 o.Dispose ()
 
-            // The device-pixel content box: the browser reports it; the native engine rejects the option.
             let devicePixel = List<int>()
 
             let d =
@@ -207,17 +208,16 @@ let run (document: Document) (create: unit -> ResizeObservationService) (cancell
                     for entry in delivered do
                         devicePixel.Add entry.DevicePixelContentBoxSize.Length)
 
-            if driver.Engine = Chromium then
+            if driver.DevicePixelSupported then
                 d.Observe (a, ResizeObserverBox.DevicePixelContentBox)
                 do! update ()
                 truth "a device-pixel content box size per entry" (List.ofSeq devicePixel = [ 1 ])
             else
-                raises "device-pixel-content-box is unsupported (Ranvier.WebCore#146)" (fun () ->
-                    d.Observe (a, ResizeObserverBox.DevicePixelContentBox))
+                raises "the baseline rejects unsupported device-pixel-content-box" (fun () -> d.Observe (a, ResizeObserverBox.DevicePixelContentBox))
 
                 d.Observe a
                 do! update ()
-                truth "no device-pixel content box size natively" (List.ofSeq devicePixel = [ 0 ])
+                truth "the baseline returns no device-pixel content box size" (List.ofSeq devicePixel = [ 0 ])
 
             d.Dispose ()
             take () |> ignore

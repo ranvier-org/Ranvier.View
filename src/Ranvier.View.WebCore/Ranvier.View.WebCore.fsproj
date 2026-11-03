@@ -13,7 +13,7 @@
         <PackageTags>reactive;signals;view;dom;webcore;native;fsharp</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>Experimental. The API may change.</PackageReleaseNotes>
-        <Version>0.1.0-alpha.44</Version>
+        <Version>0.1.0-alpha.45</Version>
         <IsAotCompatible>true</IsAotCompatible>
         <IsPackable>true</IsPackable>
         <!-- Generated wrapper implementation members inherit their contracts' documentation. -->
@@ -22,7 +22,7 @@
 
     <!-- RanvierWebCoreNativeDir holds runtimes/<rid>/native for local native runtime checks. -->
     <PropertyGroup>
-        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.1-preview.1</RanvierWebCoreNativeVersion>
+        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.1-preview.7</RanvierWebCoreNativeVersion>
         <UseLocalRanvierWebCore Condition="'$(UseLocalRanvierWebCore)' == ''">false</UseLocalRanvierWebCore>
         <RanvierWebCoreRoot Condition="'$(RanvierWebCoreRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../Ranvier.WebCore'))</RanvierWebCoreRoot>
         <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</RanvierWebCoreNativeRid>
@@ -53,6 +53,7 @@
         <Compile Include="Objects.fs" />
         <Compile Include="Events.fs" />
         <Compile Include="Traversal.fs" />
+        <Compile Include="ViewTransitionCallbacks.fs" />
         <Compile Include="Marshalling.fs" />
         <Compile Include="AnimationResults.fs" />
         <Compile Include="TimelineRanges.fs" />
@@ -85,6 +86,7 @@
         <Compile Include="DataTransfers.fs" />
         <Compile Include="BlobUrls.fs" />
         <Compile Include="MediaCapabilities.fs" />
+        <Compile Include="NativeImageEncoding.fs" />
         <Compile Include="Snapshots.fs" />
         <Compile Include="Urls.fs" />
         <Compile Include="TextSegmentation.fs" />
@@ -98,6 +100,7 @@
         <Compile Include="Coordinates.fs" />
         <Compile Include="ResizeObservation.fs" />
         <Compile Include="IntersectionObservation.fs" />
+        <Compile Include="MutationObservation.fs" />
         <Compile Include="Viewport.fs" />
         <Compile Include="MediaQueries.fs" />
         <Compile Include="ViewportScroll.fs" />
@@ -106,9 +109,12 @@
         <Compile Include="ValueFactories.fs" />
         <Compile Include="WakeLocks.fs" />
         <Compile Include="Notifications.fs" />
+        <Compile Include="FilePickers.fs" />
+        <Compile Include="WindowsFilePickers.fs" />
         <Compile Include="Animations.fs" />
         <Compile Include="Timelines.fs" />
         <Compile Include="CustomEffects.fs" />
+        <Compile Include="ViewTransitions.fs" />
         <None Include="Generated/report.txt" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />
@@ -129,6 +135,7 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="Ranvier.View.WebCore.Tests" />
+        <InternalsVisibleTo Include="Ranvier.View.WebCore.Sdl" />
     </ItemGroup>
 
 </Project>

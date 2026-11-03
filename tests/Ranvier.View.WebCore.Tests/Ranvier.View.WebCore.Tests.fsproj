@@ -8,6 +8,13 @@
     </PropertyGroup>
     <ItemGroup>
         <Compile Include="Support.fs" />
+        <Compile Include="../MutationObservation/CleanupChecks.fs" Link="CleanupChecks.fs" />
+        <Compile Include="CleanupTests.fs" />
+        <Compile Include="../MutationObservation/ObservationChecks.fs" Link="ObservationChecks.fs" />
+        <Compile Include="MutationObservationTests.fs" />
+        <Compile Include="../MutationObservation/WindowCleanupChecks.fs" Link="WindowCleanupChecks.fs" />
+        <Compile Include="CleanupFaultChecks.fs" />
+        <Compile Include="WindowCleanupTests.fs" />
         <Compile Include="ObjectTests.fs" />
         <Compile Include="HostTests.fs" />
         <Compile Include="MountTests.fs" />

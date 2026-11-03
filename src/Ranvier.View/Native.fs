@@ -103,7 +103,14 @@ let install (host: IHost) : System.IDisposable =
                 let current = System.Environment.CurrentManagedThreadId
 
                 if current <> thread then
-                    raise (System.InvalidOperationException $"A DOM host installed on thread {thread} was disposed on thread {current}")
+                    raise (
+                        System.InvalidOperationException (
+                            "A DOM host installed on thread "
+                            + thread.ToString (System.Globalization.CultureInfo.CurrentCulture)
+                            + " was disposed on thread "
+                            + current.ToString (System.Globalization.CultureInfo.CurrentCulture)
+                        )
+                    )
 
                 if HostSlot.Depth <> depth then
                     raise (System.InvalidOperationException "A DOM host was disposed while a later installation is current")
@@ -204,7 +211,17 @@ let elementById (id: string) : Element =
 /// </summary>
 [<Sealed>]
 type SameValueZero private () =
+    static let optionValue = typeof<obj option>.GetProperty("Value")
+    static let valueOptionValue = typeof<obj voption>.GetProperty("Value")
+    static let valueOptionIsSome = typeof<obj voption>.GetProperty("IsSome")
+
     static member val Instance = SameValueZero ()
+
+    static member private ReadOptionProperty(value: obj, property: System.Reflection.PropertyInfo) =
+        let actual =
+            value.GetType().GetMemberWithSameMetadataDefinitionAs property :?> System.Reflection.PropertyInfo
+
+        actual.GetValue value
 
     static member internal Normal(value: obj) : obj =
         match value with
@@ -235,13 +252,13 @@ type SameValueZero private () =
                 t.IsGenericType
                 && t.GetGenericTypeDefinition () = typedefof<option<_>>
             then
-                SameValueZero.Normal (t.GetProperty("Value").GetValue value)
+                SameValueZero.Normal (SameValueZero.ReadOptionProperty (value, optionValue))
             elif
                 t.IsGenericType
                 && t.GetGenericTypeDefinition () = typedefof<voption<_>>
             then
-                if (t.GetProperty "IsSome").GetValue value :?> bool then
-                    SameValueZero.Normal (t.GetProperty("Value").GetValue value)
+                if SameValueZero.ReadOptionProperty (value, valueOptionIsSome) :?> bool then
+                    SameValueZero.Normal (SameValueZero.ReadOptionProperty (value, valueOptionValue))
                 else
                     null
             else
@@ -517,7 +534,14 @@ let arrayAt (items: 'T array) (index: int) : 'T =
 /// <summary>Writes an element; a .NET array cannot grow, so an index past the end raises.</summary>
 let arraySet (items: 'T array) (index: int) (value: 'T) : unit =
     if index < 0 || index >= items.Length then
-        raise (System.InvalidOperationException $"A .NET array of length {items.Length} cannot grow to index {index}")
+        raise (
+            System.InvalidOperationException (
+                "A .NET array of length "
+                + items.Length.ToString (System.Globalization.CultureInfo.CurrentCulture)
+                + " cannot grow to index "
+                + index.ToString (System.Globalization.CultureInfo.CurrentCulture)
+            )
+        )
 
     items[index] <- value
 

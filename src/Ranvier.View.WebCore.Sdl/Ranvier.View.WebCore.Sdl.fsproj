@@ -12,7 +12,7 @@
         <PackageTags>reactive;signals;view;dom;webcore;native;sdl;fsharp</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>Experimental. The API may change.</PackageReleaseNotes>
-        <Version>0.1.0-alpha.44</Version>
+        <Version>0.1.0-alpha.45</Version>
         <IsAotCompatible>true</IsAotCompatible>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <IsPackable>true</IsPackable>
@@ -22,7 +22,10 @@
 
     <ItemGroup>
         <Compile Include="Keys.fs" />
+        <Compile Include="EglPresentation.fs" />
         <Compile Include="Presentation.fs" />
+        <Compile Include="WindowRegistry.fs" />
+        <Compile Include="TouchFrames.fs" />
         <Compile Include="Window.fs" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />

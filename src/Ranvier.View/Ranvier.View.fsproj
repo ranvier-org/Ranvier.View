@@ -15,11 +15,12 @@
     <PackageReleaseNotes>Alpha release. The API may change before 1.0.</PackageReleaseNotes>
     <!-- Ranvier.View, Ranvier.View.Dom, Ranvier.View.Anime and Fable.Ranvier.Anime share this version and depend on
              each other at exactly it (RanvierExactSiblingVersions, src/Directory.Build.targets). -->
-    <Version>0.1.44</Version>
+    <Version>0.1.45</Version>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <RanvierExactSiblingVersions>true</RanvierExactSiblingVersions>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="NativeDisplay.fs" />
     <Compile Include="Native.fs" />
     <Compile Include="Lifetime.fs" />
     <Compile Include="Scope.fs" />
@@ -36,6 +37,7 @@
     <Compile Include="Server.fs" />
     <Compile Include="Page.fs" />
     <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="NativeDisplay.LICENSE.txt" Pack="true" PackagePath="\" />
     <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
   <ItemGroup>
@@ -62,6 +64,7 @@
     <InternalsVisibleTo Include="Ranvier.View.Twin.Tests" />
     <InternalsVisibleTo Include="Ranvier.View.WebCore" />
     <InternalsVisibleTo Include="Ranvier.View.WebCore.Tests" />
+    <InternalsVisibleTo Include="Ranvier.View.WebCore.AotSmoke" />
   </ItemGroup>
   <ItemGroup Condition="'$(RanvierTrace)' == 'true'">
     <AssemblyMetadata Include="RanvierTrace" Value="true" />

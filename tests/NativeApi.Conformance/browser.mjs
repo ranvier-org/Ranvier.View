@@ -4,6 +4,7 @@ import { resolve, dirname, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { inflateSync } from 'node:zlib';
+import { runViewTransitionPixels as runViewTransitionPixelProof } from './view-transition-pixels.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), 'generated');
 const assets = { '/Ahem.ttf': resolve(dirname(fileURLToPath(import.meta.url)), 'Assets', 'Ahem.ttf') };
@@ -49,6 +50,7 @@ const submissionsOnly = process.argv.includes('--submissions-only');
 const eventDetailsOnly = process.argv.includes('--event-details-only');
 const valueFactoriesOnly = process.argv.includes('--value-factories-only');
 const domModelOnly = process.argv.includes('--dom-model-only');
+const viewTransitionPixelsOnly = process.argv.includes('--view-transition-pixels-only');
 const dependencies = process.env.NATIVE_API_BROWSER_PACKAGE || resolve(dirname(fileURLToPath(import.meta.url)), 'package.json');
 const { chromium } = createRequire(dependencies)('@playwright/test');
 // The fixture content at a request path: the static server and every page's request routing serve it.
@@ -576,6 +578,23 @@ const runCustomEffects = async () => {
     await effectsBrowser.close();
   }
 };
+
+const runViewTransitions = async () => {
+  const engine = await chromium.launch({ headless: true });
+  try {
+    const page = await routedPage(engine);
+    await page.goto(`http://127.0.0.1:${server.address().port}/`);
+    const result = await page.evaluate(async () => (await import('/Browser.js')).runViewTransitions());
+    if (result.viewTransitions !== 35) throw new Error(`View-transition assertions did not run: ${JSON.stringify(result)}`);
+    console.log(`BROWSER_API A11 PASS assertions=${result.viewTransitions} engine=chromium`);
+  } finally {
+    await engine.close();
+  }
+};
+const runViewTransitionPixels = async () => {
+  const result = await runViewTransitionPixelProof(chromium);
+  if (result.samples.length !== 9) throw new Error(`View-transition pixel proof did not capture all nine frames: ${result.samples.length}`);
+};
 const CUSTOM_EFFECT_ASSERTIONS = 23;
 // A01 runs the Web Animations fixture in its own page.
 const runAnimations = async () => {
@@ -654,15 +673,23 @@ const runCoordinates = async () => {
 const COORDINATE_ASSERTIONS = 304;
 // G10 runs the resize observation fixture in its own page.
 const runResizeObservation = async () => {
-  const resizeBrowser = await chromium.launch({ headless: true });
-  try {
-    const page = await resizeBrowser.newPage({ viewport: { width: 800, height: 600 } });
-    await page.goto(`http://127.0.0.1:${server.address().port}/`);
-    const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runResizeObservation(); } catch (error) { return { error: String(error?.message ?? error) }; } });
-    if (result.resize !== RESIZE_ASSERTIONS) throw new Error(`Resize observation assertions did not run: ${JSON.stringify(result)}`);
-    console.log(`BROWSER_API G10 PASS assertions=${result.resize} engine=chromium`);
-  } finally {
-    await resizeBrowser.close();
+  for (const scale of [1, 1.5, 2]) {
+    const resizeBrowser = await chromium.launch({ headless: true, args: [`--force-device-scale-factor=${scale}`] });
+    try {
+      const context = await resizeBrowser.newContext({ viewport: { width: 800, height: 600 }, deviceScaleFactor: scale });
+      try {
+        const page = await context.newPage();
+        await page.goto(`http://127.0.0.1:${server.address().port}/`);
+        const result = await page.evaluate(async () => { try { return await (await import('/Browser.js')).runResizeObservation(); } catch (error) { return { error: String(error?.message ?? error) }; } });
+        if (result.resize !== (scale === 1 ? RESIZE_ASSERTIONS : 0) || result.deviceScale !== scale || result.deviceResize !== 52)
+          throw new Error(`Resize observation assertions did not run at scale ${scale}: ${JSON.stringify(result)}`);
+        console.log(`BROWSER_API G10 PASS assertions=${result.resize} deviceAssertions=${result.deviceResize} scale=${scale} engine=chromium`);
+      } finally {
+        await context.close();
+      }
+    } finally {
+      await resizeBrowser.close();
+    }
   }
 };
 const RESIZE_ASSERTIONS = 34;
@@ -793,6 +820,8 @@ try {
   else if (process.argv.includes('--host-strings-only')) { await runHostStrings(); process.exitCode = 0; }
   else if (diagnosticsOnly) { await runDiagnostics(); process.exitCode = 0; }
   else if (cascadeOnly) { await runCascade(); process.exitCode = 0; }
+  else if (process.argv.includes('--view-transitions-only')) { await runViewTransitions(); process.exitCode = 0; }
+  else if (viewTransitionPixelsOnly) { await runViewTransitionPixels(); process.exitCode = 0; }
   else if (process.argv.includes('--custom-effects-only')) { await runCustomEffects(); process.exitCode = 0; }
   else if (process.argv.includes('--animations-only')) { await runAnimations(); process.exitCode = 0; }
   else if (process.argv.includes('--animation-lifecycle-only')) { await runAnimationLifecycle(); process.exitCode = 0; }
@@ -1074,6 +1103,8 @@ try {
   await runAnimationEvents();
   await runTimelines();
   await runCustomEffects();
+  await runViewTransitions();
+  await runViewTransitionPixels();
   await runBlobUrls();
   await runMediaCapabilities();
   await runSnapshots();

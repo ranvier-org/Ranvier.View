@@ -1,0 +1,13 @@
+{
+  "group": "examples",
+  "projects": [
+    "examples/Ranvier.Motion/Motion.fsproj",
+    "examples/Ranvier.Motion/Server/ServerChecks.fsproj",
+    "examples/Ranvier.Motion/tests/MotionTests.fsproj",
+    "examples/Ranvier.Hydration/Shared.fsproj",
+    "examples/Ranvier.Hydration/Server/Server.fsproj"
+  ],
+  "excludeFiles": [
+    "**/Generated/**"
+  ]
+}

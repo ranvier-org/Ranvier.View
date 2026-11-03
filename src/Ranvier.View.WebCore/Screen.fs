@@ -7,6 +7,7 @@ open Ranvier.Dom
 open RanvierWebCoreAbi
 
 /// <summary>A display as the app's windowing layer reports it, in CSS pixels; the work area is relative to the display.</summary>
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
 type DisplayScreen =
     {
         Width: int
@@ -18,6 +19,31 @@ type DisplayScreen =
         ColorDepth: int
         Orientation: ScreenOrientationType
     }
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            let orientation =
+                match int this.Orientation with
+                | 0 -> "PortraitPrimary"
+                | 1 -> "PortraitSecondary"
+                | 2 -> "LandscapePrimary"
+                | 3 -> "LandscapeSecondary"
+                | value -> value.ToString (System.Globalization.CultureInfo.CurrentCulture)
+
+            Ranvier.View.NativeDisplay.format (fun context depth _ ->
+                Ranvier.View.NativeDisplay.record context depth (box this) (fun nested ->
+                    [
+                        "Width", (fun () -> Ranvier.View.NativeDisplay.int32 context nested this.Width)
+                        "Height", (fun () -> Ranvier.View.NativeDisplay.int32 context nested this.Height)
+                        "UsableLeft", (fun () -> Ranvier.View.NativeDisplay.int32 context nested this.UsableLeft)
+                        "UsableTop", (fun () -> Ranvier.View.NativeDisplay.int32 context nested this.UsableTop)
+                        "UsableWidth", (fun () -> Ranvier.View.NativeDisplay.int32 context nested this.UsableWidth)
+                        "UsableHeight", (fun () -> Ranvier.View.NativeDisplay.int32 context nested this.UsableHeight)
+                        "ColorDepth", (fun () -> Ranvier.View.NativeDisplay.int32 context nested this.ColorDepth)
+                        "Orientation", (fun () -> Ranvier.View.NativeDisplay.opaque context nested orientation (box this.Orientation))
+                    ]))
 
 /// <summary>Screen and ScreenOrientation of a native host's document.</summary>
 module Screen =
