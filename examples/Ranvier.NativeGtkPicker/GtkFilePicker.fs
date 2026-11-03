@@ -10,32 +10,46 @@ module private Gtk =
 
     [<DllImport("libgtk-3.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern int gtk_init_check(nativeint argc, nativeint argv)
+
     [<DllImport("libgtk-3.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern nativeint gtk_file_chooser_native_new(string title, nativeint parent, int action, string accept, string cancel)
+
     [<DllImport("libgtk-3.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern void gtk_native_dialog_show(nativeint dialog)
+
     [<DllImport("libgtk-3.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern void gtk_native_dialog_destroy(nativeint dialog)
+
     [<DllImport("libgtk-3.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern nativeint gtk_file_chooser_get_filename(nativeint chooser)
+
     [<DllImport("libgtk-3.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern nativeint gtk_file_filter_new()
+
     [<DllImport("libgtk-3.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern void gtk_file_filter_add_pattern(nativeint filter, string pattern)
+
     [<DllImport("libgtk-3.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern void gtk_file_filter_add_mime_type(nativeint filter, string mimeType)
+
     [<DllImport("libgtk-3.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern void gtk_file_chooser_add_filter(nativeint chooser, nativeint filter)
+
     [<DllImport("libgobject-2.0.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern unativeint g_signal_connect_data(nativeint instance, string signal, nativeint callback, nativeint data, nativeint destroy, int flags)
+
     [<DllImport("libgobject-2.0.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern void g_signal_handler_disconnect(nativeint instance, unativeint handler)
+
     [<DllImport("libgobject-2.0.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern void g_object_unref(nativeint value)
+
     [<DllImport("libglib-2.0.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern void g_free(nativeint value)
+
     [<DllImport("libglib-2.0.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern int g_main_context_pending(nativeint context)
+
     [<DllImport("libglib-2.0.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern int g_main_context_iteration(nativeint context, int mayBlock)
 
@@ -53,10 +67,27 @@ type Provider internal (pump: unit -> unit, isOpen: unit -> bool, close: unit ->
     interface IDisposable with
         member _.Dispose() = close ()
 
-let tryInstall (host: WebCoreHost) =
+type Operations =
+    {
+        Connect: nativeint -> nativeint -> unativeint
+        Show: nativeint -> unit
+        Complete: FilePickerRequest -> FilePickerResult -> bool
+    }
+
+let systemOperations =
+    {
+        Connect = fun dialog callback -> Gtk.g_signal_connect_data (dialog, "response", callback, 0n, 0n, 0)
+        Show = Gtk.gtk_native_dialog_show
+        Complete = fun request result -> request.Complete result
+    }
+
+let tryInstallWith (operations: Operations) (host: WebCoreHost) =
     let mutable library = 0n
 
-    if not (OperatingSystem.IsLinux ()) || not (NativeLibrary.TryLoad ("libgtk-3.so.0", &library)) then
+    if
+        not (OperatingSystem.IsLinux ())
+        || not (NativeLibrary.TryLoad ("libgtk-3.so.0", &library))
+    then
         None
     else
         NativeLibrary.Free library
@@ -72,17 +103,27 @@ let tryInstall (host: WebCoreHost) =
                 if Environment.CurrentManagedThreadId <> ownerThread then
                     invalidOp "The GTK picker must run on its host's owner thread"
 
+            let destroyDialog dialog =
+                try
+                    Gtk.gtk_native_dialog_destroy dialog
+                finally
+                    Gtk.g_object_unref dialog
+
             let closeDialog () =
                 match active with
                 | Some current ->
                     active <- None
-                    Gtk.g_signal_handler_disconnect (current.Dialog, current.Handler)
-                    Gtk.gtk_native_dialog_destroy current.Dialog
-                    Gtk.g_object_unref current.Dialog
+
+                    try
+                        Gtk.g_signal_handler_disconnect (current.Dialog, current.Handler)
+                    finally
+                        destroyDialog current.Dialog
                 | None -> ()
 
             let response =
                 Gtk.Response (fun dialog result _ ->
+                    let pending = active
+
                     try
                         ensureOwner ()
 
@@ -98,7 +139,10 @@ let tryInstall (host: WebCoreHost) =
                                         try
                                             let path = Marshal.PtrToStringUTF8 value
 
-                                            if isNull path || not (IO.Path.IsPathFullyQualified path) then
+                                            if
+                                                isNull path
+                                                || not (IO.Path.IsPathFullyQualified path)
+                                            then
                                                 Cancelled
                                             else
                                                 Selected [| path |]
@@ -110,10 +154,29 @@ let tryInstall (host: WebCoreHost) =
                             closeDialog ()
 
                             if not disposed then
-                                current.Request.Complete selection |> ignore
+                                operations.Complete current.Request selection
+                                |> ignore
                         | _ -> ()
                     with error ->
-                        host.Errors.Add error)
+                        host.Errors.Add error
+
+                        if Environment.CurrentManagedThreadId = ownerThread then
+                            match pending with
+                            | Some current when current.Dialog = dialog ->
+                                try
+                                    match active with
+                                    | Some next when next.Dialog = dialog -> closeDialog ()
+                                    | _ -> ()
+                                with cleanupError ->
+                                    host.Errors.Add cleanupError
+
+                                if not disposed then
+                                    try
+                                        operations.Complete current.Request Cancelled
+                                        |> ignore
+                                    with cancelError ->
+                                        host.Errors.Add cancelError
+                            | _ -> ())
 
             let receive event =
                 ensureOwner ()
@@ -124,48 +187,90 @@ let tryInstall (host: WebCoreHost) =
                     | Some current when current.Request.Id = id -> closeDialog ()
                     | _ -> ()
                 | Show request ->
-                    closeDialog ()
+                    let mutable unattached = 0n
+                    let mutable completionAttempted = false
 
-                    if request.Multiple || request.Directories then
-                        request.Complete Cancelled |> ignore
-                    else
-                        let dialog = Gtk.gtk_file_chooser_native_new ("Choose a file", 0n, 0, "Open", "Cancel")
+                    let cancel () =
+                        completionAttempted <- true
+                        operations.Complete request Cancelled |> ignore
 
-                        if dialog = 0n then
-                            request.Complete Cancelled |> ignore
+                    try
+                        closeDialog ()
+
+                        if request.Multiple || request.Directories then
+                            cancel ()
                         else
-                            let extensions = request.Extensions
-                            let mimeTypes = request.MimeTypes
+                            let dialog =
+                                Gtk.gtk_file_chooser_native_new ("Choose a file", 0n, 0, "Open", "Cancel")
 
-                            if extensions.Length > 0 || mimeTypes.Length > 0 then
-                                let filter = Gtk.gtk_file_filter_new ()
+                            unattached <- dialog
 
-                                for extension in extensions do
-                                    let pattern = if extension.StartsWith "." then "*" + extension else "*." + extension
-                                    Gtk.gtk_file_filter_add_pattern (filter, pattern)
-
-                                for mimeType in mimeTypes do
-                                    Gtk.gtk_file_filter_add_mime_type (filter, mimeType)
-
-                                Gtk.gtk_file_chooser_add_filter (dialog, filter)
-
-                            let handler =
-                                Gtk.g_signal_connect_data (
-                                    dialog,
-                                    "response",
-                                    Marshal.GetFunctionPointerForDelegate<Gtk.Response> response,
-                                    0n,
-                                    0n,
-                                    0
-                                )
-
-                            if handler = 0un then
-                                Gtk.gtk_native_dialog_destroy dialog
-                                Gtk.g_object_unref dialog
-                                request.Complete Cancelled |> ignore
+                            if dialog = 0n then
+                                cancel ()
                             else
-                                active <- Some { Request = request; Dialog = dialog; Handler = handler }
-                                Gtk.gtk_native_dialog_show dialog
+                                let extensions = request.Extensions
+                                let mimeTypes = request.MimeTypes
+
+                                if extensions.Length > 0 || mimeTypes.Length > 0 then
+                                    let filter = Gtk.gtk_file_filter_new ()
+
+                                    if filter = 0n then
+                                        failwith "GTK could not create a file filter"
+
+                                    try
+                                        for extension in extensions do
+                                            let pattern =
+                                                if extension.StartsWith "." then
+                                                    "*" + extension
+                                                else
+                                                    "*." + extension
+
+                                            Gtk.gtk_file_filter_add_pattern (filter, pattern)
+
+                                        for mimeType in mimeTypes do
+                                            Gtk.gtk_file_filter_add_mime_type (filter, mimeType)
+
+                                        Gtk.gtk_file_chooser_add_filter (dialog, filter)
+                                    with _ ->
+                                        Gtk.g_object_unref filter
+                                        reraise ()
+
+                                let handler =
+                                    operations.Connect dialog (Marshal.GetFunctionPointerForDelegate<Gtk.Response> response)
+
+                                if handler = 0un then
+                                    unattached <- 0n
+                                    destroyDialog dialog
+                                    cancel ()
+                                else
+                                    active <-
+                                        Some
+                                            {
+                                                Request = request
+                                                Dialog = dialog
+                                                Handler = handler
+                                            }
+
+                                    unattached <- 0n
+                                    operations.Show dialog
+                    with error ->
+                        try
+                            if unattached <> 0n then
+                                destroyDialog unattached
+                            else
+                                match active with
+                                | Some current when current.Request.Id = request.Id -> closeDialog ()
+                                | _ -> ()
+                        with cleanupError ->
+                            host.Errors.Add cleanupError
+
+                        if not completionAttempted && not disposed then
+                            try
+                                cancel ()
+                            with cancelError ->
+                                host.Errors.Add cancelError
+
+                        raise error
 
             let registration = FilePickers.install host receive
 
@@ -180,7 +285,9 @@ let tryInstall (host: WebCoreHost) =
 
                         let mutable remaining = 32
 
-                        while not disposed && remaining > 0 && Gtk.g_main_context_pending 0n <> 0 do
+                        while not disposed
+                              && remaining > 0
+                              && Gtk.g_main_context_pending 0n <> 0 do
                             Gtk.g_main_context_iteration (0n, 0) |> ignore
                             remaining <- remaining - 1
 
@@ -201,3 +308,6 @@ let tryInstall (host: WebCoreHost) =
             | _ ->
                 registration.Dispose ()
                 reraise ()
+
+let tryInstall host =
+    tryInstallWith systemOperations host
