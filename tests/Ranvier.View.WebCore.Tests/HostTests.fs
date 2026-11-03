@@ -98,6 +98,78 @@ let tests =
     testList
         "IHost"
         [
+            testCase "native host operations reject wrong-thread and disposed owners"
+            <| fun () ->
+                onHostThread (fun () ->
+                    use host = WebCoreHost.Create (16, 16)
+                    let pixels = Array.zeroCreate<byte>(16 * 16 * 4)
+
+                    let operations =
+                        [
+                            "cycle", fun () -> host.Cycle ()
+                            "frame", fun () -> host.Frame ()
+                            "resize", fun () -> host.Resize (16, 16)
+                            "screen", fun () -> host.SetScreen (16, 16, 0, 0, 16, 16, 24, ScreenOrientationType.PortraitPrimary)
+                            "scale", fun () -> host.SetDeviceScale 1.0f
+                            "paint size", fun () -> host.PaintSize |> ignore
+                            "paint", fun () -> host.Paint pixels
+                            "dirty rectangle", fun () -> host.DirtyRect |> ignore
+                            "dirty paint", fun () -> host.PaintDirty pixels |> ignore
+                            "touch points", fun () -> host.SetMaxTouchPoints 2
+                            "focus", fun () -> host.SetFocused true
+                            "visibility", fun () -> host.SetVisible true
+                            "cursor", fun () -> host.Cursor |> ignore
+                            "composition rectangle", fun () -> host.CompositionRect |> ignore
+                            "clipboard", fun () -> host.SetClipboard ((fun _ _ _ -> ()), (fun () -> Seq.empty))
+                        ]
+
+                    for _, operation in operations do
+                        operation ()
+
+                    let errors = ResizeArray<string * exn option>()
+
+                    let worker =
+                        System.Threading.Thread (
+                            System.Threading.ThreadStart (fun () ->
+                                for name, operation in operations do
+                                    let error =
+                                        try
+                                            operation ()
+                                            None
+                                        with error ->
+                                            Some error
+
+                                    errors.Add (name, error))
+                        )
+
+                    worker.Start ()
+                    Expect.isTrue (worker.Join (TimeSpan.FromSeconds 10.0)) "rejected owner calls finish"
+
+                    for name, error in errors do
+                        match error with
+                        | Some (:? InvalidOperationException) -> ()
+                        | _ -> failtest (name + " did not reject a foreign thread")
+
+                    Expect.equal errors.Count operations.Length "every operation was checked"
+                    (host :> IDisposable).Dispose()
+
+                    for name, operation in operations do
+                        Expect.throwsT<ObjectDisposedException> operation (name + " rejects disposal")
+
+                    WebCoreHost.Has "pointer-input" |> ignore)
+            testCase "frame revalidates its host after an application callback disposes it"
+            <| fun () ->
+                onHostThread (fun () ->
+                    use host = WebCoreHost.Create (16, 16)
+                    let mutable calls = 0
+
+                    host.RequestAnimationFrame (fun _ ->
+                        calls <- calls + 1
+                        (host :> IDisposable).Dispose())
+                    |> ignore
+
+                    Expect.throwsT<ObjectDisposedException> host.Frame "no native update follows disposal"
+                    Expect.equal calls 1 "the admitted callback ran once")
             testCase "host diagnostics expose bounded native records"
             <| fun () ->
                 onHostThread (fun () ->
