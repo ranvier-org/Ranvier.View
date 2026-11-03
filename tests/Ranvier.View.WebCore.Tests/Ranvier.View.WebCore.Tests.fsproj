@@ -23,6 +23,7 @@
         <Compile Include="InputTests.fs" />
         <Compile Include="PaintTests.fs" />
         <Compile Include="WindowTests.fs" />
+        <Compile Include="IOSurfaceChecks.fs" />
         <Compile Include="IOSurfaceTests.fs" />
         <Compile Include="../../experiments/Ranvier.View.Checks/ServerFixtures.fs" Link="Checks/ServerFixtures.fs" />
         <Compile Include="../../experiments/Ranvier.View.Checks/ServerChecks.fs" Link="Checks/ServerChecks.fs" />
