@@ -1,7 +1,7 @@
 # Final ABI63 public consumer arming
 
 This lane prepares public package checks for `win-x64`, `linux-x64` and `linux-arm64`, each normal and traced.
-Both x64 and ARM64 consumer jobs are statically disabled. `inputs/unarmed.json` records allocated Native P9 and the
+Both x64 and ARM64 consumer jobs are statically disabled. `inputs/unarmed.json` records allocated Native P10 and the
 proposed View46 version families, with provider allocation, managed source and actual runtime hashes incomplete.
 Neither a dispatch nor an input value can enable a job. The pull-request job runs hermetic policy
 tests only. No public or ARM consumer run has been dispatched or qualified by this preparation.
@@ -16,12 +16,15 @@ The provider follows the matching Native version.
 Keep the complete five-RID native aggregate dependency graph; this consumer matrix executes only the three named
 RIDs and does not qualify Windows ARM64 or macOS by implication.
 
-Native P9 source `e0e9a8007683d98785e8fb1b86d3b43359699858` includes the reviewed manifest, worker-first-owner and IME
-corrections and GPU producer oracle. Its wheel and clipboard fixtures retain reviewed
+Native P10 source `233c8045c9384e5eb97e8688ca0ed0caa11a8f17` includes the coherent Mac successor and the reviewed
+optional provider packaging/ordinary-consumer corrections. Its complete ABI63/347 header, interop sources and native
+provider sources are byte-identical to reviewed P9; packaging normalizes SDK text and the consumer handles schema2.
+Source equivalence does not authenticate a package or qualify a new Host binary. The wheel and clipboard fixtures retain reviewed
 `541ca21f16b1d0399e9c6eec6b0a27e58915c1b4`; the link-drop fixture adopts platform-specific expectations from
 `333c806ae4e5269e88be26d73778c01425de6b8d`. These native fixtures are not copied into View. Source adoption does not replace actual
-matched producer/catalogue/IME receipts. ARM provider/managed qualification remains retained active work on the
-actual P9 ARM producer, with its own disabled job. Missing ARM provider hashes do not enable ARM or block the
+matched producer/catalogue/IME receipts. Actual private P9 x64/ARM provider and managed qualification is retained in
+`graph.json`; it is not relabeled as P10. Matching P10 qualification remains required for the disabled jobs.
+Missing final public ARM provider hashes do not enable ARM or block the
 independent x64 guard. An input JSON cannot substitute for passing producer/independent runtime receipts.
 
 `run.py` restores only the public SDL package and, on Linux, the optional public provider into a new owned cache.

@@ -39,17 +39,17 @@
     "hostRuntimeSupplied": false
   },
   "finalNativeRuntime": {
-    "source": "e0e9a8007683d98785e8fb1b86d3b43359699858",
-    "version": "0.1.1-preview.9",
+    "source": "233c8045c9384e5eb97e8688ca0ed0caa11a8f17",
+    "version": "0.1.1-preview.10",
     "hostSha256ByRid": {},
     "requiredAbi": 63,
     "requiredHandwrittenExports": 347,
-    "pending": ["matched P9 producer/public package payloads", "independent actual runtime/consumer qualification"]
+    "pending": ["matched P10 producer/public package payloads", "independent actual runtime/consumer qualification"]
   },
   "optionalProvider": {
     "publicId": "Ranvier.WebCore.Accessibility.Atspi",
     "publicVersion": null,
-    "proposedMatchingVersion": "0.1.1-preview.9",
+    "proposedMatchingVersion": "0.1.1-preview.10",
     "providerSha256ByRid": {},
     "runtimeTargets": ["linux-x64", "linux-arm64"],
     "publicGraphQualified": false,

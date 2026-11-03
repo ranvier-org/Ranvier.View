@@ -39,6 +39,23 @@ class CohortPolicyTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'unarmed'):
             gate.load_cohort(value)
 
+    def test_allocated_p10_target_does_not_relabel_private_p9_qualification(self):
+        inputs=json.loads((ROOT/'tools/native-cohort347/inputs/unarmed.json').read_text())
+        graph=json.loads((ROOT/'tools/native-cohort347/graph.json').read_text())
+        plan=json.loads((ROOT/'docs/research/native-api-delivery/views-0.1.46-plan.json').read_text())
+        project=ET.parse(ROOT/'src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj').getroot()
+        self.assertEqual(project.find('.//RanvierWebCoreNativeVersion').text,'0.1.1-preview.10')
+        self.assertEqual(inputs['versions']['native'],'0.1.1-preview.10')
+        self.assertEqual(inputs['nativeSource'],'233c8045c9384e5eb97e8688ca0ed0caa11a8f17')
+        self.assertEqual(plan['nativeVersion'],inputs['versions']['native'])
+        self.assertEqual(plan['nativeSource'],inputs['nativeSource'])
+        self.assertEqual(plan['domVersion'],'0.1.0-alpha.57')
+        self.assertFalse(inputs['armed'])
+        self.assertIsNone(inputs['versions']['provider'])
+        self.assertEqual(graph['finalNativeRuntime']['hostSha256ByRid'],{})
+        self.assertFalse(graph['optionalProvider']['publicGraphQualified'])
+        self.assertEqual(graph['optionalProvider']['privateQualification']['nativeSource'],'e0e9a8007683d98785e8fb1b86d3b43359699858')
+
     def test_exact_public_inputs_are_accepted_without_allocating_them(self):
         self.assertEqual(gate.load_cohort(cohort()),cohort())
 
