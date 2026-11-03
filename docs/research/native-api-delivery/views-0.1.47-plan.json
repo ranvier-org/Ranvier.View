@@ -41,8 +41,26 @@
     "authentication": "existing NuGet/login@v1 trusted publisher",
     "newWorkflowOrTrustRequired": false,
     "dispatchOrPublicationPerformedByThisPlan": false,
-    "ciState": "awaiting the exact release-prefixed follow-up CI result",
-    "publicationState": "pending the existing trusted publisher after that CI succeeds",
+    "ciState": "8c662dbd CI 41690880477 cancelled after the view analyzer exceeded its unchanged 15-minute job limit; changed instrumented recovery pending",
+    "publicationState": "pending the existing trusted publisher after the reviewed release-prefixed recovery head passes CI",
+    "analyzerRecovery": {
+      "failedSource": "8c662dbd860cbb250800a38f91fc0be33164737a",
+      "failedRun": 41690880477,
+      "failedJob": 126114685159,
+      "observedFailure": "Build completed with zero warnings/errors; the analyzer then produced no output for approximately 13 minutes before job cancellation. No process resource samples were retained by that job.",
+      "previousView46JobSeconds": 262,
+      "exactCiPairLocalControls": {
+        "source": "8c662dbd860cbb250800a38f91fc0be33164737a",
+        "twoProcessorsColdSeconds": 257.368,
+        "fourProcessorsWarmSeconds": 99.335,
+        "peakHostRssBytes": 4489363456,
+        "bothExitCodes": 0,
+        "limitation": "Windows controls establish that the source-fresh compiler/analyzer pair completes the full workload locally; they do not establish the Linux timeout cause or processor-count causality."
+      },
+      "changedTrial": "Preserve the full analyze --group workload, all RAN errors and the 15-minute job limit; disable reusable build servers, bound the child process group to 720 seconds, and retain process/CPU/RSS, Linux memory pressure, cgroup and Host compiler-provenance evidence on success or failure.",
+      "timeoutCauseEstablished": false,
+      "manualPublicationAllowed": false
+    },
     "triggerCorrection": {
       "source": "05055811aa687177611b2f5dd39bdd328f21e7dd",
       "subject": "Merge pull request #93 from ranvier-org/codex/project2-view47-release",

@@ -153,8 +153,23 @@ jobs:
           global-json-file: global.json
       - uses: ./.github/actions/use-analyzer-bootstrap
       - run: dotnet fsi build.fsx -- tools
+      - name: Check the bounded analyzer runner
+        run: python3 -I tests/native-packages/test_analyzer_runner.py
       - name: Build the group and run the analyzers over it
-        run: dotnet fsi build.fsx -- analyze --group ${{ matrix.group }} --build
+        env:
+          RANVIER_ANALYZER_HOST_PROVENANCE_DIR: ${{ github.workspace }}/artifacts/analyzer-resources/${{ matrix.group }}/host
+        run: >-
+          python3 .github/scripts/run_analyzer_ci.py
+          --output artifacts/analyzer-resources/${{ matrix.group }}/execution
+          --timeout-seconds 720
+          -- dotnet fsi build.fsx -- analyze --group ${{ matrix.group }} --build
+      - name: Upload analyzer resource and compiler identity evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: analyzers-resources-${{ matrix.group }}
+          path: artifacts/analyzer-resources/${{ matrix.group }}/
+          if-no-files-found: error
       - name: Upload the SARIF report
         if: always()
         uses: actions/upload-artifact@v7
