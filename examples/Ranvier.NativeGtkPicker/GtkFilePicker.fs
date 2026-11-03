@@ -165,7 +165,11 @@ let tryInstallWith (operations: Operations) (host: WebCoreHost) =
                             | Some current when current.Dialog = dialog ->
                                 try
                                     match active with
-                                    | Some next when next.Dialog = dialog -> closeDialog ()
+                                    | Some next when
+                                        next.Dialog = dialog
+                                        && next.Request.Id = current.Request.Id
+                                        ->
+                                        closeDialog ()
                                     | _ -> ()
                                 with cleanupError ->
                                     host.Errors.Add cleanupError
@@ -253,7 +257,7 @@ let tryInstallWith (operations: Operations) (host: WebCoreHost) =
 
                                     unattached <- 0n
                                     operations.Show dialog
-                    with error ->
+                    with _ ->
                         try
                             if unattached <> 0n then
                                 destroyDialog unattached
@@ -270,7 +274,7 @@ let tryInstallWith (operations: Operations) (host: WebCoreHost) =
                             with cancelError ->
                                 host.Errors.Add cancelError
 
-                        raise error
+                        reraise ()
 
             let registration = FilePickers.install host receive
 
