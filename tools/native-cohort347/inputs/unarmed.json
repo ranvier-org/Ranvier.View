@@ -20,6 +20,9 @@
     "linux-x64": {"hostSha256": null, "providerSha256": null},
     "linux-arm64": {"hostSha256": null, "providerSha256": null}
   },
-  "adoptedNativeFixtureSource": "541ca21f16b1d0399e9c6eec6b0a27e58915c1b4",
+  "adoptedNativeFixtureSources": {
+    "wheelAndClipboard": "541ca21f16b1d0399e9c6eec6b0a27e58915c1b4",
+    "linkDrop": "333c806ae4e5269e88be26d73778c01425de6b8d"
+  },
   "limitations": "P9 is allocated; matching producer/public payloads and actual ARM qualification remain pending. Source pins compare manifest claims; they do not authenticate a binary's build provenance."
 }

@@ -13,8 +13,9 @@ Keep the complete five-RID native aggregate dependency graph; this consumer matr
 RIDs and does not qualify Windows ARM64 or macOS by implication.
 
 Native P9 source `e0e9a8007683d98785e8fb1b86d3b43359699858` includes the reviewed manifest, worker-first-owner and IME
-corrections and GPU producer oracle. Its Linux wheel/clipboard/rich-drop fixtures are byte-identical to reviewed
-`541ca21f16b1d0399e9c6eec6b0a27e58915c1b4`; they are not copied into View. Source adoption does not replace actual
+corrections and GPU producer oracle. Its wheel and clipboard fixtures retain reviewed
+`541ca21f16b1d0399e9c6eec6b0a27e58915c1b4`; the link-drop fixture adopts platform-specific expectations from
+`333c806ae4e5269e88be26d73778c01425de6b8d`. These native fixtures are not copied into View. Source adoption does not replace actual
 matched producer/catalogue/IME receipts. ARM provider/managed qualification remains retained active work on the
 actual P9 ARM producer, with its own disabled job. Missing ARM provider hashes do not enable ARM or block the
 independent x64 guard. An input JSON cannot substitute for passing producer/independent runtime receipts.
