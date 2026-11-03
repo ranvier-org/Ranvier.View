@@ -262,6 +262,34 @@ let tests =
                     use replacement = FilePickers.install host ignore
                     ()
 
+            hostCase "picker invalidation can dispose again and install a replacement"
+            <| fun host ->
+                if WebCoreHost.Has "file-picker" then
+                    let mutable registration: IDisposable = null
+                    let mutable replacement: IDisposable = null
+                    let mutable invalidations = 0
+                    let mutable opened = false
+
+                    registration <-
+                        FilePickers.install host (function
+                            | Show _ -> opened <- true
+                            | Invalidate _ ->
+                                invalidations <- invalidations + 1
+                                registration.Dispose ()
+                                replacement <- FilePickers.install host ignore)
+
+                    let input = host.Document.createElement "input"
+                    input.setAttribute ("type", "file")
+                    host.Document.body.appendChild input |> ignore
+                    host.Cycle ()
+                    clickOn host input
+                    host.Cycle ()
+                    Expect.isTrue opened "provider opened before disposal"
+                    registration.Dispose ()
+                    Expect.equal invalidations 1 "reentrant disposal sends one invalidation"
+                    Expect.isFalse (isNull replacement) "invalidation installed a new provider"
+                    replacement.Dispose ()
+
             testCase "disposing the host invalidates an open file picker"
             <| fun () ->
                 onHostThread (fun () ->
