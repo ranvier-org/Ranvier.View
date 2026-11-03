@@ -1,6 +1,13 @@
 name: Publish NuGet
 
 on:
+  workflow_dispatch:
+    inputs:
+      sdl_ibus:
+        description: Publish the independently reviewed optional SDL IBus candidate
+        type: choice
+        options: ['off', publish]
+        default: 'off'
   workflow_run:
     workflows: [CI, Analyzer host qualification]
     branches: [main, master]
@@ -15,6 +22,39 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  publish-sdl-ibus:
+    if: ${{ false && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.sdl_ibus == 'publish' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.403'
+      - name: Verify the exact qualified candidate before authentication
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 -I tools/sdl/verify-publication.py --work "$RUNNER_TEMP/sdl-ibus-publish"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sdl-ibus-pre-push
+          path: ${{ runner.temp }}/sdl-ibus-publish/verification.json
+          if-no-files-found: error
+      - name: Authenticate under the existing trusted workflow
+        id: sdl-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER || 'shayan.habibi' }}
+      - name: Publish the unchanged optional SDL candidate
+        env:
+          NUGET_API_KEY: ${{ steps.sdl-login.outputs.NUGET_API_KEY }}
+        run: dotnet nuget push "$RUNNER_TEMP/sdl-ibus-publish/export/Ranvier.View.WebCore.Sdl.Ibus.0.1.0-alpha.1.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY"
+
   publish:
     if: >-
       github.event.workflow_run.name == 'CI' &&
