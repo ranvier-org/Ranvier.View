@@ -49,10 +49,10 @@ class PublicationTests(unittest.TestCase):
             changed=dict(checked,**{field:value})
             with self.subTest(field=field),self.assertRaises(ValueError): publication.validate_qualification_binding(dict(data,**{field:value}),changed,p,receipt)
 
-    def test_disabled_optional_route_verifies_before_login(self):
+    def test_main_manual_optional_route_verifies_before_login(self):
         workflow=(ROOT/'.github/workflows/publish.yml').read_text()
         job=workflow.split('  publish-sdl-ibus:',1)[1].split('\n  publish:',1)[0]
-        self.assertIn('if: ${{ false &&',job)
+        self.assertNotIn('if: ${{ false &&',job)
         self.assertIn("github.event_name == 'workflow_dispatch'",job)
         self.assertIn("github.ref == 'refs/heads/main'",job)
         self.assertIn("inputs.sdl_ibus == 'publish'",job)
