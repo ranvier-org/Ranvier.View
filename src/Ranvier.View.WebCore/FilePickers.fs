@@ -109,6 +109,8 @@ module FilePickers =
 
         let mutable disposed = false
         let mutable active = ValueNone
+        let mutable currentProvider = ValueSome provider
+        let mutable subscription: IDisposable = null
         let token = obj ()
 
         let complete id result =
@@ -188,7 +190,10 @@ module FilePickers =
                     if action = 1 then
                         if active = ValueSome id then
                             active <- ValueNone
-                            provider (Invalidate id)
+
+                            match currentProvider with
+                            | ValueSome notify -> notify (Invalidate id)
+                            | ValueNone -> ()
                     elif action = 0 then
                         let mutable mimeCount = 0
 
@@ -213,7 +218,10 @@ module FilePickers =
                                 )
 
                             active <- ValueSome id
-                            provider (Show request)
+
+                            match currentProvider with
+                            | ValueSome notify -> notify (Show request)
+                            | ValueNone -> ()
                 with error ->
                     host.Errors.Add error
 
@@ -230,6 +238,13 @@ module FilePickers =
         let close () =
             if not disposed then
                 disposed <- true
+                let previousProvider = currentProvider
+                currentProvider <- ValueNone
+
+                if not (isNull subscription) then
+                    let current = subscription
+                    subscription <- null
+                    current.Dispose ()
 
                 Native.rv_host_set_file_picker_handler (host.Handle, 0n, 0n)
                 |> ignore
@@ -241,14 +256,16 @@ module FilePickers =
                     active <- ValueNone
 
                     try
-                        provider (Invalidate id)
+                        match previousProvider with
+                        | ValueSome notify -> notify (Invalidate id)
+                        | ValueNone -> ()
                     with error ->
                         host.Errors.Add error
                 | ValueNone -> ()
 
                 GC.KeepAlive callback
 
-        host.Disposed.Add (fun () -> close ())
+        subscription <- host.Disposed.Subscribe (fun () -> close ())
 
         { new IDisposable with
             member _.Dispose() =

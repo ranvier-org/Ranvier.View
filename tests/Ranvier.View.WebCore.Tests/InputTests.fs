@@ -32,11 +32,45 @@ let private probeEvent (host: WebCoreHost) =
     event.initEvent ("options-probe", true, true)
     event
 
+[<System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)>]
+let private pickerPayload (host: WebCoreHost) disposeRegistration =
+    let payload = obj ()
+    let weak = WeakReference payload
+    let registration = FilePickers.install host (fun _ -> GC.KeepAlive payload)
+
+    if disposeRegistration then
+        registration.Dispose ()
+
+    weak, registration
+
 [<Tests>]
 let tests =
     testList
         "Input"
         [
+            hostCase "disposed picker registrations release their callbacks while the host remains live"
+            <| fun host ->
+                if WebCoreHost.Has "file-picker" then
+                    let registrations = [| for _ in 1..4 -> pickerPayload host true |]
+                    GC.Collect ()
+                    GC.WaitForPendingFinalizers ()
+                    GC.Collect ()
+
+                    Expect.isTrue
+                        (registrations
+                         |> Array.forall (fun (weak, _) -> not weak.IsAlive))
+                        "disposed callbacks are released"
+
+                    let weak, activeRegistration = pickerPayload host false
+                    (host :> IDisposable).Dispose()
+                    GC.Collect ()
+                    GC.WaitForPendingFinalizers ()
+                    GC.Collect ()
+                    Expect.isFalse weak.IsAlive "host disposal releases the active callback"
+                    GC.KeepAlive activeRegistration
+                    GC.KeepAlive registrations
+                    GC.KeepAlive host
+
             testCase "every input rejects a foreign thread and a disposed host"
             <| fun () ->
                 onHostThread (fun () ->
