@@ -118,6 +118,10 @@ class AnalyzerBootstrap(unittest.TestCase):
         self.assertEqual(generated.count('Version="$(RanvierCssAddonsVersion)"'), 2)
         self.assertNotIn('Version="$(RanvierCssVersion)"', generated)
 
+    def test_native_release_record_triggers_analyzer_qualification(self):
+        workflow = (ROOT / '.github/workflows/analyzer-host.yml').read_text()
+        self.assertEqual(workflow.count("'docs/research/native-api-delivery/views-0.1.45-release.json'"), 2)
+
 
 if __name__ == '__main__':
     unittest.main()
