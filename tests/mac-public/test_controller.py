@@ -93,7 +93,7 @@ class Verdicts(unittest.TestCase):
     def test_inventory_pin_is_current_exact_source_and_bounded_policy(self):
         config = json.loads((HERE / 'inputs.json').read_text())
         path = HERE / config['jitInventory']['path']
-        self.assertEqual(support.sha(path), config['jitInventory']['sha256'])
+        self.assertEqual(support.text_sha(path), config['jitInventory']['sha256'])
         inventory = json.loads(path.read_text())
         self.assertEqual(inventory['sourceCommit'], config['viewCommit'])
         self.assertEqual(len(inventory['names']), 849)
@@ -144,7 +144,7 @@ class Verdicts(unittest.TestCase):
 
     def test_frozen_common_fixtures_and_existing_feed_mapping(self):
         config = json.loads((HERE / 'inputs.json').read_text())
-        self.assertTrue(all(support.sha(HERE / name) == digest for name, digest in config['fixtureHashes'].items()))
+        self.assertTrue(all(support.text_sha(HERE / name) == digest for name, digest in config['fixtureHashes'].items()))
         text = (HERE / 'qualify.py').read_text()
         self.assertIn("shutil.copy2(view / 'nuget.config'", text)
         self.assertNotIn('--filter', text)
@@ -155,6 +155,19 @@ class Verdicts(unittest.TestCase):
         self.assertIn('artifacts/mac-public-source', workflow)
         job_environment = workflow.split('    env:\n', 1)[1].split('    steps:', 1)[0]
         self.assertNotIn('${{ runner.', job_environment)
+
+    def test_only_crlf_normalizes_and_other_text_mutation_rejects(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            p = Path(temporary) / 'fixture.fs'
+            p.write_bytes(b'let check = 1\n')
+            expected = support.text_sha(p)
+            p.write_bytes(b'let check = 1\r\n')
+            self.assertEqual(support.text_sha(p), expected)
+            p.write_bytes(b'let check = 2\r\n')
+            self.assertNotEqual(support.text_sha(p), expected)
+            p.write_bytes(b'let check = 1\r')
+            with self.assertRaisesRegex(ValueError, 'bare CR'):
+                support.text_sha(p)
 
 
 @unittest.skipUnless(os.name == 'posix', 'Owned POSIX process-group control')

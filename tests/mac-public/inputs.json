@@ -54,9 +54,9 @@
   "interopPackageSha256": "761136a5f618755ebbfa698afe4a2fbdd5893bc28812fbfd274633b7c674577b",
   "viewSourceReview": "QUALIFIED",
   "fixtureHashes": {
-    "CleanupFaultChecks.fs": "14fc3b014f445d8b8c48e89b54de3ad38fda51bc4628b466b16882810cf4729c",
-    "LifecycleChecks.fs": "34a10222d78c461b56cf0978bf433bf6a4223cb225b9e5c4d82e012ea8add738",
-    "LifecycleMain.fs": "65efbdcc1b0a926d070592899adb07ba5c5baa4376634b98ca9d908e12ab8eba"
+    "CleanupFaultChecks.fs": "b8f0a1f7fc0f36bec7046736375ba5aee06b9a9bc3875b1f7a28e89f41a85c70",
+    "LifecycleChecks.fs": "a559ccef955c627b69c0a1cc91240949d2c3fd4b858872bb12e2a66e2fc7a17b",
+    "LifecycleMain.fs": "f53c575516ae50e92c9473298d604ad0b08fe5a3c2c2639b002e1807034ac8c6"
   },
   "fixtureOriginalHashes": {
     "CleanupFaultChecks.fs": "14fc3b014f445d8b8c48e89b54de3ad38fda51bc4628b466b16882810cf4729c",
@@ -69,6 +69,7 @@
   ],
   "jitInventory": {
     "path": "jit-inventory.json",
-    "sha256": "a15bd1b8a7dc391e8eee36cd066c662ed00a2f06f0dd5e86edf3d6c5bfb052a3"
-  }
+    "sha256": "fb247273d827d7557e2dca97160a47b3bfe1ea1d2e13eb7eff322346da9e50b4"
+  },
+  "reviewedTextHashPolicy": "UTF8_CRLF_TO_LF_ONLY"
 }

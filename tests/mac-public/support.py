@@ -19,6 +19,14 @@ def sha(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
+def text_sha(path):
+    data = Path(path).read_bytes().replace(b'\r\n', b'\n')
+    data.decode('utf-8')
+    if b'\r' in data:
+        raise ValueError('Unexpected bare CR in reviewed text')
+    return hashlib.sha256(data).hexdigest()
+
+
 def atomic_json(path, value):
     temporary = path.with_suffix(path.suffix + '.tmp')
     temporary.write_text(json.dumps(value, indent=2) + '\n', encoding='utf-8')

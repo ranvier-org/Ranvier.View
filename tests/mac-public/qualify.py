@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from support import (Runner, atomic_json, jit_summary, managed_packages, runtime_identity,
-                     sha, source_identity, stage_native, strict_publish)
+                     sha, source_identity, stage_native, strict_publish, text_sha)
 
 HERE = Path(__file__).resolve().parent
 
@@ -110,10 +110,12 @@ def main():
         sources = {str(path): sha(path) for path in HERE.iterdir() if path.is_file() and path.suffix in {'.py', '.fs', '.json'}}
         sources[str(args.inputs)] = sha(args.inputs)
         record['controllerInputHashes'] = dict(sources)
-        if any(sha(HERE / name) != digest for name, digest in config['fixtureHashes'].items()):
+        if config.get('reviewedTextHashPolicy') != 'UTF8_CRLF_TO_LF_ONLY':
+            raise ValueError('Unknown reviewed text hash policy')
+        if any(text_sha(HERE / name) != digest for name, digest in config['fixtureHashes'].items()):
             raise ValueError('Reviewed lifecycle fixture changed')
         inventory_path = HERE / config['jitInventory']['path']
-        if inventory_path.parent != HERE or sha(inventory_path) != config['jitInventory']['sha256']:
+        if inventory_path.parent != HERE or text_sha(inventory_path) != config['jitInventory']['sha256']:
             raise ValueError('Reviewed source test inventory changed')
         inventory = json.loads(inventory_path.read_text())
         if inventory['sourceCommit'] != config['viewCommit']:
