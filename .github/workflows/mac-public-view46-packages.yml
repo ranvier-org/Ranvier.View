@@ -1,8 +1,6 @@
 name: Public View46 package Mac Slim consumer
 
 on:
-  push:
-    branches: [codex/project2-view46-mac-packages]
   workflow_dispatch:
     inputs:
       inputs_sha256:
