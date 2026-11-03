@@ -52,7 +52,11 @@ class CohortPolicyTests(unittest.TestCase):
         self.assertEqual(plan['nativeSource'],inputs['nativeSource'])
         self.assertEqual(plan['domVersion'],'0.1.0-alpha.58')
         self.assertEqual(graph['domSuccessor']['version'],inputs['versions']['dom'])
-        self.assertEqual(graph['domSuccessor']['publicPackageSha256'],{})
+        self.assertEqual(graph['domSuccessor']['publicPackageSha256'],{
+            'Ranvier.Dom':'3888a085a01676f95e59cb5a0a91449daf99a7ee05f00ff8f1883547990f0658',
+            'Ranvier.Dom.Traced':'663ef00ed6fddbc022ab09a619cf902c7ca78c26f0b068246611c338d3e8392e',
+            'Fable.Ranvier.Dom':'21151dee61d7db77691de4fe76cc8ee42af70b865da724444ce4b1d8a0757d26',
+            'Fable.Ranvier.Dom.Traced':'ca1f52268f7e60071b7eeaeb00f3a299ae5c42a10158cda283d9d353e555b112'})
         self.assertEqual(graph['historicalPublicDom57']['version'],'0.1.0-alpha.57')
         self.assertEqual(graph['finalNativeRuntime']['source'],inputs['nativeSource'])
         self.assertEqual(graph['finalNativeRuntime']['version'],inputs['versions']['native'])

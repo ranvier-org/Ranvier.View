@@ -10,8 +10,9 @@ Before changing the disabled job, fill a reviewed input JSON with the actual pub
 managed/Native/provider/WebKit source pins and the selected RID's independently checked host and provider hashes. Preserve
 Core preview.1, DOM alpha.58, CSS alpha.2 and CSS add-ons alpha.1. DOM alpha.58 includes the intersection
 diagnostic fix from `5e95b1993b745cd9bc9211edd85be7a49f9d3e58` and version-only merge
-`59c68218e1e4f6b6bbde1afb8f8502a3ee587abc`; public release and signed-package audit remain pending.
-Public DOM alpha.57 hashes remain in `graph.json` as historical evidence.
+`59c68218e1e4f6b6bbde1afb8f8502a3ee587abc`. All four public normal/traced DOM and Fable DOM packages passed
+independent signature and producer-payload verification; `graph.json` records their hashes. Public DOM alpha.57
+hashes remain there as historical evidence. Final View46 graph/runtime acceptance is separate.
 The provider follows the matching Native version.
 Keep the complete five-RID native aggregate dependency graph; this consumer matrix executes only the three named
 RIDs and does not qualify Windows ARM64 or macOS by implication.

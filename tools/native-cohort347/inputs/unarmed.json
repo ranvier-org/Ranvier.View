@@ -24,5 +24,5 @@
     "wheelAndClipboard": "541ca21f16b1d0399e9c6eec6b0a27e58915c1b4",
     "linkDrop": "333c806ae4e5269e88be26d73778c01425de6b8d"
   },
-  "limitations": "P11 is allocated; matching GPU payloads, Core alpha.58 publication, provider and final runtime qualification remain pending. Source pins compare manifest claims; they do not authenticate a binary's build provenance."
+  "limitations": "P11 is allocated and Core alpha.58 is public; matching GPU payloads, provider and final runtime qualification remain pending. Source pins compare manifest claims; they do not authenticate a binary's build provenance."
 }
