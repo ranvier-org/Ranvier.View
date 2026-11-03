@@ -17,9 +17,9 @@ class RelayTests(unittest.TestCase):
         for key,value in [('digest','sha256:'+'0'*64),('uploader',{'login':'other'}),('size',1),('state','new')]:
             with self.subTest(key=key),self.assertRaises(ValueError): relay.validate_release(dict(r,assets=[dict(a,**{key:value})]),p)
 
-    def test_manual_main_workflow_only_and_disabled(self):
+    def test_manual_main_workflow_only(self):
         text=(ROOT/'.github/workflows/sdl-ibus-qualification-relay.yml').read_text()
-        self.assertIn('if: ${{ false &&',text)
+        self.assertNotIn('if: ${{ false &&',text)
         self.assertIn("github.event_name == 'workflow_dispatch'",text)
         self.assertIn("github.ref == 'refs/heads/main'",text)
         self.assertNotIn('id-token:',text.lower())
