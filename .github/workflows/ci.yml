@@ -447,6 +447,11 @@ jobs:
           global-json-file: global.json
       - run: dotnet fsi build.fsx -- tools
       - run: dotnet fsi build.fsx -- format --dry-format --quick
+      - run: >-
+          dotnet fantomas --check build.fsx
+          experiments/Ranvier.View.Arms.FablePlugin/Tests/PluginTests.fsx
+          .claude/skills/fsharp-xml-docs/scripts/XmlDocAudit.fsx
+          .claude/skills/fsharp-xml-docs/scripts/audit.fsx
 
   result:
     name: CI result
