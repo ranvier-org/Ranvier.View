@@ -37,7 +37,6 @@ module IntersectionObservation =
             raise (NotSupportedException "The native library has no intersection-entries functions")
 
         let session = host.Session
-        // The callbacks stay reachable until host disposal: a callback can release its own observer while it runs.
         let callbacks = List<Native.IntersectionEntriesCallback>()
         let releases = List<obj * (unit -> unit)>()
 
@@ -86,6 +85,7 @@ module IntersectionObservation =
 
         let create (init: IntersectionObserverInit) (deliver: IntersectionObserverEntry array -> unit) : IntersectionObserverHandle =
             host.EnsureActive ()
+            let mutable callbackRoot: Native.IntersectionEntriesCallback option = None
 
             let root =
                 match init.Root with
@@ -95,10 +95,15 @@ module IntersectionObservation =
 
             let callback =
                 Native.IntersectionEntriesCallback (fun _ _ entries count ->
+                    let inFlight = callbackRoot
+
                     try
-                        deliver (copyAll entries count)
-                    with error ->
-                        session.ListenerErrors.Add error)
+                        try
+                            deliver (copyAll entries count)
+                        with error ->
+                            session.ListenerErrors.Add error
+                    finally
+                        GC.KeepAlive inFlight)
 
             let rootMargin = Encoding.UTF8.GetBytes init.RootMargin
             let scrollMargin = Encoding.UTF8.GetBytes init.ScrollMargin
@@ -126,6 +131,7 @@ module IntersectionObservation =
 
             Interop.check "rv_host_observe_intersection_entries" status
             let mutable observer = observer[0]
+            callbackRoot <- Some callback
             callbacks.Add callback
             let key = obj ()
 
@@ -133,6 +139,11 @@ module IntersectionObservation =
                 if observer <> 0n then
                     Native.rv_observer_release observer
                     observer <- 0n
+
+                    callbackRoot
+                    |> Option.iter (fun value -> callbacks.Remove value |> ignore)
+
+                    callbackRoot <- None
 
                     releases.RemoveAll (fun (owner, _) -> obj.ReferenceEquals (owner, key))
                     |> ignore

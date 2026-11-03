@@ -29,7 +29,6 @@ module ResizeObservation =
             raise (NotSupportedException "The native library has no resize-entries functions")
 
         let session = host.Session
-        // The callbacks stay reachable until host disposal: a callback can release its own observer while it runs.
         let callbacks = List<Native.ResizeEntriesCallback>()
         let releases = List<obj * (unit -> unit)>()
 
@@ -78,14 +77,20 @@ module ResizeObservation =
 
         let create (deliver: ResizeObserverEntry array -> unit) : ResizeObserverHandle =
             host.EnsureActive ()
+            let mutable callbackRoot: Native.ResizeEntriesCallback option = None
 
             let callback =
                 Native.ResizeEntriesCallback (fun _ _ entries count ->
+                    let inFlight = callbackRoot
+
                     try
-                        let first = NativePtr.ofNativeInt<Native.ResizeEntry> entries
-                        deliver (Array.init count (fun index -> copy (NativePtr.get first index)))
-                    with error ->
-                        session.ListenerErrors.Add error)
+                        try
+                            let first = NativePtr.ofNativeInt<Native.ResizeEntry> entries
+                            deliver (Array.init count (fun index -> copy (NativePtr.get first index)))
+                        with error ->
+                            session.ListenerErrors.Add error
+                    finally
+                        GC.KeepAlive inFlight)
 
             let mutable observer =
                 Native.rv_host_observe_resize_entries (host.Handle, Marshal.GetFunctionPointerForDelegate<Native.ResizeEntriesCallback> callback, 0n)
@@ -93,6 +98,7 @@ module ResizeObservation =
             if observer = 0n then
                 raise (InvalidOperationException "rv_host_observe_resize_entries returned NULL")
 
+            callbackRoot <- Some callback
             callbacks.Add callback
 
             let key = obj ()
@@ -101,6 +107,11 @@ module ResizeObservation =
                 if observer <> 0n then
                     Native.rv_observer_release observer
                     observer <- 0n
+
+                    callbackRoot
+                    |> Option.iter (fun value -> callbacks.Remove value |> ignore)
+
+                    callbackRoot <- None
 
                     releases.RemoveAll (fun (owner, _) -> obj.ReferenceEquals (owner, key))
                     |> ignore
