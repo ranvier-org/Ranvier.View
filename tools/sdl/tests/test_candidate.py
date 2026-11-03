@@ -45,9 +45,9 @@ class CandidateTests(unittest.TestCase):
                     make(**kwargs)
                     with self.assertRaises(ValueError): candidate.validate(package,binary,targets,license_file)
 
-    def test_workflow_is_manual_main_and_never_publishes(self):
+    def test_workflow_is_disabled_and_never_publishes(self):
         text=(ROOT/'.github/workflows/sdl-ibus-candidate.yml').read_text()
-        self.assertNotIn('if: ${{ false &&',text)
+        self.assertIn('if: ${{ false &&',text)
         self.assertIn("github.event_name == 'workflow_dispatch'",text)
         self.assertIn("github.ref == 'refs/heads/main'",text)
         self.assertIn(candidate.SDL_REVISION,text)
