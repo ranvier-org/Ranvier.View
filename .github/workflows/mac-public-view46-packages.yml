@@ -1,6 +1,8 @@
 name: Public View46 package Mac Slim consumer
 
 on:
+  push:
+    branches: [codex/project2-view46-mac-packages]
   workflow_dispatch:
     inputs:
       inputs_sha256:
@@ -17,12 +19,15 @@ concurrency:
 
 jobs:
   public-packages:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/codex/project2-view46-mac-packages')
     runs-on: macos-26
     timeout-minutes: 50
     env:
       DOTNET_CLI_USE_MSBUILD_SERVER: '0'
       MSBUILDDISABLENODEREUSE: '1'
-      INPUTS_SHA256: ${{ inputs.inputs_sha256 }}
+      INPUTS_SHA256: ${{ inputs.inputs_sha256 || 'a543470446f824cfcf5260cb9b4536a8a5e8e4942761f766eb0f1b0f461773ab' }}
     steps:
       - uses: actions/checkout@v7
         with:
