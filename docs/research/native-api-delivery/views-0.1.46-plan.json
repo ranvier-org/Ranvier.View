@@ -1,7 +1,7 @@
 {
   "status": "source candidate; not a publication or final runtime acceptance record",
   "implementationSource": "caf2f145b7aa3cbec2707c06a6105189d71e20ba",
-  "integratedMain": "6b1119c8dbcefc683194dec510859f1137d1e96a",
+  "integratedMain": "b531e79df75ca3dcab916c4fc42209fe64941bf8",
   "viewVersion": "0.1.46",
   "webCoreVersion": "0.1.0-alpha.46",
   "nativeVersion": "0.1.1-preview.9",

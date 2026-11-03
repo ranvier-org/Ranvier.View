@@ -1,7 +1,7 @@
 {
   "scope": "managed source and compile preparation; no matched native runtime acceptance",
   "viewBase": "b3e435b37790e4ff3a6aa5592a24066a7a379af7",
-  "integratedMain": "6b1119c8dbcefc683194dec510859f1137d1e96a",
+  "integratedMain": "b531e79df75ca3dcab916c4fc42209fe64941bf8",
   "implementationCheckpoint": "caf2f145b7aa3cbec2707c06a6105189d71e20ba",
   "candidateVersions": {"view": "0.1.46", "backend": "0.1.0-alpha.46"},
   "sdlReviewedSource": "57d950148dd931c0d2e9cac7c0ae31f11c412ef3",
