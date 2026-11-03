@@ -153,6 +153,8 @@ class Verdicts(unittest.TestCase):
         self.assertIn('contents: read', workflow)
         self.assertIn('if: always()', workflow)
         self.assertIn('artifacts/mac-public-source', workflow)
+        job_environment = workflow.split('    env:\n', 1)[1].split('    steps:', 1)[0]
+        self.assertNotIn('${{ runner.', job_environment)
 
 
 @unittest.skipUnless(os.name == 'posix', 'Owned POSIX process-group control')

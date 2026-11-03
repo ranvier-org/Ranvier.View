@@ -28,7 +28,7 @@ jobs:
     env:
       DOTNET_CLI_USE_MSBUILD_SERVER: '0'
       MSBUILDDISABLENODEREUSE: '1'
-      NUGET_PACKAGES: ${{ runner.temp }}/view46-controller-nuget
+      NUGET_PACKAGES: ${{ github.workspace }}/artifacts/mac-controller-nuget
       VIEW_SOURCE: ${{ inputs.view_source }}
       INPUTS_SHA256: ${{ inputs.inputs_sha256 }}
     steps:
