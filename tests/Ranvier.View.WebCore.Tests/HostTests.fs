@@ -18,13 +18,19 @@ let private name (node: obj) =
 let private queuePayload (host: WebCoreHost) kind =
     let payload = obj ()
     let weak = WeakReference payload
-    let keep () = GC.KeepAlive payload
+
+    let keep () =
+        GC.KeepAlive payload
 
     match kind with
     | "timer" -> host.SetTimeout (keep, 1000000.0) |> ignore
-    | "frame" -> host.RequestAnimationFrame (fun _ -> keep ()) |> ignore
+    | "frame" ->
+        host.RequestAnimationFrame (fun _ -> keep ())
+        |> ignore
     | "microtask" -> host.QueueMicrotask keep
-    | "idle" -> host.RequestIdleCallback (fun _ -> keep ()) |> ignore
+    | "idle" ->
+        host.RequestIdleCallback (fun _ -> keep ())
+        |> ignore
     | _ -> System.Threading.SynchronizationContext.Current.Post ((fun _ -> keep ()), null)
 
     weak
@@ -34,16 +40,24 @@ let private racePostsWithDisposal (host: WebCoreHost) =
     let payload = obj ()
     let weak = WeakReference payload
     let context = System.Threading.SynchronizationContext.Current
-    use ready = new System.Threading.ManualResetEventSlim(false)
-    let worker = System.Threading.Thread (System.Threading.ThreadStart (fun () ->
-        ready.Set ()
-        for _ in 1..10000 do
-            context.Post ((fun state -> GC.KeepAlive state), payload)))
+    use ready = new System.Threading.ManualResetEventSlim (false)
+
+    let worker =
+        System.Threading.Thread (
+            System.Threading.ThreadStart (fun () ->
+                ready.Set ()
+
+                for _ in 1..10000 do
+                    context.Post ((fun state -> GC.KeepAlive state), payload))
+        )
+
     worker.Start ()
     ready.Wait ()
     (host :> IDisposable).Dispose()
+
     if not (worker.Join (TimeSpan.FromSeconds 10.0)) then
         failwith "posting worker did not finish"
+
     weak
 
 /// <summary>
@@ -207,12 +221,18 @@ let tests =
                 onHostThread (fun () ->
                     use host = WebCoreHost.Create (16, 16)
                     let error = InvalidOperationException "callback failure"
+
                     host.RequestAnimationFrame (fun _ ->
                         (host :> IDisposable).Dispose()
                         raise error)
                     |> ignore
+
                     host.Frame ()
-                    Expect.isTrue (host.Errors |> Seq.exists (fun item -> obj.ReferenceEquals (item, error))) "error remains available")
+
+                    Expect.isTrue
+                        (host.Errors
+                         |> Seq.exists (fun item -> obj.ReferenceEquals (item, error)))
+                        "error remains available")
             testCase "a frame callback can cancel a later callback and request the next frame"
             <| fun () ->
                 onHostThread (fun () ->
@@ -223,7 +243,9 @@ let tests =
                     host.RequestAnimationFrame (fun _ ->
                         calls.Add 1
                         host.CancelAnimationFrame second
-                        host.RequestAnimationFrame (fun _ -> calls.Add 3) |> ignore)
+
+                        host.RequestAnimationFrame (fun _ -> calls.Add 3)
+                        |> ignore)
                     |> ignore
 
                     second <- host.RequestAnimationFrame (fun _ -> calls.Add 2)
@@ -237,15 +259,22 @@ let tests =
                     for kind in [ "frame"; "timer"; "microtask"; "posted" ] do
                         use host = WebCoreHost.Create (16, 16)
                         let calls = ResizeArray<int>()
+
                         let first () =
                             calls.Add 1
                             (host :> IDisposable).Dispose()
-                        let second () = calls.Add 2
+
+                        let second () =
+                            calls.Add 2
 
                         match kind with
                         | "frame" ->
-                            host.RequestAnimationFrame (fun _ -> first ()) |> ignore
-                            host.RequestAnimationFrame (fun _ -> second ()) |> ignore
+                            host.RequestAnimationFrame (fun _ -> first ())
+                            |> ignore
+
+                            host.RequestAnimationFrame (fun _ -> second ())
+                            |> ignore
+
                             host.Frame ()
                         | "timer" ->
                             host.SetTimeout (first, 0.0) |> ignore
@@ -266,6 +295,7 @@ let tests =
             <| fun () ->
                 onHostThread (fun () ->
                     use host = WebCoreHost.Create (16, 16)
+
                     let operations =
                         [
                             fun () -> host.QueueMicrotask ignore
@@ -279,15 +309,30 @@ let tests =
                             fun () -> host.FrameRequested |> ignore
                             fun () -> host.NextTimerDelay |> ignore
                         ]
+
                     let errors = ResizeArray<exn>()
-                    let worker = System.Threading.Thread (System.Threading.ThreadStart (fun () ->
-                        for operation in operations do
-                            try operation () with error -> errors.Add error))
+
+                    let worker =
+                        System.Threading.Thread (
+                            System.Threading.ThreadStart (fun () ->
+                                for operation in operations do
+                                    try
+                                        operation ()
+                                    with error ->
+                                        errors.Add error)
+                        )
+
                     worker.Start ()
                     Expect.isTrue (worker.Join (TimeSpan.FromSeconds 10.0)) "foreign calls return"
                     Expect.equal errors.Count operations.Length "all foreign calls fail"
-                    Expect.isTrue (errors |> Seq.forall (fun error -> error :? InvalidOperationException)) "wrong thread is rejected"
+
+                    Expect.isTrue
+                        (errors
+                         |> Seq.forall (fun error -> error :? InvalidOperationException))
+                        "wrong thread is rejected"
+
                     (host :> IDisposable).Dispose()
+
                     for operation in operations do
                         Expect.throwsT<ObjectDisposedException> operation "disposed host rejects scheduler calls")
             testCase "a captured synchronization context drops work after host disposal"
@@ -297,8 +342,10 @@ let tests =
                     let context = System.Threading.SynchronizationContext.Current
                     let mutable calls = 0
                     (host :> IDisposable).Dispose()
-                    let worker = System.Threading.Thread (System.Threading.ThreadStart (fun () ->
-                        context.Post ((fun _ -> calls <- calls + 1), null)))
+
+                    let worker =
+                        System.Threading.Thread (System.Threading.ThreadStart (fun () -> context.Post ((fun _ -> calls <- calls + 1), null)))
+
                     worker.Start ()
                     Expect.isTrue (worker.Join (TimeSpan.FromSeconds 10.0)) "cross-thread post returns"
                     context.Send ((fun _ -> calls <- calls + 1), null)

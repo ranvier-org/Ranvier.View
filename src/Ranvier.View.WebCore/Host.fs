@@ -506,6 +506,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// <summary>Cancels a timer; an unknown or finished id does nothing.</summary>
     member this.ClearTimeout(id: int) =
         this.EnsureActive ()
+
         match timerKeys.TryGetValue id with
         | true, key ->
             timers.Remove key |> ignore
@@ -949,6 +950,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// <summary>The milliseconds until the next timer is due, zero when one is overdue, or None when none is set.</summary>
     member this.NextTimerDelay: float voption =
         this.EnsureActive ()
+
         if timers.Count = 0 then
             ValueNone
         else

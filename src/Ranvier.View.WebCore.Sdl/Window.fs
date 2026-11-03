@@ -341,6 +341,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_GAINED when event.window.windowID = id -> host.SetFocused true
         | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST when event.window.windowID = id ->
             suppressImeText <- false
+
             if composing then
                 composing <- false
                 pendingCompositionClear <- false
@@ -467,20 +468,23 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
             host.Wheel (css wheel.mouse_x, css wheel.mouse_y, wheel.x * wheelStep * direction, -wheel.y * wheelStep * direction, modifiers ())
             |> ignore
-        | _ when surrounding.EventType <> 0u && event.``type`` = surrounding.EventType && event.user.windowID = id ->
+        | _ when
+            surrounding.EventType <> 0u
+            && event.``type`` = surrounding.EventType
+            && event.user.windowID = id
+            ->
             let deletion = event.user
             let token = uint64 (unativeint deletion.data2)
             let count = uint32 (unativeint deletion.data1)
+
             match surrounding.Delete (token, deletion.code, count) with
             | 1 -> ()
             | 2 ->
                 composing <- false
                 pendingCompositionClear <- false
                 suppressImeText <- true
-            | _ ->
-                suppressImeText <- true
-        | SDL_EventType.SDL_EVENT_KEY_DOWN when event.key.windowID = id && suppressImeText ->
-            suppressImeText <- false
+            | _ -> suppressImeText <- true
+        | SDL_EventType.SDL_EVENT_KEY_DOWN when event.key.windowID = id && suppressImeText -> suppressImeText <- false
         | SDL_EventType.SDL_EVENT_KEY_DOWN
         | SDL_EventType.SDL_EVENT_KEY_UP when event.key.windowID = id && not composing ->
             let press = event.key

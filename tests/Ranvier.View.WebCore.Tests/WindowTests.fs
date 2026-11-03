@@ -576,18 +576,21 @@ let tests =
             <| fun window ->
                 window.Host.SetTimeout ((fun () -> (window.Host :> IDisposable).Dispose()), 0.0)
                 |> ignore
+
                 Expect.isFalse (window.Step 0) "a disposed host stops the step"
 
             windowCase "a frame callback that disposes the window ends presentation"
             <| fun window ->
                 window.Host.RequestAnimationFrame (fun _ -> (window :> IDisposable).Dispose())
                 |> ignore
+
                 Expect.isFalse (window.Step 0) "a disposed window stops presentation"
 
             windowCase "a frame callback that disposes only the host ends presentation"
             <| fun window ->
                 window.Host.RequestAnimationFrame (fun _ -> (window.Host :> IDisposable).Dispose())
                 |> ignore
+
                 Expect.isFalse (window.Step 0) "a disposed host stops presentation"
 
             test "keys map to DOM codes and names" {

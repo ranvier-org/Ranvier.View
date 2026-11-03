@@ -26,10 +26,13 @@ module internal SurroundingText =
                 let mutable symbol = 0n
                 let mutable eventSymbol = 0n
 
-                if NativeLibrary.TryGetExport (library, "SDL_Ranvier_SetIbusSurrounding", &symbol)
-                   && NativeLibrary.TryGetExport (library, "SDL_Ranvier_GetIbusDeleteEventType", &eventSymbol) then
+                if
+                    NativeLibrary.TryGetExport (library, "SDL_Ranvier_SetIbusSurrounding", &symbol)
+                    && NativeLibrary.TryGetExport (library, "SDL_Ranvier_GetIbusDeleteEventType", &eventSymbol)
+                then
                     let getEventType = Marshal.GetDelegateForFunctionPointer<EventType> eventSymbol
                     let eventType = getEventType.Invoke ()
+
                     if eventType = 0u then
                         NativeLibrary.Free library
                         None
@@ -81,7 +84,9 @@ module internal SurroundingText =
             if Rune.TryGetRuneAt (text, index, &rune) then
                 index <- index + rune.Utf16SequenceLength
                 count <- count + 1u
-                if count = offset then result <- Some index
+
+                if count = offset then
+                    result <- Some index
             else
                 valid <- false
 
@@ -114,7 +119,9 @@ module internal SurroundingText =
             | Some (text, cursor, currentToken) when token = currentToken ->
                 match deleteRange text cursor offset count with
                 | Some (start, finish) ->
-                    let result = Native.rv_host_ime_delete_surrounding (host.Handle, token, start, finish)
+                    let result =
+                        Native.rv_host_ime_delete_surrounding (host.Handle, token, start, finish)
+
                     if count = 0u && result = 0 then 1 else result
                 | None -> -9
             | _ -> -10
@@ -132,7 +139,9 @@ module internal SurroundingText =
                     available <- false
                     snapshot <- None
                 elif not (WebCoreHost.Has "ime-surrounding") then
-                    transmit.Invoke (window, 0n, 0u, 0u, 0UL) |> ignore
+                    transmit.Invoke (window, 0n, 0u, 0u, 0UL)
+                    |> ignore
+
                     available <- false
                     snapshot <- None
                 else
@@ -166,19 +175,26 @@ module internal SurroundingText =
                             available <-
                                 transmit.Invoke (window, NativePtr.toNativeInt pointer, caret, origin, token)
                                 <> 0uy
+
                             snapshot <- if available then Some (text, caret, token) else None
                         | _ ->
-                            transmit.Invoke (window, 0n, 0u, 0u, 0UL) |> ignore
+                            transmit.Invoke (window, 0n, 0u, 0u, 0UL)
+                            |> ignore
+
                             available <- false
                             snapshot <- None
                     else
-                        transmit.Invoke (window, 0n, 0u, 0u, 0UL) |> ignore
+                        transmit.Invoke (window, 0n, 0u, 0u, 0UL)
+                        |> ignore
+
                         available <- false
                         snapshot <- None
 
         member _.Clear() =
             match send with
-            | Some (transmit, _) when NativePtr.toNativeInt (SDL3.SDL_GetKeyboardFocus ()) = window -> transmit.Invoke (window, 0n, 0u, 0u, 0UL) |> ignore
+            | Some (transmit, _) when NativePtr.toNativeInt (SDL3.SDL_GetKeyboardFocus ()) = window ->
+                transmit.Invoke (window, 0n, 0u, 0u, 0UL)
+                |> ignore
             | _ -> ()
 
             available <- false
