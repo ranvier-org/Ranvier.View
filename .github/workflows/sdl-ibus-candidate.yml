@@ -1,0 +1,45 @@
+name: Optional SDL IBus candidate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    if: ${{ false && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: libsdl-org/SDL
+          ref: ea7a2dabfd1ab6b0a5720568ffd207f5825e47f1
+          path: sdl-upstream
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.403'
+      - name: Install SDL-only Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxfixes-dev libxkbcommon-dev libwayland-dev wayland-protocols libibus-1.0-dev libdbus-1-dev libegl1-mesa-dev
+      - name: Build the pinned SDL bridge and package it
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/sdl-ibus-candidate"
+          bash tools/sdl/build-linux.sh "$GITHUB_WORKSPACE/sdl-upstream" "$RUNNER_TEMP/sdl-ibus-candidate" 2>&1 | tee "$RUNNER_TEMP/sdl-ibus-candidate/build.log"
+          dotnet pack tools/sdl/package/Ranvier.View.WebCore.Sdl.Ibus.csproj -c Release -p:Version=0.1.0-alpha.1 -p:IbusSdlLibrary="$RUNNER_TEMP/sdl-ibus-candidate/libSDL3.so" -o "$RUNNER_TEMP/sdl-ibus-candidate" 2>&1 | tee "$RUNNER_TEMP/sdl-ibus-candidate/pack.log"
+          python3 -I tools/sdl/validate-candidate.py --package "$RUNNER_TEMP/sdl-ibus-candidate/Ranvier.View.WebCore.Sdl.Ibus.0.1.0-alpha.1.nupkg" --binary "$RUNNER_TEMP/sdl-ibus-candidate/libSDL3.so" --output "$RUNNER_TEMP/sdl-ibus-candidate/candidate.json"
+      - name: Retain candidate and build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdl-ibus-candidate
+          path: ${{ runner.temp }}/sdl-ibus-candidate/
+          if-no-files-found: warn
