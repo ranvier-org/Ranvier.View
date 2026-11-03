@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "armed": false,
   "managedSource": null,
-  "nativeSource": "b3073f604a4fba7a1a565d2893ff5791c603b759",
-  "providerSource": "b3073f604a4fba7a1a565d2893ff5791c603b759",
+  "nativeSource": "e0e9a8007683d98785e8fb1b86d3b43359699858",
+  "providerSource": "e0e9a8007683d98785e8fb1b86d3b43359699858",
   "webkitSource": null,
   "versions": {
     "view": "0.1.46",
     "backend": "0.1.0-alpha.46",
-    "native": "0.1.1-preview.8",
+    "native": "0.1.1-preview.9",
     "provider": null,
     "core": "0.1.1-preview.1",
     "dom": "0.1.0-alpha.56",
@@ -21,5 +21,5 @@
     "linux-arm64": {"hostSha256": null, "providerSha256": null}
   },
   "adoptedNativeFixtureSource": "541ca21f16b1d0399e9c6eec6b0a27e58915c1b4",
-  "limitations": "No final producer allocation or ARM qualification. Source pins compare manifest claims; they do not authenticate a binary's build provenance."
+  "limitations": "P9 is allocated; matching producer/public payloads and actual ARM qualification remain pending. Source pins compare manifest claims; they do not authenticate a binary's build provenance."
 }

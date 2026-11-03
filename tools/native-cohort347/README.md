@@ -1,7 +1,7 @@
 # Final ABI63 public consumer arming
 
 This lane prepares public package checks for `win-x64`, `linux-x64` and `linux-arm64`, each normal and traced.
-Both x64 and ARM64 consumer jobs are statically disabled. `inputs/unarmed.json` records allocated Native P8 and the
+Both x64 and ARM64 consumer jobs are statically disabled. `inputs/unarmed.json` records allocated Native P9 and the
 proposed View46 version families, with provider allocation, managed source and actual runtime hashes incomplete.
 Neither a dispatch nor an input value can enable a job. The pull-request job runs hermetic policy
 tests only. No public or ARM consumer run has been dispatched or qualified by this preparation.
@@ -12,11 +12,11 @@ Core preview.1, DOM alpha.56, CSS alpha.2 and CSS add-ons alpha.1. The provider 
 Keep the complete five-RID native aggregate dependency graph; this consumer matrix executes only the three named
 RIDs and does not qualify Windows ARM64 or macOS by implication.
 
-Native P8 source `b3073f604a4fba7a1a565d2893ff5791c603b759` includes the reviewed manifest, worker-first-owner and IME
+Native P9 source `e0e9a8007683d98785e8fb1b86d3b43359699858` includes the reviewed manifest, worker-first-owner and IME
 corrections and GPU producer oracle. Its Linux wheel/clipboard/rich-drop fixtures are byte-identical to reviewed
 `541ca21f16b1d0399e9c6eec6b0a27e58915c1b4`; they are not copied into View. Source adoption does not replace actual
 matched producer/catalogue/IME receipts. ARM provider/managed qualification remains retained active work on the
-actual P8 ARM producer, with its own disabled job. Missing ARM provider hashes do not enable ARM or block the
+actual P9 ARM producer, with its own disabled job. Missing ARM provider hashes do not enable ARM or block the
 independent x64 guard. An input JSON cannot substitute for passing producer/independent runtime receipts.
 
 `run.py` restores only the public SDL package and, on Linux, the optional public provider into a new owned cache.
