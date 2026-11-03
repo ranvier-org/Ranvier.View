@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "Ranvier.View.WebCore.Sdl.Ibus",
+  "version": "0.1.0-alpha.1",
+  "candidateRun": 41679434452,
+  "candidateHead": "7dab7468a042a7a809270b808e29f4683a02dff8",
+  "packageSha256": "7923c9f66b6a0e65991e44ac353ec61cb39f03139e0adc69f79b6e5059d41de6",
+  "candidateReceiptSha256": "13b9602a34b5b0bfc5950007a2a24f151c6ad1389e65a1ba04314e7a8b6b65e3",
+  "qualificationRun": 41687949734,
+  "qualificationHead": "6b3a860d3a24928deb432f0a81a7ce246bee71c7",
+  "qualificationArtifact": 13256631004,
+  "qualificationArtifactSha256": "8b9af881d25743d7643fd657dc1a3f0ca8645fafe0b3defc0f00aa86b95e3640",
+  "qualificationReceiptSha256": "1df51afdd545b4279392570c029e12fae4158838a8e200b1b1eaa466d966d037",
+  "qualificationArchiveSha256": "3dedd15d84b545ac2126f753121c202f7b681f0a34cfc3dbd0ca23dbb1497960",
+  "scope": "Reviewed SDL candidate and local Mozc qualification relay; publisher remains disabled."
+}
