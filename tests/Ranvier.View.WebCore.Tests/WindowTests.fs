@@ -303,7 +303,8 @@ let tests =
                 event.edit.start <- 0
                 Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "cancel queued"
                 steps window 1
-                Expect.equal input.value "ac" "the uncommitted preedit is removed"
+                Expect.equal input.value "abc" "cancellation restores the original selected text"
+                Expect.equal (input.selectionStart, input.selectionEnd) (Some 1u, Some 2u) "cancellation restores the original selection"
                 Expect.sequenceEqual ended [| "" |] "cancellation ends the composition"
 
             windowCase "focus loss cancels an active composition"
@@ -335,7 +336,8 @@ let tests =
                 event.window.windowID <- target
                 Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "focus loss queued"
                 steps window 1
-                Expect.equal input.value "ac" "focus loss removes the uncommitted preedit"
+                Expect.equal input.value "abc" "focus loss restores the original selected text"
+                Expect.equal (input.selectionStart, input.selectionEnd) (Some 1u, Some 2u) "focus loss restores the original selection"
                 Expect.sequenceEqual ended [| "" |] "focus loss ends the composition"
 
             windowCase "another window receives queued close requests"
