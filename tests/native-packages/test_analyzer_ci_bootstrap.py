@@ -99,7 +99,7 @@ class AnalyzerBootstrap(unittest.TestCase):
         self.assertIn('compiler="$GITHUB_WORKSPACE/' + compiler + '"', bootstrap)
 
     def test_core_source_and_css_package_versions_match_their_release_closures(self):
-        source = 'c2a7cbe0ed2732da2cf868df719e737f61d3a2f6'
+        source = '59c68218e1e4f6b6bbde1afb8f8502a3ee587abc'
         ci = (ROOT / '.github/workflows/ci.yml').read_text()
         qualification = (ROOT / '.github/workflows/analyzer-host.yml').read_text()
         self.assertIn('ref: ' + source, ci)

@@ -9,8 +9,9 @@ tests only. No public or ARM consumer run has been dispatched or qualified by th
 Before changing the disabled job, fill a reviewed input JSON with the actual public View/Native/provider versions,
 managed/Native/provider/WebKit source pins and the selected RID's independently checked host and provider hashes. Preserve
 Core preview.1, DOM alpha.58, CSS alpha.2 and CSS add-ons alpha.1. DOM alpha.58 includes the intersection
-diagnostic fix from `5e95b1993b745cd9bc9211edd85be7a49f9d3e58`; its release and independent signed-package audit
-remain pending. Public DOM alpha.57 hashes remain in `graph.json` as historical evidence.
+diagnostic fix from `5e95b1993b745cd9bc9211edd85be7a49f9d3e58` and version-only merge
+`59c68218e1e4f6b6bbde1afb8f8502a3ee587abc`; public release and signed-package audit remain pending.
+Public DOM alpha.57 hashes remain in `graph.json` as historical evidence.
 The provider follows the matching Native version.
 Keep the complete five-RID native aggregate dependency graph; this consumer matrix executes only the three named
 RIDs and does not qualify Windows ARM64 or macOS by implication.

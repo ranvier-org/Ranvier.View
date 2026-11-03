@@ -7,9 +7,9 @@
   "sdlReviewedSource": "57d950148dd931c0d2e9cac7c0ae31f11c412ef3",
   "accessibilityReviewedSource": "0bd9d12b4c96fe80d6f8fdecedc9d8c8643cd73c",
   "domSuccessor": {
-    "source": "c2a7cbe0ed2732da2cf868df719e737f61d3a2f6",
+    "source": "59c68218e1e4f6b6bbde1afb8f8502a3ee587abc",
     "version": "0.1.0-alpha.58",
-    "status": "version-only PR head; merge, public package signature and payload audit pending",
+    "status": "version-only release merged; public package signature and payload audit pending",
     "publicPackageSha256": {}
   },
   "historicalPublicDom57": {
