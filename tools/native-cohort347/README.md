@@ -16,7 +16,7 @@ The provider follows the matching Native version.
 Keep the complete five-RID native aggregate dependency graph; this consumer matrix executes only the three named
 RIDs and does not qualify Windows ARM64 or macOS by implication.
 
-Native P10 source `233c8045c9384e5eb97e8688ca0ed0caa11a8f17` includes the coherent Mac successor and the reviewed
+Native P10 source `233c8045c9384e5eb97e8688ca0ed0caa11a8f17` includes the Cocoa IME cancellation fix and the reviewed
 optional provider packaging/ordinary-consumer corrections. Its complete ABI63/347 header, interop sources and native
 provider sources are byte-identical to reviewed P9; packaging normalizes SDK text and the consumer handles schema2.
 Source equivalence does not authenticate a package or qualify a new Host binary. The wheel and clipboard fixtures retain reviewed
