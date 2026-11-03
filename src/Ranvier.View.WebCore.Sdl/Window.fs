@@ -735,12 +735,15 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// Runs a frame and shows it: the page's animation frame callbacks and rendering update, then the painted area in
     /// the texture, presented on the window's next vertical blank.
     /// </summary>
+    /// <remarks>A frame callback that closes the window or disposes its host stops presentation.</remarks>
     member _.Present() =
         host.Frame ()
-        presenter.Present exposed
-        fullPaint <- false
-        exposed <- false
-        placeInputMethod ()
+
+        if alive () then
+            presenter.Present exposed
+            fullPaint <- false
+            exposed <- false
+            placeInputMethod ()
 
     /// <summary>
     /// One turn of the window's loop: waits up to <c>timeout</c> milliseconds (50 by default), less when a timer is due
