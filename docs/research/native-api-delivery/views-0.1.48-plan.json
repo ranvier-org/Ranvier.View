@@ -1,0 +1,56 @@
+{
+  "status": "candidate-source-preparation-unarmed",
+  "allocation": false,
+  "viewVersion": "0.1.48",
+  "webCoreViewVersion": "0.1.0-alpha.48",
+  "nativeVersion": "0.1.1-preview.12",
+  "nativeAllocationSource": "d31c3631ed4bbe6520f7f5f7c7e7d34499c38122",
+  "nativeAbi": 64,
+  "nativeDeclarations": 349,
+  "coreDomVersion": "0.1.0-alpha.58",
+  "currentViewMain": "eb06214337b55ee24a381c3fc3a4598afe40a9b0",
+  "packageIds": [
+    "Ranvier.View",
+    "Ranvier.View.Traced",
+    "Ranvier.View.Dom",
+    "Ranvier.View.Dom.Traced",
+    "Ranvier.View.WebCore",
+    "Ranvier.View.WebCore.Traced",
+    "Ranvier.View.WebCore.Sdl",
+    "Ranvier.View.WebCore.Sdl.Traced"
+  ],
+  "nativeMacGpuPackage": "Ranvier.WebCore.Native.Gpu.osx-arm64",
+  "signedNativePackageSha256": null,
+  "signedInteropPackageSha256": null,
+  "nativePublicAuditSha256": null,
+  "viewPublicPackageSha256": null,
+  "mergeGates": [
+    "Independent source and exact-head CI review",
+    "Signed public Native preview12 and matching Interop audit, including ABI64 and all349 declarations",
+    "Actual matching macOS26 ARM64 GPU producer validation, including glyph orientation, second-host and fractional-scale composition",
+    "Normal and traced unfiltered Mac source suites with an explicit source-derived test inventory",
+    "Framework-free IOSurface JIT and strict NativeAOT consumer: all4cases/53assertions and dynamicCode=false for AOT",
+    "Loaded package and native hashes, complete four-or-six dylib closure, no CPU fallback in the GPU controls",
+    "Existing Windows and Linux backend compatibility and analyzer gates"
+  ],
+  "publicationGates": [
+    "Coordinator allocates and admits the candidate View package versions",
+    "All merge gates pass on the exact integrated source",
+    "Normal and traced packages, Fable metadata and signed public payloads are independently audited",
+    "Fresh package-only Mac JIT and strict NativeAOT consumers pass without source-project fallback"
+  ],
+  "existingEvidence": {
+    "source": "ec73a856d3472a8677a41a7875e70f7512a70aed",
+    "privateInteropVersion": "0.0.0-private.abi64.349.1",
+    "normalTracedReleaseCompilation": "pass-private-package-override",
+    "normalWebCoreSdlAllRanAnalysis": "pass-two-project-scope",
+    "macRuntime": "pending-new-matching-cohort",
+    "oldDerivativeMacProof": "historical-private-only-not-successor-acceptance"
+  },
+  "activation": {
+    "armed": false,
+    "tag": null,
+    "producerRun": null,
+    "publicConsumerRun": null
+  }
+}

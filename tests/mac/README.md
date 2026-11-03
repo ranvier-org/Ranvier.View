@@ -11,13 +11,15 @@ Current Core58 and formatter/lifetime fixes are preserved. The default Interop d
 the allocated Native preview12 ABI64/349 cohort. Its producer/runtime and public package qualification
 are pending. Before that package is available, source compilation requires an explicit canonical
 source override or a private package built from that same Interop source. The successor View version
-remains unallocated, and this branch is not ready for publication.
+is staged as candidate View/Dom `0.1.48` and WebCore/SDL `0.1.0-alpha.48`. No View tag or public
+publication has been allocated; this branch is not ready for publication.
 
 Normal and traced Release compilation of the complete test project and the framework-free static
 entry passed against private `Ranvier.WebCore/0.0.0-private.abi64.349.1` and public Core58. The private
 Interop package's 349 declarations match the canonical header. A separate normal-mode all-RAN check
-of WebCore and SDL also passed. Current-main integration preserves those F# and project input bytes.
-Actual Mac execution, NativeAOT publication and the final public package graph remain required.
+of WebCore and SDL also passed. Current-main integration preserves those F# bodies; the candidate
+version and Native pin updates still require the matching public package graph. Actual Mac execution
+and NativeAOT publication remain required.
 
 The prior actual Mac JIT/AOT proof used a private derivative Host with older coherent engines. It is
 separate from the required future matching producer/runtime and public package qualification. Preserve

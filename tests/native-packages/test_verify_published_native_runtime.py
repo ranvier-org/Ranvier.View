@@ -187,6 +187,22 @@ class RuntimeVerification(unittest.TestCase):
         self.assertEqual(ABI, 63)
         self.assertEqual(self.fixture().verify()['abi'], 63)
 
+    def test_view48_candidate_is_unarmed_and_matches_project_metadata(self):
+        root = Path(__file__).resolve().parents[2]
+        plan = json.loads((root / 'docs/research/native-api-delivery/views-0.1.48-plan.json').read_text())
+        self.assertFalse(plan['allocation'])
+        self.assertFalse(plan['activation']['armed'])
+        self.assertEqual((plan['nativeVersion'], plan['nativeAbi'], plan['nativeDeclarations']),
+                         ('0.1.1-preview.12', 64, 349))
+        for project in ['Ranvier.View', 'Ranvier.View.Dom', 'Ranvier.View.WebCore', 'Ranvier.View.WebCore.Sdl']:
+            version = ET.parse(root / 'src' / project / (project + '.fsproj')).getroot().findtext('.//Version')
+            self.assertEqual(version, plan['webCoreViewVersion' if 'WebCore' in project else 'viewVersion'])
+        for key in ['signedNativePackageSha256', 'signedInteropPackageSha256',
+                    'nativePublicAuditSha256', 'viewPublicPackageSha256']:
+            self.assertIsNone(plan[key])
+        self.assertTrue(plan['mergeGates'])
+        self.assertTrue(plan['publicationGates'])
+
     def test_cpu_checks_every_one_of_317_manifest_files(self):
         self.assertEqual(self.fixture().verify()['files'], 317)
 
