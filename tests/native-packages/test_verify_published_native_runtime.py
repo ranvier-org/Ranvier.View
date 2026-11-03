@@ -65,7 +65,7 @@ class PackageFixture:
             key = package + '/' + VERSION
             package_root = self.cache / key.lower()
             native = package_root / f'runtimes/{rid}/native'
-            names = (['libRanvierWebCoreHost.dylib', 'libWebCore.dylib', 'libJavaScriptCore.dylib', 'libWTF.dylib']
+            names = (['libRanvierWebCoreHost.dylib', 'libWebCore.dylib', 'libJavaScriptCore.dylib', 'libWebGPU.dylib']
                      if rid == 'osx-arm64' else ['RanvierWebCoreHost.dll', 'WebCore.dll'])
             names += [f'WebKit.resources/data/{i:03}.bin' for i in range(315)]
             if kind == 'gpu':
@@ -108,6 +108,11 @@ class PackageFixture:
 
 
 class RuntimeVerification(unittest.TestCase):
+    def test_mac_library_names_match_inspected_public_package(self):
+        fixture = json.loads((Path(__file__).parent / 'fixtures/cocoa-native-library-closure.json').read_text())
+        self.assertEqual(VERIFY.MAC_LIBRARIES, set(fixture['publicSlim']['libraries']))
+        self.assertEqual(VERIFY.MAC_LIBRARIES | {'libEGL.dylib', 'libGLESv2.dylib'}, set(fixture['privateGpu']['libraries']))
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.root = Path(self.directory.name)

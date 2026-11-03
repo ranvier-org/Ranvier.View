@@ -9,6 +9,7 @@ OFFICIAL_SOURCE = 'https://api.nuget.org/v3/index.json'
 SLIM = 'Ranvier.WebCore.Native.win-x64'
 GPU = 'Ranvier.WebCore.Native.Gpu.win-x64'
 RIDS = {'linux-x64', 'linux-arm64', 'osx-arm64', 'win-arm64', 'win-x64'}
+MAC_LIBRARIES = {'libRanvierWebCoreHost.dylib', 'libWebCore.dylib', 'libJavaScriptCore.dylib', 'libWebGPU.dylib'}
 ASSET_SECTIONS = {'native', 'runtime', 'runtimeTargets', 'resource', 'build', 'buildTransitive', 'buildMultiTargeting'}
 
 
@@ -83,7 +84,7 @@ def package_manifest(assets, package, version, flavor, abi, rid='win-x64'):
         if type(record.get('bytes')) is not int or record['bytes'] < 0 or not re.fullmatch('[0-9a-fA-F]{64}', record.get('sha256', '')):
             raise ValueError(f'{package} has an invalid size/hash record: {name}')
     if rid == 'osx-arm64':
-        required = {'libranvierwebcorehost.dylib', 'libwebcore.dylib', 'libjavascriptcore.dylib', 'libwtf.dylib'}
+        required = {name.casefold() for name in MAC_LIBRARIES}
         required |= {'libegl.dylib', 'libglesv2.dylib'} if flavor == 'gpu' else set()
     else:
         required = {'ranvierwebcorehost.dll', 'webcore.dll'} | ({'libegl.dll', 'libglesv2.dll'} if flavor == 'gpu' else set())
