@@ -810,7 +810,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             dirty
         | ValueNone -> ValueNone
 
-    member private _.Input(name: string, call: unit -> int) : bool =
+    member private this.Input(name: string, call: unit -> int) : bool =
+        this.EnsureActive ()
         inInput <- inInput + 1
 
         let status =
