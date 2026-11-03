@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <RanvierViewWebCoreSdlVersion Condition="'$(RanvierViewWebCoreSdlVersion)' == ''">0.1.0-alpha.45</RanvierViewWebCoreSdlVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Checks.fs" />
+    <PackageReference Include="Ranvier.View.WebCore.Sdl$(RanvierPackageSuffix)" Version="[$(RanvierViewWebCoreSdlVersion)]" />
+    <PackageReference Update="FSharp.Core" Version="10.1.401" />
+  </ItemGroup>
+</Project>
