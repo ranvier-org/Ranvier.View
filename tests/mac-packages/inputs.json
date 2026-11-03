@@ -1,0 +1,150 @@
+{
+  "scope": "PUBLIC View46 normal/traced packages with publicCoreDOM58/InteropP11/NativeP11Slim on Mac26ARM; only consumer code compiled, no source providers/GPU/ABI64.",
+  "sdk": "10.0.403",
+  "fsharpCore": "10.1.403",
+  "native": {
+    "url": "https://api.nuget.org/v3-flatcontainer/ranvier.webcore.native.osx-arm64/0.1.1-preview.11/ranvier.webcore.native.osx-arm64.0.1.1-preview.11.nupkg",
+    "id": "Ranvier.WebCore.Native.osx-arm64",
+    "version": "0.1.1-preview.11",
+    "sha256": "010be9d6d02c3ff9473f1eeb1e18957604ccbfc9979a3d3d9091ac5bd5fb8085",
+    "manifest": {
+      "flavor": "slim",
+      "rid": "osx-arm64",
+      "version": "0.1.1-preview.11",
+      "webkit": "b95c91b1c0ee43cc86d25ff7af73038f67a88e04",
+      "abi": 63,
+      "source": {
+        "commit": "8b8db298eba294876c27bd9a3200881f872684df",
+        "dirty": false,
+        "builder": "ci"
+      },
+      "total_bytes": 89302256,
+      "files": [
+        {
+          "name": "libJavaScriptCore.dylib",
+          "bytes": 15711488,
+          "sha256": "83c5cfbcec82dee7aa5bbcda7172cfecc8a03f9f64acc5c10d893437ec747eec"
+        },
+        {
+          "name": "libRanvierWebCoreHost.dylib",
+          "bytes": 1200640,
+          "sha256": "435838afcb206fe45ee8407330199d669bc336f0f1d98cd82ef2fa435771daa5"
+        },
+        {
+          "name": "libWebCore.dylib",
+          "bytes": 69565216,
+          "sha256": "45f6b38720f01dfe092037549f885a9d5fca4e062cf0b34e38a09fc62a1c8232"
+        },
+        {
+          "name": "libWebGPU.dylib",
+          "bytes": 2824912,
+          "sha256": "63c482619e72d38719bb98bcc48e1297e7c58dd793192aae2d0cc847c6101bcb"
+        }
+      ]
+    }
+  },
+  "coreVersion": "0.1.1-preview.1",
+  "domVersion": "0.1.0-alpha.58",
+  "domPackageSha256": {
+    "normal": "3888a085a01676f95e59cb5a0a91449daf99a7ee05f00ff8f1883547990f0658",
+    "traced": "663ef00ed6fddbc022ab09a619cf902c7ca78c26f0b068246611c338d3e8392e"
+  },
+  "interopVersion": "0.1.1-preview.11",
+  "interopPackageSha256": "761136a5f618755ebbfa698afe4a2fbdd5893bc28812fbfd274633b7c674577b",
+  "fixtureHashes": {
+    "CleanupFaultChecks.fs": "b8f0a1f7fc0f36bec7046736375ba5aee06b9a9bc3875b1f7a28e89f41a85c70",
+    "LifecycleChecks.fs": "a559ccef955c627b69c0a1cc91240949d2c3fd4b858872bb12e2a66e2fc7a17b",
+    "LifecycleMain.fs": "f53c575516ae50e92c9473298d604ad0b08fe5a3c2c2639b002e1807034ac8c6"
+  },
+  "fixtureOriginalHashes": {
+    "CleanupFaultChecks.fs": "14fc3b014f445d8b8c48e89b54de3ad38fda51bc4628b466b16882810cf4729c",
+    "LifecycleChecks.fs": "797f74d0e9879be048afbbf1b2ece03a23df78f65f03e422c02c6d793417b09d",
+    "LifecycleMain.fs": "00fb5028292d8df0ca3dc7282b7d2ecda352d9a5ff48d560ac550d5c4835d74f"
+  },
+  "fixtureFormattingOnly": [
+    "LifecycleChecks.fs",
+    "LifecycleMain.fs"
+  ],
+  "reviewedTextHashPolicy": "UTF8_CRLF_TO_LF_ONLY",
+  "publicViewSource": "8a788889ec41e8264e5b017fcc6666c581f34d31",
+  "viewPackages": [
+    {
+      "id": "Ranvier.View",
+      "version": "0.1.46",
+      "sha256": "bc9a8dec1b7428da52f62fe926772cc841e6c0d76494ac28fe78b49d7876d1fb"
+    },
+    {
+      "id": "Ranvier.View.Traced",
+      "version": "0.1.46",
+      "sha256": "0722c39ffca099cded1fde871e10a8bcc0f45eb6935e971375404456752604a0"
+    },
+    {
+      "id": "Ranvier.View.Dom",
+      "version": "0.1.46",
+      "sha256": "fdc23e3d55fef6cdf5685e475861f587bc0a09dd8027715fe498b2b64027ff70"
+    },
+    {
+      "id": "Ranvier.View.Dom.Traced",
+      "version": "0.1.46",
+      "sha256": "29d1bae6aa5e0965c1a88522ad342f6d42a5ce03dadfaa177fb042e4171f2cb9"
+    },
+    {
+      "id": "Ranvier.View.WebCore",
+      "version": "0.1.0-alpha.46",
+      "sha256": "b9727e57b67881970fb77771a77e5bae7abcbe9b355239964e74d5eb1c97251e"
+    },
+    {
+      "id": "Ranvier.View.WebCore.Traced",
+      "version": "0.1.0-alpha.46",
+      "sha256": "d940925e96027b3dd600b9faa385ff060f0b4d8cc759ac5fa93a5c69ab519599"
+    },
+    {
+      "id": "Ranvier.View.WebCore.Sdl",
+      "version": "0.1.0-alpha.46",
+      "sha256": "a8b46515a51d9e08f0ed7f51a5848cbfd3af9a4c5964ce3783fd61811f0bdba2"
+    },
+    {
+      "id": "Ranvier.View.WebCore.Sdl.Traced",
+      "version": "0.1.0-alpha.46",
+      "sha256": "d8c62d4544861fce7e67c652f0156c7f9ef0ba9ad8b86167c2de7afd0b9ea074"
+    }
+  ],
+  "nativePackagePins": [
+    {
+      "id": "Ranvier.WebCore.Native.linux-arm64",
+      "version": "0.1.1-preview.11",
+      "sha256": "649d7e9e405cda6bda5c4a11fb02c774673b5ba6e3e29de3ef0601fdd0ed70c4"
+    },
+    {
+      "id": "Ranvier.WebCore.Native.linux-x64",
+      "version": "0.1.1-preview.11",
+      "sha256": "0be487e2bafacf7930ae98ed6b15e6fe1080bfdaf31a694b983abbdc4925abe2"
+    },
+    {
+      "id": "Ranvier.WebCore.Native",
+      "version": "0.1.1-preview.11",
+      "sha256": "a69add6e149b9b8bb285da369e6ba3efb61240adf494b51ff01851647a89b2b8"
+    },
+    {
+      "id": "Ranvier.WebCore.Native.osx-arm64",
+      "version": "0.1.1-preview.11",
+      "sha256": "010be9d6d02c3ff9473f1eeb1e18957604ccbfc9979a3d3d9091ac5bd5fb8085"
+    },
+    {
+      "id": "Ranvier.WebCore.Native.win-arm64",
+      "version": "0.1.1-preview.11",
+      "sha256": "b93918377a8461daca4f2f7b8f9f14a53dc5958076a3545218833e68e7644665"
+    },
+    {
+      "id": "Ranvier.WebCore.Native.win-x64",
+      "version": "0.1.1-preview.11",
+      "sha256": "63c8af9f391788823c1f4dacc301106023e3214a2bdb71661481db639b860c47"
+    }
+  ],
+  "viewPackageAuditSha256": "6ee9d937bee60c072180385257f914d9fdb882ff1d3238a41c43f83f8413044b",
+  "sdl": {
+    "version": "2026.1002.1",
+    "packageSha256": "c5450151ffb6abf479d9cf6d36f331ff53ae3fbd4c6335f4ca86e6e104963568",
+    "dylibSha256": "ed551fb95c4d17a15c2973d3608740bf1a84ab7910c4fbc71f51002eac5963a5"
+  }
+}

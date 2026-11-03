@@ -1,0 +1,60 @@
+name: Public View46 package Mac Slim consumer
+
+on:
+  workflow_dispatch:
+    inputs:
+      inputs_sha256:
+        description: Reviewed tests/mac-packages/inputs.json SHA256
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: view46-package-mac-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  public-packages:
+    runs-on: macos-26
+    timeout-minutes: 50
+    env:
+      DOTNET_CLI_USE_MSBUILD_SERVER: '0'
+      MSBUILDDISABLENODEREUSE: '1'
+      INPUTS_SHA256: ${{ inputs.inputs_sha256 }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.403'
+      - name: Controller admission tests
+        run: python3 -I tests/mac-packages/test_packages.py
+      - name: Consume audited public packages in both modes
+        run: >-
+          python3 -I tests/mac-packages/qualify.py --execute
+          --inputs tests/mac-packages/inputs.json --inputs-sha256 "$INPUTS_SHA256"
+          --controller-commit "$GITHUB_SHA" --work "$RUNNER_TEMP/view46-mac-packages"
+      - name: Retain all outcomes and replay bytes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: view46-package-mac-${{ github.run_id }}
+          retention-days: 3
+          if-no-files-found: error
+          include-hidden-files: true
+          path: |
+            ${{ runner.temp }}/view46-mac-packages/*.json
+            ${{ runner.temp }}/view46-mac-packages/*.log
+            ${{ runner.temp }}/view46-mac-packages/*.binlog
+            ${{ runner.temp }}/view46-mac-packages/*.zip
+            ${{ runner.temp }}/view46-mac-packages/NuGet.Config
+            ${{ runner.temp }}/view46-mac-packages/app-*/*.fsproj
+            ${{ runner.temp }}/view46-mac-packages/run-*/**
+            ${{ runner.temp }}/view46-mac-packages/jit-*/**/*.json
+            ${{ runner.temp }}/view46-mac-packages/aot-*/**/*.json
