@@ -7,12 +7,11 @@ The retained View-owned state is the imported native texture and its in-flight G
 transport state, with no additional reactive ownership or scheduling primitive.
 
 The reviewed `ae534a5` product and `c7cc031` framework-free checks are forward-applied to View47 source.
-Current Core58, formatter/lifetime fixes and package metadata are preserved. The existing Native preview11
-package does not provide the new managed IOSurface bindings: until a matching canonical ABI64/349
-Interop package is allocated, compile this source with an explicit canonical source override or a
-private package built from that same canonical Interop source. Do not publish these changes with the
-old default Interop pin.
-No new View or Native version is allocated here.
+Current Core58 and formatter/lifetime fixes are preserved. The default Interop dependency now follows
+the allocated Native preview12 ABI64/349 cohort. Its producer/runtime and public package qualification
+are pending. Before that package is available, source compilation requires an explicit canonical
+source override or a private package built from that same Interop source. The successor View version
+remains unallocated, and this branch is not ready for publication.
 
 Normal and traced Release compilation of the complete test project and the framework-free static
 entry passed against private `Ranvier.WebCore/0.0.0-private.abi64.349.1` and public Core58. The private
