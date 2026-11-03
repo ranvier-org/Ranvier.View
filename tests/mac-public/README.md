@@ -19,3 +19,5 @@ python3 -I tests/mac-public/test_controller.py
 ```
 
 An actual Mac run is still required; local source controls do not qualify the four consumer routes.
+
+Run `41640096050` qualified the normal routes (833 passed/16 allowed ignores; strict lifecycle 91, dynamic code false). Its traced builds succeeded but the initial graph guard assumed unsuffixed source-project IDs. The corrected guard requires `.Traced` source projects at alpha.46 in traced mode, preserving package mode/source/version checks. The follow-up workflow runs only `--mode traced`; it explicitly marks the result as partial and does not rebuild or claim to rerun the retained normal proof.

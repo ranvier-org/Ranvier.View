@@ -62,9 +62,9 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.403'
-      - name: Run both unfiltered source suites and both strict lifecycle AOT consumers
+      - name: Run corrected traced source and strict lifecycle consumers (normal proof retained separately)
         run: >-
-          python3 -I tests/mac-public/qualify.py --execute
+          python3 -I tests/mac-public/qualify.py --execute --mode traced
           --inputs tests/mac-public/inputs.json --inputs-sha256 "${{ steps.pins.outputs.inputs_sha256 }}"
           --view-root artifacts/mac-public-source --work "$RUNNER_TEMP/view46-mac-public"
       - name: Retain all route outcomes and replay inputs

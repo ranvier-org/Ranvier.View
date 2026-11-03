@@ -24,8 +24,8 @@ class PublicGraph(unittest.TestCase):
                      'Ranvier.Dom' + suffix + '/' + config['domVersion']: {'type': 'package'},
                      'Ranvier.WebCore/' + config['interopVersion']: {'type': 'package'},
                      'FSharp.Core/' + config['fsharpCore']: {'type': 'package'},
-                     'Ranvier.View.WebCore/0.1.0-alpha.46': {'type': 'project'},
-                     'Ranvier.View.WebCore.Sdl/0.1.0-alpha.46': {'type': 'project'}}
+                     'Ranvier.View.WebCore' + suffix + '/0.1.0-alpha.46': {'type': 'project'},
+                     'Ranvier.View.WebCore.Sdl' + suffix + '/0.1.0-alpha.46': {'type': 'project'}}
         return {'libraries': libraries}, config
 
     def test_normal_and_traced_are_separate_complete_graphs(self):
@@ -65,6 +65,20 @@ class PublicGraph(unittest.TestCase):
         data['libraries']['Ranvier.WebCore.Native.osx-arm64/0.1.1-preview.7'] = {'type': 'package'}
         with self.assertRaisesRegex(ValueError, 'native stage'):
             support.core_graph(data, 'normal', config)
+
+    def test_opposing_source_project_and_wrong_source_version_reject(self):
+        for mode in ['normal', 'traced']:
+            data, config = self.fixture(mode)
+            opposite = '' if mode == 'traced' else '.tRaCeD'
+            data['libraries']['rAnViEr.ViEw.WebCore' + opposite + '/' + config['viewVersion']] = {'type': 'project'}
+            with self.assertRaisesRegex(ValueError, 'source provider mode/version'):
+                support.core_graph(data, mode, config)
+            data, config = self.fixture(mode)
+            suffix = '.Traced' if mode == 'traced' else ''
+            del data['libraries']['Ranvier.View.WebCore' + suffix + '/' + config['viewVersion']]
+            data['libraries']['Ranvier.View.WebCore' + suffix + '/0.1.0-alpha.45'] = {'type': 'project'}
+            with self.assertRaisesRegex(ValueError, 'source provider mode/version'):
+                support.core_graph(data, mode, config)
         data, config = self.fixture()
         data['libraries']['FSharp.Core/10.1.401'] = {'type': 'package'}
         with self.assertRaisesRegex(ValueError, 'FSharp.Core'):

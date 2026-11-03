@@ -72,12 +72,14 @@ def main():
     parser.add_argument('--view-root', type=Path, required=True)
     parser.add_argument('--work', type=Path, required=True)
     parser.add_argument('--execute', action='store_true')
+    parser.add_argument('--mode', choices=['both', 'normal', 'traced'], default='both')
     args = parser.parse_args()
     if sha(args.inputs) != args.inputs_sha256:
         raise ValueError('Reviewed input identity mismatch')
     config = json.loads(args.inputs.read_text())
+    modes = ['normal', 'traced'] if args.mode == 'both' else [args.mode]
     if not args.execute:
-        print(json.dumps({'execute': False, 'sourceCommit': config['viewCommit'], 'scope': config['scope']}))
+        print(json.dumps({'execute': False, 'sourceCommit': config['viewCommit'], 'scope': config['scope'], 'modes': modes}))
         return 0
     if config['viewSourceReview'] != 'QUALIFIED':
         raise ValueError('Formatter/source checkpoint has not been independently qualified')
@@ -89,6 +91,7 @@ def main():
     root.mkdir(parents=True)
     record = {'scope': config['scope'], 'sourceCommit': config['viewCommit'], 'commands': [], 'routes': [],
               'status': 'STARTING', 'noEngineBuild': True, 'noPublication': True,
+              'executionModes': modes, 'completeFourRouteQualification': args.mode == 'both',
               'platform': platform.platform(), 'machine': platform.machine(), 'inputsSha256': sha(args.inputs)}
     receipt = root / 'receipt.json'
     def save():
@@ -150,7 +153,7 @@ def main():
         record['nugetConfigSha256'] = sha(root / 'NuGet.Config')
         sources[str(view / 'nuget.config')] = record['nugetConfigSha256']
         app = project(view, root)
-        for mode in ['normal', 'traced']:
+        for mode in modes:
             cache = root / ('cache-' + mode)
             env = dict(environment, NUGET_PACKAGES=str(cache))
             common = ['-p:RanvierTrace=' + str(mode == 'traced').lower(), '-p:UseLocalRanvier=false',
@@ -213,7 +216,7 @@ def main():
                 except Exception as error:
                     row.update(status='FAIL', error=repr(error), traceback=traceback.format_exc())
                 save()
-        record['status'] = 'PASS' if len(record['routes']) == 4 and all(row['status'] == 'PASS' for row in record['routes']) else 'FAIL'
+        record['status'] = 'PASS' if len(record['routes']) == len(modes) * 2 and all(row['status'] == 'PASS' for row in record['routes']) else 'FAIL'
     except BaseException as error:
         record.update(status='FAIL', error=repr(error), traceback=traceback.format_exc())
         raise

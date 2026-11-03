@@ -63,7 +63,18 @@ def core_graph(data, mode, config):
         raise ValueError('Missing public Core/DOM/Interop dependency')
     if [key.lower() for key in libraries if key.lower().startswith('fsharp.core/')] != ['fsharp.core/' + config['fsharpCore']]:
         raise ValueError('Unexpected FSharp.Core graph')
-    if not {'ranvier.view.webcore', 'ranvier.view.webcore.sdl'} <= {key.rsplit('/', 1)[0].lower() for key in libraries}:
+    source_families = {'ranvier.view.webcore', 'ranvier.view.webcore.sdl'}
+    wanted_source = {name + suffix.lower() for name in source_families}
+    source_found = {}
+    for key, row in libraries.items():
+        name, version = key.rsplit('/', 1)
+        lower = name.lower()
+        if lower.removesuffix('.traced') in source_families:
+            if (lower not in wanted_source or version != config['viewVersion']
+                    or row['type'] != 'project' or lower in source_found):
+                raise ValueError('Unexpected source provider mode/version: ' + key)
+            source_found[lower] = key
+    if source_found.keys() != wanted_source:
         raise ValueError('Missing current source providers')
     return found
 

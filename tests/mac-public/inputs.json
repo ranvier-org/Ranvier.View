@@ -71,5 +71,6 @@
     "path": "jit-inventory.json",
     "sha256": "fb247273d827d7557e2dca97160a47b3bfe1ea1d2e13eb7eff322346da9e50b4"
   },
-  "reviewedTextHashPolicy": "UTF8_CRLF_TO_LF_ONLY"
+  "reviewedTextHashPolicy": "UTF8_CRLF_TO_LF_ONLY",
+  "viewVersion": "0.1.0-alpha.46"
 }
