@@ -7,8 +7,23 @@ open Ranvier
 open Ranvier.View.Representation
 
 /// <summary>An element modifier constrained to its native DOM type.</summary>
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 [<Erase>]
-type Modifier<'native> = private Modifier of ModifierAction
+type Modifier<'native> =
+    private
+    | Modifier of ModifierAction
+#if !FABLE_COMPILER
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence ->
+                NativeDisplay.union context depth precedence (box this) (fun count ->
+                    let (Modifier action) = this
+                    "Modifier", [ Some (fun _ -> NativeDisplay.opaque context count "<function>" (box action)) ]))
+#endif
 
 let attribute name value : Modifier<'native> =
     validateAttribute name

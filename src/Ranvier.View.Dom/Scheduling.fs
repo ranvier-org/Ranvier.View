@@ -8,6 +8,9 @@ open Ranvier
 open Fable.Core
 #endif
 
+#if !FABLE_COMPILER
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+#endif
 type CommitFailure =
     | CollectAndContinue
     | FailFastCancel
@@ -18,6 +21,12 @@ type CommitFailure =
             match this with
             | CommitFailure.CollectAndContinue -> "CollectAndContinue", []
             | CommitFailure.FailFastCancel -> "FailFastCancel", [])
+
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
 #endif
 
 type Slot internal (owner: obj, scope: ViewScope) =

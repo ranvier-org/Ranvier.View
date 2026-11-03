@@ -125,6 +125,27 @@ let private nativeDisplayChecks () =
          && windowText.Contains "Window = 5")
         windowText
 
+    let collectText = Scheduling.CollectAndContinue.ToString ()
+    let cancelText = Scheduling.FailFastCancel.ToString ()
+    check "commit diagnostics retain collect policy" (collectText = "CollectAndContinue") collectText
+    check "commit diagnostics retain cancel policy" (cancelText = "FailFastCancel") cancelText
+    let mutable modifierCalls = 0
+
+    let modifier: Typed.Modifier<HTMLButtonElement> =
+        Typed.listener "click" (fun _ -> modifierCalls <- modifierCalls + 1)
+
+    let modifierText = modifier.ToString ()
+
+    let modifierMatches =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            modifierText.StartsWith "Modifier "
+            && modifierText.Contains "<fun:"
+        else
+            modifierText = "Modifier <function>"
+
+    check "modifier diagnostics retain the case and opaque function" modifierMatches modifierText
+    check "modifier diagnostics do not invoke the listener" (modifierCalls = 0) (string modifierCalls)
+
     if not System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
         let mutable unexpectedCalls = 0
 
