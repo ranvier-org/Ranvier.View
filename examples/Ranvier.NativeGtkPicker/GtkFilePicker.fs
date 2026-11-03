@@ -53,12 +53,10 @@ module private Gtk =
     [<DllImport("libglib-2.0.so.0", CallingConvention = CallingConvention.Cdecl)>]
     extern int g_main_context_iteration(nativeint context, int mayBlock)
 
-type private Active =
-    {
-        Request: FilePickerRequest
-        Dialog: nativeint
-        Handler: unativeint
-    }
+type private Active(request: FilePickerRequest, dialog: nativeint, handler: unativeint) =
+    member _.Request = request
+    member _.Dialog = dialog
+    member _.Handler = handler
 
 type Provider internal (pump: unit -> unit, isOpen: unit -> bool, close: unit -> unit) =
     member _.Pump() = pump ()
@@ -67,19 +65,22 @@ type Provider internal (pump: unit -> unit, isOpen: unit -> bool, close: unit ->
     interface IDisposable with
         member _.Dispose() = close ()
 
-type Operations =
-    {
-        Connect: nativeint -> nativeint -> unativeint
-        Show: nativeint -> unit
-        Complete: FilePickerRequest -> FilePickerResult -> bool
-    }
+type Operations(connect: nativeint -> nativeint -> unativeint, show: nativeint -> unit, complete: FilePickerRequest -> FilePickerResult -> bool) =
+    member _.Connect dialog callback =
+        connect dialog callback
+
+    member _.Show dialog =
+        show dialog
+
+    member _.Complete request result =
+        complete request result
 
 let systemOperations =
-    {
-        Connect = fun dialog callback -> Gtk.g_signal_connect_data (dialog, "response", callback, 0n, 0n, 0)
-        Show = Gtk.gtk_native_dialog_show
-        Complete = fun request result -> request.Complete result
-    }
+    Operations (
+        (fun dialog callback -> Gtk.g_signal_connect_data (dialog, "response", callback, 0n, 0n, 0)),
+        Gtk.gtk_native_dialog_show,
+        (fun request result -> request.Complete result)
+    )
 
 let tryInstallWith (operations: Operations) (host: WebCoreHost) =
     let mutable library = 0n
@@ -247,13 +248,7 @@ let tryInstallWith (operations: Operations) (host: WebCoreHost) =
                                     destroyDialog dialog
                                     cancel ()
                                 else
-                                    active <-
-                                        Some
-                                            {
-                                                Request = request
-                                                Dialog = dialog
-                                                Handler = handler
-                                            }
+                                    active <- Some (Active (request, dialog, handler))
 
                                     unattached <- 0n
                                     operations.Show dialog
