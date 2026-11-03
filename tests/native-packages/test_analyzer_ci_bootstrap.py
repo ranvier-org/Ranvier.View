@@ -99,14 +99,14 @@ class AnalyzerBootstrap(unittest.TestCase):
         self.assertIn('compiler="$GITHUB_WORKSPACE/' + compiler + '"', bootstrap)
 
     def test_core_source_and_css_package_versions_match_their_release_closures(self):
-        source = 'fc7a751babe9ee6df6369776451a7fa71a06a00e'
+        source = '59c68218e1e4f6b6bbde1afb8f8502a3ee587abc'
         ci = (ROOT / '.github/workflows/ci.yml').read_text()
         qualification = (ROOT / '.github/workflows/analyzer-host.yml').read_text()
         self.assertIn('ref: ' + source, ci)
         self.assertGreaterEqual(qualification.count(source), 3)
-        self.assertIn("values['version'] != '0.1.0-alpha.56'", qualification)
+        self.assertIn("values['version'] != '0.1.0-alpha.58'", qualification)
         props = ET.parse(ROOT / 'Directory.Build.props').getroot()
-        self.assertEqual(props.find('.//RanvierDomVersion').text, '0.1.0-alpha.56')
+        self.assertEqual(props.find('.//RanvierDomVersion').text, '0.1.0-alpha.58')
         self.assertEqual(props.find('.//RanvierCssVersion').text, '0.1.1-alpha.2')
         self.assertEqual(props.find('.//RanvierCssAddonsVersion').text, '0.1.1-alpha.1')
         for project in (ROOT / 'fable/Ranvier.Anime.Tests/Sugar/Sugar.fsproj',

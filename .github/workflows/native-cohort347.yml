@@ -1,0 +1,51 @@
+name: Final ABI63 public consumer preparation
+
+on:
+  pull_request:
+    paths: ['tools/native-cohort347/**', 'tests/native-cohort347/**', 'tests/native-packages/test_cohort347.py', '.github/workflows/native-cohort347*.yml']
+  workflow_dispatch:
+    inputs:
+      cohort_file:
+        description: Reviewed JSON with allocated public versions, source pins and per-RID hashes
+        type: string
+        required: true
+        default: tools/native-cohort347/inputs/unarmed.json
+
+permissions:
+  contents: read
+
+jobs:
+  policy:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - run: python3 -I tests/native-packages/test_cohort347.py
+
+  public-consumers:
+    if: ${{ false }}
+    needs: policy
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [normal, traced]
+        rid: [win-x64, linux-x64]
+    uses: ./.github/workflows/native-cohort347-run.yml
+    with:
+      cohort_file: ${{ inputs.cohort_file }}
+      rid: ${{ matrix.rid }}
+      mode: ${{ matrix.mode }}
+
+  arm64-consumers:
+    if: ${{ false }}
+    needs: policy
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [normal, traced]
+    uses: ./.github/workflows/native-cohort347-run.yml
+    with:
+      cohort_file: ${{ inputs.cohort_file }}
+      rid: linux-arm64
+      mode: ${{ matrix.mode }}

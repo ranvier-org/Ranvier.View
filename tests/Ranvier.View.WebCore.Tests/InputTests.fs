@@ -32,11 +32,92 @@ let private probeEvent (host: WebCoreHost) =
     event.initEvent ("options-probe", true, true)
     event
 
+[<System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)>]
+let private pickerPayload (host: WebCoreHost) disposeRegistration =
+    let payload = obj ()
+    let weak = WeakReference payload
+    let registration = FilePickers.install host (fun _ -> GC.KeepAlive payload)
+
+    if disposeRegistration then
+        registration.Dispose ()
+
+    weak, registration
+
 [<Tests>]
 let tests =
     testList
         "Input"
         [
+            hostCase "disposed picker registrations release their callbacks while the host remains live"
+            <| fun host ->
+                if WebCoreHost.Has "file-picker" then
+                    let registrations = [| for _ in 1..4 -> pickerPayload host true |]
+                    GC.Collect ()
+                    GC.WaitForPendingFinalizers ()
+                    GC.Collect ()
+
+                    Expect.isTrue
+                        (registrations
+                         |> Array.forall (fun (weak, _) -> not weak.IsAlive))
+                        "disposed callbacks are released"
+
+                    let weak, activeRegistration = pickerPayload host false
+                    (host :> IDisposable).Dispose()
+                    GC.Collect ()
+                    GC.WaitForPendingFinalizers ()
+                    GC.Collect ()
+                    Expect.isFalse weak.IsAlive "host disposal releases the active callback"
+                    GC.KeepAlive activeRegistration
+                    GC.KeepAlive registrations
+                    GC.KeepAlive host
+
+            testCase "every input rejects a foreign thread and a disposed host"
+            <| fun () ->
+                onHostThread (fun () ->
+                    use host = WebCoreHost.Create (320, 240)
+                    let pointer = PointerSample.Create (0, 1, 0, 10.0, 10.0)
+
+                    let operations =
+                        [|
+                            "mouse", fun () -> host.Mouse (0, 10, 10, -1, 0, 0) |> ignore
+                            "click", fun () -> host.Click (10, 10) |> ignore
+                            "wheel", fun () -> host.Wheel (10, 10, 0.0f, 1.0f, 0) |> ignore
+                            "key",
+                            fun () ->
+                                host.Key (0, "a", "KeyA", null, 0, false)
+                                |> ignore
+                            "type", fun () -> host.Type ("a", "KeyA", "a")
+                            "pointer", fun () -> host.Pointer [| pointer |] |> ignore
+                        |]
+
+                    let failures = ResizeArray<exn>()
+                    let mutable checkedInputs = 0
+
+                    let worker =
+                        Threading.Thread (
+                            Threading.ThreadStart (fun () ->
+                                for name, operation in operations do
+                                    try
+                                        Expect.throwsT<InvalidOperationException> operation (name + " requires the owner thread")
+                                        checkedInputs <- checkedInputs + 1
+                                    with error ->
+                                        failures.Add error)
+                        )
+
+                    worker.IsBackground <- true
+                    worker.Start ()
+                    Expect.isTrue (worker.Join 5000) "foreign-thread admission checks terminate"
+
+                    for failure in failures do
+                        raise failure
+
+                    Expect.equal checkedInputs operations.Length "every input admission was checked"
+                    host.Click (10, 10) |> ignore
+                    (host :> IDisposable).Dispose()
+
+                    for name, operation in operations do
+                        Expect.throwsT<ObjectDisposedException> operation (name + " rejects the disposed host"))
+
             hostCase "editor undo and redo route through native transaction history"
             <| fun host ->
                 if not (WebCoreHost.Has "editing-undo") then
@@ -180,6 +261,34 @@ let tests =
 
                     use replacement = FilePickers.install host ignore
                     ()
+
+            hostCase "picker invalidation can dispose again and install a replacement"
+            <| fun host ->
+                if WebCoreHost.Has "file-picker" then
+                    let mutable registration: IDisposable = null
+                    let mutable replacement: IDisposable = null
+                    let mutable invalidations = 0
+                    let mutable opened = false
+
+                    registration <-
+                        FilePickers.install host (function
+                            | Show _ -> opened <- true
+                            | Invalidate _ ->
+                                invalidations <- invalidations + 1
+                                registration.Dispose ()
+                                replacement <- FilePickers.install host ignore)
+
+                    let input = host.Document.createElement "input"
+                    input.setAttribute ("type", "file")
+                    host.Document.body.appendChild input |> ignore
+                    host.Cycle ()
+                    clickOn host input
+                    host.Cycle ()
+                    Expect.isTrue opened "provider opened before disposal"
+                    registration.Dispose ()
+                    Expect.equal invalidations 1 "reentrant disposal sends one invalidation"
+                    Expect.isFalse (isNull replacement) "invalidation installed a new provider"
+                    replacement.Dispose ()
 
             testCase "disposing the host invalidates an open file picker"
             <| fun () ->

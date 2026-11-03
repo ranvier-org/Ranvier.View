@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "armed": false,
+  "managedSource": null,
+  "nativeSource": "8b8db298eba294876c27bd9a3200881f872684df",
+  "providerSource": "8b8db298eba294876c27bd9a3200881f872684df",
+  "webkitSource": null,
+  "versions": {
+    "view": "0.1.46",
+    "backend": "0.1.0-alpha.46",
+    "native": "0.1.1-preview.11",
+    "provider": null,
+    "core": "0.1.1-preview.1",
+    "dom": "0.1.0-alpha.58",
+    "css": "0.1.1-alpha.2",
+    "cssAddons": "0.1.1-alpha.1"
+  },
+  "rids": {
+    "win-x64": {"hostSha256": null},
+    "linux-x64": {"hostSha256": null, "providerSha256": null},
+    "linux-arm64": {"hostSha256": null, "providerSha256": null}
+  },
+  "adoptedNativeFixtureSources": {
+    "wheelAndClipboard": "541ca21f16b1d0399e9c6eec6b0a27e58915c1b4",
+    "linkDrop": "333c806ae4e5269e88be26d73778c01425de6b8d"
+  },
+  "limitations": "P11 is allocated and Core alpha.58 is public; matching GPU payloads, provider and final runtime qualification remain pending. Source pins compare manifest claims; they do not authenticate a binary's build provenance."
+}

@@ -35,6 +35,23 @@ SDL submits its drawing, including readback, and before renderer teardown.
 The `accessibility-uia` capability attaches the page's Windows UI Automation tree to the SDL window. It
 detaches before page or window disposal. The bridge uses native COM and also works in a NativeAOT app.
 
+## Linux input methods
+
+SDL forwards composition and committed text to the focused page. For an X11 application that needs IBus
+surrounding text, an optional patched SDL build selects SDL's direct IBus context when
+`SDL_RANVIER_IBUS=1` is set before the first SDL window is created. Query
+`window.ImeSurroundingAvailable` to determine whether surrounding text is currently available. It is false
+when the context is unavailable or cleared, including while a password field is focused. If direct IBus
+cannot initialize, X11 falls back to XIM; that fallback does not provide this extension.
+
+The optional `Ranvier.View.WebCore.Sdl.Ibus` package and its SDL build are currently private qualification
+artifacts, not published packages. [The SDL build and packaging instructions](../../tools/sdl/README.md)
+describe the pinned source, prerequisites, explicit `linux-x64` publish target, and current limitations.
+Wayland text-input-v3 and XIM do not use this direct-IBus extension; single-file publish and other
+architectures have not been qualified for the optional package.
+
+## Platform support
+
 Experimental, on Windows x64, Windows ARM64, Linux x64 and macOS arm64 (macOS 26), like the backend.
 WebCore's run loop and SDL's event pump share the process main thread on macOS, with the same
 `Window.Step` implementation.
@@ -169,3 +186,15 @@ passed all four normal/traced Slim/GPU jobs. Both apps ran under JIT and NativeA
 eight visible Counter runs passed clipboard/backbuffer and independent UIA checks. Each GPU Counter
 recorded two shared frames; Slim Counters recorded zero. NativeAOT stdout/stderr logs are preserved as
 artifacts. Every selected native/resource file matches its public package manifest (24 Slim or 26 GPU).
+
+### Optional Linux accessibility
+
+An optional `libRanvierWebCoreAtspi.so` sidecar mirrors the native `rv_ax_*` tree through the desktop AT-SPI bus.
+It uses the existing host loop and stays outside the renderer library. Place the matching module beside the app or
+on its native library search path. The provider discovers `AT_SPI_BUS_ADDRESS` or `org.a11y.Bus` on the session bus;
+`Window.AccessibilityAttached` is false when the module or desktop service is unavailable.
+
+The Window owns the provider lease through the Host's cleanup installations. Direct Host disposal and Window disposal
+release it before destroying the native page. SDL movement and display-scale changes update its geometry. X11 exposes
+physical screen positions; Wayland reports screen coordinates unsupported while window coordinates remain available.
+All operations run on the host owner thread. This integration does not replace Windows UI Automation.

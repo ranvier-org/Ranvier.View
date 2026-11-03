@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Ranvier.View.WebCore.Sdl.Ibus" Version="0.1.0-local.5" />
+  </ItemGroup>
+</Project>

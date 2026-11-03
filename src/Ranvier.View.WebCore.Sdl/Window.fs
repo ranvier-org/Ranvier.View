@@ -28,6 +28,9 @@ module internal Sdl =
     let ok (value: SDLBool) : bool =
         SDLBool.op_Implicit value
 
+    let viewportExtent pixels scale =
+        max 1 (int (MathF.Ceiling (float32 pixels / scale)))
+
     /// <summary>NUL-terminated UTF-8, for SDL's byte pointer overloads.</summary>
     let utf8 (text: string) =
         Encoding.UTF8.GetBytes (text + "\000")
@@ -119,14 +122,17 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let pens = PenSamples ()
     let touchInput = WebCoreHost.Has "touch-input"
     let penInput = WebCoreHost.Has "pointer-input"
+    let surrounding = SurroundingText.Bridge (NativePtr.toNativeInt window, host)
     let presenter = new Presenter (renderer, host, egl)
     let mutable accessibilityAttached = false
+    let mutable linuxAccessibility: LinuxAccessibility option = None
     let mutable fullPaint = true
     let mutable exposed = true
     let mutable toCss = 1.0f
     let mutable closed = false
     let mutable composing = false
     let mutable pendingCompositionClear = false
+    let mutable suppressImeText = false
     let mutable cursor = -1
     let mutable disposed = false
     let mutable pageDisposed = false
@@ -213,7 +219,11 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
         toCss <- density / scale
         host.SetDeviceScale scale
-        host.Resize (max 1 (int (float32 width / scale)), max 1 (int (float32 height / scale)))
+        host.Resize (Sdl.viewportExtent width scale, Sdl.viewportExtent height scale)
+
+        linuxAccessibility
+        |> Option.iter (fun bridge -> bridge.Update ())
+
         presenter.Invalidate ()
         fullPaint <- true
 
@@ -310,6 +320,12 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             && not (isNull (box displaySignal))
             ->
             displaySignal.Value <- displayReader ()
+
+            linuxAccessibility
+            |> Option.iter (fun bridge -> bridge.Update ())
+        | SDL_EventType.SDL_EVENT_WINDOW_MOVED when event.window.windowID = id ->
+            linuxAccessibility
+            |> Option.iter (fun bridge -> bridge.Update ())
         | SDL_EventType.SDL_EVENT_QUIT -> closed <- true
         | SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED when event.window.windowID = id -> closed <- true
         | SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED
@@ -324,6 +340,8 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         | SDL_EventType.SDL_EVENT_WINDOW_SHOWN when event.window.windowID = id -> host.SetVisible true
         | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_GAINED when event.window.windowID = id -> host.SetFocused true
         | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST when event.window.windowID = id ->
+            suppressImeText <- false
+
             if composing then
                 composing <- false
                 pendingCompositionClear <- false
@@ -450,6 +468,23 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
             host.Wheel (css wheel.mouse_x, css wheel.mouse_y, wheel.x * wheelStep * direction, -wheel.y * wheelStep * direction, modifiers ())
             |> ignore
+        | _ when
+            surrounding.EventType <> 0u
+            && event.``type`` = surrounding.EventType
+            && event.user.windowID = id
+            ->
+            let deletion = event.user
+            let token = uint64 (unativeint deletion.data2)
+            let count = uint32 (unativeint deletion.data1)
+
+            match surrounding.Delete (token, deletion.code, count) with
+            | 1 -> ()
+            | 2 ->
+                composing <- false
+                pendingCompositionClear <- false
+                suppressImeText <- true
+            | _ -> suppressImeText <- true
+        | SDL_EventType.SDL_EVENT_KEY_DOWN when event.key.windowID = id && suppressImeText -> suppressImeText <- false
         | SDL_EventType.SDL_EVENT_KEY_DOWN
         | SDL_EventType.SDL_EVENT_KEY_UP when event.key.windowID = id && not composing ->
             let press = event.key
@@ -464,7 +499,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 Sdl.ok press.repeat
             )
             |> ignore
-        | SDL_EventType.SDL_EVENT_TEXT_INPUT when event.text.windowID = id ->
+        | SDL_EventType.SDL_EVENT_TEXT_INPUT when event.text.windowID = id && not suppressImeText ->
             let typed = Sdl.text event.text.text
 
             if composing then
@@ -475,7 +510,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 // RV_KEY_CHAR, between the key's RV_KEY_DOWN and RV_KEY_UP, as SDL sends text between them.
                 host.Key (2, typed, "", typed, modifiers (), false)
                 |> ignore
-        | SDL_EventType.SDL_EVENT_TEXT_EDITING when event.edit.windowID = id ->
+        | SDL_EventType.SDL_EVENT_TEXT_EDITING when event.edit.windowID = id && not suppressImeText ->
             let edit = event.edit
             let composition = Sdl.text edit.text
 
@@ -524,6 +559,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             displayFeed <- owner :> IDisposable
 
         accessibilityAttached <- WindowAccessibility.attach host window
+        linuxAccessibility <- LinuxAccessibility.TryCreate (host, window)
         SDL3.SDL_StartTextInput window |> ignore
 
         if WebCoreHost.Has "clipboard" then
@@ -557,6 +593,10 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             pendingCompositionClear <- false
             composing <- false
             host.CancelComposition ()
+
+    member private _.RefreshSurrounding() =
+        if alive () then
+            surrounding.Refresh ()
 
     static member private CreateCore(title: string, width: int, height: int, hidden: bool option, renderer: string option) : Window =
         EglRenderer.RetryFailedConstruction ()
@@ -688,6 +728,9 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// <summary>Whether the window has been asked to close.</summary>
     member _.Closed = closed
 
+    /// <summary>Whether the focused window's SDL input backend has valid surrounding text.</summary>
+    member _.ImeSurroundingAvailable = surrounding.Available
+
     /// <summary>Asks the window to close: the next <c>Step</c> returns false.</summary>
     member _.Close() =
         closed <- true
@@ -696,12 +739,15 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// Runs a frame and shows it: the page's animation frame callbacks and rendering update, then the painted area in
     /// the texture, presented on the window's next vertical blank.
     /// </summary>
+    /// <remarks>A frame callback that closes the window or disposes its host stops presentation.</remarks>
     member _.Present() =
         host.Frame ()
-        presenter.Present exposed
-        fullPaint <- false
-        exposed <- false
-        placeInputMethod ()
+
+        if alive () then
+            presenter.Present exposed
+            fullPaint <- false
+            exposed <- false
+            placeInputMethod ()
 
     /// <summary>
     /// One turn of the window's loop: waits up to <c>timeout</c> milliseconds (50 by default), less when a timer is due
@@ -717,6 +763,10 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
         if not closed then
             host.EnsureActive ()
+
+            for target in windows.Snapshot () do
+                target.RefreshSurrounding ()
+
             let longest = defaultArg timeout 50
 
             let wait =
@@ -732,10 +782,12 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             if Sdl.ok (SDL3.SDL_WaitEventTimeout (&&event, wait)) then
                 for target in windows.Snapshot () do
                     target.Dispatch event
+                    target.RefreshSurrounding ()
 
                 while alive () && Sdl.ok (SDL3.SDL_PollEvent &&event) do
                     for target in windows.Snapshot () do
                         target.Dispatch event
+                        target.RefreshSurrounding ()
 
                 for target in windows.Snapshot () do
                     target.FlushComposition ()
@@ -761,8 +813,18 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// <summary>The number of presentation attempts that took the CPU path.</summary>
     member internal _.CpuFramesPresented = presenter.CpuFramesPresented
 
-    /// <summary>Whether Windows UI Automation is attached to the window.</summary>
-    member internal _.AccessibilityAttached = accessibilityAttached
+    /// <summary>Whether Windows UI Automation or the optional Linux AT-SPI provider is attached.</summary>
+    /// <remarks>The Linux provider requires its native module and an accessible desktop bus. Unavailable providers return false.</remarks>
+    member _.AccessibilityAttached =
+        not host.Session.IsDisposed
+        && (accessibilityAttached
+            || (linuxAccessibility
+                |> Option.exists (fun bridge -> bridge.Attached)))
+
+    /// <summary>Whether the optional native AT-SPI token still belongs to this window.</summary>
+    member internal _.AtspiLeaseActive =
+        linuxAccessibility
+        |> Option.exists (fun bridge -> bridge.Attached)
 
     /// <summary>The display the host's screen follows, as the window last read it.</summary>
     member internal _.Display = displaySignal.Value
@@ -798,6 +860,9 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                     PageCleanup.run
                         [|
                             (fun () ->
+                                linuxAccessibility
+                                |> Option.iter (fun bridge -> (bridge :> IDisposable).Dispose())
+
                                 if accessibilityAttached then
                                     try
                                         WindowAccessibility.detach host
@@ -817,6 +882,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                                 (presenter :> IDisposable).Dispose()
                                 cleanupCompleted "presenter")
                             (fun () ->
+                                surrounding.Clear ()
                                 (host :> IDisposable).Dispose()
                                 cleanupCompleted "host")
                         |]

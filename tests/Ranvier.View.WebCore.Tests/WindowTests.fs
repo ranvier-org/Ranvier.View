@@ -83,6 +83,18 @@ let tests =
     testList
         "Window"
         [
+            windowCase "fractional display scale covers the full pixel extent"
+            <| fun window ->
+                for pixelsWide, pixelsHigh, scale in [ 498, 352, 1.25f; 497, 351, 1.5f; 501, 353, 2.0f; 500, 360, 1.0f ] do
+                    window.Host.SetDeviceScale scale
+                    window.Host.Resize (Sdl.viewportExtent pixelsWide scale, Sdl.viewportExtent pixelsHigh scale)
+                    let struct (paintWidth, paintHeight) = window.Host.PaintSize
+
+                    Expect.isTrue
+                        (paintWidth >= pixelsWide
+                         && paintHeight >= pixelsHigh)
+                        "the painted surface covers every output pixel"
+
             testCase "a bare host owns the first window admission" (fun () ->
                 onHostThread (fun () ->
                     use host = WebCoreHost.Create (80, 60)
@@ -303,7 +315,8 @@ let tests =
                 event.edit.start <- 0
                 Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "cancel queued"
                 steps window 1
-                Expect.equal input.value "ac" "the uncommitted preedit is removed"
+                Expect.equal input.value "abc" "cancellation restores the original selected text"
+                Expect.equal (input.selectionStart, input.selectionEnd) (Some 1u, Some 2u) "cancellation restores the original selection"
                 Expect.sequenceEqual ended [| "" |] "cancellation ends the composition"
 
             windowCase "focus loss cancels an active composition"
@@ -335,7 +348,8 @@ let tests =
                 event.window.windowID <- target
                 Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "focus loss queued"
                 steps window 1
-                Expect.equal input.value "ac" "focus loss removes the uncommitted preedit"
+                Expect.equal input.value "abc" "focus loss restores the original selected text"
+                Expect.equal (input.selectionStart, input.selectionEnd) (Some 1u, Some 2u) "focus loss restores the original selection"
                 Expect.sequenceEqual ended [| "" |] "focus loss ends the composition"
 
             windowCase "another window receives queued close requests"
@@ -558,6 +572,27 @@ let tests =
                 Expect.isFalse (window.Step 0) "a disposed window stops without cycling its destroyed host"
                 Expect.isTrue window.Host.Session.IsDisposed "the callback finished page teardown"
 
+            windowCase "a timer that disposes the host ends the window step"
+            <| fun window ->
+                window.Host.SetTimeout ((fun () -> (window.Host :> IDisposable).Dispose()), 0.0)
+                |> ignore
+
+                Expect.isFalse (window.Step 0) "a disposed host stops the step"
+
+            windowCase "a frame callback that disposes the window ends presentation"
+            <| fun window ->
+                window.Host.RequestAnimationFrame (fun _ -> (window :> IDisposable).Dispose())
+                |> ignore
+
+                Expect.isFalse (window.Step 0) "a disposed window stops presentation"
+
+            windowCase "a frame callback that disposes only the host ends presentation"
+            <| fun window ->
+                window.Host.RequestAnimationFrame (fun _ -> (window.Host :> IDisposable).Dispose())
+                |> ignore
+
+                Expect.isFalse (window.Step 0) "a disposed host stops presentation"
+
             test "keys map to DOM codes and names" {
                 Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_A) "KeyA" "a letter"
                 Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_0) "Digit0" "zero"
@@ -600,6 +635,16 @@ let tests =
                 Expect.equal cancelled.Length 1 "the remaining contact is cancelled"
                 Expect.equal cancelled[0].Action 3 "focus loss sends cancellation"
                 Expect.isEmpty (touches.Cancel 0) "cancel clears the frame"
+            }
+
+            test "IME surrounding offsets preserve scalar boundaries" {
+                let text = "前😀中後"
+                Expect.equal (SurroundingText.scalarOffset text 3) (Some 2u) "a surrogate pair counts once"
+                Expect.equal (SurroundingText.scalarOffset text 2) None "a split surrogate is unavailable"
+                Expect.equal (SurroundingText.scalarOffset ("a" + string (char 0xd800)) 1) None "invalid UTF-16 is unavailable"
+                Expect.equal (SurroundingText.scalarOffset "a\000b" 1) None "NUL cannot be sent through IBus"
+                Expect.equal (SurroundingText.deleteRange "A😀BC" 2u -1 1u) (Some (1, 3)) "a scalar deletion spans the whole surrogate pair"
+                Expect.equal (SurroundingText.deleteRange "abc" 0u -1 1u) None "a deletion before the context is rejected"
             }
 
             test "pen samples retain axes and cancel an active contact" {

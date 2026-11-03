@@ -1,0 +1,33 @@
+{
+  "status": "source candidate; not a publication or final runtime acceptance record",
+  "implementationSource": "caf2f145b7aa3cbec2707c06a6105189d71e20ba",
+  "integratedMain": "b531e79df75ca3dcab916c4fc42209fe64941bf8",
+  "viewVersion": "0.1.46",
+  "webCoreVersion": "0.1.0-alpha.46",
+  "nativeVersion": "0.1.1-preview.11",
+  "nativeSource": "8b8db298eba294876c27bd9a3200881f872684df",
+  "nativeTag": "v0.1.1-preview.11",
+  "nativeAbi": 63,
+  "nativeDeclarations": 347,
+  "producerState": "P11 Slim packages have been audited; the matching P11 GPU producer and final managed runtime acceptance remain pending. P9 private receipts remain historical, separately scoped evidence.",
+  "coreVersion": "0.1.1-preview.1",
+  "domVersion": "0.1.0-alpha.58",
+  "cssVersion": "0.1.1-alpha.2",
+  "cssAddonsVersion": "0.1.1-alpha.1",
+  "optionalProvider": {
+    "publicId": "Ranvier.WebCore.Accessibility.Atspi",
+    "proposedMatchingVersion": "0.1.1-preview.11",
+    "publicVersion": null,
+    "runtimeTargets": ["linux-x64", "linux-arm64"],
+    "publicGraphQualified": false,
+    "historicalPrivateQualification": "P9 Slim x64 and ARM64 provider/protocol/SDK/six strict AOT profiles passed independently; not relabeled as P10 or final public View46 qualification.",
+    "defaultRendererDependency": false
+  },
+  "pending": [
+    "matching P11 GPU producer artifacts and independent actual Windows/Linux runtime qualification",
+    "normal/traced public package graph and strict NativeAOT execution for the final managed source",
+    "optional provider final-host replay, version coordination and public package availability",
+    "matching P11 ARM provider/managed proof before enabling the separately disabled ARM consumer job; historical actual private P9 ARM proof remains retained",
+    "independent merger/release qualification and publication"
+  ]
+}
