@@ -3,6 +3,7 @@
   "implementationSource": "99c0bbe937d1872de86a4e00516d357e1cdcf7a7",
   "qualifiedSourceLeaf": "a66bb3ab891bd5f6ea1afaba1ae0077b8d4d0638",
   "consumerControlsSource": "79751ca07492f9c2916c1ee8373abe330bb63273",
+  "mergedReleaseSource": "05055811aa687177611b2f5dd39bdd328f21e7dd",
   "scope": "NativeAOT-safe diagnostic formatting for CommitFailure and Typed.Modifier; four durable native smoke checks",
   "proposedVersions": {
     "view": "0.1.47",
@@ -39,7 +40,16 @@
     "selectionPolicy": ".github/scripts/native-delivery-packages.json",
     "authentication": "existing NuGet/login@v1 trusted publisher",
     "newWorkflowOrTrustRequired": false,
-    "dispatchOrPublicationPerformedByThisPlan": false
+    "dispatchOrPublicationPerformedByThisPlan": false,
+    "ciState": "awaiting the exact release-prefixed follow-up CI result",
+    "publicationState": "pending the existing trusted publisher after that CI succeeds",
+    "triggerCorrection": {
+      "source": "05055811aa687177611b2f5dd39bdd328f21e7dd",
+      "subject": "Merge pull request #93 from ranvier-org/codex/project2-view47-release",
+      "releasePrefixMatched": false,
+      "finding": "The merge subject does not satisfy the existing publisher's release-prefix guard; this is a source/guard finding, not an asserted terminal publisher result.",
+      "requiredFollowupSubject": "chore: release native View47 provenance"
+    }
   },
   "publicReadback": {
     "producerRun": null,
