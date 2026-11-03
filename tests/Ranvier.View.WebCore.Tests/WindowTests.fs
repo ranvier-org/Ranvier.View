@@ -572,6 +572,18 @@ let tests =
                 Expect.isFalse (window.Step 0) "a disposed window stops without cycling its destroyed host"
                 Expect.isTrue window.Host.Session.IsDisposed "the callback finished page teardown"
 
+            windowCase "a timer that disposes the host ends the window step"
+            <| fun window ->
+                window.Host.SetTimeout ((fun () -> (window.Host :> IDisposable).Dispose()), 0.0)
+                |> ignore
+                Expect.isFalse (window.Step 0) "a disposed host stops the step"
+
+            windowCase "a frame callback that disposes the window ends presentation"
+            <| fun window ->
+                window.Host.RequestAnimationFrame (fun _ -> (window :> IDisposable).Dispose())
+                |> ignore
+                Expect.isFalse (window.Step 0) "a disposed window stops presentation"
+
             test "keys map to DOM codes and names" {
                 Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_A) "KeyA" "a letter"
                 Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_0) "Digit0" "zero"

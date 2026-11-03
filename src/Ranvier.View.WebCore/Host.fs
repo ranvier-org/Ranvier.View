@@ -115,12 +115,26 @@ module internal Factories =
 type internal HostContext(posted: ConcurrentQueue<struct (SendOrPostCallback * obj)>, thread: int) =
     inherit SynchronizationContext()
 
+    let gate = obj ()
+    let mutable stopped = false
+
     override _.Post(callback, state) =
-        posted.Enqueue (struct (callback, state))
+        lock gate (fun () ->
+            if not stopped then
+                posted.Enqueue (struct (callback, state)))
+
+    member _.Stop() =
+        lock gate (fun () ->
+            stopped <- true
+            let mutable item = Unchecked.defaultof<_>
+
+            while posted.TryDequeue (&item) do
+                ())
 
     override this.Send(callback, state) =
         if Environment.CurrentManagedThreadId = thread then
-            callback.Invoke state
+            if lock gate (fun () -> not stopped) then
+                callback.Invoke state
         else
             raise (NotSupportedException "A WebCore host runs sent work only on its own thread")
 
@@ -209,7 +223,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             struct (left, top, right - left, bottom - top)
 
     let runMicrotasks () =
-        while microtasks.Count > 0 do
+        while not disposed && microtasks.Count > 0 do
             let task = microtasks.Dequeue ()
 
             try
@@ -233,7 +247,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let runDueTimers () =
         let mutable going = true
 
-        while going && timers.Count > 0 do
+        while not disposed && going && timers.Count > 0 do
             let first = Seq.head timers
             let struct (due, id) = first.Key
 
@@ -281,7 +295,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             let pending = idles.ToArray ()
             let mutable index = 0
 
-            while index < pending.Length
+            while not disposed
+                  && index < pending.Length
                   && period.TimeRemaining () > 0.0 do
                 let struct (id, callback) = pending[index]
                 index <- index + 1
@@ -467,15 +482,18 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     // Loop
 
     /// <summary>Queues <c>callback</c> to run at the next microtask checkpoint.</summary>
-    member _.QueueMicrotask(callback: unit -> unit) =
+    member this.QueueMicrotask(callback: unit -> unit) =
+        this.EnsureActive ()
         microtasks.Enqueue callback
 
     /// <summary>Runs the queued microtasks, and those they queue, until none remain.</summary>
-    member _.RunMicrotasks() =
+    member this.RunMicrotasks() =
+        this.EnsureActive ()
         runMicrotasks ()
 
     /// <summary>Calls <c>action</c> after <c>milliseconds</c>, on a later <c>Cycle</c>; returns the timer's id.</summary>
-    member _.SetTimeout(action: unit -> unit, milliseconds: float) : int =
+    member this.SetTimeout(action: unit -> unit, milliseconds: float) : int =
+        this.EnsureActive ()
         let id = nextId
         nextId <- nextId + 1
 
@@ -486,7 +504,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         id
 
     /// <summary>Cancels a timer; an unknown or finished id does nothing.</summary>
-    member _.ClearTimeout(id: int) =
+    member this.ClearTimeout(id: int) =
+        this.EnsureActive ()
         match timerKeys.TryGetValue id with
         | true, key ->
             timers.Remove key |> ignore
@@ -494,7 +513,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         | _ -> ()
 
     /// <summary>Runs <c>callback</c> with the frame time in milliseconds at the next <c>Frame</c>; returns its id.</summary>
-    member _.RequestAnimationFrame(callback: float -> unit) : int =
+    member this.RequestAnimationFrame(callback: float -> unit) : int =
+        this.EnsureActive ()
         let id = nextId
         nextId <- nextId + 1
         frames[id] <- callback
@@ -505,7 +525,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         id
 
     /// <summary>Cancels an animation frame callback that has not run.</summary>
-    member _.CancelAnimationFrame(id: int) =
+    member this.CancelAnimationFrame(id: int) =
+        this.EnsureActive ()
         frames.Remove id |> ignore
 
     /// <summary>Runs <c>callback</c> in a later idle period of <c>Cycle</c>; returns its id. With <c>timeout</c>, the
@@ -513,7 +534,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// true.</summary>
     /// <remarks>An idle period starts in a <c>Cycle</c> with no frame requested, after its posted work, timers and
     /// microtasks. Its deadline is the earlier of 50 ms on the timing clock and the next timer's due time.</remarks>
-    member _.RequestIdleCallback(callback: IdleDeadline -> unit, ?timeout: float) : int =
+    member this.RequestIdleCallback(callback: IdleDeadline -> unit, ?timeout: float) : int =
+        this.EnsureActive ()
         let id = nextId
         nextId <- nextId + 1
         idles.Add (struct (id, callback))
@@ -537,11 +559,14 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         id
 
     /// <summary>Cancels an idle callback that has not run.</summary>
-    member _.CancelIdleCallback(id: int) =
+    member this.CancelIdleCallback(id: int) =
+        this.EnsureActive ()
         removeIdle id |> ignore
 
     /// <summary>True when the page wants a frame: a rendering update, an invalidation or an animation frame callback.</summary>
-    member _.FrameRequested = Volatile.Read &frameRequested = 1
+    member this.FrameRequested =
+        this.EnsureActive ()
+        Volatile.Read &frameRequested = 1
 
     /// <summary>
     /// One turn of the loop: cycles the native run loop for up to <c>milliseconds</c>, releases the references of collected
@@ -554,25 +579,25 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         Native.rv_run_loop_cycle (defaultArg milliseconds 0)
         |> ignore
 
-        this.EnsureActive ()
-        session.Drain ()
-        let mutable item = Unchecked.defaultof<_>
+        if not disposed then
+            session.Drain ()
+            let mutable item = Unchecked.defaultof<_>
 
-        while posted.TryDequeue (&item) do
-            let struct (callback, state) = item
+            while not disposed && posted.TryDequeue (&item) do
+                let struct (callback, state) = item
 
-            try
-                callback.Invoke state
-            with error ->
-                record error
+                try
+                    callback.Invoke state
+                with error ->
+                    record error
 
+                runMicrotasks ()
+
+            runDueTimers ()
             runMicrotasks ()
 
-        runDueTimers ()
-        runMicrotasks ()
-
-        if Volatile.Read &frameRequested = 0 then
-            runIdle ()
+            if not disposed && Volatile.Read &frameRequested = 0 then
+                runIdle ()
 
     /// <summary>Moves the timer clock forward by <c>milliseconds</c> and runs the timers then due, as a test clock does.</summary>
     member internal this.AdvanceBy(milliseconds: float) =
@@ -645,21 +670,25 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         this.EnsureActive ()
         Volatile.Write (&frameRequested, 0)
         let now = now ()
-        let callbacks = Seq.toArray frames.Values
-        frames.Clear ()
+        let callbacks = Seq.toArray frames.Keys
 
-        for callback in callbacks do
-            try
-                callback now
-            with error ->
-                record error
+        for id in callbacks do
+            if not disposed then
+                match frames.TryGetValue id with
+                | true, callback ->
+                    frames.Remove id |> ignore
 
-            runMicrotasks ()
+                    try
+                        callback now
+                    with error ->
+                        record error
 
-        this.EnsureActive ()
+                    runMicrotasks ()
+                | _ -> ()
 
-        Native.rv_host_update handle
-        |> Interop.check "rv_host_update"
+        if not disposed then
+            Native.rv_host_update handle
+            |> Interop.check "rv_host_update"
 
     // Window
 
@@ -918,7 +947,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         Native.rv_host_cursor handle
 
     /// <summary>The milliseconds until the next timer is due, zero when one is overdue, or None when none is set.</summary>
-    member _.NextTimerDelay: float voption =
+    member this.NextTimerDelay: float voption =
+        this.EnsureActive ()
         if timers.Count = 0 then
             ValueNone
         else
@@ -1179,6 +1209,11 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 let cleanup = Cleanup ()
 
                 try
+                    context.Stop ()
+                    microtasks.Clear ()
+                    timers.Clear ()
+                    timerKeys.Clear ()
+                    frames.Clear ()
                     idles.Clear ()
                     idleTimeouts.Clear ()
                     let installations = installed
