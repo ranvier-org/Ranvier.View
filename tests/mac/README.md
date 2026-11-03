@@ -9,9 +9,16 @@ transport state, with no additional reactive ownership or scheduling primitive.
 The reviewed `ae534a5` product and `c7cc031` framework-free checks are forward-applied to View47 source.
 Current Core58, formatter/lifetime fixes and package metadata are preserved. The existing Native preview11
 package does not provide the new managed IOSurface bindings: until a matching canonical ABI64/349
-Interop package is allocated, compile this source only with the explicit `UseLocalRanvierWebCore=true`
-override against that canonical source. Do not publish these changes with the old default Interop pin.
+Interop package is allocated, compile this source with an explicit canonical source override or a
+private package built from that same canonical Interop source. Do not publish these changes with the
+old default Interop pin.
 No new View or Native version is allocated here.
+
+Normal and traced Release compilation of the complete test project and the framework-free static
+entry passed against private `Ranvier.WebCore/0.0.0-private.abi64.349.1` and public Core58. The private
+Interop package's 349 declarations match the canonical header. A separate normal-mode all-RAN check
+of WebCore and SDL also passed. Current-main integration preserves those F# and project input bytes.
+Actual Mac execution, NativeAOT publication and the final public package graph remain required.
 
 The prior actual Mac JIT/AOT proof used a private derivative Host with older coherent engines. It is
 separate from the required future matching producer/runtime and public package qualification. Preserve
