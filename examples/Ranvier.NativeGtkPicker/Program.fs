@@ -18,7 +18,9 @@ let main _ =
     match GtkFilePicker.tryInstall host with
     | None ->
         description.textContent <- "The optional GTK file picker is unavailable."
-        while window.Step () do ()
+
+        while window.Step () do
+            ()
     | Some picker ->
         use picker = picker
         description.textContent <- "Choose one text or PNG file."
