@@ -11,7 +11,7 @@ PATCH_BLOB = '4d8abcac20792f8e548de4523e30433ac3691969'
 PACKAGE = 'Ranvier.View.WebCore.Sdl.Ibus.' + VERSION + '.nupkg'
 SOURCE_BLOBS = {
     'tools/sdl/ibus-surrounding.patch': PATCH_BLOB,
-    'tools/sdl/build-linux.sh': '7ba5967e0f15ea01034666751dabb3e351448ca7',
+    'tools/sdl/build-linux.sh': '959f2b165834584dfe75b1c32e5a3960f2dc2c09',
     'tools/sdl/package/Ranvier.View.WebCore.Sdl.Ibus.csproj': '9471e2d7f624a4b4d3ce971883eec3655d8dcfa5',
     'tools/sdl/package/Ranvier.View.WebCore.Sdl.Ibus.targets': '912c3059c9eb84b78d4eac4f43c1197891d52565',
     'tools/sdl/package/SDL-LICENSE.txt': 'e9adee4484511b4b1730461679fed21d9b13d88e',
@@ -24,9 +24,9 @@ def digest(data):
 
 def validate_config(header, cache):
     lines = set(header.splitlines())
-    required = {'#define SDL_VIDEO_DRIVER_X11 1', '#define HAVE_DBUS_DBUS_H 1', '#define HAVE_IBUS_IBUS_H 1'}
-    if not required <= lines or not {'SDL_DBUS:BOOL=ON', 'SDL_IBUS:BOOL=ON'} <= set(cache.splitlines()):
-        raise ValueError('SDL X11, D-Bus or IBus configuration is not enabled')
+    required = {'#define SDL_VIDEO_DRIVER_X11 1', '#define SDL_VIDEO_DRIVER_X11_XTEST 1', '#define SDL_VIDEO_DRIVER_WAYLAND 1', '#define HAVE_LIBDECOR_H 1', '#define HAVE_DBUS_DBUS_H 1', '#define HAVE_IBUS_IBUS_H 1'}
+    if not required <= lines or not {'SDL_DBUS:BOOL=ON', 'SDL_IBUS:BOOL=ON', 'SDL_WAYLAND:BOOL=ON', 'SDL_X11_XTEST:BOOL=ON'} <= set(cache.splitlines()):
+        raise ValueError('SDL X11, XTest, Wayland, libdecor, D-Bus or IBus configuration is not enabled')
 
 
 def validate(package, binary, targets, license_file):

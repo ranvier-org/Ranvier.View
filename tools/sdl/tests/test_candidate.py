@@ -12,12 +12,14 @@ spec.loader.exec_module(candidate)
 
 class CandidateTests(unittest.TestCase):
     def test_generated_config_requires_each_backend(self):
-        header='\n'.join(['#define SDL_VIDEO_DRIVER_X11 1','#define HAVE_DBUS_DBUS_H 1','#define HAVE_IBUS_IBUS_H 1'])
-        cache='SDL_DBUS:BOOL=ON\nSDL_IBUS:BOOL=ON\n'
+        headers=['#define SDL_VIDEO_DRIVER_X11 1','#define SDL_VIDEO_DRIVER_X11_XTEST 1','#define SDL_VIDEO_DRIVER_WAYLAND 1','#define HAVE_LIBDECOR_H 1','#define HAVE_DBUS_DBUS_H 1','#define HAVE_IBUS_IBUS_H 1']
+        options=['SDL_DBUS:BOOL=ON','SDL_IBUS:BOOL=ON','SDL_WAYLAND:BOOL=ON','SDL_X11_XTEST:BOOL=ON']
+        header='\n'.join(headers)
+        cache='\n'.join(options)
         candidate.validate_config(header,cache)
-        for value in ('#define SDL_VIDEO_DRIVER_X11 1','#define HAVE_DBUS_DBUS_H 1','#define HAVE_IBUS_IBUS_H 1'):
+        for value in headers:
             with self.subTest(missing=value),self.assertRaises(ValueError): candidate.validate_config(header.replace(value,''),cache)
-        for value in ('SDL_DBUS:BOOL=ON','SDL_IBUS:BOOL=ON'):
+        for value in options:
             with self.subTest(disabled=value),self.assertRaises(ValueError): candidate.validate_config(header,cache.replace(value,value.replace('ON','OFF')))
 
     def test_exact_package_payload_and_mismatches(self):
