@@ -72,6 +72,7 @@ jobs:
           name: view46-public-mac-${{ github.run_id }}
           retention-days: 3
           if-no-files-found: error
+          include-hidden-files: true
           path: |
             ${{ runner.temp }}/view46-mac-public/*.json
             ${{ runner.temp }}/view46-mac-public/*.log
@@ -82,5 +83,6 @@ jobs:
             ${{ runner.temp }}/view46-mac-public/app/*.fsproj
             ${{ runner.temp }}/view46-mac-public/publish-*/**
             ${{ runner.temp }}/view46-mac-public/jit-*/bin/**
-            ${{ runner.temp }}/view46-mac-public/jit-*/obj/**/project.assets.json
-            ${{ runner.temp }}/view46-mac-public/aot-*/obj/**/project.assets.json
+            ${{ runner.temp }}/view46-mac-public/jit-*/obj/**/*.json
+            ${{ runner.temp }}/view46-mac-public/aot-*/obj/**/*.json
+            ${{ runner.temp }}/view46-mac-public/aot-*/bin/**/*.json
