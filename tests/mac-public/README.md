@@ -10,7 +10,7 @@ Reviewed fixture/inventory text hashes normalize only CRLF to LF, matching Git's
 
 The controller aggregates all four routes and preserves each failure. It records ordinary source builds, strict AOT logs/binlogs, actual unfiltered summaries, package graphs, native/managed hashes before and after, source archives and process cleanup. All commands use owned process groups, an 8-GiB aggregate RSS bound and finite deadlines. The original public dylibs and both source checkouts remain unchanged.
 
-The workflow activates only on the exact owned `codex/project2-view46-mac-public` push branch, or an explicit dispatch with matching source/input hashes. Its first push is held until Root/QA review; do not push intermediate controller drafts. It has read-only permissions, no engine build, package publish, tag or shared cache. Artifacts retain the original outcomes, replay binaries, source and compact identity evidence for three days.
+The temporary push activation is disarmed after the completed qualification. Only an explicit dispatch with matching source/input hashes remains. It has read-only permissions, no engine build, package publish, tag or shared cache. Artifacts retain the original outcomes, replay binaries, source and compact identity evidence for three days.
 
 Local controls:
 
@@ -18,6 +18,8 @@ Local controls:
 python3 -I tests/mac-public/test_controller.py
 ```
 
-An actual Mac run is still required; local source controls do not qualify the four consumer routes.
+Local source controls do not qualify consumer routes; the actual Mac results are recorded below.
 
 Run `41640096050` qualified the normal routes (833 passed/16 allowed ignores; strict lifecycle 91, dynamic code false). Its traced builds succeeded but the initial graph guard assumed unsuffixed source-project IDs. The corrected guard requires `.Traced` source projects at alpha.46 in traced mode, preserving package mode/source/version checks. The follow-up workflow runs only `--mode traced`; it explicitly marks the result as partial and does not rebuild or claim to rerun the retained normal proof.
+
+Follow-up `41642584627` qualified the traced routes with the same 833/16 JIT and 91 AOT checks, dynamic code false and no IL diagnostics. Both runs used identical source archives and public native bytes; raw runtime hashes remained unchanged. These results qualify current View source with public dependencies, not a published View46 package or GPU support. Original setup and traced-guard failures remain in the retained evidence.

@@ -1,8 +1,6 @@
 name: Current View46 public Mac Slim consumer
 
 on:
-  push:
-    branches: [codex/project2-view46-mac-public]
   workflow_dispatch:
     inputs:
       view_source:
