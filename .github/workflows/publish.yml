@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   publish-sdl-ibus:
-    if: ${{ false && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.sdl_ibus == 'publish' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.sdl_ibus == 'publish' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
