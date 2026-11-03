@@ -51,8 +51,25 @@
     "publicVersion": null,
     "proposedMatchingVersion": "0.1.1-preview.9",
     "providerSha256ByRid": {},
-    "qualifiedRidPolicy": ["linux-x64"],
-    "arm64Qualified": false,
+    "runtimeTargets": ["linux-x64", "linux-arm64"],
+    "publicGraphQualified": false,
+    "privateQualification": {
+      "scope": "Actual P9 Slim e0 provider/protocol/ordinary SDK/six strict AOT profiles per RID, source View db5/Core DOM56; not final public View46 qualification. X64 SDK-only LF repack inherits exact unchanged native/protocol/AOT inputs and reruns its ordinary consumer.",
+      "nativeSource": "e0e9a8007683d98785e8fb1b86d3b43359699858",
+      "viewSource": "db5fe6a0c6b66d755d88beb0380f91ba930b7cad",
+      "rids": {
+        "linux-x64": {
+          "hostSha256": "21fa5568e274b0228ea189bb02a6590e6ef86d6a47de827b79eac6ad0470e7f1",
+          "providerSha256": "ac2f98a7f69b954e2ff48abca9288bbbe6889f3bfa439afaf202ee2787a95eed",
+          "qualificationReceiptSha256": "9d5b38ffc547022e950152ca25bc9843d9f7f6f3fbbfe41ea05783a26998f69d"
+        },
+        "linux-arm64": {
+          "hostSha256": "af09c7b1cbdd8087465bb60c877cc6bff7c17c272da25e6f4991435324d8ddd6",
+          "providerSha256": "4ea13ca65fb4a0a3eb7efb67f0c940b4b670fc3ddc9035a942a4e1cf5f3739e2",
+          "qualificationReceiptSha256": "0968512ecf75fb19c5f39490892c21fbb0dc9dc366f7a832aae5cbcf32d7ccef"
+        }
+      }
+    },
     "unavailableControls": ["module absent", "accessibility bus unavailable"]
   },
   "optionalSdlIbus": {
@@ -60,12 +77,12 @@
     "privateId": "Ranvier.View.WebCore.Sdl.Ibus",
     "privateVersion": "0.1.0-local.5",
     "publicVersion": null,
-    "qualifiedBackendScope": "existing private X11/IBus proof only; final347 replay required"
+    "qualifiedBackendScope": "actual private347 X11/IBus proof retained separately by Linux owner; final public package/SDL46 graph remains pending"
   },
   "modes": ["normal", "traced"],
   "futureRuntimeMatrix": [
     {"rid": "win-x64", "checks": ["real UIA and SDL Window/Host lifecycle", "selected composition and surrounding deletion", "worker-first-owner and GPU lifecycle", "strict NativeAOT and normal/traced analyzer graph"]},
     {"rid": "linux-x64", "checks": ["real X11/IBus input", "provider present/missing/no-bus", "three real Windows and three direct Hosts with non-BMP style checks", "strict NativeAOT and normal/traced analyzer graph"]},
-    {"rid": "linux-arm64", "state": "unqualified; do not arm without matching actual native host/provider and managed proof", "checks": ["actual ARM64 source/ABI/hash gate", "real provider/protocol/Window lifecycle", "strict normal/traced NativeAOT"]}
+    {"rid": "linux-arm64", "state": "private P9 Slim provider/protocol/SDK/six normal-traced AOT profiles qualified; final public View46/native/provider graph remains unarmed and pending", "checks": ["actual ARM64 source/ABI/hash gate", "real provider/protocol/Window lifecycle", "strict normal/traced NativeAOT"]}
   ]
 }
