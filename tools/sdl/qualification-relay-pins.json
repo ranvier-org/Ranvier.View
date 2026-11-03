@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "draftRelease": 433029778,
+  "asset": 706522766,
+  "tag": "codex-sdl-ibus-3dedd15d",
+  "targetCommit": "99c0bbe937d1872de86a4e00516d357e1cdcf7a7",
+  "author": "shayanhabibi",
+  "uploader": "shayanhabibi",
+  "assetName": "candidate-mozc-qualification.zip",
+  "assetBytes": 2199679,
+  "assetSha256": "3dedd15d84b545ac2126f753121c202f7b681f0a34cfc3dbd0ca23dbb1497960"
+}
