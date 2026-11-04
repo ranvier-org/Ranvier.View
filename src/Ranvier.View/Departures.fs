@@ -370,7 +370,10 @@ let private dropPending (node: Node) : unit =
 
             if not (isNullish release) then
                 forget claims each
-                System.Threading.Interlocked.Decrement &pendingClaims.contents |> ignore
+
+                System.Threading.Interlocked.Decrement &pendingClaims.contents
+                |> ignore
+
                 release ()
 
         unclaimed (fun () ->
@@ -400,7 +403,9 @@ let private claimHeld (node: Node) : unit -> unit =
 let private claimPending (node: Node) : unit =
     dropPending node
     store claims node (claimSubtree node)
-    System.Threading.Interlocked.Increment &pendingClaims.contents |> ignore
+
+    System.Threading.Interlocked.Increment &pendingClaims.contents
+    |> ignore
 #endif
 
 // Withdraws the node's exit, marks the node leaving, adds its end action to `held` and starts its exit with a `finish`

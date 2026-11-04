@@ -43,7 +43,10 @@ let private collect (host: WebCoreHost) =
 [<MethodImpl(MethodImplOptions.NoInlining)>]
 let private texts (mount: Mount) : WeakReference array =
     let list = mount.Container.querySelectorAll ("li": string)
-    [| for i in 0 .. int list.length - 1 -> WeakReference ((list.item (uint32 i)).firstChild) |]
+
+    [|
+        for i in 0 .. int list.length - 1 -> WeakReference ((list.item (uint32 i)).firstChild)
+    |]
 
 [<MethodImpl(MethodImplOptions.NoInlining)>]
 let private sameObjects (mount: Mount) (before: WeakReference array) =
@@ -64,7 +67,13 @@ let tests =
             <| fun host ->
                 finishes.Clear ()
                 use graph = new Graph ()
-                let state = graph.Run (fun () -> { Items = Api.createSignal [| 1..count |] })
+
+                let state =
+                    graph.Run (fun () ->
+                        {
+                            Items = Api.createSignal [| 1..count |]
+                        })
+
                 use mounted = mount host graph exiting state
                 let before = texts mounted
                 mounted.Act (host, fun () -> state.Items.Value <- [||])
@@ -72,7 +81,14 @@ let tests =
                 collect host
                 sameObjects mounted before
                 let released = host.Session.Released
-                mounted.Act (host, fun () -> for finish in finishes.ToArray () do finish ())
+
+                mounted.Act (
+                    host,
+                    fun () ->
+                        for finish in finishes.ToArray () do
+                            finish ()
+                )
+
                 Expect.equal (int (mounted.Container.querySelectorAll ("li": string)).length) 0 "the exits removed their rows"
                 collect host
                 Expect.isGreaterThanOrEqual (host.Session.Released - released) count "the rows' text node objects are released"
@@ -81,11 +97,17 @@ let tests =
             <| fun host ->
                 finishes.Clear ()
                 use graph = new Graph ()
-                let state = graph.Run (fun () -> { Items = Api.createSignal [| 1..count |] })
+
+                let state =
+                    graph.Run (fun () ->
+                        {
+                            Items = Api.createSignal [| 1..count |]
+                        })
+
                 let mounted = mount host graph exiting state
                 collect host
                 let released = host.Session.Released
-                (mounted :> IDisposable).Dispose ()
+                (mounted :> IDisposable).Dispose()
                 Expect.equal finishes.Count 0 "a mount disposal starts no exit"
                 collect host
                 Expect.isGreaterThanOrEqual (host.Session.Released - released) (2 * count) "the rows' element and text node objects are released"
@@ -94,12 +116,18 @@ let tests =
             <| fun host ->
                 finishes.Clear ()
                 use graph = new Graph ()
-                let state = graph.Run (fun () -> { Items = Api.createSignal [| 1..count |] })
+
+                let state =
+                    graph.Run (fun () ->
+                        {
+                            Items = Api.createSignal [| 1..count |]
+                        })
+
                 let mounted = mount host graph exiting state
                 mounted.Act (host, fun () -> state.Items.Value <- [||])
                 collect host
                 let released = host.Session.Released
-                (mounted :> IDisposable).Dispose ()
+                (mounted :> IDisposable).Dispose()
                 // Each finish captures its row's root.
                 finishes.Clear ()
                 collect host
