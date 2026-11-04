@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The framework-free IOSurface consumer over the public osx-arm64 GPU runtime. The assembly name matches the
+       packages' InternalsVisibleTo entry for the shared checks. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Ranvier.View.WebCore.Tests</AssemblyName>
+    <PublishAot>true</PublishAot>
+    <IlcTreatWarningsAsErrors>true</IlcTreatWarningsAsErrors>
+    <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Ranvier.View.WebCore.Tests/IOSurfaceChecks.fs" Link="IOSurfaceChecks.fs" />
+    <Compile Include="../../Ranvier.View.WebCore.AotIOSurface/Program.fs" Link="Program.fs" />
+    <PackageReference Include="Ranvier.View.WebCore$(RanvierPackageSuffix)" Version="[$(NativeViewPackageVersion)]" />
+    <PackageReference Include="Ranvier.View.WebCore.Sdl$(RanvierPackageSuffix)" Version="[$(NativeViewPackageVersion)]" />
+    <PackageReference Include="Ranvier.WebCore.Native.osx-arm64" Version="[$(NativeRuntimePackageVersion)]" ExcludeAssets="all" />
+    <PackageReference Include="Ranvier.WebCore.Native.Gpu.osx-arm64" Version="[$(NativeRuntimePackageVersion)]" />
+  </ItemGroup>
+</Project>

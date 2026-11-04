@@ -117,3 +117,52 @@ jobs:
             artifacts/published-native/**/Ranvier*.deps.json
             artifacts/published-native/**/*.log
           if-no-files-found: ignore
+
+  # The Metal IOSurface transport over the public osx-arm64 GPU runtime, restored from nuget.org into a fresh cache.
+  macos-gpu:
+    name: Published Metal IOSurface (macOS, ${{ matrix.trace }})
+    if: inputs.runtime_flavor != 'slim'
+    runs-on: macos-26
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        trace: [normal, traced]
+    env:
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/published-metal-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.trace }}
+      NativeViewPackageVersion: ${{ inputs.view_package_version }}
+      NativeRuntimePackageVersion: ${{ inputs.native_runtime_version }}
+      NativeRuntimeAbi: ${{ inputs.native_abi }}
+      RanvierPackageSuffix: ${{ matrix.trace == 'traced' && '.Traced' || '' }}
+      FIXTURE: tests/native-packages/IOSurface/IOSurface.fsproj
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Build the test-only native Metal producer
+        run: echo "RANVIER_MAC_INPUT_HELPER=$(python3 -I tests/mac/build_metal_input.py --output "$RUNNER_TEMP/metal-input")" >> "$GITHUB_ENV"
+      - name: Restore the fixture from official NuGet into the fresh job cache
+        run: dotnet restore "$FIXTURE" --configfile tests/native-packages/NuGet.Config -r osx-arm64
+      - name: Publish and verify the NativeAOT output
+        run: |
+          dotnet publish "$FIXTURE" -c Release -r osx-arm64 --no-restore -o artifacts/published-native/aot/IOSurface
+          python3 tools/verify-published-native-runtime.py --rid osx-arm64 --assets tests/native-packages/IOSurface/obj/project.assets.json --output artifacts/published-native/aot/IOSurface --native-version "$NativeRuntimePackageVersion" --view-package "Ranvier.View.WebCore$RanvierPackageSuffix" --view-version "$NativeViewPackageVersion" --flavor gpu --abi "$NativeRuntimeAbi"
+      - name: Run the published NativeAOT IOSurface consumer
+        timeout-minutes: 3
+        run: |
+          ./artifacts/published-native/aot/IOSurface/Ranvier.View.WebCore.Tests | tee artifacts/published-native/aot/IOSurface/iosurface.log
+          grep -qx 'DYNAMIC_CODE_SUPPORTED=False' artifacts/published-native/aot/IOSurface/iosurface.log
+          grep -qx 'IOSURFACE_STATIC_PASS cases=4 unsupported=1 assertions=53' artifacts/published-native/aot/IOSurface/iosurface.log
+      - name: Preserve the restore graph and executable output evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: published-metal-${{ matrix.trace }}
+          path: |
+            tests/native-packages/IOSurface/obj/project.assets.json
+            artifacts/published-native/**/*.log
+            ${{ runner.temp }}/metal-input/metal-input-build.json
+          if-no-files-found: ignore
