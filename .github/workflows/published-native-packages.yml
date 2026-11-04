@@ -143,7 +143,9 @@ jobs:
         with:
           global-json-file: global.json
       - name: Build the test-only native Metal producer
-        run: echo "RANVIER_MAC_INPUT_HELPER=$(python3 -I tests/mac/build_metal_input.py --output "$RUNNER_TEMP/metal-input")" >> "$GITHUB_ENV"
+        run: |
+          helper=$(python3 -I tests/mac/build_metal_input.py --output "$RUNNER_TEMP/metal-input")
+          echo "RANVIER_MAC_INPUT_HELPER=$helper" >> "$GITHUB_ENV"
       - name: Restore the fixture from official NuGet into the fresh job cache
         run: dotnet restore "$FIXTURE" --configfile tests/native-packages/NuGet.Config -r osx-arm64
       - name: Publish and verify the NativeAOT output
@@ -151,6 +153,7 @@ jobs:
           dotnet publish "$FIXTURE" -c Release -r osx-arm64 --no-restore -o artifacts/published-native/aot/IOSurface
           python3 tools/verify-published-native-runtime.py --rid osx-arm64 --assets tests/native-packages/IOSurface/obj/project.assets.json --output artifacts/published-native/aot/IOSurface --native-version "$NativeRuntimePackageVersion" --view-package "Ranvier.View.WebCore$RanvierPackageSuffix" --view-version "$NativeViewPackageVersion" --flavor gpu --abi "$NativeRuntimeAbi"
       - name: Run the published NativeAOT IOSurface consumer
+        shell: bash
         timeout-minutes: 3
         run: |
           ./artifacts/published-native/aot/IOSurface/Ranvier.View.WebCore.Tests | tee artifacts/published-native/aot/IOSurface/iosurface.log

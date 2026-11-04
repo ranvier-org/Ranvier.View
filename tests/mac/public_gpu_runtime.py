@@ -65,7 +65,10 @@ def expecto(a):
 def output(a):
     receipt = json.loads((a.stage / 'public-gpu-runtime.json').read_text())
     expected = {Path(name).name: digest for name, digest in receipt['members'].items()}
-    actual = {path.name: sha(path.read_bytes()) for path in a.output.rglob('*.dylib') if path.name in DYLIBS}
+    found = [path for path in a.output.rglob('*.dylib') if path.name in DYLIBS]
+    if len(found) != len({path.name for path in found}):
+        sys.exit(f'{a.output}: duplicate GPU dylib names {sorted(str(path) for path in found)}')
+    actual = {path.name: sha(path.read_bytes()) for path in found}
     if actual != expected:
         sys.exit(f'{a.output}: dylibs {json.dumps(actual, indent=1)} differ from {json.dumps(expected, indent=1)}')
     print(f'{a.output}: six public GPU dylibs match the package payload')

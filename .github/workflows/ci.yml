@@ -370,9 +370,13 @@ jobs:
         with:
           global-json-file: global.json
       - name: Stage the signed public GPU runtime
-        run: python3 -I tests/mac/public_gpu_runtime.py stage --version "$GPU_VERSION" --sha256 "$GPU_SHA256" --output "$RUNNER_TEMP/gpu"
+        run: |
+          grep -q "'\$(RanvierWebCoreNativeVersion)' == ''\">$GPU_VERSION<" src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj
+          python3 -I tests/mac/public_gpu_runtime.py stage --version "$GPU_VERSION" --sha256 "$GPU_SHA256" --output "$RUNNER_TEMP/gpu"
       - name: Build the test-only native Metal producer
-        run: echo "RANVIER_MAC_INPUT_HELPER=$(python3 -I tests/mac/build_metal_input.py --output "$RUNNER_TEMP/metal-input")" >> "$GITHUB_ENV"
+        run: |
+          helper=$(python3 -I tests/mac/build_metal_input.py --output "$RUNNER_TEMP/metal-input")
+          echo "RANVIER_MAC_INPUT_HELPER=$helper" >> "$GITHUB_ENV"
       - name: Build Ranvier.View.WebCore.Tests
         run: dotnet build tests/Ranvier.View.WebCore.Tests -c Release -p:RanvierTrace=$TRACE -p:RanvierWebCoreNativeDir="$RUNNER_TEMP/gpu" -o "$RUNNER_TEMP/tests"
       - name: Require the public GPU dylibs in the test output
@@ -382,12 +386,14 @@ jobs:
       - name: Run the unfiltered suite
         run: dotnet "$RUNNER_TEMP/tests/Ranvier.View.WebCore.Tests.dll" --summary
       - name: Require every applicable IOSurface case to run
+        shell: bash
         run: |
           dotnet "$RUNNER_TEMP/tests/Ranvier.View.WebCore.Tests.dll" --filter-test-list "IOSurface transport" | tee "$RUNNER_TEMP/iosurface.log"
           python3 -I tests/mac/public_gpu_runtime.py expecto --log "$RUNNER_TEMP/iosurface.log" --passed 4 --ignored 1
       - name: Publish the NativeAOT IOSurface consumer
         run: dotnet publish tests/Ranvier.View.WebCore.AotIOSurface -c Release -r osx-arm64 -p:RanvierTrace=$TRACE -p:RanvierWebCoreNativeDir="$RUNNER_TEMP/gpu" -o "$RUNNER_TEMP/aot"
       - name: Run the NativeAOT IOSurface consumer
+        shell: bash
         run: |
           python3 -I tests/mac/public_gpu_runtime.py output --stage "$RUNNER_TEMP/gpu" --output "$RUNNER_TEMP/aot"
           "$RUNNER_TEMP/aot/Ranvier.View.WebCore.Tests" | tee "$RUNNER_TEMP/aot.log"

@@ -7,19 +7,14 @@ The retained View-owned state is the imported native texture and its in-flight G
 transport state, with no additional reactive ownership or scheduling primitive.
 
 The reviewed `ae534a5` product and `c7cc031` framework-free checks are forward-applied to View47 source.
-Current Core58 and formatter/lifetime fixes are preserved. The default Interop dependency now follows
-the allocated Native preview12 ABI64/349 cohort. Its producer/runtime and public package qualification
-are pending. Before that package is available, source compilation requires an explicit canonical
-source override or a private package built from that same Interop source. The successor View version
-is staged as candidate View/Dom `0.1.48` and WebCore/SDL `0.1.0-alpha.48`. No View tag or public
-publication has been allocated; this branch is not ready for publication.
+Current Core58 and formatter/lifetime fixes are preserved. The Interop dependency follows the signed
+public Native `0.1.1-preview.12` ABI64/349 cohort. The successor View version is staged as candidate
+View/Dom `0.1.48` and WebCore/SDL `0.1.0-alpha.48`; no View tag or publication has been allocated.
 
-Normal and traced Release compilation of the complete test project and the framework-free static
-entry passed against private `Ranvier.WebCore/0.0.0-private.abi64.349.1` and public Core58. The private
-Interop package's 349 declarations match the canonical header. A separate normal-mode all-RAN check
-of WebCore and SDL also passed. Current-main integration preserves those F# bodies; the candidate
-version and Native pin updates still require the matching public package graph. Actual Mac execution
-and NativeAOT publication remain required.
+CI job `webcore-macos-gpu` stages the public `Ranvier.WebCore.Native.Gpu.osx-arm64` package by exact
+hash, runs the unfiltered normal and traced suites over it, requires four passed and one ignored
+IOSurface case, and runs the strict NativeAOT `AotIOSurface` consumer. After View publication the
+`macos-gpu` job of the published native packages workflow repeats the NativeAOT consumer package-only.
 
 The prior actual Mac JIT/AOT proof used a private derivative Host with older coherent engines. It is
 separate from the required future matching producer/runtime and public package qualification. Preserve
