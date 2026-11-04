@@ -52,6 +52,7 @@ def stage(a):
 
 def expecto(a):
     text = a.log.read_text(encoding='utf-8', errors='replace')
+    text = re.sub(r'\[[0-9;?]*[A-Za-z]', '', text)
     found = re.findall(r'(\d+) passed, (\d+) ignored, (\d+) failed, (\d+) errored', text)
     if len(found) != 1:
         sys.exit(f'{a.log}: expected one Expecto summary, found {len(found)}')
