@@ -9,6 +9,7 @@ OFFICIAL_SOURCE = 'https://api.nuget.org/v3/index.json'
 SLIM = 'Ranvier.WebCore.Native.win-x64'
 GPU = 'Ranvier.WebCore.Native.Gpu.win-x64'
 RIDS = {'linux-x64', 'linux-arm64', 'osx-arm64', 'win-arm64', 'win-x64'}
+MAC_LIBRARIES = {'libRanvierWebCoreHost.dylib', 'libWebCore.dylib', 'libJavaScriptCore.dylib', 'libWebGPU.dylib'}
 ASSET_SECTIONS = {'native', 'runtime', 'runtimeTargets', 'resource', 'build', 'buildTransitive', 'buildMultiTargeting'}
 
 
@@ -51,7 +52,7 @@ def check_bytes(path, record):
         raise ValueError(f'Runtime file hash mismatch: {path}')
 
 
-def package_manifest(assets, package, version, flavor, abi):
+def package_manifest(assets, package, version, flavor, abi, rid='win-x64'):
     _, library = matching_entry(assets['libraries'], package, version)
     name = relative_name(library['path'])
     candidates = [Path(folder) / name for folder in assets['packageFolders'] if (Path(folder) / name / 'manifest.json').is_file()]
@@ -62,7 +63,7 @@ def package_manifest(assets, package, version, flavor, abi):
     if metadata.get('source', '').rstrip('/').casefold() != OFFICIAL_SOURCE:
         raise ValueError(f'{package} was not restored from official NuGet.')
     manifest = json.loads(contained_file(root, 'manifest.json').read_text(encoding='utf-8'))
-    if manifest.get('version') != version or manifest.get('rid') != 'win-x64' or manifest.get('flavor') != flavor:
+    if manifest.get('version') != version or manifest.get('rid') != rid or manifest.get('flavor') != flavor:
         raise ValueError(f'{package} manifest version/RID/flavor does not match the requested runtime.')
     if type(manifest.get('abi')) is not int or manifest['abi'] != abi:
         raise ValueError(f'{package} manifest ABI must be {abi}.')
@@ -82,12 +83,16 @@ def package_manifest(assets, package, version, flavor, abi):
         names.add(name.casefold())
         if type(record.get('bytes')) is not int or record['bytes'] < 0 or not re.fullmatch('[0-9a-fA-F]{64}', record.get('sha256', '')):
             raise ValueError(f'{package} has an invalid size/hash record: {name}')
-    required = {'ranvierwebcorehost.dll', 'webcore.dll'} | ({'libegl.dll', 'libglesv2.dll'} if flavor == 'gpu' else set())
+    if rid == 'osx-arm64':
+        required = {name.casefold() for name in MAC_LIBRARIES}
+        required |= {'libegl.dylib', 'libglesv2.dylib'} if flavor == 'gpu' else set()
+    else:
+        required = {'ranvierwebcorehost.dll', 'webcore.dll'} | ({'libegl.dll', 'libglesv2.dll'} if flavor == 'gpu' else set())
     if not required <= names:
         raise ValueError(f'{package} is missing required native libraries.')
     if type(manifest.get('total_bytes')) is not int or sum(record['bytes'] for record in records) != manifest['total_bytes']:
         raise ValueError(f'{package} manifest total size does not match.')
-    native = root / 'runtimes/win-x64/native'
+    native = root / f'runtimes/{rid}/native'
     actual = {path.relative_to(native).as_posix().casefold() for path in native.rglob('*') if path.is_file()}
     if names != actual:
         raise ValueError(f'{package} native files do not match its complete manifest.')
@@ -96,21 +101,26 @@ def package_manifest(assets, package, version, flavor, abi):
     return manifest
 
 
-def verify_runtime(assets_path, output, *, native_version, view_package, view_version, flavor, abi):
-    if flavor not in {'slim', 'gpu'} or type(abi) is not int or abi <= 0:
-        raise ValueError('Expected slim/gpu flavor and a positive ABI.')
+def verify_runtime(assets_path, output, *, native_version, view_package, view_version, flavor, abi, rid='win-x64'):
+    if flavor not in {'slim', 'gpu'} or type(abi) is not int or abi <= 0 or rid not in {'win-x64', 'osx-arm64'}:
+        raise ValueError('Expected slim/gpu flavor, a positive ABI and supported Windows x64 or macOS ARM64 RID.')
     assets = json.loads(Path(assets_path).read_text(encoding='utf-8'))
     if any(library.get('type') == 'project' for library in assets['libraries'].values()):
         raise ValueError('Published acceptance cannot use a project reference.')
     if any(key.casefold().startswith(('xantham.', 'fable.ranvier')) for key in assets['libraries']):
         raise ValueError('Native acceptance cannot reference Xantham or Fable.Ranvier browser packages.')
     targets = assets['targets']
-    rid_targets = [target for name, target in targets.items() if name.endswith('/win-x64')]
+    traced = view_package.casefold().endswith('.traced')
+    families = {'ranvier.view', 'ranvier.view.dom', 'ranvier.view.webcore', 'ranvier.view.webcore.sdl', 'ranvier.dom'}
+    opposing = families if traced else {name + '.traced' for name in families}
+    if any(key.rsplit('/', 1)[0].casefold() in opposing for graph in [assets['libraries'], *targets.values()] for key in graph):
+        raise ValueError('Published acceptance cannot contain opposing normal/traced View or DOM packages.')
+    rid_targets = [target for name, target in targets.items() if name.endswith('/' + rid)]
     if len(rid_targets) != 1:
-        raise ValueError('Restore explicitly for one win-x64 target.')
+        raise ValueError(f'Restore explicitly for one {rid} target.')
     selected = rid_targets[0]
     matching_entry(selected, view_package, view_version)
-    dom_package = 'Ranvier.Dom.Traced' if view_package.endswith('.Traced') else 'Ranvier.Dom'
+    dom_package = 'Ranvier.Dom.Traced' if traced else 'Ranvier.Dom'
     if sum(key.rsplit('/', 1)[0].casefold() == dom_package.casefold() for key in selected) != 1:
         raise ValueError(f'Native contracts must resolve {dom_package}.')
     matching_entry(selected, 'Ranvier.WebCore', native_version)
@@ -119,24 +129,26 @@ def verify_runtime(assets_path, output, *, native_version, view_package, view_ve
     expected = {'ranvier.webcore.native.' + rid for rid in RIDS}
     if not expected <= dependencies:
         raise ValueError('The native meta-package must preserve all five RID dependencies.')
-    for rid in RIDS:
-        matching_entry(selected, 'Ranvier.WebCore.Native.' + rid, native_version)
-    package = GPU if flavor == 'gpu' else SLIM
+    for candidate_rid in RIDS:
+        matching_entry(selected, 'Ranvier.WebCore.Native.' + candidate_rid, native_version)
+    slim_package = 'Ranvier.WebCore.Native.' + rid
+    gpu_package = 'Ranvier.WebCore.Native.Gpu.' + rid
+    package = gpu_package if flavor == 'gpu' else slim_package
     _, entry = matching_entry(selected, package, native_version)
     if flavor == 'gpu':
         for target in targets.values():
-            _, slim_entry = matching_entry(target, SLIM, native_version)
+            _, slim_entry = matching_entry(target, slim_package, native_version)
             if active_assets(slim_entry):
-                raise ValueError('GPU restore must have all slim win-x64 runtime/native/buildTransitive assets suppressed.')
-    elif any(key.rsplit('/', 1)[0].casefold() == GPU.casefold() and active_assets(value) for target in targets.values() for key, value in target.items()):
+                raise ValueError(f'GPU restore must have all slim {rid} runtime/native/buildTransitive assets suppressed.')
+    elif any(key.rsplit('/', 1)[0].casefold() == gpu_package.casefold() and active_assets(value) for target in targets.values() for key, value in target.items()):
         raise ValueError('A CPU restore selected GPU assets.')
-    manifest = package_manifest(assets, package, native_version, flavor, abi)
+    manifest = package_manifest(assets, package, native_version, flavor, abi, rid)
     if flavor == 'gpu':
-        slim = package_manifest(assets, SLIM, native_version, 'slim', abi)
+        slim = package_manifest(assets, slim_package, native_version, 'slim', abi, rid)
         cohort = lambda value: (value['version'], value['abi'], value['webkit'].lower(), value['source']['commit'].lower())
         if cohort(manifest) != cohort(slim):
             raise ValueError('GPU and slim manifests must belong to the exact same release cohort.')
-    prefix = 'runtimes/win-x64/native/'
+    prefix = f'runtimes/{rid}/native/'
     payload = {path[len(prefix):].casefold() for path in active_assets(entry) if path.startswith(prefix)}
     records = manifest['files']
     if payload != {record['name'].casefold() for record in records}:
@@ -149,10 +161,10 @@ def verify_runtime(assets_path, output, *, native_version, view_package, view_ve
     expected_resources = {record['name'].casefold() for record in records if record['name'].casefold().startswith('webkit.resources/')}
     if actual_resources != expected_resources:
         raise ValueError('Output WebKit resources do not match the selected runtime manifest.')
-    for name in ['libEGL.dll', 'libGLESv2.dll']:
+    for name in ['libEGL.dll', 'libGLESv2.dll', 'libEGL.dylib', 'libGLESv2.dylib']:
         if (output / name).exists() and name.casefold() not in {record['name'].casefold() for record in records}:
             raise ValueError(f'Unexpected GPU native library in output: {name}')
-    return {'package': package, 'version': native_version, 'flavor': flavor, 'abi': abi, 'files': len(records), 'output': str(output)}
+    return {'package': package, 'version': native_version, 'flavor': flavor, 'rid': rid, 'abi': abi, 'files': len(records), 'output': str(output)}
 
 
 def main():
@@ -164,10 +176,11 @@ def main():
     parser.add_argument('--view-version', required=True)
     parser.add_argument('--flavor', required=True, choices=['slim', 'gpu'])
     parser.add_argument('--abi', type=int, required=True, help='Expected ABI of the exact published runtime cohort.')
+    parser.add_argument('--rid', choices=['win-x64', 'osx-arm64'], default='win-x64')
     args = parser.parse_args()
     try:
         result = verify_runtime(args.assets, args.output, native_version=args.native_version,
-                                view_package=args.view_package, view_version=args.view_version, flavor=args.flavor, abi=args.abi)
+                                view_package=args.view_package, view_version=args.view_version, flavor=args.flavor, abi=args.abi, rid=args.rid)
     except (ValueError, KeyError, TypeError, OSError) as error:
         parser.exit(1, f'Published runtime verification failed: {error}\n')
     print(f"Verified {result['package']} {result['version']}, ABI {result['abi']}: all {result['files']} native/resource hashes in {result['output']}")

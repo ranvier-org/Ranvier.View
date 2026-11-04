@@ -644,6 +644,12 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 else
                     accelerated
             | None when
+                OperatingSystem.IsMacOS ()
+                && WebCoreHost.Has "iosurface-frames"
+                ->
+                use name = fixed Sdl.utf8 "metal"
+                SDL3.SDL_CreateRenderer (window, name)
+            | None when
                 OperatingSystem.IsLinux ()
                 && WebCoreHost.Has "presentation-egl"
                 ->
@@ -847,6 +853,17 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     /// <summary>The actual frame retained until its EGL consumer can release it.</summary>
     member internal _.PendingEglFrame = presenter.PendingEglFrame
+
+    /// <summary>The IOSurface frame retained until its Metal consumer finishes and native release succeeds.</summary>
+    member internal _.PendingIOSurfaceFrame = presenter.PendingIOSurfaceFrame
+
+    /// <summary>Wraps this window's actual Metal queue completion for failure and retry controls.</summary>
+    member internal _.SetIOSurfaceCompletion(wrapper: (unit -> unit) -> unit) =
+        presenter.SetIOSurfaceCompletion wrapper
+
+    /// <summary>Wraps this window's native IOSurface release for failure and retry controls.</summary>
+    member internal _.SetIOSurfaceFrameRelease(release: nativeint -> int) =
+        presenter.SetIOSurfaceFrameRelease release
 
     interface IDisposable with
         member _.Dispose() =

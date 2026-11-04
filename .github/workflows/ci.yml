@@ -346,6 +346,69 @@ jobs:
           RANVIER_SMOKE: '1'
         run: ./artifacts/native-aot/counter/Ranvier.NativeCounter
 
+  # The signed public osx-arm64 GPU runtime, staged from nuget.org, under the unfiltered suite and the
+  # framework-free NativeAOT IOSurface consumer, in both normal and traced builds.
+  webcore-macos-gpu:
+    name: WebCore Metal IOSurface (macOS, ${{ matrix.trace }})
+    if: ${{ !(github.event_name == 'pull_request' && !startsWith(github.head_ref, 'codex/batch-') && !contains(github.event.pull_request.labels.*.name, 'full-matrix')) }}
+    runs-on: macos-26
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        trace: [normal, traced]
+    env:
+      GPU_VERSION: 0.1.1-preview.12
+      GPU_SHA256: 01017090aa595632043399f1f4ce669df76f2824c621417d8af4849cce9ee288
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/metal-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.trace }}
+      TRACE: ${{ matrix.trace == 'traced' && 'true' || 'false' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Stage the signed public GPU runtime
+        run: |
+          grep -q "'\$(RanvierWebCoreNativeVersion)' == ''\">$GPU_VERSION<" src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj
+          python3 -I tests/mac/public_gpu_runtime.py stage --version "$GPU_VERSION" --sha256 "$GPU_SHA256" --output "$RUNNER_TEMP/gpu"
+      - name: Build the test-only native Metal producer
+        run: |
+          helper=$(python3 -I tests/mac/build_metal_input.py --output "$RUNNER_TEMP/metal-input")
+          echo "RANVIER_MAC_INPUT_HELPER=$helper" >> "$GITHUB_ENV"
+      - name: Build Ranvier.View.WebCore.Tests
+        run: dotnet build tests/Ranvier.View.WebCore.Tests -c Release -p:RanvierTrace=$TRACE -p:RanvierWebCoreNativeDir="$RUNNER_TEMP/gpu" -o "$RUNNER_TEMP/tests"
+      - name: Require the public GPU dylibs in the test output
+        run: python3 -I tests/mac/public_gpu_runtime.py output --stage "$RUNNER_TEMP/gpu" --output "$RUNNER_TEMP/tests"
+      # dotnet run semantics: WebKit on macOS needs the process's main thread, which the tests' own Main hands to the
+      # test bodies.
+      - name: Run the unfiltered suite
+        run: dotnet "$RUNNER_TEMP/tests/Ranvier.View.WebCore.Tests.dll" --summary
+      - name: Require every applicable IOSurface case to run
+        shell: bash
+        run: |
+          dotnet "$RUNNER_TEMP/tests/Ranvier.View.WebCore.Tests.dll" --filter-test-list "IOSurface transport" | tee "$RUNNER_TEMP/iosurface.log"
+          python3 -I tests/mac/public_gpu_runtime.py expecto --log "$RUNNER_TEMP/iosurface.log" --passed 4 --ignored 1
+      - name: Publish the NativeAOT IOSurface consumer
+        run: dotnet publish tests/Ranvier.View.WebCore.AotIOSurface -c Release -r osx-arm64 -p:RanvierTrace=$TRACE -p:RanvierWebCoreNativeDir="$RUNNER_TEMP/gpu" -o "$RUNNER_TEMP/aot"
+      - name: Run the NativeAOT IOSurface consumer
+        shell: bash
+        run: |
+          python3 -I tests/mac/public_gpu_runtime.py output --stage "$RUNNER_TEMP/gpu" --output "$RUNNER_TEMP/aot"
+          "$RUNNER_TEMP/aot/Ranvier.View.WebCore.Tests" | tee "$RUNNER_TEMP/aot.log"
+          grep -qx 'DYNAMIC_CODE_SUPPORTED=False' "$RUNNER_TEMP/aot.log"
+          grep -qx 'IOSURFACE_STATIC_PASS cases=4 unsupported=1 assertions=53' "$RUNNER_TEMP/aot.log"
+      - name: Preserve run evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: metal-iosurface-${{ matrix.trace }}
+          path: |
+            ${{ runner.temp }}/gpu/public-gpu-runtime.json
+            ${{ runner.temp }}/metal-input/metal-input-build.json
+            ${{ runner.temp }}/*.log
+
   webcore-linux:
     name: WebCore backend (linux-x64)
     if: ${{ !(github.event_name == 'pull_request' && !startsWith(github.head_ref, 'codex/batch-') && !contains(github.event.pull_request.labels.*.name, 'full-matrix')) }}
@@ -470,13 +533,13 @@ jobs:
 
   result:
     name: CI result
-    needs: [views, analyzer-bootstrap, analyze, webcore, webcore-gpu, webcore-macos, webcore-linux, native-api-browser, packages, format]
+    needs: [views, analyzer-bootstrap, analyze, webcore, webcore-gpu, webcore-macos, webcore-macos-gpu, webcore-linux, native-api-browser, packages, format]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - env:
           RESULTS: ${{ needs.views.result }} ${{ needs['analyzer-bootstrap'].result }} ${{ needs.analyze.result }} ${{ needs.webcore.result }} ${{ needs['native-api-browser'].result }} ${{ needs.packages.result }} ${{ needs.format.result }}
-          PLATFORM_RESULTS: ${{ needs['webcore-macos'].result }} ${{ needs['webcore-linux'].result }}
+          PLATFORM_RESULTS: ${{ needs['webcore-macos'].result }} ${{ needs['webcore-macos-gpu'].result }} ${{ needs['webcore-linux'].result }}
           LIGHT: ${{ github.event_name == 'pull_request' && !startsWith(github.head_ref, 'codex/batch-') && !contains(github.event.pull_request.labels.*.name, 'full-matrix') }}
           GPU_ENABLED: ${{ github.event_name == 'workflow_dispatch' && inputs.gpu_runtime_version != '' }}
           GPU_RESULT: ${{ needs['webcore-gpu'].result }}

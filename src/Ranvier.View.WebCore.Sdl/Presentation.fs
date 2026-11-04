@@ -19,6 +19,7 @@ module private PresentationNative =
 
 /// <summary>CPU and shared GPU textures presented on the host and SDL owner thread.</summary>
 type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option) =
+    let metal = MetalRenderer.TryCreate renderer
     let mutable cpuTexture = NativePtr.nullPtr<SDL_Texture>
     let mutable cpuWidth = 0
     let mutable cpuHeight = 0
@@ -41,7 +42,8 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
         ((OperatingSystem.IsWindows ()
           && WebCoreHost.Has "presentation-d3d11"
           && device () <> 0n)
-         || egl.IsSome)
+         || egl.IsSome
+         || metal.IsSome)
         && RanvierWebCoreAbi.Native.rv_host_set_accelerated_compositing (host.Handle, 1) = 0
 
     let draw texture width height =
@@ -131,6 +133,10 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     let capture () =
         let surface = SDL3.SDL_RenderReadPixels (renderer, NativePtr.nullPtr)
 
+        if not (NativePtr.isNullPtr surface) then
+            metal
+            |> Option.iter (fun consumer -> consumer.ReadbackCompleted ())
+
         if NativePtr.isNullPtr surface then
             raise (PresentationNative.failure "SDL_RenderReadPixels")
 
@@ -185,17 +191,33 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                     )
             | None -> invalidOp "An EGL frame requires its consumer renderer"
 
+    let releasePendingMetalFrame () =
+        metal
+        |> Option.iter (fun consumer ->
+            consumer.ReleasePending (fun () ->
+                if not (NativePtr.isNullPtr gpuTexture) then
+                    SDL3.SDL_DestroyTexture gpuTexture
+                    gpuTexture <- NativePtr.nullPtr
+                    gpuResource <- 0n))
+
+    let present () =
+        match metal with
+        | Some consumer -> consumer.Present ()
+        | None -> PresentationNative.ok (SDL3.SDL_RenderPresent renderer)
+
     member private _.WithGpu(action: nativeptr<SDL_Texture> -> int -> int -> 'T) : 'T voption =
         releasePendingEglFrame ()
+        releasePendingMetalFrame ()
         let mutable frame = 0n
 
         let acquired =
             if not gpuEnabled then
                 -9
             else
-                match egl with
-                | Some consumer -> consumer.Acquire (host.Handle, &frame)
-                | None -> RanvierWebCoreAbi.Native.rv_host_acquire_d3d11_frame (host.Handle, device (), &frame)
+                match egl, metal with
+                | Some consumer, _ -> consumer.Acquire (host.Handle, &frame)
+                | _, Some consumer -> consumer.Acquire (host.Handle, &frame)
+                | None, None -> RanvierWebCoreAbi.Native.rv_host_acquire_d3d11_frame (host.Handle, device (), &frame)
 
         if acquired <> 0 then
             ValueNone
@@ -213,7 +235,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                     || resource = 0n
                     || width <= 0
                     || height <= 0
-                    || format <> 1
+                    || format <> (if metal.IsSome then 2 else 1)
                 then
                     ValueNone
                 else
@@ -227,9 +249,10 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                             SDL3.SDL_DestroyTexture gpuTexture
 
                         gpuTexture <-
-                            match egl with
-                            | Some consumer -> consumer.Import (resource, width, height)
-                            | None -> importTexture resource width height
+                            match egl, metal with
+                            | Some consumer, _ -> consumer.Import (resource, width, height)
+                            | _, Some consumer -> consumer.Import (resource, width, height)
+                            | None, None -> importTexture resource width height
 
                         gpuResource <- resource
                         gpuWidth <- width
@@ -249,9 +272,10 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                     else
                         ValueSome (action gpuTexture width height)
             finally
-                match egl with
-                | Some _ -> releasePendingEglFrame ()
-                | None ->
+                match egl, metal with
+                | Some _, _ -> releasePendingEglFrame ()
+                | _, Some _ -> releasePendingMetalFrame ()
+                | None, None ->
                     let flushed = PresentationNative.ok (SDL3.SDL_FlushRenderer renderer)
                     let released = RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
 
@@ -266,12 +290,35 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                             )
                         )
 
-    /// <summary>Retries a retained EGL frame before disposing its consumer context; failure preserves ownership.</summary>
+    /// <summary>Retries retained GPU frames before disposing their consumer; failure preserves ownership.</summary>
     member _.ReleasePending() =
         releasePendingEglFrame ()
+        releasePendingMetalFrame ()
 
     /// <summary>The retained native EGL frame, or zero after successful release.</summary>
     member _.PendingEglFrame = pendingEglFrame
+
+    /// <summary>The IOSurface frame retained until consumer completion and native release succeed.</summary>
+    member _.PendingIOSurfaceFrame =
+        metal
+        |> Option.map (fun consumer -> consumer.PendingFrame)
+        |> Option.defaultValue 0n
+
+    /// <summary>Wraps actual Metal completion for per-renderer failure controls; false means another transport.</summary>
+    member _.SetIOSurfaceCompletion(wrapper: (unit -> unit) -> unit) =
+        match metal with
+        | Some consumer ->
+            consumer.SetCompletion wrapper
+            true
+        | None -> false
+
+    /// <summary>Wraps native IOSurface release for per-renderer failure controls; false means another transport.</summary>
+    member _.SetIOSurfaceFrameRelease(release: nativeint -> int) =
+        match metal with
+        | Some consumer ->
+            consumer.SetFrameRelease release
+            true
+        | None -> false
 
     /// <summary>Requires a full CPU repaint after viewport or display-scale changes.</summary>
     member _.Invalidate() =
@@ -289,7 +336,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
             this.WithGpu (fun texture width height ->
                 draw texture width height
 
-                if not (PresentationNative.ok (SDL3.SDL_RenderPresent renderer)) then
+                if not (present ()) then
                     raise (PresentationNative.failure "SDL_RenderPresent"))
         with
         | ValueSome () ->
@@ -329,6 +376,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     interface IDisposable with
         member _.Dispose() =
             releasePendingEglFrame ()
+            releasePendingMetalFrame ()
 
             egl
             |> Option.iter (fun consumer ->

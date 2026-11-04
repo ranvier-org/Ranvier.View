@@ -22,6 +22,7 @@
     "Ranvier.WebCore.Native.Gpu.win-x64",
     "Ranvier.WebCore.Native.Gpu.linux-x64",
     "Ranvier.WebCore.Native.Gpu.linux-arm64",
+    "Ranvier.WebCore.Native.Gpu.osx-arm64",
     "Ranvier.Dom",
     "Ranvier.Dom.Traced",
     "Fable.Ranvier.Dom",
