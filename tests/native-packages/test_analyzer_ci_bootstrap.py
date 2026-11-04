@@ -104,11 +104,9 @@ class AnalyzerBootstrap(unittest.TestCase):
         qualification = (ROOT / '.github/workflows/analyzer-host.yml').read_text()
         self.assertIn('ref: ' + source, ci)
         self.assertGreaterEqual(qualification.count(source), 3)
-        self.assertIn("values['version'] != '0.1.0-rc.1'", qualification)
-        props = ET.parse(ROOT / 'Directory.Build.props').getroot()
-        self.assertEqual(props.find('.//RanvierDomVersion').text, '0.1.0-rc.1')
-        self.assertEqual(props.find('.//RanvierCssVersion').text, '0.1.1-alpha.2')
-        self.assertEqual(props.find('.//RanvierCssAddonsVersion').text, '0.1.1-alpha.1')
+        self.assertIn("values['version'] != dom_version", qualification)
+        self.assertIn('<RanvierDomVersion>', qualification)
+        self.assertNotRegex(qualification, r"values\['version'\] != '")
         for project in (ROOT / 'fable/Ranvier.Anime.Tests/Sugar/Sugar.fsproj',
                         ROOT / 'docs/samples/css-anime/Ranvier.Docs.CssAnime.fsproj'):
             for item in ET.parse(project).getroot().iter('PackageReference'):
@@ -117,10 +115,6 @@ class AnalyzerBootstrap(unittest.TestCase):
         generated = (ROOT / 'fable/Ranvier.Anime.Tests/typecheck.mjs').read_text()
         self.assertEqual(generated.count('Version="$(RanvierCssAddonsVersion)"'), 2)
         self.assertNotIn('Version="$(RanvierCssVersion)"', generated)
-
-    def test_native_release_record_triggers_analyzer_qualification(self):
-        workflow = (ROOT / '.github/workflows/analyzer-host.yml').read_text()
-        self.assertEqual(workflow.count("'docs/research/native-api-delivery/views-0.1.45-release.json'"), 2)
 
 
 if __name__ == '__main__':

@@ -5,8 +5,8 @@
     <PublishAot>true</PublishAot>
     <IsPackable>false</IsPackable>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <NativeRuntimePackageVersion Condition="'$(NativeRuntimePackageVersion)' == ''">0.1.1-rc.1</NativeRuntimePackageVersion>
-    <NativeRuntimeAbi Condition="'$(NativeRuntimeAbi)' == ''">64</NativeRuntimeAbi>
+    <RanvierWebCoreProject>$(MSBuildThisFileDirectory)../../src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj</RanvierWebCoreProject>
+    <NativeRuntimePackageVersion Condition="'$(NativeRuntimePackageVersion)' == ''">$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(RanvierWebCoreProject)')), '&lt;RanvierWebCoreNativeVersion[^&gt;]*&gt;([^&lt;]+)&lt;').Groups[1].Value)</NativeRuntimePackageVersion>
     <UsePublishedGpu Condition="'$(UsePublishedGpu)' == ''">false</UsePublishedGpu>
     <RestoreConfigFile>$(MSBuildThisFileDirectory)NuGet.Config</RestoreConfigFile>
     <DefineConstants Condition="'$(RanvierPackageSuffix)' == '.Traced'">$(DefineConstants);RANVIER_TRACE</DefineConstants>

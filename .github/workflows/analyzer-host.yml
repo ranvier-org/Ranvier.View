@@ -9,7 +9,6 @@ on:
       - 'tools/Ranvier.Analyzers.Tests/**'
       - 'build.fsx'
       - 'Directory.Build.*'
-      - 'docs/research/native-api-delivery/views-0.1.45-release.json'
       - '.github/workflows/analyzer-host.yml'
   pull_request:
     paths:
@@ -18,7 +17,6 @@ on:
       - 'tools/Ranvier.Analyzers.Tests/**'
       - 'build.fsx'
       - 'Directory.Build.*'
-      - 'docs/research/native-api-delivery/views-0.1.45-release.json'
       - '.github/workflows/analyzer-host.yml'
 
 permissions:
@@ -92,9 +90,11 @@ jobs:
           import hashlib
           import json
           from pathlib import Path
+          import re
           import xml.etree.ElementTree as ET
           import zipfile
           expected = {'Ranvier.Dom', 'Fable.Ranvier.Dom', 'Ranvier.Dom.Traced', 'Fable.Ranvier.Dom.Traced'}
+          dom_version = re.search(r'<RanvierDomVersion>([^<]+)</RanvierDomVersion>', Path('Directory.Build.props').read_text()).group(1)
           packages = []
           for path in sorted(Path('artifacts/core-feed').glob('*.nupkg')):
               with zipfile.ZipFile(path) as archive:
@@ -103,7 +103,7 @@ jobs:
                       raise ValueError('Expected one dependency nuspec')
                   root = ET.fromstring(archive.read(names[0]))
                   values = {node.tag.rsplit('}', 1)[-1]: node.text for node in root.iter()}
-              if values['id'] not in expected or values['version'] != '0.1.0-rc.1':
+              if values['id'] not in expected or values['version'] != dom_version:
                   raise ValueError('Unexpected private dependency package identity')
               packages.append({'id': values['id'], 'version': values['version'], 'file': path.name, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()})
           if len(packages) != 4 or {package['id'] for package in packages} != expected:
@@ -151,7 +151,7 @@ jobs:
         if: runner.os == 'Windows'
         run: python tools/Ranvier.Analyzers.Host/tests/test_build_compiler_supervision.py
       - name: Verify package layout and pinned upstream payload
-        run: python tools/Ranvier.Analyzers.Host/tests/test_package.py --package artifacts/feed/Ranvier.Analyzers.Host.0.1.0-preview.1.nupkg --upstream-package artifacts/nuget/fsharp-analyzers/0.41.0/fsharp-analyzers.0.41.0.nupkg
+        run: python tools/Ranvier.Analyzers.Host/tests/test_package.py --package (Get-Item artifacts/feed/Ranvier.Analyzers.Host.*.nupkg).FullName --upstream-package artifacts/nuget/fsharp-analyzers/0.41.0/fsharp-analyzers.0.41.0.nupkg
       - name: Verify the external-consumer harness
         run: python tools/Ranvier.Analyzers.Host/tests/test_consumer.py
       - name: Verify publication source and package identity controls

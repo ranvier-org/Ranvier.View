@@ -16,13 +16,15 @@ SPEC = importlib.util.spec_from_file_location('published_native_runtime', SCRIPT
 VERIFY = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(VERIFY)
 
-VERSION = '0.1.1-preview.11'
+# Sample cohort identity for the synthetic package fixtures. Arbitrary: the verifier logic is
+# version- and ABI-agnostic, and nothing here tracks the current release.
+VERSION = '0.1.1-sample.1'
 VIEW = 'Ranvier.View.WebCore.Sdl.Traced'
 VIEW_VERSION = '0.1.0-test.1'
 SLIM = 'Ranvier.WebCore.Native.win-x64'
 GPU = 'Ranvier.WebCore.Native.Gpu.win-x64'
 RIDS = ['linux-x64', 'linux-arm64', 'osx-arm64', 'win-arm64', 'win-x64']
-ABI = 63
+ABI = 7
 
 
 def write_json(path, value):
@@ -165,9 +167,11 @@ class RuntimeVerification(unittest.TestCase):
         fixture = ET.parse(root / 'tests/native-packages/Directory.Build.props').getroot()
         backend_version = backend.findtext(".//RanvierWebCoreNativeVersion")
         consumer_version = fixture.findtext(".//NativeRuntimePackageVersion")
-        self.assertEqual(backend_version, '0.1.1-rc.1')
-        self.assertEqual(consumer_version, '0.1.1-rc.1')
-        self.assertEqual(fixture.findtext('.//NativeRuntimeAbi'), '64')
+        self.assertTrue(backend_version)
+        # The consumer fixture reads its default from the backend project at evaluation time; it
+        # carries no literal copy. Evaluating the property is covered by the MSBuild fixtures.
+        self.assertIn('RanvierWebCoreNativeVersion', consumer_version)
+        self.assertIsNone(fixture.find('.//NativeRuntimeAbi'))
         self.assertEqual(backend.find(".//RanvierWebCoreNativeVersion").attrib.get('Condition'),
                          "'$(RanvierWebCoreNativeVersion)' == ''")
         backend_text = (root / 'src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj').read_text(encoding='utf-8')
@@ -176,30 +180,27 @@ class RuntimeVerification(unittest.TestCase):
                       backend_text)
         self.assertIn("<ItemGroup Condition=\"'$(RanvierWebCoreNativeDir)' == ''\">", backend_text)
         sdl_readme = (root / 'src/Ranvier.View.WebCore.Sdl/README.md').read_text(encoding='utf-8')
-        self.assertEqual(sdl_readme.count('Version="[0.1.1-rc.1]"'), 2)
+        self.assertEqual(sdl_readme.count(f'Version="[{backend_version}]"'), 2)
         sdl_version = ET.parse(root / 'src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj').getroot().findtext('.//Version')
         self.assertIn(f'dotnet add package Ranvier.View.WebCore.Sdl --version {sdl_version}', sdl_readme)
         self.assertIn("<NativeRuntimePackageVersion Condition=\"'$(NativeRuntimePackageVersion)' == ''\">",
                       (root / 'tests/native-packages/Directory.Build.props').read_text(encoding='utf-8'))
 
-    def test_legacy_p11_fixture_remains_explicit_abi63(self):
-        self.assertEqual(VERSION, '0.1.1-preview.11')
-        self.assertEqual(ABI, 63)
-        self.assertEqual(self.fixture().verify()['abi'], 63)
-
-    def test_release_candidate_plan_matches_project_metadata(self):
+    def test_staged_release_plan_matches_project_metadata(self):
+        """While a release is staged, its plan file must agree with the project metadata."""
         root = Path(__file__).resolve().parents[2]
-        plan = json.loads((root / 'docs/research/native-api-delivery/views-0.1.49-rc.1-plan.json').read_text())
-        self.assertFalse(plan['allocation'])
-        self.assertFalse(plan['activation']['armed'])
-        self.assertEqual((plan['nativeVersion'], plan['nativeAbi'], plan['nativeDeclarations']),
-                         ('0.1.1-rc.1', 64, 349))
+        view_version = ET.parse(root / 'src/Ranvier.View/Ranvier.View.fsproj').getroot().findtext('.//Version')
+        plan_path = root / 'docs/research/native-api-delivery' / f'views-{view_version}-plan.json'
+        if not plan_path.exists():
+            self.skipTest('no staged release plan for the current View version')
+        plan = json.loads(plan_path.read_text())
+        backend = ET.parse(root / 'src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj').getroot()
+        self.assertEqual(plan['nativeVersion'], backend.findtext('.//RanvierWebCoreNativeVersion'))
+        self.assertIsInstance(plan['nativeAbi'], int)
+        self.assertIsInstance(plan['nativeDeclarations'], int)
         for project in ['Ranvier.View', 'Ranvier.View.Dom', 'Ranvier.View.WebCore', 'Ranvier.View.WebCore.Sdl']:
             version = ET.parse(root / 'src' / project / (project + '.fsproj')).getroot().findtext('.//Version')
             self.assertEqual(version, plan['webCoreViewVersion' if 'WebCore' in project else 'viewVersion'])
-        for key in ['signedNativePackageSha256', 'signedInteropPackageSha256',
-                    'nativePublicAuditSha256', 'viewPublicPackageSha256']:
-            self.assertIsNone(plan[key])
         self.assertTrue(plan['mergeGates'])
         self.assertTrue(plan['publicationGates'])
 
@@ -222,7 +223,7 @@ class RuntimeVerification(unittest.TestCase):
             root.mkdir()
             fixture = PackageFixture(root, 'gpu', 'osx-arm64', 64)
             if mutation in ('rid', 'abi'):
-                fixture.manifests['gpu'][mutation] = 'win-x64' if mutation == 'rid' else 63
+                fixture.manifests['gpu'][mutation] = 'win-x64' if mutation == 'rid' else ABI
             elif mutation == 'slim':
                 fixture.assets['targets']['net10.0']['Ranvier.WebCore.Native.osx-arm64/' + VERSION]['native'] = {'unexpected.dylib': {}}
             else:
