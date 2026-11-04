@@ -99,11 +99,12 @@ class AnalyzerBootstrap(unittest.TestCase):
         self.assertIn('compiler="$GITHUB_WORKSPACE/' + compiler + '"', bootstrap)
 
     def test_core_source_and_css_package_versions_match_their_release_closures(self):
-        source = '59c68218e1e4f6b6bbde1afb8f8502a3ee587abc'
         ci = (ROOT / '.github/workflows/ci.yml').read_text()
         qualification = (ROOT / '.github/workflows/analyzer-host.yml').read_text()
-        self.assertIn('ref: ' + source, ci)
-        self.assertGreaterEqual(qualification.count(source), 3)
+        for workflow in (ci, qualification):
+            self.assertIn('ref: ${{ steps.core.outputs.commit }}', workflow)
+            self.assertNotRegex(workflow, r'[0-9a-f]{40}')
+        self.assertIn('$env:CORE_COMMIT', qualification)
         self.assertIn("values['version'] != dom_version", qualification)
         self.assertIn('<RanvierDomVersion>', qualification)
         self.assertNotRegex(qualification, r"values\['version'\] != '")
