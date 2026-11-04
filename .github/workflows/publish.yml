@@ -192,9 +192,12 @@ jobs:
         env:
           NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
-          dotnet nuget push artifacts/publication/feed/Ranvier.Analyzers.Host.0.1.0-preview.1.nupkg --source https://api.nuget.org/v3/index.json --api-key "$env:NUGET_API_KEY"
+          $hostPackage = Get-Item artifacts/publication/feed/Ranvier.Analyzers.Host.*.nupkg
+          $analyzersPackage = Get-Item artifacts/publication/feed/Ranvier.Analyzers.[0-9]*.nupkg
+          if (@($hostPackage).Count -ne 1 -or @($analyzersPackage).Count -ne 1) { throw 'The publication feed must hold exactly the qualified pair' }
+          dotnet nuget push $hostPackage.FullName --source https://api.nuget.org/v3/index.json --api-key "$env:NUGET_API_KEY"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet nuget push artifacts/publication/feed/Ranvier.Analyzers.0.1.1-preview.2.nupkg --source https://api.nuget.org/v3/index.json --api-key "$env:NUGET_API_KEY"
+          dotnet nuget push $analyzersPackage.FullName --source https://api.nuget.org/v3/index.json --api-key "$env:NUGET_API_KEY"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
   qualify-public-analyzers:
@@ -224,9 +227,12 @@ jobs:
           github-token: ${{ github.token }}
       - name: Wait for the exact public package versions to be indexed
         run: |
+          $hostVersion = [regex]::Match((Get-Content -Raw tools/Ranvier.Analyzers.Host/Ranvier.Analyzers.Host.csproj), '<Version>([^<]+)</Version>').Groups[1].Value
+          $analyzersVersion = [regex]::Match((Get-Content -Raw tools/Ranvier.Analyzers/Ranvier.Analyzers.fsproj), '<Version>([^<]+)</Version>').Groups[1].Value
+          if (-not $hostVersion -or -not $analyzersVersion) { throw 'Package versions are missing from the projects' }
           $packages = @(
-            @{ Id = 'ranvier.analyzers.host'; Version = '0.1.0-preview.1' },
-            @{ Id = 'ranvier.analyzers'; Version = '0.1.1-preview.2' }
+            @{ Id = 'ranvier.analyzers.host'; Version = $hostVersion },
+            @{ Id = 'ranvier.analyzers'; Version = $analyzersVersion }
           )
           foreach ($package in $packages) {
             $indexed = $false
