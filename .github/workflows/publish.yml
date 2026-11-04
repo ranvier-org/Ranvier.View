@@ -195,6 +195,7 @@ jobs:
         uses: NuGet/login@v1
         with:
           user: ${{ vars.NUGET_USER || 'shayan.habibi' }}
+      # A release that keeps the analyzer versions finds them published; qualify-public-analyzers checks the public pair.
       - name: Publish the qualified Host before its analyzer
         env:
           NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
@@ -202,9 +203,9 @@ jobs:
           $hostPackage = Get-Item artifacts/publication/feed/Ranvier.Analyzers.Host.*.nupkg
           $analyzersPackage = Get-Item artifacts/publication/feed/Ranvier.Analyzers.[0-9]*.nupkg
           if (@($hostPackage).Count -ne 1 -or @($analyzersPackage).Count -ne 1) { throw 'The publication feed must hold exactly the qualified pair' }
-          dotnet nuget push $hostPackage.FullName --source https://api.nuget.org/v3/index.json --api-key "$env:NUGET_API_KEY"
+          dotnet nuget push $hostPackage.FullName --source https://api.nuget.org/v3/index.json --api-key "$env:NUGET_API_KEY" --skip-duplicate
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet nuget push $analyzersPackage.FullName --source https://api.nuget.org/v3/index.json --api-key "$env:NUGET_API_KEY"
+          dotnet nuget push $analyzersPackage.FullName --source https://api.nuget.org/v3/index.json --api-key "$env:NUGET_API_KEY" --skip-duplicate
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
   qualify-public-analyzers:
