@@ -53,7 +53,14 @@ jobs:
       - name: Publish the unchanged optional SDL candidate
         env:
           NUGET_API_KEY: ${{ steps.sdl-login.outputs.NUGET_API_KEY }}
-        run: dotnet nuget push "$RUNNER_TEMP/sdl-ibus-publish/export/Ranvier.View.WebCore.Sdl.Ibus.0.1.0-alpha.1.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY"
+        shell: bash
+        run: |
+          set -euo pipefail
+          pkg=$(python3 -I -c "import json;p=json.load(open('tools/sdl/publication-pins.json'));print(p['id']+'.'+p['version']+'.nupkg')")
+          shopt -s nullglob
+          matches=("$RUNNER_TEMP"/sdl-ibus-publish/export/*.nupkg)
+          if [ "${#matches[@]}" -ne 1 ] || [ "$(basename "${matches[0]}")" != "$pkg" ]; then echo "Expected exactly $pkg in the export directory" >&2; exit 1; fi
+          dotnet nuget push "${matches[0]}" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY"
 
   publish:
     if: >-
