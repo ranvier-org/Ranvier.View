@@ -13,7 +13,7 @@ class QualificationTests(unittest.TestCase):
         candidate_bytes=json.dumps(candidate).encode()
         producer={'run':41679434452,'head':candidate['viewSource'],'packageSha256':package_sha,'binarySha256':q.SDL_SHA256,'candidateReceiptSha256':q.sha(candidate_bytes)}
         if failure=='head': producer['head']='0'*40
-        sources={'launcher.py':launcher,'candidate-download.json':json.dumps(producer).encode(),'ci-candidate/candidate.json':candidate_bytes,'ci-candidate/Ranvier.View.WebCore.Sdl.Ibus.0.1.0-alpha.1.nupkg':package}
+        sources={'launcher.py':launcher,'candidate-download.json':json.dumps(producer).encode(),'ci-candidate/candidate.json':candidate_bytes,'ci-candidate/'+q.PACKAGE_FILE:package}
         for mode in ('normal','traced'):
             for case in ('commit','cancel'):
                 prefix=f'consumer-{mode}-{case}'

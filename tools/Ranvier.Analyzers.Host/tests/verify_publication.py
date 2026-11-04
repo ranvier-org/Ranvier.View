@@ -43,7 +43,12 @@ def verify_pair(feed, vendor_spec, consumer_proofs):
     paths = list(Path(feed).glob("*.nupkg"))
     if len(paths) != 2 or {path.resolve() for path in paths} != {plan.host.path.resolve(), plan.analyzers.path.resolve()}:
         raise ValueError("Publication feed must contain exactly the qualified pair")
-    if (plan.host.version, plan.analyzers.version) != ("0.1.0-preview.1", "0.1.1-preview.2"):
+    root = Path(__file__).resolve().parents[3]
+    expected_versions = tuple(
+        re.search(r"<Version>([^<]+)</Version>", (root / project).read_text(encoding="utf-8")).group(1)
+        for project in ("tools/Ranvier.Analyzers.Host/Ranvier.Analyzers.Host.csproj",
+                        "tools/Ranvier.Analyzers/Ranvier.Analyzers.fsproj"))
+    if (plan.host.version, plan.analyzers.version) != expected_versions:
         raise ValueError("Unexpected publication package versions")
     if plan.manifest != vendor_spec:
         raise ValueError("Host vendor manifest differs from the qualified source specification")

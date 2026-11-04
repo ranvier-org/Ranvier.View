@@ -9,7 +9,6 @@ on:
       - 'tools/Ranvier.Analyzers.Tests/**'
       - 'build.fsx'
       - 'Directory.Build.*'
-      - 'docs/research/native-api-delivery/views-0.1.45-release.json'
       - '.github/workflows/analyzer-host.yml'
   pull_request:
     paths:
@@ -18,7 +17,6 @@ on:
       - 'tools/Ranvier.Analyzers.Tests/**'
       - 'build.fsx'
       - 'Directory.Build.*'
-      - 'docs/research/native-api-delivery/views-0.1.45-release.json'
       - '.github/workflows/analyzer-host.yml'
 
 permissions:
@@ -62,10 +60,13 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - name: Resolve the Core revision of the pinned DOM release
+        id: core
+        run: echo "commit=$(python3 -I tools/core-source.py)" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
           repository: ranvier-org/Ranvier
-          ref: 59c68218e1e4f6b6bbde1afb8f8502a3ee587abc
+          ref: ${{ steps.core.outputs.commit }}
           path: .ci/ranvier
           persist-credentials: false
       - uses: actions/setup-dotnet@v4
@@ -73,10 +74,12 @@ jobs:
           dotnet-version: '10.0.403'
       - name: Pack the pinned private DOM dependency closure
         shell: pwsh
+        env:
+          CORE_COMMIT: ${{ steps.core.outputs.commit }}
         working-directory: .ci/ranvier
         run: |
           $source = (git rev-parse HEAD).Trim()
-          if ($source -ne '59c68218e1e4f6b6bbde1afb8f8502a3ee587abc') { throw 'Unexpected Core source revision' }
+          if ($source -ne $env:CORE_COMMIT) { throw 'Unexpected Core source revision' }
           $feed = Join-Path $env:GITHUB_WORKSPACE 'artifacts/core-feed'
           foreach ($traced in @('false', 'true')) {
             $outputs = Join-Path $env:GITHUB_WORKSPACE "artifacts/core-build-$traced"
@@ -88,13 +91,17 @@ jobs:
           if (git status --porcelain --untracked-files=no) { throw 'Core packing changed tracked source files' }
       - name: Record actual private dependency package identities
         shell: python {0}
+        env:
+          CORE_COMMIT: ${{ steps.core.outputs.commit }}
         run: |
           import hashlib
           import json
           from pathlib import Path
+          import re
           import xml.etree.ElementTree as ET
           import zipfile
           expected = {'Ranvier.Dom', 'Fable.Ranvier.Dom', 'Ranvier.Dom.Traced', 'Fable.Ranvier.Dom.Traced'}
+          dom_version = re.search(r'<RanvierDomVersion>([^<]+)</RanvierDomVersion>', Path('Directory.Build.props').read_text()).group(1)
           packages = []
           for path in sorted(Path('artifacts/core-feed').glob('*.nupkg')):
               with zipfile.ZipFile(path) as archive:
@@ -103,12 +110,12 @@ jobs:
                       raise ValueError('Expected one dependency nuspec')
                   root = ET.fromstring(archive.read(names[0]))
                   values = {node.tag.rsplit('}', 1)[-1]: node.text for node in root.iter()}
-              if values['id'] not in expected or values['version'] != '0.1.0-alpha.58':
+              if values['id'] not in expected or values['version'] != dom_version:
                   raise ValueError('Unexpected private dependency package identity')
               packages.append({'id': values['id'], 'version': values['version'], 'file': path.name, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()})
           if len(packages) != 4 or {package['id'] for package in packages} != expected:
               raise ValueError('The four-package private DOM closure is incomplete')
-          Path('artifacts/core-feed/manifest.json').write_text(json.dumps({'source': '59c68218e1e4f6b6bbde1afb8f8502a3ee587abc', 'publicQualification': False, 'packages': packages}, indent=2), encoding='utf-8')
+          Path('artifacts/core-feed/manifest.json').write_text(json.dumps({'source': __import__('os').environ['CORE_COMMIT'], 'publicQualification': False, 'packages': packages}, indent=2), encoding='utf-8')
       - name: Retain the private dependency closure
         uses: actions/upload-artifact@v4
         with:
@@ -151,7 +158,7 @@ jobs:
         if: runner.os == 'Windows'
         run: python tools/Ranvier.Analyzers.Host/tests/test_build_compiler_supervision.py
       - name: Verify package layout and pinned upstream payload
-        run: python tools/Ranvier.Analyzers.Host/tests/test_package.py --package artifacts/feed/Ranvier.Analyzers.Host.0.1.0-preview.1.nupkg --upstream-package artifacts/nuget/fsharp-analyzers/0.41.0/fsharp-analyzers.0.41.0.nupkg
+        run: python tools/Ranvier.Analyzers.Host/tests/test_package.py --package (Get-Item artifacts/feed/Ranvier.Analyzers.Host.*.nupkg).FullName --upstream-package artifacts/nuget/fsharp-analyzers/0.41.0/fsharp-analyzers.0.41.0.nupkg
       - name: Verify the external-consumer harness
         run: python tools/Ranvier.Analyzers.Host/tests/test_consumer.py
       - name: Verify publication source and package identity controls

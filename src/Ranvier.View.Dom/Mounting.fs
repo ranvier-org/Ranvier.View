@@ -1179,6 +1179,9 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
                         || not (Departures.seam.Retire.Invoke (entry.Node, held))
                     then
                         remove entry.Node
+
+                        if Departures.seam.Enabled then
+                            Departures.seam.Drop.Invoke entry.Node
                 with error ->
                     errors.Add error
 
@@ -1340,6 +1343,9 @@ and [<Sealed; AllowNullLiteral>] private Row(first: Node, last: Node) =
                         || not (Departures.seam.Retire.Invoke (cursor, held))
                     then
                         remove cursor
+
+                        if Departures.seam.Enabled then
+                            Departures.seam.Drop.Invoke cursor
                 with error ->
                     failure <- error
 

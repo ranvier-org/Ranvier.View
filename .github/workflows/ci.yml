@@ -111,12 +111,16 @@ jobs:
           node-version: '26'
       - uses: ./.github/actions/use-analyzer-bootstrap
       # The counters suites compile core with RanvierCounters=true, which the published Ranvier package omits.
-      - name: Check out the native Core revision (DOM alpha.58)
+      - name: Resolve the Core revision of the pinned DOM release
+        id: core
+        if: matrix.group == 'view' || matrix.group == 'arms'
+        run: echo "commit=$(python3 -I tools/core-source.py)" >> "$GITHUB_OUTPUT"
+      - name: Check out the Core revision of the DOM release
         if: matrix.group == 'view' || matrix.group == 'arms'
         uses: actions/checkout@v7
         with:
           repository: ranvier-org/Ranvier
-          ref: 59c68218e1e4f6b6bbde1afb8f8502a3ee587abc
+          ref: ${{ steps.core.outputs.commit }}
           path: .ci/ranvier
           persist-credentials: false
       - name: Reference the core source for the counters suites
@@ -358,8 +362,6 @@ jobs:
       matrix:
         trace: [normal, traced]
     env:
-      GPU_VERSION: 0.1.1-preview.12
-      GPU_SHA256: 01017090aa595632043399f1f4ce669df76f2824c621417d8af4849cce9ee288
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/metal-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.trace }}
       TRACE: ${{ matrix.trace == 'traced' && 'true' || 'false' }}
     steps:
@@ -371,8 +373,8 @@ jobs:
           global-json-file: global.json
       - name: Stage the signed public GPU runtime
         run: |
-          grep -q "'\$(RanvierWebCoreNativeVersion)' == ''\">$GPU_VERSION<" src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj
-          python3 -I tests/mac/public_gpu_runtime.py stage --version "$GPU_VERSION" --sha256 "$GPU_SHA256" --output "$RUNNER_TEMP/gpu"
+          python3 -I tests/mac/test_public_gpu_runtime.py
+          python3 -I tests/mac/public_gpu_runtime.py stage --version-from-project src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj --output "$RUNNER_TEMP/gpu"
       - name: Build the test-only native Metal producer
         run: |
           helper=$(python3 -I tests/mac/build_metal_input.py --output "$RUNNER_TEMP/metal-input")

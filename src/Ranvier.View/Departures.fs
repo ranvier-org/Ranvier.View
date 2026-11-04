@@ -19,7 +19,7 @@ open Ranvier.View.Representation
 /// </remarks>
 [<AllowNullLiteral>]
 type Seam =
-    /// <summary>True once the exit slots <c>Retire</c>, <c>NextLive</c>, <c>Holds</c>, <c>Within</c> and <c>End</c> are set.</summary>
+    /// <summary>True once the exit slots <c>Retire</c>, <c>NextLive</c>, <c>Holds</c>, <c>Within</c>, <c>End</c> and <c>Drop</c> are set.</summary>
     abstract Enabled: bool with get, set
 
     /// <summary>True once the reflow slot <c>Before</c> is set.</summary>
@@ -45,6 +45,9 @@ type Seam =
     /// list, moves them into it instead, still running.
     /// </summary>
     abstract End: System.Action<ResizeArray<unit -> unit>, ResizeArray<exn>, ResizeArray<unit -> unit>> with get, set
+
+    /// <summary>Releases what the exits hold for the node and its descendants when a row removes the node without retiring it.</summary>
+    abstract Drop: System.Action<Node> with get, set
 
     /// <summary>
     /// Runs the <c>Before</c> of the reflow registered on the parent of a region's start marker unless its measurement is
@@ -83,6 +86,7 @@ type private SeamObject() =
     let mutable nextLive: System.Func<Node, Node> = null
     let mutable holds: System.Func<Node, Node, bool> = null
     let mutable within: System.Func<Node, bool> = null
+    let mutable drop: System.Action<Node> = null
 
     let mutable finish: System.Action<ResizeArray<unit -> unit>, ResizeArray<exn>, ResizeArray<unit -> unit>> =
         null
@@ -120,6 +124,10 @@ type private SeamObject() =
         member _.End
             with get () = finish
             and set value = finish <- value
+
+        member _.Drop
+            with get () = drop
+            and set value = drop <- value
 
         member _.Before
             with get () = before
@@ -331,6 +339,75 @@ let private endAll (held: ResizeArray<unit -> unit>) (errors: ResizeArray<exn>) 
             store holders departing[index] target
             target.Add departing[index]
 
+#if FABLE_COMPILER
+let private claimHeld (_: Node) : unit -> unit = ignore
+let private claimPending (_: Node) : unit = ()
+let private dropPending (_: Node) : unit = ()
+#else
+// The claim release of each pending root, until its row retires or removes it, and the number of them.
+let private claims = weakMap ()
+let private pendingClaims = ref 0
+
+let rec private visitBelow (parent: Node) (action: Node -> unit) =
+    let mutable child = Native.firstChildOf parent
+
+    while not (isNullish child) do
+        action child
+        visitBelow child action
+        child <- nextOrNull child
+
+// Runs `body` with the graph's root as the current owner, under which a host's reads of node objects claim none.
+let private unclaimed (body: unit -> unit) : unit =
+    match Ranvier.Graph.TryCurrent with
+    | ValueSome graph -> Ranvier.Api.runWithOwner graph.Root body
+    | ValueNone -> body ()
+
+// Releases the pending claims of the node and its descendants.
+let private dropPending (node: Node) : unit =
+    if pendingClaims.Value > 0 then
+        let take (each: Node) =
+            let release: unit -> unit = lookup claims each
+
+            if not (isNullish release) then
+                forget claims each
+
+                System.Threading.Interlocked.Decrement &pendingClaims.contents
+                |> ignore
+
+                release ()
+
+        unclaimed (fun () ->
+            take node
+            visitBelow node take)
+
+// Claims the node objects of the subtree under an owner of the graph's root that lives until the returned release runs,
+// independent of the computation that called it. A host that keeps a node object alive only while an owner claims it will
+// keep the same objects, with their per-node state, until the release.
+let private claimSubtree (node: Node) : unit -> unit =
+    match Ranvier.Graph.TryCurrent with
+    | ValueNone -> ignore
+    | ValueSome graph ->
+        Ranvier.Api.runWithOwner graph.Root (fun () ->
+            Ranvier.Api.createRoot (fun owner ->
+                visitBelow node ignore
+                fun () -> owner.Dispose ()))
+
+// Claims the held subtree for its exit, taking over the pending claims inside it.
+let private claimHeld (node: Node) : unit -> unit =
+    let release = claimSubtree node
+    dropPending node
+    release
+
+// Claims a pending root's subtree while the disposed instance's claims still hold it: the instance's later cleanups
+// release those claims. The claim lasts until the root's row retires or removes the root.
+let private claimPending (node: Node) : unit =
+    dropPending node
+    store claims node (claimSubtree node)
+
+    System.Threading.Interlocked.Increment &pendingClaims.contents
+    |> ignore
+#endif
+
 // Withdraws the node's exit, marks the node leaving, adds its end action to `held` and starts its exit with a `finish`
 // that removes the node and drops the end action. The end action cancels the exit, then removes the node; it runs
 // `safetyTimeout` milliseconds later unless `finish` ran earlier. A failure of the exit finishes it and is raised.
@@ -343,6 +420,8 @@ let private retire (node: Node) (held: ResizeArray<unit -> unit>) : bool =
         forget exits node
         forget pending node
         mark leaving node
+
+        let release = claimHeld node
         let mutable ended = false
         let mutable timer: obj = null
         let mutable cancel: unit -> unit = Unchecked.defaultof<_>
@@ -357,6 +436,7 @@ let private retire (node: Node) (held: ResizeArray<unit -> unit>) : bool =
             forget leaving node
             drop ending
             detach node
+            release ()
 
         let finish () =
             if not ended then
@@ -427,14 +507,17 @@ let internal register (node: Node) (exit: System.Func<unit -> unit, unit -> unit
         seam.Holds <- System.Func<_, _, _> holdsBetween
         seam.Within <- System.Func<_, _> within
         seam.End <- System.Action<_, _, _> endAll
+        seam.Drop <- System.Action<_> dropPending
         seam.Enabled <- true
 
     forget pending node
+    dropPending node
     store exits node exit
 
     fun () ->
         if holds exits node then
             mark pending node
+            claimPending node
 
 /// <summary>Whether <c>node</c> has a registered exit that has not started.</summary>
 let internal hasExit (node: Node) : bool =

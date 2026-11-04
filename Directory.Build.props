@@ -34,7 +34,7 @@
         <RanvierQueryVersion>0.1.1-preview.1</RanvierQueryVersion>
         <RanvierCssVersion>0.1.1-alpha.2</RanvierCssVersion>
         <RanvierCssAddonsVersion>0.1.1-alpha.1</RanvierCssAddonsVersion>
-        <RanvierDomVersion>0.1.0-alpha.58</RanvierDomVersion>
+        <RanvierDomVersion>0.1.0-rc.1</RanvierDomVersion>
         <RanvierTrace Condition="'$(RanvierTrace)' == '' and '$(Configuration)' == 'Debug'">true</RanvierTrace>
         <RanvierPackageSuffix Condition="'$(RanvierTrace)' == 'true'">.Traced</RanvierPackageSuffix>
     </PropertyGroup>
@@ -63,9 +63,12 @@
     `RanvierAnalyze=true` runs the Ranvier analyzers after each compile; Directory.Build.targets sets the flags. The
     item condition is evaluated after every property, so a project file can set RanvierAnalyze itself.
     -->
+    <PropertyGroup Condition="'$(RanvierAnalyzersHostVersion)' == ''">
+        <RanvierAnalyzersHostVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)tools/Ranvier.Analyzers.Host/Ranvier.Analyzers.Host.csproj')), '&lt;Version&gt;([^&lt;]+)&lt;').Groups[1].Value)</RanvierAnalyzersHostVersion>
+    </PropertyGroup>
     <ItemGroup Condition="'$(RanvierAnalyze)' == 'true'">
         <PackageReference Include="FSharp.Analyzers.Build" Version="0.5.0" PrivateAssets="all" IncludeAssets="build" />
-        <PackageReference Include="Ranvier.Analyzers.Host" Version="[0.1.0-preview.1]" PrivateAssets="all" IncludeAssets="build" GeneratePathProperty="true" />
+        <PackageReference Include="Ranvier.Analyzers.Host" Version="[$(RanvierAnalyzersHostVersion)]" PrivateAssets="all" IncludeAssets="build" GeneratePathProperty="true" />
     </ItemGroup>
 
 </Project>

@@ -19,14 +19,14 @@ class PublicationTests(unittest.TestCase):
         with self.assertRaises(ValueError): publication.validate_pins(dict(pins,qualificationRun=None))
         valid=dict(pins,candidateRun=1,candidateHead='a'*40,packageSha256='b'*64,candidateReceiptSha256='c'*64)
         publication.validate_pins(valid)
-        for field,value in [('candidateRun',True),('candidateHead','A'*40),('packageSha256',None),('version','0.1.0-alpha.2'),('qualificationRun',None),('qualificationHead','A'*40),('qualificationArtifact',True),('qualificationArtifactSha256',None),('qualificationReceiptSha256',None),('qualificationArchiveSha256',None)]:
+        for field,value in [('candidateRun',True),('candidateHead','A'*40),('packageSha256',None),('version',pins['version']+'.other'),('qualificationRun',None),('qualificationHead','A'*40),('qualificationArtifact',True),('qualificationArtifactSha256',None),('qualificationReceiptSha256',None),('qualificationArchiveSha256',None)]:
             with self.subTest(field=field),self.assertRaises(ValueError): publication.validate_pins(dict(valid,**{field:value}))
 
     def test_public_absence_requires_exact_404(self):
         error=urllib.error.HTTPError('test',404,'absent',{},None)
         with patch.object(publication.urllib.request,'urlopen',side_effect=error) as request:
             publication.absent()
-            self.assertIn('/0.1.0-alpha.1/',request.call_args.args[0])
+            self.assertIn('/'+json.loads((ROOT/'tools/sdl/publication-pins.json').read_text())['version']+'/',request.call_args.args[0])
         with patch.object(publication.urllib.request,'urlopen'),self.assertRaises(ValueError): publication.absent()
         with patch.object(publication.urllib.request,'urlopen',side_effect=urllib.error.HTTPError('test',500,'error',{},None)),self.assertRaises(urllib.error.HTTPError): publication.absent()
 

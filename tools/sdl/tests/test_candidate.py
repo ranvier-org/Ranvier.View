@@ -42,7 +42,7 @@ class CandidateTests(unittest.TestCase):
                     if extra: z.writestr(extra,b'foreign')
             make()
             self.assertEqual(candidate.validate(package,binary,targets,license_file)['sdlSha256'],candidate.digest(binary.read_bytes()))
-            for kwargs in ({'binary_data':b'wrong'}, {'extra':'runtimes/linux-x64/native/libRanvierWebCoreHost.so'}, {'version':'0.1.0-alpha.2'}):
+            for kwargs in ({'binary_data':b'wrong'}, {'extra':'runtimes/linux-x64/native/libRanvierWebCoreHost.so'}, {'version':candidate.VERSION+'.other'}):
                 with self.subTest(kwargs=kwargs):
                     make(**kwargs)
                     with self.assertRaises(ValueError): candidate.validate(package,binary,targets,license_file)

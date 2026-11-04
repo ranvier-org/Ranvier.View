@@ -26,9 +26,16 @@ from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 FIXTURE_MARKER = 'test "fixed buffers preserve calls and diagnostics across their whole scope"'
-PUBLIC_RANVIER_VERSION = "0.1.1-preview.1"
-PUBLIC_ANALYZERS_VERSION = "0.1.1-preview.2"
-PUBLIC_HOST_VERSION = "0.1.0-preview.1"
+
+
+def _repository_version(path, tag):
+    text = (REPO_ROOT / path).read_text(encoding="utf-8")
+    return re.search(rf"<{tag}>([^<]+)</{tag}>", text).group(1)
+
+
+PUBLIC_RANVIER_VERSION = _repository_version("Directory.Build.props", "RanvierVersion")
+PUBLIC_ANALYZERS_VERSION = _repository_version("tools/Ranvier.Analyzers/Ranvier.Analyzers.fsproj", "Version")
+PUBLIC_HOST_VERSION = _repository_version("tools/Ranvier.Analyzers.Host/Ranvier.Analyzers.Host.csproj", "Version")
 HOST_PACKAGE_ID = "Ranvier.Analyzers.Host"
 ANALYZERS_PACKAGE_ID = "Ranvier.Analyzers"
 NUGET_SOURCE = "https://api.nuget.org/v3/index.json"
@@ -254,13 +261,13 @@ def create_fake_feed(feed):
     manifest = json.dumps({"compilerSha256": compiler_hash, "compilerVersion": "43.12.402.0",
                            "compilerPublicKeyToken": "", "compilerSourceCommit": "fixture",
                            "sourceGuardSha256": "fixture", "cliSourceCommit": "fixture"})
-    _write_fake_package(feed / "Ranvier.Analyzers.Host.0.1.0-preview.1.nupkg",
-                        HOST_PACKAGE_ID, "0.1.0-preview.1",
+    _write_fake_package(feed / f"Ranvier.Analyzers.Host.{PUBLIC_HOST_VERSION}.nupkg",
+                        HOST_PACKAGE_ID, PUBLIC_HOST_VERSION,
                         {"tools/net10.0/any/vendor-manifest.json": manifest,
                          "tools/net10.0/any/FSharp.Compiler.Service.dll": compiler})
-    _write_fake_package(feed / "Ranvier.Analyzers.0.1.1-preview.2.nupkg",
-                        ANALYZERS_PACKAGE_ID, "0.1.1-preview.2", {},
-                        dependency=(HOST_PACKAGE_ID, "0.1.0-preview.1"))
+    _write_fake_package(feed / f"Ranvier.Analyzers.{PUBLIC_ANALYZERS_VERSION}.nupkg",
+                        ANALYZERS_PACKAGE_ID, PUBLIC_ANALYZERS_VERSION, {},
+                        dependency=(HOST_PACKAGE_ID, PUBLIC_HOST_VERSION))
 
 
 def ensure_outside_checkout(path, repo_root):
@@ -933,17 +940,17 @@ class ConsumerHarnessContract(unittest.TestCase):
             feed = Path(temporary)
             create_fake_feed(feed)
             plan = discover_private_packages(feed)
-        self.assertEqual(plan.analyzers.version, "0.1.1-preview.2")
-        self.assertEqual(plan.host.version, "0.1.0-preview.1")
+        self.assertEqual(plan.analyzers.version, PUBLIC_ANALYZERS_VERSION)
+        self.assertEqual(plan.host.version, PUBLIC_HOST_VERSION)
         self.assertEqual(plan.host.version, plan.host_dependency_version)
 
     def test_fixture_project_uses_public_core_and_private_analyzer_package_ids(self):
-        project = ET.fromstring(project_text("0.1.1-preview.2"))
+        project = ET.fromstring(project_text(PUBLIC_ANALYZERS_VERSION))
         references = {node.attrib["Include"]: node.attrib["Version"]
                       for node in project.findall("./ItemGroup/PackageReference")}
         compile_items = [node.attrib["Include"] for node in project.findall("./ItemGroup/Compile")]
         self.assertEqual(references, {"Ranvier": PUBLIC_RANVIER_VERSION,
-                                      ANALYZERS_PACKAGE_ID: "0.1.1-preview.2"})
+                                      ANALYZERS_PACKAGE_ID: PUBLIC_ANALYZERS_VERSION})
         self.assertEqual(compile_items, ["Fixture.fs"])
         self.assertNotIn(HOST_PACKAGE_ID, references)
 

@@ -3,6 +3,8 @@ import json
 from pathlib import Path
 import zipfile
 
+PINS=json.loads((Path(__file__).resolve().parent/'publication-pins.json').read_text())
+PACKAGE_FILE=PINS['id']+'.'+PINS['version']+'.nupkg'
 ARCHIVE_SHA256='3dedd15d84b545ac2126f753121c202f7b681f0a34cfc3dbd0ca23dbb1497960'
 PACKAGE_SHA256='7923c9f66b6a0e65991e44ac353ec61cb39f03139e0adc69f79b6e5059d41de6'
 SDL_SHA256='107928bd9421b71a2d5560a11b891c448f791a2ca6dd3a92144ec8dea2715482'
@@ -35,7 +37,7 @@ def verify(path):
             by_source[key]=row['member']
         def read(source):
             return z.read(by_source[source])
-        if sha(read('ci-candidate/Ranvier.View.WebCore.Sdl.Ibus.0.1.0-alpha.1.nupkg'))!=PACKAGE_SHA256:
+        if sha(read('ci-candidate/'+PACKAGE_FILE))!=PACKAGE_SHA256:
             raise ValueError('Qualified package differs')
         producer=json.loads(read('candidate-download.json'))
         candidate=json.loads(read('ci-candidate/candidate.json'))

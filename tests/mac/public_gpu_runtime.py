@@ -1,10 +1,15 @@
 """Stage and check the signed public macOS GPU runtime for the IOSurface transport job.
 
-  stage  --version V --sha256 H --output DIR   download the exact public package, check its hash, extract runtimes/
+  stage  (--version V | --version-from-project FILE) [--sha256 H] --output DIR
+                                               download the exact public package, check its hash, extract runtimes/;
+                                               the version defaults from RanvierWebCoreNativeVersion in FILE, the hash
+                                               from the packageHash nuget.org publishes for that id and version
   expecto --log FILE --passed N --ignored M    require an exact Expecto pass/ignore count with no failure or error
   output --stage DIR --output DIR              require the output's dylibs to equal the staged package payload
 """
 import argparse
+import base64
+import gzip
 import hashlib
 import io
 import json
@@ -24,10 +29,37 @@ def sha(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def stage(a):
-    url = f'https://api.nuget.org/v3-flatcontainer/{PACKAGE}/{a.version}/{PACKAGE}.{a.version}.nupkg'
+def fetch(url: str) -> bytes:
     data = urllib.request.urlopen(url, timeout=300).read()
-    if sha(data) != a.sha256:
+    return gzip.decompress(data) if data[:2] == bytes([0x1F, 0x8B]) else data
+
+
+def project_version(project: Path) -> str:
+    found = re.search(r'<RanvierWebCoreNativeVersion[^>]*>([^<]+)<', project.read_text(encoding='utf-8'))
+    if not found:
+        sys.exit(f'{project}: no RanvierWebCoreNativeVersion')
+    return found.group(1).strip()
+
+
+def published_sha512(version: str, get=fetch) -> bytes:
+    """The SHA512 nuget.org publishes (registration leaf, then catalog entry) for the package id and version."""
+    leaf = json.loads(get(f'https://api.nuget.org/v3/registration5-gz-semver2/{PACKAGE}/{version.lower()}.json'))
+    entry = leaf['catalogEntry']
+    if isinstance(entry, str):
+        entry = json.loads(get(entry))
+    if entry.get('packageHashAlgorithm') != 'SHA512':
+        sys.exit(f'{PACKAGE} {version}: nuget.org publishes {entry.get("packageHashAlgorithm")}, expected SHA512')
+    return base64.b64decode(entry['packageHash'])
+
+
+def stage(a):
+    version = a.version or project_version(a.version_from_project)
+    url = f'https://api.nuget.org/v3-flatcontainer/{PACKAGE}/{version}/{PACKAGE}.{version}.nupkg'
+    data = fetch(url)
+    published = published_sha512(version)
+    if hashlib.sha512(data).digest() != published:
+        sys.exit(f'{url}: sha512 differs from the packageHash nuget.org publishes for {version}')
+    if a.sha256 and sha(data) != a.sha256:
         sys.exit(f'{url}: sha256 {sha(data)} differs from pinned {a.sha256}')
     archive = zipfile.ZipFile(io.BytesIO(data))
     if '.signature.p7s' not in archive.namelist():
@@ -45,7 +77,7 @@ def stage(a):
     names = {Path(name).name for name in members}
     if names != DYLIBS:
         sys.exit(f'native payload {sorted(names)} differs from the six-dylib GPU closure')
-    receipt = dict(package=PACKAGE, version=a.version, url=url, sha256=a.sha256, members=members)
+    receipt = dict(package=PACKAGE, version=version, url=url, sha256=sha(data), sha512=published.hex(), members=members)
     (a.output / 'public-gpu-runtime.json').write_text(json.dumps(receipt, indent=2))
     print(json.dumps(receipt, indent=2))
 
@@ -75,21 +107,28 @@ def output(a):
     print(f'{a.output}: six public GPU dylibs match the package payload')
 
 
-parser = argparse.ArgumentParser()
-commands = parser.add_subparsers(dest='command', required=True)
-p = commands.add_parser('stage')
-p.add_argument('--version', required=True)
-p.add_argument('--sha256', required=True)
-p.add_argument('--output', required=True, type=Path)
-p.set_defaults(run=stage)
-p = commands.add_parser('expecto')
-p.add_argument('--log', required=True, type=Path)
-p.add_argument('--passed', required=True, type=int)
-p.add_argument('--ignored', required=True, type=int)
-p.set_defaults(run=expecto)
-p = commands.add_parser('output')
-p.add_argument('--stage', required=True, type=Path)
-p.add_argument('--output', required=True, type=Path)
-p.set_defaults(run=output)
-args = parser.parse_args()
-args.run(args)
+def main():
+    parser = argparse.ArgumentParser()
+    commands = parser.add_subparsers(dest='command', required=True)
+    p = commands.add_parser('stage')
+    source = p.add_mutually_exclusive_group(required=True)
+    source.add_argument('--version')
+    source.add_argument('--version-from-project', type=Path)
+    p.add_argument('--sha256')
+    p.add_argument('--output', required=True, type=Path)
+    p.set_defaults(run=stage)
+    p = commands.add_parser('expecto')
+    p.add_argument('--log', required=True, type=Path)
+    p.add_argument('--passed', required=True, type=int)
+    p.add_argument('--ignored', required=True, type=int)
+    p.set_defaults(run=expecto)
+    p = commands.add_parser('output')
+    p.add_argument('--stage', required=True, type=Path)
+    p.add_argument('--output', required=True, type=Path)
+    p.set_defaults(run=output)
+    args = parser.parse_args()
+    args.run(args)
+
+
+if __name__ == '__main__':
+    main()

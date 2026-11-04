@@ -5,10 +5,12 @@ from pathlib import Path
 import subprocess
 import zipfile
 
-VERSION = '0.1.0-alpha.1'
+PINS = json.loads((Path(__file__).resolve().parent / 'publication-pins.json').read_text())
+PACKAGE_ID = PINS['id']
+VERSION = PINS['version']
 SDL_REVISION = 'ea7a2dabfd1ab6b0a5720568ffd207f5825e47f1'
 PATCH_BLOB = '4d8abcac20792f8e548de4523e30433ac3691969'
-PACKAGE = 'Ranvier.View.WebCore.Sdl.Ibus.' + VERSION + '.nupkg'
+PACKAGE = PACKAGE_ID + '.' + VERSION + '.nupkg'
 SOURCE_BLOBS = {
     'tools/sdl/ibus-surrounding.patch': PATCH_BLOB,
     'tools/sdl/build-linux.sh': '959f2b165834584dfe75b1c32e5a3960f2dc2c09',

@@ -31,7 +31,7 @@
         <PackageReference Include="YoloDev.Expecto.TestSdk" Version="0.15.5" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
         <PackageReference Include="FSharp.Analyzers.SDK.Testing" Version="0.41.0" />
-        <PackageReference Include="Ranvier.Analyzers.Host" Version="[0.1.0-preview.1]" PrivateAssets="all" IncludeAssets="none" GeneratePathProperty="true" />
+        <PackageReference Include="Ranvier.Analyzers.Host" Version="[$(RanvierAnalyzersHostVersion)]" PrivateAssets="all" IncludeAssets="none" GeneratePathProperty="true" />
         <PackageReference Update="FSharp.Core" Version="10.1.402" />
     </ItemGroup>
     <ItemGroup>
