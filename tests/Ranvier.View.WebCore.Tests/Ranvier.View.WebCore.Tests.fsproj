@@ -20,6 +20,7 @@
         <Compile Include="HostTests.fs" />
         <Compile Include="ObservationLifetimeTests.fs" />
         <Compile Include="MountTests.fs" />
+        <Compile Include="ExitLifetimeTests.fs" />
         <Compile Include="InputTests.fs" />
         <Compile Include="PaintTests.fs" />
         <Compile Include="WindowTests.fs" />

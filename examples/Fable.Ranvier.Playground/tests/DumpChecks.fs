@@ -318,12 +318,23 @@ let private boardOf (target: HTMLElement) : Board =
 
     (find target).Value
 
+// Collects the node objects nothing references, so a dump of held rows reads the objects their exit keeps alive.
+let private collectNodeObjects () =
+#if !FABLE_COMPILER
+    System.GC.Collect ()
+    System.GC.WaitForPendingFinalizers ()
+    System.GC.Collect ()
+#else
+    ()
+#endif
+
 let private boardDump () =
     mounted (Component.render board ()) (fun graph target mounted ->
         // Removing the second card leaves its row held by its exit.
         let state = boardOf target
         graph.Run (fun () -> state.Cards.Value <- items |> Array.filter (fun c -> c.Id <> 2))
         mounted.Flush ()
+        collectNodeObjects ()
         record "board" graph target
         let captured = Debug.capture options mounted
         Conformance.recordIfRunning "mounted board" (Debug.text captured)
@@ -428,9 +439,11 @@ let private heldRowsDump () =
         let state = boardOf target
         graph.Run (fun () -> state.Cards.Value <- items[1..])
         mounted.Flush ()
+        collectNodeObjects ()
         record "leading exit" graph target
         graph.Run (fun () -> state.Cards.Value <- [||])
         mounted.Flush ()
+        collectNodeObjects ()
         record "empty held list" graph target)
 
 type OpaqueDump() =
