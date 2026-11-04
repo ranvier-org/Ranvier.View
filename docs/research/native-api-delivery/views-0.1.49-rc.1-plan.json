@@ -3,7 +3,7 @@
   "allocation": false,
   "viewVersion": "0.1.49-rc.1",
   "webCoreViewVersion": "0.1.0-rc.1",
-  "nativeVersion": "0.1.1-rc.1",
+  "nativeVersion": "0.1.1-rc.2",
   "nativeAllocationSource": "38742e0ad1dfa355d0a1c2f7b1d1275da1e24b7d",
   "nativeAbi": 64,
   "nativeDeclarations": 349,
@@ -25,7 +25,7 @@
   "nativePublicAuditSha256": null,
   "viewPublicPackageSha256": null,
   "mergeGates": [
-    "Ranvier.WebCore v0.1.1-rc.1 Slim, GPU and AT-SPI packages public on nuget.org",
+    "Ranvier.WebCore v0.1.1-rc.2 Slim, GPU and AT-SPI packages public on nuget.org",
     "Ranvier.Dom 0.1.0-rc.1 (normal and traced) public on nuget.org",
     "GPU_SHA256 in ci.yml pins the public Ranvier.WebCore.Native.Gpu.osx-arm64 rc.1 package",
     "Exact-head View CI passes, including the macOS Metal IOSurface jobs"
