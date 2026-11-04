@@ -165,8 +165,8 @@ class RuntimeVerification(unittest.TestCase):
         fixture = ET.parse(root / 'tests/native-packages/Directory.Build.props').getroot()
         backend_version = backend.findtext(".//RanvierWebCoreNativeVersion")
         consumer_version = fixture.findtext(".//NativeRuntimePackageVersion")
-        self.assertEqual(backend_version, '0.1.1-preview.12')
-        self.assertEqual(consumer_version, '0.1.1-preview.12')
+        self.assertEqual(backend_version, '0.1.1-rc.1')
+        self.assertEqual(consumer_version, '0.1.1-rc.1')
         self.assertEqual(fixture.findtext('.//NativeRuntimeAbi'), '64')
         self.assertEqual(backend.find(".//RanvierWebCoreNativeVersion").attrib.get('Condition'),
                          "'$(RanvierWebCoreNativeVersion)' == ''")
@@ -176,7 +176,7 @@ class RuntimeVerification(unittest.TestCase):
                       backend_text)
         self.assertIn("<ItemGroup Condition=\"'$(RanvierWebCoreNativeDir)' == ''\">", backend_text)
         sdl_readme = (root / 'src/Ranvier.View.WebCore.Sdl/README.md').read_text(encoding='utf-8')
-        self.assertEqual(sdl_readme.count('Version="[0.1.1-preview.12]"'), 2)
+        self.assertEqual(sdl_readme.count('Version="[0.1.1-rc.1]"'), 2)
         sdl_version = ET.parse(root / 'src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj').getroot().findtext('.//Version')
         self.assertIn(f'dotnet add package Ranvier.View.WebCore.Sdl --version {sdl_version}', sdl_readme)
         self.assertIn("<NativeRuntimePackageVersion Condition=\"'$(NativeRuntimePackageVersion)' == ''\">",
@@ -187,13 +187,13 @@ class RuntimeVerification(unittest.TestCase):
         self.assertEqual(ABI, 63)
         self.assertEqual(self.fixture().verify()['abi'], 63)
 
-    def test_view48_candidate_is_unarmed_and_matches_project_metadata(self):
+    def test_release_candidate_plan_matches_project_metadata(self):
         root = Path(__file__).resolve().parents[2]
-        plan = json.loads((root / 'docs/research/native-api-delivery/views-0.1.48-plan.json').read_text())
+        plan = json.loads((root / 'docs/research/native-api-delivery/views-0.1.49-rc.1-plan.json').read_text())
         self.assertFalse(plan['allocation'])
         self.assertFalse(plan['activation']['armed'])
         self.assertEqual((plan['nativeVersion'], plan['nativeAbi'], plan['nativeDeclarations']),
-                         ('0.1.1-preview.12', 64, 349))
+                         ('0.1.1-rc.1', 64, 349))
         for project in ['Ranvier.View', 'Ranvier.View.Dom', 'Ranvier.View.WebCore', 'Ranvier.View.WebCore.Sdl']:
             version = ET.parse(root / 'src' / project / (project + '.fsproj')).getroot().findtext('.//Version')
             self.assertEqual(version, plan['webCoreViewVersion' if 'WebCore' in project else 'viewVersion'])

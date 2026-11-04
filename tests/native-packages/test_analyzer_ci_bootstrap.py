@@ -104,9 +104,9 @@ class AnalyzerBootstrap(unittest.TestCase):
         qualification = (ROOT / '.github/workflows/analyzer-host.yml').read_text()
         self.assertIn('ref: ' + source, ci)
         self.assertGreaterEqual(qualification.count(source), 3)
-        self.assertIn("values['version'] != '0.1.0-alpha.58'", qualification)
+        self.assertIn("values['version'] != '0.1.0-rc.1'", qualification)
         props = ET.parse(ROOT / 'Directory.Build.props').getroot()
-        self.assertEqual(props.find('.//RanvierDomVersion').text, '0.1.0-alpha.58')
+        self.assertEqual(props.find('.//RanvierDomVersion').text, '0.1.0-rc.1')
         self.assertEqual(props.find('.//RanvierCssVersion').text, '0.1.1-alpha.2')
         self.assertEqual(props.find('.//RanvierCssAddonsVersion').text, '0.1.1-alpha.1')
         for project in (ROOT / 'fable/Ranvier.Anime.Tests/Sugar/Sugar.fsproj',

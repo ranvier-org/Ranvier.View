@@ -358,7 +358,7 @@ jobs:
       matrix:
         trace: [normal, traced]
     env:
-      GPU_VERSION: 0.1.1-preview.12
+      GPU_VERSION: 0.1.1-rc.1
       GPU_SHA256: 01017090aa595632043399f1f4ce669df76f2824c621417d8af4849cce9ee288
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/metal-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.trace }}
       TRACE: ${{ matrix.trace == 'traced' && 'true' || 'false' }}

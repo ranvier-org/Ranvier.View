@@ -103,7 +103,7 @@ jobs:
                       raise ValueError('Expected one dependency nuspec')
                   root = ET.fromstring(archive.read(names[0]))
                   values = {node.tag.rsplit('}', 1)[-1]: node.text for node in root.iter()}
-              if values['id'] not in expected or values['version'] != '0.1.0-alpha.58':
+              if values['id'] not in expected or values['version'] != '0.1.0-rc.1':
                   raise ValueError('Unexpected private dependency package identity')
               packages.append({'id': values['id'], 'version': values['version'], 'file': path.name, 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()})
           if len(packages) != 4 or {package['id'] for package in packages} != expected:

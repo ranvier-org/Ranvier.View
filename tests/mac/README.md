@@ -8,8 +8,8 @@ transport state, with no additional reactive ownership or scheduling primitive.
 
 The reviewed `ae534a5` product and `c7cc031` framework-free checks are forward-applied to View47 source.
 Current Core58 and formatter/lifetime fixes are preserved. The Interop dependency follows the signed
-public Native `0.1.1-preview.12` ABI64/349 cohort. The successor View version is staged as candidate
-View/Dom `0.1.48` and WebCore/SDL `0.1.0-alpha.48`; no View tag or publication has been allocated.
+public Native `0.1.1-rc.1` ABI64/349 cohort. The successor View version is staged as candidate
+View/Dom `0.1.49-rc.1` and WebCore/SDL `0.1.0-rc.1`.
 
 CI job `webcore-macos-gpu` stages the public `Ranvier.WebCore.Native.Gpu.osx-arm64` package by exact
 hash, runs the unfiltered normal and traced suites over it, requires four passed and one ignored
