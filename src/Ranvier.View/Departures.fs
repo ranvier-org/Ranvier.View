@@ -60,7 +60,7 @@ type Seam =
     /// Creates the element named by the string under the node: in the SVG namespace for an SVG element name and under an
     /// SVG element other than a foreignObject. Null until <c>enableSvg</c>, while the mount paths create HTML elements.
     /// </summary>
-    abstract CreateElement: System.Func<Node, string, HTMLElement> with get, set
+    abstract CreateElement: System.Func<Node, string, Element> with get, set
 
     /// <summary>
     /// Records that the elements created at the top level of the fragment take the namespace of the region start's
@@ -92,7 +92,7 @@ type private SeamObject() =
         null
 
     let mutable before: System.Func<Node, (unit -> unit) -> unit, unit -> unit> = null
-    let mutable createElement: System.Func<Node, string, HTMLElement> = null
+    let mutable createElement: System.Func<Node, string, Element> = null
     let mutable nest: System.Action<Node, Node> = null
     let mutable parse: System.Action<HTMLTemplateElement, string> = null
 
@@ -568,17 +568,42 @@ let private nests = weakMap ()
 [<Emit("new Set('svg g path circle ellipse line polyline polygon rect text tspan textpath use defs symbol marker pattern lineargradient radialgradient stop clippath mask foreignobject'.split(' '))")>]
 let private svgNames () : obj = jsNative
 #else
+let private svgNameList =
+    "svg g path circle ellipse line polyline polygon rect text tspan textpath use defs symbol marker pattern lineargradient radialgradient stop clippath mask foreignobject"
+
 let private svgNames () : obj =
-    raise (System.NotSupportedException "SVG elements are not bridged on .NET")
+    box (System.Collections.Generic.HashSet<string>(svgNameList.Split ' ', System.StringComparer.Ordinal))
+
+let private svgNamespace = "http://www.w3.org/2000/svg"
+
+let private hasSvgName (names: obj) (name: string) =
+    (names :?> System.Collections.Generic.HashSet<string>).Contains name
 #endif
 
 // An SVG element for an SVG name, or under an SVG parent other than a foreignObject; an HTML element otherwise.
 #if FABLE_COMPILER
 [<Emit("((p, tag, names) => names.has(tag.toLowerCase()) || p.namespaceURI === 'http://www.w3.org/2000/svg' && p.localName !== 'foreignObject' ? p.ownerDocument.createElementNS('http://www.w3.org/2000/svg', tag) : p.ownerDocument.createElement(tag))($2.get($0) || $0, $1, $3)")>]
-let private createUnder (parent: Node) (tag: string) (nested: obj) (names: obj) : HTMLElement = jsNative
+let private createUnder (parent: Node) (tag: string) (nested: obj) (names: obj) : Element = jsNative
 #else
-let private createUnder (parent: Node) (tag: string) (nested: obj) (names: obj) : HTMLElement =
-    raise (System.NotSupportedException "SVG elements are not bridged on .NET")
+let private createUnder (parent: Node) (tag: string) (nested: obj) (names: obj) : Element =
+    let recorded: Node = lookup nested parent
+    let under = if isNullish recorded then parent else recorded
+    let owner = under.ownerDocument
+
+    let inSvg =
+        match under with
+        | :? Element as element ->
+            element.namespaceURI = svgNamespace
+            && element.localName <> "foreignObject"
+        | _ -> false
+
+    if
+        hasSvgName names (tag.ToLowerInvariant ())
+        || inSvg
+    then
+        owner.createElementNS (svgNamespace, tag)
+    else
+        owner.createElement tag
 #endif
 
 // Parses the markup; when its root elements have SVG names, parses it again inside an svg element and lifts the nodes
@@ -588,7 +613,27 @@ let private createUnder (parent: Node) (tag: string) (nested: obj) (names: obj) 
 let private parseUnder (template: HTMLTemplateElement) (markup: string) (names: obj) : unit = jsNative
 #else
 let private parseUnder (template: HTMLTemplateElement) (markup: string) (names: obj) : unit =
-    raise (System.NotSupportedException "SVG elements are not bridged on .NET")
+    template.innerHTML <- markup
+    let roots = template.content.children
+    let mutable svg = 0
+
+    for index in 0 .. int roots.length - 1 do
+        if hasSvgName names (roots.item (uint32 index)).localName then
+            svg <- svg + 1
+
+    if svg > 0 then
+        if svg < int roots.length then
+            failwith "A row or arm template mixes SVG and HTML root elements; under synchronous commits wrap them in one element"
+
+        template.innerHTML <- "<svg>" + markup + "</svg>"
+        let content = template.content
+        let wrapper = content.firstChild
+        let children = wrapper.childNodes
+
+        content.replaceChildren
+            [|
+                for index in 0 .. int children.length - 1 -> NodeOrDOMString.Node (children.item (uint32 index))
+            |]
 #endif
 
 // Records the region start's parent, or the parent recorded for the fragment holding the region start.
@@ -597,7 +642,11 @@ let private parseUnder (template: HTMLTemplateElement) (markup: string) (names: 
 let private nestUnder (nested: obj) (fragment: Node) (regionStart: Node) : unit = jsNative
 #else
 let private nestUnder (nested: obj) (fragment: Node) (regionStart: Node) : unit =
-    raise (System.NotSupportedException "SVG elements are not bridged on .NET")
+    let parent = regionStart.parentNode
+
+    if not (isNullish parent) then
+        let recorded: Node = lookup nested parent
+        store nested fragment (if isNullish recorded then parent else recorded)
 #endif
 
 /// <summary>
@@ -612,5 +661,11 @@ let internal enableSvg () =
         seam.Nest <- System.Action<_, _>(fun fragment regionStart -> nestUnder nests fragment regionStart)
         seam.Parse <- System.Action<_, _>(fun template markup -> parseUnder template markup names)
 #else
-    ()
+    if isNullish seam.CreateElement then
+        lock nests (fun () ->
+            if isNullish seam.CreateElement then
+                let names = svgNames ()
+                seam.Nest <- System.Action<_, _>(fun fragment regionStart -> nestUnder nests fragment regionStart)
+                seam.Parse <- System.Action<_, _>(fun template markup -> parseUnder template markup names)
+                seam.CreateElement <- System.Func<_, _, _>(fun parent tag -> createUnder parent tag nests names))
 #endif
