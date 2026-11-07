@@ -2739,7 +2739,7 @@ and internal MountState
     // The element receiving created nodes; null at the top level of the range.
     let mutable target: Node = Unchecked.defaultof<_>
     let mutable bindingSetupFailure: exn option = None
-    let mutable modifierNode: HTMLElement = Unchecked.defaultof<_>
+    let mutable modifierNode: Element = Unchecked.defaultof<_>
     let mutable modifierTag = Div
 
     let ensureSetup () =
@@ -2775,7 +2775,7 @@ and internal MountState
 #endif
         modifierNode
 
-    let applyModifiers (backend: Backend) tag node (modifiers: ModifierAction array) =
+    let applyModifiers (backend: Backend) tag (node: Element) (modifiers: ModifierAction array) =
         let previousNode = modifierNode
         let previousTag = modifierTag
         modifierNode <- node
@@ -2796,13 +2796,12 @@ and internal MountState
         let tagName = name tag
         refuseScript tagName
 
-        let node =
+        let node: Element =
             if isNullish create then
 #if FABLE_COMPILER
-                document.createElement tagName
-                |> unbox<HTMLElement>
+                document.createElement tagName |> unbox<Element>
 #else
-                Native.createElement tagName
+                Native.createElement tagName :> Element
 #endif
             else
                 create.Invoke ((if isNull (box target) then host else target), tagName)
@@ -2814,7 +2813,7 @@ and internal MountState
 
         node
 
-    let childParent tag (node: HTMLElement) : Node =
+    let childParent tag (node: Element) : Node =
         if name tag = "template" then
             (node :?> HTMLTemplateElement).content :> Node
         else
@@ -3210,7 +3209,7 @@ and internal MountState
             else
                 HtmlTag node.localName
 
-        applyModifiers this tag node modifiers
+        applyModifiers this tag (node :> Element) modifiers
 
     override this.BindText(node, read) =
         ensurePrepared node
