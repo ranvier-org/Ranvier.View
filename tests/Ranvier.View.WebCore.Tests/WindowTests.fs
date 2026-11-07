@@ -64,6 +64,31 @@ let private press (window: Window) (kind: SDL_EventType) x y =
     if not (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event): bool) then
         failwithf "SDL_PushEvent failed: %s" (SDL3.SDL_GetError ())
 
+// Queues a mouse move to x, y in the window.
+let private move (window: Window) x y =
+    let mutable event = SDL_Event ()
+    event.motion.``type`` <- SDL_EventType.SDL_EVENT_MOUSE_MOTION
+    event.motion.windowID <- SDL3.SDL_GetWindowID (NativePtr.ofNativeInt<SDL_Window> window.SdlWindow)
+    event.motion.x <- x
+    event.motion.y <- y
+
+    if not (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event): bool) then
+        failwithf "SDL_PushEvent failed: %s" (SDL3.SDL_GetError ())
+
+// The page's mousemove, mousedown and mouseup events as type and client position.
+let private mouseLog (window: Window) =
+    let log = ResizeArray<string * int * int>()
+
+    for kind in [ "mousemove"; "mousedown"; "mouseup" ] do
+        window.Host.Document.addEventListener (
+            kind,
+            fun (event: Event) ->
+                let mouse = event :?> MouseEvent
+                log.Add (kind, int mouse.clientX, int mouse.clientY)
+        )
+
+    log
+
 let private closeRequest (window: Window) =
     let mutable event = SDL_Event ()
     event.window.``type`` <- SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED
@@ -203,6 +228,68 @@ let tests =
                 press window SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP 50.0f 50.0f
                 steps window 2
                 Expect.equal (graph.Run (fun () -> count.Value)) 1 "the click handler ran"
+
+            windowCase "queued mouse moves reach the page as one mousemove at the last position by default"
+            <| fun window ->
+                steps window 2
+                let log = mouseLog window
+                Expect.equal window.PointerMotion PointerMotionRate.PerFrame "per frame is the default"
+
+                for x in [ 10.0f; 20.0f; 30.0f; 40.0f ] do
+                    move window x (x + 5.0f)
+
+                steps window 1
+                Expect.equal (List.ofSeq log) [ "mousemove", 40, 45 ] "the latest move only"
+
+            windowCase "raw pointer motion reaches the page as every mousemove"
+            <| fun window ->
+                steps window 2
+                let log = mouseLog window
+                window.PointerMotion <- PointerMotionRate.Raw
+
+                for x in [ 10.0f; 20.0f; 30.0f ] do
+                    move window x x
+
+                steps window 1
+
+                Expect.equal (List.ofSeq log) [ "mousemove", 10, 10; "mousemove", 20, 20; "mousemove", 30, 30 ] "every move"
+
+            testCase "per drain pointer motion reaches the page as one mousemove per Step" (fun () ->
+                onHostThread (fun () ->
+                    use window =
+                        Window.Create ("Ranvier test", 200, 150, hidden = true, renderer = "software", pointerMotion = PointerMotionRate.PerDrain)
+
+                    steps window 2
+                    let log = mouseLog window
+                    move window 10.0f 10.0f
+                    move window 20.0f 20.0f
+                    steps window 1
+                    move window 30.0f 30.0f
+                    move window 40.0f 40.0f
+                    steps window 1
+                    Expect.equal (List.ofSeq log) [ "mousemove", 20, 20; "mousemove", 40, 40 ] "the latest move of each drain"))
+
+            windowCase "a button press between runs of mouse moves keeps its order and position"
+            <| fun window ->
+                steps window 2
+                let log = mouseLog window
+                move window 10.0f 10.0f
+                move window 20.0f 25.0f
+                press window SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN 20.0f 25.0f
+                move window 30.0f 30.0f
+                move window 50.0f 55.0f
+                press window SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP 50.0f 55.0f
+                steps window 1
+
+                Expect.equal
+                    (List.ofSeq log)
+                    [
+                        "mousemove", 20, 25
+                        "mousedown", 20, 25
+                        "mousemove", 50, 55
+                        "mouseup", 50, 55
+                    ]
+                    "each run's latest move before the button that ends it"
 
             windowCase "SDL pen and touch events reach the page"
             <| fun window ->

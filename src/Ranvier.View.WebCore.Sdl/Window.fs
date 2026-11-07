@@ -101,6 +101,20 @@ module internal Sdl =
         else
             utf16Offset text index
 
+/// <summary>How often a window dispatches mouse motion to its page.</summary>
+[<RequireQualifiedAccess>]
+type PointerMotionRate =
+    /// <summary>
+    /// At most one <c>mousemove</c> per display refresh, at the latest position: a browser's rate. The window holds the
+    /// latest motion and dispatches it before the next frame's animation callbacks, or after one refresh interval
+    /// when no frame is due.
+    /// </summary>
+    | PerFrame
+    /// <summary>The latest motion of each run of motion in a drain of SDL's event queue.</summary>
+    | PerDrain
+    /// <summary>Every motion SDL reports, about 1,000 a second from a gaming mouse.</summary>
+    | Raw
+
 /// <summary>
 /// An SDL3 window showing a <c>WebCoreHost</c>'s page: it paints the page into a texture when the page asks for a frame
 /// and forwards the window's mouse, keyboard, input method and focus events to it. All calls go on the thread that
@@ -108,7 +122,15 @@ module internal Sdl =
 /// </summary>
 /// <remarks>All windows use the thread admitted by the first <c>Create</c>, including after every window has closed.</remarks>
 [<Sealed>]
-type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option) as this =
+type Window
+    private
+    (
+        window: nativeptr<SDL_Window>,
+        renderer: nativeptr<SDL_Renderer>,
+        host: WebCoreHost,
+        egl: EglRenderer option,
+        initialMotionRate: PointerMotionRate
+    ) as this =
     static let owner = WebCoreHost.Owner
     static let windows = WindowRegistry<Window>()
     // CSS pixels a wheel tick scrolls.
@@ -138,6 +160,12 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let mutable pageDisposed = false
     let mutable cleanupCompleted: string -> unit = ignore
     let mutable maxTouchPoints = 0
+    let mutable motionRate = initialMotionRate
+    // The latest held motion, under PerFrame and PerDrain.
+    let mutable pendingMotion: SDL_MouseMotionEvent voption = ValueNone
+    // Stopwatch timestamps.
+    let mutable lastMotion = 0L
+    let mutable refreshTicks = Diagnostics.Stopwatch.Frequency / 60L
 
     let alive () =
         not closed
@@ -200,7 +228,23 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let mutable displayFeed: IDisposable = null
     let mutable displaySignal: Signal<DisplayScreen voption> = Unchecked.defaultof<_>
 
+    let readRefresh () =
+        let mode = SDL3.SDL_GetCurrentDisplayMode (SDL3.SDL_GetDisplayForWindow window)
+
+        let rate =
+            if NativePtr.isNullPtr mode then
+                0.0f
+            else
+                (NativePtr.read mode).refresh_rate
+
+        refreshTicks <-
+            if rate > 0.0f then
+                int64 (float Diagnostics.Stopwatch.Frequency / float rate)
+            else
+                Diagnostics.Stopwatch.Frequency / 60L
+
     let resize () =
+        readRefresh ()
         let mutable width = 0
         let mutable height = 0
 
@@ -293,6 +337,23 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         else
             -1
 
+    let sendMotion (motion: SDL_MouseMotionEvent) =
+        lastMotion <- Diagnostics.Stopwatch.GetTimestamp ()
+
+        host.Mouse (0, css motion.x, css motion.y, held motion.state, 0, modifiers ())
+        |> ignore
+
+        updateCursor ()
+
+    let flushMotion () =
+        match pendingMotion with
+        | ValueSome motion ->
+            pendingMotion <- ValueNone
+
+            if alive () then
+                sendMotion motion
+        | ValueNone -> ()
+
     // Places the input method's candidate window at the composition or the caret.
     let placeInputMethod () =
         match host.CompositionRect with
@@ -315,14 +376,14 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         | SDL_EventType.SDL_EVENT_DISPLAY_MOVED
         | SDL_EventType.SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED
         | SDL_EventType.SDL_EVENT_DISPLAY_USABLE_BOUNDS_CHANGED when not (isNull (box displaySignal)) -> displaySignal.Value <- displayReader ()
-        | SDL_EventType.SDL_EVENT_WINDOW_DISPLAY_CHANGED when
-            event.window.windowID = id
-            && not (isNull (box displaySignal))
-            ->
-            displaySignal.Value <- displayReader ()
+        | SDL_EventType.SDL_EVENT_WINDOW_DISPLAY_CHANGED when event.window.windowID = id ->
+            readRefresh ()
 
-            linuxAccessibility
-            |> Option.iter (fun bridge -> bridge.Update ())
+            if not (isNull (box displaySignal)) then
+                displaySignal.Value <- displayReader ()
+
+                linuxAccessibility
+                |> Option.iter (fun bridge -> bridge.Update ())
         | SDL_EventType.SDL_EVENT_WINDOW_MOVED when event.window.windowID = id ->
             linuxAccessibility
             |> Option.iter (fun bridge -> bridge.Update ())
@@ -435,10 +496,15 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             ->
             let motion = event.motion
 
-            host.Mouse (0, css motion.x, css motion.y, held motion.state, 0, modifiers ())
-            |> ignore
+            match motionRate with
+            | PointerMotionRate.Raw -> sendMotion motion
+            | PointerMotionRate.PerFrame
+            | PointerMotionRate.PerDrain ->
+                match pendingMotion with
+                | ValueSome previous when previous.which <> motion.which -> flushMotion ()
+                | _ -> ()
 
-            updateCursor ()
+                pendingMotion <- ValueSome motion
         | SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN
         | SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP when
             event.button.windowID = id
@@ -586,7 +652,51 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     member private _.Dispatch(event: SDL_Event) =
         if alive () then
+            let kind = enum<SDL_EventType>(int event.``type``)
+
+            // Held motion goes first, so the page sees every other event after the motion that preceded it.
+            if
+                not (
+                    kind = SDL_EventType.SDL_EVENT_MOUSE_MOTION
+                    && event.motion.windowID = id
+                )
+                && kind <> SDL_EventType.SDL_EVENT_POLL_SENTINEL
+            then
+                flushMotion ()
+
             dispatch event
+
+    // Ends a drain of SDL's queue: PerDrain dispatches the held motion, PerFrame once a refresh interval has passed.
+    member private _.EndDrain() =
+        match motionRate with
+        | PointerMotionRate.PerDrain -> flushMotion ()
+        | PointerMotionRate.PerFrame when
+            pendingMotion.IsSome
+            && Diagnostics.Stopwatch.GetTimestamp () - lastMotion
+               >= refreshTicks
+            ->
+            flushMotion ()
+        | _ -> ()
+
+    // Milliseconds until held motion is due, for the wait in Step.
+    member private _.MotionDue: int voption =
+        if pendingMotion.IsSome && alive () then
+            let remaining =
+                lastMotion + refreshTicks
+                - Diagnostics.Stopwatch.GetTimestamp ()
+
+            ValueSome (
+                max
+                    0
+                    (int (
+                        Math.Ceiling (
+                            float remaining * 1000.0
+                            / float Diagnostics.Stopwatch.Frequency
+                        )
+                    ))
+            )
+        else
+            ValueNone
 
     member private _.FlushComposition() =
         if pendingCompositionClear && alive () then
@@ -598,7 +708,9 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         if alive () then
             surrounding.Refresh ()
 
-    static member private CreateCore(title: string, width: int, height: int, hidden: bool option, renderer: string option) : Window =
+    static member private CreateCore
+        (title: string, width: int, height: int, hidden: bool option, renderer: string option, motion: PointerMotionRate)
+        : Window =
         EglRenderer.RetryFailedConstruction ()
         EglRenderer.Prepare ()
         // The page draws the input method's composition itself; the platform draws the candidates.
@@ -672,7 +784,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             egl <- EglRenderer.TryCreate drawing
             let host = WebCoreHost.Create (width, height)
             page <- Some host
-            new Window (window, drawing, host, egl)
+            new Window (window, drawing, host, egl, motion)
         with _ ->
             page
             |> Option.iter (fun host -> (host :> IDisposable).Dispose())
@@ -697,13 +809,13 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// <summary>
     /// Opens a window of <c>width</c> by <c>height</c> in the platform's window units, CSS pixels at the display's
     /// scale, with an empty page. <c>hidden</c> keeps it off screen; <c>renderer</c> names an SDL render driver, such
-    /// as "software".
+    /// as "software". <c>pointerMotion</c> sets <c>PointerMotion</c>, <c>PerFrame</c> by default.
     /// </summary>
-    static member Create(title: string, width: int, height: int, ?hidden: bool, ?renderer: string) : Window =
+    static member Create(title: string, width: int, height: int, ?hidden: bool, ?renderer: string, ?pointerMotion: PointerMotionRate) : Window =
         owner.Enter ()
 
         try
-            Window.CreateCore (title, width, height, hidden, renderer)
+            Window.CreateCore (title, width, height, hidden, renderer, defaultArg pointerMotion PointerMotionRate.PerFrame)
         finally
             owner.Exit ()
 
@@ -731,6 +843,17 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         else
             read "SDL.window.wayland.surface"
 
+    /// <summary>
+    /// How often the window dispatches mouse motion to its page. Button, wheel, key and other events keep their order
+    /// relative to motion: held motion is dispatched before them. Pen and touch input are dispatched as SDL reports them.
+    /// </summary>
+    /// <remarks>Setting it dispatches any held motion.</remarks>
+    member _.PointerMotion
+        with get () = motionRate
+        and set (value: PointerMotionRate) =
+            flushMotion ()
+            motionRate <- value
+
     /// <summary>Whether the window has been asked to close.</summary>
     member _.Closed = closed
 
@@ -747,6 +870,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// </summary>
     /// <remarks>A frame callback that closes the window or disposes its host stops presentation.</remarks>
     member _.Present() =
+        flushMotion ()
         host.Frame ()
 
         if alive () then
@@ -779,9 +903,18 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 if host.FrameRequested || fullPaint || exposed then
                     0
                 else
-                    match host.NextTimerDelay with
-                    | ValueSome delay -> min longest (int (Math.Ceiling delay))
-                    | ValueNone -> longest
+                    let timer =
+                        match host.NextTimerDelay with
+                        | ValueSome delay -> min longest (int (Math.Ceiling delay))
+                        | ValueNone -> longest
+
+                    windows.Snapshot ()
+                    |> Seq.fold
+                        (fun wait (target: Window) ->
+                            match target.MotionDue with
+                            | ValueSome due -> min wait due
+                            | ValueNone -> wait)
+                        timer
 
             let mutable event = SDL_Event ()
 
@@ -797,6 +930,9 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
                 for target in windows.Snapshot () do
                     target.FlushComposition ()
+
+            for target in windows.Snapshot () do
+                target.EndDrain ()
 
             if alive () then
                 host.Cycle ()

@@ -99,6 +99,26 @@ Windows), for an accessibility bridge.
 
 All calls go on the thread that created the window. That thread is the host's thread, and the main thread on macOS.
 
+## Pointer motion rate
+
+A gaming mouse reports about 1,000 motions a second. By default the window gives the page at most one `mousemove`
+per display refresh, at the latest position, as a browser does. Set the rate with `Window.Create`'s `pointerMotion`
+argument or the `PointerMotion` property:
+
+```fsharp
+use window = Window.Create ("Paint", 480, 320, pointerMotion = PointerMotionRate.Raw)
+window.PointerMotion <- PointerMotionRate.PerDrain
+```
+
+| `PointerMotionRate` | `mousemove` events |
+| --- | --- |
+| `PerFrame` (default) | At most one per display refresh: before the frame's animation callbacks, or one refresh interval after the last when no frame is due. |
+| `PerDrain` | The latest motion of each `Step`'s drain of SDL's queue. |
+| `Raw` | Every motion SDL reports. |
+
+Button, wheel, key and other events keep their order relative to motion. A press that ends a run of motion follows
+that run's latest `mousemove`. Pen and touch input are dispatched as SDL reports them under every rate.
+
 [`examples/Ranvier.NativeCounter`](../../examples/Ranvier.NativeCounter) is a complete app, published with NativeAOT.
 
 ## NativeAOT
