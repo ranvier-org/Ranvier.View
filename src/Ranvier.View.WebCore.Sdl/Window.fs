@@ -920,21 +920,25 @@ type Window
         then
             flushTouch ()
 
-    // Milliseconds until held PerFrame input is due, for the wait in Step.
+    // Milliseconds to wait in Step for held PerFrame input to become due. One millisecond longer than the time left,
+    // because SDL_WaitEventTimeout on Windows returns at once for a timeout of 1 and up to a millisecond early for
+    // longer ones.
     member private _.HeldDue: int voption =
         let remaining isHeld last =
             if isHeld then
                 let ticks = last + refreshTicks - now ()
 
                 ValueSome (
-                    max
+                    if ticks <= 0L then
                         0
-                        (int (
+                    else
+                        1
+                        + int (
                             Math.Ceiling (
                                 float ticks * 1000.0
                                 / float Diagnostics.Stopwatch.Frequency
                             )
-                        ))
+                        )
                 )
             else
                 ValueNone

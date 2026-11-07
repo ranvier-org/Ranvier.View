@@ -363,6 +363,23 @@ let tests =
                 steps window 1
                 Expect.equal (List.ofSeq log) [ "mousemove", 20, 20; "mousemove", 40, 40 ] "the latest move of each drain"
 
+            ratesCase "held pointer motion waits in Step until it is due" InputRates.Default
+            <| fun window ->
+                let log = mouseLog window
+                move window 10.0f 10.0f
+                steps window 1
+                move window 20.0f 20.0f
+                let elapsed = Diagnostics.Stopwatch.StartNew ()
+                let mutable turns = 0
+
+                while log.Count < 2
+                      && elapsed.ElapsedMilliseconds < 200L do
+                    window.Step 50 |> ignore
+                    turns <- turns + 1
+
+                Expect.equal (List.ofSeq log) [ "mousemove", 10, 10; "mousemove", 20, 20 ] "both moves"
+                Expect.isLessThan turns 20 "Steps until the held move is due"
+
             ratesCase "queued wheel events reach the page as one summed wheel event around a key press" InputRates.Default
             <| fun window ->
                 let log = eventLog window [ "wheel"; "keydown" ]
