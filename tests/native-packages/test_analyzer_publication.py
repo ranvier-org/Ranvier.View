@@ -20,6 +20,14 @@ class AnalyzerPublicationTests(unittest.TestCase):
         job = workflow.split('\n  qualify-public-analyzers:\n', 1)[1]
         self.assertIn('needs: publish-analyzers', job)
 
+    def test_only_a_newly_pushed_pair_is_qualified_against_this_build(self):
+        workflow = (ROOT / '.github/workflows/publish.yml').read_text(encoding='utf-8')
+        publish = workflow.split('\n  publish-analyzers:\n', 1)[1].split('\n  qualify-public-analyzers:\n', 1)[0]
+        self.assertIn('pushed: ${{ steps.push.outputs.pushed }}', publish)
+        self.assertIn('"pushed=$($pushed.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT', publish)
+        qualify = workflow.split('\n  qualify-public-analyzers:\n', 1)[1]
+        self.assertIn("if: needs.publish-analyzers.outputs.pushed == 'true'", qualify.split('\n    runs-on:', 1)[0])
+
 
 if __name__ == '__main__':
     unittest.main()
