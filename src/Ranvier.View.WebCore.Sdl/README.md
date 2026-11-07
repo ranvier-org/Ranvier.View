@@ -8,7 +8,7 @@ mouse, wheel, keyboard, input method and focus events to the page. It also sets 
 ## Install
 
 ```sh
-dotnet add package Ranvier.View.WebCore.Sdl --version 0.1.0-rc.2
+dotnet add package Ranvier.View.WebCore.Sdl --version 0.1.0-rc.3
 ```
 
 Use `Ranvier.View.WebCore.Sdl.Traced` for a traced build. Backend, shared contracts, canonical interop,
@@ -98,6 +98,35 @@ The window's size is in the platform's window units. The page's CSS pixels follo
 Windows), for an accessibility bridge.
 
 All calls go on the thread that created the window. That thread is the host's thread, and the main thread on macOS.
+
+## Input rates
+
+A gaming mouse reports about 1,000 motions a second, and a precision touchpad sends many small wheel events. By
+default the window dispatches high-rate input to the page at most once per display refresh, as a browser does. Set
+a rate per kind with `Window.Create`'s `inputRates` argument or the `InputRates` property:
+
+```fsharp
+use window = Window.Create ("Paint", 480, 320, inputRates = { InputRates.Default with PenMotion = InputRate.Raw })
+window.InputRates <- InputRates.Raw
+```
+
+| `InputRates` field | Held input |
+| --- | --- |
+| `PointerMotion` | The latest mouse motion, per mouse. |
+| `Wheel` | One wheel event at the latest position, with the deltas summed. |
+| `PenMotion` | The latest sample per pen, including axis changes such as pressure and tilt, with movement summed. |
+| `TouchMotion` | The latest touch frame, with every contact that moved in the frames it replaced. |
+| `Resize` | The latest window pixel size and display scale. |
+
+| `InputRate` | Dispatch |
+| --- | --- |
+| `PerFrame` (default) | At most once per display refresh: before the frame's animation callbacks, or one refresh interval after the previous dispatch when no frame is due. |
+| `PerDrain` | Once per run in each `Step`'s drain of SDL's queue. |
+| `Raw` | Every event SDL reports. |
+
+A resize under `PerFrame` or `PerDrain` applies once per drain. Held input is dispatched before any button, key,
+focus, pen or touch contact event and before input of another kind, so the page receives events in SDL's order: a
+press that ends a run of motion follows that run's latest `mousemove`, at the press's position.
 
 [`examples/Ranvier.NativeCounter`](../../examples/Ranvier.NativeCounter) is a complete app, published with NativeAOT.
 
