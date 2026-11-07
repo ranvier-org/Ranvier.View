@@ -99,25 +99,34 @@ Windows), for an accessibility bridge.
 
 All calls go on the thread that created the window. That thread is the host's thread, and the main thread on macOS.
 
-## Pointer motion rate
+## Input rates
 
-A gaming mouse reports about 1,000 motions a second. By default the window gives the page at most one `mousemove`
-per display refresh, at the latest position, as a browser does. Set the rate with `Window.Create`'s `pointerMotion`
-argument or the `PointerMotion` property:
+A gaming mouse reports about 1,000 motions a second, and a precision touchpad sends many small wheel events. By
+default the window dispatches high-rate input to the page at most once per display refresh, as a browser does. Set
+a rate per kind with `Window.Create`'s `inputRates` argument or the `InputRates` property:
 
 ```fsharp
-use window = Window.Create ("Paint", 480, 320, pointerMotion = PointerMotionRate.Raw)
-window.PointerMotion <- PointerMotionRate.PerDrain
+use window = Window.Create ("Paint", 480, 320, inputRates = { InputRates.Default with PenMotion = InputRate.Raw })
+window.InputRates <- InputRates.Raw
 ```
 
-| `PointerMotionRate` | `mousemove` events |
+| `InputRates` field | Held input |
 | --- | --- |
-| `PerFrame` (default) | At most one per display refresh: before the frame's animation callbacks, or one refresh interval after the last when no frame is due. |
-| `PerDrain` | The latest motion of each `Step`'s drain of SDL's queue. |
-| `Raw` | Every motion SDL reports. |
+| `PointerMotion` | The latest mouse motion, per mouse. |
+| `Wheel` | One wheel event at the latest position, with the deltas summed. |
+| `PenMotion` | The latest sample per pen, including axis changes such as pressure and tilt, with movement summed. |
+| `TouchMotion` | The latest touch frame, with every contact that moved in the frames it replaced. |
+| `Resize` | The latest window pixel size and display scale. |
 
-Button, wheel, key and other events keep their order relative to motion. A press that ends a run of motion follows
-that run's latest `mousemove`. Pen and touch input are dispatched as SDL reports them under every rate.
+| `InputRate` | Dispatch |
+| --- | --- |
+| `PerFrame` (default) | At most once per display refresh: before the frame's animation callbacks, or one refresh interval after the previous dispatch when no frame is due. |
+| `PerDrain` | Once per run in each `Step`'s drain of SDL's queue. |
+| `Raw` | Every event SDL reports. |
+
+A resize under `PerFrame` or `PerDrain` applies once per drain. Held input is dispatched before any button, key,
+focus, pen or touch contact event and before input of another kind, so the page receives events in SDL's order: a
+press that ends a run of motion follows that run's latest `mousemove`, at the press's position.
 
 [`examples/Ranvier.NativeCounter`](../../examples/Ranvier.NativeCounter) is a complete app, published with NativeAOT.
 
