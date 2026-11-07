@@ -60,8 +60,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - name: Resolve the Core revision of the pinned DOM release
+      - name: Resolve the Core revision of the pinned Core and DOM releases
         id: core
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: echo "commit=$(python3 -I tools/core-source.py)" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
