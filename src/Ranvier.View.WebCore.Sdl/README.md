@@ -8,7 +8,7 @@ mouse, wheel, keyboard, input method and focus events to the page. It also sets 
 ## Install
 
 ```sh
-dotnet add package Ranvier.View.WebCore.Sdl --version 0.1.0-rc.1
+dotnet add package Ranvier.View.WebCore.Sdl --version 0.1.0-rc.2
 ```
 
 Use `Ranvier.View.WebCore.Sdl.Traced` for a traced build. Backend, shared contracts, canonical interop,
@@ -19,8 +19,8 @@ Slim win-x64 assets in the application project:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="[0.1.1-rc.2]" ExcludeAssets="all" />
-  <PackageReference Include="Ranvier.WebCore.Native.Gpu.win-x64" Version="[0.1.1-rc.2]" />
+  <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="[0.1.1-rc.3]" ExcludeAssets="all" />
+  <PackageReference Include="Ranvier.WebCore.Native.Gpu.win-x64" Version="[0.1.1-rc.3]" />
 </ItemGroup>
 ```
 

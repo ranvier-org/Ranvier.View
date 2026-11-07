@@ -68,6 +68,65 @@ let tests =
                 collect host
                 Expect.isGreaterThanOrEqual (host.Session.Released - released) 50 "released after the owner's disposal"
 
+            hostCase "a createEffectOn compute that queries and measures an element acts on each change"
+            <| fun host ->
+                let target = host.Document.createElement "div" :?> HTMLElement
+                target.id <- "measured"
+                target.setAttribute ("style", "width:40px;height:10px")
+                host.Document.body.appendChild target |> ignore
+                use graph = new Graph ()
+                let index = graph.Run (fun () -> createSignal 1)
+                let acted = ResizeArray<float>()
+
+                graph.Run (fun () ->
+                    createRoot (fun _ ->
+                        createEffectOn
+                            (fun () ->
+                                float index.Value
+                                * (host.Document.querySelector "#measured").getBoundingClientRect().width)
+                            acted.Add)
+                    |> ignore)
+
+                host.Cycle ()
+                graph.Run (fun () -> index.Value <- 2)
+                host.Cycle ()
+                Expect.sequenceEqual acted [ 40.; 80. ] "the values acted on"
+
+            hostCase "a createEffectOn compute that measures a held element acts on each change"
+            <| fun host ->
+                let target = host.Document.createElement "div" :?> HTMLElement
+                target.setAttribute ("style", "width:40px;height:10px")
+                host.Document.body.appendChild target |> ignore
+                use graph = new Graph ()
+                let index = graph.Run (fun () -> createSignal 1)
+                let acted = ResizeArray<float>()
+
+                graph.Run (fun () ->
+                    createRoot (fun _ ->
+                        createEffectOn
+                            (fun () ->
+                                float index.Value
+                                * target.getBoundingClientRect().width)
+                            acted.Add)
+                    |> ignore)
+
+                host.Cycle ()
+                graph.Run (fun () -> index.Value <- 2)
+                host.Cycle ()
+                Expect.sequenceEqual acted [ 40.; 80. ] "the values acted on"
+
+            hostCase "a pure memo that reads a node acts as its value"
+            <| fun host ->
+                use graph = new Graph ()
+                let shown = graph.Run (fun () -> createSignal "a")
+
+                let read =
+                    graph.Run (fun () -> createRoot (fun _ -> createMemo (fun _ -> shown.Value + host.Document.body.tagName)))
+
+                Expect.equal (graph.Run (fun () -> read.Value)) "aBODY" "the first value"
+                graph.Run (fun () -> shown.Value <- "b")
+                Expect.equal (graph.Run (fun () -> read.Value)) "bBODY" "after the change"
+
             testCase "host disposal releases the references of live objects"
             <| fun () ->
                 onHostThread (fun () ->

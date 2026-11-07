@@ -112,11 +112,13 @@ jobs:
           node-version: '26'
       - uses: ./.github/actions/use-analyzer-bootstrap
       # The counters suites compile core with RanvierCounters=true, which the published Ranvier package omits.
-      - name: Resolve the Core revision of the pinned DOM release
+      - name: Resolve the Core revision of the pinned Core and DOM releases
         id: core
         if: matrix.group == 'view' || matrix.group == 'arms'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: echo "commit=$(python3 -I tools/core-source.py)" >> "$GITHUB_OUTPUT"
-      - name: Check out the Core revision of the DOM release
+      - name: Check out the Core revision of the Core and DOM releases
         if: matrix.group == 'view' || matrix.group == 'arms'
         uses: actions/checkout@v7
         with:

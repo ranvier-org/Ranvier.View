@@ -41,12 +41,36 @@ class CoreSourceTests(unittest.TestCase):
             self.assertEqual(core.dom_version(props), '0.1.0-rc.9')
         self.assertEqual(core.dom_version(), core.dom_version(ROOT / 'Directory.Build.props'))
 
+    def test_the_core_package_commit_is_read_from_its_own_nuspec(self):
+        urls = []
+
+        def get(url):
+            urls.append(url)
+            return nuspec(f'<repository type="git" url="https://github.com/ranvier-org/Ranvier" commit="{COMMIT}" />')
+
+        self.assertEqual(core.source_commit('0.1.1-preview.2', get, package=core.CORE_PACKAGE), COMMIT)
+        self.assertEqual(urls, ['https://api.nuget.org/v3-flatcontainer/ranvier/0.1.1-preview.2/ranvier.nuspec'])
+
+    def test_the_later_commit_contains_the_other(self):
+        other = 'f' * 40
+
+        def compare(status):
+            return lambda url: ('{"status": "%s"}' % status).encode()
+
+        self.assertEqual(core.later(COMMIT, COMMIT, compare('boom')), COMMIT)
+        self.assertEqual(core.later(COMMIT, other, compare('ahead')), other)
+        self.assertEqual(core.later(COMMIT, other, compare('identical')), other)
+        self.assertEqual(core.later(COMMIT, other, compare('behind')), COMMIT)
+        with self.assertRaises(ValueError):
+            core.later(COMMIT, other, compare('diverged'))
+
     def test_workflows_resolve_the_core_source_instead_of_pinning_a_commit(self):
         for name in ['ci.yml', 'analyzer-host.yml']:
             workflow = (ROOT / '.github/workflows' / name).read_text(encoding='utf-8')
             with self.subTest(workflow=name):
                 self.assertIn('tools/core-source.py', workflow)
                 self.assertIn('ref: ${{ steps.core.outputs.commit }}', workflow)
+                self.assertIn('GH_TOKEN: ${{ github.token }}', workflow)
                 self.assertNotRegex(workflow, r'ref: [0-9a-f]{40}')
 
 
