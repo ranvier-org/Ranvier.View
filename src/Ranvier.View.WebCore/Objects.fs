@@ -620,10 +620,9 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) as this =
         match Graph.TryCurrent with
         | ValueSome graph ->
             let owner =
-                try
-                    getOwner ()
-                with :? InvalidOperationException ->
-                    Unchecked.defaultof<_>
+                match tryGetOwner () with
+                | ValueSome owner -> owner
+                | ValueNone -> Unchecked.defaultof<_>
 
             if
                 not (isNull (box owner))

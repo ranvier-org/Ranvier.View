@@ -28,7 +28,7 @@
         <RanvierRoot Condition="'$(RanvierRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../Ranvier'))</RanvierRoot>
         <UseLocalRanvierCss Condition="'$(UseLocalRanvierCss)' == ''">false</UseLocalRanvierCss>
         <RanvierCssRoot Condition="'$(RanvierCssRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../Ranvier.Css'))</RanvierCssRoot>
-        <RanvierVersion>0.1.1-preview.1</RanvierVersion>
+        <RanvierVersion>0.1.1-preview.2</RanvierVersion>
         <RanvierElmishVersion>0.1.1-preview.1</RanvierElmishVersion>
         <RanvierWireVersion>0.1.1-preview.1</RanvierWireVersion>
         <RanvierQueryVersion>0.1.1-preview.1</RanvierQueryVersion>
