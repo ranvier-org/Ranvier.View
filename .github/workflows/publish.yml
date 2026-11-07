@@ -138,6 +138,8 @@ jobs:
     defaults:
       run:
         shell: pwsh
+    outputs:
+      pushed: ${{ steps.push.outputs.pushed }}
     env:
       QUALIFICATION_RUN: ${{ github.event.workflow_run.id }}
       QUALIFICATION_SOURCE: ${{ github.event.workflow_run.head_sha }}
@@ -195,14 +197,26 @@ jobs:
         uses: NuGet/login@v1
         with:
           user: ${{ vars.NUGET_USER || 'shayan.habibi' }}
-      # A release that keeps the analyzer versions finds them published; qualify-public-analyzers checks the public pair.
+      # A release that keeps the analyzer versions finds them published, and pushed is false: the run that published
+      # that pair qualified it, and a rebuild differs from it in its source commit.
       - name: Publish the qualified Host before its analyzer
+        id: push
         env:
           NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
           $hostPackage = Get-Item artifacts/publication/feed/Ranvier.Analyzers.Host.*.nupkg
           $analyzersPackage = Get-Item artifacts/publication/feed/Ranvier.Analyzers.[0-9]*.nupkg
           if (@($hostPackage).Count -ne 1 -or @($analyzersPackage).Count -ne 1) { throw 'The publication feed must hold exactly the qualified pair' }
+          $pushed = $false
+          foreach ($package in @($hostPackage, $analyzersPackage)) {
+            $identity = [regex]::Match($package.Name, '^(.+?)\.(\d+\.\d+\.\d+.*)\.nupkg$')
+            $id = $identity.Groups[1].Value.ToLowerInvariant()
+            $version = $identity.Groups[2].Value.ToLowerInvariant()
+            try { $versions = (Invoke-RestMethod "https://api.nuget.org/v3-flatcontainer/$id/index.json" -TimeoutSec 30).versions }
+            catch { $versions = @() }
+            if ($versions -notcontains $version) { $pushed = $true }
+          }
+          "pushed=$($pushed.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
           dotnet nuget push $hostPackage.FullName --source https://api.nuget.org/v3/index.json --api-key "$env:NUGET_API_KEY" --skip-duplicate
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           dotnet nuget push $analyzersPackage.FullName --source https://api.nuget.org/v3/index.json --api-key "$env:NUGET_API_KEY" --skip-duplicate
@@ -210,6 +224,7 @@ jobs:
 
   qualify-public-analyzers:
     needs: publish-analyzers
+    if: needs.publish-analyzers.outputs.pushed == 'true'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
