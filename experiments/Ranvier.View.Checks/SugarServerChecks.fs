@@ -53,7 +53,7 @@ let private emptyArmField () =
 
     let field =
         holder.GetField (
-            "shared",
+            "shared@",
             Reflection.BindingFlags.Static
             ||| Reflection.BindingFlags.NonPublic
             ||| Reflection.BindingFlags.Public
