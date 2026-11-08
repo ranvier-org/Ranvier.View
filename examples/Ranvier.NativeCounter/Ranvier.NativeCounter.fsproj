@@ -10,6 +10,9 @@
         <IsPackable>false</IsPackable>
         <PublishAot>true</PublishAot>
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
+        <!-- CI publishes the counter on every pull request, so an AOT or trim warning in the SDL window fails there. -->
+        <IlcTreatWarningsAsErrors>true</IlcTreatWarningsAsErrors>
+        <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
         <GenerateDocumentationFile>false</GenerateDocumentationFile>
     </PropertyGroup>
 
