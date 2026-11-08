@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../../examples/Ranvier.NativeCounter/Program.fs" Link="Program.fs" />
-    <PackageReference Include="Ranvier.View.WebCore.Sdl$(RanvierPackageSuffix)" Version="[$(NativeViewPackageVersion)]" />
+    <PackageReference Include="Ranvier.View.WebCore.Sdl$(RanvierPackageSuffix)" Version="[$(NativeSdlPackageVersion)]" />
   </ItemGroup>
   <ItemGroup Condition="'$(UsePublishedGpu)' != 'true'">
     <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="[$(NativeRuntimePackageVersion)]" ExcludeAssets="all" />

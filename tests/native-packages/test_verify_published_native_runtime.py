@@ -150,16 +150,20 @@ class RuntimeVerification(unittest.TestCase):
     def test_workflow_requires_and_passes_expected_cohort_abi(self):
         workflow = (Path(__file__).resolve().parents[2] /
                     '.github/workflows/published-native-packages.yml').read_text(encoding='utf-8')
-        view_input = workflow.split('view_package_version:', 1)[1].split('native_runtime_version:', 1)[0]
+        view_input = workflow.split('view_package_version:', 1)[1].split('sdl_package_version:', 1)[0]
+        sdl_input = workflow.split('sdl_package_version:', 1)[1].split('native_runtime_version:', 1)[0]
         runtime_input = workflow.split('native_runtime_version:', 1)[1].split('native_abi:', 1)[0]
         self.assertIn('native_runtime_version:', workflow)
         self.assertIn('native_abi:', workflow)
         self.assertIn('required: true', view_input)
+        self.assertIn('required: true', sdl_input)
         self.assertIn('required: true', runtime_input)
         self.assertIn('NativeViewPackageVersion: ${{ inputs.view_package_version }}', workflow)
+        self.assertIn('NativeSdlPackageVersion: ${{ inputs.sdl_package_version }}', workflow)
         self.assertIn('NativeRuntimePackageVersion: ${{ inputs.native_runtime_version }}', workflow)
         self.assertIn("NativeRuntimeAbi: ${{ inputs.native_abi }}", workflow)
         self.assertEqual(workflow.count('--abi "$env:NativeRuntimeAbi"'), 2)
+        self.assertEqual(workflow.count('--view-version "$version"'), 2)
 
     def test_public_consumer_defaults_match_allocated_native_preview_and_abi(self):
         root = Path(__file__).resolve().parents[2]

@@ -1,6 +1,7 @@
 <Project>
   <Target Name="ValidatePublishedNativeFixture" BeforeTargets="CollectPackageReferences;PrepareForBuild">
-    <Error Condition="'$(NativeViewPackageVersion)' == ''" Text="NativeViewPackageVersion is required: pass the exact published backend/SDL release version." />
+    <Error Condition="'$(NativeViewPackageVersion)' == ''" Text="NativeViewPackageVersion is required: pass the exact published Ranvier.View.WebCore version." />
+    <Error Condition="'$(NativeSdlPackageVersion)' == ''" Text="NativeSdlPackageVersion is required: pass the exact published Ranvier.View.WebCore.Sdl version." />
     <Error Condition="'$(RanvierPackageSuffix)' != '' and '$(RanvierPackageSuffix)' != '.Traced'" Text="RanvierPackageSuffix must be empty or .Traced." />
     <Error Condition="'$(UsePublishedGpu)' != 'true' and '$(UsePublishedGpu)' != 'false'" Text="UsePublishedGpu must be true or false." />
   </Target>
