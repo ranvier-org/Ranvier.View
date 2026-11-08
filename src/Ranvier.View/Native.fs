@@ -205,17 +205,27 @@ let elementById (id: string) : Element =
 #endif
 
 #if !FABLE_COMPILER
+let private optionValue = typeof<obj option>.GetProperty("Value")
+let private valueOptionValue = typeof<obj voption>.GetProperty("Value")
+let private valueOptionIsSome = typeof<obj voption>.GetProperty("IsSome")
+
 /// <summary>
 /// JavaScript's SameValueZero over the values Fable writes as primitives: strings, chars, numbers, booleans and
 /// <c>Some</c> of those compare by value, NaN equals NaN and -0 equals +0; every other value compares by reference.
 /// </summary>
 [<Sealed>]
 type SameValueZero private () =
-    static let optionValue = typeof<obj option>.GetProperty("Value")
-    static let valueOptionValue = typeof<obj voption>.GetProperty("Value")
-    static let valueOptionIsSome = typeof<obj voption>.GetProperty("IsSome")
+    // A class-level static initializer can deadlock against the file's initializer when two threads start them together.
+    [<DefaultValue>]
+    static val mutable private instance: SameValueZero
 
-    static member val Instance = SameValueZero ()
+    static member Instance: SameValueZero =
+        if isNull (box SameValueZero.instance) then
+            lock typeof<SameValueZero> (fun () ->
+                if isNull (box SameValueZero.instance) then
+                    SameValueZero.instance <- SameValueZero ())
+
+        SameValueZero.instance
 
     static member private ReadOptionProperty(value: obj, property: System.Reflection.PropertyInfo) =
         let actual =

@@ -28,7 +28,21 @@ module InstanceStep =
 type InstancePath private (parent: InstancePath, step: string, a: int, b: int) =
     let mutable text: string = null
 
+#if FABLE_COMPILER
     static member val Root = InstancePath (null, null, 0, 0)
+#else
+    // A class-level static initializer can deadlock against the file's initializer when two threads start them together.
+    [<DefaultValue>]
+    static val mutable private root: InstancePath
+
+    static member Root: InstancePath =
+        if isNull InstancePath.root then
+            lock typeof<InstancePath> (fun () ->
+                if isNull InstancePath.root then
+                    InstancePath.root <- InstancePath (null, null, 0, 0))
+
+        InstancePath.root
+#endif
 
     member this.Child(k: int) =
         InstancePath (this, "c", k, -1)

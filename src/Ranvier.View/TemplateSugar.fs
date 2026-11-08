@@ -14,20 +14,28 @@ open Ranvier.View.Template
 module Builders =
     [<Sealed>]
     type private EmptyArm private () =
-        static let gate = obj ()
+#if FABLE_COMPILER
         static let mutable shared: Component<unit -> unit> = Unchecked.defaultof<_>
 
         static member Get() =
-            // Reads shared without the lock; null re-checks under the lock.
             if isNull (box shared) then
-#if FABLE_COMPILER
                 shared <- Component.define (fun _ (_: unit -> unit) -> ()) (fun t -> t.fragment [||])
-#else
-                lock gate (fun () ->
-                    if isNull (box shared) then
-                        shared <- Component.define (fun _ (_: unit -> unit) -> ()) (fun t -> t.fragment [||]))
-#endif
+
             shared
+#else
+        // A class-level static initializer can deadlock against the file's initializer when two threads start them
+        // together.
+        [<DefaultValue>]
+        static val mutable private shared: Component<unit -> unit>
+
+        static member Get() =
+            if isNull (box EmptyArm.shared) then
+                lock typeof<EmptyArm> (fun () ->
+                    if isNull (box EmptyArm.shared) then
+                        EmptyArm.shared <- Component.define (fun _ (_: unit -> unit) -> ()) (fun t -> t.fragment [||]))
+
+            EmptyArm.shared
+#endif
 
     /// <summary>The zero-root arm selected by <c>show</c> while its condition is false, created on first use.</summary>
     let internal emptyArm () : Component<unit -> unit> =

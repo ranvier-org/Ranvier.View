@@ -6,6 +6,12 @@ open Expecto
 open Ranvier.View
 open Ranvier.View.Dom
 
+let private flags =
+    Reflection.BindingFlags.Static
+    ||| Reflection.BindingFlags.NonPublic
+    ||| Reflection.BindingFlags.Public
+    ||| Reflection.BindingFlags.DeclaredOnly
+
 let private startupTypes (assembly: Reflection.Assembly) =
     assembly.GetTypes ()
     |> Array.filter (fun t -> t.FullName.StartsWith "<StartupCode$")
@@ -39,6 +45,53 @@ let tests =
                             RuntimeHelpers.RunClassConstructor t.TypeHandle
                         with :? TypeInitializationException as e ->
                             failtestf "%s failed to initialise: %s" t.FullName (e.GetBaseException ()).Message
+
+            // F# guards a class's static values with an `init@` field set by its file's initializer. Two threads that
+            // start the class and the file together deadlock, and the CLR lets one read the class uninitialized.
+            testCase "no class in Ranvier.View or Ranvier.View.Dom has a static initializer of its own"
+            <| fun () ->
+                let guarded =
+                    [ typeof<Scheduling.Queue>.Assembly; typeof<ScopePhase>.Assembly ]
+                    |> List.collect (fun assembly -> List.ofArray (assembly.GetTypes ()))
+                    |> List.filter (fun t ->
+                        not (t.FullName.StartsWith "<StartupCode$")
+                        && t.GetFields flags
+                           |> Array.exists (fun f -> f.Name.StartsWith "init@"))
+                    |> List.map (fun t -> t.FullName)
+
+                Expect.isEmpty guarded "classes with an init@ field"
+
+            testCase "a set created while another thread initialises Native.fs reads an initialised comparer"
+            <| fun () ->
+                let path = typeof<InstancePath>.Assembly.Location
+                let failures = ResizeArray<string>()
+
+                for _ in 1..1000 do
+                    let context = Runtime.Loader.AssemblyLoadContext ("module-init-race", true)
+                    let assembly = context.LoadFromAssemblyPath path
+                    let startup = assembly.GetType "<StartupCode$Ranvier-View>.$Ranvier.View.Native"
+                    let native = assembly.GetType "Ranvier.View.Native"
+                    let newSet = native.GetMethod ("newSet", flags)
+                    use start = new Threading.Barrier (2)
+
+                    let run (body: unit -> unit) =
+                        Threading.Thread (fun () ->
+                            start.SignalAndWait ()
+
+                            try
+                                body ()
+                            with e ->
+                                lock failures (fun () -> failures.Add (string (e.GetBaseException ()))))
+
+                    let file = run (fun () -> RuntimeHelpers.RunClassConstructor startup.TypeHandle)
+                    let set = run (fun () -> newSet.Invoke (null, [||]) |> ignore)
+                    file.Start ()
+                    set.Start ()
+                    file.Join ()
+                    set.Join ()
+                    context.Unload ()
+
+                Expect.isEmpty (List.ofSeq failures) (String.Join ("; ", Seq.distinct failures))
 
             testCase "reading the document with no host names TwinDocument"
             <| fun () ->
