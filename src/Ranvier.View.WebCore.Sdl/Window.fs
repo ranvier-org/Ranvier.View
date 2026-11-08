@@ -161,9 +161,24 @@ type InputRates =
             Resize = InputRate.Raw
         }
 
-    // The record as sprintf "%+A" lays it out, with no reflection.
+    // The record as sprintf "%+A" lays it out. String.Concat, because an interpolated string with non-string holes
+    // compiles to F#'s printf, which native AOT rejects.
     member internal this.Display =
-        $"{{ PointerMotion = {this.PointerMotion}\n  Wheel = {this.Wheel}\n  PenMotion = {this.PenMotion}\n  TouchMotion = {this.TouchMotion}\n  Resize = {this.Resize} }}"
+        String.Concat (
+            [|
+                "{ PointerMotion = "
+                this.PointerMotion.ToString ()
+                "\n  Wheel = "
+                this.Wheel.ToString ()
+                "\n  PenMotion = "
+                this.PenMotion.ToString ()
+                "\n  TouchMotion = "
+                this.TouchMotion.ToString ()
+                "\n  Resize = "
+                this.Resize.ToString ()
+                " }"
+            |]
+        )
 
     override this.ToString() =
         if Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
