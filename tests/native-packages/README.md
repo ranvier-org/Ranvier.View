@@ -1,8 +1,9 @@
 # Published native package acceptance
 
 Run the **Published native packages** manual Actions workflow after a coordinated release exists on
-NuGet. Supply `view_package_version` for the exact published backend and SDL version, including their
-`.Traced` variants, plus the exact `native_runtime_version` and `native_abi` for the same published
+NuGet. Supply `view_package_version` for the exact published `Ranvier.View.WebCore` version and
+`sdl_package_version` for the exact published `Ranvier.View.WebCore.Sdl` version, each covering its
+`.Traced` variant, plus the exact `native_runtime_version` and `native_abi` for the same published
 cohort. The workflow has no default package version or ABI. Managed interop, the native meta-package,
 all five RID packages and the Windows GPU package must be from that same release. An absent package
 or mismatched cohort fails acceptance.

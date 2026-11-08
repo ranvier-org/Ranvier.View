@@ -4,7 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       view_package_version:
-        description: 'Exact published coordinated Ranvier.View.WebCore / .Sdl version'
+        description: 'Exact published Ranvier.View.WebCore version'
+        required: true
+        type: string
+      sdl_package_version:
+        description: 'Exact published Ranvier.View.WebCore.Sdl version'
         required: true
         type: string
       native_runtime_version:
@@ -38,6 +42,7 @@ jobs:
     env:
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/published-native-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.trace }}-${{ matrix.flavor }}
       NativeViewPackageVersion: ${{ inputs.view_package_version }}
+      NativeSdlPackageVersion: ${{ inputs.sdl_package_version }}
       NativeRuntimePackageVersion: ${{ inputs.native_runtime_version }}
       NativeRuntimeAbi: ${{ inputs.native_abi }}
       RanvierPackageSuffix: ${{ matrix.trace == 'traced' && '.Traced' || '' }}
@@ -75,7 +80,8 @@ jobs:
             dotnet build "tests/native-packages/$fixture/$fixture.fsproj" -c Release -r win-x64 --no-restore -o $output
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             $package = if ($fixture -eq 'Smoke') { "Ranvier.View.WebCore$env:RanvierPackageSuffix" } else { "Ranvier.View.WebCore.Sdl$env:RanvierPackageSuffix" }
-            python tools/verify-published-native-runtime.py --assets "tests/native-packages/$fixture/obj/project.assets.json" --output $output --native-version "$env:NativeRuntimePackageVersion" --view-package $package --view-version "$env:NativeViewPackageVersion" --flavor '${{ matrix.flavor }}' --abi "$env:NativeRuntimeAbi"
+            $version = if ($fixture -eq 'Smoke') { $env:NativeViewPackageVersion } else { $env:NativeSdlPackageVersion }
+            python tools/verify-published-native-runtime.py --assets "tests/native-packages/$fixture/obj/project.assets.json" --output $output --native-version "$env:NativeRuntimePackageVersion" --view-package $package --view-version "$version" --flavor '${{ matrix.flavor }}' --abi "$env:NativeRuntimeAbi"
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
       - name: Run the JIT smoke and visible counter with independent accessibility checks
@@ -92,7 +98,8 @@ jobs:
             dotnet publish "tests/native-packages/$fixture/$fixture.fsproj" -c Release -r win-x64 --no-restore -o $output
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             $package = if ($fixture -eq 'Smoke') { "Ranvier.View.WebCore$env:RanvierPackageSuffix" } else { "Ranvier.View.WebCore.Sdl$env:RanvierPackageSuffix" }
-            python tools/verify-published-native-runtime.py --assets "tests/native-packages/$fixture/obj/project.assets.json" --output $output --native-version "$env:NativeRuntimePackageVersion" --view-package $package --view-version "$env:NativeViewPackageVersion" --flavor '${{ matrix.flavor }}' --abi "$env:NativeRuntimeAbi"
+            $version = if ($fixture -eq 'Smoke') { $env:NativeViewPackageVersion } else { $env:NativeSdlPackageVersion }
+            python tools/verify-published-native-runtime.py --assets "tests/native-packages/$fixture/obj/project.assets.json" --output $output --native-version "$env:NativeRuntimePackageVersion" --view-package $package --view-version "$version" --flavor '${{ matrix.flavor }}' --abi "$env:NativeRuntimeAbi"
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
       - name: Run the published NativeAOT smoke and visible counter
@@ -131,6 +138,7 @@ jobs:
     env:
       NUGET_PACKAGES: ${{ github.workspace }}/.nuget/published-metal-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.trace }}
       NativeViewPackageVersion: ${{ inputs.view_package_version }}
+      NativeSdlPackageVersion: ${{ inputs.sdl_package_version }}
       NativeRuntimePackageVersion: ${{ inputs.native_runtime_version }}
       NativeRuntimeAbi: ${{ inputs.native_abi }}
       RanvierPackageSuffix: ${{ matrix.trace == 'traced' && '.Traced' || '' }}
