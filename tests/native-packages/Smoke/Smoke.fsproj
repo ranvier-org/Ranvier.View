@@ -7,8 +7,8 @@
     <Compile Include="../../Ranvier.View.WebCore.AotSmoke/Program.fs" Link="Program.fs" />
     <PackageReference Include="Ranvier.View.WebCore$(RanvierPackageSuffix)" Version="[$(NativeViewPackageVersion)]" />
   </ItemGroup>
-  <ItemGroup Condition="'$(UsePublishedGpu)' == 'true'">
+  <ItemGroup Condition="'$(UsePublishedGpu)' != 'true'">
     <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="[$(NativeRuntimePackageVersion)]" ExcludeAssets="all" />
-    <PackageReference Include="Ranvier.WebCore.Native.Gpu.win-x64" Version="[$(NativeRuntimePackageVersion)]" />
+    <PackageReference Include="Ranvier.WebCore.Native.Cpu.win-x64" Version="[$(NativeRuntimePackageVersion)]" />
   </ItemGroup>
 </Project>

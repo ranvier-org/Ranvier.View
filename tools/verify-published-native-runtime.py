@@ -6,9 +6,10 @@ from pathlib import Path, PurePosixPath
 import re
 
 OFFICIAL_SOURCE = 'https://api.nuget.org/v3/index.json'
-SLIM = 'Ranvier.WebCore.Native.win-x64'
-GPU = 'Ranvier.WebCore.Native.Gpu.win-x64'
-RIDS = {'linux-x64', 'linux-arm64', 'osx-arm64', 'win-arm64', 'win-x64'}
+# Ranvier.WebCore.Native 0.1.1-rc.5 and later: the GPU runtime under the plain per-RID IDs, Slim under .Cpu.<rid>.
+# The aggregate depends on the GPU runtimes and on the CPU win-arm64 runtime, which has no GPU build.
+META_DEPENDENCIES = {'Ranvier.WebCore.Native.' + rid for rid in ('linux-x64', 'linux-arm64', 'osx-arm64', 'win-x64')} | {
+    'Ranvier.WebCore.Native.Cpu.win-arm64'}
 MAC_LIBRARIES = {'libRanvierWebCoreHost.dylib', 'libWebCore.dylib', 'libJavaScriptCore.dylib', 'libWebGPU.dylib'}
 ASSET_SECTIONS = {'native', 'runtime', 'runtimeTargets', 'resource', 'build', 'buildTransitive', 'buildMultiTargeting'}
 
@@ -126,27 +127,26 @@ def verify_runtime(assets_path, output, *, native_version, view_package, view_ve
     matching_entry(selected, 'Ranvier.WebCore', native_version)
     _, meta = matching_entry(selected, 'Ranvier.WebCore.Native', native_version)
     dependencies = {name.casefold() for name in meta.get('dependencies', {})}
-    expected = {'ranvier.webcore.native.' + rid for rid in RIDS}
-    if not expected <= dependencies:
+    if not {name.casefold() for name in META_DEPENDENCIES} <= dependencies:
         raise ValueError('The native meta-package must preserve all five RID dependencies.')
-    for candidate_rid in RIDS:
-        matching_entry(selected, 'Ranvier.WebCore.Native.' + candidate_rid, native_version)
-    slim_package = 'Ranvier.WebCore.Native.' + rid
-    gpu_package = 'Ranvier.WebCore.Native.Gpu.' + rid
+    for dependency in sorted(META_DEPENDENCIES):
+        matching_entry(selected, dependency, native_version)
+    gpu_package = 'Ranvier.WebCore.Native.' + rid
+    slim_package = 'Ranvier.WebCore.Native.Cpu.' + rid
     package = gpu_package if flavor == 'gpu' else slim_package
     _, entry = matching_entry(selected, package, native_version)
-    if flavor == 'gpu':
+    if flavor == 'slim':
         for target in targets.values():
-            _, slim_entry = matching_entry(target, slim_package, native_version)
-            if active_assets(slim_entry):
-                raise ValueError(f'GPU restore must have all slim {rid} runtime/native/buildTransitive assets suppressed.')
-    elif any(key.rsplit('/', 1)[0].casefold() == gpu_package.casefold() and active_assets(value) for target in targets.values() for key, value in target.items()):
-        raise ValueError('A CPU restore selected GPU assets.')
+            _, gpu_entry = matching_entry(target, gpu_package, native_version)
+            if active_assets(gpu_entry):
+                raise ValueError(f'CPU restore must have all default GPU {rid} runtime/native/buildTransitive assets suppressed.')
+    elif any(key.rsplit('/', 1)[0].casefold() == slim_package.casefold() and active_assets(value) for target in targets.values() for key, value in target.items()):
+        raise ValueError('A GPU restore selected CPU assets.')
     manifest = package_manifest(assets, package, native_version, flavor, abi, rid)
-    if flavor == 'gpu':
-        slim = package_manifest(assets, slim_package, native_version, 'slim', abi, rid)
+    if flavor == 'slim':
+        gpu = package_manifest(assets, gpu_package, native_version, 'gpu', abi, rid)
         cohort = lambda value: (value['version'], value['abi'], value['webkit'].lower(), value['source']['commit'].lower())
-        if cohort(manifest) != cohort(slim):
+        if cohort(manifest) != cohort(gpu):
             raise ValueError('GPU and slim manifests must belong to the exact same release cohort.')
     prefix = f'runtimes/{rid}/native/'
     payload = {path[len(prefix):].casefold() for path in active_assets(entry) if path.startswith(prefix)}

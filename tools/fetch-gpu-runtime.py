@@ -69,7 +69,7 @@ def stage_package(data: bytes, package: str, version: str, destination: Path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--package', default='Ranvier.WebCore.Native.Gpu.win-x64')
+    parser.add_argument('--package', default='Ranvier.WebCore.Native.win-x64')
     parser.add_argument('--version', required=True)
     parser.add_argument('--source', default='https://api.nuget.org/v3/index.json')
     parser.add_argument('--out', type=Path, default=Path('artifacts/gpu-runtime'))
