@@ -19,7 +19,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-PACKAGE = 'ranvier.webcore.native.gpu.osx-arm64'
+PACKAGE = 'ranvier.webcore.native.osx-arm64'
 NATIVE = 'runtimes/osx-arm64/native/'
 DYLIBS = {'libEGL.dylib', 'libGLESv2.dylib', 'libJavaScriptCore.dylib', 'libRanvierWebCoreHost.dylib',
           'libWebCore.dylib', 'libWebGPU.dylib'}

@@ -14,7 +14,7 @@ root = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location('gpu_runtime', root / 'tools/fetch-gpu-runtime.py')
 gpu = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(gpu)
-package = 'Ranvier.WebCore.Native.Gpu.win-x64'
+package = 'Ranvier.WebCore.Native.win-x64'
 version = '0.1.0-preview.test'
 
 

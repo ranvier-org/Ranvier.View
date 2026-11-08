@@ -20,7 +20,7 @@ on:
       gpu_runtime_package:
         description: 'Windows x64 GPU runtime package ID'
         type: string
-        default: 'Ranvier.WebCore.Native.Gpu.win-x64'
+        default: 'Ranvier.WebCore.Native.win-x64'
 
 permissions:
   contents: read

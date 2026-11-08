@@ -8,24 +8,26 @@ mouse, wheel, keyboard, input method and focus events to the page. It also sets 
 ## Install
 
 ```sh
-dotnet add package Ranvier.View.WebCore.Sdl --version 0.1.0-rc.3
+dotnet add package Ranvier.View.WebCore.Sdl --version 0.1.0-rc.4
 ```
 
 Use `Ranvier.View.WebCore.Sdl.Traced` for a traced build. Backend, shared contracts, canonical interop,
-SDL3 and the five-RID native aggregate are transitive dependencies.
+SDL3 and the five-RID native aggregate are transitive dependencies. The aggregate carries the GPU runtime for
+win-x64, linux-x64, linux-arm64 and osx-arm64, and the CPU runtime for win-arm64. Select the `direct3d11` renderer
+through `Window.create`'s renderer argument for shared GPU presentation on Windows.
 
-For Windows x64 shared GPU presentation, add the matching GPU runtime and suppress the aggregate's
-Slim win-x64 assets in the application project:
+For the CPU-only Slim runtime on Windows x64 (the smallest payload, or pixels independent of the GPU), suppress the
+aggregate's win-x64 GPU assets and add the matching CPU runtime in the application project:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="[0.1.1-rc.3]" ExcludeAssets="all" />
-  <PackageReference Include="Ranvier.WebCore.Native.Gpu.win-x64" Version="[0.1.1-rc.3]" />
+  <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="[0.1.1-rc.5]" ExcludeAssets="all" />
+  <PackageReference Include="Ranvier.WebCore.Native.Cpu.win-x64" Version="[0.1.1-rc.5]" />
 </ItemGroup>
 ```
 
-Select the `direct3d11` renderer through `Window.create`'s renderer argument. The other four native RID
-dependencies remain available; the explicit exclusion prevents conflicting Windows native payloads.
+The other four native RID dependencies remain available; the explicit exclusion prevents conflicting Windows native
+payloads.
 
 On Windows, a native GPU runtime with the `presentation-d3d11` capability uses shared D3D11 textures with
 SDL's `direct3d11` renderer at display scale 1. Other renderers, unsupported devices and other display scales
@@ -202,7 +204,7 @@ counter runs each. Windows x64 verifies the independent external UIA client; Win
 UIA attachment/smoke without that client.
 
 The manual CI `webcore-gpu` lane takes an exact `gpu_runtime_version`, public NuGet v3 `gpu_runtime_source`
-and `gpu_runtime_package` (default `Ranvier.WebCore.Native.Gpu.win-x64`). It verifies the package's GPU flavor,
+and `gpu_runtime_package` (default `Ranvier.WebCore.Native.win-x64`). It verifies the package's GPU flavor,
 RID, version, clean source revision and file hashes before staging it. Managed interop uses that same version.
 Both JIT and NativeAOT must pass the strict shared-frame, actual-backbuffer and independent UIA checks, and
 a failing enabled GPU lane fails the aggregate CI result. An empty version disables the lane; CPU CI does

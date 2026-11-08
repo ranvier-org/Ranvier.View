@@ -21,9 +21,9 @@ SPEC.loader.exec_module(VERIFY)
 VERSION = '0.1.1-sample.1'
 VIEW = 'Ranvier.View.WebCore.Sdl.Traced'
 VIEW_VERSION = '0.1.0-test.1'
-SLIM = 'Ranvier.WebCore.Native.win-x64'
-GPU = 'Ranvier.WebCore.Native.Gpu.win-x64'
-RIDS = ['linux-x64', 'linux-arm64', 'osx-arm64', 'win-arm64', 'win-x64']
+GPU = 'Ranvier.WebCore.Native.win-x64'
+SLIM = 'Ranvier.WebCore.Native.Cpu.win-x64'
+META_DEPENDENCIES = sorted(VERIFY.META_DEPENDENCIES)
 ABI = 7
 
 
@@ -42,27 +42,27 @@ class PackageFixture:
         self.flavor = flavor
         self.rid = rid
         self.abi = abi
-        slim = 'Ranvier.WebCore.Native.' + rid
-        gpu = 'Ranvier.WebCore.Native.Gpu.' + rid
+        gpu = 'Ranvier.WebCore.Native.' + rid
+        slim = 'Ranvier.WebCore.Native.Cpu.' + rid
         self.manifests = {}
         self.package_roots = {}
         libraries = {}
         target = {}
         base = {}
-        for package in [VIEW, 'Ranvier.WebCore', 'Ranvier.WebCore.Native', *['Ranvier.WebCore.Native.' + rid for rid in RIDS]]:
+        for package in [VIEW, 'Ranvier.WebCore', 'Ranvier.WebCore.Native', *META_DEPENDENCIES]:
             version = VIEW_VERSION if package == VIEW else VERSION
             key = package + '/' + version
             libraries[key] = {'type': 'package', 'path': key.lower()}
             target[key] = {'type': 'package'}
             base[key] = {'type': 'package'}
-        target['Ranvier.WebCore.Native/' + VERSION]['dependencies'] = { 'Ranvier.WebCore.Native.' + rid: VERSION for rid in RIDS }
+        target['Ranvier.WebCore.Native/' + VERSION]['dependencies'] = {dependency: VERSION for dependency in META_DEPENDENCIES}
         base['Ranvier.WebCore.Native/' + VERSION] = copy.deepcopy(target['Ranvier.WebCore.Native/' + VERSION])
         for package in ['Ranvier.Dom.Traced/0.1.0-alpha.2', 'Fable.Core/5.3.0']:
             libraries[package] = {'type': 'package', 'path': package.lower()}
             target[package] = {'type': 'package'}
             base[package] = {'type': 'package'}
-        for package, kind in [(slim, 'slim'), (gpu, 'gpu')]:
-            if kind == 'gpu' and flavor != 'gpu':
+        for package, kind in [(gpu, 'gpu'), (slim, 'slim')]:
+            if kind == 'slim' and flavor != 'slim':
                 continue
             key = package + '/' + VERSION
             package_root = self.cache / key.lower()
@@ -207,8 +207,14 @@ class RuntimeVerification(unittest.TestCase):
     def test_cpu_checks_every_one_of_317_manifest_files(self):
         self.assertEqual(self.fixture().verify()['files'], 317)
 
-    def test_gpu_suppression_and_matching_release_cohort(self):
+    def test_gpu_selects_the_default_runtime(self):
         self.assertEqual(self.fixture('gpu').verify()['files'], 319)
+
+    def test_gpu_rejects_any_cpu_runtime_assets(self):
+        fixture = self.fixture('gpu')
+        fixture.assets['targets']['net10.0/win-x64'][SLIM + '/' + VERSION] = {'type': 'package', 'native': {'unexpected.dll': {}}}
+        with self.assertRaisesRegex(ValueError, 'selected CPU'):
+            fixture.verify()
 
     def test_mac64_slim_and_gpu_validate_complete_matching_public_payloads(self):
         for kind, count in [('slim', 319), ('gpu', 321)]:
@@ -217,17 +223,17 @@ class RuntimeVerification(unittest.TestCase):
             result = PackageFixture(root, kind, 'osx-arm64', 64).verify()
             self.assertEqual((result['rid'], result['abi'], result['files']), ('osx-arm64', 64, count))
 
-    def test_mac64_rejects_wrong_rid_abi_slim_assets_and_mismatched_engine_source(self):
-        for index, mutation in enumerate(['rid', 'abi', 'slim', 'source']):
+    def test_mac64_rejects_wrong_rid_abi_gpu_assets_and_mismatched_engine_source(self):
+        for index, mutation in enumerate(['rid', 'abi', 'gpu', 'source']):
             root = self.root / str(index)
             root.mkdir()
-            fixture = PackageFixture(root, 'gpu', 'osx-arm64', 64)
+            fixture = PackageFixture(root, 'slim', 'osx-arm64', 64)
             if mutation in ('rid', 'abi'):
-                fixture.manifests['gpu'][mutation] = 'win-x64' if mutation == 'rid' else ABI
-            elif mutation == 'slim':
+                fixture.manifests['slim'][mutation] = 'win-x64' if mutation == 'rid' else ABI
+            elif mutation == 'gpu':
                 fixture.assets['targets']['net10.0']['Ranvier.WebCore.Native.osx-arm64/' + VERSION]['native'] = {'unexpected.dylib': {}}
             else:
-                fixture.manifests['slim']['source']['commit'] = 'c' * 40
+                fixture.manifests['gpu']['source']['commit'] = 'c' * 40
             with self.subTest(mutation=mutation), self.assertRaises(ValueError):
                 fixture.verify()
 
@@ -283,18 +289,18 @@ class RuntimeVerification(unittest.TestCase):
             with self.subTest(field=field):
                 root = self.root / str(index)
                 root.mkdir()
-                fixture = PackageFixture(root, 'gpu')
-                fixture.manifests['slim'][field] = {'dirty': False, 'commit': 'c' * 40} if field == 'source' else 'c' * 40
+                fixture = PackageFixture(root, 'slim')
+                fixture.manifests['gpu'][field] = {'dirty': False, 'commit': 'c' * 40} if field == 'source' else 'c' * 40
                 with self.assertRaisesRegex(ValueError, 'cohort'):
                     fixture.verify()
 
-    def test_gpu_rejects_any_slim_runtime_or_build_assets(self):
+    def test_slim_rejects_any_default_gpu_runtime_or_build_assets(self):
         for index, section in enumerate(['native', 'runtime', 'runtimeTargets', 'build', 'buildTransitive', 'buildMultiTargeting']):
             with self.subTest(section=section):
                 root = self.root / str(index)
                 root.mkdir()
-                fixture = PackageFixture(root, 'gpu')
-                fixture.assets['targets']['net10.0'][SLIM + '/' + VERSION][section] = {'unexpected.dll': {}}
+                fixture = PackageFixture(root, 'slim')
+                fixture.assets['targets']['net10.0'][GPU + '/' + VERSION][section] = {'unexpected.dll': {}}
                 with self.assertRaisesRegex(ValueError, 'suppressed'):
                     fixture.verify()
 
@@ -305,10 +311,14 @@ class RuntimeVerification(unittest.TestCase):
             fixture.verify()
 
     def test_meta_keeps_all_five_rids(self):
-        fixture = self.fixture('gpu')
-        fixture.assets['targets']['net10.0/win-x64']['Ranvier.WebCore.Native/' + VERSION]['dependencies'].pop('Ranvier.WebCore.Native.linux-arm64')
-        with self.assertRaisesRegex(ValueError, 'five'):
-            fixture.verify()
+        for index, dependency in enumerate(['Ranvier.WebCore.Native.linux-arm64', 'Ranvier.WebCore.Native.Cpu.win-arm64']):
+            with self.subTest(dependency=dependency):
+                root = self.root / str(index)
+                root.mkdir()
+                fixture = PackageFixture(root, 'gpu')
+                fixture.assets['targets']['net10.0/win-x64']['Ranvier.WebCore.Native/' + VERSION]['dependencies'].pop(dependency)
+                with self.assertRaisesRegex(ValueError, 'five'):
+                    fixture.verify()
 
     def test_wrong_view_version(self):
         fixture = self.fixture()

@@ -10,7 +10,7 @@ The reviewed `ae534a5` product and `c7cc031` framework-free checks are forward-a
 Current Core58 and formatter/lifetime fixes are preserved. The Interop dependency follows the signed
 public Native cohort named by `RanvierWebCoreNativeVersion` in `Ranvier.View.WebCore.fsproj`.
 
-CI job `webcore-macos-gpu` stages the public `Ranvier.WebCore.Native.Gpu.osx-arm64` package at that version,
+CI job `webcore-macos-gpu` stages the public `Ranvier.WebCore.Native.osx-arm64` package at that version,
 checked against the hash nuget.org publishes for it, runs the unfiltered normal and traced suites over it, requires four passed and one ignored
 IOSurface case, and runs the strict NativeAOT `AotIOSurface` consumer. After View publication the
 `macos-gpu` job of the published native packages workflow repeats the NativeAOT consumer package-only.
