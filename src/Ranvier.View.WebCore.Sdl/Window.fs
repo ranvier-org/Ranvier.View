@@ -115,11 +115,18 @@ type InputRate =
     /// <summary>Every event SDL reports.</summary>
     | Raw
 
+    override this.ToString() =
+        match this with
+        | PerFrame -> "PerFrame"
+        | PerDrain -> "PerDrain"
+        | Raw -> "Raw"
+
 /// <summary>The window's <c>InputRate</c> for each kind of high-rate input.</summary>
 /// <remarks>
 /// Held input is dispatched before any button, key, focus or other input event, so the page receives events in
 /// the order SDL reports them. A resize under <c>PerFrame</c> or <c>PerDrain</c> applies the latest size once per drain.
 /// </remarks>
+[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
 type InputRates =
     {
         /// <summary>Mouse motion, as <c>mousemove</c>: about 1,000 events a second from a gaming mouse.</summary>
@@ -154,6 +161,16 @@ type InputRates =
             Resize = InputRate.Raw
         }
 
+    // The record as sprintf "%+A" lays it out, with no reflection.
+    member internal this.Display =
+        $"{{ PointerMotion = {this.PointerMotion}\n  Wheel = {this.Wheel}\n  PenMotion = {this.PenMotion}\n  TouchMotion = {this.TouchMotion}\n  Resize = {this.Resize} }}"
+
+    override this.ToString() =
+        if Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            this.Display
+
 /// <summary>How an SDL event relates to held input.</summary>
 [<RequireQualifiedAccess; Struct>]
 type internal HeldKind =
@@ -166,6 +183,16 @@ type internal HeldKind =
     | Pen
     | Touch
     | Resize
+
+    override this.ToString() =
+        match this with
+        | Ignored -> "Ignored"
+        | Barrier -> "Barrier"
+        | Motion -> "Motion"
+        | Wheel -> "Wheel"
+        | Pen -> "Pen"
+        | Touch -> "Touch"
+        | Resize -> "Resize"
 
 /// <summary>
 /// An SDL3 window showing a <c>WebCoreHost</c>'s page: it paints the page into a texture when the page asks for a frame
