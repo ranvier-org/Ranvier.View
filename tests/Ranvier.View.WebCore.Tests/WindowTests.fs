@@ -363,6 +363,20 @@ let tests =
                 steps window 1
                 Expect.equal (List.ofSeq log) [ "mousemove", 20, 20; "mousemove", 40, 40 ] "the latest move of each drain"
 
+            testCase "input rates display as sprintf %+A does, without reflection"
+            <| fun () ->
+                let mixed =
+                    { InputRates.Raw with
+                        Wheel = InputRate.PerDrain
+                        Resize = InputRate.PerFrame
+                    }
+
+                for rates in [ InputRates.Default; InputRates.Raw; mixed ] do
+                    Expect.equal rates.Display (sprintf "%+A" rates) "the record"
+
+                for rate in [ InputRate.PerFrame; InputRate.PerDrain; InputRate.Raw ] do
+                    Expect.equal (rate.ToString ()) (sprintf "%+A" rate) "the rate"
+
             ratesCase "held pointer motion waits in Step until it is due" InputRates.Default
             <| fun window ->
                 let log = mouseLog window
