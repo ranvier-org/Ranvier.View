@@ -45,6 +45,13 @@ let private steps (window: Window) count =
     for _ in 1..count do
         window.Step 0 |> ignore
 
+// Steps for 50 milliseconds, longer than a refresh interval, so held PerFrame input is due and dispatched.
+let private settle (window: Window) =
+    let elapsed = Diagnostics.Stopwatch.StartNew ()
+
+    while elapsed.ElapsedMilliseconds < 50L do
+        window.Step 50 |> ignore
+
 let private pixel (struct (width: int, _: int, bytes: byte array)) x y =
     let at = (y * width + x) * 4
     bytes[at], bytes[at + 1], bytes[at + 2]
@@ -63,6 +70,114 @@ let private press (window: Window) (kind: SDL_EventType) x y =
 
     if not (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event): bool) then
         failwithf "SDL_PushEvent failed: %s" (SDL3.SDL_GetError ())
+
+let private windowId (window: Window) =
+    SDL3.SDL_GetWindowID (NativePtr.ofNativeInt<SDL_Window> window.SdlWindow)
+
+let private push (event: SDL_Event) =
+    let mutable event = event
+
+    if not (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event): bool) then
+        failwithf "SDL_PushEvent failed: %s" (SDL3.SDL_GetError ())
+
+// Queues a mouse move to x, y in the window.
+let private move (window: Window) x y =
+    let mutable event = SDL_Event ()
+    event.motion.``type`` <- SDL_EventType.SDL_EVENT_MOUSE_MOTION
+    event.motion.windowID <- windowId window
+    event.motion.x <- x
+    event.motion.y <- y
+    push event
+
+// Queues a vertical wheel scroll of `ticks` at 50, 50; negative ticks scroll down.
+let private scroll (window: Window) ticks =
+    let mutable event = SDL_Event ()
+    event.wheel.``type`` <- SDL_EventType.SDL_EVENT_MOUSE_WHEEL
+    event.wheel.windowID <- windowId window
+    event.wheel.y <- ticks
+    event.wheel.mouse_x <- 50.0f
+    event.wheel.mouse_y <- 50.0f
+    push event
+
+// Queues an A key press.
+let private keyDown (window: Window) =
+    let mutable event = SDL_Event ()
+    event.key.``type`` <- SDL_EventType.SDL_EVENT_KEY_DOWN
+    event.key.windowID <- windowId window
+    event.key.scancode <- SDL_Scancode.SDL_SCANCODE_A
+    event.key.down <- SDLBool.op_Implicit true
+    push event
+
+let private pixelSizeChanged (window: Window) =
+    let mutable event = SDL_Event ()
+    event.window.``type`` <- SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED
+    event.window.windowID <- windowId window
+    push event
+
+// Queues a hovering move of pen 42 to x, y.
+let private penMove (window: Window) x y =
+    let mutable event = SDL_Event ()
+    event.pmotion.``type`` <- SDL_EventType.SDL_EVENT_PEN_MOTION
+    event.pmotion.windowID <- windowId window
+    event.pmotion.which <- LanguagePrimitives.EnumOfValue 42u
+    event.pmotion.x <- x
+    event.pmotion.y <- y
+    push event
+
+// Queues a pressure change of pen 42 at x, y.
+let private penPressure (window: Window) x y pressure =
+    let mutable event = SDL_Event ()
+    event.paxis.``type`` <- SDL_EventType.SDL_EVENT_PEN_AXIS
+    event.paxis.windowID <- windowId window
+    event.paxis.which <- LanguagePrimitives.EnumOfValue 42u
+    event.paxis.x <- x
+    event.paxis.y <- y
+    event.paxis.axis <- SDL_PenAxis.SDL_PEN_AXIS_PRESSURE
+    event.paxis.value <- pressure
+    push event
+
+// Queues a finger event at normalized x, y.
+let private finger (window: Window) (kind: SDL_EventType) x y =
+    let mutable event = SDL_Event ()
+    event.tfinger.``type`` <- kind
+    event.tfinger.windowID <- windowId window
+    event.tfinger.touchID <- LanguagePrimitives.EnumOfValue 7UL
+    event.tfinger.fingerID <- LanguagePrimitives.EnumOfValue 9UL
+    event.tfinger.x <- x
+    event.tfinger.y <- y
+    event.tfinger.pressure <- 0.5f
+    push event
+
+// The page's events of `kinds`: a mouse or pointer event's client position, a wheel event's deltas, or zeros.
+let private eventLog (window: Window) (kinds: string list) =
+    let log = ResizeArray<string * int * int>()
+
+    for kind in kinds do
+        window.Host.Document.addEventListener (
+            kind,
+            fun (event: Event) ->
+                match event with
+                | :? WheelEvent as wheel -> log.Add (kind, int wheel.deltaX, int wheel.deltaY)
+                | :? MouseEvent as mouse -> log.Add (kind, int mouse.clientX, int mouse.clientY)
+                | _ -> log.Add (kind, 0, 0)
+        )
+
+    log
+
+let private mouseLog (window: Window) =
+    eventLog window [ "mousemove"; "mousedown"; "mouseup" ]
+
+// A hidden window with `rates`, focused so key events reach the page.
+let private ratesCase (name: string) (rates: InputRates) (body: Window -> unit) =
+    testCase name (fun () ->
+        onHostThread (fun () ->
+            use window =
+                Window.Create ("Ranvier test", 200, 150, hidden = true, renderer = "software", inputRates = rates)
+
+            window.Host.SetFocused true
+            steps window 2
+            body window
+            Expect.isEmpty (List.ofSeq window.Host.Errors) "listener, microtask and timer errors"))
 
 let private closeRequest (window: Window) =
     let mutable event = SDL_Event ()
@@ -203,6 +318,237 @@ let tests =
                 press window SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP 50.0f 50.0f
                 steps window 2
                 Expect.equal (graph.Run (fun () -> count.Value)) 1 "the click handler ran"
+
+            windowCase "queued mouse moves reach the page as one mousemove at the last position by default"
+            <| fun window ->
+                steps window 2
+                let log = mouseLog window
+                Expect.equal window.InputRates InputRates.Default "per frame is the default"
+
+                for x in [ 10.0f; 20.0f; 30.0f; 40.0f ] do
+                    move window x (x + 5.0f)
+
+                steps window 1
+                Expect.equal (List.ofSeq log) [ "mousemove", 40, 45 ] "the latest move only"
+
+            windowCase "raw pointer motion reaches the page as every mousemove"
+            <| fun window ->
+                steps window 2
+                let log = mouseLog window
+
+                window.InputRates <-
+                    { window.InputRates with
+                        PointerMotion = InputRate.Raw
+                    }
+
+                for x in [ 10.0f; 20.0f; 30.0f ] do
+                    move window x x
+
+                steps window 1
+
+                Expect.equal (List.ofSeq log) [ "mousemove", 10, 10; "mousemove", 20, 20; "mousemove", 30, 30 ] "every move"
+
+            ratesCase
+                "per drain pointer motion reaches the page as one mousemove per Step"
+                { InputRates.Default with
+                    PointerMotion = InputRate.PerDrain
+                }
+            <| fun window ->
+                let log = mouseLog window
+                move window 10.0f 10.0f
+                move window 20.0f 20.0f
+                steps window 1
+                move window 30.0f 30.0f
+                move window 40.0f 40.0f
+                steps window 1
+                Expect.equal (List.ofSeq log) [ "mousemove", 20, 20; "mousemove", 40, 40 ] "the latest move of each drain"
+
+            ratesCase "held pointer motion waits in Step until it is due" InputRates.Default
+            <| fun window ->
+                let log = mouseLog window
+                move window 10.0f 10.0f
+                steps window 1
+                move window 20.0f 20.0f
+                let elapsed = Diagnostics.Stopwatch.StartNew ()
+                let mutable turns = 0
+
+                while log.Count < 2
+                      && elapsed.ElapsedMilliseconds < 200L do
+                    window.Step 50 |> ignore
+                    turns <- turns + 1
+
+                Expect.equal (List.ofSeq log) [ "mousemove", 10, 10; "mousemove", 20, 20 ] "both moves"
+                Expect.isLessThan turns 20 "Steps until the held move is due"
+
+            ratesCase "queued wheel events reach the page as one summed wheel event around a key press" InputRates.Default
+            <| fun window ->
+                let log = eventLog window [ "wheel"; "keydown" ]
+                scroll window -1.0f
+                scroll window -1.0f
+                keyDown window
+                scroll window -1.0f
+                steps window 1
+                settle window
+
+                Expect.equal (List.ofSeq log) [ "wheel", 0, 80; "keydown", 0, 0; "wheel", 0, 40 ] "deltas summed per run, in order"
+
+            ratesCase "raw wheel events reach the page as every wheel event" InputRates.Raw
+            <| fun window ->
+                let log = eventLog window [ "wheel"; "keydown" ]
+                scroll window -1.0f
+                scroll window -1.0f
+                keyDown window
+                scroll window -1.0f
+                steps window 1
+                settle window
+
+                Expect.equal (List.ofSeq log) [ "wheel", 0, 40; "wheel", 0, 40; "keydown", 0, 0; "wheel", 0, 40 ] "every wheel event"
+
+            ratesCase "queued size changes apply once per run around a button press" InputRates.Default
+            <| fun window ->
+                let before = window.ResizesApplied
+                let log = mouseLog window
+
+                for _ in 1..3 do
+                    pixelSizeChanged window
+
+                press window SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN 20.0f 20.0f
+                pixelSizeChanged window
+                pixelSizeChanged window
+                steps window 1
+                Expect.equal (window.ResizesApplied - before) 2 "the latest size before the press and at the drain's end"
+                Expect.equal (List.ofSeq log) [ "mousedown", 20, 20 ] "the press reaches the page"
+
+            ratesCase "raw size changes apply every change" InputRates.Raw
+            <| fun window ->
+                let before = window.ResizesApplied
+
+                for _ in 1..3 do
+                    pixelSizeChanged window
+
+                press window SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN 20.0f 20.0f
+                pixelSizeChanged window
+                pixelSizeChanged window
+                steps window 1
+                Expect.equal (window.ResizesApplied - before) 5 "every change"
+
+            ratesCase "queued pen moves and axis changes reach the page as one pointermove per run" InputRates.Default
+            <| fun window ->
+                if not (WebCoreHost.Has "pointer-input") then
+                    skiptest "the runtime has no pointer-input"
+
+                let log = eventLog window [ "pointermove"; "keydown" ]
+                penMove window 10.0f 10.0f
+                penMove window 20.0f 20.0f
+                penMove window 30.0f 30.0f
+                keyDown window
+                penPressure window 30.0f 30.0f 0.5f
+                penMove window 40.0f 40.0f
+                steps window 1
+                settle window
+
+                Expect.equal
+                    (List.ofSeq log)
+                    [ "pointermove", 30, 30; "keydown", 0, 0; "pointermove", 40, 40 ]
+                    "the latest sample of each run, in order"
+
+            ratesCase "raw pen moves and axis changes reach the page as every pointermove" InputRates.Raw
+            <| fun window ->
+                if not (WebCoreHost.Has "pointer-input") then
+                    skiptest "the runtime has no pointer-input"
+
+                let log = eventLog window [ "pointermove"; "keydown" ]
+                penMove window 10.0f 10.0f
+                penMove window 20.0f 20.0f
+                keyDown window
+                penPressure window 20.0f 20.0f 0.5f
+                penMove window 40.0f 40.0f
+                steps window 1
+
+                Expect.equal
+                    (List.ofSeq log)
+                    [
+                        "pointermove", 10, 10
+                        "pointermove", 20, 20
+                        "keydown", 0, 0
+                        "pointermove", 20, 20
+                        "pointermove", 40, 40
+                    ]
+                    "every sample"
+
+            ratesCase "queued touch moves reach the page as one pointermove per run between down and up" InputRates.Default
+            <| fun window ->
+                if not (WebCoreHost.Has "touch-input") then
+                    skiptest "the runtime has no touch-input"
+
+                let log = eventLog window [ "pointerdown"; "pointermove"; "pointerup"; "keydown" ]
+                finger window SDL_EventType.SDL_EVENT_FINGER_DOWN 0.1f 0.1f
+                finger window SDL_EventType.SDL_EVENT_FINGER_MOTION 0.2f 0.2f
+                finger window SDL_EventType.SDL_EVENT_FINGER_MOTION 0.3f 0.3f
+                keyDown window
+                finger window SDL_EventType.SDL_EVENT_FINGER_MOTION 0.4f 0.4f
+                finger window SDL_EventType.SDL_EVENT_FINGER_MOTION 0.5f 0.5f
+                finger window SDL_EventType.SDL_EVENT_FINGER_UP 0.5f 0.5f
+                steps window 1
+
+                Expect.equal
+                    (List.ofSeq log)
+                    [
+                        "pointerdown", 20, 15
+                        "pointermove", 60, 45
+                        "keydown", 0, 0
+                        "pointermove", 100, 75
+                        "pointerup", 100, 75
+                    ]
+                    "the latest frame of each run, in order"
+
+            ratesCase "raw touch moves reach the page as every pointermove" InputRates.Raw
+            <| fun window ->
+                if not (WebCoreHost.Has "touch-input") then
+                    skiptest "the runtime has no touch-input"
+
+                let log = eventLog window [ "pointerdown"; "pointermove"; "pointerup"; "keydown" ]
+                finger window SDL_EventType.SDL_EVENT_FINGER_DOWN 0.1f 0.1f
+                finger window SDL_EventType.SDL_EVENT_FINGER_MOTION 0.2f 0.2f
+                finger window SDL_EventType.SDL_EVENT_FINGER_MOTION 0.3f 0.3f
+                keyDown window
+                finger window SDL_EventType.SDL_EVENT_FINGER_MOTION 0.5f 0.5f
+                finger window SDL_EventType.SDL_EVENT_FINGER_UP 0.5f 0.5f
+                steps window 1
+
+                Expect.equal
+                    (List.ofSeq log)
+                    [
+                        "pointerdown", 20, 15
+                        "pointermove", 40, 30
+                        "pointermove", 60, 45
+                        "keydown", 0, 0
+                        "pointermove", 100, 75
+                        "pointerup", 100, 75
+                    ]
+                    "every frame"
+
+            windowCase "a button press between runs of mouse moves keeps its order and position"
+            <| fun window ->
+                steps window 2
+                let log = mouseLog window
+                move window 10.0f 10.0f
+                move window 20.0f 25.0f
+                press window SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN 20.0f 25.0f
+                move window 30.0f 30.0f
+                move window 50.0f 55.0f
+                press window SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP 50.0f 55.0f
+                steps window 1
+
+                Expect.equal
+                    (List.ofSeq log)
+                    [
+                        "mousemove", 20, 25
+                        "mousedown", 20, 25
+                        "mousemove", 50, 55
+                        "mouseup", 50, 55
+                    ]
+                    "each run's latest move before the button that ends it"
 
             windowCase "SDL pen and touch events reach the page"
             <| fun window ->

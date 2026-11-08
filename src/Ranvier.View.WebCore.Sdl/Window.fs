@@ -101,6 +101,72 @@ module internal Sdl =
         else
             utf16Offset text index
 
+/// <summary>How often a window dispatches a kind of high-rate input to its page.</summary>
+[<RequireQualifiedAccess>]
+type InputRate =
+    /// <summary>
+    /// At most one dispatch per display refresh: a browser's rate. The window holds the latest input, with wheel deltas
+    /// summed, and dispatches it before the next frame's animation callbacks, or one refresh interval after the
+    /// previous dispatch when no frame is due.
+    /// </summary>
+    | PerFrame
+    /// <summary>One dispatch per run of the input in a drain of SDL's event queue.</summary>
+    | PerDrain
+    /// <summary>Every event SDL reports.</summary>
+    | Raw
+
+/// <summary>The window's <c>InputRate</c> for each kind of high-rate input.</summary>
+/// <remarks>
+/// Held input is dispatched before any button, key, focus or other input event, so the page receives events in
+/// the order SDL reports them. A resize under <c>PerFrame</c> or <c>PerDrain</c> applies the latest size once per drain.
+/// </remarks>
+type InputRates =
+    {
+        /// <summary>Mouse motion, as <c>mousemove</c>: about 1,000 events a second from a gaming mouse.</summary>
+        PointerMotion: InputRate
+        /// <summary>Mouse wheel and touchpad scrolling, as <c>wheel</c>, with held deltas summed.</summary>
+        Wheel: InputRate
+        /// <summary>Pen motion and axis changes, as one <c>pointermove</c> per pen.</summary>
+        PenMotion: InputRate
+        /// <summary>Touch motion, as one <c>pointermove</c> frame carrying every moved contact.</summary>
+        TouchMotion: InputRate
+        /// <summary>Window pixel size and display scale changes, as a page resize.</summary>
+        Resize: InputRate
+    }
+
+    /// <summary><c>PerFrame</c> for every kind.</summary>
+    static member Default =
+        {
+            PointerMotion = InputRate.PerFrame
+            Wheel = InputRate.PerFrame
+            PenMotion = InputRate.PerFrame
+            TouchMotion = InputRate.PerFrame
+            Resize = InputRate.PerFrame
+        }
+
+    /// <summary><c>Raw</c> for every kind.</summary>
+    static member Raw =
+        {
+            PointerMotion = InputRate.Raw
+            Wheel = InputRate.Raw
+            PenMotion = InputRate.Raw
+            TouchMotion = InputRate.Raw
+            Resize = InputRate.Raw
+        }
+
+/// <summary>How an SDL event relates to held input.</summary>
+[<RequireQualifiedAccess; Struct>]
+type internal HeldKind =
+    /// <summary>An event the page never receives, or whose order relative to input is irrelevant.</summary>
+    | Ignored
+    /// <summary>An event that dispatches all held input before itself.</summary>
+    | Barrier
+    | Motion
+    | Wheel
+    | Pen
+    | Touch
+    | Resize
+
 /// <summary>
 /// An SDL3 window showing a <c>WebCoreHost</c>'s page: it paints the page into a texture when the page asks for a frame
 /// and forwards the window's mouse, keyboard, input method and focus events to it. All calls go on the thread that
@@ -108,7 +174,9 @@ module internal Sdl =
 /// </summary>
 /// <remarks>All windows use the thread admitted by the first <c>Create</c>, including after every window has closed.</remarks>
 [<Sealed>]
-type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option) as this =
+type Window
+    private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option, initialRates: InputRates) as this
+    =
     static let owner = WebCoreHost.Owner
     static let windows = WindowRegistry<Window>()
     // CSS pixels a wheel tick scrolls.
@@ -138,6 +206,25 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let mutable pageDisposed = false
     let mutable cleanupCompleted: string -> unit = ignore
     let mutable maxTouchPoints = 0
+    let mutable rates = initialRates
+    // Held input, under PerFrame and PerDrain. At most one kind is held at a time.
+    let mutable pendingMotion: SDL_MouseMotionEvent voption = ValueNone
+    // Mouse id, CSS position, summed deltas and modifiers.
+    let mutable pendingWheel: struct (SDL_MouseID * int * int * float32 * float32 * int) voption =
+        ValueNone
+
+    let pendingPens = Dictionary<uint32, PointerSample>()
+    let mutable pendingTouch: PointerSample array = null
+    let mutable pendingResize = false
+    // Stopwatch timestamps of each kind's latest dispatch.
+    let mutable lastMotion = 0L
+    let mutable lastWheel = 0L
+    let mutable lastPen = 0L
+    let mutable lastTouch = 0L
+    let mutable refreshTicks = Diagnostics.Stopwatch.Frequency / 60L
+    let mutable resizesApplied = 0
+    // Whether the page received input since the window last read its surrounding text.
+    let mutable delivered = true
 
     let alive () =
         not closed
@@ -200,7 +287,24 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     let mutable displayFeed: IDisposable = null
     let mutable displaySignal: Signal<DisplayScreen voption> = Unchecked.defaultof<_>
 
+    let readRefresh () =
+        let mode = SDL3.SDL_GetCurrentDisplayMode (SDL3.SDL_GetDisplayForWindow window)
+
+        let rate =
+            if NativePtr.isNullPtr mode then
+                0.0f
+            else
+                (NativePtr.read mode).refresh_rate
+
+        refreshTicks <-
+            if rate > 0.0f then
+                int64 (float Diagnostics.Stopwatch.Frequency / float rate)
+            else
+                Diagnostics.Stopwatch.Frequency / 60L
+
     let resize () =
+        resizesApplied <- resizesApplied + 1
+        readRefresh ()
         let mutable width = 0
         let mutable height = 0
 
@@ -235,6 +339,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     let sendPointers (samples: PointerSample array) =
         if samples.Length > 0 && alive () then
+            delivered <- true
             host.Pointer samples |> ignore
 
     let penButtons (state: SDL_PenInputFlags) =
@@ -251,11 +356,11 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
              else
                  0)
 
-    let pen id action x y button state axis =
-        let sample =
-            pens.Update (uint32 id, action, float (x * toCss), float (y * toCss), button, penButtons state, modifiers (), axis)
+    let penSample id action x y button state axis =
+        pens.Update (uint32 id, action, float (x * toCss), float (y * toCss), button, penButtons state, modifiers (), axis)
 
-        sendPointers [| sample |]
+    let pen id action x y button state axis =
+        sendPointers [| penSample id action x y button state axis |]
 
     let syntheticMouse (id: SDL_MouseID) =
         (touchInput && id = SDL3.SDL_TOUCH_MOUSEID)
@@ -293,6 +398,158 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         else
             -1
 
+    let now () =
+        Diagnostics.Stopwatch.GetTimestamp ()
+
+    let sendMotion (motion: SDL_MouseMotionEvent) =
+        lastMotion <- now ()
+        delivered <- true
+
+        host.Mouse (0, css motion.x, css motion.y, held motion.state, 0, modifiers ())
+        |> ignore
+
+        updateCursor ()
+
+    let flushMotion () =
+        match pendingMotion with
+        | ValueSome motion ->
+            pendingMotion <- ValueNone
+
+            if alive () then
+                sendMotion motion
+        | ValueNone -> ()
+
+    let sendWheel x y deltaX deltaY keys =
+        lastWheel <- now ()
+        delivered <- true
+        host.Wheel (x, y, deltaX, deltaY, keys) |> ignore
+
+    let flushWheel () =
+        match pendingWheel with
+        | ValueSome (struct (_, x, y, deltaX, deltaY, keys)) ->
+            pendingWheel <- ValueNone
+
+            if alive () then
+                sendWheel x y deltaX deltaY keys
+        | ValueNone -> ()
+
+    let flushPens () =
+        if pendingPens.Count > 0 then
+            let samples = Seq.toArray pendingPens.Values
+            pendingPens.Clear ()
+            lastPen <- now ()
+
+            for sample in samples do
+                sendPointers [| sample |]
+
+    // Movement accumulates across the samples a held pen sample replaces.
+    let holdPen (id: uint32) (sample: PointerSample) =
+        let mutable merged = sample
+        let mutable previous = Unchecked.defaultof<PointerSample>
+
+        if pendingPens.TryGetValue (id, &previous) then
+            merged.MovementX <- merged.MovementX + previous.MovementX
+            merged.MovementY <- merged.MovementY + previous.MovementY
+
+        pendingPens[id] <- merged
+
+    let flushTouch () =
+        if not (isNull pendingTouch) then
+            let frame = pendingTouch
+            pendingTouch <- null
+            lastTouch <- now ()
+            sendPointers frame
+
+    // A held touch frame keeps every contact that moved in the frames it replaces, with their movement summed.
+    let holdTouch (frame: PointerSample array) =
+        if not (isNull pendingTouch) then
+            for index in 0 .. frame.Length - 1 do
+                let mutable sample = frame[index]
+
+                match
+                    pendingTouch
+                    |> Array.tryFind (fun previous -> previous.Id = sample.Id && previous.Action = 0)
+                with
+                | Some previous ->
+                    sample.Action <- 0
+                    sample.MovementX <- sample.MovementX + previous.MovementX
+                    sample.MovementY <- sample.MovementY + previous.MovementY
+                    frame[index] <- sample
+                | None -> ()
+
+        pendingTouch <- frame
+
+    let flushResize () =
+        if pendingResize then
+            pendingResize <- false
+
+            if alive () then
+                resize ()
+
+    // Dispatches all held input except the kind in `keep`.
+    let flushHeld (keep: HeldKind) =
+        if keep <> HeldKind.Resize then
+            flushResize ()
+
+        if keep <> HeldKind.Motion then
+            flushMotion ()
+
+        if keep <> HeldKind.Wheel then
+            flushWheel ()
+
+        if keep <> HeldKind.Pen then
+            flushPens ()
+
+        if keep <> HeldKind.Touch then
+            flushTouch ()
+
+    let classify (event: SDL_Event) =
+        let own target =
+            target = id
+
+        match enum<SDL_EventType>(int event.``type``) with
+        | SDL_EventType.SDL_EVENT_MOUSE_MOTION when own event.motion.windowID ->
+            if syntheticMouse event.motion.which then
+                HeldKind.Ignored
+            else
+                HeldKind.Motion
+        | SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN
+        | SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP when own event.button.windowID ->
+            if syntheticMouse event.button.which then
+                HeldKind.Ignored
+            else
+                HeldKind.Barrier
+        | SDL_EventType.SDL_EVENT_MOUSE_WHEEL when own event.wheel.windowID -> HeldKind.Wheel
+        | SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED
+        | SDL_EventType.SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED when own event.window.windowID -> HeldKind.Resize
+        | SDL_EventType.SDL_EVENT_PEN_MOTION when penInput && own event.pmotion.windowID -> HeldKind.Pen
+        | SDL_EventType.SDL_EVENT_PEN_AXIS when penInput && own event.paxis.windowID -> HeldKind.Pen
+        | SDL_EventType.SDL_EVENT_PEN_DOWN
+        | SDL_EventType.SDL_EVENT_PEN_UP when penInput && own event.ptouch.windowID -> HeldKind.Barrier
+        | SDL_EventType.SDL_EVENT_PEN_BUTTON_DOWN
+        | SDL_EventType.SDL_EVENT_PEN_BUTTON_UP when penInput && own event.pbutton.windowID -> HeldKind.Barrier
+        | SDL_EventType.SDL_EVENT_PEN_PROXIMITY_OUT when penInput && own event.pproximity.windowID -> HeldKind.Barrier
+        | SDL_EventType.SDL_EVENT_FINGER_MOTION when touchInput && own event.tfinger.windowID -> HeldKind.Touch
+        | SDL_EventType.SDL_EVENT_FINGER_DOWN
+        | SDL_EventType.SDL_EVENT_FINGER_UP
+        | SDL_EventType.SDL_EVENT_FINGER_CANCELED when touchInput && own event.tfinger.windowID -> HeldKind.Barrier
+        | SDL_EventType.SDL_EVENT_KEY_DOWN
+        | SDL_EventType.SDL_EVENT_KEY_UP when own event.key.windowID -> HeldKind.Barrier
+        | SDL_EventType.SDL_EVENT_TEXT_INPUT when own event.text.windowID -> HeldKind.Barrier
+        | SDL_EventType.SDL_EVENT_TEXT_EDITING when own event.edit.windowID -> HeldKind.Barrier
+        | SDL_EventType.SDL_EVENT_WINDOW_MOUSE_LEAVE
+        | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_GAINED
+        | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST
+        | SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED when own event.window.windowID -> HeldKind.Barrier
+        | SDL_EventType.SDL_EVENT_QUIT -> HeldKind.Barrier
+        | _ when
+            surrounding.EventType <> 0u
+            && event.``type`` = surrounding.EventType
+            && own event.user.windowID
+            ->
+            HeldKind.Barrier
+        | _ -> HeldKind.Ignored
+
     // Places the input method's candidate window at the composition or the caret.
     let placeInputMethod () =
         match host.CompositionRect with
@@ -315,21 +572,25 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         | SDL_EventType.SDL_EVENT_DISPLAY_MOVED
         | SDL_EventType.SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED
         | SDL_EventType.SDL_EVENT_DISPLAY_USABLE_BOUNDS_CHANGED when not (isNull (box displaySignal)) -> displaySignal.Value <- displayReader ()
-        | SDL_EventType.SDL_EVENT_WINDOW_DISPLAY_CHANGED when
-            event.window.windowID = id
-            && not (isNull (box displaySignal))
-            ->
-            displaySignal.Value <- displayReader ()
+        | SDL_EventType.SDL_EVENT_WINDOW_DISPLAY_CHANGED when event.window.windowID = id ->
+            readRefresh ()
 
-            linuxAccessibility
-            |> Option.iter (fun bridge -> bridge.Update ())
+            if not (isNull (box displaySignal)) then
+                displaySignal.Value <- displayReader ()
+
+                linuxAccessibility
+                |> Option.iter (fun bridge -> bridge.Update ())
         | SDL_EventType.SDL_EVENT_WINDOW_MOVED when event.window.windowID = id ->
             linuxAccessibility
             |> Option.iter (fun bridge -> bridge.Update ())
         | SDL_EventType.SDL_EVENT_QUIT -> closed <- true
         | SDL_EventType.SDL_EVENT_WINDOW_CLOSE_REQUESTED when event.window.windowID = id -> closed <- true
         | SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED
-        | SDL_EventType.SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED when event.window.windowID = id -> resize ()
+        | SDL_EventType.SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED when event.window.windowID = id ->
+            if rates.Resize = InputRate.Raw then
+                resize ()
+            else
+                pendingResize <- true
         | SDL_EventType.SDL_EVENT_WINDOW_EXPOSED when event.window.windowID = id ->
             exposed <- true
             host.SetVisible true
@@ -389,10 +650,18 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 maxTouchPoints <- touches.Count
                 host.SetMaxTouchPoints maxTouchPoints
 
-            sendPointers frame
+            if action <> 0 || rates.TouchMotion = InputRate.Raw then
+                sendPointers frame
+            elif frame.Length > 0 then
+                holdTouch frame
         | SDL_EventType.SDL_EVENT_PEN_MOTION when penInput && event.pmotion.windowID = id ->
             let motion = event.pmotion
-            pen motion.which 0 motion.x motion.y -1 motion.pen_state None
+            let sample = penSample motion.which 0 motion.x motion.y -1 motion.pen_state None
+
+            if rates.PenMotion = InputRate.Raw then
+                sendPointers [| sample |]
+            else
+                holdPen (uint32 motion.which) sample
         | SDL_EventType.SDL_EVENT_PEN_DOWN
         | SDL_EventType.SDL_EVENT_PEN_UP when penInput && event.ptouch.windowID = id ->
             let touch = event.ptouch
@@ -419,7 +688,14 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 None
         | SDL_EventType.SDL_EVENT_PEN_AXIS when penInput && event.paxis.windowID = id ->
             let axis = event.paxis
-            pen axis.which 0 axis.x axis.y -1 axis.pen_state (Some (axis.axis, axis.value))
+
+            let sample =
+                penSample axis.which 0 axis.x axis.y -1 axis.pen_state (Some (axis.axis, axis.value))
+
+            if rates.PenMotion = InputRate.Raw then
+                sendPointers [| sample |]
+            else
+                holdPen (uint32 axis.which) sample
         | SDL_EventType.SDL_EVENT_PEN_PROXIMITY_OUT when penInput && event.pproximity.windowID = id ->
             match pens.Leave (uint32 event.pproximity.which, modifiers ()) with
             | ValueSome sample -> sendPointers [| sample |]
@@ -435,10 +711,14 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             ->
             let motion = event.motion
 
-            host.Mouse (0, css motion.x, css motion.y, held motion.state, 0, modifiers ())
-            |> ignore
+            if rates.PointerMotion = InputRate.Raw then
+                sendMotion motion
+            else
+                match pendingMotion with
+                | ValueSome previous when previous.which <> motion.which -> flushMotion ()
+                | _ -> ()
 
-            updateCursor ()
+                pendingMotion <- ValueSome motion
         | SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN
         | SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP when
             event.button.windowID = id
@@ -466,8 +746,21 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 else
                     1.0f
 
-            host.Wheel (css wheel.mouse_x, css wheel.mouse_y, wheel.x * wheelStep * direction, -wheel.y * wheelStep * direction, modifiers ())
-            |> ignore
+            let x = css wheel.mouse_x
+            let y = css wheel.mouse_y
+            let deltaX = wheel.x * wheelStep * direction
+            let deltaY = -wheel.y * wheelStep * direction
+            let keys = modifiers ()
+
+            if rates.Wheel = InputRate.Raw then
+                sendWheel x y deltaX deltaY keys
+            else
+                match pendingWheel with
+                | ValueSome (struct (mouse, _, _, heldX, heldY, heldKeys)) when mouse = wheel.which && heldKeys = keys ->
+                    pendingWheel <- ValueSome (struct (mouse, x, y, heldX + deltaX, heldY + deltaY, keys))
+                | _ ->
+                    flushWheel ()
+                    pendingWheel <- ValueSome (struct (wheel.which, x, y, deltaX, deltaY, keys))
         | _ when
             surrounding.EventType <> 0u
             && event.``type`` = surrounding.EventType
@@ -586,7 +879,86 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     member private _.Dispatch(event: SDL_Event) =
         if alive () then
+            match classify event with
+            | HeldKind.Ignored -> ()
+            | HeldKind.Barrier ->
+                delivered <- true
+                flushHeld HeldKind.Barrier
+            | kind -> flushHeld kind
+
             dispatch event
+
+    // Ends a drain of SDL's queue: dispatches a held resize, PerDrain input, and PerFrame input once a refresh interval
+    // has passed since its kind's previous dispatch.
+    member private _.EndDrain() =
+        let due rate last =
+            match rate with
+            | InputRate.PerFrame -> now () - last >= refreshTicks
+            | InputRate.PerDrain
+            | InputRate.Raw -> true
+
+        flushResize ()
+
+        if
+            pendingMotion.IsSome
+            && due rates.PointerMotion lastMotion
+        then
+            flushMotion ()
+
+        if pendingWheel.IsSome && due rates.Wheel lastWheel then
+            flushWheel ()
+
+        if
+            pendingPens.Count > 0
+            && due rates.PenMotion lastPen
+        then
+            flushPens ()
+
+        if
+            not (isNull pendingTouch)
+            && due rates.TouchMotion lastTouch
+        then
+            flushTouch ()
+
+    // Milliseconds to wait in Step for held PerFrame input to become due. One millisecond longer than the time left,
+    // because SDL_WaitEventTimeout on Windows returns at once for a timeout of 1 and up to a millisecond early for
+    // longer ones.
+    member private _.HeldDue: int voption =
+        let remaining isHeld last =
+            if isHeld then
+                let ticks = last + refreshTicks - now ()
+
+                ValueSome (
+                    if ticks <= 0L then
+                        0
+                    else
+                        1
+                        + int (
+                            Math.Ceiling (
+                                float ticks * 1000.0
+                                / float Diagnostics.Stopwatch.Frequency
+                            )
+                        )
+                )
+            else
+                ValueNone
+
+        if not (alive ()) then
+            ValueNone
+        else
+            [
+                remaining pendingMotion.IsSome lastMotion
+                remaining pendingWheel.IsSome lastWheel
+                remaining (pendingPens.Count > 0) lastPen
+                remaining (not (isNull pendingTouch)) lastTouch
+            ]
+            |> List.fold
+                (fun earliest due ->
+                    match earliest, due with
+                    | ValueSome a, ValueSome b -> ValueSome (min a b)
+                    | ValueNone, due -> due
+                    | earliest, ValueNone -> earliest)
+                ValueNone
 
     member private _.FlushComposition() =
         if pendingCompositionClear && alive () then
@@ -596,9 +968,17 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
 
     member private _.RefreshSurrounding() =
         if alive () then
+            delivered <- false
             surrounding.Refresh ()
 
-    static member private CreateCore(title: string, width: int, height: int, hidden: bool option, renderer: string option) : Window =
+    // Reads the surrounding text again only when the page received input since the last read.
+    member private this.RefreshAfterInput() =
+        if delivered then
+            this.RefreshSurrounding ()
+
+    static member private CreateCore
+        (title: string, width: int, height: int, hidden: bool option, renderer: string option, rates: InputRates)
+        : Window =
         EglRenderer.RetryFailedConstruction ()
         EglRenderer.Prepare ()
         // The page draws the input method's composition itself; the platform draws the candidates.
@@ -672,7 +1052,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
             egl <- EglRenderer.TryCreate drawing
             let host = WebCoreHost.Create (width, height)
             page <- Some host
-            new Window (window, drawing, host, egl)
+            new Window (window, drawing, host, egl, rates)
         with _ ->
             page
             |> Option.iter (fun host -> (host :> IDisposable).Dispose())
@@ -697,13 +1077,13 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// <summary>
     /// Opens a window of <c>width</c> by <c>height</c> in the platform's window units, CSS pixels at the display's
     /// scale, with an empty page. <c>hidden</c> keeps it off screen; <c>renderer</c> names an SDL render driver, such
-    /// as "software".
+    /// as "software". <c>inputRates</c> sets <c>InputRates</c>, <c>InputRates.Default</c> when omitted.
     /// </summary>
-    static member Create(title: string, width: int, height: int, ?hidden: bool, ?renderer: string) : Window =
+    static member Create(title: string, width: int, height: int, ?hidden: bool, ?renderer: string, ?inputRates: InputRates) : Window =
         owner.Enter ()
 
         try
-            Window.CreateCore (title, width, height, hidden, renderer)
+            Window.CreateCore (title, width, height, hidden, renderer, defaultArg inputRates InputRates.Default)
         finally
             owner.Exit ()
 
@@ -731,6 +1111,17 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
         else
             read "SDL.window.wayland.surface"
 
+    /// <summary>How often the window dispatches each kind of high-rate input to its page.</summary>
+    /// <remarks>Setting it dispatches any held input.</remarks>
+    member _.InputRates
+        with get () = rates
+        and set (value: InputRates) =
+            flushHeld HeldKind.Barrier
+            rates <- value
+
+    /// <summary>The number of page resizes the window has applied.</summary>
+    member internal _.ResizesApplied = resizesApplied
+
     /// <summary>Whether the window has been asked to close.</summary>
     member _.Closed = closed
 
@@ -747,6 +1138,7 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
     /// </summary>
     /// <remarks>A frame callback that closes the window or disposes its host stops presentation.</remarks>
     member _.Present() =
+        flushHeld HeldKind.Barrier
         host.Frame ()
 
         if alive () then
@@ -779,24 +1171,36 @@ type Window private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Rend
                 if host.FrameRequested || fullPaint || exposed then
                     0
                 else
-                    match host.NextTimerDelay with
-                    | ValueSome delay -> min longest (int (Math.Ceiling delay))
-                    | ValueNone -> longest
+                    let timer =
+                        match host.NextTimerDelay with
+                        | ValueSome delay -> min longest (int (Math.Ceiling delay))
+                        | ValueNone -> longest
+
+                    windows.Snapshot ()
+                    |> Seq.fold
+                        (fun wait (target: Window) ->
+                            match target.HeldDue with
+                            | ValueSome due -> min wait due
+                            | ValueNone -> wait)
+                        timer
 
             let mutable event = SDL_Event ()
 
             if Sdl.ok (SDL3.SDL_WaitEventTimeout (&&event, wait)) then
                 for target in windows.Snapshot () do
                     target.Dispatch event
-                    target.RefreshSurrounding ()
+                    target.RefreshAfterInput ()
 
                 while alive () && Sdl.ok (SDL3.SDL_PollEvent &&event) do
                     for target in windows.Snapshot () do
                         target.Dispatch event
-                        target.RefreshSurrounding ()
+                        target.RefreshAfterInput ()
 
                 for target in windows.Snapshot () do
                     target.FlushComposition ()
+
+            for target in windows.Snapshot () do
+                target.EndDrain ()
 
             if alive () then
                 host.Cycle ()
