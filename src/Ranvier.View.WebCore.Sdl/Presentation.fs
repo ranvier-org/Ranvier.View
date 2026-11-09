@@ -18,7 +18,7 @@ module private PresentationNative =
         InvalidOperationException (operation + " failed: " + SDL3.SDL_GetError ())
 
 /// <summary>CPU and shared GPU textures presented on the host and SDL owner thread.</summary>
-type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option) =
+type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option, swapChain: D3D11SwapChain option) =
     let metal = MetalRenderer.TryCreate renderer
     let mutable cpuTexture = NativePtr.nullPtr<SDL_Texture>
     let mutable cpuWidth = 0
@@ -34,9 +34,15 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     let mutable lastGpu = false
     let mutable pendingEglFrame = 0n
 
+    // The frame on screen or being presented through the swap chain, released once its present has finished.
+    let mutable heldFrame = 0n
+
     let device () =
-        use key = fixed PresentationNative.utf8 "SDL.renderer.d3d11.device"
-        SDL3.SDL_GetPointerProperty (SDL3.SDL_GetRendererProperties renderer, key, 0n)
+        match swapChain with
+        | Some chain -> chain.Device
+        | None ->
+            use key = fixed PresentationNative.utf8 "SDL.renderer.d3d11.device"
+            SDL3.SDL_GetPointerProperty (SDL3.SDL_GetRendererProperties renderer, key, 0n)
 
     let gpuEnabled =
         ((OperatingSystem.IsWindows ()
@@ -205,6 +211,132 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
         | Some consumer -> consumer.Present ()
         | None -> PresentationNative.ok (SDL3.SDL_RenderPresent renderer)
 
+    let releaseHeldFrame () =
+        if heldFrame <> 0n then
+            let released = RanvierWebCoreAbi.Native.rv_gpu_frame_release heldFrame
+
+            if released <> 0 then
+                raise (
+                    InvalidOperationException (
+                        "GPU frame release failed: "
+                        + released.ToString ()
+                    )
+                )
+
+            heldFrame <- 0n
+
+    // True when the finished present lost the device.
+    let settleSwapChain (chain: D3D11SwapChain) =
+        let lost = chain.Settle ()
+
+        if not chain.Presenting then
+            releaseHeldFrame ()
+
+        lost
+
+    let waitSwapChain (chain: D3D11SwapChain) =
+        chain.WaitIdle ()
+        settleSwapChain chain |> ignore
+
+    // Acquires the composited frame on the swap chain's device: its texture and size, with the frame in heldFrame.
+    let acquireForSwapChain () =
+        let mutable frame = 0n
+
+        if
+            gpuEnabled
+            && RanvierWebCoreAbi.Native.rv_host_acquire_d3d11_frame (host.Handle, device (), &frame) = 0
+        then
+            let mutable resource = 0n
+            let mutable width, height, format = 0, 0, 0
+
+            if
+                RanvierWebCoreAbi.Native.rv_gpu_frame_info (frame, &resource, &width, &height, &format) = 0
+                && resource <> 0n
+                && width > 0
+                && height > 0
+                && format = 1
+            then
+                heldFrame <- frame
+                ValueSome (struct (resource, width, height))
+            else
+                RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
+                |> ignore
+
+                ValueNone
+        else
+            ValueNone
+
+    // Paints into pixels when the page changed; the returned flag says whether it did.
+    let paintForSwapChain () =
+        let struct (width, height) = host.PaintSize
+
+        if width > 0 && height > 0 then
+            if width <> cpuWidth || height <> cpuHeight then
+                cpuWidth <- width
+                cpuHeight <- height
+                pixels <- Array.zeroCreate (width * height * 4)
+                fullPaint <- true
+
+            if fullPaint then
+                host.Paint pixels
+                fullPaint <- false
+                true
+            else
+                (host.PaintDirty pixels).IsSome
+        else
+            false
+
+    let presentOnSwapChain (chain: D3D11SwapChain) (exposed: bool) =
+        waitSwapChain chain
+
+        if not (chain.Prepare ()) then
+            false
+        else
+            match acquireForSwapChain () with
+            | ValueSome (struct (texture, width, height)) ->
+                chain.Submit (texture, width, height)
+                gpuFrames <- gpuFrames + 1L
+                lastGpu <- true
+                fullPaint <- true
+                true
+            | ValueNone ->
+                cpuFrames <- cpuFrames + 1L
+                lastGpu <- false
+
+                let painted = paintForSwapChain ()
+
+                if painted || (exposed && cpuWidth > 0) then
+                    chain.Submit (chain.UploadCpu (pixels, cpuWidth, cpuHeight), cpuWidth, cpuHeight)
+
+                true
+
+    // Top-down RGBA of the page. A GPU frame reads as opaque, as it appears composited over the window's black.
+    let readFromSwapChain (chain: D3D11SwapChain) =
+        waitSwapChain chain
+
+        if not (chain.Prepare ()) then
+            invalidOp "The window's D3D11 device is lost"
+
+        let gpu = if lastGpu then acquireForSwapChain () else ValueNone
+
+        match gpu with
+        | ValueSome (struct (texture, width, height)) ->
+            try
+                let bytes = chain.Read (texture, width, height)
+
+                for index in 3..4 .. bytes.Length - 1 do
+                    bytes[index] <- 255uy
+
+                struct (width, height, bytes)
+            finally
+                releaseHeldFrame ()
+        | ValueNone ->
+            if lastGpu then
+                fullPaint <- true
+
+            paintForSwapChain () |> ignore
+            struct (cpuWidth, cpuHeight, chain.Read (chain.UploadCpu (pixels, cpuWidth, cpuHeight), cpuWidth, cpuHeight))
+
     member private _.WithGpu(action: nativeptr<SDL_Texture> -> int -> int -> 'T) : 'T voption =
         releasePendingEglFrame ()
         releasePendingMetalFrame ()
@@ -290,8 +422,37 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                             )
                         )
 
+    /// <summary>A presenter without a D3D11 swap chain.</summary>
+    new(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option) = new Presenter (renderer, host, egl, None)
+
+    /// <summary>Whether a present is running on the swap chain's thread; always false without a swap chain.</summary>
+    member _.Presenting =
+        match swapChain with
+        | Some chain -> chain.Presenting
+        | None -> false
+
+    /// <summary>Takes a finished present's outcome: true when the window must be drawn again because the device was lost.</summary>
+    member _.Settle() =
+        match swapChain with
+        | Some chain -> settleSwapChain chain
+        | None -> false
+
+    /// <summary>Sets the swap chain's back buffer size for the next present.</summary>
+    member _.Resized(width: int, height: int) =
+        swapChain
+        |> Option.iter (fun chain -> chain.Resize (width, height))
+
+    /// <summary>Sets how later swap chain frames reach the window.</summary>
+    member _.Pace(visible: bool, refreshMs: int) =
+        swapChain
+        |> Option.iter (fun chain -> chain.Pace (visible, refreshMs))
+
+    /// <summary>The swap chain frames go through, for failure controls.</summary>
+    member _.SwapChain = swapChain
+
     /// <summary>Retries retained GPU frames before disposing their consumer; failure preserves ownership.</summary>
     member _.ReleasePending() =
+        swapChain |> Option.iter waitSwapChain
         releasePendingEglFrame ()
         releasePendingMetalFrame ()
 
@@ -330,51 +491,63 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     /// <summary>The number of presentation attempts that took the CPU path.</summary>
     member _.CpuFramesPresented = cpuFrames
 
-    /// <summary>Presents the updated page, with CPU painting when shared texture import is unavailable.</summary>
+    /// <summary>
+    /// Presents the updated page, with CPU painting when shared texture import is unavailable. Through a swap chain the
+    /// present runs on its own thread after this returns. False when a lost device left nothing to draw to.
+    /// </summary>
     member this.Present(exposed: bool) =
-        match
-            this.WithGpu (fun texture width height ->
-                draw texture width height
+        match swapChain with
+        | Some chain -> presentOnSwapChain chain exposed
+        | None ->
+            match
+                this.WithGpu (fun texture width height ->
+                    draw texture width height
 
-                if not (present ()) then
-                    raise (PresentationNative.failure "SDL_RenderPresent"))
-        with
-        | ValueSome () ->
-            gpuFrames <- gpuFrames + 1L
-            lastGpu <- true
-            fullPaint <- true
-        | ValueNone ->
-            cpuFrames <- cpuFrames + 1L
-            lastGpu <- false
-            let painted = updateCpu ()
+                    if not (present ()) then
+                        raise (PresentationNative.failure "SDL_RenderPresent"))
+            with
+            | ValueSome () ->
+                gpuFrames <- gpuFrames + 1L
+                lastGpu <- true
+                fullPaint <- true
+            | ValueNone ->
+                cpuFrames <- cpuFrames + 1L
+                lastGpu <- false
+                let painted = updateCpu ()
 
-            if painted || exposed then
-                draw cpuTexture cpuWidth cpuHeight
+                if painted || exposed then
+                    draw cpuTexture cpuWidth cpuHeight
 
-                if not (PresentationNative.ok (SDL3.SDL_RenderPresent renderer)) then
-                    raise (PresentationNative.failure "SDL_RenderPresent")
+                    if not (PresentationNative.ok (SDL3.SDL_RenderPresent renderer)) then
+                        raise (PresentationNative.failure "SDL_RenderPresent")
+
+            true
 
     /// <summary>Captures the rendered page as physical dimensions and top-down straight RGBA bytes.</summary>
     member this.ReadPixels() =
-        match
-            (if lastGpu then
-                 this.WithGpu (fun texture width height ->
-                     draw texture width height
-                     capture ())
-             else
-                 ValueNone)
-        with
-        | ValueSome pixels -> pixels
-        | ValueNone ->
-            if lastGpu then
-                fullPaint <- true
+        match swapChain with
+        | Some chain -> readFromSwapChain chain
+        | None ->
+            match
+                (if lastGpu then
+                     this.WithGpu (fun texture width height ->
+                         draw texture width height
+                         capture ())
+                 else
+                     ValueNone)
+            with
+            | ValueSome pixels -> pixels
+            | ValueNone ->
+                if lastGpu then
+                    fullPaint <- true
 
-            updateCpu () |> ignore
-            draw cpuTexture cpuWidth cpuHeight
-            capture ()
+                updateCpu () |> ignore
+                draw cpuTexture cpuWidth cpuHeight
+                capture ()
 
     interface IDisposable with
         member _.Dispose() =
+            swapChain |> Option.iter waitSwapChain
             releasePendingEglFrame ()
             releasePendingMetalFrame ()
 
@@ -390,6 +563,9 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
             if not (NativePtr.isNullPtr cpuTexture) then
                 SDL3.SDL_DestroyTexture cpuTexture
                 cpuTexture <- NativePtr.nullPtr
+
+            swapChain
+            |> Option.iter (fun chain -> (chain :> IDisposable).Dispose())
 
 /// <summary>Attaches the native Windows UI Automation tree to an SDL window on its owner thread.</summary>
 module internal WindowAccessibility =

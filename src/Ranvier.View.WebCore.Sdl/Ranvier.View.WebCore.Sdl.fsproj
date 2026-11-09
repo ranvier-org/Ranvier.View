@@ -24,6 +24,7 @@
         <Compile Include="Keys.fs" />
         <Compile Include="EglPresentation.fs" />
         <Compile Include="MetalPresentation.fs" />
+        <Compile Include="D3D11Presentation.fs" />
         <Compile Include="Presentation.fs" />
         <Compile Include="WindowRegistry.fs" />
         <Compile Include="TouchFrames.fs" />

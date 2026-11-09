@@ -217,8 +217,15 @@ type internal HeldKind =
 /// <remarks>All windows use the thread admitted by the first <c>Create</c>, including after every window has closed.</remarks>
 [<Sealed>]
 type Window
-    private (window: nativeptr<SDL_Window>, renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, egl: EglRenderer option, initialRates: InputRates) as this
-    =
+    private
+    (
+        window: nativeptr<SDL_Window>,
+        renderer: nativeptr<SDL_Renderer>,
+        host: WebCoreHost,
+        egl: EglRenderer option,
+        swapChain: D3D11SwapChain option,
+        initialRates: InputRates
+    ) as this =
     static let owner = WebCoreHost.Owner
     static let windows = WindowRegistry<Window>()
     // CSS pixels a wheel tick scrolls.
@@ -233,11 +240,14 @@ type Window
     let touchInput = WebCoreHost.Has "touch-input"
     let penInput = WebCoreHost.Has "pointer-input"
     let surrounding = SurroundingText.Bridge (NativePtr.toNativeInt window, host)
-    let presenter = new Presenter (renderer, host, egl)
+    let presenter = new Presenter (renderer, host, egl, swapChain)
     let mutable accessibilityAttached = false
     let mutable linuxAccessibility: LinuxAccessibility option = None
     let mutable fullPaint = true
     let mutable exposed = true
+    // A frame ran during a long present and is not on screen yet.
+    let mutable framePending = false
+    let mutable lastFrameAt = 0L
     let mutable toCss = 1.0f
     let mutable closed = false
     let mutable composing = false
@@ -364,6 +374,7 @@ type Window
             | _ -> 1.0f
 
         toCss <- density / scale
+        presenter.Resized (width, height)
         host.SetDeviceScale scale
         host.Resize (Sdl.viewportExtent width scale, Sdl.viewportExtent height scale)
 
@@ -1048,8 +1059,31 @@ type Window
             SDL3.SDL_QuitSubSystem SDL_InitFlags.SDL_INIT_VIDEO
             raise error
 
+        // Windows frames present through the window's own swap chain, which excludes an SDL renderer on the same window.
+        let swapChain =
+            if
+                (renderer.IsNone || renderer = Some "direct3d11")
+                && OperatingSystem.IsWindows ()
+                && WebCoreHost.Has "presentation-d3d11"
+            then
+                let mutable pixelWidth = 0
+                let mutable pixelHeight = 0
+
+                SDL3.SDL_GetWindowSizeInPixels (window, &&pixelWidth, &&pixelHeight)
+                |> ignore
+
+                use key = fixed Sdl.utf8 "SDL.window.win32.hwnd"
+
+                let hwnd =
+                    SDL3.SDL_GetPointerProperty (SDL3.SDL_GetWindowProperties window, key, 0n)
+
+                D3D11SwapChain.TryCreate (hwnd, pixelWidth, pixelHeight)
+            else
+                None
+
         let drawing =
             match renderer with
+            | _ when swapChain.IsSome -> NativePtr.nullPtr<SDL_Renderer>
             | Some driver ->
                 use name = fixed Sdl.utf8 driver
                 SDL3.SDL_CreateRenderer (window, name)
@@ -1079,22 +1113,31 @@ type Window
                 SDL3.SDL_CreateRenderer (window, name)
             | None -> SDL3.SDL_CreateRenderer (window, NativePtr.nullPtr<byte>)
 
-        if NativePtr.isNullPtr drawing then
+        if swapChain.IsNone && NativePtr.isNullPtr drawing then
             let error = Sdl.failure "SDL_CreateRenderer"
             SDL3.SDL_DestroyWindow window
             SDL3.SDL_QuitSubSystem SDL_InitFlags.SDL_INIT_VIDEO
             raise error
 
-        SDL3.SDL_SetRenderVSync (drawing, 1) |> ignore
-        let cleanupEgl = EglRenderer.Capture drawing
+        if swapChain.IsNone then
+            SDL3.SDL_SetRenderVSync (drawing, 1) |> ignore
+
+        let cleanupEgl =
+            if swapChain.IsSome then
+                None
+            else
+                EglRenderer.Capture drawing
+
         let mutable page = None
         let mutable egl = None
 
         try
-            egl <- EglRenderer.TryCreate drawing
+            if swapChain.IsNone then
+                egl <- EglRenderer.TryCreate drawing
+
             let host = WebCoreHost.Create (width, height)
             page <- Some host
-            new Window (window, drawing, host, egl, rates)
+            new Window (window, drawing, host, egl, swapChain, rates)
         with _ ->
             page
             |> Option.iter (fun host -> (host :> IDisposable).Dispose())
@@ -1104,7 +1147,12 @@ type Window
                     cleanupEgl
                     |> Option.forall (fun consumer -> consumer.Activate ())
                 then
-                    SDL3.SDL_DestroyRenderer drawing
+                    swapChain
+                    |> Option.iter (fun chain -> (chain :> IDisposable).Dispose())
+
+                    if not (NativePtr.isNullPtr drawing) then
+                        SDL3.SDL_DestroyRenderer drawing
+
                     SDL3.SDL_DestroyWindow window
                     SDL3.SDL_QuitSubSystem SDL_InitFlags.SDL_INIT_VIDEO
                     true
@@ -1119,7 +1167,8 @@ type Window
     /// <summary>
     /// Opens a window of <c>width</c> by <c>height</c> in the platform's window units, CSS pixels at the display's
     /// scale, with an empty page. <c>hidden</c> keeps it off screen; <c>renderer</c> names an SDL render driver, such
-    /// as "software". <c>inputRates</c> sets <c>InputRates</c>, <c>InputRates.Default</c> when omitted.
+    /// as "software", and "direct3d11" or no name uses a D3D11 swap chain with no SDL renderer where the runtime
+    /// supports it. <c>inputRates</c> sets <c>InputRates</c>, <c>InputRates.Default</c> when omitted.
     /// </summary>
     static member Create(title: string, width: int, height: int, ?hidden: bool, ?renderer: string, ?inputRates: InputRates) : Window =
         owner.Enter ()
@@ -1178,15 +1227,34 @@ type Window
     /// Runs a frame and shows it: the page's animation frame callbacks and rendering update, then the painted area in
     /// the texture, presented on the window's next vertical blank.
     /// </summary>
-    /// <remarks>A frame callback that closes the window or disposes its host stops presentation.</remarks>
+    /// <remarks>
+    /// A frame callback that closes the window or disposes its host stops presentation. On a window with a D3D11 swap
+    /// chain the present runs on its own thread, so a present that blocks leaves this call and <c>Step</c> running.
+    /// </remarks>
     member _.Present() =
         flushHeld HeldKind.Barrier
         host.Frame ()
+        lastFrameAt <- now ()
 
         if alive () then
-            presenter.Present exposed
+            let hidden =
+                SDL3.SDL_GetWindowFlags window
+                &&& (SDL_WindowFlags.SDL_WINDOW_HIDDEN
+                     ||| SDL_WindowFlags.SDL_WINDOW_MINIMIZED)
+                <> LanguagePrimitives.EnumOfValue 0UL
+
+            presenter.Pace (
+                not hidden,
+                int (
+                    refreshTicks * 1000L
+                    / Diagnostics.Stopwatch.Frequency
+                )
+            )
+
+            let shown = presenter.Present exposed
+            framePending <- false
             fullPaint <- false
-            exposed <- false
+            exposed <- not shown
             placeInputMethod ()
 
     /// <summary>
@@ -1204,13 +1272,24 @@ type Window
         if not closed then
             host.EnsureActive ()
 
+            if presenter.Settle () then
+                exposed <- true
+
             for target in windows.Snapshot () do
                 target.RefreshSurrounding ()
 
             let longest = defaultArg timeout 50
+            // A frame runs without waiting for the screen once a present has run this long past the last frame.
+            let stall = refreshTicks * 3L / 2L
 
             let wait =
-                if host.FrameRequested || fullPaint || exposed then
+                if
+                    (host.FrameRequested
+                     || fullPaint
+                     || exposed
+                     || framePending)
+                    && not presenter.Presenting
+                then
                     0
                 else
                     let timer =
@@ -1218,13 +1297,32 @@ type Window
                         | ValueSome delay -> min longest (int (Math.Ceiling delay))
                         | ValueNone -> longest
 
-                    windows.Snapshot ()
-                    |> Seq.fold
-                        (fun wait (target: Window) ->
-                            match target.HeldDue with
-                            | ValueSome due -> min wait due
-                            | ValueNone -> wait)
-                        timer
+                    let held =
+                        windows.Snapshot ()
+                        |> Seq.fold
+                            (fun wait (target: Window) ->
+                                match target.HeldDue with
+                                | ValueSome due -> min wait due
+                                | ValueNone -> wait)
+                            timer
+
+                    if presenter.Presenting && host.FrameRequested then
+                        let ticks = lastFrameAt + stall - now ()
+
+                        if ticks <= 0L then
+                            0
+                        else
+                            min
+                                held
+                                (1
+                                 + int (
+                                     Math.Ceiling (
+                                         float ticks * 1000.0
+                                         / float Diagnostics.Stopwatch.Frequency
+                                     )
+                                 ))
+                    else
+                        held
 
             let mutable event = SDL_Event ()
 
@@ -1249,9 +1347,21 @@ type Window
 
             if
                 alive ()
-                && (host.FrameRequested || fullPaint || exposed)
+                && (host.FrameRequested
+                    || fullPaint
+                    || exposed
+                    || framePending)
             then
-                this.Present ()
+                if not presenter.Presenting then
+                    this.Present ()
+                elif
+                    host.FrameRequested
+                    && now () - lastFrameAt >= stall
+                then
+                    flushHeld HeldKind.Barrier
+                    host.Frame ()
+                    lastFrameAt <- now ()
+                    framePending <- true
 
         alive ()
 
@@ -1264,6 +1374,9 @@ type Window
 
     /// <summary>The number of presentation attempts that took the CPU path.</summary>
     member internal _.CpuFramesPresented = presenter.CpuFramesPresented
+
+    /// <summary>The D3D11 swap chain presenting this window's frames on its own thread, when it has one.</summary>
+    member internal _.SwapChain = presenter.SwapChain
 
     /// <summary>Whether Windows UI Automation or the optional Linux AT-SPI provider is attached.</summary>
     /// <remarks>The Linux provider requires its native module and an accessible desktop bus. Unavailable providers return false.</remarks>
@@ -1362,7 +1475,10 @@ type Window
                     SDL3.SDL_DestroyCursor (NativePtr.ofNativeInt created)
 
                 SDL3.SDL_StopTextInput window |> ignore
-                SDL3.SDL_DestroyRenderer renderer
+
+                if not (NativePtr.isNullPtr renderer) then
+                    SDL3.SDL_DestroyRenderer renderer
+
                 SDL3.SDL_DestroyWindow window
                 SDL3.SDL_QuitSubSystem SDL_InitFlags.SDL_INIT_VIDEO
 

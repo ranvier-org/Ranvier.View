@@ -13,8 +13,8 @@ dotnet add package Ranvier.View.WebCore.Sdl --version 0.1.0-rc.4
 
 Use `Ranvier.View.WebCore.Sdl.Traced` for a traced build. Backend, shared contracts, canonical interop,
 SDL3 and the five-RID native aggregate are transitive dependencies. The aggregate carries the GPU runtime for
-win-x64, linux-x64, linux-arm64 and osx-arm64, and the CPU runtime for win-arm64. Select the `direct3d11` renderer
-through `Window.create`'s renderer argument for shared GPU presentation on Windows.
+win-x64, linux-x64, linux-arm64 and osx-arm64, and the CPU runtime for win-arm64. Windows uses shared GPU presentation
+by default.
 
 For the CPU-only Slim runtime on Windows x64 (the smallest payload, or pixels independent of the GPU), suppress the
 aggregate's win-x64 GPU assets and add the matching CPU runtime in the application project:
@@ -29,10 +29,13 @@ aggregate's win-x64 GPU assets and add the matching CPU runtime in the applicati
 The other four native RID dependencies remain available; the explicit exclusion prevents conflicting Windows native
 payloads.
 
-On Windows, a native GPU runtime with the `presentation-d3d11` capability uses shared D3D11 textures with
-SDL's `direct3d11` renderer at display scale 1. Other renderers, unsupported devices and other display scales
-use CPU painting. An explicit `renderer = "software"` keeps CPU presentation. GPU frames are released after
-SDL submits its drawing, including readback, and before renderer teardown.
+On Windows, a native GPU runtime with the `presentation-d3d11` capability copies shared D3D11 textures to a
+flip-model swap chain owned by the window, and `SDL_GetRenderer` returns null for that window. A separate thread
+copies and presents each frame, so a present that blocks in the driver or the compositor leaves input and animation
+running; the next frame shows the page's latest state. This applies with no `renderer` argument and with
+`renderer = "direct3d11"`. SDL's `direct3d11` renderer is the fallback when the swap chain cannot be created.
+Unsupported devices and display scales other than 1 use CPU painting. An explicit `renderer = "software"` keeps CPU presentation through SDL. GPU frames are released after their present
+finishes, and `ReadPixels` and disposal wait for a running present.
 
 The `accessibility-uia` capability attaches the page's Windows UI Automation tree to the SDL window. It
 detaches before page or window disposal. The bridge uses native COM and also works in a NativeAOT app.
