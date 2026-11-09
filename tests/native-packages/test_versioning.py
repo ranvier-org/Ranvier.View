@@ -112,6 +112,20 @@ class VersioningTests(unittest.TestCase):
         result = self.check()
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def reference_a_from_b(self, version):
+        self.write('src/B/B.csproj',
+                   f'<Project><ItemGroup><PackageReference Include="A" Version="{version}" /></ItemGroup></Project>\n')
+        self.commit()
+
+    def test_a_literal_reference_to_a_shipit_versioned_package_fails(self):
+        self.reference_a_from_b('[0.1.1-rc.1]')
+        self.assertRejected(self.check(), 'src/B/B.csproj')
+
+    def test_a_property_reference_to_a_shipit_versioned_package_passes(self):
+        self.reference_a_from_b('[$(AVersion)]')
+        result = self.check()
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def release_a_new_version(self):
         self.write('src/A/A.fsproj', project_xml('0.1.1-rc.2'))
         self.write('src/A/CHANGELOG.md', changelog('0.1.1-rc.2'))

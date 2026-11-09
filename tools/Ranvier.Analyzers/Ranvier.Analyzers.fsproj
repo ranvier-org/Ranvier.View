@@ -35,7 +35,7 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="FSharp.Analyzers.Build" Version="0.5.0" PrivateAssets="none" />
-        <PackageReference Include="Ranvier.Analyzers.Host" Version="[0.1.0-preview.1]" PrivateAssets="none" IncludeAssets="build;buildTransitive" GeneratePathProperty="true" />
+        <PackageReference Include="Ranvier.Analyzers.Host" Version="[$(RanvierAnalyzersHostVersion)]" PrivateAssets="none" IncludeAssets="build;buildTransitive" GeneratePathProperty="true" />
         <None Include="build/Ranvier.Analyzers.props" Pack="true" PackagePath="build" />
         <None Include="build/Ranvier.Analyzers.targets" Pack="true" PackagePath="build" />
         <None Include="README.md" Pack="true" PackagePath="\" />

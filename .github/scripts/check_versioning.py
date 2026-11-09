@@ -19,6 +19,7 @@ RELEASE_TITLES = ('chore: release ', 'chore(release): ')
 # The expression ShipIt reads versions with. A heading ending in CRLF does not match.
 HEADING = re.compile(r'^##\s\[?v?(?P<version>[\w.-]+\.[\w.-]+[a-zA-Z0-9])\]?(\s-\s\d{4}-\d{2}-\d{2})?$', re.MULTILINE)
 UPDATER = re.compile(r'^\s*-\s*(?P<kind>[\w.]+):\s*\n\s*file:\s*(?P<file>\S+)\s*$', re.MULTILINE)
+REFERENCE = re.compile(r'<PackageReference\s+Include="(?P<package>[^"]+)"\s+Version="(?P<version>[^"]+)"')
 
 
 def git(root, *args):
@@ -30,11 +31,14 @@ def read(path):
     return path.read_bytes().decode('utf-8')
 
 
-def packaged_projects(root):
+def tracked_projects(root):
     tracked = git(root, 'ls-files', '*.fsproj', '*.csproj').stdout.splitlines()
-    return [path for path in tracked
+    return [path for path in tracked if (root / path).exists()]
+
+
+def packaged_projects(root):
+    return [path for path in tracked_projects(root)
             if path not in EXTERNALLY_VERSIONED
-            and (root / path).exists()
             and '<PackageId>' in read(root / path)]
 
 
@@ -77,6 +81,14 @@ def project_problems(root, path, owners, texts):
     return []
 
 
+def reference_problems(root, projects):
+    owned = {package for path in projects for package in re.findall(r'<PackageId>([^<$]+)</PackageId>', read(root / path))}
+    return [f'{path} pins {match["package"]} at {match["version"]}, which ShipIt will move. Read the version from a property.'
+            for path in tracked_projects(root)
+            for match in REFERENCE.finditer(read(root / path))
+            if match['package'] in owned and '$(' not in match['version']]
+
+
 def pull_request_problems(root, projects, base, head_ref, author, title):
     if head_ref == RELEASE_BRANCH and author == RELEASE_AUTHOR:
         return []
@@ -103,6 +115,7 @@ def main():
     owners = project_owners(texts)
     problems = [problem for path, text in texts.items() for problem in changelog_problems(path, text)]
     problems += [problem for path in projects for problem in project_problems(args.root, path, owners, texts)]
+    problems += reference_problems(args.root, projects)
     if args.base:
         problems += pull_request_problems(args.root, projects, args.base, args.head_ref, args.author, args.title)
     for problem in problems:
