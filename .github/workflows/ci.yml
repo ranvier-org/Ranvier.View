@@ -1,8 +1,8 @@
 name: CI
 
 on:
-  # A pull request runs the Windows x64 backend only, unless it is a codex/batch-* branch or is labelled
-  # full-matrix; adding the label starts the full run.
+  # A pull request runs the Windows x64 backend only, unless the scope job finds a native path among its files, or it
+  # is a codex/batch-* branch or is labelled full-matrix; adding the label starts the full run.
   pull_request:
     types: [opened, synchronize, reopened, labeled]
   push:
@@ -30,6 +30,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  scope:
+    name: CI scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      full: ${{ steps.scope.outputs.full }}
+    steps:
+      - id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LIGHT_CANDIDATE: ${{ github.event_name == 'pull_request' && !startsWith(github.head_ref, 'codex/batch-') && !contains(github.event.pull_request.labels.*.name, 'full-matrix') }}
+          PR: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+          NATIVE_PATHS: '^(src/Ranvier\.View\.WebCore|tests/(Ranvier\.View\.WebCore|NativeApi\.Conformance|mac/|native-window/)|examples/Ranvier\.Native|tools/(Ranvier\.View\.WebCore\.Generate|fetch-gpu-runtime|native-window-probe|check-webcore-generated|refresh-webcore-interop)|(src/)?Directory\.Build\.|global\.json$|nuget\.config$|\.github/workflows/ci\.yml$)'
+        run: |
+          set -euo pipefail
+          full=true
+          if [ "$LIGHT_CANDIDATE" = true ]; then
+            files="$(gh api --paginate "repos/$REPOSITORY/pulls/$PR/files" --jq '.[] | .filename, (.previous_filename // empty)')"
+            native="$(grep -vE '\.md$' <<<"$files" | grep -E "$NATIVE_PATHS" || true)"
+            # The files endpoint stops at 3000 files, so a list that long may hide a native path.
+            if [ -z "$native" ] && [ "$(wc -l <<<"$files")" -lt 3000 ]; then
+              full=false
+            elif [ -n "$native" ]; then
+              echo "Full matrix for:" && echo "$native"
+            fi
+          fi
+          echo "full=$full" | tee -a "$GITHUB_OUTPUT"
+
   analyzer-bootstrap:
     name: Analyzer CI bootstrap
     runs-on: ubuntu-latest
@@ -187,12 +219,13 @@ jobs:
 
   webcore:
     name: WebCore backend (${{ matrix.rid }})
+    needs: scope
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON((github.event_name == 'pull_request' && !startsWith(github.head_ref, 'codex/batch-') && !contains(github.event.pull_request.labels.*.name, 'full-matrix')) && '[{"runner":"windows-2025","rid":"win-x64","arch":"X64"}]' || '[{"runner":"windows-2025","rid":"win-x64","arch":"X64"},{"runner":"windows-11-arm","rid":"win-arm64","arch":"ARM64"}]') }}
+        include: ${{ fromJSON(needs.scope.outputs.full != 'true' && '[{"runner":"windows-2025","rid":"win-x64","arch":"X64"}]' || '[{"runner":"windows-2025","rid":"win-x64","arch":"X64"},{"runner":"windows-11-arm","rid":"win-arm64","arch":"ARM64"}]') }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -313,7 +346,8 @@ jobs:
   # macos-26: the osx-arm64 native package needs macOS 26 (decision G12).
   webcore-macos:
     name: WebCore backend (macOS)
-    if: ${{ !(github.event_name == 'pull_request' && !startsWith(github.head_ref, 'codex/batch-') && !contains(github.event.pull_request.labels.*.name, 'full-matrix')) }}
+    needs: scope
+    if: needs.scope.outputs.full == 'true'
     runs-on: macos-26
     timeout-minutes: 30
     steps:
@@ -360,7 +394,8 @@ jobs:
   # framework-free NativeAOT IOSurface consumer, in both normal and traced builds.
   webcore-macos-gpu:
     name: WebCore Metal IOSurface (macOS, ${{ matrix.trace }})
-    if: ${{ !(github.event_name == 'pull_request' && !startsWith(github.head_ref, 'codex/batch-') && !contains(github.event.pull_request.labels.*.name, 'full-matrix')) }}
+    needs: scope
+    if: needs.scope.outputs.full == 'true'
     runs-on: macos-26
     timeout-minutes: 45
     strategy:
@@ -419,7 +454,8 @@ jobs:
 
   webcore-linux:
     name: WebCore backend (linux-x64)
-    if: ${{ !(github.event_name == 'pull_request' && !startsWith(github.head_ref, 'codex/batch-') && !contains(github.event.pull_request.labels.*.name, 'full-matrix')) }}
+    needs: scope
+    if: needs.scope.outputs.full == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -541,14 +577,14 @@ jobs:
 
   result:
     name: CI result
-    needs: [views, analyzer-bootstrap, analyze, webcore, webcore-gpu, webcore-macos, webcore-macos-gpu, webcore-linux, native-api-browser, packages, format]
+    needs: [scope, views, analyzer-bootstrap, analyze, webcore, webcore-gpu, webcore-macos, webcore-macos-gpu, webcore-linux, native-api-browser, packages, format]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - env:
-          RESULTS: ${{ needs.views.result }} ${{ needs['analyzer-bootstrap'].result }} ${{ needs.analyze.result }} ${{ needs.webcore.result }} ${{ needs['native-api-browser'].result }} ${{ needs.packages.result }} ${{ needs.format.result }}
+          RESULTS: ${{ needs.scope.result }} ${{ needs.views.result }} ${{ needs['analyzer-bootstrap'].result }} ${{ needs.analyze.result }} ${{ needs.webcore.result }} ${{ needs['native-api-browser'].result }} ${{ needs.packages.result }} ${{ needs.format.result }}
           PLATFORM_RESULTS: ${{ needs['webcore-macos'].result }} ${{ needs['webcore-macos-gpu'].result }} ${{ needs['webcore-linux'].result }}
-          LIGHT: ${{ github.event_name == 'pull_request' && !startsWith(github.head_ref, 'codex/batch-') && !contains(github.event.pull_request.labels.*.name, 'full-matrix') }}
+          LIGHT: ${{ needs.scope.outputs.full != 'true' }}
           GPU_ENABLED: ${{ github.event_name == 'workflow_dispatch' && inputs.gpu_runtime_version != '' }}
           GPU_RESULT: ${{ needs['webcore-gpu'].result }}
         run: |
