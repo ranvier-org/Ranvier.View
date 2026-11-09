@@ -1,14 +1,25 @@
 ---
-last_commit_released: 09686e71a96976e6cd58f2e6d00410b763786775
+last_commit_released: 449a485e760f147c10a30aa103f01aaff824c50e
+pre_release: rc
+include:
+  - ../Fable.Ranvier.Anime/
+  - ../../Directory.Build.props
 updaters:
-  - xml:
+  - regex:
       file: Ranvier.View.Anime.fsproj
-      selector: /Project/PropertyGroup/Version
+      pattern: (?<=<Version>)[^<]+(?=</Version>)
+  - regex:
+      file: ../Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj
+      pattern: (?<=<Version>)[^<]+(?=</Version>)
 ---
 
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.45
+
+Released by hand before ShipIt owned this version. See the commit history for its changes.
 
 ## 0.1.1 - 2026-10-28
 

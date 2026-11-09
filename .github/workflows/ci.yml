@@ -580,14 +580,37 @@ jobs:
           .claude/skills/fsharp-xml-docs/scripts/XmlDocAudit.fsx
           .claude/skills/fsharp-xml-docs/scripts/audit.fsx
 
+  versioning:
+    name: Version ownership
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Test the version ownership check
+        run: python3 -I tests/native-packages/test_versioning.py
+      - name: Check that ShipIt owns every package version
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            python3 -I .github/scripts/check_versioning.py --base HEAD^1 --head-ref "$HEAD_REF" --author "$AUTHOR" --title "$TITLE"
+          else
+            python3 -I .github/scripts/check_versioning.py
+          fi
+
   result:
     name: CI result
-    needs: [scope, views, analyzer-bootstrap, analyze, webcore, webcore-gpu, webcore-macos, webcore-macos-gpu, webcore-linux, native-api-browser, packages, format]
+    needs: [scope, views, analyzer-bootstrap, analyze, webcore, webcore-gpu, webcore-macos, webcore-macos-gpu, webcore-linux, native-api-browser, packages, format, versioning]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - env:
-          RESULTS: ${{ needs.scope.result }} ${{ needs.views.result }} ${{ needs['analyzer-bootstrap'].result }} ${{ needs.analyze.result }} ${{ needs.webcore.result }} ${{ needs['native-api-browser'].result }} ${{ needs.packages.result }} ${{ needs.format.result }}
+          RESULTS: ${{ needs.scope.result }} ${{ needs.views.result }} ${{ needs['analyzer-bootstrap'].result }} ${{ needs.analyze.result }} ${{ needs.webcore.result }} ${{ needs['native-api-browser'].result }} ${{ needs.packages.result }} ${{ needs.format.result }} ${{ needs.versioning.result }}
           PLATFORM_RESULTS: ${{ needs['webcore-macos'].result }} ${{ needs['webcore-macos-gpu'].result }} ${{ needs['webcore-linux'].result }}
           LIGHT: ${{ needs.scope.outputs.full != 'true' }}
           GPU_ENABLED: ${{ github.event_name == 'workflow_dispatch' && inputs.gpu_runtime_version != '' }}

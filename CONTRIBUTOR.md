@@ -53,16 +53,44 @@ release versions from conventional commits. Use `feat` for features and `fix`
 for fixes; breaking changes must carry the marker above. Inspect the installed
 tool's `shipit conventions` command for its supported release categories.
 
-Each packaged project has a `CHANGELOG.md` next to its `.fsproj`. Its YAML
-`updaters` entry points to exactly one unconditional literal `<Version>` in that
-project. Keep the version in the project and the latest changelog heading in
-sync. ShipIt owns release version changes; do not run a separate numeric bump or
-hand-edit generated release entries.
+ShipIt owns every package version. CI's `Version ownership` job, part of the required
+`CI result`, fails a pull request that changes a `<Version>` or uses a release title,
+unless it is ShipIt's release pull request. Do not bump a version or write a
+`chore: release` pull request by hand.
+
+Each packaged project has a `regex` entry under `updaters` in a `CHANGELOG.md`, pointing
+to exactly one unconditional literal `<Version>` in that project, and the latest heading
+in that changelog matches that version. ShipIt computes the next version from that
+heading. Use `regex`, not `xml`: the `xml` updater reformats the whole project file. The
+one exception is `Ranvier.View.WebCore.Sdl.Ibus`, pinned by
+`tools/sdl/publication-pins.json`.
+
+To release a change:
+
+| You want | Do this |
+| --- | --- |
+| A new prerelease | Merge a `feat`, `perf` or `fix` commit touching the project's folder, then merge the release pull request. |
+| A release after a dependency pin change | Title the change `fix(deps): ...`. Commits typed `chore` or `build` release nothing. |
+| A stable version | Remove `pre_release` from the project's changelog. The next release drops the suffix: `0.1.0-rc.6` becomes `0.1.0`. |
+| A new base version in a prerelease line | Set `force_version` in the changelog for one run. A `feat` or a breaking change on a prerelease only raises its number. |
+
+Commits count for a changelog when they touch its folder or a path in its `include`. A
+release of a changelog in `depends_on` also releases its dependents, following the package
+graph: `Ranvier.View` with `Ranvier.View.Dom`, then `Ranvier.View.WebCore`, then
+`Ranvier.View.WebCore.Sdl`. `pre_release` sets each changelog's channel.
+
+| Changelog | Projects | Channel |
+| --- | --- | --- |
+| `src/Ranvier.View` | `Ranvier.View`, `Ranvier.View.Dom` | `rc` |
+| `src/Ranvier.View.WebCore` | `Ranvier.View.WebCore` | `rc` |
+| `src/Ranvier.View.WebCore.Sdl` | `Ranvier.View.WebCore.Sdl` | `rc` |
+| `src/Ranvier.View.Anime` | `Ranvier.View.Anime`, `Fable.Ranvier.Anime` | `rc` |
+| `tools/Ranvier.Analyzers.Host` | `Ranvier.Analyzers.Host` | `preview` |
+| `tools/Ranvier.Analyzers` | `Ranvier.Analyzers` | `preview` |
 
 Add a project to the solution and give it its own changelog/updater for independent
-versioning. The build CLI's `shipit init project --changelog <path> --project <path>`
-command can register this. Use one changelog with multiple XML updaters when
-projects intentionally share a version.
+versioning, with `last_commit_released` set to a full commit hash. Use one changelog with
+multiple updaters when projects intentionally share a version.
 
 The `bump` command calculates and applies a release locally; use `--dry-run` to
 preview it and `--allow-branch master` when working on `master` instead of `main`.
@@ -71,10 +99,13 @@ Both need restored tools, a Git repository with full history, and valid
 conventional commits. GitHub operations also need GitHub authentication.
 
 After CI succeeds on a push to `main` or `master`, the ShipIt workflow opens or
-updates a release PR. Merge it using its `chore: release ...` title. CI validates
-and packs that release commit, then the publish workflow uploads those exact CI
-artifacts to NuGet using trusted publishing. Keep the release title prefix: it
-is how the publish workflow recognizes a release.
+updates a release PR and starts CI on its branch. Merge it using its
+`chore: release ...` title. CI validates and packs that release commit, then the
+publish workflow uploads those exact CI artifacts to NuGet using trusted publishing.
+Keep the release title prefix: it is how the publish workflow recognizes a release.
+Pull request runs on the release branch stay at `action_required`, because GitHub holds
+runs started by `GITHUB_TOKEN`. The started CI run reports the required check on the
+same commit.
 
 The build CLI's `publish --dry-publish` command builds, tests and packs locally
 without uploading anything. Maintainers can also publish locally with
@@ -85,14 +116,10 @@ without uploading anything. Maintainers can also publish locally with
 1. Enable squash merging and allow GitHub Actions to create and approve pull
    requests in repository Actions settings. Require the `CI result` and Contribution checks
    in branch protection.
-2. For release PRs that trigger CI automatically, set `SHIPIT_TOKEN` to a fine-grained
-   token with repository Contents and Pull requests write permissions. The workflow
-   falls back to `GITHUB_TOKEN`; PRs created with that token require a manual CI run
-   on the release branch because GitHub suppresses automatic workflow triggers.
-3. Set the Actions variable `NUGET_USER` to your NuGet.org username. Create a NuGet
+2. Set the Actions variable `NUGET_USER` to your NuGet.org username. Create a NuGet
    trusted publishing policy for `ranvier-org/Ranvier.View` and the workflow
    filename `publish.yml`. No long-lived NuGet key is needed in GitHub secrets.
-4. Before the first release, ensure the initial commit is conventional (for example
+3. Before the first release, ensure the initial commit is conventional (for example
    `feat: initialise the project`). For an existing package, seed its changelog with
    the actual latest release and set `last_commit_released` to that release's commit.
 
@@ -102,9 +129,9 @@ rights; this is an explicit maintainer operation.
 
 ### Imported release baseline
 
-The view libraries and the analyzers preserve the versions already published from Ranvier. Each changelog records
-the initial import commit as `last_commit_released`, so the migration itself is excluded from new release
-calculations. Do not reset package versions or attempt to overwrite an existing NuGet version.
+The view libraries and the analyzers preserve the versions already published from Ranvier. Each changelog's
+`last_commit_released` records the commit that set its current version, so earlier commits are excluded from new
+release calculations. Do not reset package versions or attempt to overwrite an existing NuGet version.
 
 When a release requires a newer core, first test the exact upstream and downstream revisions in local-reference
 mode. Publish the core, wait until its exact version restores from NuGet, update `RanvierVersion` (and the other

@@ -1,14 +1,21 @@
 ---
-last_commit_released: c91f875b133499c586ce9f5de8ce24dbf589142c
+last_commit_released: 449a485e760f147c10a30aa103f01aaff824c50e
+pre_release: preview
+depends_on:
+  - ../Ranvier.Analyzers.Host/
 updaters:
-  - xml:
+  - regex:
       file: Ranvier.Analyzers.fsproj
-      selector: /Project/PropertyGroup/Version
+      pattern: (?<=<Version>)[^<]+(?=</Version>)
 ---
 
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.1-preview.2
+
+Released by hand before ShipIt owned this version. See the commit history for its changes.
 
 ## 0.1.1-preview.1 - 2026-10-28
 

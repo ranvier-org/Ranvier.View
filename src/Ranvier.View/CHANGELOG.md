@@ -1,14 +1,25 @@
 ---
-last_commit_released: 09686e71a96976e6cd58f2e6d00410b763786775
+last_commit_released: ca95dc744b662a837925ba50ac1b97fb7cb48d0c
+pre_release: rc
+include:
+  - ../Ranvier.View.Dom/
+  - ../../Directory.Build.props
 updaters:
-  - xml:
+  - regex:
       file: Ranvier.View.fsproj
-      selector: /Project/PropertyGroup/Version
+      pattern: (?<=<Version>)[^<]+(?=</Version>)
+  - regex:
+      file: ../Ranvier.View.Dom/Ranvier.View.Dom.fsproj
+      pattern: (?<=<Version>)[^<]+(?=</Version>)
 ---
 
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.49-rc.2
+
+Released by hand before ShipIt owned this version. See the commit history for its changes.
 
 ## 0.1.1 - 2026-10-28
 

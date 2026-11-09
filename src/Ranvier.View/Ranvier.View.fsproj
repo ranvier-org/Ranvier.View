@@ -13,8 +13,8 @@
     <PackageTags>reactive;signals;view;templates;html;server-rendering;fine-grained;fsharp</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>Alpha release. The API may change before 1.0.</PackageReleaseNotes>
-    <!-- Ranvier.View, Ranvier.View.Dom, Ranvier.View.Anime and Fable.Ranvier.Anime share this version and depend on
-             each other at exactly it (RanvierExactSiblingVersions, src/Directory.Build.targets). -->
+    <!-- Ranvier.View and Ranvier.View.Dom share this version, set by ShipIt from CHANGELOG.md. Sibling packages depend on
+             each other at exact versions (RanvierExactSiblingVersions, src/Directory.Build.targets). -->
     <Version>0.1.49-rc.2</Version>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <RanvierExactSiblingVersions>true</RanvierExactSiblingVersions>
