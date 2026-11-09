@@ -7,6 +7,12 @@ updaters:
   - regex:
       file: Ranvier.Analyzers.fsproj
       pattern: (?<=<Version>)[^<]+(?=</Version>)
+  - regex:
+      file: README.md
+      pattern: (?<=Include="Ranvier.Analyzers" Version=")[^"]+
+  - regex:
+      file: ../../docs/content/analyzers/index.md
+      pattern: (?<=Include="Ranvier.Analyzers" Version=")[^"]+|(?<=candidate at `)[^`]+
 ---
 
 # Changelog
