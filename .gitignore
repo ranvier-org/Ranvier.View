@@ -28,7 +28,7 @@ test-results/
 *.user
 .SageFs/
 /dist/
-/fable/Ranvier.Anime.Tests/generated-types/
+/fable/Ranvier.View.Anime.Tests/generated-types/
 artifacts/
 /.config/.tool-restore/
 __pycache__/

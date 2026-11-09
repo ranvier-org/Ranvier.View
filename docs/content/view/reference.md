@@ -38,7 +38,7 @@ for their documentation comments, and the linked guides for examples.
 | Project | Page |
 | --- | --- |
 | [`src/Fable.Ranvier`](https://github.com/ranvier-org/Ranvier.View/tree/main/src/Fable.Ranvier) | [Other authoring layers](authored.md) |
-| [`src/Fable.Ranvier.Anime`](https://github.com/ranvier-org/Ranvier.View/tree/main/src/Fable.Ranvier.Anime) | [Animation](motion.md), [Owning and driving animations](motion-reactive.md), [Testing and costs](motion-testing.md) |
+| [`ranvier-org/Ranvier.Anime`](https://github.com/ranvier-org/Ranvier.Anime/tree/main/src/Fable.Ranvier.Anime) | [Animation](motion.md), [Owning and driving animations](motion-reactive.md), [Testing and costs](motion-testing.md) |
 | [`src/Ranvier.View.Anime`](https://github.com/ranvier-org/Ranvier.View/tree/main/src/Ranvier.View.Anime) | [Motion parts](motion-parts.md) |
 | [`examples/Ranvier.Motion`](https://github.com/ranvier-org/Ranvier.View/tree/main/examples/Ranvier.Motion) | [Motion parts](motion-parts.md#examples) |
 | [`src/Ranvier.Wire`](https://github.com/ranvier-org/Ranvier/tree/master/src/Ranvier.Wire) | [State transfer](../server/state-transfer.md) |

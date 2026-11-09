@@ -14,7 +14,7 @@ of lists and arms.
 
 | Package | Namespace | Holds | Depends on |
 | --- | --- | --- | --- |
-| `Fable.Ranvier.Anime` | `Ranvier.Anime` | the bindings, `Reactive` (owners and signals) and `Testing` (a manual clock) | `Ranvier` |
+| `Fable.Ranvier.Anime` | `Ranvier.Anime` | the bindings, `Reactive` (owners and signals) and `Testing` (a manual clock), from [Ranvier.Anime](https://ranvier-org.github.io/Ranvier.Anime/) | `Ranvier` |
 | `Ranvier.View.Anime` | `Ranvier.View.Anime` | the `Motion.*` template parts | `Ranvier.View` and `Fable.Ranvier.Anime` |
 
 Use `Ranvier.View.Anime` for template motion, or `Fable.Ranvier.Anime` to animate an element

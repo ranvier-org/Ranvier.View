@@ -120,7 +120,7 @@ root imports tree-shake, so a bundle holds the features it calls:
 | everything | 41.0 kB |
 
 What Ranvier adds, from the committed measurements
-([`bindings-bundle.json`](https://github.com/ranvier-org/Ranvier/blob/master/docs/research/motion/bindings-bundle.json),
+([`bindings-bundle.json`](https://github.com/ranvier-org/Ranvier.Anime/blob/main/docs/research/motion/bindings-bundle.json),
 [`bundle.json`](https://github.com/ranvier-org/Ranvier/blob/master/docs/research/motion/bundle.json)),
 each checked for drift in CI:
 

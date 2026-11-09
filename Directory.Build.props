@@ -18,9 +18,10 @@
     </PropertyGroup>
 
     <!--
-    Core Ranvier packages (ranvier-org/Ranvier) and CSS packages (ranvier-org/Ranvier.Css). `UseLocalRanvier=true`
-    turns the core package references into project references into $(RanvierRoot); `UseLocalRanvierCss=true` does the
-    same for the CSS packages and $(RanvierCssRoot). The `dev local` command of build.fsx writes both
+    Core Ranvier packages (ranvier-org/Ranvier), CSS packages (ranvier-org/Ranvier.Css) and the anime.js bindings
+    (ranvier-org/Ranvier.Anime). `UseLocalRanvier=true` turns the core package references into project references into
+    $(RanvierRoot); `UseLocalRanvierCss=true` and `UseLocalRanvierAnime=true` do the same for the CSS packages and
+    $(RanvierCssRoot), and the bindings and $(RanvierAnimeRoot). The `dev local` command of build.fsx writes them
     to Local.Build.props.
     -->
     <PropertyGroup>
@@ -28,6 +29,8 @@
         <RanvierRoot Condition="'$(RanvierRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../Ranvier'))</RanvierRoot>
         <UseLocalRanvierCss Condition="'$(UseLocalRanvierCss)' == ''">false</UseLocalRanvierCss>
         <RanvierCssRoot Condition="'$(RanvierCssRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../Ranvier.Css'))</RanvierCssRoot>
+        <UseLocalRanvierAnime Condition="'$(UseLocalRanvierAnime)' == ''">false</UseLocalRanvierAnime>
+        <RanvierAnimeRoot Condition="'$(RanvierAnimeRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../Ranvier.Anime'))</RanvierAnimeRoot>
         <RanvierVersion>0.1.1-preview.2</RanvierVersion>
         <RanvierElmishVersion>0.1.1-preview.1</RanvierElmishVersion>
         <RanvierWireVersion>0.1.1-preview.1</RanvierWireVersion>
@@ -35,13 +38,14 @@
         <RanvierCssVersion>0.1.1-alpha.2</RanvierCssVersion>
         <RanvierCssAddonsVersion>0.1.1-alpha.1</RanvierCssAddonsVersion>
         <RanvierDomVersion>0.1.0-rc.1</RanvierDomVersion>
+        <RanvierAnimeVersion>0.1.44</RanvierAnimeVersion>
         <RanvierTrace Condition="'$(RanvierTrace)' == '' and '$(Configuration)' == 'Debug'">true</RanvierTrace>
         <RanvierPackageSuffix Condition="'$(RanvierTrace)' == 'true'">.Traced</RanvierPackageSuffix>
     </PropertyGroup>
 
     <!-- A solution build passes its configuration to the sibling-checkout projects outside the solution, which would
          otherwise build as Debug, and so traced, under a Release solution build. -->
-    <PropertyGroup Condition="'$(UseLocalRanvier)' == 'true' or '$(UseLocalRanvierCss)' == 'true'">
+    <PropertyGroup Condition="'$(UseLocalRanvier)' == 'true' or '$(UseLocalRanvierCss)' == 'true' or '$(UseLocalRanvierAnime)' == 'true'">
         <ShouldUnsetParentConfigurationAndPlatform>false</ShouldUnsetParentConfigurationAndPlatform>
     </PropertyGroup>
 
