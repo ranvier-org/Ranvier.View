@@ -30,8 +30,36 @@ permissions:
   contents: read
 
 jobs:
+  # A release dispatches this workflow as soon as it pushes, before NuGet has indexed the packages.
+  indexed:
+    name: Wait for NuGet to index the packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      VIEW_VERSION: ${{ inputs.view_package_version }}
+      SDL_VERSION: ${{ inputs.sdl_package_version }}
+    steps:
+      - run: |
+          set -u
+          for attempt in $(seq 1 40); do
+            missing=0
+            for package in "ranvier.view.webcore:$VIEW_VERSION" "ranvier.view.webcore.traced:$VIEW_VERSION"                            "ranvier.view.webcore.sdl:$SDL_VERSION" "ranvier.view.webcore.sdl.traced:$SDL_VERSION"; do
+              id="${package%%:*}"
+              version="${package#*:}"
+              curl -fsSL "https://api.nuget.org/v3-flatcontainer/$id/index.json" | jq -e --arg v "$version" '.versions | index($v)' >/dev/null || missing=1
+            done
+            if [ "$missing" = 0 ]; then
+              echo "Indexed after $attempt checks"
+              exit 0
+            fi
+            sleep 60
+          done
+          echo "NuGet did not index the packages in time" >&2
+          exit 1
+
   acceptance:
     name: Published (${{ matrix.trace }}, ${{ matrix.flavor }})
+    needs: indexed
     runs-on: windows-2025
     timeout-minutes: 30
     strategy:
@@ -128,6 +156,7 @@ jobs:
   # The Metal IOSurface transport over the public osx-arm64 GPU runtime, restored from nuget.org into a fresh cache.
   macos-gpu:
     name: Published Metal IOSurface (macOS, ${{ matrix.trace }})
+    needs: indexed
     if: inputs.runtime_flavor != 'slim'
     runs-on: macos-26
     timeout-minutes: 30

@@ -121,6 +121,28 @@ jobs:
                               '--api-key', os.environ['NUGET_API_KEY'], '--skip-duplicate'], check=True)
           PY
 
+  # A separate workflow run, so the verification does not hold the nuget-publish concurrency group: a release waiting
+  # in that group is cancelled by the next push's run.
+  verify-published:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - name: Start verification of the exact published versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          eval "$(python3 -I .github/scripts/published_native_inputs.py)"
+          gh workflow run published-native-packages.yml -R "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"             -f view_package_version="$VIEW_VERSION"             -f sdl_package_version="$SDL_VERSION"             -f native_runtime_version="$NATIVE_VERSION"             -f native_abi="$NATIVE_ABI"             -f runtime_flavor=all
+
   publish-analyzers:
     if: >-
       github.event.workflow_run.name == 'Analyzer host qualification' &&
