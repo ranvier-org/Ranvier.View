@@ -104,6 +104,64 @@ Windows), for an accessibility bridge.
 
 All calls go on the thread that created the window. That thread is the host's thread, and the main thread on macOS.
 
+## Custom window shells
+
+`WindowFrame.Custom` removes the platform's title bar and borders, and the page draws its own. Mount on `window.Graph`
+to read the window's state:
+
+```fsharp
+use window =
+    Window.Create ("Shell", 900, 600, hidden = true, frame = WindowFrame.Custom 6, minimumSize = struct (480, 320))
+
+use mounted = mount window // Mounting.mount window.Graph ...
+window.Present ()
+window.Show ()
+window.Run ()
+```
+
+```fsharp
+t.div [| t.Attrs.windowRegion WindowRegion.Drag |] [|
+    t.span [||] [| t.text (fun _ -> "Title") |]
+    t.div [| t.Attrs.windowRegion WindowRegion.Content |] [|
+        t.button [| t.Events.on ("click", fun s _ -> s.Window.Minimize ()) |] [| t.text (fun _ -> "—") |]
+        t.button [|
+            t.Attrs.windowRegion WindowRegion.Maximize
+            t.Events.on ("click", fun s _ -> s.Window.ToggleMaximize ())
+        |] [| t.text (fun s -> if s.Window.Placement.Value = WindowPlacement.Maximized then "❐" else "□") |]
+        t.button [| t.Events.on ("click", fun s _ -> s.Window.Close ()) |] [| t.text (fun _ -> "✕") |]
+    |]
+|]
+```
+
+| `WindowRegion` | Behaviour |
+| --- | --- |
+| `Drag` | Moves the window, snaps it, and maximizes it on a double click. A right click opens the window menu. |
+| `Maximize` | An ordinary page button, which Windows 11 also treats as the maximize button for Snap Layouts. `Content` on other platforms. |
+| `Content` | The page receives the input. It marks an interactive element inside a `Drag` region. |
+
+The nearest marked ancestor decides an element's region, and the window reads the page on each hit test, so a reflowed
+title bar or an overlay above it takes effect at once. The outer `Custom` border, in window units, resizes a `Normal`
+window ahead of the page's regions.
+
+| Member | Contract |
+| --- | --- |
+| `Graph` | The graph holding `Placement` and `Focused`. A computation on another graph reads their first value and never re-runs. |
+| `Placement`, `Focused` | Read-only memos on `Graph`. |
+| `Minimize`, `ToggleMaximize`, `Close`, `Show`, `Run` | Commands and the window's loop. |
+| `ShowSystemMenu (x, y)` | The platform's window menu at a CSS position. |
+| `Title`, `SetIcon (width, height, rgba)` | Set after creation. |
+
+On Windows 11 a custom frame has rounded corners and the compositor's shadow; earlier versions have square corners.
+[`examples/Ranvier.CustomShell`](../../examples/Ranvier.CustomShell) is a complete shell. macOS and Linux have not been
+run with a custom frame; macOS has no traffic lights in one. [The design record](../../docs/research/custom-window-shell-api.md)
+holds the evidence and the open items.
+
+## Moving and resizing
+
+Every window, with either frame, keeps rendering during the platform's modal move or resize loop: the page's frames run
+and the page reflows to the new size mid-gesture. Other windows wait for the gesture to end. A failure during such a
+turn surfaces from the next `Step`.
+
 ## Input rates
 
 A gaming mouse reports about 1,000 motions a second, and a precision touchpad sends many small wheel events. By

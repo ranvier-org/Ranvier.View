@@ -63,6 +63,9 @@
     <Project Path="examples/Ranvier.Motion/tests/MotionTests.fsproj" />
     <Project Path="examples/Ranvier.Motion/Server/ServerChecks.fsproj" />
   </Folder>
+  <Folder Name="/examples/Ranvier.CustomShell/">
+    <Project Path="examples/Ranvier.CustomShell/Ranvier.CustomShell.fsproj" />
+  </Folder>
   <Folder Name="/examples/Ranvier.NativeCounter/">
     <Project Path="examples/Ranvier.NativeCounter/Ranvier.NativeCounter.fsproj" />
   </Folder>

@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+    A custom window shell: the page draws the title bar, and the window provides moving, resizing, snapping and window state.
+    `dotnet run` opens it; `dotnet publish -c Release -r win-x64` builds a NativeAOT executable beside the native libraries.
+    -->
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <PublishAot>true</PublishAot>
+        <TrimmerSingleWarn>false</TrimmerSingleWarn>
+        <IlcTreatWarningsAsErrors>true</IlcTreatWarningsAsErrors>
+        <ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../src/Ranvier.View/Ranvier.View.fsproj" />
+        <ProjectReference Include="../../src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj" />
+        <ProjectReference Include="../../src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseLocalRanvier)' == 'true'">
+        <ProjectReference Include="$(RanvierRoot)/src/Ranvier/Ranvier.fsproj" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(UseLocalRanvier)' != 'true'">
+        <PackageReference Include="Ranvier$(RanvierPackageSuffix)" Version="$(RanvierVersion)" />
+    </ItemGroup>
+
+</Project>

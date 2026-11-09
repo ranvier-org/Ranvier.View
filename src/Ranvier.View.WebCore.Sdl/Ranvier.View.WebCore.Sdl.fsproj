@@ -30,6 +30,7 @@
         <Compile Include="TouchFrames.fs" />
         <Compile Include="SurroundingText.fs" />
         <Compile Include="LinuxAccessibility.fs" />
+        <Compile Include="WindowFrame.fs" />
         <Compile Include="Window.fs" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />
