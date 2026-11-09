@@ -126,10 +126,10 @@
   },
   "helpers": {
     "src/Ranvier.View.Anime/Motion.js": 0,
-    "fable_modules/Fable.Ranvier.Anime.0.1.44/Css.fs.js": 0,
-    "fable_modules/Fable.Ranvier.Anime.0.1.44/Params.fs.js": 0,
-    "fable_modules/Fable.Ranvier.Anime.0.1.44/Reactive.fs.js": 0,
-    "fable_modules/Fable.Ranvier.Anime.0.1.44/Testing.fs.js": 0
+    "fable_modules/Fable.Ranvier.Anime.0.1.45-rc.1/Css.fs.js": 0,
+    "fable_modules/Fable.Ranvier.Anime.0.1.45-rc.1/Params.fs.js": 0,
+    "fable_modules/Fable.Ranvier.Anime.0.1.45-rc.1/Reactive.fs.js": 0,
+    "fable_modules/Fable.Ranvier.Anime.0.1.45-rc.1/Testing.fs.js": 0
   },
   "withinBudget": true
 }

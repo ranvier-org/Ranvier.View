@@ -29,7 +29,6 @@
         <ProjectReference Include="../Ranvier.View/Ranvier.View.fsproj" />
     </ItemGroup>
 
-    <!-- Motion.fs reads Fable.Ranvier.Anime internals, granted to this assembly by InternalsVisibleTo. -->
     <ItemGroup Condition="'$(UseLocalRanvierAnime)' == 'true'">
         <ProjectReference Include="$(RanvierAnimeRoot)/src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj" />
     </ItemGroup>

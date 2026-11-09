@@ -38,7 +38,7 @@
         <RanvierCssVersion>0.1.1-alpha.2</RanvierCssVersion>
         <RanvierCssAddonsVersion>0.1.1-alpha.1</RanvierCssAddonsVersion>
         <RanvierDomVersion>0.1.0-rc.1</RanvierDomVersion>
-        <RanvierAnimeVersion>0.1.44</RanvierAnimeVersion>
+        <RanvierAnimeVersion>0.1.45-rc.1</RanvierAnimeVersion>
         <RanvierTrace Condition="'$(RanvierTrace)' == '' and '$(Configuration)' == 'Debug'">true</RanvierTrace>
         <RanvierPackageSuffix Condition="'$(RanvierTrace)' == 'true'">.Traced</RanvierPackageSuffix>
     </PropertyGroup>
