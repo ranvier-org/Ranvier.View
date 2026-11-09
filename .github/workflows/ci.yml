@@ -197,6 +197,11 @@ jobs:
       - name: Build the group and run the analyzers over it
         env:
           RANVIER_ANALYZER_HOST_PROVENANCE_DIR: ${{ github.workspace }}/artifacts/analyzer-resources/${{ matrix.group }}/host
+          # A stack dump lands in the uploaded resources when the host aborts: one run held a core for five minutes,
+          # then died with "Out of memory" while 10 GB was free.
+          DOTNET_DbgEnableMiniDump: '1'
+          DOTNET_DbgMiniDumpType: '1'
+          DOTNET_DbgMiniDumpName: ${{ github.workspace }}/artifacts/analyzer-resources/${{ matrix.group }}/host/%e-%p.dmp
         run: >-
           python3 .github/scripts/run_analyzer_ci.py
           --output artifacts/analyzer-resources/${{ matrix.group }}/execution
