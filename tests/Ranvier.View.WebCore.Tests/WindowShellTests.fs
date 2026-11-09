@@ -124,7 +124,14 @@ let private mouseLog (window: Window) =
             kind,
             fun (event: Event) ->
                 let mouse = unbox<MouseEvent> event
-                log.Add (kind + " " + mouse.clientX.ToString () + "," + mouse.clientY.ToString ())
+
+                log.Add (
+                    kind
+                    + " "
+                    + mouse.clientX.ToString ()
+                    + ","
+                    + mouse.clientY.ToString ()
+                )
         )
 
     log
@@ -149,7 +156,10 @@ let private screenPacked (window: Window) x y =
     let mutable point = Point ()
     point.x <- x
     point.y <- y
-    ClientToScreen (window.NativeHandle, &point) |> ignore
+
+    ClientToScreen (window.NativeHandle, &point)
+    |> ignore
+
     packed point.x point.y
 
 let private hitTestMessage (window: Window) x y =
@@ -160,7 +170,8 @@ let private nonClient (window: Window) message x y =
     |> ignore
 
 let private client (window: Window) message x y =
-    SendMessage (window.NativeHandle, message, 0n, packed x y) |> ignore
+    SendMessage (window.NativeHandle, message, 0n, packed x y)
+    |> ignore
 
 [<Tests>]
 let tests =
@@ -189,12 +200,18 @@ let tests =
                 Expect.equal (placement SDL_WindowFlags.SDL_WINDOW_FULLSCREEN) WindowPlacement.Fullscreen "fullscreen"
 
                 Expect.equal
-                    (placement (SDL_WindowFlags.SDL_WINDOW_MINIMIZED ||| SDL_WindowFlags.SDL_WINDOW_MAXIMIZED))
+                    (placement (
+                        SDL_WindowFlags.SDL_WINDOW_MINIMIZED
+                        ||| SDL_WindowFlags.SDL_WINDOW_MAXIMIZED
+                    ))
                     WindowPlacement.Minimized
                     "a minimized maximized window"
 
                 Expect.equal
-                    (placement (SDL_WindowFlags.SDL_WINDOW_FULLSCREEN ||| SDL_WindowFlags.SDL_WINDOW_MAXIMIZED))
+                    (placement (
+                        SDL_WindowFlags.SDL_WINDOW_FULLSCREEN
+                        ||| SDL_WindowFlags.SDL_WINDOW_MAXIMIZED
+                    ))
                     WindowPlacement.Fullscreen
                     "a fullscreen maximized window"
             }
@@ -220,7 +237,12 @@ let tests =
             }
 
             test "only a normal window has resize edges" {
-                for placement in [ WindowPlacement.Maximized; WindowPlacement.Minimized; WindowPlacement.Fullscreen ] do
+                for placement in
+                    [
+                        WindowPlacement.Maximized
+                        WindowPlacement.Minimized
+                        WindowPlacement.Fullscreen
+                    ] do
                     Expect.equal (WindowHit.resize placement 6 300 200 0 0) ValueNone (placement.ToString ())
             }
 
@@ -243,7 +265,7 @@ let tests =
                 Expect.equal (window.RegionAt (70.0f, 20.0f)) WindowRegion.Content "an overlay covers the bar"
 
                 overlay.remove ()
-                (document.getElementById "bar").setAttribute ("style", "left:0;top:50px;width:300px;height:40px")
+                (document.getElementById "bar").setAttribute("style", "left:0;top:50px;width:300px;height:40px")
                 Expect.equal (window.RegionAt (70.0f, 70.0f)) WindowRegion.Drag "the bar moved"
                 Expect.equal (window.RegionAt (70.0f, 20.0f)) WindowRegion.Content "where the bar was"
 
@@ -277,7 +299,9 @@ let tests =
 
             test "a negative resize border is rejected" {
                 Expect.throwsT<ArgumentOutOfRangeException>
-                    (fun () -> Window.Create ("Bad", 100, 80, hidden = true, frame = WindowFrame.Custom -1) |> ignore)
+                    (fun () ->
+                        Window.Create ("Bad", 100, 80, hidden = true, frame = WindowFrame.Custom -1)
+                        |> ignore)
                     "a negative border"
             }
 
@@ -323,7 +347,9 @@ let tests =
                 let mutable current = WindowPlacement.Normal
                 window.SetPlacementReader (fun () -> current)
                 let seen = ResizeArray<WindowPlacement>()
-                watch window (fun () -> seen.Add window.Placement.Value) |> ignore
+
+                watch window (fun () -> seen.Add window.Placement.Value)
+                |> ignore
 
                 for placement, kind in
                     [
@@ -371,7 +397,9 @@ let tests =
 
             testCase "a native frame leaves right clicks to the page" (fun () ->
                 onHostThread (fun () ->
-                    use window = Window.Create ("Native", 300, 200, hidden = true, renderer = "software")
+                    use window =
+                        Window.Create ("Native", 300, 200, hidden = true, renderer = "software")
+
                     window.Host.Document.body.innerHTML <- page
                     let menus = ResizeArray<struct (int * int)>()
                     window.SetSystemMenu (fun x y -> menus.Add (struct (x, y)))
@@ -487,7 +515,9 @@ let tests =
                         Window.Create ("Region", 300, 200, hidden = true, renderer = "software", frame = WindowFrame.Custom 6)
 
                     let container = window.Host.Document.createElement "div"
-                    window.Host.Document.body.appendChild container |> ignore
+
+                    window.Host.Document.body.appendChild container
+                    |> ignore
 
                     let mounted =
                         Mounting.mount window.Graph None (fun errors -> raise (AggregateException errors)) container None (fun context ->
@@ -533,10 +563,7 @@ let tests =
                 nonClient window WM_NCLBUTTONDOWN 210 20
                 nonClient window WM_NCLBUTTONUP 210 20
 
-                Expect.sequenceEqual
-                    log
-                    [ "mousemove 210,20"; "mousedown 210,20"; "mouseup 210,20"; "click 210,20" ]
-                    "the page's events"
+                Expect.sequenceEqual log [ "mousemove 210,20"; "mousedown 210,20"; "mouseup 210,20"; "click 210,20" ] "the page's events"
 
             windowsCase "releasing a press on the maximize button elsewhere clicks nothing"
             <| fun window ->
@@ -546,16 +573,19 @@ let tests =
                 client window WM_LBUTTONUP 100 100
 
                 Expect.sequenceEqual
-                    (log |> Seq.filter (fun line -> not (line.StartsWith "click")))
+                    (log
+                     |> Seq.filter (fun line -> not (line.StartsWith "click")))
                     [ "mousedown 210,20"; "mousemove 100,100"; "mouseup 100,100" ]
                     "the press follows the pointer"
 
-                Expect.isFalse (log |> Seq.exists (fun line -> line = "click 210,20")) "no click on the button"
+                Expect.isFalse
+                    (log
+                     |> Seq.exists (fun line -> line = "click 210,20"))
+                    "no click on the button"
 
             windowsCase "a maximize click that disposes the window finishes teardown in the next step"
             <| fun window ->
-                (window.Host.Document.getElementById "max")
-                    .addEventListener ("click", fun (_: Event) -> (window :> IDisposable).Dispose())
+                (window.Host.Document.getElementById "max").addEventListener("click", fun (_: Event) -> (window :> IDisposable).Dispose())
 
                 nonClient window WM_NCLBUTTONDOWN 210 20
                 nonClient window WM_NCLBUTTONUP 210 20
@@ -569,7 +599,20 @@ let tests =
                 let log = mouseLog window
                 nonClient window WM_NCLBUTTONDOWN 210 20
                 client window WM_CAPTURECHANGED 0 0
-                Expect.equal (log |> Seq.filter (fun line -> line.StartsWith "mouseup") |> Seq.length) 1 "one release"
+
+                Expect.equal
+                    (log
+                     |> Seq.filter (fun line -> line.StartsWith "mouseup")
+                     |> Seq.length)
+                    1
+                    "one release"
+
                 client window WM_LBUTTONUP 210 20
-                Expect.equal (log |> Seq.filter (fun line -> line.StartsWith "mouseup") |> Seq.length) 1 "the press is over"
+
+                Expect.equal
+                    (log
+                     |> Seq.filter (fun line -> line.StartsWith "mouseup")
+                     |> Seq.length)
+                    1
+                    "the press is over"
         ]

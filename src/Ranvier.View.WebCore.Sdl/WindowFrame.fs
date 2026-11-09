@@ -79,12 +79,17 @@ module internal WindowHit =
     /// <summary>The placement for SDL window flags.</summary>
     let placement (flags: SDL_WindowFlags) =
         let has (flag: SDL_WindowFlags) =
-            flags &&& flag <> LanguagePrimitives.EnumOfValue 0UL
+            flags &&& flag
+            <> LanguagePrimitives.EnumOfValue 0UL
 
-        if has SDL_WindowFlags.SDL_WINDOW_MINIMIZED then WindowPlacement.Minimized
-        elif has SDL_WindowFlags.SDL_WINDOW_FULLSCREEN then WindowPlacement.Fullscreen
-        elif has SDL_WindowFlags.SDL_WINDOW_MAXIMIZED then WindowPlacement.Maximized
-        else WindowPlacement.Normal
+        if has SDL_WindowFlags.SDL_WINDOW_MINIMIZED then
+            WindowPlacement.Minimized
+        elif has SDL_WindowFlags.SDL_WINDOW_FULLSCREEN then
+            WindowPlacement.Fullscreen
+        elif has SDL_WindowFlags.SDL_WINDOW_MAXIMIZED then
+            WindowPlacement.Maximized
+        else
+            WindowPlacement.Normal
 
     /// <summary>
     /// The resize result at a window position, in a window of <c>width</c> by <c>height</c>. Only a <c>Normal</c>
@@ -99,15 +104,24 @@ module internal WindowHit =
             let top = y < border
             let bottom = y >= height - border
 
-            if top && left then ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_TOPLEFT
-            elif top && right then ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_TOPRIGHT
-            elif bottom && right then ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_BOTTOMRIGHT
-            elif bottom && left then ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_BOTTOMLEFT
-            elif top then ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_TOP
-            elif right then ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_RIGHT
-            elif bottom then ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_BOTTOM
-            elif left then ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_LEFT
-            else ValueNone
+            if top && left then
+                ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_TOPLEFT
+            elif top && right then
+                ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_TOPRIGHT
+            elif bottom && right then
+                ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_BOTTOMRIGHT
+            elif bottom && left then
+                ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_BOTTOMLEFT
+            elif top then
+                ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_TOP
+            elif right then
+                ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_RIGHT
+            elif bottom then
+                ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_BOTTOM
+            elif left then
+                ValueSome SDL_HitTestResult.SDL_HITTEST_RESIZE_LEFT
+            else
+                ValueNone
 
 [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
 type internal HitTestCallback = delegate of nativeint * nativeint * nativeint -> SDL_HitTestResult
@@ -157,7 +171,9 @@ module internal Win32Native =
     let applyCompositorFrame (hwnd: nativeint) =
         // DWMWA_WINDOW_CORNER_PREFERENCE, DWMWCP_ROUND.
         let mutable round = 2
-        DwmSetWindowAttribute (hwnd, 33, &round, 4) |> ignore
+
+        DwmSetWindowAttribute (hwnd, 33, &round, 4)
+        |> ignore
 
 /// <summary>
 /// Reports a Windows window's <c>Maximize</c> region as its maximize button, the condition for Snap Layouts, and returns
@@ -169,7 +185,8 @@ module internal Win32Native =
 /// button or -1, and a click count.
 /// </remarks>
 [<Sealed>]
-type internal SnapButtonSubclass(hwnd: nativeint, regionAt: int -> int -> WindowRegion, mouse: int -> int -> int -> int -> int -> unit, leave: unit -> unit) as this =
+type internal SnapButtonSubclass
+    (hwnd: nativeint, regionAt: int -> int -> WindowRegion, mouse: int -> int -> int -> int -> int -> unit, leave: unit -> unit) as this =
     [<Literal>]
     let GWLP_WNDPROC = -4
 
@@ -212,7 +229,9 @@ type internal SnapButtonSubclass(hwnd: nativeint, regionAt: int -> int -> Window
 
     let HTMAXBUTTON = 9n
 
-    let procedure = WindowProcedure (fun hwnd message wParam lParam -> this.Procedure (hwnd, message, wParam, lParam))
+    let procedure =
+        WindowProcedure (fun hwnd message wParam lParam -> this.Procedure (hwnd, message, wParam, lParam))
+
     let mutable previous = 0n
     let mutable overButton = false
     let mutable pressed = false
@@ -227,12 +246,15 @@ type internal SnapButtonSubclass(hwnd: nativeint, regionAt: int -> int -> Window
         let mutable point = Win32Point ()
         point.x <- x
         point.y <- y
-        Win32Native.ScreenToClient (hwnd, &point) |> ignore
+
+        Win32Native.ScreenToClient (hwnd, &point)
+        |> ignore
+
         struct (point.x, point.y)
 
     let trackLeave () =
         let mutable request = Win32TrackMouse ()
-        request.cbSize <- uint32 (Marshal.SizeOf<Win32TrackMouse> ())
+        request.cbSize <- uint32 (Marshal.SizeOf<Win32TrackMouse>())
         // TME_LEAVE ||| TME_NONCLIENT.
         request.dwFlags <- 0x00000012u
         request.hwndTrack <- hwnd

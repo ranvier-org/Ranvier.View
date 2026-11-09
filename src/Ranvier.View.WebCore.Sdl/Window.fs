@@ -343,7 +343,8 @@ type Window
     let mutable displayFeed: IDisposable = null
     let mutable displaySignal: Signal<DisplayScreen voption> = Unchecked.defaultof<_>
 
-    let mutable placementReader = fun () -> WindowHit.placement (SDL3.SDL_GetWindowFlags window)
+    let mutable placementReader =
+        fun () -> WindowHit.placement (SDL3.SDL_GetWindowFlags window)
 
     let placementSignal = graph.Run (fun () -> createSignal (placementReader ()))
 
@@ -1096,7 +1097,8 @@ type Window
                                 |> ignore)),
                         (fun () ->
                             inCallback (fun () ->
-                                host.Mouse (0, -1, -1, -1, 0, modifiers ()) |> ignore))
+                                host.Mouse (0, -1, -1, -1, 0, modifiers ())
+                                |> ignore))
                     )
 
                 Win32Native.applyCompositorFrame hwnd
@@ -1109,7 +1111,10 @@ type Window
                     let event = NativePtr.read (NativePtr.ofNativeInt<SDL_Event> pointer)
 
                     match enum<SDL_EventType>(int event.``type``) with
-                    | SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED when event.window.windowID = id && host.Session.IsOwnerThread ->
+                    | SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED when
+                        event.window.windowID = id
+                        && host.Session.IsOwnerThread
+                        ->
                         modalResizePending <- true
                     // SDL marks the tick raised inside the platform's modal move or resize loop with data1 = 1.
                     | SDL_EventType.SDL_EVENT_WINDOW_EXPOSED when
@@ -1123,7 +1128,9 @@ type Window
                     1uy))
 
         eventWatchPointer <- Marshal.GetFunctionPointerForDelegate<EventWatchCallback> eventWatch
-        SDL3.SDL_AddEventWatch (eventWatchPointer, 0n) |> ignore
+
+        SDL3.SDL_AddEventWatch (eventWatchPointer, 0n)
+        |> ignore
 
         windows.Add (uint32 id, this)
 
@@ -1254,8 +1261,16 @@ type Window
             this.RefreshSurrounding ()
 
     static member private CreateCore
-        (title: string, width: int, height: int, hidden: bool option, renderer: string option, rates: InputRates, frame: WindowFrame, minimumSize: struct (int * int) option)
-        : Window =
+        (
+            title: string,
+            width: int,
+            height: int,
+            hidden: bool option,
+            renderer: string option,
+            rates: InputRates,
+            frame: WindowFrame,
+            minimumSize: struct (int * int) option
+        ) : Window =
         EglRenderer.RetryFailedConstruction ()
         EglRenderer.Prepare ()
         // The page draws the input method's composition itself; the platform draws the candidates.
@@ -1405,7 +1420,17 @@ type Window
     /// <c>WindowFrame.Native</c> when omitted. <c>minimumSize</c> is a width and height in window units.
     /// </summary>
     /// <exception cref="T:System.ArgumentOutOfRangeException"><c>frame</c> is <c>WindowFrame.Custom</c> with a negative border.</exception>
-    static member Create(title: string, width: int, height: int, ?hidden: bool, ?renderer: string, ?inputRates: InputRates, ?frame: WindowFrame, ?minimumSize: struct (int * int)) : Window =
+    static member Create
+        (
+            title: string,
+            width: int,
+            height: int,
+            ?hidden: bool,
+            ?renderer: string,
+            ?inputRates: InputRates,
+            ?frame: WindowFrame,
+            ?minimumSize: struct (int * int)
+        ) : Window =
         match frame with
         | Some (WindowFrame.Custom border) when border < 0 ->
             raise (ArgumentOutOfRangeException (nameof frame, border, "A custom frame's resize border is at least zero."))
@@ -1414,7 +1439,16 @@ type Window
         owner.Enter ()
 
         try
-            Window.CreateCore (title, width, height, hidden, renderer, defaultArg inputRates InputRates.Default, defaultArg frame WindowFrame.Native, minimumSize)
+            Window.CreateCore (
+                title,
+                width,
+                height,
+                hidden,
+                renderer,
+                defaultArg inputRates InputRates.Default,
+                defaultArg frame WindowFrame.Native,
+                minimumSize
+            )
         finally
             owner.Exit ()
 
@@ -1441,7 +1475,8 @@ type Window
             SDL3.SDL_SetWindowTitle (window, name) |> ignore
 
     /// <summary>Shows a window created with <c>hidden</c>.</summary>
-    member _.Show() = SDL3.SDL_ShowWindow window |> ignore
+    member _.Show() =
+        SDL3.SDL_ShowWindow window |> ignore
 
     /// <summary>Minimizes the window.</summary>
     member _.Minimize() =
@@ -1482,7 +1517,8 @@ type Window
             ()
 
     /// <summary>The page's region at a window position.</summary>
-    member internal _.RegionAt(x: float32, y: float32) = regionAt x y
+    member internal _.RegionAt(x: float32, y: float32) =
+        regionAt x y
 
     /// <summary>The SDL hit test result at a window position; a native frame's is always normal.</summary>
     member internal _.HitTest(x: int, y: int) =
@@ -1494,13 +1530,16 @@ type Window
     member internal _.RegionReads = regionReads
 
     /// <summary>Replaces how the window reads its placement; tests stand in for showing a window.</summary>
-    member internal _.SetPlacementReader(reader: unit -> WindowPlacement) = placementReader <- reader
+    member internal _.SetPlacementReader(reader: unit -> WindowPlacement) =
+        placementReader <- reader
 
     /// <summary>Replaces how the window opens its menu; tests stand in for the platform's modal menu.</summary>
-    member internal _.SetSystemMenu(menu: int -> int -> unit) = systemMenu <- menu
+    member internal _.SetSystemMenu(menu: int -> int -> unit) =
+        systemMenu <- menu
 
     /// <summary>Replaces the page work of a modal turn, for failure checks.</summary>
-    member internal _.SetModalFrame(turn: unit -> unit) = modalFrame <- turn
+    member internal _.SetModalFrame(turn: unit -> unit) =
+        modalFrame <- turn
 
     /// <summary>The window's page.</summary>
     member _.Host = host
@@ -1797,7 +1836,8 @@ type Window
                 disposePending <- true
             elif not disposed then
                 if not (isNull hitTestCallback) then
-                    SDL3.SDL_SetWindowHitTest (window, 0n, 0n) |> ignore
+                    SDL3.SDL_SetWindowHitTest (window, 0n, 0n)
+                    |> ignore
 
                 snapButton
                 |> Option.iter (fun button -> button.Uninstall ())

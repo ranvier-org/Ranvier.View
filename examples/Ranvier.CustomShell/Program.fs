@@ -39,70 +39,74 @@ type private Shell =
     override _.ToString() = "Shell"
 
 let private app =
-    Component.define
-        (fun _ (shell: Shell) -> shell)
-        (fun t ->
-            t.div
-                [| t.Attrs.attribute ("id", "shell") |]
-                [|
-                    t.div
-                        [|
-                            t.Attrs.windowRegion WindowRegion.Drag
-                            t.Attrs.attribute (
-                                "class",
-                                fun (s: Shell) -> Some (if s.Window.Focused.Value then "titlebar" else "titlebar inactive")
-                            )
-                        |]
-                        [|
-                            t.span [| t.Attrs.attribute ("class", "logo") |] [| t.text (fun _ -> "R") |]
-                            t.button
-                                [|
-                                    t.Attrs.windowRegion WindowRegion.Content
-                                    t.Attrs.attribute ("class", "tab")
-                                    t.Events.on ("click", fun s _ -> s.Clicks.Value <- s.Clicks.Value + 1)
-                                |]
-                                [| t.text (fun s -> "Tab (" + s.Clicks.Value.ToString () + ")") |]
-                            t.div [| t.Attrs.attribute ("class", "spacer") |] [||]
-                            t.div
-                                [|
-                                    t.Attrs.windowRegion WindowRegion.Content
-                                    t.Attrs.attribute ("class", "controls")
-                                |]
-                                [|
-                                    t.button
-                                        [|
-                                            t.Attrs.attribute ("class", "control")
-                                            t.Events.on ("click", fun s _ -> s.Window.Minimize ())
-                                        |]
-                                        [| t.text (fun _ -> "—") |]
-                                    t.button
-                                        [|
-                                            t.Attrs.windowRegion WindowRegion.Maximize
-                                            t.Attrs.attribute ("class", "control")
-                                            t.Events.on ("click", fun s _ -> s.Window.ToggleMaximize ())
-                                        |]
-                                        [|
-                                            t.text (fun s ->
-                                                if s.Window.Placement.Value = WindowPlacement.Maximized then
-                                                    "❐"
-                                                else
-                                                    "□")
-                                        |]
-                                    t.button
-                                        [|
-                                            t.Attrs.attribute ("class", "control close")
-                                            t.Events.on ("click", fun s _ -> s.Window.Close ())
-                                        |]
-                                        [| t.text (fun _ -> "✕") |]
-                                |]
-                        |]
-                    t.div
-                        [| t.Attrs.attribute ("class", "body") |]
-                        [|
-                            t.div [| t.Attrs.attribute ("id", "spin") |] [||]
-                            t.div [| t.Attrs.attribute ("class", "state") |] [| t.text (fun s -> s.Stats.Value) |]
-                        |]
-                |])
+    Component.define (fun _ (shell: Shell) -> shell) (fun t ->
+        t.div
+            [| t.Attrs.attribute ("id", "shell") |]
+            [|
+                t.div
+                    [|
+                        t.Attrs.windowRegion WindowRegion.Drag
+                        t.Attrs.attribute (
+                            "class",
+                            fun (s: Shell) ->
+                                Some (
+                                    if s.Window.Focused.Value then
+                                        "titlebar"
+                                    else
+                                        "titlebar inactive"
+                                )
+                        )
+                    |]
+                    [|
+                        t.span [| t.Attrs.attribute ("class", "logo") |] [| t.text (fun _ -> "R") |]
+                        t.button
+                            [|
+                                t.Attrs.windowRegion WindowRegion.Content
+                                t.Attrs.attribute ("class", "tab")
+                                t.Events.on ("click", fun s _ -> s.Clicks.Value <- s.Clicks.Value + 1)
+                            |]
+                            [| t.text (fun s -> "Tab (" + s.Clicks.Value.ToString () + ")") |]
+                        t.div [| t.Attrs.attribute ("class", "spacer") |] [||]
+                        t.div
+                            [|
+                                t.Attrs.windowRegion WindowRegion.Content
+                                t.Attrs.attribute ("class", "controls")
+                            |]
+                            [|
+                                t.button
+                                    [|
+                                        t.Attrs.attribute ("class", "control")
+                                        t.Events.on ("click", fun s _ -> s.Window.Minimize ())
+                                    |]
+                                    [| t.text (fun _ -> "—") |]
+                                t.button
+                                    [|
+                                        t.Attrs.windowRegion WindowRegion.Maximize
+                                        t.Attrs.attribute ("class", "control")
+                                        t.Events.on ("click", fun s _ -> s.Window.ToggleMaximize ())
+                                    |]
+                                    [|
+                                        t.text (fun s ->
+                                            if s.Window.Placement.Value = WindowPlacement.Maximized then
+                                                "❐"
+                                            else
+                                                "□")
+                                    |]
+                                t.button
+                                    [|
+                                        t.Attrs.attribute ("class", "control close")
+                                        t.Events.on ("click", fun s _ -> s.Window.Close ())
+                                    |]
+                                    [| t.text (fun _ -> "✕") |]
+                            |]
+                    |]
+                t.div
+                    [| t.Attrs.attribute ("class", "body") |]
+                    [|
+                        t.div [| t.Attrs.attribute ("id", "spin") |] [||]
+                        t.div [| t.Attrs.attribute ("class", "state") |] [| t.text (fun s -> s.Stats.Value) |]
+                    |]
+            |])
 
 let private mount (window: Window) =
     let host = window.Host
@@ -140,7 +144,13 @@ let private mount (window: Window) =
 
             match host.Document.getElementById "spin" with
             | null -> ()
-            | spin -> spin.setAttribute ("style", "transform: rotate(" + (now / 8.0 % 360.0).ToString "F0" + "deg)")
+            | spin ->
+                spin.setAttribute (
+                    "style",
+                    "transform: rotate("
+                    + (now / 8.0 % 360.0).ToString "F0"
+                    + "deg)"
+                )
 
             if now - lastPublish > 200.0 then
                 lastPublish <- now
@@ -151,9 +161,13 @@ let private mount (window: Window) =
                         String.Join (
                             "\n",
                             [|
-                                "placement    " + window.Placement.Value.ToString ()
+                                "placement    "
+                                + window.Placement.Value.ToString ()
                                 "focused      " + window.Focused.Value.ToString ()
-                                "page size    " + width.ToString () + " x " + height.ToString ()
+                                "page size    "
+                                + width.ToString ()
+                                + " x "
+                                + height.ToString ()
                                 "longest gap  " + longestGap.ToString "F0" + " ms"
                             |]
                         )
@@ -189,7 +203,10 @@ let main _ =
         for _ in 1..60 do
             window.Step 16 |> ignore
 
-        if window.Placement.Value <> WindowPlacement.Maximized then
+        if
+            window.Placement.Value
+            <> WindowPlacement.Maximized
+        then
             failwith "The window did not report its maximized placement."
 
         window.ToggleMaximize ()
