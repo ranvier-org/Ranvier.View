@@ -1,5 +1,5 @@
 ---
-last_commit_released: 09686e71a96976e6cd58f2e6d00410b763786775
+last_commit_released: c90ac925b8867b15ea83769406a04557af607ed4
 updaters:
   - xml:
       file: Ranvier.View.Dom.fsproj
@@ -9,6 +9,26 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.2.0 - 2026-11-09
+
+### 🚀 Features
+
+* Batch 6 view bindings (A02-A10 Web Animations) (#45) ([b9fef3d](https://github.com/ranvier-org/Ranvier.View/commit/b9fef3d63179997faaa715f40d7a74676cf8311a))
+* *(view)* Integrate native application cohort ([449a485](https://github.com/ranvier-org/Ranvier.View/commit/449a485e760f147c10a30aa103f01aaff824c50e))
+* *(webcore)* Provide shared typed style maps (#16) ([f70985c](https://github.com/ranvier-org/Ranvier.View/commit/f70985ccf8a33d8b435739e0d5cb71ed715d8abb))
+* *(webcore)* Provide shared geometry and matrix values (#17) ([5e3b88a](https://github.com/ranvier-org/Ranvier.View/commit/5e3b88a2b9257cc533523f7c726b23a2b711a34d))
+* *(webcore)* Add typed transform services and conformance (#18) ([0b56d26](https://github.com/ranvier-org/Ranvier.View/commit/0b56d261163d1b076187ab45fcbec2d6707e1aa9))
+* *(webcore)* Share profiling marks with the host frame clock (#19) ([73c80cd](https://github.com/ranvier-org/Ranvier.View/commit/73c80cd07b6d23b0783ffd7e5004130a550014bf))
+* *(webcore)* Batch 1 native API bindings (0.1.39) (#40) ([51f8390](https://github.com/ranvier-org/Ranvier.View/commit/51f8390bccebc1f4342ef36b0a1ecef3db5caf66))
+
+### 🐞 Bug Fixes
+
+* *(native)* Qualify View46 lifecycle for P11 and DOM58 (#73) ([3fe45e3](https://github.com/ranvier-org/Ranvier.View/commit/3fe45e3d60f8cfa51df681ac708633e7ae936ac4))
+* *(view)* Keep boundary diagnostics safe under NativeAOT ([a66bb3a](https://github.com/ranvier-org/Ranvier.View/commit/a66bb3ab891bd5f6ea1afaba1ae0077b8d4d0638))
+* *(view)* Create SVG arms and rows in the SVG namespace on WebCore (#99) ([1c939d4](https://github.com/ranvier-org/Ranvier.View/commit/1c939d437e98d1192c23476d17b8ee80d7c0b6eb))
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/09686e71a96976e6cd58f2e6d00410b763786775..c90ac925b8867b15ea83769406a04557af607ed4)</small></strong>
 
 ## 0.1.1 - 2026-10-28
 
