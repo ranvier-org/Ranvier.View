@@ -2,6 +2,7 @@ namespace Ranvier.View.WebCore.Sdl
 
 open System
 open System.Collections.Generic
+open System.Runtime.ExceptionServices
 open System.Runtime.InteropServices
 open System.Text
 open Microsoft.FSharp.NativeInterop
@@ -224,10 +225,13 @@ type Window
         host: WebCoreHost,
         egl: EglRenderer option,
         swapChain: D3D11SwapChain option,
-        initialRates: InputRates
+        initialRates: InputRates,
+        frame: WindowFrame
     ) as this =
     static let owner = WebCoreHost.Owner
     static let windows = WindowRegistry<Window>()
+    // A page call is on the owner thread's stack: a modal tick waits for the next turn.
+    static let mutable onPage = false
     // CSS pixels a wheel tick scrolls.
     static let wheelStep = 40.0f
     // RV_CURSOR_NONE.
@@ -339,6 +343,58 @@ type Window
     let mutable displayFeed: IDisposable = null
     let mutable displaySignal: Signal<DisplayScreen voption> = Unchecked.defaultof<_>
 
+    let mutable placementReader =
+        fun () -> WindowHit.placement (SDL3.SDL_GetWindowFlags window)
+
+    let placementSignal = graph.Run (fun () -> createSignal (placementReader ()))
+
+    let focusedSignal =
+        graph.Run (fun () ->
+            createSignal (
+                SDL3.SDL_GetWindowFlags window
+                &&& SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS
+                <> LanguagePrimitives.EnumOfValue 0UL
+            ))
+
+    let struct (stateOwner, placementMemo, focusedMemo) =
+        graph.Run (fun () ->
+            createRoot (fun owner ->
+                struct (owner :> IDisposable, createMemo (fun _ -> placementSignal.Value), createMemo (fun _ -> focusedSignal.Value))))
+
+    let mutable systemMenu =
+        fun x y ->
+            SDL3.SDL_ShowWindowSystemMenu (window, x, y)
+            |> ignore
+
+    let mutable modalFrame = fun () -> host.Cycle ()
+    // Native callbacks hold these delegates' function pointers for the window's lifetime.
+    let mutable hitTestCallback: HitTestCallback = null
+    let mutable eventWatch: EventWatchCallback = null
+    let mutable eventWatchPointer = 0n
+    let mutable snapButton: SnapButtonSubclass option = None
+    let mutable regionReads = 0L
+    let mutable modalResizePending = false
+    // The first failure inside a native callback, rethrown by the next Step.
+    let mutable nativeFailure: ExceptionDispatchInfo = null
+    // Page code is running inside a native callback, where SDL cannot destroy this window.
+    let mutable callbackDepth = 0
+    let mutable disposePending = false
+
+    let guarded fallback (call: unit -> 'T) : 'T =
+        try
+            call ()
+        with error ->
+            if isNull nativeFailure then
+                nativeFailure <- ExceptionDispatchInfo.Capture error
+
+            fallback
+
+    let rethrowNativeFailure () =
+        if not (isNull nativeFailure) then
+            let failure = nativeFailure
+            nativeFailure <- null
+            failure.Throw ()
+
     let readRefresh () =
         let mode = SDL3.SDL_GetCurrentDisplayMode (SDL3.SDL_GetDisplayForWindow window)
 
@@ -355,6 +411,7 @@ type Window
                 Diagnostics.Stopwatch.Frequency / 60L
 
     let resize () =
+        modalResizePending <- false
         resizesApplied <- resizesApplied + 1
         readRefresh ()
         let mutable width = 0
@@ -617,7 +674,67 @@ type Window
             |> ignore
         | ValueNone -> ()
 
+    // The page's region at a window position, from the element under it at the time of the call.
+    let regionAt (x: float32) (y: float32) =
+        if alive () then
+            regionReads <- regionReads + 1L
+            let element = host.Document.elementFromPoint (float (x * toCss), float (y * toCss))
+
+            if isNull (box element) then
+                WindowRegion.Content
+            else
+                let marked = element.closest WindowRegionAttribute.Selector
+
+                if isNull (box marked) then
+                    WindowRegion.Content
+                else
+                    WindowRegionAttribute.parse (marked.getAttribute WindowRegionAttribute.Name)
+        else
+            WindowRegion.Content
+
+    let resizeResult (border: int) (x: int) (y: int) =
+        let mutable width = 0
+        let mutable height = 0
+
+        SDL3.SDL_GetWindowSize (window, &&width, &&height)
+        |> ignore
+
+        WindowHit.resize (placementReader ()) border width height x y
+
+    // The resize border, then the page's regions.
+    let hitTest (border: int) (x: int) (y: int) =
+        match resizeResult border x y with
+        | ValueSome edge -> edge
+        | ValueNone ->
+            let region =
+                match snapButton with
+                | Some button when button.Answering.IsSome -> button.Answering.Value
+                | _ -> regionAt (float32 x) (float32 y)
+
+            if region = WindowRegion.Drag then
+                SDL_HitTestResult.SDL_HITTEST_DRAGGABLE
+            else
+                SDL_HitTestResult.SDL_HITTEST_NORMAL
+
+    let syncWindowState (event: SDL_Event) =
+        let write (signal: Signal<'T>) (value: 'T) =
+            graph.Run (fun () ->
+                signal.Value <- value
+                flush ())
+
+        match enum<SDL_EventType>(int event.``type``) with
+        | SDL_EventType.SDL_EVENT_WINDOW_MINIMIZED
+        | SDL_EventType.SDL_EVENT_WINDOW_MAXIMIZED
+        | SDL_EventType.SDL_EVENT_WINDOW_RESTORED
+        | SDL_EventType.SDL_EVENT_WINDOW_ENTER_FULLSCREEN
+        | SDL_EventType.SDL_EVENT_WINDOW_LEAVE_FULLSCREEN when event.window.windowID = id -> write placementSignal (placementReader ())
+        | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_GAINED when event.window.windowID = id -> write focusedSignal true
+        | SDL_EventType.SDL_EVENT_WINDOW_FOCUS_LOST when event.window.windowID = id -> write focusedSignal false
+        | _ -> ()
+
     let dispatch (event: SDL_Event) =
+        syncWindowState event
+
         match enum<SDL_EventType>(int event.``type``) with
         | SDL_EventType.SDL_EVENT_DISPLAY_ORIENTATION
         | SDL_EventType.SDL_EVENT_DISPLAY_ADDED
@@ -789,6 +906,16 @@ type Window
                 |> ignore
 
                 updateCursor ()
+
+                // Windows opens this menu itself; other platforms report the right click to the window.
+                if
+                    action = 2
+                    && button = 3
+                    && frame <> WindowFrame.Native
+                    && alive ()
+                    && regionAt press.x press.y = WindowRegion.Drag
+                then
+                    systemMenu (int press.x) (int press.y)
             | _ -> ()
         | SDL_EventType.SDL_EVENT_MOUSE_WHEEL when event.wheel.windowID = id ->
             let wheel = event.wheel
@@ -928,7 +1055,109 @@ type Window
         then
             host.SetFocused true
 
+        match frame with
+        | WindowFrame.Native -> ()
+        | WindowFrame.Custom border ->
+            hitTestCallback <-
+                HitTestCallback (fun _ point _ ->
+                    guarded SDL_HitTestResult.SDL_HITTEST_NORMAL (fun () ->
+                        let at = NativePtr.read (NativePtr.ofNativeInt<SDL_Point> point)
+                        hitTest border at.x at.y))
+
+            if not (Sdl.ok (SDL3.SDL_SetWindowHitTest (window, Marshal.GetFunctionPointerForDelegate<HitTestCallback> hitTestCallback, 0n))) then
+                raise (Sdl.failure "SDL_SetWindowHitTest")
+
+            if OperatingSystem.IsWindows () then
+                let hwnd =
+                    use key = fixed Sdl.utf8 "SDL.window.win32.hwnd"
+                    SDL3.SDL_GetPointerProperty (SDL3.SDL_GetWindowProperties window, key, 0n)
+
+                let inCallback (call: unit -> unit) =
+                    guarded () (fun () ->
+                        if alive () then
+                            callbackDepth <- callbackDepth + 1
+
+                            try
+                                call ()
+                            finally
+                                callbackDepth <- callbackDepth - 1)
+
+                let subclass =
+                    SnapButtonSubclass (
+                        hwnd,
+                        (fun x y ->
+                            guarded WindowRegion.Content (fun () ->
+                                if (resizeResult border x y).IsSome then
+                                    WindowRegion.Content
+                                else
+                                    regionAt (float32 x) (float32 y))),
+                        (fun action x y button clicks ->
+                            inCallback (fun () ->
+                                host.Mouse (action, css (float32 x), css (float32 y), button, clicks, modifiers ())
+                                |> ignore)),
+                        (fun () ->
+                            inCallback (fun () ->
+                                host.Mouse (0, -1, -1, -1, 0, modifiers ())
+                                |> ignore))
+                    )
+
+                Win32Native.applyCompositorFrame hwnd
+                subclass.Install ()
+                snapButton <- Some subclass
+
+        eventWatch <-
+            EventWatchCallback (fun _ pointer ->
+                guarded 1uy (fun () ->
+                    let event = NativePtr.read (NativePtr.ofNativeInt<SDL_Event> pointer)
+
+                    match enum<SDL_EventType>(int event.``type``) with
+                    | SDL_EventType.SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED when
+                        event.window.windowID = id
+                        && host.Session.IsOwnerThread
+                        ->
+                        modalResizePending <- true
+                    // SDL marks the tick raised inside the platform's modal move or resize loop with data1 = 1.
+                    | SDL_EventType.SDL_EVENT_WINDOW_EXPOSED when
+                        event.window.windowID = id
+                        && event.window.data1 = 1
+                        && host.Session.IsOwnerThread
+                        ->
+                        this.ModalTurn ()
+                    | _ -> ()
+
+                    1uy))
+
+        eventWatchPointer <- Marshal.GetFunctionPointerForDelegate<EventWatchCallback> eventWatch
+
+        SDL3.SDL_AddEventWatch (eventWatchPointer, 0n)
+        |> ignore
+
         windows.Add (uint32 id, this)
+
+    // A turn of the page inside the platform's modal move or resize loop, which blocks Step for the whole gesture.
+    member private this.ModalTurn() =
+        if not onPage && alive () then
+            onPage <- true
+            callbackDepth <- callbackDepth + 1
+
+            try
+                if modalResizePending then
+                    resize ()
+
+                modalFrame ()
+
+                if
+                    alive ()
+                    && (host.FrameRequested
+                        || fullPaint
+                        || exposed
+                        || framePending)
+                    && not presenter.Presenting
+                then
+                    this.Present ()
+            finally
+                callbackDepth <- callbackDepth - 1
+                onPage <- false
 
     member private _.Dispatch(event: SDL_Event) =
         if alive () then
@@ -943,7 +1172,9 @@ type Window
 
     // Ends a drain of SDL's queue: dispatches a held resize, PerDrain input, and PerFrame input once a refresh interval
     // has passed since its kind's previous dispatch.
-    member private _.EndDrain() =
+    member private this.EndDrain() =
+        this.CompleteDispose ()
+
         let due rate last =
             match rate with
             | InputRate.PerFrame -> now () - last >= refreshTicks
@@ -1030,8 +1261,16 @@ type Window
             this.RefreshSurrounding ()
 
     static member private CreateCore
-        (title: string, width: int, height: int, hidden: bool option, renderer: string option, rates: InputRates)
-        : Window =
+        (
+            title: string,
+            width: int,
+            height: int,
+            hidden: bool option,
+            renderer: string option,
+            rates: InputRates,
+            frame: WindowFrame,
+            minimumSize: struct (int * int) option
+        ) : Window =
         EglRenderer.RetryFailedConstruction ()
         EglRenderer.Prepare ()
         // The page draws the input method's composition itself; the platform draws the candidates.
@@ -1049,6 +1288,9 @@ type Window
                      SDL_WindowFlags.SDL_WINDOW_HIDDEN
                  else
                      LanguagePrimitives.EnumOfValue 0UL)
+            ||| (match frame with
+                 | WindowFrame.Custom _ -> SDL_WindowFlags.SDL_WINDOW_BORDERLESS
+                 | WindowFrame.Native -> LanguagePrimitives.EnumOfValue 0UL)
 
         let window =
             use name = fixed Sdl.utf8 title
@@ -1058,6 +1300,12 @@ type Window
             let error = Sdl.failure "SDL_CreateWindow"
             SDL3.SDL_QuitSubSystem SDL_InitFlags.SDL_INIT_VIDEO
             raise error
+
+        match minimumSize with
+        | Some (struct (minimumWidth, minimumHeight)) ->
+            SDL3.SDL_SetWindowMinimumSize (window, minimumWidth, minimumHeight)
+            |> ignore
+        | None -> ()
 
         // Windows frames present through the window's own swap chain, which excludes an SDL renderer on the same window.
         let swapChain =
@@ -1137,7 +1385,7 @@ type Window
 
             let host = WebCoreHost.Create (width, height)
             page <- Some host
-            new Window (window, drawing, host, egl, swapChain, rates)
+            new Window (window, drawing, host, egl, swapChain, rates, frame)
         with _ ->
             page
             |> Option.iter (fun host -> (host :> IDisposable).Dispose())
@@ -1168,15 +1416,130 @@ type Window
     /// Opens a window of <c>width</c> by <c>height</c> in the platform's window units, CSS pixels at the display's
     /// scale, with an empty page. <c>hidden</c> keeps it off screen; <c>renderer</c> names an SDL render driver, such
     /// as "software", and "direct3d11" or no name uses a D3D11 swap chain with no SDL renderer where the runtime
-    /// supports it. <c>inputRates</c> sets <c>InputRates</c>, <c>InputRates.Default</c> when omitted.
+    /// supports it. <c>inputRates</c> sets <c>InputRates</c>, <c>InputRates.Default</c> when omitted. <c>frame</c> is
+    /// <c>WindowFrame.Native</c> when omitted. <c>minimumSize</c> is a width and height in window units.
     /// </summary>
-    static member Create(title: string, width: int, height: int, ?hidden: bool, ?renderer: string, ?inputRates: InputRates) : Window =
+    /// <exception cref="T:System.ArgumentOutOfRangeException"><c>frame</c> is <c>WindowFrame.Custom</c> with a negative border.</exception>
+    static member Create
+        (
+            title: string,
+            width: int,
+            height: int,
+            ?hidden: bool,
+            ?renderer: string,
+            ?inputRates: InputRates,
+            ?frame: WindowFrame,
+            ?minimumSize: struct (int * int)
+        ) : Window =
+        match frame with
+        | Some (WindowFrame.Custom border) when border < 0 ->
+            raise (ArgumentOutOfRangeException (nameof frame, border, "A custom frame's resize border is at least zero."))
+        | _ -> ()
+
         owner.Enter ()
 
         try
-            Window.CreateCore (title, width, height, hidden, renderer, defaultArg inputRates InputRates.Default)
+            Window.CreateCore (
+                title,
+                width,
+                height,
+                hidden,
+                renderer,
+                defaultArg inputRates InputRates.Default,
+                defaultArg frame WindowFrame.Native,
+                minimumSize
+            )
         finally
             owner.Exit ()
+
+    /// <summary>
+    /// The graph holding <c>Placement</c> and <c>Focused</c>. A view reading them mounts on this graph: a computation
+    /// on another graph reads their first value and never re-runs.
+    /// </summary>
+    member _.Graph = graph
+
+    /// <summary>How the window occupies its display, on <c>Graph</c>.</summary>
+    member _.Placement: Memo<WindowPlacement> = placementMemo
+
+    /// <summary>Whether the window has input focus, on <c>Graph</c>.</summary>
+    member _.Focused: Memo<bool> = focusedMemo
+
+    /// <summary>The window's frame.</summary>
+    member _.Frame = frame
+
+    /// <summary>The window's title.</summary>
+    member _.Title
+        with get () = SDL3.SDL_GetWindowTitle window
+        and set (value: string) =
+            use name = fixed Sdl.utf8 value
+            SDL3.SDL_SetWindowTitle (window, name) |> ignore
+
+    /// <summary>Shows a window created with <c>hidden</c>.</summary>
+    member _.Show() =
+        SDL3.SDL_ShowWindow window |> ignore
+
+    /// <summary>Minimizes the window.</summary>
+    member _.Minimize() =
+        SDL3.SDL_MinimizeWindow window |> ignore
+
+    /// <summary>Maximizes a restored window and restores a maximized one.</summary>
+    member _.ToggleMaximize() =
+        if placementReader () = WindowPlacement.Maximized then
+            SDL3.SDL_RestoreWindow window |> ignore
+        else
+            SDL3.SDL_MaximizeWindow window |> ignore
+
+    /// <summary>Opens the platform's window menu at a CSS position in the page.</summary>
+    member _.ShowSystemMenu(x: int, y: int) =
+        systemMenu (int (float32 x / toCss)) (int (float32 y / toCss))
+
+    /// <summary>Sets the window's icon from top-down RGBA bytes.</summary>
+    /// <exception cref="T:System.ArgumentException"><c>rgba</c> does not hold four bytes per pixel.</exception>
+    member _.SetIcon(width: int, height: int, rgba: byte array) =
+        if rgba.Length <> width * height * 4 then
+            invalidArg (nameof rgba) "An icon has four bytes per pixel."
+
+        use pixels = fixed rgba
+
+        // ABGR8888 is R, G, B, A in byte order on the little-endian platforms SDL windows run on here.
+        let surface =
+            SDL3.SDL_CreateSurfaceFrom (width, height, SDL_PixelFormat.SDL_PIXELFORMAT_ABGR8888, NativePtr.toNativeInt pixels, width * 4)
+
+        if NativePtr.isNullPtr surface then
+            raise (Sdl.failure "SDL_CreateSurfaceFrom")
+
+        SDL3.SDL_SetWindowIcon (window, surface) |> ignore
+        SDL3.SDL_DestroySurface surface
+
+    /// <summary>Runs the window's loop until it closes.</summary>
+    member this.Run() =
+        while this.Step () do
+            ()
+
+    /// <summary>The page's region at a window position.</summary>
+    member internal _.RegionAt(x: float32, y: float32) =
+        regionAt x y
+
+    /// <summary>The SDL hit test result at a window position; a native frame's is always normal.</summary>
+    member internal _.HitTest(x: int, y: int) =
+        match frame with
+        | WindowFrame.Custom border -> hitTest border x y
+        | WindowFrame.Native -> SDL_HitTestResult.SDL_HITTEST_NORMAL
+
+    /// <summary>The number of region queries against the page.</summary>
+    member internal _.RegionReads = regionReads
+
+    /// <summary>Replaces how the window reads its placement; tests stand in for showing a window.</summary>
+    member internal _.SetPlacementReader(reader: unit -> WindowPlacement) =
+        placementReader <- reader
+
+    /// <summary>Replaces how the window opens its menu; tests stand in for the platform's modal menu.</summary>
+    member internal _.SetSystemMenu(menu: int -> int -> unit) =
+        systemMenu <- menu
+
+    /// <summary>Replaces the page work of a modal turn, for failure checks.</summary>
+    member internal _.SetModalFrame(turn: unit -> unit) =
+        modalFrame <- turn
 
     /// <summary>The window's page.</summary>
     member _.Host = host
@@ -1231,7 +1594,16 @@ type Window
     /// A frame callback that closes the window or disposes its host stops presentation. On a window with a D3D11 swap
     /// chain the present runs on its own thread, so a present that blocks leaves this call and <c>Step</c> running.
     /// </remarks>
-    member _.Present() =
+    member this.Present() =
+        let outer = onPage
+        onPage <- true
+
+        try
+            this.PresentFrame ()
+        finally
+            onPage <- outer
+
+    member private _.PresentFrame() =
         flushHeld HeldKind.Barrier
         host.Frame ()
         lastFrameAt <- now ()
@@ -1263,12 +1635,33 @@ type Window
     /// frame if the page asked for one. Returns false once the window has been asked to close.
     /// </summary>
     /// <remarks>Drains SDL's global event queue for all live Ranvier windows. An application that owns the SDL event pump runs its own loop instead.</remarks>
+    /// <exception cref="T:System.Exception">A failure inside a native callback since the previous call: a modal move or resize turn, a hit test or the maximize button's input.</exception>
     member this.Step(?timeout: int) : bool =
         owner.Ensure ()
 
         if not host.Session.IsOwnerThread then
             invalidOp "An SDL window is stepped on the thread that created it"
 
+        rethrowNativeFailure ()
+        let outer = onPage
+        onPage <- true
+
+        try
+            let running = this.Turn (defaultArg timeout 50, outer)
+            this.CompleteDispose ()
+            rethrowNativeFailure ()
+            running
+        finally
+            onPage <- outer
+
+    // Finishes a Dispose requested inside a native callback.
+    member private this.CompleteDispose() =
+        if disposePending && callbackDepth = 0 then
+            disposePending <- false
+            (this :> IDisposable).Dispose()
+
+    // `outer` is onPage on entry to Step, restored while SDL pumps.
+    member private this.Turn(longest: int, outer: bool) : bool =
         if not closed then
             host.EnsureActive ()
 
@@ -1278,7 +1671,6 @@ type Window
             for target in windows.Snapshot () do
                 target.RefreshSurrounding ()
 
-            let longest = defaultArg timeout 50
             // A frame runs without waiting for the screen once a present has run this long past the last frame.
             let stall = refreshTicks * 3L / 2L
 
@@ -1326,12 +1718,21 @@ type Window
 
             let mutable event = SDL_Event ()
 
-            if Sdl.ok (SDL3.SDL_WaitEventTimeout (&&event, wait)) then
+            // A platform move or resize loop runs inside these two SDL calls.
+            onPage <- outer
+            let received = Sdl.ok (SDL3.SDL_WaitEventTimeout (&&event, wait))
+            onPage <- true
+
+            if received then
                 for target in windows.Snapshot () do
                     target.Dispatch event
                     target.RefreshAfterInput ()
 
-                while alive () && Sdl.ok (SDL3.SDL_PollEvent &&event) do
+                while alive ()
+                      && (onPage <- outer
+                          let polled = Sdl.ok (SDL3.SDL_PollEvent &&event)
+                          onPage <- true
+                          polled) do
                     for target in windows.Snapshot () do
                         target.Dispatch event
                         target.RefreshAfterInput ()
@@ -1430,6 +1831,23 @@ type Window
                 if not host.Session.IsOwnerThread then
                     invalidOp "An SDL window is disposed on the thread that created it"
 
+            if not disposed && callbackDepth > 0 then
+                closed <- true
+                disposePending <- true
+            elif not disposed then
+                if not (isNull hitTestCallback) then
+                    SDL3.SDL_SetWindowHitTest (window, 0n, 0n)
+                    |> ignore
+
+                snapButton
+                |> Option.iter (fun button -> button.Uninstall ())
+
+                snapButton <- None
+
+                if eventWatchPointer <> 0n then
+                    SDL3.SDL_RemoveEventWatch (eventWatchPointer, 0n)
+                    eventWatchPointer <- 0n
+
                 presenter.ReleasePending ()
 
                 if not pageDisposed then
@@ -1450,6 +1868,7 @@ type Window
                                 if not (isNull displayFeed) then
                                     displayFeed.Dispose ()
 
+                                stateOwner.Dispose ()
                                 cleanupCompleted "display")
                             (fun () ->
                                 (graph :> IDisposable).Dispose()
