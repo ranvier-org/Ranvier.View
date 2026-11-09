@@ -24,6 +24,8 @@ let private red =
 let private chainOf (window: Window) =
     match window.SwapChain with
     | Some chain -> chain
+    | None when Environment.GetEnvironmentVariable "RANVIER_REQUIRE_SWAP_CHAIN" = "1" ->
+        failtest "RANVIER_REQUIRE_SWAP_CHAIN is set, and this window has no D3D11 swap chain"
     | None -> skiptest "the machine has no D3D11 hardware device or runtime presentation"
 
 // A hidden window on its default path, with a red square mounted and shown.
