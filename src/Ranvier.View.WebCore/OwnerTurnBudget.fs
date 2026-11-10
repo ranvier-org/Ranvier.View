@@ -30,6 +30,21 @@ type OwnerTurnResult =
         BudgetExceeded: bool
     }
 
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            System.String.Concat
+                [|
+                    "{ Executed = "
+                    this.Executed.ToString (System.Globalization.CultureInfo.InvariantCulture)
+                    "; Remaining = "
+                    this.Remaining.ToString ()
+                    "; BudgetExceeded = "
+                    this.BudgetExceeded.ToString ()
+                    " }"
+                |]
+
 type internal TurnLimit(budget: OwnerTurnBudget, clock: unit -> int64, frequency: int64) =
     do budget.Validate ()
     let start = clock ()

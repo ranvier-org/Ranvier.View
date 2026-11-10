@@ -36,6 +36,33 @@ type SchedulingEvent =
         Count: int
     }
 
+    override this.ToString() =
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" this
+        else
+            let invariant = System.Globalization.CultureInfo.InvariantCulture
+
+            System.String.Concat
+                [|
+                    "{ HostId = "
+                    this.HostId.ToString (invariant)
+                    "; Sequence = "
+                    this.Sequence.ToString (invariant)
+                    "; FrameId = "
+                    this.FrameId.ToString (invariant)
+                    "; Phase = "
+                    this.Phase.ToString ()
+                    "; Started = "
+                    this.Started.ToString (invariant)
+                    "; Duration = "
+                    this.Duration.ToString (invariant)
+                    "; Pending = "
+                    this.Pending.ToString (invariant)
+                    "; Count = "
+                    this.Count.ToString (invariant)
+                    " }"
+                |]
+
 type internal HostSchedulingTrace() =
     static let mutable nextHost = 0L
     let hostId = Interlocked.Increment &nextHost

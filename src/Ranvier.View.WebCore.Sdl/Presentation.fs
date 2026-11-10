@@ -385,7 +385,12 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                     elif status = 1 then
                         deferPipeline ()
                     else
-                        raise (InvalidOperationException ($"GPU pipeline failed: {status}"))
+                        raise (
+                            InvalidOperationException (
+                                "GPU pipeline failed: "
+                                + status.ToString (Globalization.CultureInfo.InvariantCulture)
+                            )
+                        )
 
                 let configured =
                     OptionalNative.rv_host_configure_gpu_pipeline (host.Handle, chain.Device)
