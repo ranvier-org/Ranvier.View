@@ -103,7 +103,7 @@ module BackgroundSnapshots =
         if not (WebCoreHost.Has "detached-image-encoding-v1") then
             raise (NotSupportedException "The native library has no detached image encoder")
 
-        let raw = Snapshots.forHost host
+        let raw = Snapshots.forHostBounded true host
         let capacity = capacities.GetValue (host, fun _ -> Capacity ())
         let document = host.Document
         let live = HashSet<ResourceOperation<SnapshotImage>>()

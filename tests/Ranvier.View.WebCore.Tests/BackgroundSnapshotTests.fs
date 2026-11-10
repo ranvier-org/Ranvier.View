@@ -23,6 +23,56 @@ let tests =
     testList
         "Background snapshots"
         [
+            backgroundCase "oversized capture rejects before worker admission and capacity remains usable" (fun host ->
+                let workers = Queue<unit -> unit>()
+                use service = BackgroundSnapshots.create host workers.Enqueue
+                let element = host.Document.createElement "div"
+                element.setAttribute ("style", "position:absolute;width:4096px;height:4096px;background:red")
+                host.Document.body.appendChild element |> ignore
+                let outcomes = ResizeArray<ResourceOutcome<SnapshotImage>>()
+
+                let options =
+                    { SnapshotContract.defaults with
+                        Scale = Some 2.0
+                    }
+
+                use rejected =
+                    service.Capture (SnapshotSubject.Element element, options, outcomes.Add)
+
+                host.Cycle ()
+                Expect.equal workers.Count 0 "oversized pixels never reach worker"
+
+                match rejected.Snapshot with
+                | ResourceState.Settled (ResourceOutcome.Failed (ResourceFailure.LoadFailed message)) ->
+                    Expect.stringContains message "capture limits" "bounded capture rejected"
+                | state -> failtestf "Expected bounded rejection, got %A" state
+
+                use next =
+                    service.Capture (SnapshotSubject.Viewport, SnapshotContract.defaults, ignore)
+
+                host.Cycle ()
+                Task.Run(workers.Dequeue ()).GetAwaiter().GetResult()
+                host.Cycle ()
+                Expect.equal outcomes.Count 1 "one terminal rejection")
+            backgroundCase "cancellation before the first cycle releases admission without encoding" (fun host ->
+                let workers = Queue<unit -> unit>()
+                use service = BackgroundSnapshots.create host workers.Enqueue
+                let outcomes = ResizeArray<ResourceOutcome<SnapshotImage>>()
+
+                use operation =
+                    service.Capture (SnapshotSubject.Viewport, SnapshotContract.defaults, outcomes.Add)
+
+                operation.Cancel ()
+                host.Cycle ()
+                Expect.equal workers.Count 0 "no worker needed for cancelled captured pixels"
+                Expect.sequenceEqual outcomes [ ResourceOutcome.Failed ResourceFailure.Cancelled ] "one cancellation"
+
+                use next =
+                    service.Capture (SnapshotSubject.Viewport, SnapshotContract.defaults, ignore)
+
+                host.Cycle ()
+                Task.Run(workers.Dequeue ()).GetAwaiter().GetResult()
+                host.Cycle ())
             backgroundCase "capacity is shared and only pending previews are replaced" (fun host ->
                 let workers = Queue<unit -> unit>()
                 use first = BackgroundSnapshots.create host workers.Enqueue
