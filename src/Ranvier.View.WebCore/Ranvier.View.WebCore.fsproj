@@ -95,6 +95,7 @@
         <Compile Include="MediaCapabilities.fs" />
         <Compile Include="NativeImageEncoding.fs" />
         <Compile Include="Snapshots.fs" />
+        <Compile Include="BackgroundSnapshots.fs" />
         <Compile Include="Urls.fs" />
         <Compile Include="TextSegmentation.fs" />
         <Compile Include="Crypto.fs" />

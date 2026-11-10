@@ -33,3 +33,21 @@ module internal OptionalNative =
 
     [<DllImport("RanvierWebCoreHost")>]
     extern int rv_host_try_acquire_completed_gpu_frame(nativeint host, uint64& frame_id, nativeint& frame)
+
+    [<DllImport("RanvierWebCoreHost")>]
+    extern int rv_image_encode_rgba(
+        byte[] pixels,
+        int64 length,
+        int width,
+        int height,
+        int color_space,
+        int encoding,
+        double quality,
+        nativeint& result
+    )
+
+    [<DllImport("RanvierWebCoreHost")>]
+    extern int rv_encoded_image_bytes(nativeint image, byte[] buffer, int64 capacity, int64& length)
+
+    [<DllImport("RanvierWebCoreHost")>]
+    extern void rv_encoded_image_release(nativeint image)
