@@ -12,6 +12,21 @@ let tests =
     testList
         "Layout phases"
         [
+            hostCase "viewport boundaries edit the displayed logical row" (fun host ->
+                for total in [ 10; 1000 ] do
+                    host.Document.body.innerHTML <- "<div id='viewport'></div>"
+                    let container = host.Document.getElementById "viewport" :?> HTMLElement
+                    use editor = new EditorViewport (host, container, total)
+
+                    for requested in [ 0; 7; total - 1 ] do
+                        editor.MoveTo requested
+                        let first = min (max 0 (total - 25)) requested
+                        Expect.equal editor.First first "first row clamps to the last full viewport"
+                        editor.Edit "changed"
+                        let rows = container.querySelectorAll ".editor-line"
+                        let start = min (max 0 (total - editor.Count)) (max 0 (first - 50))
+                        Expect.equal (rows.item (uint32 (first - start))).textContent $"line {first}: changed" "edit targets visible row"
+                        Expect.equal container.scrollTop ((first - start) * 20) "scroll matches mounted offset")
             testCase "viewport and measurement memory do not grow with document size" (fun _ ->
                 Expect.equal (viewportKeys 100000 500 25).Length 125 "viewport plus overscan"
                 Expect.equal (viewportKeys 10000000 500 25).Length 125 "larger document"

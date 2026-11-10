@@ -51,7 +51,7 @@ type EditorViewport(host: WebCoreHost, container: HTMLElement, total: int, ?unbo
     let fonts = Fonts.forHost host
     let mutable fontRevision = 0L
     let fontEvents = fonts.Subscribe (fun _ -> fontRevision <- fontRevision + 1L)
-    let mutable first = 50
+    let mutable first = min 50 (max 0 (total - visible))
     let mutable pinned = false
     let mutable requested = first
     let mutable styleRevision = 0L
@@ -63,8 +63,13 @@ type EditorViewport(host: WebCoreHost, container: HTMLElement, total: int, ?unbo
         | "bidi" -> $"line {line}: العربية עברית abc 日本語"
         | _ -> $"line {line}: let value = {line}"
 
+    let mutable start = 0
+
+    let clampFirst line =
+        max 0 (min (total - min count (max 1 (height / 20))) line)
+
     let refresh () =
-        let start = min (max 0 (total - count)) (max 0 (first - 50))
+        start <- min (max 0 (total - count)) (max 0 (first - 50))
 
         phases.Mutate (fun () ->
             graph.Run (fun () ->
@@ -72,7 +77,7 @@ type EditorViewport(host: WebCoreHost, container: HTMLElement, total: int, ?unbo
                     for index in 0 .. slots.Length - 1 do
                         slots[index].Text.Value <- text (start + index))))
 
-        container.scrollTop <- min 50 first * 20
+        container.scrollTop <- (first - start) * 20
 
     do
         container.setAttribute ("style", "height:500px;width:700px;overflow:hidden;font:14px monospace;line-height:20px;white-space:pre")
@@ -83,10 +88,10 @@ type EditorViewport(host: WebCoreHost, container: HTMLElement, total: int, ?unbo
     member _.CacheCount = cache.Count
 
     member _.Edit(text: string) =
-        phases.Mutate (fun () -> graph.Run (fun () -> Api.batch (fun () -> slots[min 50 (slots.Length - 1)].Text.Value <- $"line {first}: {text}")))
+        phases.Mutate (fun () -> graph.Run (fun () -> Api.batch (fun () -> slots[first - start].Text.Value <- $"line {first}: {text}")))
 
     member _.MoveTo line =
-        requested <- max 0 (min (total - 1) line)
+        requested <- clampFirst line
 
         if not pinned then
             first <- requested
@@ -117,6 +122,12 @@ type EditorViewport(host: WebCoreHost, container: HTMLElement, total: int, ?unbo
                     $"height:{height}px;width:{width}px;overflow:hidden;font:14px monospace;line-height:20px;white-space:"
                     + (if wrap then "pre-wrap" else "pre")
                 ))
+
+            requested <- clampFirst requested
+
+            if not pinned then
+                first <- requested
+                refresh ()
 
     member _.Measure() =
         cache.Configure
