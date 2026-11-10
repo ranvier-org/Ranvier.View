@@ -252,6 +252,9 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
             interactive = interactive
             gpuFramePipeline = pipeline
             boundedImeContext = boundedIme
+            gpuPipelineSupported = WebCoreHost.Has "gpu-frame-pipeline-v1"
+            imeWindowSupported = WebCoreHost.Has "ime-surrounding-window-v1"
+            nativeAbi = RanvierWebCoreAbi.Native.rv_abi_version ()
             inputDocumentOrigin = inputDocumentOrigin
             inputDocumentCursor =
                 inputDocumentOrigin

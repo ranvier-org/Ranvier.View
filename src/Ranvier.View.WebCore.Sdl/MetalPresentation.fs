@@ -58,7 +58,7 @@ module private MetalNative =
         let ready buffer =
             match send (buffer, sel_registerName "status") with
             | 4n -> true
-            | 5n -> invalidOp "The Metal command buffer failed"
+            | 5n -> raise (GpuCompletionFailure "The Metal command buffer failed")
             | _ -> false
 
         CompletionFence (
@@ -131,6 +131,7 @@ type internal MetalRenderer private (renderer: nativeptr<SDL_Renderer>, queue: n
         if pendingFrame <> 0n then
             invalidOp "An IOSurface frame is awaiting consumer completion"
 
+        fence.Reset ()
         pendingFrame <- frame
         submitted <- false
         pipelineFrame <- true

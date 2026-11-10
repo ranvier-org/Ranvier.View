@@ -1,5 +1,10 @@
 name: WebCore responsiveness qualification
 on:
+  workflow_call:
+    inputs:
+      native_run:
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       native_run:
@@ -62,10 +67,12 @@ jobs:
         run: |
           prefix=()
           if [ "$RUNNER_OS" = Linux ]; then prefix=(xvfb-run -a); fi
+          if [ "$RUNNER_OS" != Linux ]; then unset SDL_VIDEODRIVER; fi
           "${prefix[@]}" dotnet artifacts/tests/Ranvier.View.WebCore.Tests.dll --summary
           "${prefix[@]}" dotnet artifacts/tests/Ranvier.View.WebCore.Tests.dll --filter "portable GPU readiness" --summary | tee artifacts/portable.log
           "${prefix[@]}" dotnet artifacts/fixture/Responsiveness.dll --scenario typing --seconds 5 --repetitions 1 --lines 1000000 --bounded-ime --gpu-pipeline --output artifacts/qualification
           "${prefix[@]}" dotnet artifacts/fixture/Responsiveness.dll --scenario ime --seconds 5 --repetitions 1 --lines 1000000 --bounded-ime --gpu-pipeline --output artifacts/qualification
+          python -c "import json,pathlib; samples=[json.loads((pathlib.Path('artifacts/qualification')/(s+'-1.json')).read_text()) for s in ['typing','ime']]; assert all(s['nativeAbi'] >= 69 and s['gpuPipelineSupported'] and s['imeWindowSupported'] and s['gpuFrames'] > 0 and s['cpuFrames'] == 0 for s in samples), samples"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

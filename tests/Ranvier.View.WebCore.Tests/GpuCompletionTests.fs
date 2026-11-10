@@ -33,3 +33,26 @@ let tests =
         ready <- false
         fence.Complete ()
         Expect.equal (starts, waits, releases) (2, 1, 2) "only explicit cleanup waits"
+
+[<Tests>]
+let failedCompletion =
+    testCase "terminal GPU failure still permits owner cleanup"
+    <| fun () ->
+        let mutable starts, waits, releases = 0, 0, 0
+
+        let fence =
+            CompletionFence (
+                (fun () ->
+                    starts <- starts + 1
+                    42n),
+                (fun _ -> raise (GpuCompletionFailure "device lost")),
+                (fun _ -> waits <- waits + 1),
+                (fun _ -> releases <- releases + 1)
+            )
+
+        Expect.throws (fun () -> fence.TryComplete () |> ignore) "poll reports the terminal failure"
+        fence.Complete ()
+        Expect.equal (starts, waits, releases) (1, 0, 1) "cleanup uses terminal proof without another wait"
+        fence.Reset ()
+        fence.Complete ()
+        Expect.equal (starts, waits, releases) (2, 1, 2) "failure first observed during disposal also releases"

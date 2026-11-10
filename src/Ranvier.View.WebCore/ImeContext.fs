@@ -27,6 +27,7 @@ type ImeContextSnapshot =
 /// <summary>Bounded native input-method context for supported text controls.</summary>
 module ImeContext =
     /// <summary>Reads at most maxUnits UTF-16 units; unsupported structure or composition reports Unavailable.</summary>
+    /// <param name="host">The active host, accessed on its owner thread.</param>
     /// <param name="maxUnits">Between 1 and 4096 UTF-16 units, including both selection ends.</param>
     /// <returns>ValueNone when the native runtime lacks the capability.</returns>
     let read (host: WebCoreHost) maxUnits =
