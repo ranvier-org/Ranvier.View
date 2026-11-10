@@ -549,12 +549,19 @@ jobs:
         run: dotnet fsi build.fsx -- pack
       - name: Test native-delivery package selection
         run: python3 -I tests/native-packages/test_native_delivery_packages.py
+      - name: Test Anime package publication selection
+        run: python3 -I tests/native-packages/test_anime_publication.py
       - name: Select the native-delivery package artifacts
         run: python3 -I .github/scripts/native_delivery_packages.py --directory bin --excluded-directory artifacts/native-delivery-excluded --report artifacts/native-delivery-packages.json
       - uses: actions/upload-artifact@v7
         with:
           name: native-delivery-package-selection
           path: artifacts/native-delivery-packages.json
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v7
+        with:
+          name: anime-packages
+          path: artifacts/native-delivery-excluded/Ranvier.View.Anime*.nupkg
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
         with:
