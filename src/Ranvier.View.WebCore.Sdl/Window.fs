@@ -1631,6 +1631,10 @@ type Window
     /// chain the present runs on its own thread, so a present that blocks leaves this call and <c>Step</c> running.
     /// </remarks>
     member this.Present() =
+        presenter.Invalidate ()
+        this.PresentPending ()
+
+    member private this.PresentPending() =
         let outer = onPage
         onPage <- true
 
@@ -1640,6 +1644,9 @@ type Window
             onPage <- outer
 
     member private _.PresentFrame() =
+        if host.FrameRequested || fullPaint || framePending then
+            presenter.Invalidate ()
+
         flushHeld HeldKind.Barrier
         host.Frame ()
         lastFrameAt <- now ()
@@ -1665,8 +1672,18 @@ type Window
             let submittedFrame = host.SchedulingTrace.FrameId
             let presentStarted = host.SchedulingTrace.Start ()
             let shown = presenter.Present exposed
-            // Present waits for any preceding submission before accepting another frame.
-            completePresentationTrace ()
+
+            if
+                not presenter.GpuFramePipelineActive
+                || not presenter.Presenting
+            then
+                completePresentationTrace ()
+
+            let submittedFrame =
+                match presenter.PresentedFrameId with
+                | ValueSome identity when shown -> identity
+                | _ -> submittedFrame
+
             host.SchedulingTrace.Finish (SchedulingPhase.Present, presentStarted, 0, frameId = submittedFrame)
 
             if shown then
@@ -1685,8 +1702,14 @@ type Window
     /// sooner or a frame is wanted, for window events and dispatches them to the page, cycles the host, then presents a
     /// frame if the page asked for one. Returns false once the window has been asked to close.
     /// </summary>
-    /// <remarks>Drains SDL's global event queue for all live Ranvier windows. An application that owns the SDL event pump runs its own loop instead.</remarks>
-    /// <exception cref="T:System.Exception">A failure inside a native callback since the previous call: a modal move or resize turn, a hit test or the maximize button's input.</exception>
+    /// <remarks>
+    /// Drains SDL's global event queue for all live Ranvier windows.
+    /// An application that owns the SDL event pump runs its own loop instead.
+    /// </remarks>
+    /// <exception cref="T:System.Exception">
+    /// A failure inside a native callback since the previous call: a modal move or resize turn,
+    /// a hit test or the maximize button's input.
+    /// </exception>
     member this.Step(?timeout: int) : bool =
         owner.Ensure ()
 
@@ -1726,6 +1749,15 @@ type Window
     member private _.CycleHost() =
         cycleHost ()
 
+    /// <summary>Opts into bounded nonblocking D3D11 transport when the native runtime supports it.</summary>
+    /// <remarks>False by default. Congestion retains the previous image and retries at the display interval.
+    /// Unsupported platforms retain their existing presentation path.</remarks>
+    member _.GpuFramePipeline
+        with get () = presenter.GpuFramePipeline
+        and set value =
+            host.EnsureActive ()
+            presenter.GpuFramePipeline <- value
+
     member private this.Turn(longest: int, outer: bool) : bool =
         if not closed then
             host.EnsureActive ()
@@ -1753,10 +1785,18 @@ type Window
                     (host.FrameRequested
                      || fullPaint
                      || exposed
-                     || framePending)
+                     || framePending
+                     || presenter.PendingGpuFrame)
                     && not presenter.Presenting
                 then
-                    0
+                    let retry = presenter.GpuRetryDelay
+
+                    let due =
+                        match host.NextTimerDelay with
+                        | ValueSome delay -> min retry (max 0 (int (Math.Ceiling delay)))
+                        | ValueNone -> retry
+
+                    min longest due
                 else
                     let timer =
                         match host.NextTimerDelay with
@@ -1859,10 +1899,12 @@ type Window
                 && (host.FrameRequested
                     || fullPaint
                     || exposed
-                    || framePending)
+                    || framePending
+                    || presenter.PendingGpuFrame)
             then
                 if not presenter.Presenting then
-                    this.Present ()
+                    if presenter.GpuRetryDelay = 0 then
+                        this.PresentPending ()
                 elif
                     host.FrameRequested
                     && now () - lastFrameAt >= stall

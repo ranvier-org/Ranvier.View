@@ -27,12 +27,14 @@ let percentile quantile (values: int64 array) =
         * 1000.0
         / float Stopwatch.Frequency
 
-let sample scenario seconds lines unbounded visible renderer tracing interactive output repetition =
+let sample scenario seconds lines unbounded visible renderer tracing interactive pipeline output repetition =
     use window =
         Window.Create ("Ranvier responsiveness", 800, 600, hidden = not visible, ?renderer = renderer)
 
     if interactive then
         window.InteractiveBudget <- Some OwnerTurnBudget.Default
+
+    window.GpuFramePipeline <- pipeline
 
     let host = window.Host
     host.Document.body.innerHTML <- "<textarea id='input' style='width:700px;height:80px'></textarea><div id='lines'></div>"
@@ -82,7 +84,7 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
                     && visibleColor <> result.VisibleColor
                 then
                     visibleColor <- result.VisibleColor
-                    viewport.style.setProperty("color", visibleColor, ""))
+                    viewport.style.setProperty ("color", visibleColor, ""))
         )
 
     let mutable cancellation = new CancellationTokenSource ()
@@ -223,6 +225,7 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
             hidden = not visible
             tracing = tracing
             interactive = interactive
+            gpuFramePipeline = pipeline
             requestedRenderer = defaultArg renderer "default"
             stopwatchFrequency = Stopwatch.Frequency
             runtimeHash = hash
@@ -305,6 +308,7 @@ let main args =
                 renderer
                 (not (Array.contains "--no-trace" args))
                 (Array.contains "--interactive" args)
+                (Array.contains "--gpu-pipeline" args)
                 output
                 repetition
 

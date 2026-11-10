@@ -437,7 +437,10 @@ type internal D3D11SwapChain private (hwnd: nativeint, wakeEvent: uint32) =
             SDL3.SDL_PumpEvents ()
 
     /// <summary>Applies a resize and rebuilds a lost device; false leaves nothing to present to, for at least this frame.</summary>
-    member _.Prepare() =
+    member _.MarkDeviceLost() =
+        lost <- true
+
+    member _.Prepare(?nonblocking: bool) =
         if lost then
             teardown ()
             lost <- not (build ())
@@ -463,7 +466,7 @@ type internal D3D11SwapChain private (hwnd: nativeint, wakeEvent: uint32) =
                 lost <- true
 
         // A device that cannot be rebuilt yet is retried at the display's rate, not as fast as the loop turns.
-        if lost then
+        if lost && not (defaultArg nonblocking false) then
             Thread.Sleep refreshMs
 
         not lost

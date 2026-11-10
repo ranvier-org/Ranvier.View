@@ -1081,7 +1081,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         if WebCoreHost.Has "host-layout-metrics" then
             let mutable count = 0u
 
-            Native.rv_host_layout_count (handle, &count)
+            OptionalNative.rv_host_layout_count (handle, &count)
             |> Interop.check "rv_host_layout_count"
 
             ValueSome count

@@ -1,0 +1,18 @@
+namespace Ranvier.View.WebCore
+
+open System.Runtime.InteropServices
+
+// Optional ABI 66/67 entry points, gated by rv_abi_has. Keep the public interop package dependency
+// compatible with older runtimes until the coordinated native package release is available.
+module internal OptionalNative =
+    [<DllImport("RanvierWebCoreHost")>]
+    extern int rv_host_layout_count(nativeint host, uint32& count)
+
+    [<DllImport("RanvierWebCoreHost")>]
+    extern int rv_host_configure_gpu_pipeline(nativeint host, nativeint consumer_device)
+
+    [<DllImport("RanvierWebCoreHost")>]
+    extern int rv_host_submit_gpu_frame(nativeint host, uint64 frame_id)
+
+    [<DllImport("RanvierWebCoreHost")>]
+    extern int rv_host_try_acquire_completed_gpu_frame(nativeint host, uint64& frame_id, nativeint& frame)

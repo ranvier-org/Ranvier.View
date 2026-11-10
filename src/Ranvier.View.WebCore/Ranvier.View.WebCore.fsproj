@@ -62,6 +62,7 @@
         <Compile Include="HostSchedulingTrace.fs" />
         <Compile Include="OwnerTurnBudget.fs" />
         <Compile Include="OwnerWorkQueue.fs" />
+        <Compile Include="OptionalNative.fs" />
         <Compile Include="Host.fs" />
         <Compile Include="LatestPublication.fs" />
 
