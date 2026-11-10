@@ -27,7 +27,7 @@ let percentile quantile (values: int64 array) =
         * 1000.0
         / float Stopwatch.Frequency
 
-let sample scenario seconds lines unbounded visible renderer tracing interactive pipeline output repetition =
+let sample scenario seconds lines unbounded visible renderer tracing interactive pipeline boundedIme output repetition =
     use window =
         Window.Create ("Ranvier responsiveness", 800, 600, hidden = not visible, ?renderer = renderer)
 
@@ -35,10 +35,33 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
         window.InteractiveBudget <- Some OwnerTurnBudget.Default
 
     window.GpuFramePipeline <- pipeline
+    window.BoundedImeContext <- boundedIme
 
     let host = window.Host
     host.Document.body.innerHTML <- "<textarea id='input' style='width:700px;height:80px'></textarea><div id='lines'></div>"
     let input = host.Document.getElementById "input" :?> HTMLTextAreaElement
+    let mutable inputDocumentOrigin = 0L
+
+    let trimInput () =
+        let text = input.value
+
+        if text.Length > 256 then
+            let mutable removed = text.Length - 128
+
+            if
+                Char.IsLowSurrogate text[removed]
+                && Char.IsHighSurrogate text[removed - 1]
+            then
+                removed <- removed + 1
+
+            if int input.selectionStart >= removed then
+                let start = int input.selectionStart - removed
+                let finish = int input.selectionEnd - removed
+                let direction = input.selectionDirection
+                input.value <- text.Substring removed
+                input.setSelectionRange (uint32 start, uint32 finish, direction)
+                inputDocumentOrigin <- inputDocumentOrigin + int64 removed
+
     let viewport = host.Document.getElementById "lines" :?> HTMLElement
 
     use editor =
@@ -105,8 +128,7 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
 
         match scenario with
         | "typing" ->
-            if input.value.Length > 256 then
-                input.value <- ""
+            trimInput ()
 
             host.Type ("a", "KeyA", "a")
             editor.Edit input.value
@@ -123,8 +145,7 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
             editor.EndComposition ()
             editor.Edit input.value
 
-            if input.value.Length > 256 then
-                input.value <- ""
+            trimInput ()
         | "scroll"
         | "long-line"
         | "bidi" -> editor.MoveTo (50 + iteration % max 1 (lines - 125))
@@ -165,6 +186,10 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
         | other -> invalidArg "scenario" other
 
         editor.Measure ()
+
+        if boundedIme then
+            ImeContext.read host 4096 |> ignore
+
         phases.Present (fun () -> window.Step (timeout = 0) |> ignore)
         turnDurations.Add (Stopwatch.GetTimestamp () - started)
         let struct (batch, lost) = host.DrainSchedulingTrace ()
@@ -226,6 +251,16 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
             tracing = tracing
             interactive = interactive
             gpuFramePipeline = pipeline
+            boundedImeContext = boundedIme
+            inputDocumentOrigin = inputDocumentOrigin
+            inputDocumentCursor =
+                inputDocumentOrigin
+                + int64 (
+                    if input.selectionDirection = "backward" then
+                        input.selectionStart
+                    else
+                        input.selectionEnd
+                )
             requestedRenderer = defaultArg renderer "default"
             stopwatchFrequency = Stopwatch.Frequency
             runtimeHash = hash
@@ -309,6 +344,7 @@ let main args =
                 (not (Array.contains "--no-trace" args))
                 (Array.contains "--interactive" args)
                 (Array.contains "--gpu-pipeline" args)
+                (Array.contains "--bounded-ime" args)
                 output
                 repetition
 

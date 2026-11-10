@@ -6,6 +6,23 @@ open System.Runtime.InteropServices
 // compatible with older runtimes until the coordinated native package release is available.
 module internal OptionalNative =
     [<DllImport("RanvierWebCoreHost")>]
+    extern int rv_host_ime_surrounding_window(
+        nativeint host,
+        int max_units,
+        byte[] buffer,
+        int capacity,
+        int[] length,
+        int& origin,
+        int& cursor,
+        int& anchor,
+        int& state,
+        uint64& token
+    )
+
+    [<DllImport("RanvierWebCoreHost")>]
+    extern int rv_host_ime_delete_surrounding_window(nativeint host, uint64 token, int start, int finish)
+
+    [<DllImport("RanvierWebCoreHost")>]
     extern int rv_host_layout_count(nativeint host, uint32& count)
 
     [<DllImport("RanvierWebCoreHost")>]

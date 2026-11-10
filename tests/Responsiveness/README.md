@@ -28,6 +28,15 @@ unpublished managed package. Native release packaging must include the regenerat
 and host together; enable the pipeline only after validating that runtime on the target Windows hardware.
 The feature is off by default and does not change macOS/Linux presentation.
 
+Use `--bounded-ime` to enable `Window.BoundedImeContext` on ABI 68. Control queries copy at most
+4,096 UTF-16 units and visit at most 64 flat editor nodes. Selection direction and a document origin
+are retained. Arbitrary contenteditable, active composition and selections that do not fit explicitly
+return Unavailable; there is no full-text fallback on this path. Older runtimes retain legacy behavior.
+Deletion validates the token and then uses the existing editing transaction; only explicit deletion
+may still serialize the full control. The fixture keeps a trailing input context, trims outside
+composition without discarding a selection, and reports its absolute origin/caret. It does not retain
+a complete document buffer or qualify physical platform IMEs.
+
 `posted` is the deliberately unbounded ordinary-post control. `publication` uses one detached-result slot, one worker at a time, and owner-side document/text/project/request revision validation before changing the visible decoration. The sample cancels its worker on shutdown and checks revisions regardless of cancellation. The document ID is a fresh open-document generation, so reopening a path cannot accept an old result. For reactive values, use Ranvier core async/stream primitives instead of this host transport.
 
 `LatestPublication` transfers ownership of every published value, including values rejected after disposal. Its apply callback borrows the payload; the optional release callback runs once afterward or when replaced/rejected, on whichever thread owns that operation. Release must be thread-safe and cannot access native handles. Dispose clears pending payloads; a delivery already claimed may complete. Revision validation is application policy, not inferred by the generic slot.

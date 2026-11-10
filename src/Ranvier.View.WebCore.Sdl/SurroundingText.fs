@@ -106,7 +106,14 @@ module internal SurroundingText =
     type Bridge(window: nativeint, host: WebCoreHost) =
         let send = sender.Value
         let mutable available = false
-        let mutable snapshot: (string * uint32 * uint64) option = None
+        let mutable snapshot: (string * uint32 * uint64 * bool) option = None
+        let mutable boundedRequested = false
+
+        member _.Bounded
+            with get () = boundedRequested
+            and set value =
+                boundedRequested <- value
+                snapshot <- None
 
         member _.Available = available
         member _.EventType = send |> Option.map snd |> Option.defaultValue 0u
@@ -116,11 +123,14 @@ module internal SurroundingText =
             snapshot <- None
 
             match previous with
-            | Some (text, cursor, currentToken) when token = currentToken ->
+            | Some (text, cursor, currentToken, bounded) when token = currentToken ->
                 match deleteRange text cursor offset count with
                 | Some (start, finish) ->
                     let result =
-                        Native.rv_host_ime_delete_surrounding (host.Handle, token, start, finish)
+                        if bounded then
+                            OptionalNative.rv_host_ime_delete_surrounding_window (host.Handle, token, start, finish)
+                        else
+                            Native.rv_host_ime_delete_surrounding (host.Handle, token, start, finish)
 
                     if count = 0u && result = 0 then 1 else result
                 | None -> -9
@@ -148,14 +158,38 @@ module internal SurroundingText =
                     let length = [| 0 |]
                     let mutable cursor, anchor, state = 0, 0, 0
                     let mutable token = 0UL
-                    let mutable bytes = Array.zeroCreate<byte> 1024
+
+                    let bounded =
+                        boundedRequested
+                        && WebCoreHost.Has "ime-surrounding-window-v1"
+
+                    let mutable origin = 0
+                    let mutable bytes = Array.zeroCreate<byte>(if bounded then 12288 else 1024)
 
                     let call () =
-                        Native.rv_host_ime_surrounding (host.Handle, bytes, bytes.Length, length, &cursor, &anchor, &state, &token)
+                        if bounded then
+                            OptionalNative.rv_host_ime_surrounding_window (
+                                host.Handle,
+                                4096,
+                                bytes,
+                                bytes.Length,
+                                length,
+                                &origin,
+                                &cursor,
+                                &anchor,
+                                &state,
+                                &token
+                            )
+                        else
+                            Native.rv_host_ime_surrounding (host.Handle, bytes, bytes.Length, length, &cursor, &anchor, &state, &token)
 
                     let mutable status = call ()
 
-                    if status = -6 && length[0] > bytes.Length then
+                    if
+                        not bounded
+                        && status = -6
+                        && length[0] > bytes.Length
+                    then
                         bytes <- Array.zeroCreate<byte> length[0]
                         status <- call ()
 
@@ -176,7 +210,11 @@ module internal SurroundingText =
                                 transmit.Invoke (window, NativePtr.toNativeInt pointer, caret, origin, token)
                                 <> 0uy
 
-                            snapshot <- if available then Some (text, caret, token) else None
+                            snapshot <-
+                                if available then
+                                    Some (text, caret, token, bounded)
+                                else
+                                    None
                         | _ ->
                             transmit.Invoke (window, 0n, 0u, 0u, 0UL)
                             |> ignore

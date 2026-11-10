@@ -30,6 +30,7 @@
         <Compile Include="ExitLifetimeTests.fs" />
         <Compile Include="SvgTests.fs" />
         <Compile Include="InputTests.fs" />
+        <Compile Include="ImeContextTests.fs" />
         <Compile Include="PaintTests.fs" />
         <Compile Include="WindowTests.fs" />
         <Compile Include="WindowShellTests.fs" />

@@ -1618,6 +1618,15 @@ type Window
     /// <summary>Whether the focused window's SDL input backend has valid surrounding text.</summary>
     member _.ImeSurroundingAvailable = surrounding.Available
 
+    /// <summary>Opts into bounded control context when the runtime supports it; disabled by default.</summary>
+    /// <remarks>Composition and unsupported editable structures report unavailable surrounding text.</remarks>
+    member _.BoundedImeContext
+        with get () = surrounding.Bounded
+        and set value =
+            host.EnsureActive ()
+            surrounding.Bounded <- value
+            surrounding.Refresh ()
+
     /// <summary>Asks the window to close: the next <c>Step</c> returns false.</summary>
     member _.Close() =
         closed <- true
