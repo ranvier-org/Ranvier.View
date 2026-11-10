@@ -616,6 +616,8 @@ jobs:
           fetch-depth: 2
       - name: Test the version ownership check
         run: python3 -I tests/native-packages/test_versioning.py
+      - name: Verify public native dependency examples before release
+        run: python3 -I tests/native-packages/test_verify_published_native_runtime.py RuntimeVerification.test_public_consumer_defaults_match_allocated_native_preview_and_abi
       - name: Check that ShipIt owns every package version
         env:
           HEAD_REF: ${{ github.head_ref }}

@@ -21,8 +21,8 @@ aggregate's win-x64 GPU assets and add the matching CPU runtime in the applicati
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="[0.1.1-rc.5]" ExcludeAssets="all" />
-  <PackageReference Include="Ranvier.WebCore.Native.Cpu.win-x64" Version="[0.1.1-rc.5]" />
+  <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="[0.1.1-rc.6]" ExcludeAssets="all" />
+  <PackageReference Include="Ranvier.WebCore.Native.Cpu.win-x64" Version="[0.1.1-rc.6]" />
 </ItemGroup>
 ```
 
