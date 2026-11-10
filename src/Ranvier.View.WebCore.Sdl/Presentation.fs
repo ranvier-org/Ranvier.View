@@ -71,7 +71,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     let pipelineActive () =
         pipelineRequested
         && gpuEnabled
-        && swapChain.IsSome
+        && (swapChain.IsSome || egl.IsSome || metal.IsSome)
         && WebCoreHost.Has "gpu-frame-pipeline-v1"
 
     let retryDelay () =
@@ -502,6 +502,167 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
             paintForSwapChain () |> ignore
             struct (cpuWidth, cpuHeight, chain.Read (chain.UploadCpu (pixels, cpuWidth, cpuHeight), cpuWidth, cpuHeight))
 
+    member private this.PresentPortable(exposed: bool) =
+        let retireTexture () =
+            if not (NativePtr.isNullPtr gpuTexture) then
+                SDL3.SDL_DestroyTexture gpuTexture
+                gpuTexture <- NativePtr.nullPtr
+                gpuResource <- 0n
+
+        if retryDelay () > 0 then
+            false
+        else
+            let hadConsumer =
+                metal
+                |> Option.exists (fun consumer -> consumer.PendingFrame <> 0n)
+
+            let completed =
+                match metal with
+                | Some consumer -> consumer.TryReleasePending retireTexture
+                | None -> true
+
+            if not completed then
+                deferPipeline ()
+            elif
+                hadConsumer
+                && not pipelineNeedsSubmit
+                && not pipelinePending
+            then
+                retryAt <- 0L
+                true
+            else
+                let consumer =
+                    match egl, metal with
+                    | Some consumer, _ ->
+                        if not (consumer.Activate ()) then
+                            raise (PresentationNative.failure "SDL_GL_MakeCurrent")
+
+                        consumer.Context
+                    | _, Some consumer -> consumer.Queue
+                    | _ -> invalidOp "Missing portable GPU consumer"
+
+                let recover status =
+                    if status = 1 then
+                        deferPipeline ()
+                    elif status = -9 then
+                        pipelineRequested <- false
+                        this.Present exposed
+                    else
+                        invalidOp (
+                            "GPU pipeline failed; recreate the window after device loss: "
+                            + string status
+                        )
+
+                let configured =
+                    OptionalNative.rv_host_configure_gpu_pipeline (host.Handle, consumer)
+
+                if configured <> 0 then
+                    recover configured
+                else
+                    if pipelinePending && pipelineSize <> host.PaintSize then
+                        pipelinePending <- false
+                        pipelineNeedsSubmit <- true
+
+                    let submitted =
+                        if
+                            not pipelinePending
+                            && (pipelineNeedsSubmit || exposed)
+                        then
+                            let status = OptionalNative.rv_host_submit_gpu_frame (host.Handle, pipelineId + 1UL)
+
+                            if status = 0 then
+                                pipelineId <- pipelineId + 1UL
+                                pipelineTraceFrame <- host.SchedulingTrace.FrameId
+                                pipelineSize <- host.PaintSize
+                                pipelinePending <- true
+                                pipelineNeedsSubmit <- false
+
+                            status
+                        else
+                            0
+
+                    if submitted <> 0 then
+                        recover submitted
+                    elif not pipelinePending then
+                        retryAt <- 0L
+                        true
+                    else
+                        let mutable identity = 0UL
+                        let mutable frame = 0n
+
+                        let status =
+                            OptionalNative.rv_host_try_acquire_completed_gpu_frame (host.Handle, &identity, &frame)
+
+                        if status <> 0 then
+                            recover status
+                        else
+                            let mutable resource = 0n
+                            let mutable width, height, format = 0, 0, 0
+
+                            let status =
+                                RanvierWebCoreAbi.Native.rv_gpu_frame_info (frame, &resource, &width, &height, &format)
+
+                            if
+                                status <> 0
+                                || identity <> pipelineId
+                                || resource = 0n
+                                || format <> (if metal.IsSome then 2 else 1)
+                            then
+                                RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
+                                |> ignore
+
+                                invalidOp "Invalid completed portable GPU frame"
+
+                            match egl, metal with
+                            | Some _, _ -> pendingEglFrame <- frame
+                            | _, Some consumer -> consumer.Adopt frame
+                            | _ -> ()
+
+                            try
+                                retireTexture ()
+
+                                gpuTexture <-
+                                    match egl, metal with
+                                    | Some consumer, _ -> consumer.Import (resource, width, height)
+                                    | _, Some consumer -> consumer.Import (resource, width, height)
+                                    | _ -> NativePtr.nullPtr
+
+                                if NativePtr.isNullPtr gpuTexture then
+                                    invalidOp "GPU frame import failed"
+
+                                gpuResource <- resource
+                                gpuWidth <- width
+                                gpuHeight <- height
+
+                                if
+                                    not (
+                                        PresentationNative.ok (
+                                            SDL3.SDL_SetTextureBlendMode (gpuTexture, SDL_BlendMode.SDL_BLENDMODE_BLEND_PREMULTIPLIED)
+                                        )
+                                    )
+                                then
+                                    raise (PresentationNative.failure "SDL_SetTextureBlendMode")
+
+                                draw gpuTexture width height
+
+                                if not (present ()) then
+                                    raise (PresentationNative.failure "SDL_RenderPresent")
+
+                                pipelinePending <- false
+                                presentedTraceFrame <- ValueSome pipelineTraceFrame
+                                gpuFrames <- gpuFrames + 1L
+                                lastGpu <- true
+                                fullPaint <- true
+
+                                if metal.IsSome || pipelineNeedsSubmit then
+                                    deferPipeline ()
+                                else
+                                    retryAt <- 0L
+                                    true
+                            finally
+                                if egl.IsSome then
+                                    releasePendingEglFrame ()
+
     member private _.WithGpu(action: nativeptr<SDL_Texture> -> int -> int -> 'T) : 'T voption =
         releasePendingEglFrame ()
         releasePendingMetalFrame ()
@@ -686,6 +847,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     member this.Present(exposed: bool) =
         match swapChain with
         | Some chain -> presentOnSwapChain chain exposed
+        | None when pipelineActive () -> this.PresentPortable exposed
         | None ->
             match
                 this.WithGpu (fun texture width height ->

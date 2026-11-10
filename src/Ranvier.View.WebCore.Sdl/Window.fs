@@ -1758,7 +1758,7 @@ type Window
     member private _.CycleHost() =
         cycleHost ()
 
-    /// <summary>Opts into bounded nonblocking D3D11 transport when the native runtime supports it.</summary>
+    /// <summary>Opts into bounded GPU transport with nonblocking readiness when the native runtime supports it.</summary>
     /// <remarks>False by default. Congestion retains the previous image and retries at the display interval.
     /// Unsupported platforms retain their existing presentation path.</remarks>
     member _.GpuFramePipeline

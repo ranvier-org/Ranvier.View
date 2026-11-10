@@ -17,7 +17,7 @@ Use the same staged runtime hash, renderer, device, resolution, display refresh 
 
 Use `--interactive` to opt into 64 posted callbacks or 2 ms per checkpointed turn, and 256 SDL events or 2 ms per batch. Generic posts remain lossless and may accumulate under sustained overload. The queue-delay trace makes that backlog visible. Microtasks, timers, native run-loop work and deferred release batches remain cooperative and exhaustive.
 
-Use `--gpu-pipeline` on Windows to opt into `Window.GpuFramePipeline`. This requires native ABI 67's
+Use `--gpu-pipeline` to opt into `Window.GpuFramePipeline`. Windows requires native ABI 67's
 `gpu-frame-pipeline-v1`; older runtimes keep the legacy path. NotReady preserves the current image and
 retries at the display interval without selecting CPU readback. `ReadPixels` remains an explicit,
 synchronous diagnostic operation. Layout and GPU command submission still run on the owner thread.
@@ -26,7 +26,19 @@ The managed package remains compatible with the released rc.5 dependency. Four i
 imports are capability-gated, so consumers can stage an ABI 66/67 native runtime without requiring an
 unpublished managed package. Native release packaging must include the regenerated canonical bindings
 and host together; enable the pipeline only after validating that runtime on the target Windows hardware.
-The feature is off by default and does not change macOS/Linux presentation.
+The feature is off by default. ABI 69 adds Linux EGL and macOS ANGLE/Metal support when
+`EGL_KHR_fence_sync` is available. Linux submits producer and consumer fences; macOS polls producer
+completion and the SDL Metal queue. Both use the same three-slot pool across resize generations and
+256 MiB process accounting cap. Failed, unproved fences retain their resources and charge. Recreate
+the window/host after portable device or context loss. External image inputs retain their legacy
+completed-read path. Cleanup/readback remain explicit synchronous operations, and SDL presentation
+or driver submission may still block. Completion is retried through the existing display-interval
+timer; there is no arbitrary-thread native release or busy loop.
+
+The manually dispatched `WebCore responsiveness qualification` workflow consumes an exact native
+build run's GPU packages, records payload hashes, runs the managed suite and captures typing/IME
+traces on Windows, Linux and macOS. Ordinary CI against released packages verifies compatibility;
+it cannot qualify the new native implementation.
 
 Use `--bounded-ime` to enable `Window.BoundedImeContext` on ABI 68. Control queries copy at most
 4,096 UTF-16 units and visit at most 64 flat editor nodes. Selection direction and a document origin

@@ -1,0 +1,76 @@
+name: WebCore responsiveness qualification
+on:
+  workflow_dispatch:
+    inputs:
+      native_run:
+        description: Ranvier.WebCore build run containing the matching GPU packages
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+jobs:
+  qualify:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: windows-2025, rid: win-x64}
+          - {os: ubuntu-24.04, rid: linux-x64}
+          - {os: macos-26, rid: osx-arm64}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RANVIER_REQUIRE_PIPELINE: '1'
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      SDL_VIDEODRIVER: ${{ matrix.rid == 'linux-x64' && 'x11' || '' }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Linux graphics and display dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get -o Acquire::Retries=5 update -q
+          sudo apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
+            xvfb xauth dbus-x11 fonts-dejavu-core libgl1-mesa-dri \
+            libglib2.0-0t64 libharfbuzz0b libharfbuzz-icu0 libicu74 libjpeg-turbo8 libepoxy0 libgcrypt20 \
+            libsoup-3.0-0 libtasn1-6 libxkbcommon0 libxml2 libpng16-16t64 libsqlite3-0 \
+            libwebp7 libwebpdemux2 libwebpmux3 libatomic1 libfreetype6 libfontconfig1 libwoff1 libdrm2 libegl1 libgles2
+      - name: Download exact native build artifacts
+        env:
+          NATIVE_RUN: ${{ inputs.native_run }}
+          RID: ${{ matrix.rid }}
+        shell: bash
+        run: |
+          gh run download "$NATIVE_RUN" --repo ranvier-org/Ranvier.WebCore --name "package-$RID-gpu" --dir artifacts/packages
+          python -I tools/stage-qualification-runtime.py artifacts/packages artifacts/native "$RID"
+      - name: Build consumers against the staged runtime
+        shell: bash
+        run: |
+          dotnet build tests/Ranvier.View.WebCore.Tests -c Release -p:RanvierWebCoreNativeDir="$PWD/artifacts/native" -o artifacts/tests
+          dotnet build tests/Responsiveness -c Release -p:RanvierWebCoreNativeDir="$PWD/artifacts/native" -o artifacts/fixture
+      - name: Run integration and bounded input/presentation traces
+        shell: bash
+        run: |
+          prefix=()
+          if [ "$RUNNER_OS" = Linux ]; then prefix=(xvfb-run -a); fi
+          "${prefix[@]}" dotnet artifacts/tests/Ranvier.View.WebCore.Tests.dll --summary
+          "${prefix[@]}" dotnet artifacts/tests/Ranvier.View.WebCore.Tests.dll --filter "portable GPU readiness" --summary | tee artifacts/portable.log
+          "${prefix[@]}" dotnet artifacts/fixture/Responsiveness.dll --scenario typing --seconds 5 --repetitions 1 --lines 1000000 --bounded-ime --gpu-pipeline --output artifacts/qualification
+          "${prefix[@]}" dotnet artifacts/fixture/Responsiveness.dll --scenario ime --seconds 5 --repetitions 1 --lines 1000000 --bounded-ime --gpu-pipeline --output artifacts/qualification
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: responsiveness-${{ matrix.rid }}
+          path: |
+            artifacts/native-receipt.json
+            artifacts/qualification
+            artifacts/*.log
