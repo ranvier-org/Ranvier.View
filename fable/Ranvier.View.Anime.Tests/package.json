@@ -7,7 +7,7 @@
   },
   "scripts": {
     "compile": "dotnet fickl Ranvier.View.Anime.Tests.fsproj --outDir generated --configuration Release",
-    "test": "npm run compile && node --test motion.test.mjs readme.test.mjs && node motion-size.mjs"
+    "test": "npm run compile && node --test motion.test.mjs readme.test.mjs && node typecheck.mjs && node motion-size.mjs"
   },
   "devDependencies": {
     "animejs": "4.5.0",

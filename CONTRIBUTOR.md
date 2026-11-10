@@ -30,14 +30,14 @@ every commit that reaches the release branch must follow the convention too.
 ## Before opening a pull request
 
 Restore the pinned tools with `dotnet fsi build.fsx -- tools`, then run `dotnet fsi build.fsx -- test` for every
-check, or `test --group view`, `sugar`, `anime`, `motion`, `hydration`, `arms` or `analyzers` for one CI
+check, or `test --group view`, `sugar`, `motion`, `hydration`, `arms` or `analyzers` for one CI
 shard. `dotnet fsi build.fsx -- ci` runs every CI gate and packs the libraries. `--quick` skips npm installs,
 Chromium installation and restores after the first run.
 
 Use .NET 10 (pinned by `global.json`), the .NET 8 runtime and Node.js 26 or later.
 
 For changes spanning this repository and Ranvier, use
-`dotnet fsi build.fsx -- dev local [--ranvier-root <path>] [--with-css [--ranvier-css-root <path>]]`. This clones a
+`dotnet fsi build.fsx -- dev local [--ranvier-root <path>] [--with-css [--ranvier-css-root <path>]] [--with-anime [--ranvier-anime-root <path>]]`. This clones a
 missing sibling checkout and enables project references through the ignored `Local.Build.props`. Existing
 checkouts are preserved. `dev packages` returns to pinned package references. Commit and submit each repository's
 changes separately. CI uses packages.
@@ -84,7 +84,7 @@ graph: `Ranvier.View` with `Ranvier.View.Dom`, then `Ranvier.View.WebCore`, then
 | `src/Ranvier.View` | `Ranvier.View`, `Ranvier.View.Dom` | `rc` |
 | `src/Ranvier.View.WebCore` | `Ranvier.View.WebCore` | `rc` |
 | `src/Ranvier.View.WebCore.Sdl` | `Ranvier.View.WebCore.Sdl` | `rc` |
-| `src/Ranvier.View.Anime` | `Ranvier.View.Anime`, `Fable.Ranvier.Anime` | `rc` |
+| `src/Ranvier.View.Anime` | `Ranvier.View.Anime` | `rc` |
 | `tools/Ranvier.Analyzers.Host` | `Ranvier.Analyzers.Host` | `preview` |
 | `tools/Ranvier.Analyzers` | `Ranvier.Analyzers` | `preview` |
 

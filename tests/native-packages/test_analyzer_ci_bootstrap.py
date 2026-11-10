@@ -84,7 +84,7 @@ class AnalyzerBootstrap(unittest.TestCase):
                 self.assertIn('needs: analyzer-bootstrap', block)
                 self.assertLess(block.index('uses: ./.github/actions/use-analyzer-bootstrap'), block.index('run: dotnet'))
         views = re.search(r'(?ms)^  views:\n(.*?)(?=^  [A-Za-z0-9_-]+:|\Z)', text).group(1)
-        self.assertIn('group: [view, sugar, anime, motion, hydration, arms, analyzers]', views)
+        self.assertIn('group: [view, sugar, motion, hydration, arms, analyzers]', views)
 
     def test_cold_bootstrap_uses_the_reviewed_compiler_workspace(self):
         import re
@@ -108,12 +108,12 @@ class AnalyzerBootstrap(unittest.TestCase):
         self.assertIn("values['version'] != dom_version", qualification)
         self.assertIn('<RanvierDomVersion>', qualification)
         self.assertNotRegex(qualification, r"values\['version'\] != '")
-        for project in (ROOT / 'fable/Ranvier.Anime.Tests/Sugar/Sugar.fsproj',
+        for project in (ROOT / 'fable/Ranvier.View.Anime.Tests/Ranvier.View.Anime.Tests.fsproj',
                         ROOT / 'docs/samples/css-anime/Ranvier.Docs.CssAnime.fsproj'):
             for item in ET.parse(project).getroot().iter('PackageReference'):
                 if item.get('Include') in ('Ranvier.Css.Bindings', 'Ranvier.Css.View'):
                     self.assertEqual(item.get('Version'), '$(RanvierCssAddonsVersion)')
-        generated = (ROOT / 'fable/Ranvier.Anime.Tests/typecheck.mjs').read_text()
+        generated = (ROOT / 'fable/Ranvier.View.Anime.Tests/typecheck.mjs').read_text()
         self.assertEqual(generated.count('Version="$(RanvierCssAddonsVersion)"'), 2)
         self.assertNotIn('Version="$(RanvierCssVersion)"', generated)
 

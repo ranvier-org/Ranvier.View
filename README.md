@@ -24,7 +24,7 @@ coordinated development.
 | `Ranvier.View` | Typed templates, view sugar, keyed lists, arms, boundaries and server HTML rendering. |
 | `Ranvier.View.Dom` | The browser renderer: mounting, hydration of server HTML, delegated events and generated HTML bindings. |
 | `Ranvier.View.Anime` | Motion parts for templates over anime.js, omitted by the server renderer. |
-| `Fable.Ranvier.Anime` | Typed anime.js bindings for Fable with Ranvier integration. |
+| `Fable.Ranvier.Anime` | Typed anime.js bindings for Fable, published from [ranvier-org/Ranvier.Anime](https://github.com/ranvier-org/Ranvier.Anime). |
 | `Ranvier.Analyzers` | F# analyzers that report Ranvier traps at build time. |
 
 The four libraries share a version and depend on each other at exactly it. Each also packs as a `.Traced` package
@@ -35,7 +35,7 @@ over the traced core packages, and carries its F# sources under `fable/` for Fab
 - `src/`: the four libraries and `Fable.Ranvier`, the unpacked Fable DOM helper the experiments use.
 - `experiments/`: `Ranvier.View.Arms` (`Arms.Match` and its Fable plugin), the representation checks, the DOM twin and
   the view testing API.
-- `tests/Ranvier.View.Twin.Tests`, `fable/`: the twin conformance suite and the Fable suites of the anime packages.
+- `tests/Ranvier.View.Twin.Tests`, `fable/`: the twin conformance suite and the Fable suite of the Motion parts.
 - `examples/`: the Fable playground, the Motion pages and the server hydration example.
 - `tools/`: the DOM binding generator and the analyzers with their tests and truth fixtures.
 - `docs/`: the Nacara site (Views, Server, Analyzers and the browser examples) and its compiled samples.
@@ -54,7 +54,6 @@ rtk dotnet fsi build.fsx -- test
 ```powershell
 rtk dotnet fsi build.fsx -- test --group view       # representation checks, docs samples, playground, twin
 rtk dotnet fsi build.fsx -- test --group sugar      # DOM generator output, README samples, generated types
-rtk dotnet fsi build.fsx -- test --group anime      # Fable.Ranvier.Anime under jsdom and Chromium
 rtk dotnet fsi build.fsx -- test --group motion     # Motion parts and the Motion example pages
 rtk dotnet fsi build.fsx -- test --group hydration  # server hydration example and alternative backends
 rtk dotnet fsi build.fsx -- test --group arms       # Arms.Match plugin, discovery, suites, budgets, trim

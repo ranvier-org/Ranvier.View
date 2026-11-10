@@ -2,14 +2,10 @@
 last_commit_released: 449a485e760f147c10a30aa103f01aaff824c50e
 pre_release: rc
 include:
-  - ../Fable.Ranvier.Anime/
   - ../../Directory.Build.props
 updaters:
   - regex:
       file: Ranvier.View.Anime.fsproj
-      pattern: (?<=<Version>)[^<]+(?=</Version>)
-  - regex:
-      file: ../Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj
       pattern: (?<=<Version>)[^<]+(?=</Version>)
 ---
 

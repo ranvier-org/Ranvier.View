@@ -31,6 +31,9 @@
     <Target Name="ValidateLocalRanvierCss" BeforeTargets="PrepareForBuild" Condition="'$(UseLocalRanvierCss)' == 'true'">
         <Error Condition="!Exists('$(RanvierCssRoot)/src/Ranvier.Css/Ranvier.Css.fsproj')" Text="RanvierCssRoot must point to a Ranvier.Css checkout. Run dotnet fsi build.fsx -- dev local --with-css." />
     </Target>
+    <Target Name="ValidateLocalRanvierAnime" BeforeTargets="PrepareForBuild" Condition="'$(UseLocalRanvierAnime)' == 'true'">
+        <Error Condition="!Exists('$(RanvierAnimeRoot)/src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj')" Text="RanvierAnimeRoot must point to a Ranvier.Anime checkout. Run dotnet fsi build.fsx -- dev local --with-anime." />
+    </Target>
 
     <!--
     A traced build packs only under a `.Traced` package id, which a project

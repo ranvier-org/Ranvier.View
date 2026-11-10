@@ -128,7 +128,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        group: [view, sugar, anime, motion, hydration, arms, analyzers]
+        group: [view, sugar, motion, hydration, arms, analyzers]
     steps:
       - uses: actions/checkout@v7
         with:
@@ -138,7 +138,7 @@ jobs:
         with:
           global-json-file: global.json
           dotnet-version: 8.0.x
-      # The playground, the Motion and hydration examples and the anime suites require Node 26 or newer.
+      # The playground, the Motion and hydration examples and the Motion part suites require Node 26 or newer.
       - uses: actions/setup-node@v7
         with:
           node-version: '26'

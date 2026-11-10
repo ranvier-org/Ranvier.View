@@ -15,7 +15,6 @@ module Spec =
     /// The packed libraries in dependency order. Each packs untraced and again as its `.Traced` package.
     let sources =
         [
-            "src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj"
             "src/Ranvier.View/Ranvier.View.fsproj"
             "src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj"
             "src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj"
@@ -28,11 +27,7 @@ module Spec =
     /// The projects `analyze` checks, by group. Fable-only projects are left out.
     let analyzedGroups =
         [
-            "library",
-            [
-                "src/Fable.Ranvier/Fable.Ranvier.fsproj"
-                "src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj"
-            ]
+            "library", [ "src/Fable.Ranvier/Fable.Ranvier.fsproj" ]
             "view",
             [
                 "src/Ranvier.View/Ranvier.View.fsproj"
@@ -61,8 +56,7 @@ module Spec =
             "examples/Ranvier.Hydration"
         ]
 
-    let groups =
-        [ "all"; "view"; "sugar"; "anime"; "motion"; "hydration"; "arms"; "analyzers" ]
+    let groups = [ "all"; "view"; "sugar"; "motion"; "hydration"; "arms"; "analyzers" ]
 
     let localTools =
         use manifest =
@@ -141,6 +135,15 @@ module Options =
         Input.option<string> "--ranvier-css-root"
         |> Input.def (Path.GetFullPath (Path.Combine (Spec.root, "../Ranvier.Css")))
         |> Input.description "Path to the sibling Ranvier.Css repository (with --with-css)"
+
+    let withAnime =
+        Input.option<bool> "--with-anime"
+        |> Input.description "Also use a sibling Ranvier.Anime checkout"
+
+    let ranvierAnimeRoot =
+        Input.option<string> "--ranvier-anime-root"
+        |> Input.def (Path.GetFullPath (Path.Combine (Spec.root, "../Ranvier.Anime")))
+        |> Input.description "Path to the sibling Ranvier.Anime repository (with --with-anime)"
 
 module Stage =
     let restoreTools =
@@ -308,25 +311,6 @@ module Stage =
                 }
         }
 
-    /// The Fable.Ranvier.Anime bindings under jsdom, their emit and bundle budget, and typed CSS animation in Chromium.
-    let anime =
-        input {
-            let! npm = npm "fable/Ranvier.Anime.Tests"
-            and! chromium = chromium "fable/Ranvier.Anime.Tests"
-
-            return
-                stage "anime bindings" {
-                    npm
-                    chromium
-
-                    stage "bindings tests" {
-                        workingDir (Path.Combine (Spec.root, "fable/Ranvier.Anime.Tests"))
-                        run "npm test"
-                        run "npm run test:browser"
-                    }
-                }
-        }
-
     /// The Ranvier.View.Anime parts under jsdom with their server twins, and the Motion example pages.
     let motion =
         input {
@@ -491,7 +475,6 @@ module Stage =
             and! skip = Baked.Common.skipTests
             and! view = view
             and! sugar = sugar
-            and! anime = anime
             and! motion = motion
             and! hydration = hydration
             and! arms = arms
@@ -512,11 +495,6 @@ module Stage =
                     stage "sugar group" {
                         when' (chosen "sugar")
                         sugar
-                    }
-
-                    stage "anime group" {
-                        when' (chosen "anime")
-                        anime
                     }
 
                     stage "motion group" {
@@ -732,8 +710,11 @@ module Stage =
             let! root = Options.ranvierRoot
             and! withCss = Options.withCss
             and! cssRoot = Options.ranvierCssRoot
+            and! withAnime = Options.withAnime
+            and! animeRoot = Options.ranvierAnimeRoot
             let root = Path.GetFullPath (root, Spec.root)
             let cssRoot = Path.GetFullPath (cssRoot, Spec.root)
+            let animeRoot = Path.GetFullPath (animeRoot, Spec.root)
 
             return
                 stage "configure sibling checkouts" {
@@ -747,6 +728,11 @@ module Stage =
                         run (cmd $"git clone https://github.com/ranvier-org/Ranvier.Css.git {cssRoot}")
                     }
 
+                    stage "clone Ranvier.Anime if missing" {
+                        when' (withAnime && not (Directory.Exists animeRoot))
+                        run (cmd $"git clone https://github.com/ranvier-org/Ranvier.Anime.git {animeRoot}")
+                    }
+
                     stage "write local configuration" {
                         run (fun _ ->
                             if not (File.Exists (Path.Combine (root, "src/Ranvier/Ranvier.fsproj"))) then
@@ -758,6 +744,12 @@ module Stage =
                             then
                                 invalidArg "ranvier-css-root" "The path is not a Ranvier.Css checkout."
 
+                            if
+                                withAnime
+                                && not (File.Exists (Path.Combine (animeRoot, "src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj")))
+                            then
+                                invalidArg "ranvier-anime-root" "The path is not a Ranvier.Anime checkout."
+
                             let escape (path: string) =
                                 Security.SecurityElement.Escape path
 
@@ -767,9 +759,15 @@ module Stage =
                                 else
                                     ""
 
+                            let anime =
+                                if withAnime then
+                                    $"<UseLocalRanvierAnime>true</UseLocalRanvierAnime><RanvierAnimeRoot>{escape animeRoot}</RanvierAnimeRoot>"
+                                else
+                                    ""
+
                             File.WriteAllText (
                                 Path.Combine (Spec.root, "Local.Build.props"),
-                                $"<Project><PropertyGroup><UseLocalRanvier>true</UseLocalRanvier><RanvierRoot>{escape root}</RanvierRoot>{css}</PropertyGroup></Project>"
+                                $"<Project><PropertyGroup><UseLocalRanvier>true</UseLocalRanvier><RanvierRoot>{escape root}</RanvierRoot>{css}{anime}</PropertyGroup></Project>"
                             ))
                     }
                 }
@@ -780,7 +778,7 @@ module Stage =
             run (fun _ ->
                 File.WriteAllText (
                     Path.Combine (Spec.root, "Local.Build.props"),
-                    "<Project><PropertyGroup><UseLocalRanvier>false</UseLocalRanvier><UseLocalRanvierCss>false</UseLocalRanvierCss></PropertyGroup></Project>"
+                    "<Project><PropertyGroup><UseLocalRanvier>false</UseLocalRanvier><UseLocalRanvierCss>false</UseLocalRanvierCss><UseLocalRanvierAnime>false</UseLocalRanvierAnime></PropertyGroup></Project>"
                 ))
         }
 
@@ -828,7 +826,8 @@ exit
         description "Switch between published and sibling Ranvier references"
 
         command "local" {
-            description "Clone Ranvier if missing and configure local project references (--with-css for Ranvier.Css too)"
+            description
+                "Clone Ranvier if missing and configure local project references (--with-css, --with-anime for Ranvier.Css, Ranvier.Anime too)"
 
             Command.pipeline {
                 Stage.local
@@ -837,7 +836,7 @@ exit
         }
 
         command "packages" {
-            description "Switch back to pinned published Ranvier and Ranvier.Css dependencies"
+            description "Switch back to pinned published Ranvier, Ranvier.Css and Ranvier.Anime dependencies"
 
             Command.pipeline {
                 Stage.packages

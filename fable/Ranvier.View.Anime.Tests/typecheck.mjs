@@ -14,7 +14,7 @@ function dotnet(args, success = true) {
   return log;
 }
 const project = path.join(output, 'Types.fsproj');
-await fs.writeFile(project, `<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include="${path.join(root, 'src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj')}"/><ProjectReference Include="${path.join(root, 'src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj')}"/><PackageReference Include="Ranvier.Css.View" Version="$(RanvierCssAddonsVersion)"/><Compile Include="${path.join(root, 'docs/samples/css-anime/Example.fs')}"/><Compile Include="Types.fs"/></ItemGroup><ItemGroup Condition="'$(UseLocalRanvierCss)' == 'true'"><ProjectReference Include="$(RanvierCssRoot)/src/Ranvier.Css.Bindings/Ranvier.Css.Bindings.fsproj"/></ItemGroup><ItemGroup Condition="'$(UseLocalRanvierCss)' != 'true'"><PackageReference Include="Ranvier.Css.Bindings" Version="$(RanvierCssAddonsVersion)"/></ItemGroup></Project>`);
+await fs.writeFile(project, `<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include="${path.join(root, 'src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj')}"/><PackageReference Include="Ranvier.Css.View" Version="$(RanvierCssAddonsVersion)"/><Compile Include="${path.join(root, 'docs/samples/css-anime/Example.fs')}"/><Compile Include="Types.fs"/></ItemGroup><ItemGroup Condition="'$(UseLocalRanvierCss)' == 'true'"><ProjectReference Include="$(RanvierCssRoot)/src/Ranvier.Css.Bindings/Ranvier.Css.Bindings.fsproj"/></ItemGroup><ItemGroup Condition="'$(UseLocalRanvierCss)' != 'true'"><PackageReference Include="Ranvier.Css.Bindings" Version="$(RanvierCssAddonsVersion)"/></ItemGroup></Project>`);
 const prefix = `module Types
 open Ranvier.Css
 open Ranvier.Anime
@@ -29,11 +29,8 @@ let drive (el: Fable.Core.TS.Dom.Element) =
 let expression = Css.width (CssValue.Length.calc (CssValue.Length.variable "--gap" * Css.number 2. + Css.px 10.))
 `);
 dotnet(['build', project, '-c', 'Release']);
+// The bindings' own wrong-dimension cases are checked in ranvier-org/Ranvier.Anime.
 const cases = [
-  'let invalid = Anim().With(gap, Css.deg 42.)',
-  'let invalid = Anim().With(gap, Css.px 0., Css.deg 42.)',
-  'let invalid = Anim().With(gap, [| Css.deg 42. |])',
-  'let invalid (el: Fable.Core.TS.Dom.Element) = Reactive.driveCss (fun () -> Css.deg 42.) el gap (AnimatableProp())',
   'let invalid = Ranvier.View.Anime.Motion.followCss gap (AnimatableProp()) (fun (_:unit) -> Css.deg 42.)',
 ];
 for (const source of cases) {
@@ -41,4 +38,4 @@ for (const source of cases) {
   const log = dotnet(['build', project, '-c', 'Release', '--no-restore', '-p:BuildProjectReferences=false'], false);
   if (!/error FS(0001|0041|0193)/.test(log)) throw new Error(`Expected a CSS grammar mismatch: ${source}\n${log}`);
 }
-console.log('Generated CSS sugar and the complete view example compile; all 5 wrong-dimension endpoint/keyframe/reactive consumers are rejected.');
+console.log(`Generated CSS sugar and the complete view example compile; all ${cases.length} wrong-dimension Motion consumers are rejected.`);

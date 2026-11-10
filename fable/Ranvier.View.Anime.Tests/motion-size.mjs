@@ -61,9 +61,18 @@ for (const [part, imports] of Object.entries(parts)) {
 
 const helpers = /\b(curry\d*|uncurry\d*|partialApply|createObj)\b/g;
 const generated = new URL("generated/", here);
+// The bindings compile from the Fable.Ranvier.Anime package, or from a sibling Ranvier.Anime checkout under
+// `dev local --with-anime`.
+const bindings = (() => {
+  const packaged = readdirSync(new URL("fable_modules/", generated)).find(name => /^Fable\.Ranvier\.Anime(\.Traced)?\.\d/.test(name));
+  if (packaged) return `fable_modules/${packaged}/`;
+  const local = readdirSync(generated, { recursive: true }).find(name => name.replaceAll("\\", "/").endsWith("src/Fable.Ranvier.Anime"));
+  if (local) return `${local.replaceAll("\\", "/")}/`;
+  throw new Error("The generated output holds no Fable.Ranvier.Anime modules.");
+})();
 const modules = [
   ...readdirSync(new URL("src/Ranvier.View.Anime/", generated)).map(file => `src/Ranvier.View.Anime/${file}`),
-  ...readdirSync(new URL("src/Fable.Ranvier.Anime/", generated)).map(file => `src/Fable.Ranvier.Anime/${file}`)
+  ...readdirSync(new URL(bindings, generated)).filter(file => file.endsWith(".js")).map(file => `${bindings}${file}`)
 ];
 for (const module of modules) {
   const text = readFileSync(new URL(module, generated), "utf8");
