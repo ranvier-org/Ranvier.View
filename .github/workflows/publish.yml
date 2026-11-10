@@ -121,6 +121,49 @@ jobs:
                               '--api-key', os.environ['NUGET_API_KEY'], '--skip-duplicate'], check=True)
           PY
 
+  # Ranvier.View.Anime depends on the native View cohort, so it follows that cohort to NuGet.
+  publish-anime:
+    needs: publish
+    if: >-
+      github.event.workflow_run.name == 'CI' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      (startsWith(github.event.workflow_run.head_commit.message, 'chore: release ') ||
+       startsWith(github.event.workflow_run.head_commit.message, 'chore(release): '))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/download-artifact@v8
+        with:
+          name: anime-packages
+          path: anime
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Select the Ranvier.View.Anime pair at the project version
+        run: python3 -I .github/scripts/anime_packages.py --directory anime --project src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj > anime-packages.txt
+      - name: Authenticate to NuGet with trusted publishing
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER || 'shayan.habibi' }}
+      - name: Publish Ranvier.View.Anime untraced and traced
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: |
+          set -euo pipefail
+          while read -r package; do dotnet nuget push "$package" --source https://api.nuget.org/v3/index.json --api-key "$NUGET_API_KEY" --skip-duplicate; done < anime-packages.txt
+
   # A separate workflow run, so the verification does not hold the nuget-publish concurrency group: a release waiting
   # in that group is cancelled by the next push's run.
   verify-published:
