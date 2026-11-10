@@ -16,6 +16,8 @@ type SchedulingPhase =
     | Present = 7
     | PresentCompleted = 8
     | EventDrain = 9
+    | QueueDelay = 10
+    | BudgetExceeded = 11
 
 /// <summary>A phase on the Stopwatch clock; durations are ticks, not milliseconds.</summary>
 [<Struct>]
@@ -26,7 +28,8 @@ type SchedulingEvent =
       Phase: SchedulingPhase
       Started: int64
       Duration: int64
-      Pending: int }
+      Pending: int
+      Count: int }
 
 type internal HostSchedulingTrace() =
     static let mutable nextHost = 0L
@@ -45,7 +48,7 @@ type internal HostSchedulingTrace() =
         count <- 0
         dropped <- 0L
 
-    member _.Record(phase, started, duration, pending) =
+    member _.Record(phase, started, duration, pending, ?processed) =
         if events.Length <> 0 then
             sequence <- sequence + 1L
             if count = events.Length then
@@ -53,15 +56,15 @@ type internal HostSchedulingTrace() =
             else
                 events[count] <-
                     { HostId = hostId; Sequence = sequence; FrameId = frame
-                      Phase = phase; Started = started; Duration = duration; Pending = pending }
+                      Phase = phase; Started = started; Duration = duration; Pending = pending; Count = defaultArg processed 0 }
                 count <- count + 1
 
     member this.Start() =
         if this.Enabled then Stopwatch.GetTimestamp() else 0L
 
-    member this.Finish(phase, started, pending) =
+    member this.Finish(phase, started, pending, ?processed) =
         if started <> 0L then
-            this.Record(phase, started, Stopwatch.GetTimestamp() - started, pending)
+            this.Record(phase, started, Stopwatch.GetTimestamp() - started, pending, ?processed = processed)
 
     member _.Drain() =
         let result = events |> Array.take count

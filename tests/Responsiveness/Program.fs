@@ -21,8 +21,9 @@ let percentile quantile (values: int64 array) =
         Array.sortInPlace values
         float values[min (values.Length - 1) (int (ceil (quantile * float values.Length)) - 1)] * 1000.0 / float Stopwatch.Frequency
 
-let sample scenario seconds lines unbounded visible renderer tracing output repetition =
+let sample scenario seconds lines unbounded visible renderer tracing interactive output repetition =
     use window = Window.Create ("Ranvier responsiveness", 800, 600, hidden = not visible, ?renderer = renderer)
+    if interactive then window.InteractiveBudget <- Some OwnerTurnBudget.Default
     let host = window.Host
     let count = if unbounded then lines else min lines 150
     host.Document.body.innerHTML <- "<textarea id='input' style='width:700px;height:80px'></textarea><pre id='lines'></pre>"
@@ -82,7 +83,7 @@ let sample scenario seconds lines unbounded visible renderer tracing output repe
     let hash = if File.Exists runtime then Convert.ToHexString (SHA256.HashData (File.ReadAllBytes runtime)) else "platform runtime: see package receipt"
     let stats =
         {| scenario = scenario; repetition = repetition; seconds = seconds; logicalLines = lines
-           liveLines = count; hidden = not visible; tracing = tracing; requestedRenderer = defaultArg renderer "default"
+           liveLines = count; hidden = not visible; tracing = tracing; interactive = interactive; requestedRenderer = defaultArg renderer "default"
            stopwatchFrequency = Stopwatch.Frequency; runtimeHash = hash; os = Environment.OSVersion.ToString()
            managedVersion = typeof<WebCoreHost>.Assembly.GetName().Version.ToString()
            iterations = iteration; allocatedBytes = allocatedBytes; dropped = dropped; nativeDropped = nativeDropped
@@ -113,5 +114,5 @@ let main args =
     let scenarios = if scenario = "all" then [ "idle"; "typing"; "scroll"; "ime"; "publication"; "resize" ] else [ scenario ]
     for name in scenarios do
         for repetition in 1..repetitions do
-            sample name seconds lines (Array.contains "--unbounded-dom" args) (Array.contains "--visible" args) renderer (not (Array.contains "--no-trace" args)) output repetition
+            sample name seconds lines (Array.contains "--unbounded-dom" args) (Array.contains "--visible" args) renderer (not (Array.contains "--no-trace" args)) (Array.contains "--interactive" args) output repetition
     0

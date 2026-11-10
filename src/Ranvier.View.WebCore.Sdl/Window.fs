@@ -260,6 +260,12 @@ type Window
     let mutable cursor = -1
     let mutable disposed = false
     let mutable pageDisposed = false
+    let mutable interactiveBudget: OwnerTurnBudget option = None
+    let mutable eventDrainPending = false
+    let cycleHost () =
+        match interactiveBudget with
+        | Some budget -> host.CycleInteractive budget |> ignore
+        | None -> host.Cycle ()
     let wakeGate = obj ()
     let mutable wakeActive = true
     let wakeEvent = SDL3.SDL_RegisterEvents 1
@@ -369,7 +375,7 @@ type Window
             SDL3.SDL_ShowWindowSystemMenu (window, x, y)
             |> ignore
 
-    let mutable modalFrame = fun () -> host.Cycle ()
+    let mutable modalFrame = cycleHost
     // Native callbacks hold these delegates' function pointers for the window's lifetime.
     let mutable hitTestCallback: HitTestCallback = null
     let mutable eventWatch: EventWatchCallback = null
@@ -1676,6 +1682,16 @@ type Window
             (this :> IDisposable).Dispose()
 
     // `outer` is onPage on entry to Step, restored while SDL pumps.
+    /// Opt-in cooperative posted-work and SDL event budgets. None retains exhaustive draining.
+    member _.InteractiveBudget
+        with get () = interactiveBudget
+        and set (value: OwnerTurnBudget option) =
+            host.EnsureActive ()
+            value |> Option.iter (fun budget -> budget.Validate ())
+            interactiveBudget <- value
+
+    member private _.CycleHost() = cycleHost ()
+
     member private this.Turn(longest: int, outer: bool) : bool =
         if not closed then
             host.EnsureActive ()
@@ -1694,7 +1710,7 @@ type Window
             let stall = refreshTicks * 3L / 2L
 
             let wait =
-                if windows.Snapshot () |> Seq.exists (fun target -> target.Host.HasPendingWork) then
+                if eventDrainPending || (windows.Snapshot () |> Seq.exists (fun target -> target.Host.HasPendingWork)) then
                     0
                 elif
                     (host.FrameRequested
@@ -1744,29 +1760,41 @@ type Window
             let received = Sdl.ok (SDL3.SDL_WaitEventTimeout (&&event, min wait 50))
             onPage <- true
 
+            let drainStarted = now ()
+            let mutable eventCount = 0
+            let withinEventBudget () =
+                interactiveBudget.IsNone || (eventCount < 256 && float (now () - drainStarted) * 1000.0 / float Diagnostics.Stopwatch.Frequency < 2.0)
+            eventDrainPending <- false
             if received then
+                eventCount <- 1
                 for target in windows.Snapshot () do
                     target.Dispatch event
                     target.RefreshAfterInput ()
 
                 while alive ()
+                      && withinEventBudget ()
                       && (onPage <- outer
                           let polled = Sdl.ok (SDL3.SDL_PollEvent &&event)
                           onPage <- true
                           polled) do
+                    eventCount <- eventCount + 1
                     for target in windows.Snapshot () do
                         target.Dispatch event
                         target.RefreshAfterInput ()
 
+                eventDrainPending <- not (withinEventBudget ())
+
+            if not eventDrainPending then
                 for target in windows.Snapshot () do
                     target.FlushComposition ()
+            host.SchedulingTrace.Record (SchedulingPhase.EventDrain, drainStarted, now () - drainStarted, (if eventDrainPending then 1 else 0), processed = eventCount)
 
             for target in windows.Snapshot () do
                 target.EndDrain ()
 
             for target in windows.Snapshot () do
                 if not target.Host.Session.IsDisposed && (obj.ReferenceEquals(target, this) || target.Host.HasPendingWork) then
-                    target.Host.Cycle ()
+                    target.CycleHost ()
 
             if
                 alive ()

@@ -8,6 +8,54 @@ open Ranvier.View.WebCore.Tests.Support
 [<Tests>]
 let tests =
     testList "Host scheduling" [
+        hostCase "interactive exceptions preserve checkpoint and following work" (fun host ->
+            let mutable checkpoint = false
+            host.PostToOwner (fun () ->
+                host.QueueMicrotask (fun () -> checkpoint <- true)
+                failwith "expected callback failure")
+            host.PostToOwner (fun () -> Expect.isTrue checkpoint "checkpoint survived exception")
+            let result = host.CycleInteractive { MaxCallbacks = 2; MaxMilliseconds = 10000.0 }
+            Expect.equal result.Executed 2 "both attempted"
+            Expect.equal host.Errors.Count 1 "reported on owner"
+            host.Errors.Clear ())
+        hostCase "interactive disposal does not run queued callbacks" (fun host ->
+            let mutable ran = false
+            host.PostToOwner (fun () -> (host :> IDisposable).Dispose ())
+            host.PostToOwner (fun () -> ran <- true)
+            let result = host.CycleInteractive OwnerTurnBudget.Default
+            Expect.isFalse ran "disposed queue dropped"
+            Expect.isFalse result.Remaining "no retained callbacks")
+        hostCase "interactive turns preserve checkpoints and FIFO" (fun host ->
+            let order = ResizeArray<int> ()
+            for i in 1..100 do
+                host.PostToOwner (fun () ->
+                    order.Add (i * 2)
+                    host.QueueMicrotask (fun () -> order.Add (i * 2 + 1)))
+            let result = host.CycleInteractive { MaxCallbacks = 64; MaxMilliseconds = 10000.0 }
+            Expect.equal result.Executed 64 "callback cap"
+            Expect.isTrue result.Remaining "work remains"
+            Expect.isTrue result.BudgetExceeded "cap reached"
+            Expect.sequenceEqual order [| for i in 1..64 do yield i*2; yield i*2+1 |] "whole checkpoints"
+            host.Cycle ()
+            Expect.equal order.Count 200 "public Cycle still drains")
+        hostCase "self posting work yields and suppresses idle" (fun host ->
+            let mutable calls = 0
+            let rec callback () =
+                calls <- calls + 1
+                if calls < 1000 then host.PostToOwner callback
+            host.PostToOwner callback
+            let result = host.CycleInteractive { MaxCallbacks = 3; MaxMilliseconds = 10000.0 }
+            Expect.equal calls 3 "self post bounded"
+            Expect.isTrue result.Remaining "next turn required")
+        testCase "time budget uses injected monotonic clock" (fun () ->
+            let mutable ticks = 0L
+            let limit = TurnLimit (OwnerTurnBudget.Default, (fun () -> ticks), 1000L)
+            Expect.isFalse limit.Exceeded "initial"
+            limit.Complete ()
+            ticks <- 2L
+            Expect.isTrue limit.Exceeded "time reached after complete checkpoint"
+            Expect.equal limit.Executed 1 "single long callback accounted"
+            Expect.throws (fun () -> { OwnerTurnBudget.Default with MaxMilliseconds = Double.NaN }.Validate ()) "invalid budget")
         hostCase "trace records posted work microtasks and frames in order" (fun host ->
             host.SetSchedulingTrace true
             host.PostToOwner (fun () -> host.QueueMicrotask (fun () -> ()))

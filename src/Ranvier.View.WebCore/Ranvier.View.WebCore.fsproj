@@ -60,6 +60,7 @@
         <Compile Include="Generated/Objects.fs" />
         <Compile Include="EventTargets.fs" />
         <Compile Include="HostSchedulingTrace.fs" />
+        <Compile Include="OwnerTurnBudget.fs" />
         <Compile Include="OwnerWorkQueue.fs" />
         <Compile Include="Host.fs" />
         

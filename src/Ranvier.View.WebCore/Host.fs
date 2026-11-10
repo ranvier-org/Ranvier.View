@@ -143,8 +143,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     static let nativeOwner = NativeOwner ()
     let thread = Environment.CurrentManagedThreadId
     let microtasks = Queue<unit -> unit>()
-    let posted = OwnerWorkQueue ()
     let schedulingTrace = HostSchedulingTrace ()
+    let posted = OwnerWorkQueue(timestamp = schedulingTrace.Start, dequeued = (fun started -> schedulingTrace.Finish(SchedulingPhase.QueueDelay, started, 0)))
     let timers = SortedDictionary<struct (float * int), unit -> unit>()
     let timerKeys = Dictionary<int, struct (float * int)>()
     let frames = Dictionary<int, float -> unit>()
@@ -238,6 +238,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 time - clock.Elapsed.TotalMilliseconds
 
     let runDueTimers () =
+        let mutable processed = 0
         let mutable going = true
 
         while not disposed && going && timers.Count > 0 do
@@ -247,6 +248,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             if due <= now () then
                 timers.Remove first.Key |> ignore
                 timerKeys.Remove id |> ignore
+                processed <- processed + 1
 
                 try
                     first.Value ()
@@ -256,6 +258,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 runMicrotasks ()
             else
                 going <- false
+        processed
 
     let removeIdle (id: int) =
         let index = idles.FindIndex (fun struct (entry, _) -> entry = id)
@@ -587,20 +590,31 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// no frame is requested.
     /// </summary>
     member this.Cycle(?milliseconds: int) =
+        this.CycleCore(defaultArg milliseconds 0, None) |> ignore
+
+    member internal this.CycleInteractive(budget: OwnerTurnBudget) =
+        budget.Validate ()
+        this.CycleCore(0, Some budget)
+
+    member private this.CycleCore(milliseconds: int, budget: OwnerTurnBudget option) =
         this.EnsureActive ()
 
         let nativeStarted = schedulingTrace.Start ()
-        Native.rv_run_loop_cycle (defaultArg milliseconds 0)
+        Native.rv_run_loop_cycle milliseconds
         |> ignore
         schedulingTrace.Finish (SchedulingPhase.NativeCycle, nativeStarted, posted.Count)
 
+        let limit = budget |> Option.map (fun value -> TurnLimit(value, Stopwatch.GetTimestamp, Stopwatch.Frequency))
+        let mutable executed = 0
+        let exceeded () = limit |> Option.exists (fun value -> value.Exceeded)
         if not disposed then
             let releaseStarted = schedulingTrace.Start ()
+            let releasedBefore = session.Released
             session.Drain ()
-            schedulingTrace.Finish (SchedulingPhase.Releases, releaseStarted, 0)
+            schedulingTrace.Finish (SchedulingPhase.Releases, releaseStarted, 0, processed = session.Released - releasedBefore)
             let mutable item = Unchecked.defaultof<_>
 
-            while not disposed && posted.TryDequeue (&item) do
+            while not disposed && (executed = 0 || not (exceeded ())) && posted.TryDequeue (&item) do
                 let struct (callback, state) = item
                 let callbackStarted = schedulingTrace.Start ()
 
@@ -611,14 +625,21 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
                 schedulingTrace.Finish (SchedulingPhase.Posted, callbackStarted, posted.Count)
                 runMicrotasks ()
+                executed <- executed + 1
+                limit |> Option.iter (fun value -> value.Complete ())
 
             let timersStarted = schedulingTrace.Start ()
-            runDueTimers ()
-            schedulingTrace.Finish (SchedulingPhase.Timers, timersStarted, timers.Count)
+            let timersProcessed = runDueTimers ()
+            schedulingTrace.Finish (SchedulingPhase.Timers, timersStarted, timers.Count, processed = timersProcessed)
             runMicrotasks ()
 
-            if not disposed && Volatile.Read &frameRequested = 0 then
+            if not disposed && posted.Count = 0 && Volatile.Read &frameRequested = 0 then
                 runIdle ()
+
+        let overBudget = exceeded ()
+        if overBudget then
+            schedulingTrace.Record(SchedulingPhase.BudgetExceeded, Stopwatch.GetTimestamp(), 0L, posted.Count, processed = executed)
+        { Executed = executed; Remaining = posted.Count > 0; BudgetExceeded = overBudget }
 
     /// <summary>Moves the timer clock forward by <c>milliseconds</c> and runs the timers then due, as a test clock does.</summary>
     member internal this.AdvanceBy(milliseconds: float) =

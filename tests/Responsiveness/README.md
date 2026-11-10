@@ -7,3 +7,7 @@ Options: `--lines 1000|100000|1000000`, `--unbounded-dom` (deliberately material
 Each sample saves summary, managed events, and native events. Managed events use Stopwatch ticks and identify host, sequence and frame. Native events retain their original clock domain; do not merge timestamps without calibration. PresentCompleted is owner-thread observation of completion, not a display scanout timestamp. Counts dropped by either buffer are explicit; samples with loss are unsuitable for detailed timeline analysis. Both exported event collections are capped at 500,000 entries.
 
 Use the same staged runtime hash, renderer, device, resolution, display refresh and driver for comparisons. Record the latter hardware properties separately. Run traced and untraced samples to establish instrumentation overhead. The current summary describes total synthetic turn time and allocation, not isolated raster performance. On hidden windows there is no claim of physical 60/120 Hz qualification.
+# Interactive scheduling
+
+Use `--interactive` to opt into 64 posted callbacks or 2 ms per checkpointed turn, and 256 SDL events or 2 ms per batch. Generic posts remain lossless and may accumulate under sustained overload. The queue-delay trace makes that backlog visible. Microtasks, timers, native run-loop work and deferred release batches remain cooperative and exhaustive.
+
