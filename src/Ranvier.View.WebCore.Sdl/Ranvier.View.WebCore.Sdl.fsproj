@@ -23,6 +23,7 @@
     <ItemGroup>
         <Compile Include="Keys.fs" />
         <Compile Include="EglPresentation.fs" />
+        <Compile Include="CompletionFence.fs" />
         <Compile Include="MetalPresentation.fs" />
         <Compile Include="D3D11Presentation.fs" />
         <Compile Include="Presentation.fs" />
@@ -51,6 +52,7 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="Ranvier.View.WebCore.Tests" />
+        <InternalsVisibleTo Include="Responsiveness" />
         <InternalsVisibleTo Include="Ranvier.NativeCounter" />
     </ItemGroup>
 

@@ -36,6 +36,23 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
     // The frame on screen or being presented through the swap chain, released once its present has finished.
     let mutable heldFrame = 0n
+    let mutable heldIsPipeline = false
+    let mutable pipelineRequested = false
+    let mutable pipelinePending = false
+    let mutable pipelineNeedsSubmit = true
+    let mutable pipelineId = 0UL
+    let mutable pipelineTraceFrame = 0L
+    let mutable pipelineSize = struct (0, 0)
+    let mutable presentedTraceFrame: int64 voption = ValueNone
+    let mutable retryAt = 0L
+    let mutable retryMilliseconds = 16
+
+    let documentChanged =
+        host.DocumentReplaced.Subscribe (fun _ ->
+            fullPaint <- true
+            pipelinePending <- false
+            pipelineNeedsSubmit <- true
+            retryAt <- 0L)
 
     let device () =
         match swapChain with
@@ -51,6 +68,35 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
          || egl.IsSome
          || metal.IsSome)
         && RanvierWebCoreAbi.Native.rv_host_set_accelerated_compositing (host.Handle, 1) = 0
+
+    let pipelineActive () =
+        pipelineRequested
+        && gpuEnabled
+        && (swapChain.IsSome || egl.IsSome || metal.IsSome)
+        && WebCoreHost.Has "gpu-frame-pipeline-v1"
+
+    let retryDelay () =
+        if not (pipelineActive ()) then
+            0
+        else
+            max
+                0
+                (int (
+                    Math.Ceiling (
+                        float (retryAt - Diagnostics.Stopwatch.GetTimestamp ())
+                        * 1000.
+                        / float Diagnostics.Stopwatch.Frequency
+                    )
+                ))
+
+    let deferPipeline () =
+        retryAt <-
+            Diagnostics.Stopwatch.GetTimestamp ()
+            + int64 retryMilliseconds
+              * Diagnostics.Stopwatch.Frequency
+              / 1000L
+
+        false
 
     let draw texture width height =
         if not (PresentationNative.ok (SDL3.SDL_RenderClear renderer)) then
@@ -95,6 +141,8 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                 || height <> cpuHeight
                 || NativePtr.isNullPtr cpuTexture
             then
+                let allocationStarted = host.SchedulingTrace.Start ()
+
                 if not (NativePtr.isNullPtr cpuTexture) then
                     SDL3.SDL_DestroyTexture cpuTexture
 
@@ -116,6 +164,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                 cpuWidth <- width
                 cpuHeight <- height
                 pixels <- Array.zeroCreate (width * height * 4)
+                host.SchedulingTrace.Finish (SchedulingPhase.CpuBufferCreate, allocationStarted, 0, processed = pixels.Length)
                 fullPaint <- true
 
             let painted =
@@ -128,9 +177,12 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
             if painted then
                 use start = fixed pixels
+                let uploadStarted = host.SchedulingTrace.Start ()
 
                 if not (PresentationNative.ok (SDL3.SDL_UpdateTexture (cpuTexture, NativePtr.nullPtr, NativePtr.toNativeInt start, width * 4))) then
                     raise (PresentationNative.failure "SDL_UpdateTexture")
+
+                host.SchedulingTrace.Finish (SchedulingPhase.CpuUpload, uploadStarted, 0, processed = pixels.Length)
 
             painted
         else
@@ -214,8 +266,15 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     let releaseHeldFrame () =
         if heldFrame <> 0n then
             let released = RanvierWebCoreAbi.Native.rv_gpu_frame_release heldFrame
+            heldFrame <- 0n
 
-            if released <> 0 then
+            if released <> 0 && heldIsPipeline then
+                swapChain
+                |> Option.iter (fun chain -> chain.MarkDeviceLost ())
+
+                pipelinePending <- false
+                pipelineNeedsSubmit <- true
+            elif released <> 0 then
                 raise (
                     InvalidOperationException (
                         "GPU frame release failed: "
@@ -223,7 +282,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                     )
                 )
 
-            heldFrame <- 0n
+            heldIsPipeline <- false
 
     // True when the finished present lost the device.
     let settleSwapChain (chain: D3D11SwapChain) =
@@ -257,6 +316,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                 && format = 1
             then
                 heldFrame <- frame
+                heldIsPipeline <- false
                 ValueSome (struct (resource, width, height))
             else
                 RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
@@ -272,9 +332,11 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
         if width > 0 && height > 0 then
             if width <> cpuWidth || height <> cpuHeight then
+                let allocationStarted = host.SchedulingTrace.Start ()
                 cpuWidth <- width
                 cpuHeight <- height
                 pixels <- Array.zeroCreate (width * height * 4)
+                host.SchedulingTrace.Finish (SchedulingPhase.CpuBufferCreate, allocationStarted, 0, processed = pixels.Length)
                 fullPaint <- true
 
             if fullPaint then
@@ -286,7 +348,13 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
         else
             false
 
-    let presentOnSwapChain (chain: D3D11SwapChain) (exposed: bool) =
+    let uploadCpu (chain: D3D11SwapChain) =
+        let started = host.SchedulingTrace.Start ()
+        let texture = chain.UploadCpu (pixels, cpuWidth, cpuHeight)
+        host.SchedulingTrace.Finish (SchedulingPhase.CpuUpload, started, 0, processed = pixels.Length)
+        texture
+
+    let presentLegacyOnSwapChain (chain: D3D11SwapChain) (exposed: bool) =
         waitSwapChain chain
 
         if not (chain.Prepare ()) then
@@ -299,17 +367,129 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                 lastGpu <- true
                 fullPaint <- true
                 true
+
             | ValueNone ->
                 cpuFrames <- cpuFrames + 1L
                 lastGpu <- false
-
                 let painted = paintForSwapChain ()
 
                 if painted || (exposed && cpuWidth > 0) then
-                    chain.Submit (chain.UploadCpu (pixels, cpuWidth, cpuHeight), cpuWidth, cpuHeight)
+                    chain.Submit (uploadCpu chain, cpuWidth, cpuHeight)
 
                 true
 
+    let presentOnSwapChain (chain: D3D11SwapChain) (exposed: bool) =
+        presentedTraceFrame <- ValueNone
+
+        if not (pipelineActive ()) then
+            presentLegacyOnSwapChain chain exposed
+        elif chain.Presenting || retryDelay () > 0 then
+            false
+        else
+            settleSwapChain chain |> ignore
+
+            if not (chain.Prepare (nonblocking = true)) then
+                deferPipeline ()
+            else
+                let recover status =
+                    if status = -12 then
+                        chain.MarkDeviceLost ()
+                        pipelinePending <- false
+                        pipelineNeedsSubmit <- true
+                        deferPipeline ()
+                    elif status = 1 then
+                        deferPipeline ()
+                    else
+                        raise (
+                            InvalidOperationException (
+                                "GPU pipeline failed: "
+                                + status.ToString (Globalization.CultureInfo.InvariantCulture)
+                            )
+                        )
+
+                let configured =
+                    OptionalNative.rv_host_configure_gpu_pipeline (host.Handle, chain.Device)
+
+                if configured <> 0 then
+                    recover configured
+                else
+                    if pipelinePending && pipelineSize <> host.PaintSize then
+                        pipelinePending <- false
+                        pipelineNeedsSubmit <- true
+
+                    let submitted =
+                        if
+                            not pipelinePending
+                            && (pipelineNeedsSubmit || exposed)
+                        then
+                            let status = OptionalNative.rv_host_submit_gpu_frame (host.Handle, pipelineId + 1UL)
+
+                            if status = 0 then
+                                pipelineId <- pipelineId + 1UL
+                                pipelineTraceFrame <- host.SchedulingTrace.FrameId
+                                pipelineSize <- host.PaintSize
+                                pipelinePending <- true
+                                pipelineNeedsSubmit <- false
+
+                            status
+                        else
+                            0
+
+                    if submitted = -9 then
+                        pipelineRequested <- false
+                        presentLegacyOnSwapChain chain exposed
+                    elif submitted <> 0 then
+                        recover submitted
+                    elif not pipelinePending then
+                        true
+                    else
+                        let mutable identity = 0UL
+                        let mutable frame = 0n
+
+                        let acquired =
+                            OptionalNative.rv_host_try_acquire_completed_gpu_frame (host.Handle, &identity, &frame)
+
+                        if acquired <> 0 then
+                            recover acquired
+                        elif identity <> pipelineId then
+                            RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
+                            |> ignore
+
+                            deferPipeline ()
+                        else
+                            let mutable texture = 0n
+                            let mutable width, height, format = 0, 0, 0
+
+                            let status =
+                                RanvierWebCoreAbi.Native.rv_gpu_frame_info (frame, &texture, &width, &height, &format)
+
+                            if
+                                status <> 0
+                                || texture = 0n
+                                || width <= 0
+                                || height <= 0
+                                || format <> 1
+                            then
+                                RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
+                                |> ignore
+
+                                invalidOp "Invalid completed GPU pipeline frame"
+
+                            heldFrame <- frame
+                            heldIsPipeline <- true
+                            pipelinePending <- false
+                            presentedTraceFrame <- ValueSome pipelineTraceFrame
+                            chain.Submit (texture, width, height)
+                            gpuFrames <- gpuFrames + 1L
+                            lastGpu <- true
+                            fullPaint <- true
+
+                            if pipelineNeedsSubmit then
+                                deferPipeline () |> ignore
+                            else
+                                retryAt <- 0L
+
+                            true
     // Top-down RGBA of the page. A GPU frame reads as opaque, as it appears composited over the window's black.
     let readFromSwapChain (chain: D3D11SwapChain) =
         waitSwapChain chain
@@ -335,7 +515,172 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                 fullPaint <- true
 
             paintForSwapChain () |> ignore
-            struct (cpuWidth, cpuHeight, chain.Read (chain.UploadCpu (pixels, cpuWidth, cpuHeight), cpuWidth, cpuHeight))
+            struct (cpuWidth, cpuHeight, chain.Read (uploadCpu chain, cpuWidth, cpuHeight))
+
+    member private this.PresentPortable(exposed: bool) =
+        let retireTexture () =
+            if not (NativePtr.isNullPtr gpuTexture) then
+                SDL3.SDL_DestroyTexture gpuTexture
+                gpuTexture <- NativePtr.nullPtr
+                gpuResource <- 0n
+
+        if retryDelay () > 0 then
+            false
+        else
+            let hadConsumer =
+                metal
+                |> Option.exists (fun consumer -> consumer.PendingFrame <> 0n)
+
+            let completed =
+                match metal with
+                | Some consumer -> consumer.TryReleasePending retireTexture
+                | None -> true
+
+            if not completed then
+                deferPipeline ()
+            elif
+                hadConsumer
+                && not pipelineNeedsSubmit
+                && not pipelinePending
+            then
+                retryAt <- 0L
+                true
+            else
+                let consumer =
+                    match egl, metal with
+                    | Some consumer, _ ->
+                        if not (consumer.Activate ()) then
+                            raise (PresentationNative.failure "SDL_GL_MakeCurrent")
+
+                        consumer.Context
+                    | _, Some consumer -> consumer.Queue
+                    | _ -> invalidOp "Missing portable GPU consumer"
+
+                let recover status =
+                    if status = 1 then
+                        deferPipeline ()
+                    elif status = -9 then
+                        pipelineRequested <- false
+                        this.Present exposed
+                    else
+                        invalidOp (
+                            "GPU pipeline failed; recreate the window after device loss: "
+                            + string status
+                        )
+
+                let configured =
+                    OptionalNative.rv_host_configure_gpu_pipeline (host.Handle, consumer)
+
+                if configured <> 0 then
+                    recover configured
+                else
+                    if pipelinePending && pipelineSize <> host.PaintSize then
+                        pipelinePending <- false
+                        pipelineNeedsSubmit <- true
+
+                    let submitted =
+                        if
+                            not pipelinePending
+                            && (pipelineNeedsSubmit || exposed)
+                        then
+                            let status = OptionalNative.rv_host_submit_gpu_frame (host.Handle, pipelineId + 1UL)
+
+                            if status = 0 then
+                                pipelineId <- pipelineId + 1UL
+                                pipelineTraceFrame <- host.SchedulingTrace.FrameId
+                                pipelineSize <- host.PaintSize
+                                pipelinePending <- true
+                                pipelineNeedsSubmit <- false
+
+                            status
+                        else
+                            0
+
+                    if submitted <> 0 then
+                        recover submitted
+                    elif not pipelinePending then
+                        retryAt <- 0L
+                        true
+                    else
+                        let mutable identity = 0UL
+                        let mutable frame = 0n
+
+                        let status =
+                            OptionalNative.rv_host_try_acquire_completed_gpu_frame (host.Handle, &identity, &frame)
+
+                        if status <> 0 then
+                            recover status
+                        elif identity <> pipelineId then
+                            RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
+                            |> ignore
+
+                            deferPipeline ()
+                        else
+                            let mutable resource = 0n
+                            let mutable width, height, format = 0, 0, 0
+
+                            let status =
+                                RanvierWebCoreAbi.Native.rv_gpu_frame_info (frame, &resource, &width, &height, &format)
+
+                            if
+                                status <> 0
+                                || resource = 0n
+                                || format <> (if metal.IsSome then 2 else 1)
+                            then
+                                RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
+                                |> ignore
+
+                                invalidOp "Invalid completed portable GPU frame"
+
+                            match egl, metal with
+                            | Some _, _ -> pendingEglFrame <- frame
+                            | _, Some consumer -> consumer.Adopt frame
+                            | _ -> ()
+
+                            try
+                                retireTexture ()
+
+                                gpuTexture <-
+                                    match egl, metal with
+                                    | Some consumer, _ -> consumer.Import (resource, width, height)
+                                    | _, Some consumer -> consumer.Import (resource, width, height)
+                                    | _ -> NativePtr.nullPtr
+
+                                if NativePtr.isNullPtr gpuTexture then
+                                    invalidOp "GPU frame import failed"
+
+                                gpuResource <- resource
+                                gpuWidth <- width
+                                gpuHeight <- height
+
+                                if
+                                    not (
+                                        PresentationNative.ok (
+                                            SDL3.SDL_SetTextureBlendMode (gpuTexture, SDL_BlendMode.SDL_BLENDMODE_BLEND_PREMULTIPLIED)
+                                        )
+                                    )
+                                then
+                                    raise (PresentationNative.failure "SDL_SetTextureBlendMode")
+
+                                draw gpuTexture width height
+
+                                if not (present ()) then
+                                    raise (PresentationNative.failure "SDL_RenderPresent")
+
+                                pipelinePending <- false
+                                presentedTraceFrame <- ValueSome pipelineTraceFrame
+                                gpuFrames <- gpuFrames + 1L
+                                lastGpu <- true
+                                fullPaint <- true
+
+                                if metal.IsSome || pipelineNeedsSubmit then
+                                    deferPipeline ()
+                                else
+                                    retryAt <- 0L
+                                    true
+                            finally
+                                if egl.IsSome then
+                                    releasePendingEglFrame ()
 
     member private _.WithGpu(action: nativeptr<SDL_Texture> -> int -> int -> 'T) : 'T voption =
         releasePendingEglFrame ()
@@ -439,11 +784,18 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
     /// <summary>Sets the swap chain's back buffer size for the next present.</summary>
     member _.Resized(width: int, height: int) =
+        fullPaint <- true
+        pipelinePending <- false
+        pipelineNeedsSubmit <- true
+        retryAt <- 0L
+
         swapChain
         |> Option.iter (fun chain -> chain.Resize (width, height))
 
     /// <summary>Sets how later swap chain frames reach the window.</summary>
     member _.Pace(visible: bool, refreshMs: int) =
+        retryMilliseconds <- max 1 refreshMs
+
         swapChain
         |> Option.iter (fun chain -> chain.Pace (visible, refreshMs))
 
@@ -484,6 +836,23 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     /// <summary>Requires a full CPU repaint after viewport or display-scale changes.</summary>
     member _.Invalidate() =
         fullPaint <- true
+        pipelineNeedsSubmit <- true
+
+    member _.GpuFramePipeline
+        with get () = pipelineRequested
+        and set value =
+            pipelineRequested <- value
+            pipelineNeedsSubmit <- true
+            retryAt <- 0L
+
+    member _.GpuFramePipelineActive = pipelineActive ()
+    member _.GpuRetryDelay = retryDelay ()
+
+    member _.PendingGpuFrame =
+        pipelineActive ()
+        && (pipelinePending || pipelineNeedsSubmit)
+
+    member _.PresentedFrameId = presentedTraceFrame
 
     /// <summary>The number of shared GPU frames presented to this renderer.</summary>
     member _.GpuFramesPresented = gpuFrames
@@ -498,6 +867,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     member this.Present(exposed: bool) =
         match swapChain with
         | Some chain -> presentOnSwapChain chain exposed
+        | None when pipelineActive () -> this.PresentPortable exposed
         | None ->
             match
                 this.WithGpu (fun texture width height ->
@@ -547,6 +917,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
     interface IDisposable with
         member _.Dispose() =
+            documentChanged.Dispose ()
             swapChain |> Option.iter waitSwapChain
             releasePendingEglFrame ()
             releasePendingMetalFrame ()

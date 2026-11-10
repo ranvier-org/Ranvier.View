@@ -39,6 +39,35 @@ module private MetalNative =
         use name = fixed utf8 key
         SDL3.SDL_GetPointerProperty (SDL3.SDL_GetRendererProperties renderer, name, 0n)
 
+    let completion queue =
+        let start () =
+            let pool = send (objc_getClass "NSAutoreleasePool", sel_registerName "new")
+
+            try
+                let buffer = send (queue, sel_registerName "commandBuffer")
+
+                if buffer = 0n then
+                    invalidOp "The Metal command queue could not create a completion fence"
+
+                sendVoid (buffer, sel_registerName "retain")
+                sendVoid (buffer, sel_registerName "commit")
+                buffer
+            finally
+                sendVoid (pool, sel_registerName "drain")
+
+        let ready buffer =
+            match send (buffer, sel_registerName "status") with
+            | 4n -> true
+            | 5n -> raise (GpuCompletionFailure "The Metal command buffer failed")
+            | _ -> false
+
+        CompletionFence (
+            start,
+            ready,
+            (fun buffer -> sendVoid (buffer, sel_registerName "waitUntilCompleted")),
+            (fun buffer -> sendVoid (buffer, sel_registerName "release"))
+        )
+
     let finish queue =
         let pool = send (objc_getClass "NSAutoreleasePool", sel_registerName "new")
 
@@ -62,6 +91,8 @@ type internal MetalRenderer private (renderer: nativeptr<SDL_Renderer>, queue: n
     let mutable submitted = false
     let mutable complete = fun () -> MetalNative.finish queue
     let mutable release = RanvierWebCoreAbi.Native.rv_gpu_frame_release
+    let fence = MetalNative.completion queue
+    let mutable pipelineFrame = false
 
     /// <summary>Creates a consumer only for a Metal renderer and a native runtime advertising IOSurface frames.</summary>
     static member TryCreate(renderer: nativeptr<SDL_Renderer>) =
@@ -88,8 +119,41 @@ type internal MetalRenderer private (renderer: nativeptr<SDL_Renderer>, queue: n
         if status = 0 then
             pendingFrame <- frame
             submitted <- false
+            pipelineFrame <- false
 
         status
+
+    /// <summary>The renderer's queue identity used to configure its native frame pool.</summary>
+    member _.Queue = queue
+
+    /// <summary>Retains an already-completed producer frame until Metal consumption finishes.</summary>
+    member _.Adopt(frame: nativeint) =
+        if pendingFrame <> 0n then
+            invalidOp "An IOSurface frame is awaiting consumer completion"
+
+        fence.Reset ()
+        pendingFrame <- frame
+        submitted <- false
+        pipelineFrame <- true
+
+    /// <summary>Polls consumer completion without waiting; the caller retries on its next scheduled frame.</summary>
+    member _.TryReleasePending(retireTexture: unit -> unit) =
+        if pendingFrame = 0n then
+            true
+        elif not submitted then
+            false
+        elif not (fence.TryComplete ()) then
+            false
+        else
+            retireTexture ()
+            let status = release pendingFrame
+
+            if status <> 0 then
+                invalidOp ("IOSurface frame release failed: " + string status)
+
+            pendingFrame <- 0n
+            pipelineFrame <- false
+            true
 
     /// <summary>Imports premultiplied BGRA8 sRGB storage without copying pixels through the CPU.</summary>
     member _.Import(surface: nativeint, width: int, height: int) =
@@ -152,7 +216,7 @@ type internal MetalRenderer private (renderer: nativeptr<SDL_Renderer>, queue: n
                 SDL3.SDL_RenderPresent renderer |> ignore
                 submitted <- true
 
-            complete ()
+            if pipelineFrame then fence.Complete () else complete ()
             retireTexture ()
             let status = release pendingFrame
 

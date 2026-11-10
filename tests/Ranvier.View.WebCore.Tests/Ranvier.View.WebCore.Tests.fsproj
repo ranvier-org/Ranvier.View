@@ -18,12 +18,24 @@
         <Compile Include="AtspiWindowChecks.fs" />
         <Compile Include="ObjectTests.fs" />
         <Compile Include="HostTests.fs" />
+        <Compile Include="BackgroundSnapshotTests.fs" />
+        <Compile Include="../Responsiveness/ViewportModel.fs" Link="ViewportModel.fs" />
+        <Compile Include="../Responsiveness/EditorViewport.fs" Link="EditorViewport.fs" />
+        <Compile Include="LayoutPhasesTests.fs" />
+        <Compile Include="SchedulingTests.fs" />
+    <Compile Include="OwnerWorkQueueTests.fs" />
+    <Compile Include="../Responsiveness/SemanticPublication.fs" Link="SemanticPublication.fs" />
+    <Compile Include="LatestPublicationTests.fs" />
         <Compile Include="ObservationLifetimeTests.fs" />
         <Compile Include="MountTests.fs" />
         <Compile Include="ExitLifetimeTests.fs" />
         <Compile Include="SvgTests.fs" />
         <Compile Include="InputTests.fs" />
+        <Compile Include="ImeContextTests.fs" />
+        <Compile Include="GpuCompletionTests.fs" />
+        <Compile Include="PortablePipelineTests.fs" />
         <Compile Include="PaintTests.fs" />
+        <Compile Include="CpuStagingTests.fs" />
         <Compile Include="WindowTests.fs" />
         <Compile Include="WindowShellTests.fs" />
         <Compile Include="SwapChainTests.fs" />

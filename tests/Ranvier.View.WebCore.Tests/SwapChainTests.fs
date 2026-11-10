@@ -71,6 +71,125 @@ let tests =
     <| testList
         "the D3D11 swap chain window"
         [
+            chainCase "the frame pipeline replaces a pending frame after direct host resize" (fun window chain _ ->
+                if not (WebCoreHost.Has "gpu-frame-pipeline-v1") then
+                    skiptest "requires native GPU pipeline"
+
+                stepUntilIdle window chain
+                window.GpuFramePipeline <- true
+
+                let flags =
+                    Reflection.BindingFlags.Instance
+                    ||| Reflection.BindingFlags.NonPublic
+
+                let presenter = typeof<Window>.GetField("presenter", flags).GetValue window
+
+                let set name value =
+                    presenter.GetType().GetField(name, flags).SetValue(presenter, value)
+
+                Expect.equal (OptionalNative.rv_host_configure_gpu_pipeline (window.Host.Handle, chain.Device)) 0 "configure"
+                Expect.equal (OptionalNative.rv_host_submit_gpu_frame (window.Host.Handle, 100UL)) 0 "accepted native frame"
+                // Reproduce the accepted-but-not-yet-acquired interval independently of GPU speed.
+                set "pipelineId" (box 100UL)
+                set "pipelinePending" (box true)
+                set "pipelineNeedsSubmit" (box false)
+                let size = presenter.GetType().GetField("pipelineSize", flags)
+
+                if not (isNull size) then
+                    size.SetValue (presenter, box window.Host.PaintSize)
+
+                window.Host.Resize (310, 230)
+                window.Host.SetDeviceScale 1.5f
+                let before = window.GpuFramesPresented
+                let timer = Diagnostics.Stopwatch.StartNew ()
+
+                while window.GpuFramesPresented = before
+                      && timer.ElapsedMilliseconds < 5000L do
+                    window.Step 2 |> ignore
+
+                Expect.isGreaterThan window.GpuFramesPresented before "discarded completion is replaced"
+                stepUntilIdle window chain
+                Expect.equal window.CpuFramesPresented 0L "resize stays on GPU")
+            chainCase "the frame pipeline explicitly presents an unchanged page" (fun window chain _ ->
+                if not (WebCoreHost.Has "gpu-frame-pipeline-v1") then
+                    skiptest "requires native GPU pipeline"
+
+                stepUntilIdle window chain
+                window.GpuFramePipeline <- true
+
+                let waitForFrame before =
+                    let timer = Diagnostics.Stopwatch.StartNew ()
+
+                    while window.GpuFramesPresented = before
+                          && timer.ElapsedMilliseconds < 5000L do
+                        window.Step 2 |> ignore
+
+                    Expect.isGreaterThan window.GpuFramesPresented before "a GPU frame is submitted"
+                    stepUntilIdle window chain
+
+                waitForFrame window.GpuFramesPresented
+                let before = window.GpuFramesPresented
+                window.Present ()
+                waitForFrame before
+                Expect.equal window.CpuFramesPresented 0L "explicit present remains on GPU")
+            chainCase "the frame pipeline recovers after resize and device loss" (fun window chain _ ->
+                if not (WebCoreHost.Has "gpu-frame-pipeline-v1") then
+                    skiptest "requires native GPU pipeline"
+
+                stepUntilIdle window chain
+                window.GpuFramePipeline <- true
+
+                let waitForFrame before =
+                    let timer = Diagnostics.Stopwatch.StartNew ()
+
+                    while window.GpuFramesPresented = before
+                          && timer.ElapsedMilliseconds < 5000L do
+                        window.Step 2 |> ignore
+
+                    Expect.isGreaterThan window.GpuFramesPresented before "pipeline resumes"
+                    stepUntilIdle window chain
+
+                waitForFrame window.GpuFramesPresented
+
+                SDL3.SDL_SetWindowSize (NativePtr.ofNativeInt<SDL_Window> window.SdlWindow, 300, 220)
+                |> ignore
+
+                waitForFrame window.GpuFramesPresented
+                let struct (width, height, _) = window.ReadPixels ()
+                Expect.equal (width, height) (300, 220) "new dimensions reach presentation"
+                chain.SetPresentWrapper (fun _ -> 0x887A0005)
+                let beforeLoss = window.GpuFramesPresented
+                window.Present ()
+                waitForFrame beforeLoss
+                chain.SetPresentWrapper Unchecked.defaultof<_>
+                waitForFrame window.GpuFramesPresented
+                Expect.equal (redAt (window.ReadPixels ()) 90 90) (255uy, 0uy, 0uy, 255uy) "recovered page"
+                Expect.equal window.CpuFramesPresented 0L "recovery remains on GPU")
+            chainCase "the frame pipeline defers a held present without CPU fallback" (fun window chain _ ->
+                if not (WebCoreHost.Has "gpu-frame-pipeline-v1") then
+                    skiptest "requires native GPU pipeline"
+
+                stepUntilIdle window chain
+                window.GpuFramePipeline <- true
+                let cpu = window.CpuFramesPresented
+                let gpu = window.GpuFramesPresented
+                use released = new ManualResetEventSlim (false)
+                chain.SetPresentWrapper (blocking 200 released)
+                let deadline = Diagnostics.Stopwatch.StartNew ()
+
+                while not chain.Presenting
+                      && deadline.ElapsedMilliseconds < 5000L do
+                    window.Step 2 |> ignore
+
+                Expect.isTrue chain.Presenting "a completed pipeline frame reaches the consumer"
+                let call = Diagnostics.Stopwatch.StartNew ()
+                window.Present ()
+                Expect.isLessThan call.ElapsedMilliseconds 100L "owner does not wait for held present"
+                Expect.equal window.CpuFramesPresented cpu "congestion never selects CPU"
+                stepUntilIdle window chain
+                chain.SetPresentWrapper (fun present -> present ())
+                Expect.isGreaterThan window.GpuFramesPresented gpu "pipeline presents a GPU frame"
+                Expect.equal (redAt (window.ReadPixels ()) 10 10) (255uy, 0uy, 0uy, 255uy) "retained pixels")
             testCase "the software renderer keeps SDL's renderer"
             <| fun () ->
                 onHostThread (fun () ->
@@ -135,6 +254,35 @@ let tests =
                 Expect.isGreaterThan window.GpuFramesPresented before "the frame produced during the present is shown afterwards"
                 let image = window.ReadPixels ()
                 Expect.equal (redAt image 90 90) (255uy, 0uy, 0uy, 255uy) "the page is intact afterwards"
+
+            chainCase "presentation completion retains the submitted frame identity"
+            <| fun window chain _ ->
+                use released = new ManualResetEventSlim ()
+                stepUntilIdle window chain
+                window.Host.SetSchedulingTrace true
+                chain.SetPresentWrapper (blocking 200 released)
+                window.Present ()
+                let struct (submitted, _) = window.Host.DrainSchedulingTrace ()
+
+                let submission =
+                    submitted
+                    |> Array.find (fun item -> item.Phase = SchedulingPhase.Present)
+
+                Expect.isTrue chain.Presenting "submission is outstanding"
+                // The stall path can update the host while this submission is outstanding.
+                window.Host.Frame ()
+                Expect.isGreaterThan window.Host.SchedulingTrace.FrameId submission.FrameId "host advances without submitting"
+                Expect.isTrue (released.Wait (TimeSpan.FromSeconds 5.0)) "worker completes"
+                chain.SetPresentWrapper Unchecked.defaultof<_>
+                window.Step 0 |> ignore
+                let struct (completed, lost) = window.Host.DrainSchedulingTrace ()
+                Expect.equal lost 0L "trace retained"
+
+                let completion =
+                    completed
+                    |> Array.find (fun item -> item.Phase = SchedulingPhase.PresentCompleted)
+
+                Expect.equal completion.FrameId submission.FrameId "completion belongs to the submitted frame"
 
             testCase "closing a window during a blocked present waits for it"
             <| fun () ->

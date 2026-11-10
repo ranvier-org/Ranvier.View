@@ -606,8 +606,9 @@ let tests =
                     steps window 1
                     Expect.equal (graph.Run (fun () -> count.Value)) (before + 1) "touch down reaches the page"
 
-            windowCase "an XIM clear followed by committed text ends the composition with its result"
+            windowCase "budgeted XIM clear followed by committed text ends the composition with its result"
             <| fun window ->
+                window.InteractiveBudget <- Some OwnerTurnBudget.Default
                 let input = window.Host.Document.createElement "input" :?> HTMLInputElement
                 input.setAttribute ("style", "position:absolute;left:0;top:0;width:100px;height:40px")
                 input.value <- "abc"
@@ -637,11 +638,19 @@ let tests =
                 event.edit.text <- empty
                 event.edit.start <- 0
                 Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "preedit clear queued"
+                let mutable filler = SDL_Event ()
+                filler.``type`` <- SDL3.SDL_RegisterEvents 1
+
+                for _ in 1..300 do
+                    SDL3.SDL_PushEvent &&filler |> ignore
+
                 event.text.``type`` <- SDL_EventType.SDL_EVENT_TEXT_INPUT
                 event.text.windowID <- target
                 event.text.text <- committed
                 Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "commit queued"
                 steps window 1
+                Expect.isEmpty ended "budget boundary must not cancel preedit"
+                steps window 10
                 Expect.equal input.value "a仮名c" "the result replaces the selected text"
                 Expect.sequenceEqual ended [| "仮名" |] "compositionend contains the committed result"
 
@@ -711,6 +720,74 @@ let tests =
                 Expect.equal input.value "abc" "focus loss restores the original selected text"
                 Expect.equal (input.selectionStart, input.selectionEnd) (Some 1u, Some 2u) "focus loss restores the original selection"
                 Expect.sequenceEqual ended [| "" |] "focus loss ends the composition"
+
+            windowCase "interactive callback flood reaches frame scheduling"
+            <| fun window ->
+                window.InteractiveBudget <-
+                    Some
+                        {
+                            MaxCallbacks = 3
+                            MaxMilliseconds = 10000.0
+                        }
+
+                let mutable calls = 0
+                let mutable frames = 0
+
+                let rec callback () =
+                    calls <- calls + 1
+
+                    if calls < 1000 then
+                        window.Host.PostToOwner callback
+
+                window.Host.PostToOwner callback
+
+                window.Host.RequestAnimationFrame (fun _ -> frames <- frames + 1)
+                |> ignore
+
+                steps window 1
+                Expect.equal calls 3 "bounded callbacks"
+                Expect.equal frames 1 "frame is not starved"
+
+            windowCase "posted work wakes the shared loop and runs on the owner"
+            <| fun window ->
+                use other =
+                    Window.Create ("Posted work", 100, 80, hidden = true, renderer = "software")
+
+                settle window
+                let owner = Environment.CurrentManagedThreadId
+                let mutable deliveredOn = 0
+
+                let producer =
+                    Threading.Tasks.Task.Run (fun () ->
+                        Threading.Thread.Sleep 10
+                        other.Host.PostToOwner (fun () -> deliveredOn <- Environment.CurrentManagedThreadId))
+
+                let deadline = Diagnostics.Stopwatch.StartNew ()
+
+                while deliveredOn = 0
+                      && deadline.ElapsedMilliseconds < 2000L do
+                    window.Step 1000 |> ignore
+
+                producer.GetAwaiter().GetResult()
+                Expect.equal deliveredOn owner "other host is serviced by the shared loop"
+                Expect.equal other.Host.OwnerWakeFailures 0L "SDL accepted the notification"
+
+            windowCase "post racing window disposal cannot signal a destroyed window"
+            <| fun window ->
+                let other =
+                    Window.Create ("Disposed work", 100, 80, hidden = true, renderer = "software")
+
+                let context = Threading.SynchronizationContext.Current
+
+                let producer =
+                    Threading.Tasks.Task.Run (fun () ->
+                        for _ in 1..10000 do
+                            context.Post (Threading.SendOrPostCallback ignore, null))
+
+                (other :> IDisposable).Dispose()
+                producer.GetAwaiter().GetResult()
+                steps window 2
+                Expect.equal other.Host.OwnerWakeFailures 0L "retired wake is harmless"
 
             windowCase "another window receives queued close requests"
             <| fun window ->

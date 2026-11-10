@@ -251,6 +251,16 @@ type Window
     let mutable exposed = true
     // A frame ran during a long present and is not on screen yet.
     let mutable framePending = false
+    let mutable tracedPresentation: int64 voption = ValueNone
+
+    let completePresentationTrace () =
+        match tracedPresentation with
+        | ValueSome frameId ->
+            tracedPresentation <- ValueNone
+            let observed = host.SchedulingTrace.Start ()
+            host.SchedulingTrace.Finish (SchedulingPhase.PresentCompleted, observed, 0, frameId = frameId)
+        | ValueNone -> ()
+
     let mutable lastFrameAt = 0L
     let mutable toCss = 1.0f
     let mutable closed = false
@@ -260,6 +270,17 @@ type Window
     let mutable cursor = -1
     let mutable disposed = false
     let mutable pageDisposed = false
+    let mutable interactiveBudget: OwnerTurnBudget option = None
+    let mutable eventDrainPending = false
+
+    let cycleHost () =
+        match interactiveBudget with
+        | Some budget -> host.CycleInteractive budget |> ignore
+        | None -> host.Cycle ()
+
+    let wakeGate = obj ()
+    let mutable wakeActive = true
+    let wakeEvent = SDL3.SDL_RegisterEvents 1
     let mutable cleanupCompleted: string -> unit = ignore
     let mutable maxTouchPoints = 0
     let mutable rates = initialRates
@@ -366,7 +387,7 @@ type Window
             SDL3.SDL_ShowWindowSystemMenu (window, x, y)
             |> ignore
 
-    let mutable modalFrame = fun () -> host.Cycle ()
+    let mutable modalFrame = cycleHost
     // Native callbacks hold these delegates' function pointers for the window's lifetime.
     let mutable hitTestCallback: HitTestCallback = null
     let mutable eventWatch: EventWatchCallback = null
@@ -1134,6 +1155,21 @@ type Window
 
         windows.Add (uint32 id, this)
 
+        host.SetOwnerWake (
+            Some (fun () ->
+                lock wakeGate (fun () ->
+                    if wakeActive then
+                        if wakeEvent = UInt32.MaxValue then
+                            invalidOp "SDL owner wake registration failed"
+
+                        let mutable wake = SDL_Event ()
+                        // The registered event type is a stable token; no engine pointer crosses threads.
+                        wake.``type`` <- wakeEvent
+
+                        if not (Sdl.ok (SDL3.SDL_PushEvent &&wake)) then
+                            invalidOp "SDL owner wake signal failed"))
+        )
+
     // A turn of the page inside the platform's modal move or resize loop, which blocks Step for the whole gesture.
     member private this.ModalTurn() =
         if not onPage && alive () then
@@ -1582,6 +1618,15 @@ type Window
     /// <summary>Whether the focused window's SDL input backend has valid surrounding text.</summary>
     member _.ImeSurroundingAvailable = surrounding.Available
 
+    /// <summary>Opts into bounded control context when the runtime supports it; disabled by default.</summary>
+    /// <remarks>Composition and unsupported editable structures report unavailable surrounding text.</remarks>
+    member _.BoundedImeContext
+        with get () = surrounding.Bounded
+        and set value =
+            host.EnsureActive ()
+            surrounding.Bounded <- value
+            surrounding.Refresh ()
+
     /// <summary>Asks the window to close: the next <c>Step</c> returns false.</summary>
     member _.Close() =
         closed <- true
@@ -1595,6 +1640,10 @@ type Window
     /// chain the present runs on its own thread, so a present that blocks leaves this call and <c>Step</c> running.
     /// </remarks>
     member this.Present() =
+        presenter.Invalidate ()
+        this.PresentPending ()
+
+    member private this.PresentPending() =
         let outer = onPage
         onPage <- true
 
@@ -1604,6 +1653,9 @@ type Window
             onPage <- outer
 
     member private _.PresentFrame() =
+        if host.FrameRequested || fullPaint || framePending then
+            presenter.Invalidate ()
+
         flushHeld HeldKind.Barrier
         host.Frame ()
         lastFrameAt <- now ()
@@ -1623,7 +1675,32 @@ type Window
                 )
             )
 
+            if not presenter.Presenting then
+                completePresentationTrace ()
+
+            let submittedFrame = host.SchedulingTrace.FrameId
+            let presentStarted = host.SchedulingTrace.Start ()
             let shown = presenter.Present exposed
+
+            if
+                not presenter.GpuFramePipelineActive
+                || not presenter.Presenting
+            then
+                completePresentationTrace ()
+
+            let submittedFrame =
+                match presenter.PresentedFrameId with
+                | ValueSome identity when shown -> identity
+                | _ -> submittedFrame
+
+            host.SchedulingTrace.Finish (SchedulingPhase.Present, presentStarted, 0, frameId = submittedFrame)
+
+            if shown then
+                tracedPresentation <- ValueSome submittedFrame
+
+                if not presenter.Presenting then
+                    completePresentationTrace ()
+
             framePending <- false
             fullPaint <- false
             exposed <- not shown
@@ -1634,8 +1711,14 @@ type Window
     /// sooner or a frame is wanted, for window events and dispatches them to the page, cycles the host, then presents a
     /// frame if the page asked for one. Returns false once the window has been asked to close.
     /// </summary>
-    /// <remarks>Drains SDL's global event queue for all live Ranvier windows. An application that owns the SDL event pump runs its own loop instead.</remarks>
-    /// <exception cref="T:System.Exception">A failure inside a native callback since the previous call: a modal move or resize turn, a hit test or the maximize button's input.</exception>
+    /// <remarks>
+    /// Drains SDL's global event queue for all live Ranvier windows.
+    /// An application that owns the SDL event pump runs its own loop instead.
+    /// </remarks>
+    /// <exception cref="T:System.Exception">
+    /// A failure inside a native callback since the previous call: a modal move or resize turn,
+    /// a hit test or the maximize button's input.
+    /// </exception>
     member this.Step(?timeout: int) : bool =
         owner.Ensure ()
 
@@ -1661,12 +1744,38 @@ type Window
             (this :> IDisposable).Dispose()
 
     // `outer` is onPage on entry to Step, restored while SDL pumps.
+    /// <summary>Opt-in cooperative posted-work and SDL event budgets. None retains exhaustive draining.</summary>
+    member _.InteractiveBudget
+        with get () = interactiveBudget
+        and set (value: OwnerTurnBudget option) =
+            host.EnsureActive ()
+
+            value
+            |> Option.iter (fun budget -> budget.Validate ())
+
+            interactiveBudget <- value
+
+    member private _.CycleHost() =
+        cycleHost ()
+
+    /// <summary>Opts into bounded GPU transport with nonblocking readiness when the native runtime supports it.</summary>
+    /// <remarks>False by default. Congestion retains the previous image and retries at the display interval.
+    /// Unsupported platforms retain their existing presentation path.</remarks>
+    member _.GpuFramePipeline
+        with get () = presenter.GpuFramePipeline
+        and set value =
+            host.EnsureActive ()
+            presenter.GpuFramePipeline <- value
+
     member private this.Turn(longest: int, outer: bool) : bool =
         if not closed then
             host.EnsureActive ()
 
             if presenter.Settle () then
                 exposed <- true
+
+            if not presenter.Presenting then
+                completePresentationTrace ()
 
             for target in windows.Snapshot () do
                 target.RefreshSurrounding ()
@@ -1676,13 +1785,27 @@ type Window
 
             let wait =
                 if
+                    eventDrainPending
+                    || (windows.Snapshot ()
+                        |> Seq.exists (fun target -> target.Host.HasPendingWork))
+                then
+                    0
+                elif
                     (host.FrameRequested
                      || fullPaint
                      || exposed
-                     || framePending)
+                     || framePending
+                     || presenter.PendingGpuFrame)
                     && not presenter.Presenting
                 then
-                    0
+                    let retry = presenter.GpuRetryDelay
+
+                    let due =
+                        match host.NextTimerDelay with
+                        | ValueSome delay -> min retry (max 0 (int (Math.Ceiling delay)))
+                        | ValueNone -> retry
+
+                    min longest due
                 else
                     let timer =
                         match host.NextTimerDelay with
@@ -1720,41 +1843,77 @@ type Window
 
             // A platform move or resize loop runs inside these two SDL calls.
             onPage <- outer
-            let received = Sdl.ok (SDL3.SDL_WaitEventTimeout (&&event, wait))
+            let received = Sdl.ok (SDL3.SDL_WaitEventTimeout (&&event, min wait 50))
             onPage <- true
 
+            let drainStarted = now ()
+            let mutable eventCount = 0
+
+            let withinEventBudget () =
+                interactiveBudget.IsNone
+                || (eventCount < 256
+                    && float (now () - drainStarted) * 1000.0
+                       / float Diagnostics.Stopwatch.Frequency
+                        <
+                        2.0)
+
+            eventDrainPending <- false
+
             if received then
+                eventCount <- 1
+
                 for target in windows.Snapshot () do
                     target.Dispatch event
                     target.RefreshAfterInput ()
 
                 while alive ()
+                      && withinEventBudget ()
                       && (onPage <- outer
                           let polled = Sdl.ok (SDL3.SDL_PollEvent &&event)
                           onPage <- true
                           polled) do
+                    eventCount <- eventCount + 1
+
                     for target in windows.Snapshot () do
                         target.Dispatch event
                         target.RefreshAfterInput ()
 
+                eventDrainPending <- not (withinEventBudget ())
+
+            if not eventDrainPending then
                 for target in windows.Snapshot () do
                     target.FlushComposition ()
+
+            host.SchedulingTrace.Record (
+                SchedulingPhase.EventDrain,
+                drainStarted,
+                now () - drainStarted,
+                (if eventDrainPending then 1 else 0),
+                processed = eventCount
+            )
 
             for target in windows.Snapshot () do
                 target.EndDrain ()
 
-            if alive () then
-                host.Cycle ()
+            for target in windows.Snapshot () do
+                if
+                    not target.Host.Session.IsDisposed
+                    && (obj.ReferenceEquals (target, this)
+                        || target.Host.HasPendingWork)
+                then
+                    target.CycleHost ()
 
             if
                 alive ()
                 && (host.FrameRequested
                     || fullPaint
                     || exposed
-                    || framePending)
+                    || framePending
+                    || presenter.PendingGpuFrame)
             then
                 if not presenter.Presenting then
-                    this.Present ()
+                    if presenter.GpuRetryDelay = 0 then
+                        this.PresentPending ()
                 elif
                     host.FrameRequested
                     && now () - lastFrameAt >= stall
@@ -1835,6 +1994,9 @@ type Window
                 closed <- true
                 disposePending <- true
             elif not disposed then
+                lock wakeGate (fun () -> wakeActive <- false)
+                host.SetOwnerWake None
+
                 if not (isNull hitTestCallback) then
                     SDL3.SDL_SetWindowHitTest (window, 0n, 0n)
                     |> ignore

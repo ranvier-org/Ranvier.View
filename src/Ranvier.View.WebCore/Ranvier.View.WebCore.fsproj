@@ -22,7 +22,7 @@
 
     <!-- RanvierWebCoreNativeDir holds runtimes/<rid>/native for local native runtime checks. -->
     <PropertyGroup>
-        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.1-rc.5</RanvierWebCoreNativeVersion>
+        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.1-rc.6</RanvierWebCoreNativeVersion>
         <UseLocalRanvierWebCore Condition="'$(UseLocalRanvierWebCore)' == ''">false</UseLocalRanvierWebCore>
         <RanvierWebCoreRoot Condition="'$(RanvierWebCoreRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../Ranvier.WebCore'))</RanvierWebCoreRoot>
         <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</RanvierWebCoreNativeRid>
@@ -59,7 +59,13 @@
         <Compile Include="TimelineRanges.fs" />
         <Compile Include="Generated/Objects.fs" />
         <Compile Include="EventTargets.fs" />
+        <Compile Include="HostSchedulingTrace.fs" />
+        <Compile Include="OwnerTurnBudget.fs" />
+        <Compile Include="OwnerWorkQueue.fs" />
+        <Compile Include="OptionalNative.fs" />
         <Compile Include="Host.fs" />
+        <Compile Include="LatestPublication.fs" />
+
         <Compile Include="SvgViews.fs" />
         <Compile Include="StyleSheets.fs" />
         <Compile Include="CssQueries.fs" />
@@ -77,6 +83,7 @@
         <Compile Include="Fonts.fs" />
         <Compile Include="EventConstruction.fs" />
         <Compile Include="InputState.fs" />
+        <Compile Include="ImeContext.fs" />
         <Compile Include="PointerInput.fs" />
         <Compile Include="FormData.fs" />
         <Compile Include="FormSubmissions.fs" />
@@ -88,6 +95,7 @@
         <Compile Include="MediaCapabilities.fs" />
         <Compile Include="NativeImageEncoding.fs" />
         <Compile Include="Snapshots.fs" />
+        <Compile Include="BackgroundSnapshots.fs" />
         <Compile Include="Urls.fs" />
         <Compile Include="TextSegmentation.fs" />
         <Compile Include="Crypto.fs" />

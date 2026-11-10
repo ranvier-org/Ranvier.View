@@ -9,6 +9,14 @@ on:
     branches: [main, master]
   workflow_dispatch:
     inputs:
+      native_run:
+        description: 'Exact Ranvier.WebCore GPU build run for responsiveness qualification (optional)'
+        type: string
+        default: ''
+      native_rid:
+        description: 'Responsiveness qualification platform (all, win-x64, linux-x64, osx-arm64)'
+        type: string
+        default: 'all'
       gpu_runtime_version:
         description: 'Exact coordinated GPU/managed WebCore version (empty disables the GPU lane)'
         type: string
@@ -30,6 +38,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  responsiveness-qualification:
+    if: github.event_name == 'workflow_dispatch' && inputs.native_run != ''
+    uses: ./.github/workflows/webcore-responsiveness.yml
+    permissions:
+      contents: read
+      actions: read
+    with:
+      native_run: ${{ inputs.native_run }}
+      native_rid: ${{ inputs.native_rid }}
+
   scope:
     name: CI scope
     runs-on: ubuntu-latest

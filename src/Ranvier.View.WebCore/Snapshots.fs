@@ -87,7 +87,7 @@ module Snapshots =
     /// host, releases every snapshot not yet delivered, which then settles <c>ResourceFailure.Cancelled</c>.
     /// </remarks>
     /// <param name="host">The live host whose creating thread runs every operation.</param>
-    let forHost (host: WebCoreHost) : SnapshotService =
+    let internal forHostBounded bounded (host: WebCoreHost) : SnapshotService =
         if isNull (box host) then
             nullArg (nameof host)
 
@@ -214,14 +214,26 @@ module Snapshots =
             let mutable token = 0UL
 
             let status =
-                Native.rv_host_snapshot (host.Handle, element, NativePtr.toNativeInt &&value, completions.Pointer, nativeint key, &token)
+                if bounded then
+                    OptionalNative.rv_host_snapshot_bounded (
+                        host.Handle,
+                        element,
+                        NativePtr.toNativeInt &&value,
+                        completions.Pointer,
+                        nativeint key,
+                        &token
+                    )
+                else
+                    Native.rv_host_snapshot (host.Handle, element, NativePtr.toNativeInt &&value, completions.Pointer, nativeint key, &token)
 
             if status <> 0 then
                 completions.Remove key
-                (arbiter :> IDisposable).Dispose()
+
+                if not bounded then
+                    (arbiter :> IDisposable).Dispose()
 
                 match status with
-                | -9 -> raise (ArgumentOutOfRangeException ("options", "The crop lies outside the subject"))
+                | -9 -> raise (ArgumentOutOfRangeException ("options", "The crop lies outside the subject or exceeds capture limits"))
                 | -12 -> invalidArg "subject" "The element belongs to another document"
                 | -5 -> raise (InvalidOperationException "The element has no box to paint")
                 | _ -> Interop.check "rv_host_snapshot" status
@@ -259,3 +271,9 @@ module Snapshots =
                     for operation in List.ofSeq live do
                         operation.Dispose ()
         }
+
+    /// <summary>A snapshot service for the host's current document, with synchronous capture and encoding.</summary>
+    /// <remarks>Completion runs later on the owner. Disposing the service or host cancels pending delivery.</remarks>
+    /// <param name="host">The live host whose creating thread runs every operation.</param>
+    let forHost (host: WebCoreHost) : SnapshotService =
+        forHostBounded false host

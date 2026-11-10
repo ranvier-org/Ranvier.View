@@ -112,28 +112,18 @@ module internal Factories =
 
 /// <summary>Posts work to a host's loop, which runs it on the host thread during <c>WebCoreHost.Cycle</c>.</summary>
 [<Sealed>]
-type internal HostContext(posted: ConcurrentQueue<struct (SendOrPostCallback * obj)>, thread: int) =
+type internal HostContext(posted: OwnerWorkQueue, thread: int) =
     inherit SynchronizationContext()
 
-    let gate = obj ()
-    let mutable stopped = false
-
     override _.Post(callback, state) =
-        lock gate (fun () ->
-            if not stopped then
-                posted.Enqueue (struct (callback, state)))
+        posted.Enqueue (callback, state) |> ignore
 
     member _.Stop() =
-        lock gate (fun () ->
-            stopped <- true
-            let mutable item = Unchecked.defaultof<_>
-
-            while posted.TryDequeue (&item) do
-                ())
+        posted.Stop ()
 
     override this.Send(callback, state) =
         if Environment.CurrentManagedThreadId = thread then
-            if lock gate (fun () -> not stopped) then
+            if not posted.IsStopped then
                 callback.Invoke state
         else
             raise (NotSupportedException "A WebCore host runs sent work only on its own thread")
@@ -154,7 +144,14 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     static let nativeOwner = NativeOwner ()
     let thread = Environment.CurrentManagedThreadId
     let microtasks = Queue<unit -> unit>()
-    let posted = ConcurrentQueue<struct (SendOrPostCallback * obj)>()
+    let schedulingTrace = HostSchedulingTrace ()
+
+    let posted =
+        OwnerWorkQueue (
+            timestamp = schedulingTrace.Start,
+            dequeued = (fun started -> schedulingTrace.Finish (SchedulingPhase.QueueDelay, started, 0))
+        )
+
     let timers = SortedDictionary<struct (float * int), unit -> unit>()
     let timerKeys = Dictionary<int, struct (float * int)>()
     let frames = Dictionary<int, float -> unit>()
@@ -223,6 +220,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             struct (left, top, right - left, bottom - top)
 
     let runMicrotasks () =
+        let started = schedulingTrace.Start ()
+
         while not disposed && microtasks.Count > 0 do
             let task = microtasks.Dequeue ()
 
@@ -230,6 +229,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 task ()
             with error ->
                 record error
+
+        schedulingTrace.Finish (SchedulingPhase.Microtasks, started, microtasks.Count)
 
     let now () =
         if manual then
@@ -245,6 +246,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 time - clock.Elapsed.TotalMilliseconds
 
     let runDueTimers () =
+        let mutable processed = 0
         let mutable going = true
 
         while not disposed && going && timers.Count > 0 do
@@ -254,6 +256,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             if due <= now () then
                 timers.Remove first.Key |> ignore
                 timerKeys.Remove id |> ignore
+                processed <- processed + 1
 
                 try
                     first.Value ()
@@ -263,6 +266,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 runMicrotasks ()
             else
                 going <- false
+
+        processed
 
     let removeIdle (id: int) =
         let index = idles.FindIndex (fun struct (entry, _) -> entry = id)
@@ -408,12 +413,35 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 now ()
         }
 
+    /// <summary>Enables a bounded scheduling trace; changing the setting clears buffered events.</summary>
+    member this.SetSchedulingTrace(enabled: bool) =
+        this.EnsureActive ()
+        schedulingTrace.SetEnabled enabled
+
+    /// <summary>Returns buffered Stopwatch-tick events and the number dropped since the previous drain.</summary>
+    member this.DrainSchedulingTrace() =
+        this.EnsureActive ()
+        schedulingTrace.Drain ()
+
+    member internal _.SchedulingTrace = schedulingTrace
+
     /// <summary>Posts a callback to the host's thread-safe work queue.</summary>
     member internal _.PostToOwner(action: unit -> unit) =
         context.Post (SendOrPostCallback (fun _ -> action ()), null)
 
     /// <summary>Runs after owned DOM references have been detached at host disposal.</summary>
     member internal _.Disposed = disposedEvent.Publish
+
+    member internal _.TryPostToOwner(action: unit -> unit) =
+        posted.Enqueue (SendOrPostCallback (fun _ -> action ()), null)
+
+    member internal _.HasPendingWork = posted.Count > 0
+
+    member internal _.SetOwnerWake(callback) =
+        posted.SetWakeCallback callback
+
+    /// <summary>Number of failed owner wake signals. Work remains queued for the next turn.</summary>
+    member _.OwnerWakeFailures = posted.WakeFailures
 
     /// <summary>Runs after <c>SetScreen</c> or <c>Resize</c>, which can change the screen the document reports.</summary>
     member internal _.ScreenMayHaveChanged = screenEvent.Publish
@@ -575,30 +603,77 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// no frame is requested.
     /// </summary>
     member this.Cycle(?milliseconds: int) =
-        this.EnsureActive ()
-
-        Native.rv_run_loop_cycle (defaultArg milliseconds 0)
+        this.CycleCore (defaultArg milliseconds 0, None)
         |> ignore
 
+    member internal this.CycleInteractive(budget: OwnerTurnBudget) =
+        budget.Validate ()
+        this.CycleCore (0, Some budget)
+
+    member private this.CycleCore(milliseconds: int, budget: OwnerTurnBudget option) =
+        this.EnsureActive ()
+
+        let nativeStarted = schedulingTrace.Start ()
+        Native.rv_run_loop_cycle milliseconds |> ignore
+        schedulingTrace.Finish (SchedulingPhase.NativeCycle, nativeStarted, posted.Count)
+
+        let limit =
+            budget
+            |> Option.map (fun value -> TurnLimit (value, Stopwatch.GetTimestamp, Stopwatch.Frequency))
+
+        let mutable executed = 0
+
+        let exceeded () =
+            limit
+            |> Option.exists (fun value -> value.Exceeded)
+
         if not disposed then
+            let releaseStarted = schedulingTrace.Start ()
+            let releasedBefore = session.Released
             session.Drain ()
+            schedulingTrace.Finish (SchedulingPhase.Releases, releaseStarted, 0, processed = session.Released - releasedBefore)
             let mutable item = Unchecked.defaultof<_>
 
-            while not disposed && posted.TryDequeue (&item) do
+            while not disposed
+                  && (executed = 0 || not (exceeded ()))
+                  && posted.TryDequeue (&item) do
                 let struct (callback, state) = item
+                let callbackStarted = schedulingTrace.Start ()
 
                 try
                     callback.Invoke state
                 with error ->
                     record error
 
+                schedulingTrace.Finish (SchedulingPhase.Posted, callbackStarted, posted.Count)
                 runMicrotasks ()
+                executed <- executed + 1
 
-            runDueTimers ()
+                limit
+                |> Option.iter (fun value -> value.Complete ())
+
+            let timersStarted = schedulingTrace.Start ()
+            let timersProcessed = runDueTimers ()
+            schedulingTrace.Finish (SchedulingPhase.Timers, timersStarted, timers.Count, processed = timersProcessed)
             runMicrotasks ()
 
-            if not disposed && Volatile.Read &frameRequested = 0 then
+            if
+                not disposed
+                && posted.Count = 0
+                && Volatile.Read &frameRequested = 0
+            then
                 runIdle ()
+
+        let overBudget = exceeded ()
+
+        if overBudget then
+            schedulingTrace.Record (SchedulingPhase.BudgetExceeded, Stopwatch.GetTimestamp (), 0L, posted.Count, processed = executed)
+
+        {
+            Executed = executed
+            Remaining = posted.Count > 0
+            BudgetExceeded = overBudget
+        }
 
     /// <summary>Moves the timer clock forward by <c>milliseconds</c> and runs the timers then due, as a test clock does.</summary>
     member internal this.AdvanceBy(milliseconds: float) =
@@ -669,6 +744,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// </summary>
     member this.Frame() =
         this.EnsureActive ()
+        schedulingTrace.NextFrame ()
+        let frameStarted = schedulingTrace.Start ()
         Volatile.Write (&frameRequested, 0)
         let now = now ()
         let callbacks = Seq.toArray frames.Keys
@@ -690,6 +767,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         if not disposed then
             Native.rv_host_update handle
             |> Interop.check "rv_host_update"
+
+        schedulingTrace.Finish (SchedulingPhase.Frame, frameStarted, 0)
 
     // Window
 
@@ -879,6 +958,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     member private this.Input(name: string, call: unit -> int) : bool =
         this.EnsureActive ()
+        let inputStarted = schedulingTrace.Start ()
         inInput <- inInput + 1
 
         let status =
@@ -886,6 +966,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 call ()
             finally
                 inInput <- inInput - 1
+                schedulingTrace.Finish (SchedulingPhase.Input, inputStarted, posted.Count)
 
         runMicrotasks ()
 
@@ -989,6 +1070,23 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             raise (NotSupportedException $"The native library does not provide {feature}")
 
         action () |> Interop.check operation
+
+    /// <summary>Samples completed main-frame layout passes without flushing pending work.</summary>
+    /// <remarks>Call on the host thread. None means the runtime lacks host-layout-metrics.
+    /// The counter includes subtree layouts, wraps at 32 bits and resets with the frame view.
+    /// Compare samples only within one document lifetime; child frames and style-only updates are excluded.</remarks>
+    member this.LayoutPassCount: uint32 voption =
+        this.EnsureActive ()
+
+        if WebCoreHost.Has "host-layout-metrics" then
+            let mutable count = 0u
+
+            OptionalNative.rv_host_layout_count (handle, &count)
+            |> Interop.check "rv_host_layout_count"
+
+            ValueSome count
+        else
+            ValueNone
 
     /// <summary>Enables or disables the host's bounded rendering trace.</summary>
     /// <remarks>Call on the host thread. A change of state clears queued events.</remarks>
