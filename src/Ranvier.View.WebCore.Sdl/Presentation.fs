@@ -595,6 +595,11 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
                         if status <> 0 then
                             recover status
+                        elif identity <> pipelineId then
+                            RanvierWebCoreAbi.Native.rv_gpu_frame_release frame
+                            |> ignore
+
+                            deferPipeline ()
                         else
                             let mutable resource = 0n
                             let mutable width, height, format = 0, 0, 0
@@ -604,7 +609,6 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
                             if
                                 status <> 0
-                                || identity <> pipelineId
                                 || resource = 0n
                                 || format <> (if metal.IsSome then 2 else 1)
                             then
