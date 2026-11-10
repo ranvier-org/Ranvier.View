@@ -16,8 +16,8 @@ Core retains graph batching, ownership, keyed projection and reactive scheduling
 
 ## Status
 
-- Task 4: implemented and tested; native and View commit pending.
-- Task 5: pending; starts after task 4 passes its gate.
+- Task 4: complete; native b26a1b3, View 4a67889. Passed its full gate before task 5 began.
+- Task 5: complete; final suite 939 passed, 17 excluded. Native 47510ca plus pixel regression a591a9b; View consumer 25684f3, with viewport review fix e24c288.
 
 ## Task 4 evidence and rulings
 
@@ -31,3 +31,24 @@ Core retains graph batching, ownership, keyed projection and reactive scheduling
 - Nine GPU fixture scenarios passed at one second each with no dropped trace events, including independent long-line and bidi workloads. Typing at 1,000 versus 10,000,000 logical lines: both 125 live rows, 220 iterations, 218 cache entries; 8,436,008 versus 8,436,000 allocated bytes. P95 2.42 versus 2.99 ms. These short synthetic runs establish smoke/scaling evidence, not physical refresh qualification.
 - Prior task-3 fixture comparison: 150 static pre lines, P95 2.25 ms, ~3.16 MB allocations. New fixture performs real row mutation/measurement and uses a different staged runtime; this is a workload comparison, not a speedup claim. Long-line P95 81.94 ms and bidi P95 45.08 ms show remaining shaping/viewport costs.
 - Managed integration currently builds against the local canonical interop using UseLocalRanvierWebCore=true and RanvierWebCoreRoot=C:/wk/rw-gpu-combined. Package coordination remains last in task 5; nothing is published.
+
+## Task 5 evidence and rulings
+
+- ABI 67 adds gpu-frame-pipeline-v1, retained consumer configuration, monotonic submission IDs and newest-completed acquisition. NotReady is positive 1; device loss is -12. Legacy calls retain their contracts.
+- Three slots cover all resize generations; accounted RGBA/depth and external-input caches share a 256 MiB cap. Zero-time keyed-mutex checks cover production, acquisition and retirement. Destroyed resources remain charged until completion queries prove retirement or devices are removed. Minimum charge is 64 KiB; driver/private WebCore allocations are outside this cap.
+- Native pure state tests passed (exhaustion, late/out-of-order completion, retirement, memory arithmetic). Real pipeline test passed 157 assertions, including three held leases, resize backpressure, owner-thread checks, busy external producer cache, actual device removal, document replacement, host teardown with a held frame, and translucent pixel equality with legacy at fractional DPR. Legacy external-input acceptance: 306 assertions, 42 frames. Native frame acceptance passed all four teardown modes after final retirement changes. Canonical interop: 355 declarations, zero differences. GPU tracing: 346 assertions.
+- Private runtime SHA256 B46E3147CFDE704A6B6153C7F594DE8BFCD8AC913BF394D3949B6891C2D2C8EF. Shared WebKit objects remained unchanged. New-path readiness never requests a positive-time mutex wait. Driver submission and layout still execute on owner.
+- View opt-in Window.GpuFramePipeline preserves the current image on congestion, retries at a scheduled interval, and does not choose CPU fallback on NotReady. Explicit Present retains its force-frame behavior; a regression failed before the fix and passed afterward. Device loss, SDL resize and direct host resize/DPR replacement are covered. Diagnostic ReadPixels remains synchronous.
+- Full initial task-5 suite: 937 passed, 17 excluded. Final suite after review fixes: 939 passed, 17 excluded, zero failed in 25 seconds (artifacts/layout-gpu/results/task5-final.trx and .log). Native runtime staged after each managed build; one early focused run skipped against the old runtime and was rerun with the correct ABI, not counted as acceptance.
+- Nine one-second pipeline fixture scenarios on 10,000,000 logical lines passed with 125 live rows, zero CPU frames and zero dropped managed/native trace records. Typing P95 3.20 ms; scroll 8.47 ms; resize 9.75 ms. Long-line P95 89.34 ms remains expensive. These are synthetic hidden-window smoke results, not a speedup claim or physical 60/120 Hz qualification.
+- Ruling: keep released rc.5 package defaults and add four capability-gated private imports for ABI 66/67 instead of referencing an unpublished package version. Canonical native managed declarations are regenerated. Default-package build passed; old-runtime layout/legacy-presentation checks passed 14 tests, with three new-capability tests correctly skipped. Cost if wrong: release packaging must still coordinate the new native runtime and canonical interop; opting in on an old runtime remains legacy behavior.
+- SageFs disconnected with Transport closed during the final managed gate. Used normal isolated dotnet builds/tests for that step; no daemon restart or changes to other sessions.
+- Task-owned SageFs session stop and lease release were attempted at completion; the connector still returned Transport closed. No other session was touched. XML documentation audit passed with zero findings.
+
+## Final whole-branch review
+
+- Fresh reviewer found no critical issue and two important issues. Both were reproduced as failing tests before fixes.
+- Final: fixed pending GPU submission stranded by direct host Resize/SetDeviceScale — tracked submitted physical dimensions and resubmitted on mismatch; direct-host-resize test RED→GREEN, final suite 939/939 executed passed.
+- Final: fixed viewport edits/scrolling at document boundaries — derive slot and scroll from actual mounted start, clamp the first line to a full viewport, and initialize small documents correctly; viewport-boundaries test RED→GREEN for 10 and 1,000 lines, final suite 939/939 executed passed.
+- Final: Ruling: the review's composition-test limitation is intentional fixture scope, not evidence of recycled-contenteditable selection safety. Input is a separate stable textarea and display rows are noneditable. Cost if wrong: consumers needing selection inside recycled editable rows need additional design and real-platform IME acceptance; no such guarantee is made here.
+- Deferred minor: no test of selection/composition inside recycled editable rows; the fixture does not implement that interaction.
