@@ -251,6 +251,16 @@ type Window
     let mutable exposed = true
     // A frame ran during a long present and is not on screen yet.
     let mutable framePending = false
+    let mutable tracedPresentation: int64 voption = ValueNone
+
+    let completePresentationTrace () =
+        match tracedPresentation with
+        | ValueSome frameId ->
+            tracedPresentation <- ValueNone
+            let observed = host.SchedulingTrace.Start ()
+            host.SchedulingTrace.Finish (SchedulingPhase.PresentCompleted, observed, 0, frameId = frameId)
+        | ValueNone -> ()
+
     let mutable lastFrameAt = 0L
     let mutable toCss = 1.0f
     let mutable closed = false
@@ -262,10 +272,12 @@ type Window
     let mutable pageDisposed = false
     let mutable interactiveBudget: OwnerTurnBudget option = None
     let mutable eventDrainPending = false
+
     let cycleHost () =
         match interactiveBudget with
         | Some budget -> host.CycleInteractive budget |> ignore
         | None -> host.Cycle ()
+
     let wakeGate = obj ()
     let mutable wakeActive = true
     let wakeEvent = SDL3.SDL_RegisterEvents 1
@@ -1142,16 +1154,21 @@ type Window
         |> ignore
 
         windows.Add (uint32 id, this)
-        host.SetOwnerWake (Some (fun () ->
-            lock wakeGate (fun () ->
-                if wakeActive then
-                    if wakeEvent = UInt32.MaxValue then
-                        invalidOp "SDL owner wake registration failed"
-                    let mutable wake = SDL_Event ()
-                    // The registered event type is a stable token; no engine pointer crosses threads.
-                    wake.``type`` <- wakeEvent
-                    if not (Sdl.ok (SDL3.SDL_PushEvent &&wake)) then
-                        invalidOp "SDL owner wake signal failed")))
+
+        host.SetOwnerWake (
+            Some (fun () ->
+                lock wakeGate (fun () ->
+                    if wakeActive then
+                        if wakeEvent = UInt32.MaxValue then
+                            invalidOp "SDL owner wake registration failed"
+
+                        let mutable wake = SDL_Event ()
+                        // The registered event type is a stable token; no engine pointer crosses threads.
+                        wake.``type`` <- wakeEvent
+
+                        if not (Sdl.ok (SDL3.SDL_PushEvent &&wake)) then
+                            invalidOp "SDL owner wake signal failed"))
+        )
 
     // A turn of the page inside the platform's modal move or resize loop, which blocks Step for the whole gesture.
     member private this.ModalTurn() =
@@ -1642,9 +1659,22 @@ type Window
                 )
             )
 
+            if not presenter.Presenting then
+                completePresentationTrace ()
+
+            let submittedFrame = host.SchedulingTrace.FrameId
             let presentStarted = host.SchedulingTrace.Start ()
             let shown = presenter.Present exposed
-            host.SchedulingTrace.Finish (SchedulingPhase.Present, presentStarted, 0)
+            // Present waits for any preceding submission before accepting another frame.
+            completePresentationTrace ()
+            host.SchedulingTrace.Finish (SchedulingPhase.Present, presentStarted, 0, frameId = submittedFrame)
+
+            if shown then
+                tracedPresentation <- ValueSome submittedFrame
+
+                if not presenter.Presenting then
+                    completePresentationTrace ()
+
             framePending <- false
             fullPaint <- false
             exposed <- not shown
@@ -1682,26 +1712,29 @@ type Window
             (this :> IDisposable).Dispose()
 
     // `outer` is onPage on entry to Step, restored while SDL pumps.
-    /// Opt-in cooperative posted-work and SDL event budgets. None retains exhaustive draining.
+    /// <summary>Opt-in cooperative posted-work and SDL event budgets. None retains exhaustive draining.</summary>
     member _.InteractiveBudget
         with get () = interactiveBudget
         and set (value: OwnerTurnBudget option) =
             host.EnsureActive ()
-            value |> Option.iter (fun budget -> budget.Validate ())
+
+            value
+            |> Option.iter (fun budget -> budget.Validate ())
+
             interactiveBudget <- value
 
-    member private _.CycleHost() = cycleHost ()
+    member private _.CycleHost() =
+        cycleHost ()
 
     member private this.Turn(longest: int, outer: bool) : bool =
         if not closed then
             host.EnsureActive ()
 
-            let wasPresenting = presenter.Presenting
             if presenter.Settle () then
                 exposed <- true
-            if wasPresenting && not presenter.Presenting then
-                let observed = host.SchedulingTrace.Start ()
-                host.SchedulingTrace.Finish (SchedulingPhase.PresentCompleted, observed, 0)
+
+            if not presenter.Presenting then
+                completePresentationTrace ()
 
             for target in windows.Snapshot () do
                 target.RefreshSurrounding ()
@@ -1710,7 +1743,11 @@ type Window
             let stall = refreshTicks * 3L / 2L
 
             let wait =
-                if eventDrainPending || (windows.Snapshot () |> Seq.exists (fun target -> target.Host.HasPendingWork)) then
+                if
+                    eventDrainPending
+                    || (windows.Snapshot ()
+                        |> Seq.exists (fun target -> target.Host.HasPendingWork))
+                then
                     0
                 elif
                     (host.FrameRequested
@@ -1762,11 +1799,20 @@ type Window
 
             let drainStarted = now ()
             let mutable eventCount = 0
+
             let withinEventBudget () =
-                interactiveBudget.IsNone || (eventCount < 256 && float (now () - drainStarted) * 1000.0 / float Diagnostics.Stopwatch.Frequency < 2.0)
+                interactiveBudget.IsNone
+                || (eventCount < 256
+                    && float (now () - drainStarted) * 1000.0
+                       / float Diagnostics.Stopwatch.Frequency
+                        <
+                        2.0)
+
             eventDrainPending <- false
+
             if received then
                 eventCount <- 1
+
                 for target in windows.Snapshot () do
                     target.Dispatch event
                     target.RefreshAfterInput ()
@@ -1778,6 +1824,7 @@ type Window
                           onPage <- true
                           polled) do
                     eventCount <- eventCount + 1
+
                     for target in windows.Snapshot () do
                         target.Dispatch event
                         target.RefreshAfterInput ()
@@ -1787,13 +1834,24 @@ type Window
             if not eventDrainPending then
                 for target in windows.Snapshot () do
                     target.FlushComposition ()
-            host.SchedulingTrace.Record (SchedulingPhase.EventDrain, drainStarted, now () - drainStarted, (if eventDrainPending then 1 else 0), processed = eventCount)
+
+            host.SchedulingTrace.Record (
+                SchedulingPhase.EventDrain,
+                drainStarted,
+                now () - drainStarted,
+                (if eventDrainPending then 1 else 0),
+                processed = eventCount
+            )
 
             for target in windows.Snapshot () do
                 target.EndDrain ()
 
             for target in windows.Snapshot () do
-                if not target.Host.Session.IsDisposed && (obj.ReferenceEquals(target, this) || target.Host.HasPendingWork) then
+                if
+                    not target.Host.Session.IsDisposed
+                    && (obj.ReferenceEquals (target, this)
+                        || target.Host.HasPendingWork)
+                then
                     target.CycleHost ()
 
             if
@@ -1887,6 +1945,7 @@ type Window
             elif not disposed then
                 lock wakeGate (fun () -> wakeActive <- false)
                 host.SetOwnerWake None
+
                 if not (isNull hitTestCallback) then
                     SDL3.SDL_SetWindowHitTest (window, 0n, 0n)
                     |> ignore

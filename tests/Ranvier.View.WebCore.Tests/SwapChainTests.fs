@@ -136,6 +136,35 @@ let tests =
                 let image = window.ReadPixels ()
                 Expect.equal (redAt image 90 90) (255uy, 0uy, 0uy, 255uy) "the page is intact afterwards"
 
+            chainCase "presentation completion retains the submitted frame identity"
+            <| fun window chain _ ->
+                use released = new ManualResetEventSlim ()
+                stepUntilIdle window chain
+                window.Host.SetSchedulingTrace true
+                chain.SetPresentWrapper (blocking 200 released)
+                window.Present ()
+                let struct (submitted, _) = window.Host.DrainSchedulingTrace ()
+
+                let submission =
+                    submitted
+                    |> Array.find (fun item -> item.Phase = SchedulingPhase.Present)
+
+                Expect.isTrue chain.Presenting "submission is outstanding"
+                // The stall path can update the host while this submission is outstanding.
+                window.Host.Frame ()
+                Expect.isGreaterThan window.Host.SchedulingTrace.FrameId submission.FrameId "host advances without submitting"
+                Expect.isTrue (released.Wait (TimeSpan.FromSeconds 5.0)) "worker completes"
+                chain.SetPresentWrapper Unchecked.defaultof<_>
+                window.Step 0 |> ignore
+                let struct (completed, lost) = window.Host.DrainSchedulingTrace ()
+                Expect.equal lost 0L "trace retained"
+
+                let completion =
+                    completed
+                    |> Array.find (fun item -> item.Phase = SchedulingPhase.PresentCompleted)
+
+                Expect.equal completion.FrameId submission.FrameId "completion belongs to the submitted frame"
+
             testCase "closing a window during a blocked present waits for it"
             <| fun () ->
                 if not (OperatingSystem.IsWindows ()) then

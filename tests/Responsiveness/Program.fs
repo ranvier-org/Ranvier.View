@@ -17,14 +17,22 @@ let option name fallback (args: string array) =
     | _ -> fallback
 
 let percentile quantile (values: int64 array) =
-    if values.Length = 0 then 0.0
+    if values.Length = 0 then
+        0.0
     else
         Array.sortInPlace values
-        float values[min (values.Length - 1) (int (ceil (quantile * float values.Length)) - 1)] * 1000.0 / float Stopwatch.Frequency
+
+        float values[min (values.Length - 1) (int (ceil (quantile * float values.Length)) - 1)]
+        * 1000.0
+        / float Stopwatch.Frequency
 
 let sample scenario seconds lines unbounded visible renderer tracing interactive output repetition =
-    use window = Window.Create ("Ranvier responsiveness", 800, 600, hidden = not visible, ?renderer = renderer)
-    if interactive then window.InteractiveBudget <- Some OwnerTurnBudget.Default
+    use window =
+        Window.Create ("Ranvier responsiveness", 800, 600, hidden = not visible, ?renderer = renderer)
+
+    if interactive then
+        window.InteractiveBudget <- Some OwnerTurnBudget.Default
+
     let host = window.Host
     let count = if unbounded then lines else min lines 150
     host.Document.body.innerHTML <- "<textarea id='input' style='width:700px;height:80px'></textarea><pre id='lines'></pre>"
@@ -33,9 +41,15 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
     viewport.textContent <- String.concat "\n" [ for i in 1..count -> $"line {i}: let value = {i}" ]
     input.focus ()
     host.SetFocused true
-    for _ in 1..10 do window.Step (timeout = 0) |> ignore
+
+    for _ in 1..10 do
+        window.Step (timeout = 0) |> ignore
+
     host.SetSchedulingTrace tracing
-    if WebCoreHost.Has "host-tracing" then host.SetRenderingTrace tracing
+
+    if WebCoreHost.Has "host-tracing" then
+        host.SetRenderingTrace tracing
+
     let events = ResizeArray<SchedulingEvent>()
     let turnDurations = ResizeArray<int64>()
     let mutable dropped = 0L
@@ -43,27 +57,61 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
     let nativeEvents = ResizeArray<obj>()
     let allocated = GC.GetTotalAllocatedBytes false
     let context = SynchronizationContext.Current
-    let mutable revision = { DocumentId = Guid.NewGuid(); TextRevision = 0L; ProjectRevision = 0L; RequestId = 0L }
+
+    let mutable revision =
+        {
+            DocumentId = Guid.NewGuid ()
+            TextRevision = 0L
+            ProjectRevision = 0L
+            RequestId = 0L
+        }
+
     let mutable visibleColor = ""
-    use publication = new LatestPublication<Result>(host, (fun result ->
-        if isCurrent revision result && visibleColor <> result.VisibleColor then
-            visibleColor <- result.VisibleColor
-            viewport.setAttribute("style", "color:" + visibleColor)))
-    let mutable cancellation = new CancellationTokenSource()
-    use cancelOnExit = { new IDisposable with member _.Dispose() = cancellation.Cancel(); cancellation.Dispose() }
+
+    use publication =
+        new LatestPublication<Result> (
+            host,
+            (fun result ->
+                if
+                    isCurrent revision result
+                    && visibleColor <> result.VisibleColor
+                then
+                    visibleColor <- result.VisibleColor
+                    viewport.setAttribute ("style", "color:" + visibleColor))
+        )
+
+    let mutable cancellation = new CancellationTokenSource ()
+
+    use cancelOnExit =
+        { new IDisposable with
+            member _.Dispose() =
+                cancellation.Cancel ()
+                cancellation.Dispose ()
+        }
+
     let mutable worker = Tasks.Task.CompletedTask
     let clock = Stopwatch.StartNew ()
     let mutable iteration = 0
+
     while clock.Elapsed.TotalSeconds < seconds do
         let started = Stopwatch.GetTimestamp ()
+
         match scenario with
         | "typing" ->
-            if input.value.Length > 256 then input.value <- ""
+            if input.value.Length > 256 then
+                input.value <- ""
+
             host.Type ("a", "KeyA", "a")
         | "ime" ->
             host.SetComposition ("日本", 2, 2)
-            if iteration % 2 = 0 then host.CancelComposition () else host.CommitComposition "日本"
-            if input.value.Length > 256 then input.value <- ""
+
+            if iteration % 2 = 0 then
+                host.CancelComposition ()
+            else
+                host.CommitComposition "日本"
+
+            if input.value.Length > 256 then
+                input.value <- ""
         | "scroll" -> host.Wheel (200, 200, 0.0f, 24.0f, 0) |> ignore
         | "posted" ->
             for i in 1..1000 do
@@ -73,72 +121,164 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
             // Bound worker concurrency as well as owner delivery; workers see only detached data.
             if worker.IsCompleted then
                 worker.GetAwaiter().GetResult()
-                cancellation.Cancel()
-                cancellation.Dispose()
-                cancellation <- new CancellationTokenSource()
-                revision <- { revision with RequestId = revision.RequestId + 1L }
+                cancellation.Cancel ()
+                cancellation.Dispose ()
+                cancellation <- new CancellationTokenSource ()
+
+                revision <-
+                    { revision with
+                        RequestId = revision.RequestId + 1L
+                    }
+
                 let captured = revision
                 let token = cancellation.Token
-                worker <- Tasks.Task.Run(fun () ->
-                    for i in 1..1000 do
-                        if not token.IsCancellationRequested then
-                            publication.Publish { Revision = captured; VisibleColor = if i % 2 = 0 then "#225588" else "#884422" } |> ignore)
+
+                worker <-
+                    Tasks.Task.Run (fun () ->
+                        for i in 1..1000 do
+                            if not token.IsCancellationRequested then
+                                publication.Publish
+                                    {
+                                        Revision = captured
+                                        VisibleColor = if i % 2 = 0 then "#225588" else "#884422"
+                                    }
+                                |> ignore)
         | "resize" -> host.Resize (800 + iteration % 2, 600)
         | "idle" -> ()
         | other -> invalidArg "scenario" other
+
         window.Step (timeout = 0) |> ignore
         turnDurations.Add (Stopwatch.GetTimestamp () - started)
         let struct (batch, lost) = host.DrainSchedulingTrace ()
         dropped <- dropped + lost
-        if events.Count + batch.Length <= 500000 then events.AddRange batch
-        else dropped <- dropped + int64 batch.Length
+
+        if events.Count + batch.Length <= 500000 then
+            events.AddRange batch
+        else
+            dropped <- dropped + int64 batch.Length
+
         if tracing && WebCoreHost.Has "host-tracing" then
             let native, lostNative = host.DrainRenderingTrace ()
             nativeDropped <- nativeDropped + lostNative
+
             if nativeEvents.Count + native.Length <= 500000 then
                 nativeEvents.AddRange (native |> Array.map box)
-            else nativeDropped <- nativeDropped + uint64 native.Length
+            else
+                nativeDropped <- nativeDropped + uint64 native.Length
+
         iteration <- iteration + 1
-        let remaining = 8 - int (Stopwatch.GetElapsedTime(started).TotalMilliseconds)
-        if remaining > 0 then Thread.Sleep remaining
-    cancellation.Cancel()
+
+        let remaining =
+            8
+            - int (Stopwatch.GetElapsedTime(started).TotalMilliseconds)
+
+        if remaining > 0 then
+            Thread.Sleep remaining
+
+    cancellation.Cancel ()
     worker.GetAwaiter().GetResult()
     let allocatedBytes = GC.GetTotalAllocatedBytes false - allocated
-    let nativeName = if OperatingSystem.IsWindows () then "RanvierWebCoreHost.dll" elif OperatingSystem.IsMacOS () then "libRanvierWebCoreHost.dylib" else "libRanvierWebCoreHost.so"
-    let runtime = Path.Combine (AppContext.BaseDirectory, "runtimes", Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier, "native", nativeName)
-    let hash = if File.Exists runtime then Convert.ToHexString (SHA256.HashData (File.ReadAllBytes runtime)) else "platform runtime: see package receipt"
+
+    let nativeName =
+        if OperatingSystem.IsWindows () then
+            "RanvierWebCoreHost.dll"
+        elif OperatingSystem.IsMacOS () then
+            "libRanvierWebCoreHost.dylib"
+        else
+            "libRanvierWebCoreHost.so"
+
+    let runtime =
+        Path.Combine (AppContext.BaseDirectory, "runtimes", Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier, "native", nativeName)
+
+    let hash =
+        if File.Exists runtime then
+            Convert.ToHexString (SHA256.HashData (File.ReadAllBytes runtime))
+        else
+            "platform runtime: see package receipt"
+
     let stats =
-        {| scenario = scenario; repetition = repetition; seconds = seconds; logicalLines = lines
-           liveLines = count; hidden = not visible; tracing = tracing; interactive = interactive; requestedRenderer = defaultArg renderer "default"
-           stopwatchFrequency = Stopwatch.Frequency; runtimeHash = hash; os = Environment.OSVersion.ToString()
-           managedVersion = typeof<WebCoreHost>.Assembly.GetName().Version.ToString()
-           iterations = iteration; allocatedBytes = allocatedBytes; dropped = dropped; nativeDropped = nativeDropped
-           gpuFrames = window.GpuFramesPresented; cpuFrames = window.CpuFramesPresented
-           turnP50Ms = percentile 0.50 (turnDurations.ToArray())
-           turnP95Ms = percentile 0.95 (turnDurations.ToArray())
-           turnP99Ms = percentile 0.99 (turnDurations.ToArray())
-           maximumTurnMs = percentile 1.0 (turnDurations.ToArray())
-           qualification = "Synthetic local workload; not OS input-to-photon or display-refresh qualification. Native timestamps remain in their own clock domain." |}
+        {|
+            scenario = scenario
+            repetition = repetition
+            seconds = seconds
+            logicalLines = lines
+            liveLines = count
+            hidden = not visible
+            tracing = tracing
+            interactive = interactive
+            requestedRenderer = defaultArg renderer "default"
+            stopwatchFrequency = Stopwatch.Frequency
+            runtimeHash = hash
+            os = Environment.OSVersion.ToString ()
+            managedVersion = typeof<WebCoreHost>.Assembly.GetName().Version.ToString()
+            iterations = iteration
+            allocatedBytes = allocatedBytes
+            dropped = dropped
+            nativeDropped = nativeDropped
+            gpuFrames = window.GpuFramesPresented
+            cpuFrames = window.CpuFramesPresented
+            turnP50Ms = percentile 0.50 (turnDurations.ToArray ())
+            turnP95Ms = percentile 0.95 (turnDurations.ToArray ())
+            turnP99Ms = percentile 0.99 (turnDurations.ToArray ())
+            maximumTurnMs = percentile 1.0 (turnDurations.ToArray ())
+            qualification =
+                "Synthetic local workload; not OS input-to-photon or display-refresh qualification. Native timestamps remain in their own clock domain."
+        |}
+
     let prefix = Path.Combine (output, $"{scenario}-{repetition}")
     let options = JsonSerializerOptions (IncludeFields = true)
     File.WriteAllText (prefix + ".json", JsonSerializer.Serialize (stats, options))
     File.WriteAllText (prefix + "-managed.json", JsonSerializer.Serialize (events, options))
     File.WriteAllText (prefix + "-native.json", JsonSerializer.Serialize (nativeEvents, options))
     printfn "%s" (JsonSerializer.Serialize stats)
-    if host.Errors.Count > 0 then failwithf "Host errors: %A" (List.ofSeq host.Errors)
+
+    if host.Errors.Count > 0 then
+        failwithf "Host errors: %A" (List.ofSeq host.Errors)
 
 [<EntryPoint>]
 let main args =
     let scenario = option "--scenario" "all" args
-    let seconds = Double.Parse (option "--seconds" "60" args, Globalization.CultureInfo.InvariantCulture)
+
+    let seconds =
+        Double.Parse (option "--seconds" "60" args, Globalization.CultureInfo.InvariantCulture)
+
     let repetitions = int (option "--repetitions" "5" args)
     let lines = int (option "--lines" "100000" args)
-    if seconds <= 0.0 || not (Double.IsFinite seconds) || repetitions < 1 || lines < 1 then invalidArg "args" "positive finite duration, repetitions and lines required"
+
+    if
+        seconds <= 0.0
+        || not (Double.IsFinite seconds)
+        || repetitions < 1
+        || lines < 1
+    then
+        invalidArg "args" "positive finite duration, repetitions and lines required"
+
     let output = option "--output" "artifacts/responsiveness" args
     Directory.CreateDirectory output |> ignore
-    let renderer = match option "--renderer" "default" args with "default" -> None | value -> Some value
-    let scenarios = if scenario = "all" then [ "idle"; "typing"; "scroll"; "ime"; "posted"; "publication"; "resize" ] else [ scenario ]
+
+    let renderer =
+        match option "--renderer" "default" args with
+        | "default" -> None
+        | value -> Some value
+
+    let scenarios =
+        if scenario = "all" then
+            [ "idle"; "typing"; "scroll"; "ime"; "posted"; "publication"; "resize" ]
+        else
+            [ scenario ]
+
     for name in scenarios do
         for repetition in 1..repetitions do
-            sample name seconds lines (Array.contains "--unbounded-dom" args) (Array.contains "--visible" args) renderer (not (Array.contains "--no-trace" args)) (Array.contains "--interactive" args) output repetition
+            sample
+                name
+                seconds
+                lines
+                (Array.contains "--unbounded-dom" args)
+                (Array.contains "--visible" args)
+                renderer
+                (not (Array.contains "--no-trace" args))
+                (Array.contains "--interactive" args)
+                output
+                repetition
+
     0

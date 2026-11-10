@@ -640,7 +640,10 @@ let tests =
                 Expect.isTrue (SDLBool.op_Implicit (SDL3.SDL_PushEvent &&event)) "preedit clear queued"
                 let mutable filler = SDL_Event ()
                 filler.``type`` <- SDL3.SDL_RegisterEvents 1
-                for _ in 1..300 do SDL3.SDL_PushEvent &&filler |> ignore
+
+                for _ in 1..300 do
+                    SDL3.SDL_PushEvent &&filler |> ignore
+
                 event.text.``type`` <- SDL_EventType.SDL_EVENT_TEXT_INPUT
                 event.text.windowID <- target
                 event.text.text <- committed
@@ -720,41 +723,68 @@ let tests =
 
             windowCase "interactive callback flood reaches frame scheduling"
             <| fun window ->
-                window.InteractiveBudget <- Some { MaxCallbacks = 3; MaxMilliseconds = 10000.0 }
+                window.InteractiveBudget <-
+                    Some
+                        {
+                            MaxCallbacks = 3
+                            MaxMilliseconds = 10000.0
+                        }
+
                 let mutable calls = 0
                 let mutable frames = 0
+
                 let rec callback () =
                     calls <- calls + 1
-                    if calls < 1000 then window.Host.PostToOwner callback
+
+                    if calls < 1000 then
+                        window.Host.PostToOwner callback
+
                 window.Host.PostToOwner callback
-                window.Host.RequestAnimationFrame (fun _ -> frames <- frames + 1) |> ignore
+
+                window.Host.RequestAnimationFrame (fun _ -> frames <- frames + 1)
+                |> ignore
+
                 steps window 1
                 Expect.equal calls 3 "bounded callbacks"
                 Expect.equal frames 1 "frame is not starved"
 
             windowCase "posted work wakes the shared loop and runs on the owner"
             <| fun window ->
-                use other = Window.Create ("Posted work", 100, 80, hidden = true, renderer = "software")
+                use other =
+                    Window.Create ("Posted work", 100, 80, hidden = true, renderer = "software")
+
                 settle window
                 let owner = Environment.CurrentManagedThreadId
                 let mutable deliveredOn = 0
-                let producer = Threading.Tasks.Task.Run (fun () ->
-                    Threading.Thread.Sleep 10
-                    other.Host.PostToOwner (fun () -> deliveredOn <- Environment.CurrentManagedThreadId))
+
+                let producer =
+                    Threading.Tasks.Task.Run (fun () ->
+                        Threading.Thread.Sleep 10
+                        other.Host.PostToOwner (fun () -> deliveredOn <- Environment.CurrentManagedThreadId))
+
                 let deadline = Diagnostics.Stopwatch.StartNew ()
-                while deliveredOn = 0 && deadline.ElapsedMilliseconds < 2000L do
+
+                while deliveredOn = 0
+                      && deadline.ElapsedMilliseconds < 2000L do
                     window.Step 1000 |> ignore
+
                 producer.GetAwaiter().GetResult()
                 Expect.equal deliveredOn owner "other host is serviced by the shared loop"
                 Expect.equal other.Host.OwnerWakeFailures 0L "SDL accepted the notification"
 
             windowCase "post racing window disposal cannot signal a destroyed window"
             <| fun window ->
-                let other = Window.Create ("Disposed work", 100, 80, hidden = true, renderer = "software")
+                let other =
+                    Window.Create ("Disposed work", 100, 80, hidden = true, renderer = "software")
+
                 let context = Threading.SynchronizationContext.Current
-                let producer = Threading.Tasks.Task.Run (fun () ->
-                    for _ in 1..10000 do context.Post (Threading.SendOrPostCallback ignore, null))
-                (other :> IDisposable).Dispose ()
+
+                let producer =
+                    Threading.Tasks.Task.Run (fun () ->
+                        for _ in 1..10000 do
+                            context.Post (Threading.SendOrPostCallback ignore, null))
+
+                (other :> IDisposable).Dispose()
                 producer.GetAwaiter().GetResult()
                 steps window 2
                 Expect.equal other.Host.OwnerWakeFailures 0L "retired wake is harmless"
