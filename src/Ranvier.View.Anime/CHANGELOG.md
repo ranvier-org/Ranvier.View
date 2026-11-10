@@ -1,5 +1,5 @@
 ---
-last_commit_released: 449a485e760f147c10a30aa103f01aaff824c50e
+last_commit_released: 3331a3075863963e22924e99991b85f70d0ff1cf
 pre_release: rc
 include:
   - ../../Directory.Build.props
@@ -12,6 +12,14 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.46-rc.1 - 2026-11-10
+
+### 🐞 Bug Fixes
+
+* *(native)* Qualify View46 lifecycle for P11 and DOM58 (#73) ([3fe45e3](https://github.com/ranvier-org/Ranvier.View/commit/3fe45e3d60f8cfa51df681ac708633e7ae936ac4))
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/449a485e760f147c10a30aa103f01aaff824c50e..3331a3075863963e22924e99991b85f70d0ff1cf)</small></strong>
 
 ## 0.1.45
 
