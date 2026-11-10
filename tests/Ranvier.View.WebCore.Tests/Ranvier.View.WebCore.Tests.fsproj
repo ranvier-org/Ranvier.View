@@ -19,6 +19,7 @@
         <Compile Include="ObjectTests.fs" />
         <Compile Include="HostTests.fs" />
         <Compile Include="SchedulingTests.fs" />
+    <Compile Include="OwnerWorkQueueTests.fs" />
         <Compile Include="ObservationLifetimeTests.fs" />
         <Compile Include="MountTests.fs" />
         <Compile Include="ExitLifetimeTests.fs" />

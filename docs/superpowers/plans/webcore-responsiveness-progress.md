@@ -22,6 +22,6 @@ Scope: tasks 0–3 only, authorized by user. Baseline dab7ab62ac4d1f2c435adddea0
 - Task 0 ruling: use a paced synthetic local fixture, label observed presentation completion and separate native clock domain explicitly. Physical refresh-rate/input-to-photon qualification, driver inventory and merged cross-clock timeline remain qualification work, not inferred from this local run.
 - Task 0 tooling: bare SageFs #r of host DLL failed dependency resolution and held the output DLL; stopped only our session. Pure trace prototype passed in REPL. New bare session avoids loading build outputs.
 - Task 0 implementation gate: 909/909 full native-backed tests pass; six paced GPU scenarios pass, no trace drops. Baseline raw data: artifacts/responsiveness-baseline-paced. Long 60/120 Hz platform qualification remains explicitly unverified.
-- Task 1: in progress.
+- Task 1: complete. OwnerWorkQueue prototype passed in SageFs; missing-type RED test failed before implementation. Queue/coalescing, reentrant wake failure, concurrent producers/Stop, shared-window delivery and disposal-race tests added. Full suite: 915/915 passed. SDL registered event type is the stable wake token; retired events carry no host pointer. A 50 ms maximum wait retains recovery from failed signaling; OwnerWakeFailures reports failures. No new native ABI.
 - Task 2: pending.
 - Task 3: pending.

@@ -712,6 +712,33 @@ let tests =
                 Expect.equal (input.selectionStart, input.selectionEnd) (Some 1u, Some 2u) "focus loss restores the original selection"
                 Expect.sequenceEqual ended [| "" |] "focus loss ends the composition"
 
+            windowCase "posted work wakes the shared loop and runs on the owner"
+            <| fun window ->
+                use other = Window.Create ("Posted work", 100, 80, hidden = true, renderer = "software")
+                settle window
+                let owner = Environment.CurrentManagedThreadId
+                let mutable deliveredOn = 0
+                let producer = Threading.Tasks.Task.Run (fun () ->
+                    Threading.Thread.Sleep 10
+                    other.Host.PostToOwner (fun () -> deliveredOn <- Environment.CurrentManagedThreadId))
+                let deadline = Diagnostics.Stopwatch.StartNew ()
+                while deliveredOn = 0 && deadline.ElapsedMilliseconds < 2000L do
+                    window.Step 1000 |> ignore
+                producer.GetAwaiter().GetResult()
+                Expect.equal deliveredOn owner "other host is serviced by the shared loop"
+                Expect.equal other.Host.OwnerWakeFailures 0L "SDL accepted the notification"
+
+            windowCase "post racing window disposal cannot signal a destroyed window"
+            <| fun window ->
+                let other = Window.Create ("Disposed work", 100, 80, hidden = true, renderer = "software")
+                let context = Threading.SynchronizationContext.Current
+                let producer = Threading.Tasks.Task.Run (fun () ->
+                    for _ in 1..10000 do context.Post (Threading.SendOrPostCallback ignore, null))
+                (other :> IDisposable).Dispose ()
+                producer.GetAwaiter().GetResult()
+                steps window 2
+                Expect.equal other.Host.OwnerWakeFailures 0L "retired wake is harmless"
+
             windowCase "another window receives queued close requests"
             <| fun window ->
                 use other =

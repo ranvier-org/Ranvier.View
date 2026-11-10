@@ -260,6 +260,9 @@ type Window
     let mutable cursor = -1
     let mutable disposed = false
     let mutable pageDisposed = false
+    let wakeGate = obj ()
+    let mutable wakeActive = true
+    let wakeEvent = SDL3.SDL_RegisterEvents 1
     let mutable cleanupCompleted: string -> unit = ignore
     let mutable maxTouchPoints = 0
     let mutable rates = initialRates
@@ -1133,6 +1136,16 @@ type Window
         |> ignore
 
         windows.Add (uint32 id, this)
+        host.SetOwnerWake (Some (fun () ->
+            lock wakeGate (fun () ->
+                if wakeActive then
+                    if wakeEvent = UInt32.MaxValue then
+                        invalidOp "SDL owner wake registration failed"
+                    let mutable wake = SDL_Event ()
+                    // The registered event type is a stable token; no engine pointer crosses threads.
+                    wake.``type`` <- wakeEvent
+                    if not (Sdl.ok (SDL3.SDL_PushEvent &&wake)) then
+                        invalidOp "SDL owner wake signal failed")))
 
     // A turn of the page inside the platform's modal move or resize loop, which blocks Step for the whole gesture.
     member private this.ModalTurn() =
@@ -1681,7 +1694,9 @@ type Window
             let stall = refreshTicks * 3L / 2L
 
             let wait =
-                if
+                if windows.Snapshot () |> Seq.exists (fun target -> target.Host.HasPendingWork) then
+                    0
+                elif
                     (host.FrameRequested
                      || fullPaint
                      || exposed
@@ -1726,7 +1741,7 @@ type Window
 
             // A platform move or resize loop runs inside these two SDL calls.
             onPage <- outer
-            let received = Sdl.ok (SDL3.SDL_WaitEventTimeout (&&event, wait))
+            let received = Sdl.ok (SDL3.SDL_WaitEventTimeout (&&event, min wait 50))
             onPage <- true
 
             if received then
@@ -1749,8 +1764,9 @@ type Window
             for target in windows.Snapshot () do
                 target.EndDrain ()
 
-            if alive () then
-                host.Cycle ()
+            for target in windows.Snapshot () do
+                if not target.Host.Session.IsDisposed && (obj.ReferenceEquals(target, this) || target.Host.HasPendingWork) then
+                    target.Host.Cycle ()
 
             if
                 alive ()
@@ -1841,6 +1857,8 @@ type Window
                 closed <- true
                 disposePending <- true
             elif not disposed then
+                lock wakeGate (fun () -> wakeActive <- false)
+                host.SetOwnerWake None
                 if not (isNull hitTestCallback) then
                     SDL3.SDL_SetWindowHitTest (window, 0n, 0n)
                     |> ignore

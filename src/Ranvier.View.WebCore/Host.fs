@@ -112,28 +112,17 @@ module internal Factories =
 
 /// <summary>Posts work to a host's loop, which runs it on the host thread during <c>WebCoreHost.Cycle</c>.</summary>
 [<Sealed>]
-type internal HostContext(posted: ConcurrentQueue<struct (SendOrPostCallback * obj)>, thread: int) =
+type internal HostContext(posted: OwnerWorkQueue, thread: int) =
     inherit SynchronizationContext()
 
-    let gate = obj ()
-    let mutable stopped = false
-
     override _.Post(callback, state) =
-        lock gate (fun () ->
-            if not stopped then
-                posted.Enqueue (struct (callback, state)))
+        posted.Enqueue (callback, state) |> ignore
 
-    member _.Stop() =
-        lock gate (fun () ->
-            stopped <- true
-            let mutable item = Unchecked.defaultof<_>
-
-            while posted.TryDequeue (&item) do
-                ())
+    member _.Stop() = posted.Stop ()
 
     override this.Send(callback, state) =
         if Environment.CurrentManagedThreadId = thread then
-            if lock gate (fun () -> not stopped) then
+            if not posted.IsStopped then
                 callback.Invoke state
         else
             raise (NotSupportedException "A WebCore host runs sent work only on its own thread")
@@ -154,7 +143,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     static let nativeOwner = NativeOwner ()
     let thread = Environment.CurrentManagedThreadId
     let microtasks = Queue<unit -> unit>()
-    let posted = ConcurrentQueue<struct (SendOrPostCallback * obj)>()
+    let posted = OwnerWorkQueue ()
     let schedulingTrace = HostSchedulingTrace ()
     let timers = SortedDictionary<struct (float * int), unit -> unit>()
     let timerKeys = Dictionary<int, struct (float * int)>()
@@ -430,6 +419,13 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     /// <summary>Runs after owned DOM references have been detached at host disposal.</summary>
     member internal _.Disposed = disposedEvent.Publish
+
+    member internal _.HasPendingWork = posted.Count > 0
+
+    member internal _.SetOwnerWake(callback) = posted.SetWakeCallback callback
+
+    /// <summary>Number of failed owner wake signals. Work remains queued for the next turn.</summary>
+    member _.OwnerWakeFailures = posted.WakeFailures
 
     /// <summary>Runs after <c>SetScreen</c> or <c>Resize</c>, which can change the screen the document reports.</summary>
     member internal _.ScreenMayHaveChanged = screenEvent.Publish
