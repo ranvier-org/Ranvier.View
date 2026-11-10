@@ -20,6 +20,8 @@
         <Compile Include="HostTests.fs" />
         <Compile Include="SchedulingTests.fs" />
     <Compile Include="OwnerWorkQueueTests.fs" />
+    <Compile Include="../Responsiveness/SemanticPublication.fs" Link="SemanticPublication.fs" />
+    <Compile Include="LatestPublicationTests.fs" />
         <Compile Include="ObservationLifetimeTests.fs" />
         <Compile Include="MountTests.fs" />
         <Compile Include="ExitLifetimeTests.fs" />

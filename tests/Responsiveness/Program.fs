@@ -1,4 +1,4 @@
-module Responsiveness
+module Responsiveness.Program
 
 open System
 open System.Diagnostics
@@ -9,6 +9,7 @@ open System.Threading
 open Ranvier.Dom
 open Ranvier.View.WebCore
 open Ranvier.View.WebCore.Sdl
+open Responsiveness.SemanticPublication
 
 let option name fallback (args: string array) =
     match Array.tryFindIndex ((=) name) args with
@@ -42,6 +43,15 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
     let nativeEvents = ResizeArray<obj>()
     let allocated = GC.GetTotalAllocatedBytes false
     let context = SynchronizationContext.Current
+    let mutable revision = { DocumentId = Guid.NewGuid(); TextRevision = 0L; ProjectRevision = 0L; RequestId = 0L }
+    let mutable visibleColor = ""
+    use publication = new LatestPublication<Result>(host, (fun result ->
+        if isCurrent revision result && visibleColor <> result.VisibleColor then
+            visibleColor <- result.VisibleColor
+            viewport.setAttribute("style", "color:" + visibleColor)))
+    let mutable cancellation = new CancellationTokenSource()
+    use cancelOnExit = { new IDisposable with member _.Dispose() = cancellation.Cancel(); cancellation.Dispose() }
+    let mutable worker = Tasks.Task.CompletedTask
     let clock = Stopwatch.StartNew ()
     let mutable iteration = 0
     while clock.Elapsed.TotalSeconds < seconds do
@@ -55,10 +65,24 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
             if iteration % 2 = 0 then host.CancelComposition () else host.CommitComposition "日本"
             if input.value.Length > 256 then input.value <- ""
         | "scroll" -> host.Wheel (200, 200, 0.0f, 24.0f, 0) |> ignore
-        | "publication" ->
+        | "posted" ->
             for i in 1..1000 do
                 let value = i
                 context.Post (SendOrPostCallback (fun _ -> viewport.setAttribute ("data-result", string value)), null)
+        | "publication" ->
+            // Bound worker concurrency as well as owner delivery; workers see only detached data.
+            if worker.IsCompleted then
+                worker.GetAwaiter().GetResult()
+                cancellation.Cancel()
+                cancellation.Dispose()
+                cancellation <- new CancellationTokenSource()
+                revision <- { revision with RequestId = revision.RequestId + 1L }
+                let captured = revision
+                let token = cancellation.Token
+                worker <- Tasks.Task.Run(fun () ->
+                    for i in 1..1000 do
+                        if not token.IsCancellationRequested then
+                            publication.Publish { Revision = captured; VisibleColor = if i % 2 = 0 then "#225588" else "#884422" } |> ignore)
         | "resize" -> host.Resize (800 + iteration % 2, 600)
         | "idle" -> ()
         | other -> invalidArg "scenario" other
@@ -77,6 +101,8 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
         iteration <- iteration + 1
         let remaining = 8 - int (Stopwatch.GetElapsedTime(started).TotalMilliseconds)
         if remaining > 0 then Thread.Sleep remaining
+    cancellation.Cancel()
+    worker.GetAwaiter().GetResult()
     let allocatedBytes = GC.GetTotalAllocatedBytes false - allocated
     let nativeName = if OperatingSystem.IsWindows () then "RanvierWebCoreHost.dll" elif OperatingSystem.IsMacOS () then "libRanvierWebCoreHost.dylib" else "libRanvierWebCoreHost.so"
     let runtime = Path.Combine (AppContext.BaseDirectory, "runtimes", Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier, "native", nativeName)
@@ -111,7 +137,7 @@ let main args =
     let output = option "--output" "artifacts/responsiveness" args
     Directory.CreateDirectory output |> ignore
     let renderer = match option "--renderer" "default" args with "default" -> None | value -> Some value
-    let scenarios = if scenario = "all" then [ "idle"; "typing"; "scroll"; "ime"; "publication"; "resize" ] else [ scenario ]
+    let scenarios = if scenario = "all" then [ "idle"; "typing"; "scroll"; "ime"; "posted"; "publication"; "resize" ] else [ scenario ]
     for name in scenarios do
         for repetition in 1..repetitions do
             sample name seconds lines (Array.contains "--unbounded-dom" args) (Array.contains "--visible" args) renderer (not (Array.contains "--no-trace" args)) (Array.contains "--interactive" args) output repetition

@@ -423,6 +423,9 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// <summary>Runs after owned DOM references have been detached at host disposal.</summary>
     member internal _.Disposed = disposedEvent.Publish
 
+    member internal _.TryPostToOwner(action: unit -> unit) =
+        posted.Enqueue (SendOrPostCallback (fun _ -> action ()), null)
+
     member internal _.HasPendingWork = posted.Count > 0
 
     member internal _.SetOwnerWake(callback) = posted.SetWakeCallback callback
