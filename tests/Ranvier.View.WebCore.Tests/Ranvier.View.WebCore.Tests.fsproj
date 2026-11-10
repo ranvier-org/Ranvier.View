@@ -35,6 +35,7 @@
         <Compile Include="GpuCompletionTests.fs" />
         <Compile Include="PortablePipelineTests.fs" />
         <Compile Include="PaintTests.fs" />
+        <Compile Include="CpuStagingTests.fs" />
         <Compile Include="WindowTests.fs" />
         <Compile Include="WindowShellTests.fs" />
         <Compile Include="SwapChainTests.fs" />

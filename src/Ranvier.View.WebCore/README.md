@@ -10,7 +10,29 @@ the canonical `Ranvier.WebCore` managed interop and `Ranvier.WebCore.Native` agg
 assets for the application's RID. On macOS, create the host and run WebCore on the process main thread,
 shared with SDL's event pump.
 
-## Install
+## Background snapshots
+
+`Snapshots.forHost` retains synchronous capture and encoding, with deferred completion.
+`BackgroundSnapshots.forHost host` opts into detached worker encoding (native ABI 70,
+`detached-image-encoding-v1`). Call it, its operations, and disposal on the host thread.
+
+`Capture(subject, options, terminal)` paints immediately and rejects with
+`InvalidOperationException` if this host already has a capture/encode in progress.
+`Preview(subject, options, terminal)` can wait in one pending slot; a newer preview cancels
+the previous pending preview. A waiting preview paints when admitted, so it observes the
+document at that point. Capacity is shared across services for the same host.
+
+Only copied RGBA pixels reach the worker. Completion returns to the owner queue. Cancellation,
+service disposal, host disposal and document replacement suppress stale completion; a codec
+already running keeps its slot until it returns. Encoding supports PNG, JPEG, WEBP and raw RGBA,
+subject to the host's advertised formats, dimensions up to 8192 and 64 MiB of input pixels.
+Capture itself still runs on the owner thread.
+
+Scheduling traces expose `CpuBufferCreate` and `CpuUpload` separately, with byte counts in
+`Count`. CPU staging arrays and textures persist across same-size repaints. Native capture
+traces separately measure buffer creation, rasterization, image encoding and pixel copying.
+
+## Package installation
 
 ```sh
 dotnet add package Ranvier.View.WebCore --version 0.1.0-alpha.1

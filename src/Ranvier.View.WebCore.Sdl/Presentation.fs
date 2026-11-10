@@ -49,6 +49,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
     let documentChanged =
         host.DocumentReplaced.Subscribe (fun _ ->
+            fullPaint <- true
             pipelinePending <- false
             pipelineNeedsSubmit <- true
             retryAt <- 0L)
@@ -140,6 +141,8 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                 || height <> cpuHeight
                 || NativePtr.isNullPtr cpuTexture
             then
+                let allocationStarted = host.SchedulingTrace.Start ()
+
                 if not (NativePtr.isNullPtr cpuTexture) then
                     SDL3.SDL_DestroyTexture cpuTexture
 
@@ -161,6 +164,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                 cpuWidth <- width
                 cpuHeight <- height
                 pixels <- Array.zeroCreate (width * height * 4)
+                host.SchedulingTrace.Finish (SchedulingPhase.CpuBufferCreate, allocationStarted, 0, processed = pixels.Length)
                 fullPaint <- true
 
             let painted =
@@ -173,9 +177,12 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
             if painted then
                 use start = fixed pixels
+                let uploadStarted = host.SchedulingTrace.Start ()
 
                 if not (PresentationNative.ok (SDL3.SDL_UpdateTexture (cpuTexture, NativePtr.nullPtr, NativePtr.toNativeInt start, width * 4))) then
                     raise (PresentationNative.failure "SDL_UpdateTexture")
+
+                host.SchedulingTrace.Finish (SchedulingPhase.CpuUpload, uploadStarted, 0, processed = pixels.Length)
 
             painted
         else
@@ -325,9 +332,11 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
         if width > 0 && height > 0 then
             if width <> cpuWidth || height <> cpuHeight then
+                let allocationStarted = host.SchedulingTrace.Start ()
                 cpuWidth <- width
                 cpuHeight <- height
                 pixels <- Array.zeroCreate (width * height * 4)
+                host.SchedulingTrace.Finish (SchedulingPhase.CpuBufferCreate, allocationStarted, 0, processed = pixels.Length)
                 fullPaint <- true
 
             if fullPaint then
@@ -338,6 +347,12 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                 (host.PaintDirty pixels).IsSome
         else
             false
+
+    let uploadCpu (chain: D3D11SwapChain) =
+        let started = host.SchedulingTrace.Start ()
+        let texture = chain.UploadCpu (pixels, cpuWidth, cpuHeight)
+        host.SchedulingTrace.Finish (SchedulingPhase.CpuUpload, started, 0, processed = pixels.Length)
+        texture
 
     let presentLegacyOnSwapChain (chain: D3D11SwapChain) (exposed: bool) =
         waitSwapChain chain
@@ -359,7 +374,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                 let painted = paintForSwapChain ()
 
                 if painted || (exposed && cpuWidth > 0) then
-                    chain.Submit (chain.UploadCpu (pixels, cpuWidth, cpuHeight), cpuWidth, cpuHeight)
+                    chain.Submit (uploadCpu chain, cpuWidth, cpuHeight)
 
                 true
 
@@ -500,7 +515,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                 fullPaint <- true
 
             paintForSwapChain () |> ignore
-            struct (cpuWidth, cpuHeight, chain.Read (chain.UploadCpu (pixels, cpuWidth, cpuHeight), cpuWidth, cpuHeight))
+            struct (cpuWidth, cpuHeight, chain.Read (uploadCpu chain, cpuWidth, cpuHeight))
 
     member private this.PresentPortable(exposed: bool) =
         let retireTexture () =
@@ -769,6 +784,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
     /// <summary>Sets the swap chain's back buffer size for the next present.</summary>
     member _.Resized(width: int, height: int) =
+        fullPaint <- true
         pipelinePending <- false
         pipelineNeedsSubmit <- true
         retryAt <- 0L

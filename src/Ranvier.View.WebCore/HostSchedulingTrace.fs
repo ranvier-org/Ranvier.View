@@ -21,6 +21,8 @@ type SchedulingPhase =
     | Mutation = 12
     | Measurement = 13
     | Presentation = 14
+    | CpuBufferCreate = 15
+    | CpuUpload = 16
 
 /// <summary>A phase on the Stopwatch clock; durations are ticks, not milliseconds.</summary>
 [<Struct>]
