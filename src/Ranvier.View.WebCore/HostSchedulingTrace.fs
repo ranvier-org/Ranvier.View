@@ -18,6 +18,9 @@ type SchedulingPhase =
     | EventDrain = 9
     | QueueDelay = 10
     | BudgetExceeded = 11
+    | Mutation = 12
+    | Measurement = 13
+    | Presentation = 14
 
 /// <summary>A phase on the Stopwatch clock; durations are ticks, not milliseconds.</summary>
 [<Struct>]

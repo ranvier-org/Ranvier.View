@@ -10,6 +10,7 @@ open Ranvier.Dom
 open Ranvier.View.WebCore
 open Ranvier.View.WebCore.Sdl
 open Responsiveness.SemanticPublication
+open Responsiveness.EditorViewport
 
 let option name fallback (args: string array) =
     match Array.tryFindIndex ((=) name) args with
@@ -34,11 +35,15 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
         window.InteractiveBudget <- Some OwnerTurnBudget.Default
 
     let host = window.Host
-    let count = if unbounded then lines else min lines 150
-    host.Document.body.innerHTML <- "<textarea id='input' style='width:700px;height:80px'></textarea><pre id='lines'></pre>"
+    host.Document.body.innerHTML <- "<textarea id='input' style='width:700px;height:80px'></textarea><div id='lines'></div>"
     let input = host.Document.getElementById "input" :?> HTMLTextAreaElement
-    let viewport = host.Document.getElementById "lines"
-    viewport.textContent <- String.concat "\n" [ for i in 1..count -> $"line {i}: let value = {i}" ]
+    let viewport = host.Document.getElementById "lines" :?> HTMLElement
+
+    use editor =
+        new EditorViewport (host, viewport, lines, unbounded = unbounded, textKind = scenario)
+
+    let phases = Frames.layoutForHost host
+    let count = editor.Count
     input.focus ()
     host.SetFocused true
 
@@ -77,7 +82,7 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
                     && visibleColor <> result.VisibleColor
                 then
                     visibleColor <- result.VisibleColor
-                    viewport.setAttribute ("style", "color:" + visibleColor))
+                    viewport.style.setProperty("color", visibleColor, ""))
         )
 
     let mutable cancellation = new CancellationTokenSource ()
@@ -102,17 +107,25 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
                 input.value <- ""
 
             host.Type ("a", "KeyA", "a")
+            editor.Edit input.value
         | "ime" ->
+            editor.PinComposition ()
             host.SetComposition ("日本", 2, 2)
+            editor.MoveTo (50 + iteration % max 1 (lines - 125))
 
             if iteration % 2 = 0 then
                 host.CancelComposition ()
             else
                 host.CommitComposition "日本"
 
+            editor.EndComposition ()
+            editor.Edit input.value
+
             if input.value.Length > 256 then
                 input.value <- ""
-        | "scroll" -> host.Wheel (200, 200, 0.0f, 24.0f, 0) |> ignore
+        | "scroll"
+        | "long-line"
+        | "bidi" -> editor.MoveTo (50 + iteration % max 1 (lines - 125))
         | "posted" ->
             for i in 1..1000 do
                 let value = i
@@ -143,11 +156,14 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
                                         VisibleColor = if i % 2 = 0 then "#225588" else "#884422"
                                     }
                                 |> ignore)
-        | "resize" -> host.Resize (800 + iteration % 2, 600)
+        | "resize" ->
+            host.Resize (800 + iteration % 2, 600)
+            editor.Configure (700 + iteration % 2, 500, 1., false)
         | "idle" -> ()
         | other -> invalidArg "scenario" other
 
-        window.Step (timeout = 0) |> ignore
+        editor.Measure ()
+        phases.Present (fun () -> window.Step (timeout = 0) |> ignore)
         turnDurations.Add (Stopwatch.GetTimestamp () - started)
         let struct (batch, lost) = host.DrainSchedulingTrace ()
         dropped <- dropped + lost
@@ -203,6 +219,7 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
             seconds = seconds
             logicalLines = lines
             liveLines = count
+            measurementCacheEntries = editor.CacheCount
             hidden = not visible
             tracing = tracing
             interactive = interactive
@@ -263,7 +280,17 @@ let main args =
 
     let scenarios =
         if scenario = "all" then
-            [ "idle"; "typing"; "scroll"; "ime"; "posted"; "publication"; "resize" ]
+            [
+                "idle"
+                "typing"
+                "scroll"
+                "ime"
+                "posted"
+                "publication"
+                "resize"
+                "long-line"
+                "bidi"
+            ]
         else
             [ scenario ]
 

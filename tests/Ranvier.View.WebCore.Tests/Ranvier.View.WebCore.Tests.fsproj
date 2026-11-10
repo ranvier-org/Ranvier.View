@@ -18,6 +18,9 @@
         <Compile Include="AtspiWindowChecks.fs" />
         <Compile Include="ObjectTests.fs" />
         <Compile Include="HostTests.fs" />
+        <Compile Include="../Responsiveness/ViewportModel.fs" Link="ViewportModel.fs" />
+        <Compile Include="../Responsiveness/EditorViewport.fs" Link="EditorViewport.fs" />
+        <Compile Include="LayoutPhasesTests.fs" />
         <Compile Include="SchedulingTests.fs" />
     <Compile Include="OwnerWorkQueueTests.fs" />
     <Compile Include="../Responsiveness/SemanticPublication.fs" Link="SemanticPublication.fs" />

@@ -4,8 +4,76 @@ open System
 open System.Collections.Generic
 open Ranvier.Dom
 
+/// <summary>Annotates synchronous application mutation, measurement and presentation phases.</summary>
+/// <remarks>No work is queued and no getter is intercepted. Wrap existing reactive batches in Mutate.
+/// Enable the host scheduling trace for diagnostics: Measurement.Pending is one after declared writes;
+/// Count is actual main-frame layout passes, or -1 when unavailable. A warning does not imply a layout ran.
+/// Measurements must stay within one document lifetime.</remarks>
+type LayoutPhases internal (host: WebCoreHost) =
+    let mutable writes = false
+
+    /// <summary>Runs an application's mutation batch immediately.</summary>
+    member _.Mutate(action: unit -> 'T) : 'T =
+        host.EnsureActive ()
+        writes <- true
+        let trace = host.SchedulingTrace
+        let started = trace.Start ()
+
+        try
+            action ()
+        finally
+            trace.Finish (SchedulingPhase.Mutation, started, 0)
+
+    /// <summary>Runs a synchronous measurement and records whether it forced layout after writes.</summary>
+    member _.Measure(action: unit -> 'T) : 'T =
+        host.EnsureActive ()
+        let pending = if writes then 1 else 0
+        writes <- false
+        let trace = host.SchedulingTrace
+        let started = trace.Start ()
+        let before = if trace.Enabled then host.LayoutPassCount else ValueNone
+
+        try
+            action ()
+        finally
+            let after =
+                if trace.Enabled then
+                    try
+                        host.LayoutPassCount
+                    with :? ObjectDisposedException ->
+                        ValueNone
+                else
+                    ValueNone
+
+            let passes =
+                match before, after with
+                | ValueSome a, ValueSome b when b >= a && b - a <= uint32 Int32.MaxValue -> int (b - a)
+                | _ -> -1
+
+            trace.Finish (SchedulingPhase.Measurement, started, pending, processed = passes)
+
+    /// <summary>Runs presentation immediately and ends the preceding mutation phase.</summary>
+    member _.Present(action: unit -> 'T) : 'T =
+        host.EnsureActive ()
+        writes <- false
+        let trace = host.SchedulingTrace
+        let started = trace.Start ()
+
+        try
+            action ()
+        finally
+            trace.Finish (SchedulingPhase.Presentation, started, 0)
+
 /// <summary>Animation frames, timers and microtasks of a native host.</summary>
 module Frames =
+
+    /// <summary>Creates owner-thread phase annotations for one application's layout work.</summary>
+    let layoutForHost (host: WebCoreHost) =
+        if isNull (box host) then
+            nullArg (nameof host)
+
+        host.EnsureActive ()
+        LayoutPhases host
 
     /// <summary>A scheduler over <c>host</c>'s frame, timer and microtask queues; <c>Now</c> is the host's timing
     /// clock, which frame times also use.</summary>

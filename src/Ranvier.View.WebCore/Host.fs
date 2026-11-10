@@ -1071,6 +1071,23 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
         action () |> Interop.check operation
 
+    /// <summary>Samples completed main-frame layout passes without flushing pending work.</summary>
+    /// <remarks>Call on the host thread. None means the runtime lacks host-layout-metrics.
+    /// The counter includes subtree layouts, wraps at 32 bits and resets with the frame view.
+    /// Compare samples only within one document lifetime; child frames and style-only updates are excluded.</remarks>
+    member this.LayoutPassCount: uint32 voption =
+        this.EnsureActive ()
+
+        if WebCoreHost.Has "host-layout-metrics" then
+            let mutable count = 0u
+
+            Native.rv_host_layout_count (handle, &count)
+            |> Interop.check "rv_host_layout_count"
+
+            ValueSome count
+        else
+            ValueNone
+
     /// <summary>Enables or disables the host's bounded rendering trace.</summary>
     /// <remarks>Call on the host thread. A change of state clears queued events.</remarks>
     /// <exception cref="T:System.NotSupportedException">The native provider has no host tracing.</exception>

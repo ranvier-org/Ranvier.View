@@ -5,6 +5,8 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup><Compile Include="SemanticPublication.fs" />
+    <Compile Include="ViewportModel.fs" />
+    <Compile Include="EditorViewport.fs" />
     <Compile Include="Program.fs" /></ItemGroup>
   <ItemGroup><ProjectReference Include="../../src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj" /></ItemGroup>
 </Project>
