@@ -155,6 +155,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let thread = Environment.CurrentManagedThreadId
     let microtasks = Queue<unit -> unit>()
     let posted = ConcurrentQueue<struct (SendOrPostCallback * obj)>()
+    let schedulingTrace = HostSchedulingTrace ()
     let timers = SortedDictionary<struct (float * int), unit -> unit>()
     let timerKeys = Dictionary<int, struct (float * int)>()
     let frames = Dictionary<int, float -> unit>()
@@ -223,6 +224,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
             struct (left, top, right - left, bottom - top)
 
     let runMicrotasks () =
+        let started = schedulingTrace.Start ()
         while not disposed && microtasks.Count > 0 do
             let task = microtasks.Dequeue ()
 
@@ -230,6 +232,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 task ()
             with error ->
                 record error
+
+        schedulingTrace.Finish (SchedulingPhase.Microtasks, started, microtasks.Count)
 
     let now () =
         if manual then
@@ -408,6 +412,18 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 now ()
         }
 
+    /// <summary>Enables a bounded scheduling trace; changing the setting clears buffered events.</summary>
+    member this.SetSchedulingTrace(enabled: bool) =
+        this.EnsureActive ()
+        schedulingTrace.SetEnabled enabled
+
+    /// <summary>Returns buffered Stopwatch-tick events and the number dropped since the previous drain.</summary>
+    member this.DrainSchedulingTrace() =
+        this.EnsureActive ()
+        schedulingTrace.Drain ()
+
+    member internal _.SchedulingTrace = schedulingTrace
+
     /// <summary>Posts a callback to the host's thread-safe work queue.</summary>
     member internal _.PostToOwner(action: unit -> unit) =
         context.Post (SendOrPostCallback (fun _ -> action ()), null)
@@ -577,24 +593,32 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     member this.Cycle(?milliseconds: int) =
         this.EnsureActive ()
 
+        let nativeStarted = schedulingTrace.Start ()
         Native.rv_run_loop_cycle (defaultArg milliseconds 0)
         |> ignore
+        schedulingTrace.Finish (SchedulingPhase.NativeCycle, nativeStarted, posted.Count)
 
         if not disposed then
+            let releaseStarted = schedulingTrace.Start ()
             session.Drain ()
+            schedulingTrace.Finish (SchedulingPhase.Releases, releaseStarted, 0)
             let mutable item = Unchecked.defaultof<_>
 
             while not disposed && posted.TryDequeue (&item) do
                 let struct (callback, state) = item
+                let callbackStarted = schedulingTrace.Start ()
 
                 try
                     callback.Invoke state
                 with error ->
                     record error
 
+                schedulingTrace.Finish (SchedulingPhase.Posted, callbackStarted, posted.Count)
                 runMicrotasks ()
 
+            let timersStarted = schedulingTrace.Start ()
             runDueTimers ()
+            schedulingTrace.Finish (SchedulingPhase.Timers, timersStarted, timers.Count)
             runMicrotasks ()
 
             if not disposed && Volatile.Read &frameRequested = 0 then
@@ -669,6 +693,8 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// </summary>
     member this.Frame() =
         this.EnsureActive ()
+        schedulingTrace.NextFrame ()
+        let frameStarted = schedulingTrace.Start ()
         Volatile.Write (&frameRequested, 0)
         let now = now ()
         let callbacks = Seq.toArray frames.Keys
@@ -690,6 +716,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         if not disposed then
             Native.rv_host_update handle
             |> Interop.check "rv_host_update"
+        schedulingTrace.Finish (SchedulingPhase.Frame, frameStarted, 0)
 
     // Window
 
@@ -879,6 +906,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     member private this.Input(name: string, call: unit -> int) : bool =
         this.EnsureActive ()
+        let inputStarted = schedulingTrace.Start ()
         inInput <- inInput + 1
 
         let status =
@@ -886,6 +914,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
                 call ()
             finally
                 inInput <- inInput - 1
+                schedulingTrace.Finish (SchedulingPhase.Input, inputStarted, posted.Count)
 
         runMicrotasks ()
 

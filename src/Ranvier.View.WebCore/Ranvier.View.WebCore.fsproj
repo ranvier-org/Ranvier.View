@@ -59,7 +59,9 @@
         <Compile Include="TimelineRanges.fs" />
         <Compile Include="Generated/Objects.fs" />
         <Compile Include="EventTargets.fs" />
+        <Compile Include="HostSchedulingTrace.fs" />
         <Compile Include="Host.fs" />
+        
         <Compile Include="SvgViews.fs" />
         <Compile Include="StyleSheets.fs" />
         <Compile Include="CssQueries.fs" />

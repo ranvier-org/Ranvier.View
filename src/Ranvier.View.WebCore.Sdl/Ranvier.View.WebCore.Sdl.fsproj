@@ -51,6 +51,7 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="Ranvier.View.WebCore.Tests" />
+        <InternalsVisibleTo Include="Responsiveness" />
         <InternalsVisibleTo Include="Ranvier.NativeCounter" />
     </ItemGroup>
 

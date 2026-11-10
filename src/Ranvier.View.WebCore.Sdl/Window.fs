@@ -1623,7 +1623,9 @@ type Window
                 )
             )
 
+            let presentStarted = host.SchedulingTrace.Start ()
             let shown = presenter.Present exposed
+            host.SchedulingTrace.Finish (SchedulingPhase.Present, presentStarted, 0)
             framePending <- false
             fullPaint <- false
             exposed <- not shown
@@ -1665,8 +1667,12 @@ type Window
         if not closed then
             host.EnsureActive ()
 
+            let wasPresenting = presenter.Presenting
             if presenter.Settle () then
                 exposed <- true
+            if wasPresenting && not presenter.Presenting then
+                let observed = host.SchedulingTrace.Start ()
+                host.SchedulingTrace.Finish (SchedulingPhase.PresentCompleted, observed, 0)
 
             for target in windows.Snapshot () do
                 target.RefreshSurrounding ()
