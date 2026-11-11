@@ -81,7 +81,7 @@ jobs:
           python -c "import json,pathlib; samples=[json.loads((pathlib.Path('artifacts/qualification')/(s+'-1.json')).read_text()) for s in ['typing','ime']]; assert all(s['nativeAbi'] >= 69 and s['gpuPipelineSupported'] and s['imeWindowSupported'] and s['gpuFrames'] > 0 and s['cpuFrames'] == 0 for s in samples), samples"
       - uses: actions/checkout@v7
         with:
-          ref: 960fdfa
+          ref: 960fdfa62bc9c35797ae3c95031165a1c5861ab8
           path: artifacts/baseline-source
           persist-credentials: false
       - name: Build fixed benchmark baseline with identical native runtime
