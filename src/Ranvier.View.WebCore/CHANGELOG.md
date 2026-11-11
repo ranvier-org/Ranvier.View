@@ -1,5 +1,5 @@
 ---
-last_commit_released: ab9fa4e4a2723dcf171cfe81c6278292d05ff9c7
+last_commit_released: fffe5dc0149737f6d479a5498f5f8dffa280f9b7
 pre_release: rc
 depends_on:
   - ../Ranvier.View/
@@ -12,6 +12,15 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.0-rc.5 - 2026-11-11
+
+### 🚀 Features
+
+* *(host)* Bound callback admission and semantic worker traffic (#129) ([e8d5054](https://github.com/ranvier-org/Ranvier.View/commit/e8d5054c7b076d98f71c81df22c1cdba6cf050c9))
+* *(snapshots)* Bound capture bytes and avoid redundant RGBA encoding (#130) ([fffe5dc](https://github.com/ranvier-org/Ranvier.View/commit/fffe5dc0149737f6d479a5498f5f8dffa280f9b7))
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/ab9fa4e4a2723dcf171cfe81c6278292d05ff9c7..fffe5dc0149737f6d479a5498f5f8dffa280f9b7)</small></strong>
 
 ## 0.1.0-rc.4 - 2026-11-10
 
