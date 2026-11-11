@@ -139,6 +139,7 @@ module BackgroundSnapshots =
             let mutable arbiter = Unchecked.defaultof<ResourceArbiter<SnapshotImage>>
             let mutable request = Unchecked.defaultof<Request>
             let mutable captureOperation: ResourceOperation<SnapshotImage> option = None
+            let mutable pendingPixels: SnapshotPixels option = None
 
             arbiter <-
                 new ResourceArbiter<SnapshotImage> (
@@ -154,10 +155,70 @@ module BackgroundSnapshots =
                     (fun () ->
                         capacity.Withdraw request
 
+                        pendingPixels
+                        |> Option.iter (fun pixels -> pixels.Dispose ())
+
+                        pendingPixels <- None
+
                         captureOperation
                         |> Option.iter (fun operation -> operation.Dispose ())),
                     ignore
                 )
+
+            let startOwnedPixels finished =
+                let pixels = SnapshotPixels.Capture (host, subject, options)
+                pendingPixels <- Some pixels
+
+                let queued =
+                    host.TryPostToOwner (fun () ->
+                        let captured = pendingPixels
+                        pendingPixels <- None
+
+                        match captured with
+                        | None -> finished ()
+                        | Some pixels ->
+                            let settle result =
+                                try
+                                    if
+                                        disposed
+                                        || not (obj.ReferenceEquals (document, host.Document))
+                                    then
+                                        arbiter.Cancel ()
+                                    else
+                                        arbiter.Settle result |> ignore
+                                finally
+                                    finished ()
+
+                            if options.Encoding = ImageEncoding.Rgba8 then
+                                let result =
+                                    try
+                                        use owned = pixels
+                                        ResourceOutcome.Succeeded (owned.Read options)
+                                    with error ->
+                                        ResourceOutcome.Failed (ResourceFailure.LoadFailed error.Message)
+
+                                settle result
+                            else
+                                try
+                                    launch (fun () ->
+                                        let result =
+                                            try
+                                                use owned = pixels
+                                                ResourceOutcome.Succeeded (owned.Read options)
+                                            with error ->
+                                                ResourceOutcome.Failed (ResourceFailure.LoadFailed error.Message)
+
+                                        host.TryPostToOwner (fun () -> settle result)
+                                        |> ignore)
+                                with error ->
+                                    pixels.Dispose ()
+                                    settle (ResourceOutcome.Failed (ResourceFailure.LoadFailed error.Message)))
+
+                if not queued then
+                    pendingPixels <- None
+                    pixels.Dispose ()
+                    arbiter.Cancel ()
+                    finished ()
 
             request <-
                 {
@@ -192,61 +253,64 @@ module BackgroundSnapshots =
                                 then
                                     invalidOp "Snapshot exceeds capture limits (raw byte budget); crop the subject or raise the budget"
 
-                                captureOperation <-
-                                    Some (
-                                        raw.Capture (
-                                            subject,
-                                            { options with
-                                                Encoding = ImageEncoding.Rgba8
-                                            },
-                                            fun outcome ->
-                                                captureOperation
-                                                |> Option.iter (fun operation -> operation.Dispose ())
+                                if WebCoreHost.Has "snapshot-pixels-v1" then
+                                    startOwnedPixels finished
+                                else
+                                    captureOperation <-
+                                        Some (
+                                            raw.Capture (
+                                                subject,
+                                                { options with
+                                                    Encoding = ImageEncoding.Rgba8
+                                                },
+                                                fun outcome ->
+                                                    captureOperation
+                                                    |> Option.iter (fun operation -> operation.Dispose ())
 
-                                                captureOperation <- None
+                                                    captureOperation <- None
 
-                                                match outcome with
-                                                | ResourceOutcome.Failed failure ->
-                                                    try
-                                                        arbiter.Settle (ResourceOutcome.Failed failure)
-                                                        |> ignore
-                                                    finally
-                                                        finished ()
-                                                | ResourceOutcome.Succeeded pixels when options.Encoding = ImageEncoding.Rgba8 ->
-                                                    try
-                                                        arbiter.Settle (ResourceOutcome.Succeeded pixels)
-                                                        |> ignore
-                                                    finally
-                                                        finished ()
-                                                | ResourceOutcome.Succeeded pixels ->
-                                                    try
-                                                        launch (fun () ->
-                                                            let result =
-                                                                try
-                                                                    ResourceOutcome.Succeeded (encode pixels options)
-                                                                with error ->
-                                                                    ResourceOutcome.Failed (ResourceFailure.LoadFailed error.Message)
-
-                                                            host.TryPostToOwner (fun () ->
-                                                                try
-                                                                    if
-                                                                        disposed
-                                                                        || not (obj.ReferenceEquals (document, host.Document))
-                                                                    then
-                                                                        arbiter.Cancel ()
-                                                                    else
-                                                                        arbiter.Settle result |> ignore
-                                                                finally
-                                                                    finished ())
-                                                            |> ignore)
-                                                    with error ->
+                                                    match outcome with
+                                                    | ResourceOutcome.Failed failure ->
                                                         try
-                                                            arbiter.Settle (ResourceOutcome.Failed (ResourceFailure.LoadFailed error.Message))
+                                                            arbiter.Settle (ResourceOutcome.Failed failure)
                                                             |> ignore
                                                         finally
                                                             finished ()
+                                                    | ResourceOutcome.Succeeded pixels when options.Encoding = ImageEncoding.Rgba8 ->
+                                                        try
+                                                            arbiter.Settle (ResourceOutcome.Succeeded pixels)
+                                                            |> ignore
+                                                        finally
+                                                            finished ()
+                                                    | ResourceOutcome.Succeeded pixels ->
+                                                        try
+                                                            launch (fun () ->
+                                                                let result =
+                                                                    try
+                                                                        ResourceOutcome.Succeeded (encode pixels options)
+                                                                    with error ->
+                                                                        ResourceOutcome.Failed (ResourceFailure.LoadFailed error.Message)
+
+                                                                host.TryPostToOwner (fun () ->
+                                                                    try
+                                                                        if
+                                                                            disposed
+                                                                            || not (obj.ReferenceEquals (document, host.Document))
+                                                                        then
+                                                                            arbiter.Cancel ()
+                                                                        else
+                                                                            arbiter.Settle result |> ignore
+                                                                    finally
+                                                                        finished ())
+                                                                |> ignore)
+                                                        with error ->
+                                                            try
+                                                                arbiter.Settle (ResourceOutcome.Failed (ResourceFailure.LoadFailed error.Message))
+                                                                |> ignore
+                                                            finally
+                                                                finished ()
+                                            )
                                         )
-                                    )
                             with error ->
                                 try
                                     arbiter.Settle (ResourceOutcome.Failed (ResourceFailure.LoadFailed error.Message))

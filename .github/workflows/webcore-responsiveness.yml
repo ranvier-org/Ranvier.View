@@ -33,6 +33,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       RANVIER_REQUIRE_PIPELINE: '1'
       RANVIER_REQUIRE_BACKGROUND_SNAPSHOTS: '1'
+      RANVIER_REQUIRE_SNAPSHOT_PIXELS: '1'
       LIBGL_ALWAYS_SOFTWARE: '1'
       SDL_VIDEODRIVER: ${{ matrix.rid == 'linux-x64' && 'x11' || '' }}
     steps:
@@ -68,6 +69,8 @@ jobs:
           python -m unittest discover -s tests/Responsiveness -p test_compare.py
           dotnet build tests/Ranvier.View.WebCore.Tests -c Release -p:RanvierWebCoreNativeDir="$PWD/artifacts/native" -o artifacts/tests
           dotnet build tests/Responsiveness -c Release -p:RanvierWebCoreNativeDir="$PWD/artifacts/native" -o artifacts/fixture
+          dotnet build tests/SnapshotPerformance -c Release -p:BaselineManaged=true -o artifacts/snapshot-baseline
+          dotnet build tests/SnapshotPerformance -c Release -p:RanvierWebCoreNativeDir="$PWD/artifacts/native" -o artifacts/snapshot-candidate
       - name: Run integration and bounded input/presentation traces
         shell: bash
         run: |
@@ -96,6 +99,7 @@ jobs:
           "${prefix[@]}" python tests/Responsiveness/run_comparison.py artifacts/baseline-fixture/Responsiveness.dll artifacts/fixture/Responsiveness.dll --output artifacts/qualification/typing-gate
           "${prefix[@]}" python tests/Responsiveness/run_comparison.py artifacts/baseline-fixture/Responsiveness.dll artifacts/fixture/Responsiveness.dll --scenario long-line --iterations 100 --output artifacts/qualification/long-line-gate
           "${prefix[@]}" python tests/Responsiveness/run_extreme_comparison.py artifacts/fixture/Responsiveness.dll --output artifacts/qualification/extreme-line-gate
+          "${prefix[@]}" python tests/SnapshotPerformance/compare.py artifacts/snapshot-baseline/SnapshotPerformance.dll artifacts/snapshot-candidate/SnapshotPerformance.dll --output artifacts/qualification/snapshot-transfer-gate
       - uses: actions/upload-artifact@v4
         if: always()
         with:
