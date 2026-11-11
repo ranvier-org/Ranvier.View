@@ -31,6 +31,8 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     let mutable gpuHeight = 0
     let mutable gpuFrames = 0L
     let mutable cpuFrames = 0L
+    let mutable fullCpuPaints = 0L
+    let mutable dirtyCpuPaints = 0L
     let mutable lastGpu = false
     let mutable pendingEglFrame = 0n
 
@@ -170,10 +172,16 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
             let painted =
                 if fullPaint then
                     host.Paint pixels
+                    fullCpuPaints <- fullCpuPaints + 1L
                     fullPaint <- false
                     true
                 else
-                    (host.PaintDirty pixels).IsSome
+                    let changed = (host.PaintDirty pixels).IsSome
+
+                    if changed then
+                        dirtyCpuPaints <- dirtyCpuPaints + 1L
+
+                    changed
 
             if painted then
                 use start = fixed pixels
@@ -341,10 +349,16 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
             if fullPaint then
                 host.Paint pixels
+                fullCpuPaints <- fullCpuPaints + 1L
                 fullPaint <- false
                 true
             else
-                (host.PaintDirty pixels).IsSome
+                let changed = (host.PaintDirty pixels).IsSome
+
+                if changed then
+                    dirtyCpuPaints <- dirtyCpuPaints + 1L
+
+                changed
         else
             false
 
@@ -833,8 +847,17 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
             true
         | None -> false
 
-    /// <summary>Requires a full CPU repaint after viewport or display-scale changes.</summary>
-    member _.Invalidate() =
+    /// <summary>Counts completed full CPU paints, including swap-chain fallback.</summary>
+    member _.FullCpuPaints = fullCpuPaints
+    /// <summary>Counts completed dirty-region CPU paints.</summary>
+    member _.DirtyCpuPaints = dirtyCpuPaints
+
+    /// <summary>Requests updated GPU content while preserving native CPU damage.</summary>
+    member _.InvalidateContent() =
+        pipelineNeedsSubmit <- true
+
+    /// <summary>Requires full CPU painting and updated GPU content.</summary>
+    member _.InvalidateAll() =
         fullPaint <- true
         pipelineNeedsSubmit <- true
 

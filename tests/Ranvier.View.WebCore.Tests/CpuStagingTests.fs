@@ -6,6 +6,43 @@ open Ranvier.View.WebCore.Sdl
 open Ranvier.View.WebCore.Tests.Support
 
 [<Tests>]
+let dirtyPaintRegression =
+    testCase "ordinary CPU edits preserve dirty painting" (fun () ->
+        onHostThread (fun () ->
+            use window =
+                Window.Create ("dirty paint", 200, 150, hidden = true, renderer = "software")
+
+            let host = window.Host
+
+            host.Document.body.innerHTML <-
+                "<div id='box' style='position:absolute;left:10px;top:10px;width:40px;height:40px;background:red'></div>"
+
+            window.Step (timeout = 0) |> ignore
+            let before = window.FullCpuPaints
+            let dirtyBefore = window.DirtyCpuPaints
+            let box = host.Document.getElementById "box"
+            box.setAttribute ("style", "position:absolute;left:10px;top:10px;width:40px;height:40px;background:blue")
+            window.Step (timeout = 0) |> ignore
+            let deadline = System.Diagnostics.Stopwatch.StartNew ()
+
+            while window.DirtyCpuPaints = dirtyBefore
+                  && window.FullCpuPaints = before
+                  && deadline.ElapsedMilliseconds < 1000L do
+                System.Threading.Thread.Sleep 1
+                window.Step (timeout = 0) |> ignore
+
+            Expect.equal window.FullCpuPaints before "ordinary edit must not force full paint"
+            Expect.isGreaterThan window.DirtyCpuPaints dirtyBefore "edit paints dirty region"
+            box.setAttribute ("style", "display:none")
+            window.Step (timeout = 0) |> ignore
+            let struct (width, height, partial) = window.ReadPixels ()
+            let reference = Array.zeroCreate<byte>(width * height * 4)
+            host.Paint reference
+            Expect.sequenceEqual partial reference "removed content clears old pixels"
+            window.Present ()
+            Expect.isGreaterThan window.FullCpuPaints before "explicit presentation retains full invalidation"))
+
+[<Tests>]
 let tests =
     testCase "CPU staging reuses buffers and traces upload independently" (fun () ->
         onHostThread (fun () ->
