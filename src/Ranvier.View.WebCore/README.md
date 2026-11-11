@@ -22,11 +22,17 @@ shared with SDL's event pump.
 the previous pending preview. A waiting preview paints when admitted, so it observes the
 document at that point. Capacity is shared across services for the same host.
 
-Only copied RGBA pixels reach the worker. Completion returns to the owner queue. Cancellation,
+Encoded requests send only copied RGBA pixels to the worker. Raw RGBA requests return that owned array directly without an encoder dispatch or second copy. Completion returns to the owner queue. Cancellation,
 service disposal, host disposal and document replacement suppress stale completion; a codec
 already running keeps its slot until it returns. Encoding supports PNG, JPEG, WEBP and raw RGBA,
 subject to the host's advertised formats, dimensions up to 8192 and 64 MiB of input pixels.
 Capture itself still runs on the owner thread.
+
+`BackgroundSnapshots.forHostWithByteBudget maximumRawBytes host` adds a raw-pixel ceiling between 1 byte and 64 MiB. Smaller budgets are checked before capture and rechecked after a queued preview waits through a resize. Viewports use CSS dimensions and the requested scale; crops are conservatively rounded. Uncropped elements reserve 64 MiB because their paint bounds can include overflow and shadows. Codec workspace and encoded output are additional memory; retained public results remain caller-owned. The default ceiling uses native clipping and native size validation.
+
+## Bounded owner admission
+
+`host.TryPost(action, maximumPending)` returns `Accepted`, `Full`, or `Closed` without blocking the producer. Retry or retain lossless application work on `Full`; `Closed` leaves ownership with the caller. Accepted callbacks keep FIFO order, but shutdown discards queued callbacks. Existing synchronization-context posting remains compatible and unbounded. Pending, peak, rejected and discarded counters expose queue pressure. Admission bounds pending callback count, not the duration of a callback already running.
 
 Scheduling traces expose `CpuBufferCreate` and `CpuUpload` separately, with byte counts in
 `Count`. CPU staging arrays and textures persist across same-size repaints. Native capture
