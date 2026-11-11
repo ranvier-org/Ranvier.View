@@ -24,6 +24,7 @@ type MeasurementEnvironment =
 
 type MeasurementCache(capacity: int) =
     let values = Dictionary<MeasurementKey, float>()
+    let order = Queue<MeasurementKey>()
     let mutable environment: MeasurementEnvironment option = None
 
     do
@@ -33,6 +34,7 @@ type MeasurementCache(capacity: int) =
     member _.Configure value =
         if environment <> Some value then
             values.Clear ()
+            order.Clear ()
             environment <- Some value
 
     member _.Count = values.Count
@@ -44,7 +46,8 @@ type MeasurementCache(capacity: int) =
             let value = measure ()
 
             if values.Count >= capacity then
-                values.Clear ()
+                values.Remove (order.Dequeue ()) |> ignore
 
             values[key] <- value
+            order.Enqueue key
             value

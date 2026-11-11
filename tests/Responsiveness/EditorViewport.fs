@@ -8,7 +8,13 @@ open Ranvier.View.Dom
 open Ranvier.View.WebCore
 open Responsiveness.ViewportModel
 
-type private Row = { Slot: int; Text: Signal<string> }
+type private Row =
+    {
+        Slot: int
+        Text: Signal<string>
+        mutable Line: int
+        mutable Revision: int64
+    }
 
 let private row =
     Component.define (fun _ (item: unit -> Row) -> item ()) (fun t ->
@@ -39,8 +45,13 @@ type EditorViewport(host: WebCoreHost, container: HTMLElement, total: int, ?unbo
                 {
                     Slot = slot
                     Text = Api.createSignal ""
+                    Line = -1
+                    Revision = 0L
                 }))
 
+    let mutable ordered = slots
+    let mutable textWrites = 0L
+    let mutable widthReads = 0L
     let items = graph.Run (fun () -> Api.createSignal slots)
 
     let mounted =
@@ -69,13 +80,30 @@ type EditorViewport(host: WebCoreHost, container: HTMLElement, total: int, ?unbo
         max 0 (min (total - min count (max 1 (height / 20))) line)
 
     let refresh () =
-        start <- min (max 0 (total - count)) (max 0 (first - 50))
+        let nextStart = min (max 0 (total - count)) (max 0 (first - 50))
+        let delta = nextStart - start
+
+        if delta <> 0 && abs delta < count then
+            let previous = ordered
+            ordered <- Array.init count (fun index -> previous[(index + delta + count) % count])
+
+        start <- nextStart
 
         phases.Mutate (fun () ->
             graph.Run (fun () ->
                 Api.batch (fun () ->
-                    for index in 0 .. slots.Length - 1 do
-                        slots[index].Text.Value <- text (start + index))))
+                    for index in 0 .. ordered.Length - 1 do
+                        let row = ordered[index]
+                        let line = start + index
+
+                        if row.Line <> line then
+                            row.Line <- line
+                            row.Revision <- row.Revision + 1L
+                            row.Text.Value <- text line
+                            textWrites <- textWrites + 1L
+
+                    if delta <> 0 then
+                        items.Value <- ordered)))
 
         container.scrollTop <- (first - start) * 20
 
@@ -83,12 +111,24 @@ type EditorViewport(host: WebCoreHost, container: HTMLElement, total: int, ?unbo
         container.setAttribute ("style", "height:500px;width:700px;overflow:hidden;font:14px monospace;line-height:20px;white-space:pre")
         refresh ()
 
+    let nodesBySlot =
+        let nodes = container.querySelectorAll ".editor-line"
+        Array.init count (fun i -> nodes.item (uint32 i) :?> HTMLElement)
+
+    member _.TextWrites = textWrites
+    member _.WidthReads = widthReads
     member _.Count = count
     member _.First = first
     member _.CacheCount = cache.Count
 
     member _.Edit(text: string) =
-        phases.Mutate (fun () -> graph.Run (fun () -> Api.batch (fun () -> slots[first - start].Text.Value <- $"line {first}: {text}")))
+        let row = ordered[first - start]
+        let value = $"line {first}: {text}"
+
+        if row.Text.Value <> value then
+            phases.Mutate (fun () -> graph.Run (fun () -> Api.batch (fun () -> row.Text.Value <- value)))
+            row.Revision <- row.Revision + 1L
+            textWrites <- textWrites + 1L
 
     member _.MoveTo line =
         requested <- clampFirst line
@@ -139,21 +179,24 @@ type EditorViewport(host: WebCoreHost, container: HTMLElement, total: int, ?unbo
                 Height = height
             }
 
-        let nodes = container.querySelectorAll ".editor-line"
-
         phases.Measure (fun () ->
-            for index in 0 .. int nodes.length - 1 do
-                let node = nodes.item (uint32 index) :?> HTMLElement
+            for row in ordered do
+                let node = nodesBySlot[row.Slot]
 
                 let key =
                     {
-                        Text = node.textContent
+                        Text = $"{row.Slot}:{row.Revision}"
                         Font = "14px monospace"
                         Width = width
                         StyleRevision = styleRevision
                     }
 
-                cache.Measure (key, fun () -> float node.scrollWidth)
+                cache.Measure (
+                    key,
+                    fun () ->
+                        widthReads <- widthReads + 1L
+                        float node.scrollWidth
+                )
                 |> ignore)
 
     interface IDisposable with
