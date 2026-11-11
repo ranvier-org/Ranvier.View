@@ -31,6 +31,14 @@ let private pointerSquare =
             |]
             [||])
 
+let private crosshairSquare =
+    Component.define (fun _ (count: Signal<int>) -> count) (fun t ->
+        t.div
+            [|
+                t.Attrs.attribute ("style", "position:absolute;left:0;top:0;width:100px;height:100px;cursor:crosshair")
+            |]
+            [||])
+
 // A hidden window drawn by SDL's software renderer, so the test needs no GPU, on the WebCore host thread.
 let private windowCase (name: string) (body: Window -> unit) =
     testCase name (fun () ->
@@ -233,6 +241,24 @@ let tests =
                     Expect.stringContains failure.Message "same native thread" "rejection happens at admission"
                     use window = Window.Create ("owner", 80, 60, hidden = true, renderer = "software")
                     Expect.isTrue (window.Step 0) "the host owner can create and pump a window"))
+
+            windowCase "a crosshair cursor on Windows is drawn by the window, not the system"
+            <| fun window ->
+                use graph = new Graph ()
+                let count = graph.Run (fun () -> Api.createSignal 0)
+                use _mounted = mount window.Host graph crosshairSquare count
+                steps window 3
+                let before = NativePtr.toNativeInt (SDL3.SDL_GetCursor ())
+                move window 50.0f 50.0f
+                settle window
+                Expect.equal window.Host.Cursor Sdl.crosshair "the page asks for a crosshair"
+                let system = NativePtr.toNativeInt (SDL3.SDL_GetDefaultCursor ())
+                let active = NativePtr.toNativeInt (SDL3.SDL_GetCursor ())
+                Expect.notEqual active 0n "a cursor is set"
+                Expect.notEqual active before "the cursor changed over the element"
+
+                Expect.notEqual active system "not the default cursor"
+                Expect.equal window.DrawnCrosshairs (if OperatingSystem.IsWindows () then 1 else 0) "drawn on Windows only"
 
             windowCase "a mounted component reaches the window's texture"
             <| fun window ->
@@ -1047,6 +1073,31 @@ let tests =
                     ))
                     3
                     "shift and control bits"
+            }
+
+            test "the drawn crosshair is opaque, centred and scales with the display" {
+                Expect.equal (Sdl.crosshairSize 1.0f) 23 "23 pixels at 100%"
+                Expect.equal (Sdl.crosshairSize 1.25f) 29 "29 pixels at 125%"
+                Expect.equal (Sdl.crosshairSize 2.0f) 45 "45 pixels at 200%"
+                Expect.equal (Sdl.crosshairSize 0.5f) 23 "never smaller than at 100%"
+
+                for size in [ 23; 29; 45 ] do
+                    let pixels = Sdl.crosshairPixels size
+                    let centre = size / 2
+
+                    let at x y =
+                        List.init 4 (fun channel -> pixels[(y * size + x) * 4 + channel])
+
+                    Expect.equal pixels.Length (size * size * 4) "four bytes per pixel"
+                    Expect.equal (at centre centre) [ 0uy; 0uy; 0uy; 255uy ] "the hot spot is black"
+                    Expect.equal (at 0 centre) [ 0uy; 0uy; 0uy; 255uy ] "the arm reaches the left edge"
+                    Expect.equal (at centre (size - 1)) [ 0uy; 0uy; 0uy; 255uy ] "the arm reaches the bottom edge"
+                    Expect.equal (at 0 (centre - 1 - (size / 23 - 1) / 2)) [ 255uy; 255uy; 255uy; 255uy ] "a white edge runs along the arm"
+                    Expect.equal (at 0 0) [ 0uy; 0uy; 0uy; 0uy ] "the corners are transparent"
+
+                    // Every pixel is fully opaque or fully transparent: nothing for the system to invert or blend.
+                    for index in 3..4 .. pixels.Length - 1 do
+                        Expect.isTrue (pixels[index] = 0uy || pixels[index] = 255uy) "alpha is 0 or 255"
             }
 
             test "input method offsets count code points as UTF-16" {
