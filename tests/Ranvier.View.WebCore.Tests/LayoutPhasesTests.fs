@@ -12,6 +12,84 @@ let tests =
     testList
         "Layout phases"
         [
+            hostCase "empty document lines retain line height" (fun host ->
+                let buffer = Responsiveness.DocumentModel.DocumentBuffer "\n\ntext"
+                host.Document.body.innerHTML <- "<div id='viewport'></div>"
+                let container = host.Document.getElementById "viewport" :?> HTMLElement
+                use editor = new EditorViewport (host, container, 3, document = buffer)
+                let row = container.querySelector ".editor-line" :?> HTMLElement
+                Expect.equal row.offsetHeight 20 "empty logical line has a line box")
+            hostCase "wrapped rows use measured heights for the viewport anchor" (fun host ->
+                let buffer =
+                    Responsiveness.DocumentModel.DocumentBuffer (String.concat "\n" (Array.create 200 (String.replicate 20 "word ")))
+
+                host.Document.body.innerHTML <- "<div id='viewport'></div>"
+                let container = host.Document.getElementById "viewport" :?> HTMLElement
+                use editor = new EditorViewport (host, container, 200, document = buffer)
+                editor.Configure (100, 500, 1., true)
+                editor.Measure ()
+                Expect.isGreaterThan container.scrollTop 1000 "wrapped overscan contributes actual height"
+                editor.MoveTo 199
+                editor.Measure ()
+                Expect.equal editor.First 199 "last wrapped line is reachable"
+                editor.MoveTo 50
+                editor.Configure (700, 500, 1., false)
+                editor.Measure ()
+                Expect.equal container.scrollTop 1000 "unwrapped fixed height restored")
+            hostCase "document edits retain viewport anchor and immutable worker input" (fun host ->
+                let buffer =
+                    Responsiveness.DocumentModel.DocumentBuffer (String.concat "\n" [ for i in 0..199 -> $"row {i}" ])
+
+                let before = buffer.Snapshot
+                host.Document.body.innerHTML <- "<div id='viewport'></div>"
+                let container = host.Document.getElementById "viewport" :?> HTMLElement
+                use editor = new EditorViewport (host, container, 200, document = buffer)
+                let anchor = (buffer.Snapshot.Line editor.First).Id
+                buffer.Replace ({ Line = 0; Column = 0 }, { Line = 0; Column = 0 }, "inserted\n")
+                Expect.equal (buffer.Snapshot.Line editor.First).Id anchor "insertion above preserves anchor"
+                editor.Edit "changed"
+                Expect.equal (buffer.Snapshot.Line editor.First).Text "changed" "edit reaches buffer"
+                Expect.equal (before.Line 50).Text "row 50" "worker snapshot stays immutable"
+                let anchored = editor.First
+                Expect.isTrue (buffer.Undo ()) "undo edit"
+                Expect.equal editor.First anchored "undo does not jump to start"
+                Expect.isTrue (buffer.Undo ()) "undo inserted line"
+                Expect.equal (buffer.Snapshot.Line editor.First).Id anchor "undo above preserves identity"
+                editor.MoveTo 199
+                editor.PinComposition ()
+
+                buffer.Replace (
+                    { Line = 0; Column = 0 },
+                    {
+                        Line = buffer.Snapshot.LineCount - 1
+                        Column = (buffer.Snapshot.Line (buffer.Snapshot.LineCount - 1)).Text.Length
+                    },
+                    "small"
+                )
+
+                Expect.equal editor.First 0 "deletion clamps viewport"
+                editor.Edit "small"
+                editor.EndComposition ()
+                editor.Measure ()
+                Expect.equal (container.querySelector ".editor-line").textContent "small" "short document paints")
+            hostCase "viewport updates only entering rows and measures only changed identities" (fun host ->
+                host.Document.body.innerHTML <- "<div id='viewport'></div>"
+                let container = host.Document.getElementById "viewport" :?> HTMLElement
+                use editor = new EditorViewport (host, container, 1000000, textKind = "long-line")
+                editor.Measure ()
+                let writes, reads = editor.TextWrites, editor.WidthReads
+                editor.MoveTo (editor.First)
+                editor.Measure ()
+                Expect.equal (editor.TextWrites, editor.WidthReads) (writes, reads) "unchanged refresh does no work"
+                editor.MoveTo (editor.First + 1)
+                editor.Measure ()
+                Expect.equal (editor.TextWrites - writes) 1L "one entering row"
+                Expect.equal (editor.WidthReads - reads) 1L "only entering row measured"
+                let beforeEdit = editor.TextWrites
+                editor.Edit "changed"
+                editor.Measure ()
+                Expect.equal (editor.TextWrites - beforeEdit) 1L "single edited row"
+                Expect.isLessThanOrEqual editor.CacheCount 250 "bounded measurement keys")
             hostCase "viewport boundaries edit the displayed logical row" (fun host ->
                 for total in [ 10; 1000 ] do
                     host.Document.body.innerHTML <- "<div id='viewport'></div>"
@@ -27,6 +105,21 @@ let tests =
                         let start = min (max 0 (total - editor.Count)) (max 0 (first - 50))
                         Expect.equal (rows.item (uint32 (first - start))).textContent $"line {first}: changed" "edit targets visible row"
                         Expect.equal container.scrollTop ((first - start) * 20) "scroll matches mounted offset")
+            testCase "measurement eviction retains other live keys" (fun _ ->
+                let cache = MeasurementCache 2
+
+                let key text =
+                    {
+                        Text = text
+                        Font = "mono"
+                        Width = 700
+                        StyleRevision = 0L
+                    }
+
+                cache.Measure (key "a", fun () -> 1.) |> ignore
+                cache.Measure (key "b", fun () -> 2.) |> ignore
+                cache.Measure (key "c", fun () -> 3.) |> ignore
+                Expect.equal (cache.Measure (key "b", fun () -> failwith "live key evicted")) 2. "evict only oldest")
             testCase "viewport and measurement memory do not grow with document size" (fun _ ->
                 Expect.equal (viewportKeys 100000 500 25).Length 125 "viewport plus overscan"
                 Expect.equal (viewportKeys 10000000 500 25).Length 125 "larger document"

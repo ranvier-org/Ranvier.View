@@ -13,6 +13,7 @@ def main():
     parser.add_argument('candidate', type=Path)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--scenario', default='typing')
+    parser.add_argument('--iterations', type=int, default=600)
     args = parser.parse_args()
     rng = random.Random(1701)
     results = {'baseline': [], 'candidate': []}
@@ -23,7 +24,7 @@ def main():
             destination = args.output / label / str(repetition)
             destination.mkdir(parents=True, exist_ok=True)
             command = ['dotnet', str(getattr(args, label).resolve()), '--scenario', args.scenario,
-                       '--iterations', '600', '--repetitions', '1', '--lines', '1000',
+                       '--iterations', str(args.iterations), '--repetitions', '1', '--lines', '1000',
                        '--renderer', 'software', '--no-trace', '--interactive', '--bounded-ime',
                        '--output', str(destination.resolve())]
             result = subprocess.run(command, capture_output=True, text=True, timeout=180)

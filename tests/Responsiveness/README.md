@@ -52,7 +52,17 @@ a complete document buffer or qualify physical platform IMEs.
 `posted` is the deliberately unbounded ordinary-post control. `publication` uses one detached-result slot, one worker at a time, and owner-side document/text/project/request revision validation before changing the visible decoration. The sample cancels its worker on shutdown and checks revisions regardless of cancellation. The document ID is a fresh open-document generation, so reopening a path cannot accept an old result. For reactive values, use Ranvier core async/stream primitives instead of this host transport.
 
 `LatestPublication` transfers ownership of every published value, including values rejected after disposal. Its apply callback borrows the payload; the optional release callback runs once afterward or when replaced/rejected, on whichever thread owns that operation. Release must be thread-safe and cannot access native handles. Dispose clears pending payloads; a delivery already claimed may complete. Revision validation is application policy, not inferred by the generic slot.
-# Regression comparison
+
+## Real document scenario
+
+`--scenario document --lines 100000` constructs a real immutable line tree and
+edits it through the same viewport. Snapshots retain stable line IDs and revisions,
+UTF-16 line/column edits preserve line endings, and undo advances the document
+revision. Retained rows survive edits above the viewport. Wrapped row offsets use
+cached native heights. Complex scripts and long lines retain whole-line shaping;
+this reference integration does not yet bound the cost of one arbitrarily long line.
+
+## Regression comparison
 
 Use `--iterations 600 --repetitions 5 --no-trace` for matched fixed-work cohorts.
 Run baseline and candidate in interleaved fresh processes on the same machine,

@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
-  <ItemGroup><Compile Include="SemanticPublication.fs" />
+  <ItemGroup><Compile Include="DocumentModel.fs" /><Compile Include="SemanticPublication.fs" />
     <Compile Include="ViewportModel.fs" />
     <Compile Include="EditorViewport.fs" />
     <Compile Include="Program.fs" /></ItemGroup>
