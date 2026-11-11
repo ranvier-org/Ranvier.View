@@ -54,14 +54,15 @@ let tests =
                 match captured.Snapshot with
                 | ResourceState.Settled (ResourceOutcome.Succeeded image) -> Expect.equal image.Format ImageEncoding.Png "encoded result"
                 | state -> failtestf "Expected PNG, got %A" state)
-            pixelsCase "native capture remains readable on a worker after document replacement" (fun host ->
+            pixelsCase "native capture remains readable on a worker after replacement and host disposal" (fun host ->
                 host.Document.body.innerHTML <- "<div style='position:fixed;inset:0;background:red'></div>"
 
                 use pixels =
                     SnapshotPixels.Capture (host, SnapshotSubject.Viewport, SnapshotContract.defaults)
 
                 let expected = pixels.Read SnapshotContract.defaults
-                host.Document.body.innerHTML <- "<div style='position:fixed;inset:0;background:blue'></div>"
+                host.LoadSvg "<svg xmlns='http://www.w3.org/2000/svg' width='320' height='240'><rect width='320' height='240' fill='blue'/></svg>"
+                (host :> IDisposable).Dispose()
 
                 let actual =
                     Task.Run(fun () -> pixels.Read SnapshotContract.defaults).GetAwaiter().GetResult()
