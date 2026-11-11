@@ -9,6 +9,12 @@ type OwnerPostAdmission =
     | Full
     | Closed
 
+    override this.ToString() =
+        match this with
+        | Accepted -> "Accepted"
+        | Full -> "Full"
+        | Closed -> "Closed"
+
 type internal OwnerWorkQueue(?timestamp: unit -> int64, ?dequeued: int64 -> unit) =
     let gate = obj ()
     let items = Collections.Generic.Queue<struct (SendOrPostCallback * obj * int64)>()
