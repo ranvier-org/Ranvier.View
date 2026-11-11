@@ -19,3 +19,11 @@ Authorization: implement tasks 9–16, test edge cases between batches, create P
 - Batch A review: fixed comparator false-pass for reduced live rows/presentation coverage (negative test RED then GREEN, seven comparator tests). Added CPU fallback accounting and corrected invalidation documentation. PR #126 open with CI watched.
 - Task 11: ring reuse preserves retained row signals/nodes; compact identity/revision measurement keys eliminate DOM text copies. Single-entry FIFO eviction replaces whole-cache clearing (REPL RED/GREEN). Focused layout suite passed; final suite and long-line comparison in progress.
 - Tasks 12–16: pending.
+
+Task 11 evidence: 954 tests passed (18 skips). Five matched long-line cohorts passed: median run p95 107.0605 -> 12.2809 ms; managed bytes/operation 4,133,808 -> 127,268 (96.9% reduction). Raw local evidence is under artifacts/viewport-comparison.
+
+Task 12 ruling: use .NET ImmutableList's persistent balanced tree for the reference text buffer instead of writing a new piece table. This provides indexed lines and structural sharing; only changed line strings are rebuilt. UTF-16 line/column edits preserve CRLF and reject surrogate splits. Undo history is bounded to 64 snapshots and advances semantic revisions.
+
+Task 12 ruling: defer horizontal text segmentation after the unchanged long-line workload improved below the 16.7ms frame interval. Whole-line WebCore shaping preserves bidi/contextual shaping and caret semantics. This leaves extreme single-line cost unbounded; report that limit rather than introduce unqualified shaping changes. Wrapping uses cached native row heights, not estimated character widths.
+
+Batch A merged as #126 after CI 42947829704 succeeded. Batch B independent review found undo anchoring, empty-line height, last wrapped-line reachability and deletion during pinned composition. Fixes use inverse edit ranges, 20px minimum row height, final-line anchoring in wrap mode and composition cancellation when the edited range is removed. Regression tests cover all four. Real 100,000-line document smoke completed 100 edits with p95 7.01ms and 100 dirty CPU paints.

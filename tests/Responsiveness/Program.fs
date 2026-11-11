@@ -64,8 +64,14 @@ let sample scenario seconds operations lines unbounded visible renderer tracing 
 
     let viewport = host.Document.getElementById "lines" :?> HTMLElement
 
+    let document =
+        if scenario = "document" then
+            Some (Responsiveness.DocumentModel.DocumentBuffer (String.concat "\n" (Array.init lines (fun i -> $"line {i}: let value = {i}"))))
+        else
+            None
+
     use editor =
-        new EditorViewport (host, viewport, lines, unbounded = unbounded, textKind = scenario)
+        new EditorViewport (host, viewport, lines, unbounded = unbounded, textKind = scenario, ?document = document)
 
     let phases = Frames.layoutForHost host
     let count = editor.Count
@@ -130,6 +136,7 @@ let sample scenario seconds operations lines unbounded visible renderer tracing 
         let started = Stopwatch.GetTimestamp ()
 
         match scenario with
+        | "document"
         | "typing" ->
             trimInput ()
 
