@@ -300,15 +300,28 @@ let view (shell: Shell) : Component<unit> =
                 // The indicator is as wide as a tab at every breakpoint, so its offset is the route's index in widths of its own.
                 span (
                     Attrs.className "indicator",
-                    Motion.follow "x" { ComposedAnimationOptions.Default with Duration = 420.; Unit = Some "%"; Extra = AnimatableParams (ease = Ease.outBack) } (fun (s: Shell) ->
-                        float (Array.findIndex ((=) s.Route.Value) routes)
-                        * 100.)
+                    Motion.follow
+                        "x"
+                        { ComposedAnimationOptions.Default with
+                            Duration = 420.
+                            Unit = Some "%"
+                            Extra = AnimatableParams (ease = Ease.outBack)
+                        }
+                        (fun (s: Shell) ->
+                            float (Array.findIndex ((=) s.Route.Value) routes)
+                            * 100.)
                 ) {
                     ()
                 }
             }
 
-            main (Attrs.className "stage", Motion.flip { LayoutOptions.Default.WithDuration 380u with Ease = Page.outQuart }) {
+            main (
+                Attrs.className "stage",
+                Motion.flip
+                    { LayoutOptions.Default.WithDuration 380u with
+                        Ease = Page.outQuart
+                    }
+            ) {
                 matchWith (fun (s: Shell) -> s.Route.Value) (function
                     | Home -> arm homeArm ()
                     | Gallery -> arm galleryArm ()

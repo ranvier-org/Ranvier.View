@@ -25,32 +25,38 @@ type MotionSlot internal () =
     member _.Running = running
 
     /// <summary>Whether the latest animation is live: played, and not yet completed or cancelled.</summary>
-    member _.Playing = not (isNull running) && not running.Completed && not running.Cancelled
+    member _.Playing =
+        not (isNull running)
+        && not running.Completed
+        && not running.Cancelled
 
     /// <summary>
     /// Cancels the running animation, then plays the one <c>start</c> creates while the instance is live; after its
     /// disposal the slot is closed and <c>Play</c> only cancels.
     /// </summary>
     member this.Play(start: unit -> #ITickable) =
-        this.Stop()
+        this.Stop ()
 
         if not closed then
             let next = start () :> ITickable
 
-            if not (isNull running) && not (obj.ReferenceEquals(running, next)) then
-                running.Cancel()
+            if
+                not (isNull running)
+                && not (obj.ReferenceEquals (running, next))
+            then
+                running.Cancel ()
 
             running <- next
 
     /// <summary>Cancels the running animation at its current values.</summary>
     member _.Stop() =
         if not (isNull running) then
-            running.Cancel()
+            running.Cancel ()
             running <- null
 
     member internal this.Close() =
         closed <- true
-        this.Stop()
+        this.Stop ()
 
 /// <summary>The instance signals a scroll-linked element writes; each is written while given.</summary>
 [<NoEquality; NoComparison>]
@@ -75,7 +81,12 @@ type ScrollParams =
     }
 
     /// <summary>The window, the part's element and the default thresholds.</summary>
-    static member Default = { Container = None; Target = None; Options = ScrollOptions.Default }
+    static member Default =
+        {
+            Container = None
+            Target = None
+            Options = ScrollOptions.Default
+        }
 
 /// <summary>The instance signals a draggable element shares with the rest of the instance.</summary>
 [<NoEquality; NoComparison>]
@@ -103,19 +114,23 @@ type DragBinding =
 /// </remarks>
 [<RequireQualifiedAccess>]
 module Motion =
-    let inline private nodeOf (native: 'native) : Node = unbox<Node> (box native)
-    let inline private elementOf (native: 'native) : Element = unbox<Element> (box native)
+    let inline private nodeOf (native: 'native) : Node =
+        unbox<Node>(box native)
+
+    let inline private elementOf (native: 'native) : Element =
+        unbox<Element>(box native)
 
     // Elements whose Motion exit runs.
-    let private departing = NodeSet()
+    let private departing = NodeSet ()
     // Elements whose Motion enter started in a pass that has not yet been laid out.
-    let private arriving = NodeSet()
+    let private arriving = NodeSet ()
     // Elements whose Motion part animates them.
-    let private animated = NodeSet()
-    let private none = NodeSet()
+    let private animated = NodeSet ()
+    let private none = NodeSet ()
 
     /// <summary>The number of elements whose Motion exit runs.</summary>
-    let internal departures () = departing.Count
+    let internal departures () =
+        departing.Count
 
     let private nothing () = ()
 
@@ -125,14 +140,28 @@ module Motion =
         | Reactive.Full -> false
 
     let private animate (element: Element) (duration: float) (ease: string) (specs: PropertySpec array) =
-        Anime.animate (box element) specs { ComposedAnimationOptions.Default with Duration = duration; Ease = Ease.named ease }
+        Anime.animate
+            (box element)
+            specs
+            { ComposedAnimationOptions.Default with
+                Duration = duration
+                Ease = Ease.named ease
+            }
 
     // The cleanup of a part's animation: paused while the element's exit follows, reverted otherwise.
     let private settle (context: MotionContext) (revertible: IRevertible) =
-        fun () -> if context.ExitPending() then Anime.pause revertible else revertible.Revert()
+        fun () ->
+            if context.ExitPending () then
+                Anime.pause revertible
+            else
+                revertible.Revert ()
 
     let private settleFollower (context: MotionContext) (follower: Follower<'v>) =
-        fun () -> if context.ExitPending() then follower.Pause() else follower.Revert()
+        fun () ->
+            if context.ExitPending () then
+                follower.Pause ()
+            else
+                follower.Revert ()
 
     // Marks the element as animated by a Motion part until `release` runs.
     let private owning (node: Node) (release: unit -> unit) =
@@ -186,13 +215,12 @@ module Motion =
 
                 fun () ->
                     departing.Remove node
-                    tickable.Cancel())
+                    tickable.Cancel ())
 
     /// <summary>Plays on every placement, hydration included; the cleanup reverts the animation.</summary>
     let on (play: 'inst -> Element -> #IRevertible) : Part<'native, 'inst> =
         Hooks.motion (
-            Func<_, _, _, _>(fun inst native context ->
-                owning (nodeOf native) (settle context (play inst (elementOf native) :> IRevertible)))
+            Func<_, _, _, _>(fun inst native context -> owning (nodeOf native) (settle context (play inst (elementOf native) :> IRevertible)))
         )
 
     /// <summary>Plays on every placement of an element created on the client; an element adopted from server HTML stays as served.</summary>
@@ -209,11 +237,13 @@ module Motion =
     /// Plays when the element's row or arm is created by a region pass after the region's first; rows of the first pass,
     /// hydrated rows and rows nested inside an entering row stay still.
     /// </summary>
-    let enter (play: 'inst -> Element -> #ITickable) : Part<'native, 'inst> = Hooks.motion (entering play)
+    let enter (play: 'inst -> Element -> #ITickable) : Part<'native, 'inst> =
+        Hooks.motion (entering play)
 
     /// <summary>On a row or arm root element: plays when the row is retired, and the element leaves when the tickable completes.</summary>
     /// <remarks>A forced removal, as when the mount is disposed, cancels the tickable and removes the element at once.</remarks>
-    let exit (play: 'inst -> Element -> #ITickable) : Part<'native, 'inst> = Hooks.exit (departure false play)
+    let exit (play: 'inst -> Element -> #ITickable) : Part<'native, 'inst> =
+        Hooks.exit (departure false play)
 
     /// <summary>
     /// On a row or arm root element: <c>enter</c> and <c>exit</c> together. The leaving element is pinned out of flow,
@@ -226,37 +256,54 @@ module Motion =
     /// <summary>Presence that fades the element in over 240 ms and out over 180 ms.</summary>
     let fade<'native, 'inst> : Part<'native, 'inst> =
         presence
-            (fun (_: 'inst) element -> animate element 240. "outQuad" [| PropertySpec.Scalar("opacity", 1., fromValue = 0.) |])
-            (fun _ element -> animate element 180. "inQuad" [| PropertySpec.Scalar("opacity", 0.) |])
+            (fun (_: 'inst) element -> animate element 240. "outQuad" [| PropertySpec.Scalar ("opacity", 1., fromValue = 0.) |])
+            (fun _ element -> animate element 180. "inQuad" [| PropertySpec.Scalar ("opacity", 0.) |])
 
     /// <summary>Presence that fades the element in while rising 12 px, and out while rising a further 12 px.</summary>
     let rise<'native, 'inst> : Part<'native, 'inst> =
         presence
             (fun (_: 'inst) element ->
-                animate element 240. "outQuad" [| PropertySpec.Scalar("y", 0., fromValue = 12.); PropertySpec.Scalar("opacity", 1., fromValue = 0.) |])
-            (fun _ element -> animate element 180. "inQuad" [| PropertySpec.Scalar("y", -12.); PropertySpec.Scalar("opacity", 0.) |])
+                animate
+                    element
+                    240.
+                    "outQuad"
+                    [|
+                        PropertySpec.Scalar ("y", 0., fromValue = 12.)
+                        PropertySpec.Scalar ("opacity", 1., fromValue = 0.)
+                    |])
+            (fun _ element -> animate element 180. "inQuad" [| PropertySpec.Scalar ("y", -12.); PropertySpec.Scalar ("opacity", 0.) |])
 
     /// <summary>Presence that fades the element in from 92 % scale and out to it.</summary>
     let scale<'native, 'inst> : Part<'native, 'inst> =
         presence
             (fun (_: 'inst) element ->
-                animate element 240. "outQuad" [| PropertySpec.Scalar("scale", 1., fromValue = 0.92); PropertySpec.Scalar("opacity", 1., fromValue = 0.) |])
-            (fun _ element -> animate element 180. "inQuad" [| PropertySpec.Scalar("scale", 0.92); PropertySpec.Scalar("opacity", 0.) |])
+                animate
+                    element
+                    240.
+                    "outQuad"
+                    [|
+                        PropertySpec.Scalar ("scale", 1., fromValue = 0.92)
+                        PropertySpec.Scalar ("opacity", 1., fromValue = 0.)
+                    |])
+            (fun _ element -> animate element 180. "inQuad" [| PropertySpec.Scalar ("scale", 0.92); PropertySpec.Scalar ("opacity", 0.) |])
 
     let private unfold (_: 'inst) (element: Element) =
         DomKit.setStyle element "overflow" "hidden"
         let height = DomKit.scrollHeight element
-        let animation = animate element 240. "outQuad" [| PropertySpec.Scalar("height", height, fromValue = 0.) |]
 
-        (animation :> ITickable).WhenCompleted(fun () ->
-            DomKit.removeStyle element "height"
-            DomKit.removeStyle element "overflow")
+        let animation =
+            animate element 240. "outQuad" [| PropertySpec.Scalar ("height", height, fromValue = 0.) |]
+
+        (animation :> ITickable)
+            .WhenCompleted(fun () ->
+                DomKit.removeStyle element "height"
+                DomKit.removeStyle element "overflow")
 
         animation
 
     let private fold (_: 'inst) (element: Element) =
         DomKit.setStyle element "overflow" "hidden"
-        animate element 180. "inQuad" [| PropertySpec.Scalar("height", 0.) |]
+        animate element 180. "inQuad" [| PropertySpec.Scalar ("height", 0.) |]
 
     /// <summary>
     /// Presence that unfolds the element's height from 0 and folds it back to 0, in flow, with its overflow hidden while
@@ -285,7 +332,9 @@ module Motion =
             Api.onCleanup layout.Revert
 
             let owned () =
-                animated.AnyUnder rootNode || departing.AnyUnder rootNode || arriving.AnyUnder rootNode
+                animated.AnyUnder rootNode
+                || departing.AnyUnder rootNode
+                || arriving.AnyUnder rootNode
 
             {
                 Before =
@@ -293,13 +342,13 @@ module Motion =
                         recorded <- not (reduced ())
 
                         if recorded then
-                            layout.Record(Flip.children root departing arriving, owned ())
+                            layout.Record (Flip.children root departing arriving, owned ())
                 After =
                     fun () ->
                         if recorded then
                             recorded <- false
-                            layout.SetOwned(owned ())
-                            layout.Animate()
+                            layout.SetOwned (owned ())
+                            layout.Animate ()
 
                             for child in Flip.children root none none do
                                 arriving.Remove child
@@ -323,7 +372,7 @@ module Motion =
     /// the instance's setup. The instance's disposal cancels the running animation and closes the slot.
     /// </summary>
     let slot () : MotionSlot =
-        let created = MotionSlot()
+        let created = MotionSlot ()
         Api.onCleanup created.Close
         created
 
@@ -356,7 +405,9 @@ module Motion =
         : Part<'native, 'inst> =
         Hooks.motion (
             Func<_, _, _, _>(fun inst native context ->
-                let follower = Follow.css (elementOf native) property parameters (Api.untrack (fun () -> read inst))
+                let follower =
+                    Follow.css (elementOf native) property parameters (Api.untrack (fun () -> read inst))
+
                 Api.createEffectOn (fun () -> read inst) (fun value -> follower.To value)
                 owning (nodeOf native) (settleFollower context follower))
         )
@@ -373,10 +424,15 @@ module Motion =
 
                 Api.createEffectOn (fun () -> read inst) (fun value ->
                     let tickable = play inst (elementOf native) value :> ITickable
-                    if isNull current then tickable.Complete()
+
+                    if isNull current then
+                        tickable.Complete ()
+
                     current <- tickable)
 
-                owning (nodeOf native) (fun () -> if not (isNull current) then settle context current ()))
+                owning (nodeOf native) (fun () ->
+                    if not (isNull current) then
+                        settle context current ()))
         )
 
     /// <summary>
@@ -387,7 +443,9 @@ module Motion =
     let draw (parameters: ComposedAnimationOptions) (read: 'inst -> float) : Part<'native, 'inst> =
         Hooks.motion (
             Func<_, _, _, _>(fun inst native context ->
-                let follower = Follow.draw (elementOf native) parameters (Api.untrack (fun () -> read inst))
+                let follower =
+                    Follow.draw (elementOf native) parameters (Api.untrack (fun () -> read inst))
+
                 Api.createEffectOn (fun () -> read inst) (fun fraction -> follower.To fraction)
                 settleFollower context follower)
         )
@@ -427,7 +485,8 @@ module Motion =
                     | None -> element
 
                 let write (signal: Signal<'v> voption) (value: 'v) =
-                    signal |> ValueOption.iter (fun signal -> graph.Batch(fun () -> signal.Value <- value))
+                    signal
+                    |> ValueOption.iter (fun signal -> graph.Batch (fun () -> signal.Value <- value))
 
                 let onEvent (event: ScrollEvent) (progress: float) =
                     match event with
@@ -436,12 +495,14 @@ module Motion =
                     | ScrollEvent.Leave -> write binding.InView false
                     | _ -> ()
 
-                let observer = Scroll.observe parameters.Container target parameters.Options tickable onEvent
+                let observer =
+                    Scroll.observe parameters.Container target parameters.Options tickable onEvent
+
                 let stop = settle context tickable
 
                 fun () ->
                     stop ()
-                    observer.Revert())
+                    observer.Revert ())
         )
 
     /// <summary>
@@ -460,10 +521,11 @@ module Motion =
                 let callbacks = parameters.Callbacks
 
                 let publish (draggable: NativeDraggable) =
-                    graph.Batch(fun () -> binding.Position.Value <- struct (draggable.X, draggable.Y))
+                    graph.Batch (fun () -> binding.Position.Value <- struct (draggable.X, draggable.Y))
 
                 let dragging (value: bool) =
-                    binding.Dragging |> ValueOption.iter (fun signal -> graph.Batch(fun () -> signal.Value <- value))
+                    binding.Dragging
+                    |> ValueOption.iter (fun signal -> graph.Batch (fun () -> signal.Value <- value))
 
                 let chained =
                     { callbacks with
@@ -478,20 +540,32 @@ module Motion =
                         OnGrab =
                             fun draggable ->
                                 callbacks.OnGrab draggable
-                                binding.Slot |> ValueOption.iter (fun slot -> slot.Stop())
+
+                                binding.Slot
+                                |> ValueOption.iter (fun slot -> slot.Stop ())
+
                                 dragging true
                         OnRelease =
                             fun draggable ->
                                 callbacks.OnRelease draggable
-                                dragging false }
+                                dragging false
+                    }
 
-                let draggable = Drag.create (elementOf native) { parameters with Callbacks = chained }
+                let draggable =
+                    Drag.create (elementOf native) { parameters with Callbacks = chained }
 
                 Api.createEffectOn (fun () -> binding.Position.Value) (fun (struct (x, y)) ->
-                    if x <> draggable.X then draggable.X <- x
-                    if y <> draggable.Y then draggable.Y <- y)
+                    if x <> draggable.X then
+                        draggable.X <- x
 
-                fun () -> if context.ExitPending() then draggable.Cancel() else draggable.Revert())
+                    if y <> draggable.Y then
+                        draggable.Y <- y)
+
+                fun () ->
+                    if context.ExitPending () then
+                        draggable.Cancel ()
+                    else
+                        draggable.Revert ())
         )
 
     /// <summary>
@@ -506,10 +580,10 @@ module Motion =
                 let tickable = play inst splitter :> ITickable
 
                 fun () ->
-                    if context.ExitPending() then
-                        tickable.Pause()
-                        splitter.Freeze()
+                    if context.ExitPending () then
+                        tickable.Pause ()
+                        splitter.Freeze ()
                     else
-                        tickable.Revert()
-                        splitter.Revert() |> ignore)
+                        tickable.Revert ()
+                        splitter.Revert () |> ignore)
         )

@@ -283,7 +283,13 @@ let private gauge (label: string) (read: Sample -> float) =
         div (Attrs.className "gauge-track") {
             div (
                 Attrs.className "gauge-fill",
-                Motion.follow "scaleX" { ComposedAnimationOptions.Default with Duration = 700.; Ease = Page.outQuart } (fun (panel: Panel) -> read panel.Latest.Value)
+                Motion.follow
+                    "scaleX"
+                    { ComposedAnimationOptions.Default with
+                        Duration = 700.
+                        Ease = Page.outQuart
+                    }
+                    (fun (panel: Panel) -> read panel.Latest.Value)
             ) {
                 ()
             }
@@ -351,7 +357,12 @@ let private content (store: Store) =
                         Attrs.attribute ("cx", "50"),
                         Attrs.attribute ("cy", "50"),
                         Attrs.attribute ("r", "42"),
-                        Motion.draw { ComposedAnimationOptions.Default with Duration = 700.; Ease = Page.outQuart } (fun (panel: Panel) -> panel.Latest.Value.Cpu)
+                        Motion.draw
+                            { ComposedAnimationOptions.Default with
+                                Duration = 700.
+                                Ease = Page.outQuart
+                            }
+                            (fun (panel: Panel) -> panel.Latest.Value.Cpu)
                     ) {
                         ()
                     }

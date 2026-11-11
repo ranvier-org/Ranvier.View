@@ -327,7 +327,10 @@ let private inspector =
                         let parameters =
                             Anim (duration = (if dragging then 100 else 650), ease = Ease.outQuart)
 
-                        Fable.Ranvier.Anime.Anime.animate (element, parameters.With ("viewBox", Value.op_Implicit (sprintf "%.3f 0 %.3f 280" window.Start window.Span))))
+                        Fable.Ranvier.Anime.Anime.animate (
+                            element,
+                            parameters.With ("viewBox", Value.op_Implicit (sprintf "%.3f 0 %.3f 280" window.Start window.Span))
+                        ))
                 ) {
                     defs () {
                         linearGradient (
@@ -378,10 +381,20 @@ let private inspector =
                         Attrs.className "crosshair",
                         Attrs.attribute ("y1", "12"),
                         Attrs.attribute ("y2", "255"),
-                        Motion.follow "x1" { ComposedAnimationOptions.Default with Duration = 240.; Ease = Page.outQuart } (fun (store: Store) ->
-                            float store.Cursor.Value * 10.),
-                        Motion.follow "x2" { ComposedAnimationOptions.Default with Duration = 240.; Ease = Page.outQuart } (fun (store: Store) ->
-                            float store.Cursor.Value * 10.)
+                        Motion.follow
+                            "x1"
+                            { ComposedAnimationOptions.Default with
+                                Duration = 240.
+                                Ease = Page.outQuart
+                            }
+                            (fun (store: Store) -> float store.Cursor.Value * 10.),
+                        Motion.follow
+                            "x2"
+                            { ComposedAnimationOptions.Default with
+                                Duration = 240.
+                                Ease = Page.outQuart
+                            }
+                            (fun (store: Store) -> float store.Cursor.Value * 10.)
                     ) {
                         ()
                     }
@@ -395,10 +408,20 @@ let private inspector =
                                 Anim (duration = (if dragging then 100 else 650), ease = Ease.outQuart)
 
                             Fable.Ranvier.Anime.Anime.animate (element, parameters.With ("rx", Value.op_Implicit (span * 5. / 960.)))),
-                        Motion.follow "cx" { ComposedAnimationOptions.Default with Duration = 240.; Ease = Page.outQuart } (fun (store: Store) ->
-                            float store.Cursor.Value * 10.),
-                        Motion.follow "cy" { ComposedAnimationOptions.Default with Duration = 240.; Ease = Page.outQuart } (fun (store: Store) ->
-                            y (value 0. store.Cursor.Value))
+                        Motion.follow
+                            "cx"
+                            { ComposedAnimationOptions.Default with
+                                Duration = 240.
+                                Ease = Page.outQuart
+                            }
+                            (fun (store: Store) -> float store.Cursor.Value * 10.),
+                        Motion.follow
+                            "cy"
+                            { ComposedAnimationOptions.Default with
+                                Duration = 240.
+                                Ease = Page.outQuart
+                            }
+                            (fun (store: Store) -> y (value 0. store.Cursor.Value))
                     ) {
                         ()
                     }
@@ -409,10 +432,22 @@ let private inspector =
                     (div (
                         Attrs.className "graph-tooltip",
                         Attrs.role "status",
-                        Motion.follow "--tip-x" { ComposedAnimationOptions.Default with Duration = 240.; Unit = Some "%"; Ease = Page.outQuart } (fun (store: Store) ->
-                            let struct (x, _) = store.Pointer.Value in x),
-                        Motion.follow "top" { ComposedAnimationOptions.Default with Duration = 240.; Unit = Some "%"; Ease = Page.outQuart } (fun (store: Store) ->
-                            let struct (_, y) = store.Pointer.Value in y)
+                        Motion.follow
+                            "--tip-x"
+                            { ComposedAnimationOptions.Default with
+                                Duration = 240.
+                                Unit = Some "%"
+                                Ease = Page.outQuart
+                            }
+                            (fun (store: Store) -> let struct (x, _) = store.Pointer.Value in x),
+                        Motion.follow
+                            "top"
+                            { ComposedAnimationOptions.Default with
+                                Duration = 240.
+                                Unit = Some "%"
+                                Ease = Page.outQuart
+                            }
+                            (fun (store: Store) -> let struct (_, y) = store.Pointer.Value in y)
                     ) {
                         span () { fun (store: Store) -> time (float store.Cursor.Value * 10.) }
                         strong () { fun (store: Store) -> sprintf "%.1f ms" (value 0. store.Cursor.Value) }

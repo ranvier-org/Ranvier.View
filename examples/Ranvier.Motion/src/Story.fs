@@ -174,7 +174,10 @@ let private letters (_: Story) (splitter: Ranvier.Anime.TextSplitter) =
     )
 
 let private popIn (_: string) (element: TS.Dom.Element) =
-    Fable.Ranvier.Anime.Anime.animate (element, Anim (scale = Value.fromTo (0.4, 1), opacity = Value.fromTo (0, 1), duration = 420, ease = Ease.outBack))
+    Fable.Ranvier.Anime.Anime.animate (
+        element,
+        Anim (scale = Value.fromTo (0.4, 1), opacity = Value.fromTo (0, 1), duration = 420, ease = Ease.outBack)
+    )
 
 /// <summary>
 /// The page around the story's article: the document's title and viewport entries, the site header and the introduction.
@@ -237,7 +240,14 @@ let view: Component<Story -> unit> =
                     header (Attrs.className "hero") {
                         p (Attrs.className "eyebrow", Motion.appear rise) { "Rendered on .NET · hydrated in the browser" }
 
-                        h1 (Attrs.className "headline", Motion.split { TextSplitterOptions.Default with Chars = SplitMode.Enabled } letters) {
+                        h1 (
+                            Attrs.className "headline",
+                            Motion.split
+                                { TextSplitterOptions.Default with
+                                    Chars = SplitMode.Enabled
+                                }
+                                letters
+                        ) {
                             "Motion, owned by the view."
                         }
 

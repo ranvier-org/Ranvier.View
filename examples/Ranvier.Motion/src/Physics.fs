@@ -96,7 +96,11 @@ let private scrubbed (playground: Playground) (track: TS.Dom.Element) =
     timeline
 
 let private follower (index: int) =
-    let parameters = { ComposedAnimationOptions.Default with Duration = float trail[index]; Ease = Page.outQuart }
+    let parameters =
+        { ComposedAnimationOptions.Default with
+            Duration = float trail[index]
+            Ease = Page.outQuart
+        }
 
     div (Attrs.className "follower", Attrs.data ("follower", string index), Motion.follow "x" parameters xOf, Motion.follow "y" parameters yOf) { () }
 

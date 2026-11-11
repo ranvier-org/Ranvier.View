@@ -37,8 +37,20 @@ let private selectedBoard =
                     (fun b -> b.Cards.Value)
                     (li (
                         Motion.presence
-                            (fun _ el -> Anime.animate el [| PropertySpec.Scalar ("opacity", 1., fromValue = 0.) |] { ComposedAnimationOptions.Default with Duration = 240. })
-                            (fun _ el -> Anime.animate el [| PropertySpec.Scalar ("opacity", 0.) |] { ComposedAnimationOptions.Default with Duration = 180. })
+                            (fun _ el ->
+                                Anime.animate
+                                    el
+                                    [| PropertySpec.Scalar ("opacity", 1., fromValue = 0.) |]
+                                    { ComposedAnimationOptions.Default with
+                                        Duration = 240.
+                                    })
+                            (fun _ el ->
+                                Anime.animate
+                                    el
+                                    [| PropertySpec.Scalar ("opacity", 0.) |]
+                                    { ComposedAnimationOptions.Default with
+                                        Duration = 180.
+                                    })
                     ) {
                         fun current -> (current ()).Title
                     })
@@ -70,8 +82,20 @@ let private notes =
                 id
                 (fun (n: Notes) -> n.Notes)
                 (li (
-                    Motion.enter (fun _ el -> Anime.animate el [| PropertySpec.Scalar ("x", 0., fromValue = 40.) |] { ComposedAnimationOptions.Default with Duration = 200. }),
-                    Motion.exit (fun _ el -> Anime.animate el [| PropertySpec.Scalar ("x", 40.) |] { ComposedAnimationOptions.Default with Duration = 200. })
+                    Motion.enter (fun _ el ->
+                        Anime.animate
+                            el
+                            [| PropertySpec.Scalar ("x", 0., fromValue = 40.) |]
+                            { ComposedAnimationOptions.Default with
+                                Duration = 200.
+                            }),
+                    Motion.exit (fun _ el ->
+                        Anime.animate
+                            el
+                            [| PropertySpec.Scalar ("x", 40.) |]
+                            { ComposedAnimationOptions.Default with
+                                Duration = 200.
+                            })
                 ) {
                     fun (note: string) -> note
                 })
