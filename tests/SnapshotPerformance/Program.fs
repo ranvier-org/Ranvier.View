@@ -87,6 +87,26 @@ let main args =
                     |}
             )
 
+    let directory = AppContext.BaseDirectory
+
+    let nativeName =
+        if OperatingSystem.IsWindows () then
+            "RanvierWebCoreHost.dll"
+        elif OperatingSystem.IsMacOS () then
+            "libRanvierWebCoreHost.dylib"
+        else
+            "libRanvierWebCoreHost.so"
+
+    let nativePath =
+        [
+            Path.Combine (directory, nativeName)
+            Path.Combine (directory, "runtimes", System.Runtime.InteropServices.RuntimeInformation.RuntimeIdentifier, "native", nativeName)
+        ]
+        |> List.find File.Exists
+
+    let hashFile path =
+        Convert.ToHexString (SHA256.HashData (File.ReadAllBytes path))
+
     let result =
         {|
             width = width
@@ -95,6 +115,8 @@ let main args =
             nativePixels = WebCoreHost.Has "snapshot-pixels-v1"
             managedAssembly = typeof<WebCoreHost>.Assembly.GetName().Version.ToString()
             pngSha256 = imageHash
+            managedSha256 = hashFile typeof<WebCoreHost>.Assembly.Location
+            nativeSha256 = hashFile nativePath
             samples = samples.ToArray ()
         |}
 
