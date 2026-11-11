@@ -23,11 +23,50 @@ let private encodedOptions =
         Encoding = ImageEncoding.Png
     }
 
+let private pixelsCase name body =
+    hostCase name (fun host ->
+        if not (WebCoreHost.Has "snapshot-pixels-v1") then
+            if Environment.GetEnvironmentVariable "RANVIER_REQUIRE_SNAPSHOT_PIXELS" = "1" then
+                failtest "Native pixel capture capability required"
+
+            skiptest "runtime predates native pixel capture"
+
+        body host)
+
 [<Tests>]
 let tests =
     testList
         "Background snapshots"
         [
+            pixelsCase "encoded capture does not allocate an intermediate managed RGBA frame" (fun host ->
+                host.Resize (800, 600)
+                let workers = Queue<unit -> unit>()
+                use service = BackgroundSnapshots.create host workers.Enqueue
+                let before = GC.GetAllocatedBytesForCurrentThread ()
+                use captured = service.Capture (SnapshotSubject.Viewport, encodedOptions, ignore)
+                host.Cycle ()
+                let allocated = GC.GetAllocatedBytesForCurrentThread () - before
+                Expect.equal workers.Count 1 "encoding queued"
+                Expect.isLessThan allocated 262144L "no 1.92MB managed RGBA allocation before worker"
+                Task.Run(workers.Dequeue ()).GetAwaiter().GetResult()
+                host.Cycle ()
+
+                match captured.Snapshot with
+                | ResourceState.Settled (ResourceOutcome.Succeeded image) -> Expect.equal image.Format ImageEncoding.Png "encoded result"
+                | state -> failtestf "Expected PNG, got %A" state)
+            pixelsCase "native capture remains readable on a worker after document replacement" (fun host ->
+                host.Document.body.innerHTML <- "<div style='position:fixed;inset:0;background:red'></div>"
+
+                use pixels =
+                    SnapshotPixels.Capture (host, SnapshotSubject.Viewport, SnapshotContract.defaults)
+
+                let expected = pixels.Read SnapshotContract.defaults
+                host.Document.body.innerHTML <- "<div style='position:fixed;inset:0;background:blue'></div>"
+
+                let actual =
+                    Task.Run(fun () -> pixels.Read SnapshotContract.defaults).GetAwaiter().GetResult()
+
+                Expect.isTrue (Array.forall2 (=) expected.Data actual.Data) "owned immutable pixels")
             backgroundCase "default budget lets native capture clip a large crop" (fun host ->
                 let workers = Queue<unit -> unit>()
                 use service = BackgroundSnapshots.create host workers.Enqueue
