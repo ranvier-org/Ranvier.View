@@ -435,6 +435,26 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     member internal _.TryPostToOwner(action: unit -> unit) =
         posted.Enqueue (SendOrPostCallback (fun _ -> action ()), null)
 
+    /// <summary>Attempts thread-safe FIFO admission below the supplied pending-callback limit.</summary>
+    /// <remarks>Full and Closed leave ownership with the caller. Accepted work runs on the owner; host shutdown cancels queued callbacks. Existing Post callers remain unbounded.</remarks>
+    member _.TryPost(action: unit -> unit, maximumPending: int) =
+        if isNull (box action) then
+            nullArg "action"
+
+        posted.TryEnqueue (SendOrPostCallback (fun _ -> action ()), null, maximumPending)
+
+    /// <summary>Number of callbacks currently waiting on the owner.</summary>
+    member _.PendingPostedWork = posted.Count
+
+    /// <summary>Number of callback admissions rejected because the queue was full.</summary>
+    member _.RejectedPostedWork = posted.Rejected
+
+    /// <summary>Number of queued callbacks cancelled by host shutdown.</summary>
+    member _.DiscardedPostedWork = posted.Discarded
+
+    /// <summary>Largest observed pending callback count.</summary>
+    member _.PeakPostedWork = posted.Peak
+
     member internal _.HasPendingWork = posted.Count > 0
 
     member internal _.SetOwnerWake(callback) =

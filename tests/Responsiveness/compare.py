@@ -17,6 +17,10 @@ def compare(before, after, ratio=1.15, noise_ms=0.5):
     try:
         identity = tuple(before[0][key] for key in MATCH)
         for run in before + after:
+            if run.get('analysisFailures', 0) != 0:
+                errors.append('analysis failures cannot qualify')
+            if run.get('pendingAtMeasurementEnd', 0) != 0:
+                errors.append('work deferred beyond measured interval')
             if tuple(run[key] for key in MATCH) != identity:
                 errors.append('workload/environment mismatch')
             if run['schemaVersion'] != 1 or run['benchmarkProtocol'] != 'owner-turn-v1':

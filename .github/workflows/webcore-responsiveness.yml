@@ -79,6 +79,22 @@ jobs:
           "${prefix[@]}" dotnet artifacts/fixture/Responsiveness.dll --scenario typing --seconds 5 --repetitions 1 --lines 1000000 --bounded-ime --gpu-pipeline --output artifacts/qualification
           "${prefix[@]}" dotnet artifacts/fixture/Responsiveness.dll --scenario ime --seconds 5 --repetitions 1 --lines 1000000 --bounded-ime --gpu-pipeline --output artifacts/qualification
           python -c "import json,pathlib; samples=[json.loads((pathlib.Path('artifacts/qualification')/(s+'-1.json')).read_text()) for s in ['typing','ime']]; assert all(s['nativeAbi'] >= 69 and s['gpuPipelineSupported'] and s['imeWindowSupported'] and s['gpuFrames'] > 0 and s['cpuFrames'] == 0 for s in samples), samples"
+      - uses: actions/checkout@v7
+        with:
+          ref: 960fdfa
+          path: artifacts/baseline-source
+          persist-credentials: false
+      - name: Build fixed benchmark baseline with identical native runtime
+        shell: bash
+        run: dotnet build artifacts/baseline-source/tests/Responsiveness -c Release -p:RanvierWebCoreNativeDir="$PWD/artifacts/native" -o artifacts/baseline-fixture
+      - name: Gate matched CPU typing and long-line cohorts
+        shell: bash
+        run: |
+          prefix=()
+          if [ "$RUNNER_OS" = Linux ]; then prefix=(xvfb-run -a); fi
+          if [ "$RUNNER_OS" != Linux ]; then unset SDL_VIDEODRIVER; fi
+          "${prefix[@]}" python tests/Responsiveness/run_comparison.py artifacts/baseline-fixture/Responsiveness.dll artifacts/fixture/Responsiveness.dll --output artifacts/qualification/typing-gate
+          "${prefix[@]}" python tests/Responsiveness/run_comparison.py artifacts/baseline-fixture/Responsiveness.dll artifacts/fixture/Responsiveness.dll --scenario long-line --iterations 100 --output artifacts/qualification/long-line-gate
       - uses: actions/upload-artifact@v4
         if: always()
         with:

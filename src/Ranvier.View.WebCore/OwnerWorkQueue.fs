@@ -3,12 +3,21 @@ namespace Ranvier.View.WebCore
 open System
 open System.Threading
 
+/// <summary>Whether a callback entered the owner queue, hit its admission limit, or found a closed host.</summary>
+type OwnerPostAdmission =
+    | Accepted
+    | Full
+    | Closed
+
 type internal OwnerWorkQueue(?timestamp: unit -> int64, ?dequeued: int64 -> unit) =
     let gate = obj ()
     let items = Collections.Generic.Queue<struct (SendOrPostCallback * obj * int64)>()
     let mutable stopped = false
     let mutable wake: (unit -> unit) option = None
     let mutable failures = 0L
+    let mutable rejected = 0L
+    let mutable discarded = 0L
+    let mutable peak = 0
 
     let signal callback =
         match callback with
@@ -19,11 +28,17 @@ type internal OwnerWorkQueue(?timestamp: unit -> int64, ?dequeued: int64 -> unit
                 Interlocked.Increment (&failures) |> ignore
         | None -> ()
 
-    member _.Enqueue(callback, state) =
+    member _.TryEnqueue(callback, state, capacity: int) =
+        if capacity < 1 then
+            invalidArg "capacity" "positive capacity required"
+
         let accepted, notify =
             lock gate (fun () ->
                 if stopped then
-                    false, None
+                    OwnerPostAdmission.Closed, None
+                elif items.Count >= capacity then
+                    rejected <- rejected + 1L
+                    OwnerPostAdmission.Full, None
                 else
                     let empty = items.Count = 0
 
@@ -35,10 +50,18 @@ type internal OwnerWorkQueue(?timestamp: unit -> int64, ?dequeued: int64 -> unit
                                 |> Option.defaultValue 0L)
                     )
 
-                    true, (if empty then wake else None))
+                    peak <- max peak items.Count
+                    OwnerPostAdmission.Accepted, (if empty then wake else None))
 
         signal notify
         accepted
+
+    member this.Enqueue(callback, state) =
+        this.TryEnqueue (callback, state, Int32.MaxValue) = OwnerPostAdmission.Accepted
+
+    member _.Rejected = lock gate (fun () -> rejected)
+    member _.Discarded = lock gate (fun () -> discarded)
+    member _.Peak = lock gate (fun () -> peak)
 
     member _.TryDequeue(item: byref<struct (SendOrPostCallback * obj)>) =
         let result =
@@ -78,4 +101,5 @@ type internal OwnerWorkQueue(?timestamp: unit -> int64, ?dequeued: int64 -> unit
         lock gate (fun () ->
             stopped <- true
             wake <- None
+            discarded <- discarded + int64 items.Count
             items.Clear ())
