@@ -126,14 +126,14 @@
   },
   "helpers": {
     "src/Ranvier.View.Anime/Motion.js": 0,
-    "Fable.Ranvier.Anime/Css.js": 0,
-    "Fable.Ranvier.Anime/Params.js": 0,
-    "Fable.Ranvier.Anime/Reactive.js": 0,
-    "Fable.Ranvier.Anime/Testing.js": 0,
-    "Fable.Ranvier.Anime/Portable/Anime.js": 0,
-    "Fable.Ranvier.Anime/Portable/Contracts.js": 0,
-    "Fable.Ranvier.Anime/Portable/Motion.js": 0,
-    "Fable.Ranvier.Anime/Portable/Reactive.js": 0
+    "Fable.Ranvier.Anime/Css.fs.js": 0,
+    "Fable.Ranvier.Anime/Params.fs.js": 0,
+    "Fable.Ranvier.Anime/Reactive.fs.js": 0,
+    "Fable.Ranvier.Anime/Testing.fs.js": 0,
+    "Fable.Ranvier.Anime/Portable/Anime.fs.js": 0,
+    "Fable.Ranvier.Anime/Portable/Contracts.fs.js": 0,
+    "Fable.Ranvier.Anime/Portable/Motion.fs.js": 0,
+    "Fable.Ranvier.Anime/Portable/Reactive.fs.js": 0
   },
   "withinBudget": true
 }
