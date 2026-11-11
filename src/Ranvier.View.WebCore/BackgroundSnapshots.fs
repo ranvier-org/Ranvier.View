@@ -97,8 +97,14 @@ module BackgroundSnapshots =
             if encoded <> 0n then
                 OptionalNative.rv_encoded_image_release encoded
 
-    let internal create (host: WebCoreHost) (launch: (unit -> unit) -> unit) : BackgroundSnapshotService =
+    let internal createWithBudget (host: WebCoreHost) (launch: (unit -> unit) -> unit) (maximumRawBytes: int64) : BackgroundSnapshotService =
         host.EnsureActive ()
+
+        if
+            maximumRawBytes < 1L
+            || maximumRawBytes > 64L * 1024L * 1024L
+        then
+            invalidArg "maximumRawBytes" "raw byte budget must be between 1 and 67108864"
 
         if not (WebCoreHost.Has "detached-image-encoding-v1") then
             raise (NotSupportedException "The native library has no detached image encoder")
@@ -160,6 +166,31 @@ module BackgroundSnapshots =
                         fun finished ->
                             try
                                 check ()
+                                let scale = defaultArg options.Scale (float host.SnapshotDeviceScale)
+
+                                let width, height =
+                                    match options.Crop, subject with
+                                    | Some crop, _ -> Math.Ceiling (crop.Width) + 1., Math.Ceiling (crop.Height) + 1.
+                                    | None, SnapshotSubject.Viewport ->
+                                        let struct (w, h) = host.SnapshotViewportSize
+                                        float w, float h
+                                    | None, SnapshotSubject.Element _ -> 0., 0.
+
+                                let bytes =
+                                    if width = 0. && height = 0. then
+                                        64. * 1024. * 1024.
+                                    else
+                                        Math.Ceiling (width * scale)
+                                        * Math.Ceiling (height * scale)
+                                        * 4.
+
+                                // Native capture enforces its exact ceiling without conservative crop rounding.
+                                if
+                                    maximumRawBytes < 67108864L
+                                    && (not (Double.IsFinite bytes)
+                                        || bytes > float maximumRawBytes)
+                                then
+                                    invalidOp "Snapshot exceeds capture limits (raw byte budget); crop the subject or raise the budget"
 
                                 captureOperation <-
                                     Some (
@@ -178,6 +209,12 @@ module BackgroundSnapshots =
                                                 | ResourceOutcome.Failed failure ->
                                                     try
                                                         arbiter.Settle (ResourceOutcome.Failed failure)
+                                                        |> ignore
+                                                    finally
+                                                        finished ()
+                                                | ResourceOutcome.Succeeded pixels when options.Encoding = ImageEncoding.Rgba8 ->
+                                                    try
+                                                        arbiter.Settle (ResourceOutcome.Succeeded pixels)
                                                         |> ignore
                                                     finally
                                                         finished ()
@@ -266,6 +303,17 @@ module BackgroundSnapshots =
                 cancelAll ()
                 raw.Dispose ()
         }
+
+    let internal create host launch =
+        createWithBudget host launch (64L * 1024L * 1024L)
+
+    /// <summary>Creates a snapshot service with a raw-pixel byte ceiling checked before painting.</summary>
+    /// <remarks>Uncropped elements reserve the native 64 MiB ceiling because paint bounds can include overflow and shadows.
+    /// Cropped subjects use conservative rounded bounds. Codec workspace and encoded output are additional memory.</remarks>
+    /// <param name="maximumRawBytes">A positive ceiling no greater than 67108864 bytes.</param>
+    /// <param name="host">The host whose owner thread creates and uses the service.</param>
+    let forHostWithByteBudget maximumRawBytes (host: WebCoreHost) =
+        createWithBudget host (fun work -> Task.Run (Action work) |> ignore) maximumRawBytes
 
     /// <summary>Creates an owner-thread service; Capture rejects while this host's encoder is busy.</summary>
     /// <remarks>Capture paints immediately. Preview may paint later. Encoding receives copied pixels only;
