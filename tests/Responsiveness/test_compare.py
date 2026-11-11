@@ -8,7 +8,8 @@ def sample(p95=10., iterations=600, pending=0):
                 interactive=True, gpuFramePipeline=False, boundedImeContext=True,
                 iterations=iterations, pendingWork=pending, turnP95Ms=p95,
                 allocatedBytes=60000, os='test', machineId='machine',
-                runtimeHash='host', benchmarkProtocol='owner-turn-v1')
+                runtimeHash='host', benchmarkProtocol='owner-turn-v1',
+                liveLines=125, cpuFrames=602, gpuFrames=0)
 
 
 class ComparisonTests(unittest.TestCase):
@@ -36,6 +37,12 @@ class ComparisonTests(unittest.TestCase):
         runs = [sample() for _ in range(5)]
         runs[-1]['pendingWork'] = 10
         self.assertTrue(compare([sample()] * 5, runs))
+
+    def test_rejects_missing_rendering_work(self):
+        for changes in [dict(liveLines=0), dict(cpuFrames=0), dict(cpuFrames=300)]:
+            changed = sample(5)
+            changed.update(changes)
+            self.assertTrue(compare([sample()] * 5, [changed] * 5))
 
 
 if __name__ == '__main__':

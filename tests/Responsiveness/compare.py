@@ -7,7 +7,7 @@ from statistics import median
 
 MATCH = ('schemaVersion', 'benchmarkProtocol', 'scenario', 'logicalLines',
          'requestedRenderer', 'hidden', 'tracing', 'interactive',
-         'gpuFramePipeline', 'boundedImeContext', 'os', 'machineId')
+         'gpuFramePipeline', 'boundedImeContext', 'os', 'machineId', 'liveLines')
 
 
 def compare(before, after, ratio=1.15, noise_ms=0.5):
@@ -21,13 +21,17 @@ def compare(before, after, ratio=1.15, noise_ms=0.5):
                 errors.append('workload/environment mismatch')
             if run['schemaVersion'] != 1 or run['benchmarkProtocol'] != 'owner-turn-v1':
                 errors.append('unsupported protocol')
-            for key in ('turnP95Ms', 'allocatedBytes', 'iterations', 'pendingWork'):
+            for key in ('turnP95Ms', 'allocatedBytes', 'iterations', 'pendingWork', 'cpuFrames', 'gpuFrames'):
                 if not math.isfinite(run[key]) or run[key] < 0:
                     errors.append(f'invalid {key}')
             if run['iterations'] <= 0 or run['iterations'] != before[0]['iterations']:
                 errors.append('completed operation count mismatch')
             if run['pendingWork'] != 0:
                 errors.append('unfinished work cannot qualify')
+            frames = run['cpuFrames'] + run['gpuFrames']
+            baseline_frames = before[0]['cpuFrames'] + before[0]['gpuFrames']
+            if frames <= 0 or frames < baseline_frames * 0.95:
+                errors.append('presentation coverage decreased')
         if errors:
             return errors
         baseline = median(r['turnP95Ms'] for r in before)
