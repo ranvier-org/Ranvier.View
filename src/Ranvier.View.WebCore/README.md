@@ -41,7 +41,7 @@ traces separately measure buffer creation, rasterization, image encoding and pix
 ## Package installation
 
 ```sh
-dotnet add package Ranvier.View.WebCore --version 0.1.0-alpha.1
+dotnet add package Ranvier.View.WebCore --prerelease
 ```
 
 Use `Ranvier.View.WebCore.Traced` for the traced build. The package brings the shared `Ranvier.Dom`

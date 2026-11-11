@@ -1,5 +1,5 @@
 ---
-last_commit_released: a2c8e6d3b2ba0c79b0da0094848b703f60641402
+last_commit_released: fffe5dc0149737f6d479a5498f5f8dffa280f9b7
 pre_release: rc
 depends_on:
   - ../Ranvier.View.WebCore/
@@ -15,6 +15,18 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.0-rc.9 - 2026-11-11
+
+### 🐞 Bug Fixes
+
+* *(sdl)* Preserve dirty CPU painting and gate responsiveness regressions (#126) ([960fdfa](https://github.com/ranvier-org/Ranvier.View/commit/960fdfa62bc9c35797ae3c95031165a1c5861ab8))
+
+### 🔗 Dependencies
+
+* `src/Ranvier.View.WebCore` updated to 0.1.0-rc.5
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/a2c8e6d3b2ba0c79b0da0094848b703f60641402..fffe5dc0149737f6d479a5498f5f8dffa280f9b7)</small></strong>
 
 ## 0.1.0-rc.8 - 2026-11-10
 
