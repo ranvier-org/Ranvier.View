@@ -11,6 +11,26 @@ let tests =
     testList
         "Owner work queue"
         [
+            testCase "bounded admission is atomic and resumes after drain" (fun () ->
+                let queue = OwnerWorkQueue ()
+                let accepted = ref 0
+
+                Parallel.For (
+                    0,
+                    1000,
+                    fun _ ->
+                        if queue.TryEnqueue (SendOrPostCallback ignore, null, 8) = OwnerPostAdmission.Accepted then
+                            Interlocked.Increment accepted |> ignore
+                )
+                |> ignore
+
+                Expect.equal accepted.Value 8 "capacity cannot be oversubscribed"
+                Expect.equal queue.Count 8 "queue bound"
+                let mutable item = Unchecked.defaultof<_>
+                Expect.isTrue (queue.TryDequeue &item) "drain one"
+                Expect.equal (queue.TryEnqueue (SendOrPostCallback ignore, null, 8)) OwnerPostAdmission.Accepted "capacity returns"
+                queue.Stop ()
+                Expect.equal (queue.TryEnqueue (SendOrPostCallback ignore, null, 8)) OwnerPostAdmission.Closed "closed distinguished from full")
             testCase "coalesces wakes and rearms after empty" (fun () ->
                 let queue = OwnerWorkQueue ()
                 let mutable wakes = 0

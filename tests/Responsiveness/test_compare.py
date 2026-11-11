@@ -44,6 +44,12 @@ class ComparisonTests(unittest.TestCase):
             changed.update(changes)
             self.assertTrue(compare([sample()] * 5, [changed] * 5))
 
+    def test_rejects_hidden_analysis_failures_and_tail_work(self):
+        for changes in [dict(analysisFailures=1), dict(pendingAtMeasurementEnd=1)]:
+            changed = sample(5)
+            changed.update(changes)
+            self.assertTrue(compare([sample()] * 5, [changed] * 5))
+
 
 if __name__ == '__main__':
     unittest.main()

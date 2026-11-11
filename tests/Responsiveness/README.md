@@ -73,5 +73,16 @@ to the tested commit. Keep the raw JSON and runtime receipt.
 fails for a median p95 increase exceeding both 15% and 0.5 ms, or per-operation
 allocation exceeding both 20% and 256 bytes. It rejects unmatched conditions,
 invalid data and unfinished work. Queue workloads currently mark unknown pending
-counts as -1 and cannot pass this timing gate. Shared CI runners enforce structural
-contracts; timing acceptance requires matched controlled runs.
+counts explicitly and cannot pass this timing gate with unfinished work. The
+qualification workflow also compares five interleaved CPU cohorts against fixed
+commit 960fdfa using identical native packages. Hosted-runner results do not qualify
+physical display latency or IME candidate behavior.
+
+`WebCoreHost.TryPost(callback, maximumPending)` adds atomic admission to the owner
+FIFO: retry Full off the owner thread, stop producing on Closed, and never retry
+Accepted. Shutdown cancels queued callbacks; pending, peak, rejected and discarded
+counts make that distinction observable. Existing synchronization-context Post is
+unchanged. The reference analysis worker keeps one active and one replaceable
+pending request per worker, with a process-wide concurrency limit. Owner application
+still validates document/text/project/request revision; cancellation alone is not
+a stale-result guard.

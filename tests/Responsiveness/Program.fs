@@ -103,29 +103,51 @@ let sample scenario seconds operations lines unbounded visible renderer tracing 
         }
 
     let mutable visibleColor = ""
+    let mutable appliedAnalysis = 0L
+    let mutable staleAnalysis = 0L
+    let mutable appliedRequest = -1L
 
     use publication =
         new LatestPublication<Result> (
             host,
             (fun result ->
-                if
-                    isCurrent revision result
-                    && visibleColor <> result.VisibleColor
-                then
-                    visibleColor <- result.VisibleColor
-                    viewport.style.setProperty ("color", visibleColor, ""))
+                if isCurrent revision result then
+                    appliedAnalysis <- appliedAnalysis + 1L
+                    appliedRequest <- result.Revision.RequestId
+
+                    if visibleColor <> result.VisibleColor then
+                        visibleColor <- result.VisibleColor
+                        viewport.style.setProperty ("color", visibleColor, "")
+                else
+                    staleAnalysis <- staleAnalysis + 1L)
         )
 
-    let mutable cancellation = new CancellationTokenSource ()
+    use analysis =
+        new Responsiveness.LatestAnalysis.LatestAnalysis<Revision * Responsiveness.DocumentModel.Snapshot option, Result> (
+            (fun (captured, snapshot) token ->
+                let mutable declarations = 0
 
-    use cancelOnExit =
-        { new IDisposable with
-            member _.Dispose() =
-                cancellation.Cancel ()
-                cancellation.Dispose ()
-        }
+                match snapshot with
+                | Some value ->
+                    for index in 0 .. value.LineCount - 1 do
+                        if index % 64 = 0 then
+                            token.ThrowIfCancellationRequested ()
 
-    let mutable worker = Tasks.Task.CompletedTask
+                        if (value.Line index).Text.Contains("let ", StringComparison.Ordinal) then
+                            declarations <- declarations + 1
+                | None -> token.ThrowIfCancellationRequested ()
+
+                {
+                    Revision = captured
+                    VisibleColor =
+                        if (int64 declarations + captured.RequestId) % 2L = 0L then
+                            "#225588"
+                        else
+                            "#884422"
+                }),
+            (fun result -> publication.Publish result |> ignore)
+        )
+
     let clock = Stopwatch.StartNew ()
     let mutable iteration = 0
 
@@ -164,36 +186,32 @@ let sample scenario seconds operations lines unbounded visible renderer tracing 
                 let value = i
                 context.Post (SendOrPostCallback (fun _ -> viewport.setAttribute ("data-result", string value)), null)
         | "publication" ->
-            // Bound worker concurrency as well as owner delivery; workers see only detached data.
-            if worker.IsCompleted then
-                worker.GetAwaiter().GetResult()
-                cancellation.Cancel ()
-                cancellation.Dispose ()
-                cancellation <- new CancellationTokenSource ()
+            revision <-
+                { revision with
+                    RequestId = revision.RequestId + 1L
+                }
 
-                revision <-
-                    { revision with
-                        RequestId = revision.RequestId + 1L
-                    }
-
-                let captured = revision
-                let token = cancellation.Token
-
-                worker <-
-                    Tasks.Task.Run (fun () ->
-                        for i in 1..1000 do
-                            if not token.IsCancellationRequested then
-                                publication.Publish
-                                    {
-                                        Revision = captured
-                                        VisibleColor = if i % 2 = 0 then "#225588" else "#884422"
-                                    }
-                                |> ignore)
+            analysis.Publish (revision, None) |> ignore
         | "resize" ->
             host.Resize (800 + iteration % 2, 600)
             editor.Configure (700 + iteration % 2, 500, 1., false)
         | "idle" -> ()
         | other -> invalidArg "scenario" other
+
+        match document with
+        | Some buffer ->
+            let snapshot = buffer.Snapshot
+
+            revision <-
+                { revision with
+                    DocumentId = snapshot.DocumentId
+                    TextRevision = snapshot.Revision
+                    RequestId = revision.RequestId + 1L
+                }
+
+            analysis.Publish (revision, Some snapshot)
+            |> ignore
+        | None -> ()
 
         editor.Measure ()
 
@@ -228,9 +246,39 @@ let sample scenario seconds operations lines unbounded visible renderer tracing 
         if remaining > 0 then
             Thread.Sleep remaining
 
-    cancellation.Cancel ()
-    worker.GetAwaiter().GetResult()
     let allocatedBytes = GC.GetTotalAllocatedBytes false - allocated
+    let pendingAtEnd = host.PendingPostedWork
+    analysis.Complete ()
+    let drain = Stopwatch.StartNew ()
+
+    while (not analysis.Completion.IsCompleted
+           || host.PendingPostedWork > 0)
+          && drain.Elapsed.TotalSeconds < 5. do
+        window.Step (timeout = 0) |> ignore
+        Thread.Sleep 1
+
+    if not analysis.Completion.IsCompleted then
+        failwith "analysis did not drain within five seconds"
+
+    analysis.Completion.GetAwaiter().GetResult()
+
+    if analysis.Failures > 0L then
+        failwithf "analysis failed %d times" analysis.Failures
+
+    if
+        analysis.Submitted
+        <> analysis.Completed
+           + analysis.Cancelled
+           + analysis.Superseded
+           + analysis.Failures
+    then
+        failwith "analysis accounting mismatch"
+
+    if
+        analysis.Submitted > 0L
+        && appliedRequest <> revision.RequestId
+    then
+        failwith "latest semantic revision was not applied"
 
     let nativeName =
         if OperatingSystem.IsWindows () then
@@ -255,11 +303,19 @@ let sample scenario seconds operations lines unbounded visible renderer tracing 
             benchmarkProtocol = "owner-turn-v1"
             machineId = Environment.MachineName
             sourceCommit = Environment.GetEnvironmentVariable "RANVIER_BENCH_COMMIT"
-            pendingWork =
-                if scenario = "posted" || scenario = "publication" then
-                    -1
-                else
-                    0
+            pendingWork = host.PendingPostedWork
+            peakPostedWork = host.PeakPostedWork
+            rejectedPostedWork = host.RejectedPostedWork
+            discardedPostedWork = host.DiscardedPostedWork
+            analysisFailures = analysis.Failures
+            analysisSubmitted = analysis.Submitted
+            analysisCompleted = analysis.Completed
+            analysisCancelled = analysis.Cancelled
+            analysisSuperseded = analysis.Superseded
+            analysisApplied = appliedAnalysis
+            analysisStale = staleAnalysis
+            pendingAtMeasurementEnd = pendingAtEnd
+            tailDrainMs = drain.Elapsed.TotalMilliseconds
             scenario = scenario
             repetition = repetition
             seconds = seconds
