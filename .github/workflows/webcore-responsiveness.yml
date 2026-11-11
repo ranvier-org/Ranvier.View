@@ -95,6 +95,7 @@ jobs:
           if [ "$RUNNER_OS" != Linux ]; then unset SDL_VIDEODRIVER; fi
           "${prefix[@]}" python tests/Responsiveness/run_comparison.py artifacts/baseline-fixture/Responsiveness.dll artifacts/fixture/Responsiveness.dll --output artifacts/qualification/typing-gate
           "${prefix[@]}" python tests/Responsiveness/run_comparison.py artifacts/baseline-fixture/Responsiveness.dll artifacts/fixture/Responsiveness.dll --scenario long-line --iterations 100 --output artifacts/qualification/long-line-gate
+          "${prefix[@]}" python tests/Responsiveness/run_extreme_comparison.py artifacts/fixture/Responsiveness.dll --output artifacts/qualification/extreme-line-gate
       - uses: actions/upload-artifact@v4
         if: always()
         with:
