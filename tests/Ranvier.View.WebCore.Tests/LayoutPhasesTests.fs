@@ -12,6 +12,113 @@ let tests =
     testList
         "Layout phases"
         [
+            testCase "horizontal projection bounds shaping and preserves logical columns" (fun _ ->
+                let window = Responsiveness.HorizontalLine.project 100000 true 8. 700 400000.
+                Expect.isLessThanOrEqual window.Length 2048 "bounded shaping payload"
+                Expect.isLessThan window.Start 50000 "left overscan"
+                Expect.isGreaterThan (window.Start + window.Length) 50087 "right overscan"
+                Expect.equal (window.LogicalColumn (window.LocalColumn 50020)) 50020 "logical caret survives projection"
+
+                let last =
+                    Responsiveness.HorizontalLine.project 100000 true 8. 700 System.Double.MaxValue
+
+                Expect.equal (last.Start + last.Length) 100000 "far scroll stays inside line"
+
+                for text in [ "abc\tdef"; "fi العربية"; "a\u0301"; "😀"; "a\u202eb" ] do
+                    Expect.isFalse (Responsiveness.HorizontalLine.eligible text) "contextual text keeps whole-line rendering"
+
+                for pitch in [ 0.; System.Double.NaN; System.Double.PositiveInfinity ] do
+                    Expect.equal (Responsiveness.HorizontalLine.project 100000 true pitch 700 0.).Length 100000 "invalid metrics fall back"
+
+                Expect.equal (Responsiveness.HorizontalLine.project 100000 false 8. 700 0.).Length 100000 "unsafe line falls back")
+            hostCase "extreme ASCII rows shape only the horizontal window and restore contextual text" (fun host ->
+                let original = String.replicate 10000 "abcdef "
+                let buffer = Responsiveness.DocumentModel.DocumentBuffer original
+                host.Document.body.innerHTML <- "<div id='viewport'></div>"
+                let container = host.Document.getElementById "viewport" :?> HTMLElement
+
+                use editor =
+                    new EditorViewport (host, container, 1, document = buffer, horizontalCulling = true)
+
+                let row = container.querySelector ".editor-line"
+                Expect.isLessThanOrEqual row.textContent.Length 2048 "bounded DOM text"
+                editor.MoveHorizontal 20000
+                Expect.isLessThanOrEqual row.textContent.Length 2048 "far scroll remains bounded"
+                Expect.isGreaterThan container.scrollLeft 19000 "logical line width is retained"
+                Expect.equal (buffer.Snapshot.Line 0).Text original "document retains full text"
+                let writes = editor.TextWrites
+                editor.MoveHorizontal 20000
+                Expect.equal editor.TextWrites writes "unchanged window performs no text write"
+                editor.PinComposition ()
+                Expect.equal row.textContent original "composition keeps full context"
+                editor.EndComposition ()
+                Expect.isLessThanOrEqual row.textContent.Length 2048 "projection resumes"
+                editor.Edit (original + " العربية")
+                Expect.equal row.textContent (original + " العربية") "whole-line classification catches offscreen bidi"
+                editor.Edit original
+                editor.Configure (300, 200, 1., true)
+                Expect.equal row.textContent original "wrapped line remains complete")
+            hostCase "horizontal projection matches full-line pixels at distant offsets" (fun host ->
+                let text = String.replicate 10000 "fi!<>abc09 "
+
+                let capture culling offset =
+                    host.Document.body.innerHTML <- "<div id='viewport'></div>"
+                    let container = host.Document.getElementById "viewport" :?> HTMLElement
+
+                    use editor =
+                        new EditorViewport (
+                            host,
+                            container,
+                            1,
+                            document = Responsiveness.DocumentModel.DocumentBuffer text,
+                            horizontalCulling = culling
+                        )
+
+                    editor.Configure (300, 200, 1., false)
+                    editor.MoveHorizontal offset
+                    let struct (w, h) = host.PaintSize
+                    let pixels = Array.zeroCreate<byte>(w * h * 4)
+                    host.Paint pixels
+                    pixels
+
+                for offset in [ 0; 1003; 20000; 200003; 700000 ] do
+                    let full = capture false offset
+                    let projected = capture true offset
+                    Expect.isTrue (Array.forall2 (=) projected full) $"pixel parity at {offset}")
+            hostCase "offscreen extreme edits invalidate logical width measurements" (fun host ->
+                host.Document.body.innerHTML <- "<div id='viewport'></div>"
+                let container = host.Document.getElementById "viewport" :?> HTMLElement
+                use editor = new EditorViewport (host, container, 1, horizontalCulling = true)
+                let text = String.replicate 10000 "abcdef "
+                editor.Edit text
+                editor.Measure ()
+                let reads = editor.WidthReads
+                let writes = editor.TextWrites
+                editor.Edit (text + "a")
+                editor.Measure ()
+                Expect.equal editor.TextWrites writes "visible substring is unchanged"
+                Expect.equal editor.WidthReads (reads + 1L) "logical extent changes outside the window")
+            hostCase "horizontal projection declares writes before measurement" (fun host ->
+                host.Document.body.innerHTML <- "<div id='viewport'></div>"
+                let container = host.Document.getElementById "viewport" :?> HTMLElement
+
+                use editor =
+                    new EditorViewport (host, container, 1, textKind = "extreme-line", horizontalCulling = true)
+
+                let phases = Frames.layoutForHost host
+                editor.Measure ()
+                phases.Present host.Frame
+                host.SetSchedulingTrace true
+                editor.MoveHorizontal 20000
+                editor.Measure ()
+                let struct (events, _) = host.DrainSchedulingTrace ()
+
+                Expect.isTrue
+                    (events
+                     |> Array.exists (fun e ->
+                         e.Phase = SchedulingPhase.Measurement
+                         && e.Pending = 1))
+                    "projection writes are reported")
             hostCase "empty document lines retain line height" (fun host ->
                 let buffer = Responsiveness.DocumentModel.DocumentBuffer "\n\ntext"
                 host.Document.body.innerHTML <- "<div id='viewport'></div>"

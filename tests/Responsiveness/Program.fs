@@ -27,7 +27,7 @@ let percentile quantile (values: int64 array) =
         * 1000.0
         / float Stopwatch.Frequency
 
-let sample scenario seconds operations lines unbounded visible renderer tracing interactive pipeline boundedIme output repetition =
+let sample scenario seconds operations lines unbounded visible renderer tracing interactive pipeline boundedIme horizontalCulling output repetition =
     use window =
         Window.Create ("Ranvier responsiveness", 800, 600, hidden = not visible, ?renderer = renderer)
 
@@ -71,7 +71,15 @@ let sample scenario seconds operations lines unbounded visible renderer tracing 
             None
 
     use editor =
-        new EditorViewport (host, viewport, lines, unbounded = unbounded, textKind = scenario, ?document = document)
+        new EditorViewport (
+            host,
+            viewport,
+            lines,
+            unbounded = unbounded,
+            textKind = scenario,
+            ?document = document,
+            horizontalCulling = horizontalCulling
+        )
 
     let phases = Frames.layoutForHost host
     let count = editor.Count
@@ -178,6 +186,14 @@ let sample scenario seconds operations lines unbounded visible renderer tracing 
             editor.Edit input.value
 
             trimInput ()
+        | "extreme-edit" ->
+            editor.Edit (
+                string (iteration % 10)
+                + String.replicate 10000 "abcdef012 "
+            )
+
+            editor.MoveHorizontal ((iteration * 997) % 700000)
+        | "extreme-line" -> editor.MoveHorizontal ((iteration * 997) % 700000)
         | "scroll"
         | "long-line"
         | "bidi" -> editor.MoveTo (50 + iteration % max 1 (lines - 125))
@@ -339,6 +355,7 @@ let sample scenario seconds operations lines unbounded visible renderer tracing 
                     else
                         input.selectionEnd
                 )
+            horizontalCulling = horizontalCulling
             requestedRenderer = defaultArg renderer "default"
             stopwatchFrequency = Stopwatch.Frequency
             runtimeHash = hash
@@ -432,6 +449,7 @@ let main args =
                 (Array.contains "--interactive" args)
                 (Array.contains "--gpu-pipeline" args)
                 (Array.contains "--bounded-ime" args)
+                (Array.contains "--horizontal-culling" args)
                 output
                 repetition
 

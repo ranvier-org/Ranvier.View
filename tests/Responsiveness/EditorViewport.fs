@@ -31,7 +31,8 @@ type EditorViewport
         total: int,
         ?unbounded: bool,
         ?textKind: string,
-        ?document: Responsiveness.DocumentModel.DocumentBuffer
+        ?document: Responsiveness.DocumentModel.DocumentBuffer,
+        ?horizontalCulling: bool
     ) =
     do
         if total < 1 then
@@ -63,6 +64,12 @@ type EditorViewport
 
     let mutable ordered = slots
     let sourceKeys = Array.create count (-1L, -1L)
+    let originals = Array.create count ""
+    let safeLines = Array.create count false
+    let rowStyles = Array.create count ""
+    let mutable horizontal = 0
+    let mutable measuredFont = -1L
+    let mutable pitch = 0.
     let mutable textWrites = 0L
     let mutable widthReads = 0L
     let items = graph.Run (fun () -> Api.createSignal slots)
@@ -83,6 +90,8 @@ type EditorViewport
 
     let generatedText line =
         match defaultArg textKind "ordinary" with
+        | "extreme-line"
+        | "extreme-edit" -> String.replicate 10000 "abcdef012 "
         | "long-line" -> $"line {line}: " + String.replicate 512 "abcdef "
         | "bidi" -> $"line {line}: العربية עברית abc 日本語"
         | _ -> $"line {line}: let value = {line}"
@@ -96,6 +105,87 @@ type EditorViewport
                 (total
                  - min count (if wrap then 1 else max 1 (height / 20)))
                 line)
+
+    let nodesBySlot =
+        let nodes = container.querySelectorAll ".editor-line"
+        Array.init count (fun i -> nodes.item (uint32 i) :?> HTMLElement)
+
+    let measurePitch () =
+        if measuredFont <> fontRevision then
+            use service = Canvas.forHost host
+            let canvas = host.Document.createElement "canvas" :?> HTMLCanvasElement
+            canvas.setAttribute ("style", "display:none")
+            container.appendChild canvas |> ignore
+
+            match service.GetContext (canvas, CanvasContextType.TwoD, Canvas2DSettings.Default) with
+            | CanvasContextOutcome.Context context ->
+                context.font <- "14px Consolas, 'DejaVu Sans Mono', Menlo, monospace"
+                let advance = (context.measureText "0").width
+
+                let fixedPitch =
+                    [ ' ' .. '~' ]
+                    |> List.forall (fun c -> abs ((context.measureText (string c)).width - advance) < 0.000001)
+
+                pitch <- if fixedPitch then Math.Ceiling advance else 0.
+
+                container.style.setProperty (
+                    "letter-spacing",
+                    (if fixedPitch then
+                         FormattableString.Invariant $"{pitch - advance}px"
+                     else
+                         "normal"),
+                    ""
+                )
+            | _ -> pitch <- 0.
+
+            container.removeChild canvas |> ignore
+            measuredFont <- fontRevision
+
+    let projectRows () =
+        measurePitch ()
+
+        phases.Mutate (fun () ->
+            graph.Run (fun () ->
+                Api.batch (fun () ->
+                    for row in ordered do
+                        let text = originals[row.Slot]
+
+                        let projection =
+                            Responsiveness.HorizontalLine.project
+                                text.Length
+                                (defaultArg horizontalCulling false
+                                 && safeLines[row.Slot]
+                                 && not wrap
+                                 && not pinned)
+                                pitch
+                                width
+                                (float horizontal)
+
+                        let value =
+                            if projection.IsWindowed then
+                                text.Substring (projection.Start, projection.Length)
+                            else
+                                text
+
+                        if row.Text.Value <> value then
+                            row.Text.Value <- value
+                            row.Revision <- row.Revision + 1L
+                            textWrites <- textWrites + 1L
+
+                        let style =
+                            if projection.IsWindowed then
+                                FormattableString.Invariant
+                                    $"min-height:20px;box-sizing:border-box;padding-left:{float projection.Start * pitch}px;width:{float projection.TotalLength * pitch}px"
+                            else
+                                "min-height:20px"
+
+                        let node = nodesBySlot[row.Slot]
+
+                        if rowStyles[row.Slot] <> style then
+                            node.setAttribute ("style", style)
+                            rowStyles[row.Slot] <- style))
+
+            container.scrollLeft <- horizontal)
 
     let refresh () =
         let nextStart = min (max 0 (total - count)) (max 0 (first - 50))
@@ -159,30 +249,29 @@ type EditorViewport
                             sourceKeys[row.Slot] <- sourceKey
                             row.Revision <- row.Revision + 1L
 
-                            row.Text.Value <-
+                            let text =
                                 match document with
                                 | Some buffer when line < total -> (buffer.Snapshot.Line line).Text
                                 | Some _ -> ""
                                 | None -> generatedText line
 
-                            textWrites <- textWrites + 1L
+                            originals[row.Slot] <- text
+                            safeLines[row.Slot] <- Responsiveness.HorizontalLine.eligible text
 
                     if delta <> 0 || document.IsSome then
                         items.Value <- ordered)))
 
+        projectRows ()
         container.scrollTop <- (first - start) * 20
 
     do
-        container.setAttribute ("style", "height:500px;width:700px;overflow:hidden;font:14px monospace;line-height:20px;white-space:pre")
+        container.setAttribute (
+            "style",
+            "height:500px;width:700px;overflow:hidden;font:14px Consolas, 'DejaVu Sans Mono', Menlo, monospace;font-kerning:none;font-variant-ligatures:none;line-height:20px;white-space:pre"
+        )
+
         refresh ()
 
-    let nodesBySlot =
-        let nodes = container.querySelectorAll ".editor-line"
-
-        Array.init count (fun i ->
-            let node = nodes.item (uint32 i) :?> HTMLElement
-            node.style.setProperty ("min-height", "20px", "")
-            node)
 
     let documentEvents =
         document
@@ -212,6 +301,12 @@ type EditorViewport
                     first <- requested
                     refresh ()))
 
+    member _.MoveHorizontal(offset: int) =
+        horizontal <- max 0 offset
+
+        if not pinned then
+            projectRows ()
+
     member _.TextWrites = textWrites
     member _.WidthReads = widthReads
     member _.Count = count
@@ -235,10 +330,11 @@ type EditorViewport
             let row = ordered[first - start]
             let value = $"line {first}: {text}"
 
-            if row.Text.Value <> value then
-                phases.Mutate (fun () -> graph.Run (fun () -> Api.batch (fun () -> row.Text.Value <- value)))
+            if originals[row.Slot] <> value then
                 row.Revision <- row.Revision + 1L
-                textWrites <- textWrites + 1L
+                originals[row.Slot] <- value
+                safeLines[row.Slot] <- Responsiveness.HorizontalLine.eligible value
+                projectRows ()
 
     member _.MoveTo line =
         requested <- clampFirst line
@@ -249,6 +345,7 @@ type EditorViewport
 
     member _.PinComposition() =
         pinned <- true
+        projectRows ()
 
     member _.EndComposition() =
         pinned <- false
@@ -265,11 +362,12 @@ type EditorViewport
             scale <- newScale
             wrap <- newWrap
             styleRevision <- styleRevision + 1L
+            measuredFont <- -1L
 
             phases.Mutate (fun () ->
                 container.setAttribute (
                     "style",
-                    $"height:{height}px;width:{width}px;overflow:hidden;font:14px monospace;line-height:20px;white-space:"
+                    $"height:{height}px;width:{width}px;overflow:hidden;font:14px Consolas, 'DejaVu Sans Mono', Menlo, monospace;font-kerning:none;font-variant-ligatures:none;line-height:20px;white-space:"
                     + (if wrap then "pre-wrap" else "pre")
                 ))
 
@@ -280,6 +378,9 @@ type EditorViewport
                 refresh ()
 
     member _.Measure() =
+        if measuredFont <> fontRevision then
+            projectRows ()
+
         cache.Configure
             {
                 FontRevision = fontRevision
@@ -299,7 +400,7 @@ type EditorViewport
                 let key =
                     {
                         Text = $"{row.Slot}:{row.Revision}"
-                        Font = "14px monospace"
+                        Font = "14px Consolas, 'DejaVu Sans Mono', Menlo, monospace"
                         Width = width
                         StyleRevision = styleRevision
                     }

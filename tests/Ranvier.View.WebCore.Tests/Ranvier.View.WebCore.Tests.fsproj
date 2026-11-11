@@ -24,6 +24,7 @@
         <Compile Include="../Responsiveness/LatestAnalysis.fs" Link="LatestAnalysis.fs" />
         <Compile Include="LatestAnalysisTests.fs" />
         <Compile Include="../Responsiveness/ViewportModel.fs" Link="ViewportModel.fs" />
+        <Compile Include="../Responsiveness/HorizontalLine.fs" Link="HorizontalLine.fs" />
         <Compile Include="../Responsiveness/EditorViewport.fs" Link="EditorViewport.fs" />
         <Compile Include="LayoutPhasesTests.fs" />
         <Compile Include="SchedulingTests.fs" />
