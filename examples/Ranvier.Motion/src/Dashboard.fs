@@ -8,6 +8,7 @@ open System
 open Fable.Core
 open global.Ranvier
 open Ranvier.Anime
+open Fable.Ranvier.Anime
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Dom.Scheduling
@@ -195,7 +196,7 @@ let private trackChart (cpu: Memo<float array>) =
             let clock = Page.point 0. 0.
 
             let animation =
-                Reactive.own (Anime.animate (Targets.object clock, Anim (x = 1, duration = 1000, ease = Ease.linear)))
+                Reactive.own (Fable.Ranvier.Anime.Anime.animate (Targets.object clock, Anim (x = 1, duration = 1000, ease = Ease.linear)))
 
             frame.Value <- previous, current, (Reactive.track animation).Progress
 
@@ -241,7 +242,7 @@ let private percent (value: float) =
     sprintf "%.0f%%" (value * 100.)
 
 let private pulse (delay: int) (_: unit) (element: TS.Dom.Element) =
-    Anime.animate (
+    Fable.Ranvier.Anime.Anime.animate (
         element,
         Anim (opacity = Value.fromTo (0.35, 1), duration = 820, delay = delay, loop = Loop.forever, alternate = true, ease = Ease.inOutSine)
     )
@@ -282,7 +283,7 @@ let private gauge (label: string) (read: Sample -> float) =
         div (Attrs.className "gauge-track") {
             div (
                 Attrs.className "gauge-fill",
-                Motion.follow "scaleX" (AnimatableParams (duration = 700, ease = Ease.outQuart)) (fun (panel: Panel) -> read panel.Latest.Value)
+                Motion.follow "scaleX" { ComposedAnimationOptions.Default with Duration = 700.; Ease = Page.outQuart } (fun (panel: Panel) -> read panel.Latest.Value)
             ) {
                 ()
             }
@@ -322,7 +323,7 @@ let private content (store: Store) =
                 let clock = Page.point 0. 0.
 
                 let animation =
-                    Reactive.own (Anime.animate (Targets.object clock, Anim (x = 1, duration = 900, ease = Ease.linear)))
+                    Reactive.own (Fable.Ranvier.Anime.Anime.animate (Targets.object clock, Anim (x = 1, duration = 900, ease = Ease.linear)))
 
                 tween.Value <-
                     {
@@ -350,7 +351,7 @@ let private content (store: Store) =
                         Attrs.attribute ("cx", "50"),
                         Attrs.attribute ("cy", "50"),
                         Attrs.attribute ("r", "42"),
-                        Motion.draw (AnimatableParams (duration = 700, ease = Ease.outQuart)) (fun (panel: Panel) -> panel.Latest.Value.Cpu)
+                        Motion.draw { ComposedAnimationOptions.Default with Duration = 700.; Ease = Page.outQuart } (fun (panel: Panel) -> panel.Latest.Value.Cpu)
                     ) {
                         ()
                     }

@@ -4,6 +4,7 @@ module MotionChecks
 open Fable.Core
 open Fable.Core.TS.Dom
 open global.Ranvier
+open Fable.Ranvier.Anime
 open Ranvier.Anime
 open Ranvier.View
 open Ranvier.View.Dom
@@ -120,10 +121,10 @@ let private rows (items: int array) =
     { Items = Api.createSignal items }
 
 let private fadeIn (_: unit -> int) (node: Element) =
-    Anime.animate (node, Anim (opacity = Value.fromTo (0, 1), duration = 1000, ease = Ease.linear))
+    Anime.animate node [| PropertySpec.Scalar ("opacity", 1., fromValue = 0.) |] { ComposedAnimationOptions.Default with Duration = 1000.; Ease = Ease.named "linear" }
 
 let private fadeOut (_: unit -> int) (node: Element) =
-    Anime.animate (node, Anim (opacity = 0, duration = 1000, ease = Ease.linear))
+    Anime.animate node [| PropertySpec.Scalar ("opacity", 0.) |] { ComposedAnimationOptions.Default with Duration = 1000.; Ease = Ease.named "linear" }
 
 let private entering =
     Component.template
@@ -202,7 +203,7 @@ let private onRevertsOnDisposal (clock: Clock) =
     let view =
         Component.template
             (fun _ () -> ())
-            (div (Motion.on (fun _ node -> Anime.animate (node, Anim (opacity = 0.5, duration = 1000, ease = Ease.linear)))) { "on" })
+            (div (Motion.on (fun _ node -> Fable.Ranvier.Anime.Anime.animate (node, Anim (opacity = 0.5, duration = 1000, ease = Ease.linear)))) { "on" })
 
     let mounted = mountIn false graph target (Component.render view ())
     let element = find target "div"
@@ -227,7 +228,7 @@ let private typedCssOnReverts queued (clock: Clock) =
             (fun _ () -> ())
             (div (
                 Attrs.className "user-class",
-                Motion.on (fun _ node -> Anime.animate (node, Anim(duration = 1000, ease = Ease.linear).With(gap, px 0., px 100.)))
+                Motion.on (fun _ node -> Fable.Ranvier.Anime.Anime.animate (node, Anim(duration = 1000, ease = Ease.linear).With(gap, px 0., px 100.)))
             ) {
                 "typed"
             })
@@ -266,7 +267,7 @@ let private typedCssFollow queued (clock: Clock) =
             (div (
                 Attrs.className "user-class",
                 existing,
-                Motion.followCss gap (AnimatableProp (duration = 1000., ease = Ease.linear)) (fun (value: Signal<float>) -> px value.Value)
+                Motion.followCss gap { ComposedAnimationOptions.Default with Duration = 1000.; Ease = id } (fun (value: Signal<float>) -> px value.Value)
             ) {
                 "typed"
             })
@@ -313,8 +314,8 @@ let private toggled =
                 (fun (s: Toggle) -> s.Shown.Value)
                 (p (
                     Motion.presence
-                        (fun _ node -> Anime.animate (node, Anim (opacity = Value.fromTo (0, 1), duration = 1000, ease = Ease.linear)))
-                        (fun _ node -> Anime.animate (node, Anim (opacity = 0, duration = 1000, ease = Ease.linear)))
+                        (fun _ node -> Fable.Ranvier.Anime.Anime.animate (node, Anim (opacity = Value.fromTo (0, 1), duration = 1000, ease = Ease.linear)))
+                        (fun _ node -> Fable.Ranvier.Anime.Anime.animate (node, Anim (opacity = 0, duration = 1000, ease = Ease.linear)))
                 ) {
                     "panel"
                 })
@@ -391,7 +392,7 @@ let private reducedPolicy queued (clock: Clock) =
 let private flipped =
     Component.template
         (fun _ (state: Rows) -> state)
-        (ul (Motion.flip (LayoutParams (duration = 300))) {
+        (ul (Motion.flip (LayoutOptions.Default.WithDuration 300u)) {
             forEach id (fun (s: Rows) -> s.Items.Value) (li (Motion.exit fadeOut) { fun (row: unit -> int) -> string (row ()) })
         })
 
@@ -430,7 +431,7 @@ let private followReaches (clock: Clock) =
     let view =
         Component.template
             (fun _ (s: Level) -> s)
-            (div (Motion.follow "opacity" (AnimatableParams (duration = 1000, ease = Ease.linear)) (fun (s: Level) -> s.Level.Value)) { "level" })
+            (div (Motion.follow "opacity" { ComposedAnimationOptions.Default with Duration = 1000.; Ease = id } (fun (s: Level) -> s.Level.Value)) { "level" })
 
     let mounted = mountIn false graph target (Component.render view state)
     let element = find target "div"
@@ -449,7 +450,7 @@ let private replayed =
         (fun _ (s: Level) -> s)
         (div (
             Motion.animateOn (fun (s: Level) -> s.Level.Value) (fun _ node level ->
-                Anime.animate (node, Anim (opacity = level, duration = 1000, ease = Ease.linear)))
+                Fable.Ranvier.Anime.Anime.animate (node, Anim (opacity = level, duration = 1000, ease = Ease.linear)))
         ) {
             "level"
         })
@@ -484,7 +485,7 @@ let private animateOnReplaces (clock: Clock) =
 let private stroked =
     Component.template
         (fun _ (s: Level) -> s)
-        (svg () { path (Motion.draw (AnimatableParams (duration = 1000, ease = Ease.linear)) (fun (s: Level) -> s.Level.Value)) { () } })
+        (svg () { path (Motion.draw { ComposedAnimationOptions.Default with Duration = 1000.; Ease = id } (fun (s: Level) -> s.Level.Value)) { () } })
 
 let private drawReaches queued (clock: Clock) =
     use graph = new Graph ()
@@ -512,7 +513,7 @@ type Outline = { Shape: Signal<string> }
 let private morphed =
     Component.template
         (fun _ (s: Outline) -> s)
-        (svg () { path (Motion.morph (Anim (duration = 1000, ease = Ease.linear)) (fun (s: Outline) -> s.Shape.Value)) { () } })
+        (svg () { path (Motion.morph { ComposedAnimationOptions.Default with Duration = 1000.; Ease = id } (fun (s: Outline) -> s.Shape.Value)) { () } })
 
 let private morphReaches queued (clock: Clock) =
     use graph = new Graph ()
@@ -544,7 +545,7 @@ let private strokes =
             forEach
                 id
                 (fun (s: Strokes) -> s.Fractions.Value)
-                (path (Motion.draw (AnimatableParams (duration = 1000, ease = Ease.linear)) (fun (current: unit -> float) -> current ())) { () })
+                (path (Motion.draw { ComposedAnimationOptions.Default with Duration = 1000.; Ease = id } (fun (current: unit -> float) -> current ())) { () })
         })
 
 [<Emit("Array.from($0.querySelectorAll($1), n => n.namespaceURI + ' ' + n.getAttribute('stroke-dasharray'))")>]
@@ -578,7 +579,7 @@ let private curvedArm =
         (svg () {
             show
                 (fun (s: Curved) -> s.Drawn.Value)
-                (path (Motion.morph (Anim (duration = 1000, ease = Ease.linear)) (fun (s: Curved) -> s.Curve.Value)) { () })
+                (path (Motion.morph { ComposedAnimationOptions.Default with Duration = 1000.; Ease = id } (fun (s: Curved) -> s.Curve.Value)) { () })
         })
 
 let private svgArm queued (clock: Clock) =
@@ -615,7 +616,7 @@ let private dragged =
     Component.template
         (fun _ (p: Puck) -> p)
         (div (
-            Motion.drag (DraggableParams (onUpdate = fun _ -> ())) (fun (p: Puck) ->
+            Motion.drag { NativeDraggableOptions.Default with Callbacks = { DraggableCallbacks.Default with OnUpdate = fun _ -> () } } (fun (p: Puck) ->
                 {
                     Position = p.Position
                     Dragging = ValueSome p.Dragging
@@ -666,13 +667,13 @@ let private scrolled =
         (fun _ (s: Scrolled) -> s)
         (section (
             Motion.scroll
-                (ScrollParams ())
+                ScrollParams.Default
                 (fun (s: Scrolled) ->
                     {
                         Progress = ValueSome s.Progress
                         InView = ValueSome s.InView
                     })
-                (fun _ node -> Anime.animate (node, Anim (opacity = Value.fromTo (0, 1), duration = 1000, ease = Ease.linear)))
+                (fun _ node -> Fable.Ranvier.Anime.Anime.animate (node, Anim (opacity = Value.fromTo (0, 1), duration = 1000, ease = Ease.linear)))
         ) {
             "story"
         })
@@ -701,8 +702,8 @@ let private splitted =
     Component.template
         (fun _ () -> ())
         (h1 (
-            Motion.split (SplitParams (chars = true)) (fun _ splitter ->
-                Anime.animate (splitter.chars, Anim (opacity = Value.fromTo (0, 1), duration = 100)))
+            Motion.split { TextSplitterOptions.Default with Chars = SplitMode.Enabled } (fun _ splitter ->
+                Anime.animateTargets (Array.map box splitter.Chars) [| PropertySpec.Scalar ("opacity", 1., fromValue = 0.) |] { ComposedAnimationOptions.Default with Duration = 100. })
         ) {
             "Hi"
         })
@@ -720,7 +721,7 @@ let private splitReverts (clock: Clock) =
 let private appeared =
     Component.template
         (fun _ () -> ())
-        (p (Motion.appear (fun _ node -> Anime.animate (node, Anim (opacity = Value.fromTo (0, 1), duration = 1000)))) { "served" })
+        (p (Motion.appear (fun _ node -> Fable.Ranvier.Anime.Anime.animate (node, Anim (opacity = Value.fromTo (0, 1), duration = 1000)))) { "served" })
 
 let private appearSkipsHydrated (clock: Clock) =
     use graph = new Graph ()
@@ -754,7 +755,7 @@ let private livelyRows =
                 (fun (s: Lane) -> s.Lanes.Value)
                 (li (
                     Motion.exit fadeOut,
-                    Motion.drag (DraggableParams ()) (fun (_: unit -> int) ->
+                    Motion.drag NativeDraggableOptions.Default (fun (_: unit -> int) ->
                         {
                             Position = Api.createSignal (struct (0., 0.))
                             Dragging = ValueNone
@@ -762,13 +763,13 @@ let private livelyRows =
                         })
                 ) {
                     span (
-                        Motion.split (SplitParams (chars = true)) (fun _ split ->
-                            Anime.animate (split.chars, Anim (opacity = Value.fromTo (0, 1), duration = 100)))
+                        Motion.split { TextSplitterOptions.Default with Chars = SplitMode.Enabled } (fun _ split ->
+                            Anime.animateTargets (Array.map box split.Chars) [| PropertySpec.Scalar ("opacity", 1., fromValue = 0.) |] { ComposedAnimationOptions.Default with Duration = 100. })
                     ) {
                         "ab"
                     }
 
-                    b (Motion.follow "opacity" (AnimatableParams (duration = 100)) (fun (_: unit -> int) -> 0.5)) { "f" }
+                    b (Motion.follow "opacity" { ComposedAnimationOptions.Default with Duration = 100. } (fun (_: unit -> int) -> 0.5)) { "f" }
                 })
         })
 
@@ -810,12 +811,12 @@ let private guardedRows =
                     id
                     (fun (s: Panel) -> s.Rows.Value)
                     (li (Motion.presence fadeIn fadeOut) {
-                        b (Motion.follow "opacity" (AnimatableParams (duration = 1000)) (fun (_: unit -> int) -> 0.3)) { "f" }
-                        i (Motion.on (fun _ el -> Anime.animate (el, Anim (opacity = 0.5, duration = 1000, ease = Ease.linear)))) { "o" }
+                        b (Motion.follow "opacity" { ComposedAnimationOptions.Default with Duration = 1000. } (fun (_: unit -> int) -> 0.3)) { "f" }
+                        i (Motion.on (fun _ el -> Fable.Ranvier.Anime.Anime.animate (el, Anim (opacity = 0.5, duration = 1000, ease = Ease.linear)))) { "o" }
 
                         em (
                             Motion.animateOn (fun (_: unit -> int) -> 0.7) (fun _ el value ->
-                                Anime.animate (el, Anim (opacity = value, duration = 100)))
+                                Fable.Ranvier.Anime.Anime.animate (el, Anim (opacity = value, duration = 100)))
                         ) {
                             "a"
                         }
@@ -824,7 +825,7 @@ let private guardedRows =
 
             show
                 (fun (s: Panel) -> s.Open.Value)
-                (section (Motion.fade) { b (Motion.follow "opacity" (AnimatableParams (duration = 1000)) (fun (_: Panel) -> 0.3)) { "g" } })
+                (section (Motion.fade) { b (Motion.follow "opacity" { ComposedAnimationOptions.Default with Duration = 1000. } (fun (_: Panel) -> 0.3)) { "g" } })
         })
 
 let private descendantsPause queued (clock: Clock) =
@@ -1016,12 +1017,12 @@ let private svgCleanupRestores (clock: Clock) =
 let private enteringUnderFlip (enter: Part<Ranvier.Dom.HTMLLIElement, unit -> int>) =
     Component.template
         (fun _ (state: Rows) -> state)
-        (ul (Motion.flip (LayoutParams (duration = 300, ease = Ease.linear))) {
+        (ul (Motion.flip { LayoutOptions.Default.WithDuration 300u with Ease = id }) {
             forEach id (fun (s: Rows) -> s.Items.Value) (li enter { fun (row: unit -> int) -> string (row ()) })
         })
 
 let private opacityEnter (_: unit -> int) (node: Element) =
-    Anime.animate (node, Anim (opacity = Value.fromTo (0, 1), duration = 100, ease = Ease.linear))
+    Fable.Ranvier.Anime.Anime.animate (node, Anim (opacity = Value.fromTo (0, 1), duration = 100, ease = Ease.linear))
 
 let private flippedEnter = enteringUnderFlip (Motion.enter opacityEnter)
 
@@ -1054,6 +1055,9 @@ let private flipKeepsEnters queued (clock: Clock) =
 [<Emit("$0.animate[$0.xProp]($1, $2)")>]
 let private releaseTo (draggable: Draggable) (x: float) (duration: float) : unit = jsNative
 
+[<Emit("$0.onGrab($0)")>]
+let private fireGrab (draggable: Draggable) : unit = jsNative
+
 [<Emit("$0.onSettle($0)")>]
 let private fireSettle (draggable: Draggable) : unit = jsNative
 
@@ -1071,6 +1075,7 @@ let private dragWritesSettle (clock: Clock) =
     let mounted = mountIn false graph target (Component.render dragged puck)
     let draggable = lastDraggable ()
     // anime reports the settle while the release animation still runs, then moves the element with no callback.
+    fireGrab draggable
     releaseTo draggable 42. 100.
     advance clock 0.
     advance clock 48.
@@ -1096,7 +1101,7 @@ let private layoutFieldsPinned (clock: Clock) =
     root.appendChild (document.createElement "p")
     |> ignore
 
-    let layout = Anime.layout root
+    let layout = Fable.Ranvier.Anime.Anime.layout root
     layout.animate () |> ignore
     let shaped = layoutShape layout
     layout.revert ()
@@ -1244,9 +1249,6 @@ let private tweened () : obj = jsNative
 [<Emit("$0.x")>]
 let private xOf (target: obj) : float = jsNative
 
-[<Emit("$0.onGrab($0)")>]
-let private fireGrab (draggable: Draggable) : unit = jsNative
-
 let private thrown =
     Component.template
         (fun _ (publish: Thrown -> unit) ->
@@ -1259,7 +1261,7 @@ let private thrown =
             publish created
             created)
         (div (
-            Motion.drag (DraggableParams ()) (fun (t: Thrown) ->
+            Motion.drag NativeDraggableOptions.Default (fun (t: Thrown) ->
                 {
                     Position = t.At
                     Dragging = ValueNone
@@ -1283,7 +1285,7 @@ let private slotOwnsAnimations (clock: Clock) =
     let play (target: obj) =
         spring.Play (fun () ->
             starts.Value <- starts.Value + 1
-            Anime.animate (Targets.object target, Anim (x = 100, duration = 1000, ease = Ease.linear)))
+            Fable.Ranvier.Anime.Anime.animate (Targets.object target, Anim (x = 100, duration = 1000, ease = Ease.linear)))
 
     let first = tweened ()
     play first
@@ -1330,7 +1332,7 @@ let private unhinted (element: obj) : bool = jsNative
 let private laned =
     Component.template
         (fun _ (state: Rows) -> state)
-        (ul (Attrs.data ("rects", ""), Motion.flip (LayoutParams (duration = 300, ease = Ease.linear))) {
+        (ul (Attrs.data ("rects", ""), Motion.flip { LayoutOptions.Default.WithDuration 300u with Ease = id }) {
             forEach id (fun (s: Rows) -> s.Items.Value) (li () { fun (row: unit -> int) -> string (row ()) })
         })
 
@@ -1401,13 +1403,13 @@ let private followUnit (clock: Clock) =
         Component.template
             (fun _ (s: Offset) -> s)
             (div () {
-                span (Motion.follow "x" (AnimatableParams (unit = "%", duration = 100, ease = Ease.linear)) (fun (s: Offset) -> s.Offset.Value)) {
+                span (Motion.follow "x" { ComposedAnimationOptions.Default with Unit = Some "%"; Duration = 100.; Ease = id } (fun (s: Offset) -> s.Offset.Value)) {
                     "shared"
                 }
 
-                b (Motion.follow "x" (AnimatableParams (x = AnimatableProp (unit = "px"), unit = "%")) (fun (s: Offset) -> s.Offset.Value)) { "own" }
+                b (Motion.follow "x" { ComposedAnimationOptions.Default with Unit = Some "%"; Extra = AnimatableParams (x = AnimatableProp (unit = "px")) } (fun (s: Offset) -> s.Offset.Value)) { "own" }
 
-                i (Motion.follow "x" (AnimatableParams (x = 400, unit = "%", ease = Ease.linear)) (fun (s: Offset) -> s.Offset.Value)) { "timed" }
+                i (Motion.follow "x" { ComposedAnimationOptions.Default with Unit = Some "%"; Ease = id; Extra = AnimatableParams (x = 400) } (fun (s: Offset) -> s.Offset.Value)) { "timed" }
             })
 
     let mounted = mountIn false graph target (Component.render view state)

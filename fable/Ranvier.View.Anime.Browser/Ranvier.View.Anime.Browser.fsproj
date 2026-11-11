@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+    Ranvier.View.Anime's source over Fable.Ranvier.Anime on .NET as well as under Fable, for the browser projects of this
+    repository that also compile on .NET (the Motion example's server, the docs samples): there the anime.js bindings
+    are inert stubs, where src/Ranvier.View.Anime would bring the native Ranvier.Anime, which has no bindings. Not packed.
+    -->
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <RootNamespace>Ranvier.View.Anime</RootNamespace>
+        <AssemblyName>Ranvier.View.Anime.Browser</AssemblyName>
+        <IsPackable>false</IsPackable>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+        <!-- The floor of the packed libraries, so a consumer keeps its own FSharp.Core. -->
+        <FSharpCoreImplicitPackageVersion>8.0.100</FSharpCoreImplicitPackageVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="../../src/Ranvier.View.Anime/Motion.fs" Link="Motion.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../src/Ranvier.View/Ranvier.View.fsproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseLocalRanvierAnime)' == 'true'">
+        <ProjectReference Include="$(RanvierAnimeRoot)/src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(UseLocalRanvierAnime)' != 'true'">
+        <PackageReference Include="Fable.Ranvier.Anime$(RanvierPackageSuffix)" Version="$(RanvierAnimeVersion)" />
+    </ItemGroup>
+
+</Project>

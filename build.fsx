@@ -746,9 +746,12 @@ module Stage =
 
                             if
                                 withAnime
-                                && not (File.Exists (Path.Combine (animeRoot, "src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj")))
+                                && not (
+                                    File.Exists (Path.Combine (animeRoot, "src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj"))
+                                    && File.Exists (Path.Combine (animeRoot, "src/Ranvier.Anime/Ranvier.Anime.fsproj"))
+                                )
                             then
-                                invalidArg "ranvier-anime-root" "The path is not a Ranvier.Anime checkout."
+                                invalidArg "ranvier-anime-root" "The path is not a Ranvier.Anime checkout with Fable.Ranvier.Anime and Ranvier.Anime."
 
                             let escape (path: string) =
                                 Security.SecurityElement.Escape path

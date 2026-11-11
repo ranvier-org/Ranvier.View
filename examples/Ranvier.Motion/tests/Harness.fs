@@ -3,7 +3,7 @@ module Harness
 
 open Fable.Core
 open global.Ranvier
-open Ranvier.Anime
+open Fable.Ranvier.Anime
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Dom.Scheduling

@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <!--
-    The Ranvier.View.Anime parts: compiled with Fable and run under the Node test runner with jsdom and a mocked clock
-    (npm test), and run on .NET as the server-render check (dotnet run).
+    The Ranvier.View.Anime parts: compiled with Fable over anime.js and run under the Node test runner with jsdom and a
+    mocked clock (npm test), and run on .NET over Ranvier.Anime as the server-render check (dotnet run). The jsdom checks
+    and bundle entries use the anime.js bindings, so they compile under Fable only.
     -->
     <PropertyGroup>
         <OutputType>Exe</OutputType>
@@ -14,8 +15,8 @@
 
     <ItemGroup>
         <Compile Include="Fixtures.fs" />
-        <Compile Include="SizeEntries.fs" />
-        <Compile Include="MotionChecks.fs" />
+        <Compile Include="SizeEntries.fs" Condition="'$(FABLE_COMPILER)' == 'true'" />
+        <Compile Include="MotionChecks.fs" Condition="'$(FABLE_COMPILER)' == 'true'" />
         <Compile Include="ServerChecks.fs" />
     </ItemGroup>
 

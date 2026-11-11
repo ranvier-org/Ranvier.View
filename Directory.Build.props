@@ -18,11 +18,12 @@
     </PropertyGroup>
 
     <!--
-    Core Ranvier packages (ranvier-org/Ranvier), CSS packages (ranvier-org/Ranvier.Css) and the anime.js bindings
-    (ranvier-org/Ranvier.Anime). `UseLocalRanvier=true` turns the core package references into project references into
-    $(RanvierRoot); `UseLocalRanvierCss=true` and `UseLocalRanvierAnime=true` do the same for the CSS packages and
-    $(RanvierCssRoot), and the bindings and $(RanvierAnimeRoot). The `dev local` command of build.fsx writes them
-    to Local.Build.props.
+    Core Ranvier packages (ranvier-org/Ranvier), CSS packages (ranvier-org/Ranvier.Css) and the anime packages
+    (ranvier-org/Ranvier.Anime): Fable.Ranvier.Anime over anime.js, at $(RanvierAnimeVersion), and the native
+    Ranvier.Anime, at $(RanvierNativeAnimeVersion). `UseLocalRanvier=true` turns the core package references into project
+    references into $(RanvierRoot); `UseLocalRanvierCss=true` and `UseLocalRanvierAnime=true` do the same for the CSS
+    packages and $(RanvierCssRoot), and both anime packages and $(RanvierAnimeRoot). The `dev local` command of build.fsx
+    writes them to Local.Build.props.
     -->
     <PropertyGroup>
         <UseLocalRanvier Condition="'$(UseLocalRanvier)' == ''">false</UseLocalRanvier>
@@ -38,7 +39,9 @@
         <RanvierCssVersion>0.1.1-alpha.2</RanvierCssVersion>
         <RanvierCssAddonsVersion>0.1.1-alpha.1</RanvierCssAddonsVersion>
         <RanvierDomVersion>0.1.0-rc.1</RanvierDomVersion>
-        <RanvierAnimeVersion>0.1.45-rc.1</RanvierAnimeVersion>
+        <!-- The first releases with the portable API: Fable.Ranvier.Anime 0.1.45-rc.2 and Ranvier.Anime 0.1.0-rc.1. -->
+        <RanvierAnimeVersion>0.1.45-rc.2</RanvierAnimeVersion>
+        <RanvierNativeAnimeVersion>0.1.0-rc.1</RanvierNativeAnimeVersion>
         <RanvierTrace Condition="'$(RanvierTrace)' == '' and '$(Configuration)' == 'Debug'">true</RanvierTrace>
         <RanvierPackageSuffix Condition="'$(RanvierTrace)' == 'true'">.Traced</RanvierPackageSuffix>
     </PropertyGroup>

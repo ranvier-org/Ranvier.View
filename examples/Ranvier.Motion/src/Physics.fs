@@ -7,6 +7,7 @@ module Physics
 open Fable.Core
 open global.Ranvier
 open Ranvier.Anime
+open Fable.Ranvier.Anime
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Dom.Scheduling
@@ -61,7 +62,7 @@ let springHome (playground: Playground) =
         let point = Page.point x y
 
         playground.Spring.Play (fun () ->
-            Anime.animate (
+            Fable.Ranvier.Anime.Anime.animate (
                 Targets.object point,
                 Anim (
                     x = 0,
@@ -82,7 +83,7 @@ let private yOf (playground: Playground) =
 // The track's dots fan out, turn and change colour along one timeline that the range input seeks.
 let private scrubbed (playground: Playground) (track: TS.Dom.Element) =
     let timeline =
-        Anime
+        Fable.Ranvier.Anime.Anime
             .timeline(TimelineParams (autoplay = false, defaults = Anim (duration = 600, ease = Ease.inOutQuad)))
             .add(Page.queryAll track ".dot", Anim (y = Value.stagger (Value.fromTo (-70, 70)), rotate = 180, delay = Value.stagger 60))
             .add(
@@ -95,7 +96,7 @@ let private scrubbed (playground: Playground) (track: TS.Dom.Element) =
     timeline
 
 let private follower (index: int) =
-    let parameters = AnimatableParams (duration = trail[index], ease = Ease.outQuart)
+    let parameters = { ComposedAnimationOptions.Default with Duration = float trail[index]; Ease = Page.outQuart }
 
     div (Attrs.className "follower", Attrs.data ("follower", string index), Motion.follow "x" parameters xOf, Motion.follow "y" parameters yOf) { () }
 
@@ -127,13 +128,11 @@ let view: Component<Playground -> unit> =
                 div (
                     Attrs.className (fun (p: Playground) -> if p.Dragging.Value then "puck grabbed" else "puck"),
                     Motion.drag
-                        (DraggableParams (
-                            container = ".arena",
-                            releaseStiffness = 120.,
-                            releaseDamping = 9.,
-                            releaseMass = 1.,
-                            velocityMultiplier = 1.4
-                        ))
+                        { NativeDraggableOptions.Default with
+                            ReleaseStiffness = 120.
+                            ReleaseDamping = 9.
+                            Extra = DraggableParams (container = ".arena", velocityMultiplier = 1.4)
+                        }
                         (fun (p: Playground) ->
                             {
                                 Position = p.Puck

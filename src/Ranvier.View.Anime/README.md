@@ -1,6 +1,11 @@
 # Ranvier.View.Anime
 
-Motion parts for `Ranvier.View` templates, using typed [anime.js](https://animejs.com) 4.5.0 bindings.
+Motion parts for `Ranvier.View` templates, over two engines: [anime.js](https://animejs.com) 4.5.0 through
+`Fable.Ranvier.Anime` in the browser, and the native F# port `Ranvier.Anime` on .NET hosts such as WebCore. Both
+packages expose the same portable API in the namespace `Ranvier.Anime`, and the parts are one source written against
+it: a template, its parameter records and its play functions compile unchanged for either engine. See
+[one API, two engines](#one-api-two-engines) and [native hosts](#native-hosts).
+
 Add a `Motion.*` part to a Sugar tag beside its attributes and events. It creates anime objects when
 the element is placed and normally reverts them on disposal; [exits](#enter-and-exit-rules) preserve
 the current visual state until the leaving animation finishes.
@@ -28,11 +33,11 @@ open Ranvier.View.Sugar
 open Ranvier.View.Anime
 ```
 
-Every sample on this page assumes these lines; the [view sugar reference](https://github.com/ranvier-org/Ranvier.View/blob/main/src/Ranvier.View/README.md) covers `Ranvier.View` and `Ranvier.View.Sugar`, and `Ranvier.Anime` holds the bindings. `Motion` requires qualified access: its `exit` would otherwise shadow FSharp.Core's.
+Every sample on this page assumes these lines; the [view sugar reference](https://github.com/ranvier-org/Ranvier.View/blob/main/src/Ranvier.View/README.md) covers `Ranvier.View` and `Ranvier.View.Sugar`, and `Ranvier.Anime` holds the portable API of both engines. `Motion` requires qualified access: its `exit` would otherwise shadow FSharp.Core's.
 
-**A play function receives the element as `Element`.** `Targets` converts from `Element` and `Element array` only, so a play function written `fun _ el -> Anime.animate (el, Anim (...))` type-checks on every tag.
+**A play function receives the element as `Element`,** `Ranvier.Anime.Dom.Element`: the engine's DOM element, `Fable.Core.TS.Dom.Element` in the browser and `Ranvier.Dom.Element` on .NET. `Anime.animate el specs options` takes it as its target on both.
 
-**Anime objects are created inside play functions.** A template is built where its definition is bound, also on .NET, where the `[<Emit>]` and `[<Import>]` members of the bindings raise. The parameter constructors (`Anim`, `LayoutParams`, `AnimatableParams` and the others) are inert on .NET and may appear at definition time; `Anime.animate`, `Value.stagger`, `Ease.spring` and `Svg.morphTo` belong inside a play function.
+**Animations are created inside play functions.** A template is built where its definition is bound; `Anime.animate`, `Anime.timeline` and `Ease.named` reach the engine, which on .NET is the host installed on the thread, so they belong inside a play function. The option records (`ComposedAnimationOptions`, `LayoutOptions` and the others) are plain data and may appear at definition time.
 
 ## Lifecycle parts
 
@@ -64,14 +69,14 @@ let board =
                 Selected = Api.createSignal false
             })
         (section () {
-            ul (Attrs.className "cards", Motion.flip (LayoutParams (duration = 350, ease = Ease.outQuart))) {
+            ul (Attrs.className "cards", Motion.flip { LayoutOptions.Default.WithDuration 350u with Ease = fun t -> 1. - (1. - t) ** 4. }) {
                 forEach
                     (fun card -> card.Id)
                     (fun b -> b.Cards.Value)
                     (li (
                         Motion.presence
-                            (fun _ el -> Anime.animate (el, Anim (opacity = Value.fromTo (0, 1), y = Value.fromTo (12, 0), duration = 240)))
-                            (fun _ el -> Anime.animate (el, Anim (opacity = 0, scale = 0.9, duration = 180)))
+                            (fun _ el -> Anime.animate el [| PropertySpec.Scalar ("opacity", 1., fromValue = 0.); PropertySpec.Scalar ("y", 0., fromValue = 12.) |] { ComposedAnimationOptions.Default with Duration = 240. })
+                            (fun _ el -> Anime.animate el [| PropertySpec.Scalar ("opacity", 0.); PropertySpec.Scalar ("scale", 0.9) |] { ComposedAnimationOptions.Default with Duration = 180. })
                     ) {
                         fun current -> (current ()).Title
                     })
@@ -81,7 +86,7 @@ let board =
         })
 ```
 
-`on` and `appear` take any `IRevertible`, such as an `Animatable`; `enter`, `exit` and `presence` take a tickable, `JSAnimation` or `Timeline`:
+`on` and `appear` take any `IRevertible`; `enter`, `exit` and `presence` take an `ITickable`: the `ComposedAnimation` of `Anime.animate`, a `ComposedTimeline`, or one of the engine's own tickables:
 
 ```fsharp
 type Banner = { Text: string }
@@ -90,9 +95,9 @@ let banner =
     Component.template
         (fun _ (text: string) -> { Text = text })
         (header () {
-            h1 (Motion.appear (fun _ el -> Anime.animate (el, Anim (opacity = Value.fromTo (0, 1), duration = 400)))) { fun b -> b.Text }
+            h1 (Motion.appear (fun _ el -> Anime.animate el [| PropertySpec.Scalar ("opacity", 1., fromValue = 0.) |] { ComposedAnimationOptions.Default with Duration = 400. })) { fun b -> b.Text }
 
-            span (Motion.on (fun _ el -> Anime.animate (el, Anim (rotate = 360, duration = 1200, loop = Loop.forever, ease = Ease.linear)))) { "*" }
+            span (Motion.on (fun _ el -> Anime.animate el [| PropertySpec.Scalar ("rotate", 360.) |] { ComposedAnimationOptions.Default with Duration = 1200.; Ease = Ease.named "linear" })) { "*" }
         })
 ```
 
@@ -109,13 +114,73 @@ let toasts =
                 id
                 (fun (t: Toast) -> t.Messages.Value)
                 (li (
-                    Motion.enter (fun _ el -> Anime.animate (el, Anim (x = Value.fromTo (40, 0), duration = 200))),
-                    Motion.exit (fun _ el -> Anime.animate (el, Anim (x = 40, opacity = 0, duration = 200)))
+                    Motion.enter (fun _ el -> Anime.animate el [| PropertySpec.Scalar ("x", 0., fromValue = 40.) |] { ComposedAnimationOptions.Default with Duration = 200. }),
+                    Motion.exit (fun _ el -> Anime.animate el [| PropertySpec.Scalar ("x", 40.); PropertySpec.Scalar ("opacity", 0.) |] { ComposedAnimationOptions.Default with Duration = 200. })
                 ) {
                     fun message -> message ()
                 })
         })
 ```
+
+## One API, two engines
+
+The project is one source: `Motion.fs` compiles under Fable against `Fable.Ranvier.Anime` and on .NET against
+`Ranvier.Anime`, and calls only the portable API the two share. A template that does the same compiles unchanged on
+both, play functions included:
+
+- **Animations.** `Anime.animate target specs options`, `Anime.animateTargets` and `Anime.timeline ()`, with
+  `PropertySpec.Scalar` and `PropertySpec.Text` for the properties, `ComposedAnimationOptions` for the timing and
+  `Ease.named`, `Ease.cubicBezier` and `Ease.steps` for the curves. They return a `ComposedAnimation` or a
+  `ComposedTimeline`, both `ITickable`.
+- **Parameter records.** `LayoutOptions` (`flip`), `ComposedAnimationOptions` (`follow`, `followCss`, `draw`, `morph`),
+  `ScrollParams` with `ScrollOptions` (`scroll`), `NativeDraggableOptions` (`drag`) and `TextSplitterOptions`
+  (`split`), whose play function receives the portable `TextSplitter` (`Lines`, `Words`, `Chars`).
+- **Engine-only fields stay on the engine's record.** The browser records add `Extra`, further anime.js parameters
+  merged last, for options only anime.js has (`enterFrom`, a selector `container` such as
+  `{ NativeDraggableOptions.Default with Extra = DraggableParams (container = "article") }`, a per-property entry), and
+  `ComposedAnimationOptions.Unit`, the shared unit of a follower. The native records add `Computed`, `Playback` and
+  the rest. Portable code names neither.
+
+Every sample on this page is portable unless it says otherwise.
+
+**The bindings remain available in the browser.** `open Fable.Ranvier.Anime` brings the anime.js bindings, whose
+objects are the portable contracts: a `JSAnimation` is a `ComposedAnimation`, a binding `Timeline` a
+`ComposedTimeline`. A play function may return one where it needs what only anime.js has, such as a loop, a stagger or
+a spring. With both namespaces open, `Anime.animate` is the portable function, so the binding's is written out:
+
+```fsharp
+type Spinner = { Glyph: string }
+
+let spinner =
+    Component.template
+        (fun _ (glyph: string) -> { Glyph = glyph })
+        (span (
+            Motion.on (fun _ el ->
+                Fable.Ranvier.Anime.Anime.animate (el, Anim (rotate = 360, duration = 1200, loop = Loop.forever, ease = Ease.linear)))
+        ) {
+            fun s -> s.Glyph
+        })
+```
+
+## Native hosts
+
+On .NET the portable functions, and so the parts, read the host's frame scheduler and computed styles from
+`AnimeHost`, part of `Ranvier.Anime`, installed on the host thread before mounting; `drag` and `scroll` also need the
+host's input, resize and viewport services, passed to the `AnimeHost.Install` overload taking
+`AnimeInteractionServices`. The browser needs no host.
+
+```fsharp
+let installMotion (host: WebCoreHost) =
+    AnimeHost.Install { Scheduler = Frames.forHost host; Computed = ComputedStyles.forHost host }
+```
+
+`Reactive.policy ()` is a per-graph signal seeded `Full` on .NET, where no media query exists. `scroll` links a
+`ComposedAnimation`, `ComposedTimeline`, `Timer` or `Timeline`; an interrupted native FLIP pass restarts from the rows' laid-out boxes.
+
+Coverage: the parts run under Fable and jsdom (`fable/Ranvier.View.Anime.Tests`, `npm test`), and this page's portable
+samples (`Fixtures.fs`) also compile on .NET, where `ServerChecks.fs` renders them. The parts on a WebCore page, and the
+host installation above, are covered in ranvier-org/Ranvier.Anime's native smoke host (`MotionViewProbe.fs`,
+`MotionPartsProbe.fs`, `MotionFixtures.fs`).
 
 ## Enter and exit rules
 
@@ -127,10 +192,10 @@ let toasts =
 
 ## FLIP
 
-`Motion.flip parameters` on a list's container wraps anime's `createLayout`. Before the first region pass under the container in a flush it records the layout of the container's element children, and once the pass's nodes and commits are in place it animates them from the recorded layout to the new one. A pass with no recorded layout before it, such as the first, does not animate.
+`Motion.flip parameters` on a list's container wraps anime's `createLayout` (Ranvier.Anime's `AutoLayout` on .NET), with the timing of a `LayoutOptions`. Before the first region pass under the container in a flush it records the layout of the container's element children, and once the pass's nodes and commits are in place it animates them from the recorded layout to the new one. A pass with no recorded layout before it, such as the first, does not animate.
 
-- **The rows are the container's direct element children.** `parameters`' `children` is replaced by those children, measured at both moments. A row whose Motion exit has started, or whose Motion enter started in the pass, is left out of that pass's measurements.
-- **Motion parts keep the visual properties.** In a pass where an element under the container carries a Motion part, the layout animates position and size only, and the opacity, colours, borders, filters, clip paths and font size stay with the parts (an opacity `enter` or `presence` under `flip` ends at its last frame). In a pass with no such element, anime's default fades apply. A property named in `properties`, `enterFrom`, `leaveTo` or `swapAt` is always the layout's.
+- **The rows are the container's direct element children,** measured at both moments; they replace anime's `children` (the native layout's `Targets`). A row whose Motion exit has started, or whose Motion enter started in the pass, is left out of that pass's measurements.
+- **Motion parts keep the visual properties.** In a pass where an element under the container carries a Motion part, the layout animates position and size only, and the opacity, colours, borders, filters, clip paths and font size stay with the parts (an opacity `enter` or `presence` under `flip` ends at its last frame). In a pass with no such element, anime's default fades apply. A property in `parameters.Properties` beyond the default set, or named in the browser `Extra`'s `enterFrom`, `leaveTo` or `swapAt`, is always the layout's.
 - **The container is positioned.** anime animates moved rows with `position: absolute` and a translation through the Web Animations API during the animation.
 - **The layout is created on the first recording,** and reverted with the instance.
 - **A dropped row starts from where it was dropped.** `Motion.flipFrom element` starts the element's next FLIP from its current visual box, drag transform included, in place of the transform-free box the recording measures. Call it before the change that moves the row and before the drag position is reset. The box stays on the element until the next pass that measures the element as a row, which starts its FLIP there, with the recorded size, and drops the box; under `Reduced`, where flip stays still, the call returns at once. The element comes from the handler's event or from `Hooks.mounted`.
@@ -162,17 +227,17 @@ let gauge =
                 Label = Api.createSignal "idle"
             })
         (div () {
-            div (Attrs.className "bar", Motion.follow "scaleX" (AnimatableParams (duration = 400, ease = Ease.outQuart)) (fun g -> g.Load.Value)) {
+            div (Attrs.className "bar", Motion.follow "scaleX" { ComposedAnimationOptions.Default with Duration = 400.; Ease = fun t -> 1. - (1. - t) ** 4. } (fun g -> g.Load.Value)) {
                 ()
             }
 
-            span (Motion.animateOn (fun g -> g.Label.Value) (fun _ el _ -> Anime.animate (el, Anim (opacity = Value.fromTo (0, 1), duration = 200)))) {
+            span (Motion.animateOn (fun g -> g.Label.Value) (fun _ el _ -> Anime.animate el [| PropertySpec.Scalar ("opacity", 1., fromValue = 0.) |] { ComposedAnimationOptions.Default with Duration = 200. })) {
                 fun g -> g.Label.Value
             }
         })
 ```
 
-`follow`'s `parameters` without an entry for `property` give the property the shared duration and ease, and the shared `unit` applies to `property` unless its entry sets its own `unit`: `Motion.follow "x" (AnimatableParams (unit = "%", duration = 420))` moves the element by percentages of its width.
+`follow`, `followCss`, `draw` and `morph` take the timing of a `ComposedAnimationOptions`. In the browser, `follow`'s shared `Unit` applies to `property` unless an entry for it in `Extra` sets its own `unit`: `Motion.follow "x" { ComposedAnimationOptions.Default with Unit = Some "%"; Duration = 420. }` moves the element by percentages of its width. On .NET a value keeps the property's default unit.
 
 ```fsharp
 type Story =
@@ -192,28 +257,28 @@ let story =
             })
         (article () {
             h2 (
-                Motion.split (SplitParams (chars = true)) (fun _ split ->
-                    Anime.animate (split.chars, Anim (y = Value.fromTo ("100%", "0%"), delay = Value.stagger 20)))
+                Motion.split { TextSplitterOptions.Default with Chars = SplitMode.Enabled } (fun _ split ->
+                    Anime.animateTargets (Array.map box split.Chars) [| PropertySpec.Scalar ("opacity", 1., fromValue = 0.) |] { ComposedAnimationOptions.Default with Duration = 400. })
             ) {
                 "Ranvier"
             }
 
             section (
                 Motion.scroll
-                    (ScrollParams (enter = "bottom top", leave = "top bottom", sync = true))
+                    { ScrollParams.Default with Options = { ScrollOptions.Default with Enter = { Container = "bottom"; Target = "top" }; Leave = { Container = "top"; Target = "bottom" }; Sync = ScrollSync.Smooth 1. } }
                     (fun s ->
                         {
                             Progress = ValueSome s.Progress
                             InView = ValueSome s.Seen
                         })
-                    (fun _ el -> Anime.animate (el, Anim (opacity = Value.fromTo (0.2, 1), autoplay = false)))
+                    (fun _ el -> Anime.animate el [| PropertySpec.Scalar ("opacity", 1., fromValue = 0.2) |] { ComposedAnimationOptions.Default with Autoplay = false })
             ) {
-                fun s -> sprintf "%.0f %%" (s.Progress.Value * 100.)
+                fun s -> string (round (s.Progress.Value * 100.)) + " %"
             }
 
             div (
                 Attrs.className "puck",
-                Motion.drag (DraggableParams (container = "article")) (fun s ->
+                Motion.drag NativeDraggableOptions.Default (fun s ->
                     {
                         Position = s.Puck
                         Dragging = ValueNone
@@ -224,6 +289,8 @@ let story =
             }
         })
 ```
+
+`split`'s play function animates the splitter's `Chars`, `Words` or `Lines`; in the browser, where a splitter is anime's own, the bindings add a stagger: `Fable.Ranvier.Anime.Anime.animate (Targets.object split.Chars, Anim (y = Value.fromTo ("100%", "0%"), delay = Value.stagger 20))`.
 
 **`split` takes static text.** A text slot or region inside the split element stops updating once its text is split. `splitText`, `onScroll` and `createDraggable` require `ResizeObserver`, and the draggable `DOMPoint` and `DOMMatrix`.
 
@@ -244,8 +311,8 @@ let chart =
                 Line = Api.createSignal "M0 0 L100 0"
             })
         (svg () {
-            path (Motion.draw (AnimatableParams (duration = 300)) (fun c -> c.Fraction.Value)) { () }
-            path (Motion.morph (Anim (duration = 300)) (fun c -> c.Line.Value)) { () }
+            path (Motion.draw { ComposedAnimationOptions.Default with Duration = 300. } (fun c -> c.Fraction.Value)) { () }
+            path (Motion.morph { ComposedAnimationOptions.Default with Duration = 300. } (fun c -> c.Line.Value)) { () }
         })
 ```
 
@@ -253,7 +320,7 @@ A list row or arm rooted at an SVG tag is an SVG element too, under both commit 
 
 ## Animations from handlers
 
-An animation started by a handler or an effect, such as a spring home on a click or after a release, belongs to a `MotionSlot`. `Motion.slot ()`, called in the instance's setup, returns one owned by the instance:
+An animation started by a handler or an effect, such as a spring home on a click or after a release, belongs to a `MotionSlot`. The sample below uses the browser bindings for the spring and its update callback. `Motion.slot ()`, called in the instance's setup, returns one owned by the instance:
 
 - **`slot.Play (fun () -> animation)`** cancels the running animation, then plays the one the function creates; a cancelled animation stops at its current values, its callbacks muted. The slot holds the animation the function returns, and cancels one the function plays through the same slot.
 - **`slot.Stop ()`** cancels the running animation; `slot.Running` is the latest animation played (null after a stop), and `slot.Playing` is true while it is live, played and not yet completed or cancelled (a WAAPI animation reports completion only).
@@ -276,7 +343,7 @@ let springHome (tile: Tile) =
     let point = { x = x; y = y }
 
     tile.Spring.Play (fun () ->
-        Anime.animate (
+        Fable.Ranvier.Anime.Anime.animate (
             Targets.object point,
             Anim (
                 x = 0,
@@ -296,7 +363,7 @@ let tile =
         (div () {
             div (
                 Attrs.className "tile",
-                Motion.drag (DraggableParams ()) (fun t ->
+                Motion.drag NativeDraggableOptions.Default (fun t ->
                     {
                         Position = t.Offset
                         Dragging = ValueNone
@@ -324,8 +391,12 @@ The three hook kinds behind the parts (motion, exit and reflow) add no markup, a
 
 | Entry | Against | Δ gzip | Budget |
 |---|---|--:|--:|
-| rows with `Motion.presence` | the same rows with `Hooks.motion` and `Hooks.exit` calling `animate` by hand | +732 B | 900 B |
-| a list with `Motion.flip` | the same list with `Hooks.reflow` calling `createLayout` by hand | +580 B | 600 B |
+| rows with `Motion.presence` | the same rows with `Hooks.motion` and `Hooks.exit` calling `animate` by hand | +706 B | 900 B |
+| a list with `Motion.flip` | the same list with `Hooks.reflow` calling `createLayout` by hand | +1071 B | 1100 B |
+
+`flip`'s glue includes the `LayoutOptions` record and its conversion to anime's layout parameters, the price of the
+parameter record both engines share, and the `FlipLayout` object through which the one `Motion.flip` reaches either
+engine.
 
 An entry using one Motion part declares no anime feature class (`AutoLayout`, `Draggable`, `ScrollObserver`, `TextSplitter`, `WAAPIAnimation`, `Timeline`) beyond those of the anime functions that part calls. The emitted module holds no `curry`, `uncurry`, `partialApply` or `createObj`.
 

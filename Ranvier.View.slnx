@@ -31,6 +31,7 @@
     <Project Path="tests/Ranvier.View.WebCore.Tests/Ranvier.View.WebCore.Tests.fsproj" />
     <Project Path="tests/Ranvier.View.WebCore.AotSmoke/Ranvier.View.WebCore.AotSmoke.fsproj" />
     <Project Path="fable/Ranvier.View.Anime.Tests/Ranvier.View.Anime.Tests.fsproj" />
+    <Project Path="fable/Ranvier.View.Anime.Browser/Ranvier.View.Anime.Browser.fsproj" />
   </Folder>
   <Folder Name="/experiments/Ranvier.View.Checks/">
     <Project Path="experiments/Ranvier.View.Checks/RepresentationChecks.fsproj" />

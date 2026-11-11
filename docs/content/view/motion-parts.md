@@ -3,8 +3,10 @@ title: Motion parts
 description: Template parts that animate elements on placement, on entering and leaving lists and arms, on reorder, and from signals.
 ---
 
-`Ranvier.View.Anime` adds `Motion.*` parts beside a tag's attributes and events. They start anime
-objects after placement and clean them up with the instance. The
+`Ranvier.View.Anime` adds `Motion.*` parts beside a tag's attributes and events. They start
+animations after placement and clean them up with the instance. The parts are one source over the
+portable API of the namespace `Ranvier.Anime`: under Fable it is `Fable.Ranvier.Anime`'s, over
+anime.js, and on .NET hosts `Ranvier.Anime`'s, the native engine. The
 [reference](https://github.com/ranvier-org/Ranvier.View/blob/main/src/Ranvier.View.Anime/README.md)
 has every part; this page explains their shared lifecycle.
 
@@ -31,20 +33,20 @@ let taskList =
                 Done = Api.createSignal 0.
             })
         (section () {
-            ul (Attrs.className "tasks", Motion.flip (LayoutParams (duration = 300, ease = Ease.outQuart))) {
+            ul (Attrs.className "tasks", Motion.flip (LayoutOptions.Default.WithDuration 300u)) {
                 forEach
                     (fun task -> task.Id)
                     (fun l -> l.Tasks.Value)
                     (li (
                         Motion.presence
-                            (fun _ el -> Anime.animate (el, Anim (opacity = Value.fromTo (0, 1), y = Value.fromTo (8, 0), duration = 220)))
-                            (fun _ el -> Anime.animate (el, Anim (opacity = 0, duration = 160)))
+                            (fun _ el -> Anime.animate el [| PropertySpec.Scalar ("opacity", 1., fromValue = 0.); PropertySpec.Scalar ("y", 0., fromValue = 8.) |] { ComposedAnimationOptions.Default with Duration = 220. })
+                            (fun _ el -> Anime.animate el [| PropertySpec.Scalar ("opacity", 0.) |] { ComposedAnimationOptions.Default with Duration = 160. })
                     ) {
                         fun current -> (current ()).Title
                     })
             }
 
-            div (Attrs.className "progress", Motion.follow "scaleX" (AnimatableParams (duration = 400)) (fun l -> l.Done.Value)) { () }
+            div (Attrs.className "progress", Motion.follow "scaleX" { ComposedAnimationOptions.Default with Duration = 400. } (fun l -> l.Done.Value)) { () }
         })
 ```
 
@@ -56,14 +58,22 @@ animates the progress element's `scaleX`.
 
 ## Play functions
 
-A play function receives the instance and the element, typed `TS.Dom.Element` on every tag, and
-returns the anime object the part owns. `on` and `appear` take any `IRevertible`; `enter`, `exit`
-and `presence` take a tickable, a `JSAnimation` or a `Timeline`.
+A play function receives the instance and the element, typed `Ranvier.Anime.Dom.Element` on every
+tag (`Fable.Core.TS.Dom.Element` in the browser, `Ranvier.Dom.Element` on .NET), and returns the
+animation the part owns. `on` and `appear` take any `IRevertible`; `enter`, `exit` and `presence`
+take an `ITickable`: the `ComposedAnimation` of `Anime.animate`, a `ComposedTimeline`, or in the
+browser a binding object such as a `JSAnimation` or a `Timeline`, which inherit those contracts.
 
-Anime objects are created inside play functions. A template is built where its definition is bound,
-on .NET as well, where `Anime.animate`, `Value.stagger`, `Ease.spring` and the other imported and
-emitted members raise. The parameter constructors are inert on .NET and may appear at definition
-time, as `LayoutParams` and `AnimatableParams` do above.
+Animations are created inside play functions. A template is built where its definition is bound,
+also on the server, and `Anime.animate`, `Anime.timeline` and `Ease.named` reach the engine. The
+option records (`ComposedAnimationOptions`, `LayoutOptions` and the others) are plain data and may
+appear at definition time, as they do above.
+
+The bindings remain available in the browser with `open Fable.Ranvier.Anime`, for what only
+anime.js has, such as a loop, a stagger or a spring. With both namespaces open `Anime.animate` is
+the portable function, so the binding's is written `Fable.Ranvier.Anime.Anime.animate`. The browser
+records also carry `Extra`, further anime.js parameters merged last, as in
+`{ NativeDraggableOptions.Default with Extra = DraggableParams (container = ".arena") }`.
 
 ## The parts
 
@@ -122,8 +132,9 @@ animates them from that layout to the new one once the pass's nodes and commits 
 - **Motion parts keep the visual properties.** In a pass where an element under the container carries
   a Motion part (`on`, `appear`, `follow`, `animateOn`, or a running enter or exit), the layout
   animates position and size only; opacity, colours, borders, filters, clip paths and font size stay
-  with the parts. In a pass with no such element, anime's default fades apply. A property named in
-  `properties`, `enterFrom`, `leaveTo` or `swapAt` is always the layout's.
+  with the parts. In a pass with no such element, anime's default fades apply. A property in the
+  options' `Properties` beyond the default set, or named in the browser `Extra`'s `enterFrom`,
+  `leaveTo` or `swapAt`, is always the layout's.
 - **The container is positioned.** anime animates moved rows with `position: absolute` and a
   translation through the Web Animations API.
 - A pass with no recorded layout before it, such as the first, does not animate.
@@ -153,7 +164,11 @@ instance.
   cancels.
 - Given as a `DragBinding`'s `Slot`, a grab cancels the slot's running animation.
 
+The sample uses the browser bindings for the spring and its update callback:
+
 ```fsharp
+open Fable.Ranvier.Anime
+
 type Point = { mutable x: float; mutable y: float }
 
 type Handle =
@@ -168,7 +183,7 @@ let springBack (handle: Handle) =
     let point = { x = x; y = y }
 
     handle.Spring.Play (fun () ->
-        Anime.animate (
+        Fable.Ranvier.Anime.Anime.animate (
             Targets.object point,
             Anim (
                 x = 0,
@@ -188,7 +203,7 @@ let handle =
         (div () {
             div (
                 Attrs.className "handle",
-                Motion.drag (DraggableParams ()) (fun h ->
+                Motion.drag NativeDraggableOptions.Default (fun h ->
                     {
                         Position = h.Offset
                         Dragging = ValueNone
@@ -219,10 +234,10 @@ template with Motion parts renders the HTML of its twin without them. `taskList`
 ```
 
 Hydration adopts the served elements. `appear` and `enter` leave them as served, and `on` plays.
-`follow` sets its first value at once. `follow`'s `parameters` give the followed property their
-shared duration, ease and `unit` unless its own entry sets them:
-`Motion.follow "x" (AnimatableParams (unit = "%", duration = 420))` moves the element by percentages of
-its width.
+`follow` sets its first value at once, and its options give the followed property its duration and
+ease. In the browser the options' `Unit` is the property's unit:
+`Motion.follow "x" { ComposedAnimationOptions.Default with Unit = Some "%"; Duration = 420. }` moves
+the element by percentages of its width. On .NET a value keeps the property's default unit.
 
 A page whose template holds event handlers renders under `Omit`; `Reject` refuses listeners, and
 hydration attaches them. The story example renders its whole page that way with

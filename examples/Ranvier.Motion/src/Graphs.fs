@@ -5,6 +5,7 @@ open System
 open Fable.Core
 open global.Ranvier
 open Ranvier.Anime
+open Fable.Ranvier.Anime
 open Ranvier.View
 open Ranvier.View.Sugar
 open Ranvier.View.Anime
@@ -326,7 +327,7 @@ let private inspector =
                         let parameters =
                             Anim (duration = (if dragging then 100 else 650), ease = Ease.outQuart)
 
-                        Anime.animate (element, parameters.With ("viewBox", Value.op_Implicit (sprintf "%.3f 0 %.3f 280" window.Start window.Span))))
+                        Fable.Ranvier.Anime.Anime.animate (element, parameters.With ("viewBox", Value.op_Implicit (sprintf "%.3f 0 %.3f 280" window.Start window.Span))))
                 ) {
                     defs () {
                         linearGradient (
@@ -377,9 +378,9 @@ let private inspector =
                         Attrs.className "crosshair",
                         Attrs.attribute ("y1", "12"),
                         Attrs.attribute ("y2", "255"),
-                        Motion.follow "x1" (AnimatableParams (duration = 240, ease = Ease.outQuart)) (fun (store: Store) ->
+                        Motion.follow "x1" { ComposedAnimationOptions.Default with Duration = 240.; Ease = Page.outQuart } (fun (store: Store) ->
                             float store.Cursor.Value * 10.),
-                        Motion.follow "x2" (AnimatableParams (duration = 240, ease = Ease.outQuart)) (fun (store: Store) ->
+                        Motion.follow "x2" { ComposedAnimationOptions.Default with Duration = 240.; Ease = Page.outQuart } (fun (store: Store) ->
                             float store.Cursor.Value * 10.)
                     ) {
                         ()
@@ -393,10 +394,10 @@ let private inspector =
                             let parameters =
                                 Anim (duration = (if dragging then 100 else 650), ease = Ease.outQuart)
 
-                            Anime.animate (element, parameters.With ("rx", Value.op_Implicit (span * 5. / 960.)))),
-                        Motion.follow "cx" (AnimatableParams (duration = 240, ease = Ease.outQuart)) (fun (store: Store) ->
+                            Fable.Ranvier.Anime.Anime.animate (element, parameters.With ("rx", Value.op_Implicit (span * 5. / 960.)))),
+                        Motion.follow "cx" { ComposedAnimationOptions.Default with Duration = 240.; Ease = Page.outQuart } (fun (store: Store) ->
                             float store.Cursor.Value * 10.),
-                        Motion.follow "cy" (AnimatableParams (duration = 240, ease = Ease.outQuart)) (fun (store: Store) ->
+                        Motion.follow "cy" { ComposedAnimationOptions.Default with Duration = 240.; Ease = Page.outQuart } (fun (store: Store) ->
                             y (value 0. store.Cursor.Value))
                     ) {
                         ()
@@ -408,9 +409,9 @@ let private inspector =
                     (div (
                         Attrs.className "graph-tooltip",
                         Attrs.role "status",
-                        Motion.follow "--tip-x" (AnimatableParams (unit = "%", duration = 240, ease = Ease.outQuart)) (fun (store: Store) ->
+                        Motion.follow "--tip-x" { ComposedAnimationOptions.Default with Duration = 240.; Unit = Some "%"; Ease = Page.outQuart } (fun (store: Store) ->
                             let struct (x, _) = store.Pointer.Value in x),
-                        Motion.follow "top" (AnimatableParams (unit = "%", duration = 240, ease = Ease.outQuart)) (fun (store: Store) ->
+                        Motion.follow "top" { ComposedAnimationOptions.Default with Duration = 240.; Unit = Some "%"; Ease = Page.outQuart } (fun (store: Store) ->
                             let struct (_, y) = store.Pointer.Value in y)
                     ) {
                         span () { fun (store: Store) -> time (float store.Cursor.Value * 10.) }
@@ -444,7 +445,7 @@ let private bar (index: int) =
         Motion.animateOn
             (fun (store: Store) -> let snapshot = store.Snapshot.Value in rank snapshot index, snapshots[snapshot][index])
             (fun _ element (rank, score) ->
-                let timeline = Anime.timeline (TimelineParams ())
+                let timeline = Fable.Ranvier.Anime.Anime.timeline (TimelineParams ())
 
                 timeline.add (
                     element,

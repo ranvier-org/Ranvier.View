@@ -7,6 +7,7 @@ module Routes
 open Fable.Core
 open global.Ranvier
 open Ranvier.Anime
+open Fable.Ranvier.Anime
 open Ranvier.Elmish
 open Ranvier.View
 open Ranvier.View.Dom
@@ -268,10 +269,10 @@ let private about =
         })
 
 let private arrive (_: unit -> unit) (element: TS.Dom.Element) =
-    Anime.animate (element, Anim (opacity = Value.fromTo (0, 1), y = Value.fromTo (24, 0), duration = 420, ease = Ease.outQuart))
+    Fable.Ranvier.Anime.Anime.animate (element, Anim (opacity = Value.fromTo (0, 1), y = Value.fromTo (24, 0), duration = 420, ease = Ease.outQuart))
 
 let private depart (_: unit -> unit) (element: TS.Dom.Element) =
-    Anime.animate (element, Anim (opacity = 0, y = -16, duration = 260, ease = Ease.inQuad))
+    Fable.Ranvier.Anime.Anime.animate (element, Anim (opacity = 0, y = -16, duration = 260, ease = Ease.inQuad))
 
 let private page (route: Route) (content: TemplateView<unit -> unit>) =
     armOf (section (Attrs.className "page", Attrs.data ("route", nameOf route), Motion.presence arrive depart) { content })
@@ -299,7 +300,7 @@ let view (shell: Shell) : Component<unit> =
                 // The indicator is as wide as a tab at every breakpoint, so its offset is the route's index in widths of its own.
                 span (
                     Attrs.className "indicator",
-                    Motion.follow "x" (AnimatableParams (unit = "%", duration = 420., ease = Ease.outBack)) (fun (s: Shell) ->
+                    Motion.follow "x" { ComposedAnimationOptions.Default with Duration = 420.; Unit = Some "%"; Extra = AnimatableParams (ease = Ease.outBack) } (fun (s: Shell) ->
                         float (Array.findIndex ((=) s.Route.Value) routes)
                         * 100.)
                 ) {
@@ -307,7 +308,7 @@ let view (shell: Shell) : Component<unit> =
                 }
             }
 
-            main (Attrs.className "stage", Motion.flip (LayoutParams (duration = 380, ease = Ease.outQuart))) {
+            main (Attrs.className "stage", Motion.flip { LayoutOptions.Default.WithDuration 380u with Ease = Page.outQuart }) {
                 matchWith (fun (s: Shell) -> s.Route.Value) (function
                     | Home -> arm homeArm ()
                     | Gallery -> arm galleryArm ()

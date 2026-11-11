@@ -1,7 +1,9 @@
 // Bundle-size checks of the Motion parts, over the SizeEntries.fs entries bundled with rolldown and compressed with gzip
 // level 9 (spec "Bundle budget"):
 // - glue: Motion.presence against its twin calling animate through Hooks.motion and Hooks.exit (≤ 900 B), and
-//   Motion.flip against its twin calling createLayout through Hooks.reflow (≤ 600 B);
+//   Motion.flip against its twin calling createLayout through Hooks.reflow (≤ 1100 B: over the 589 B of anime-only
+//   parameters, the shared LayoutOptions record and its conversion to anime layout parameters add about 320 B, and the
+//   portable FlipLayout seam between Motion.flip and the engine about 160 B);
 // - isolation: an unminified entry using one Motion part declares no anime feature class beyond those its own anime
 //   imports bring (AutoLayout, Draggable, ScrollObserver, TextSplitter, WAAPIAnimation, Timeline);
 // - helpers: the emitted Ranvier.View.Anime and Fable.Ranvier.Anime modules hold no curry, uncurry, partialApply or
@@ -30,7 +32,7 @@ const sizeOf = code => ({ raw: code.length, gzip: gzipSync(code, { level: 9 }).l
 const result = { glue: {}, isolation: {}, helpers: {} };
 let breach = false;
 
-for (const [part, twin, budgetGzip] of [["presence", "presenceTwin", 900], ["flip", "flipTwin", 600]]) {
+for (const [part, twin, budgetGzip] of [["presence", "presenceTwin", 900], ["flip", "flipTwin", 1100]]) {
   const motion = sizeOf(await bundle(part, entry(part), true));
   const handWritten = sizeOf(await bundle(twin, entry(twin), true));
   const deltaGzip = motion.gzip - handWritten.gzip;
@@ -45,7 +47,7 @@ const declared = code => classes.filter(name => new RegExp(`\\b(class ${name}|${
 // Each part with the anime functions it calls; the classes those functions bring are the part's own.
 const parts = {
   on: ["animate"], appear: ["animate"], enter: ["animate"], exit: ["animate"], presence: ["animate"],
-  fade: ["animate"], collapse: ["animate", "cleanInlineStyles"], flip: ["createLayout"],
+  fade: ["animate"], collapse: ["animate"], flip: ["createLayout"],
   follow: ["createAnimatable"], animateOn: ["animate"], draw: ["createDrawable", "createAnimatable"],
   morph: ["animate", "morphTo"], scroll: ["onScroll", "animate"], drag: ["createDraggable"],
   split: ["splitText", "animate"]
@@ -61,8 +63,8 @@ for (const [part, imports] of Object.entries(parts)) {
 
 const helpers = /\b(curry\d*|uncurry\d*|partialApply|createObj)\b/g;
 const generated = new URL("generated/", here);
-// The bindings compile from the Fable.Ranvier.Anime package, or from a sibling Ranvier.Anime checkout under
-// `dev local --with-anime`.
+// Fable.Ranvier.Anime, with its Portable folder, compiles from its package, or from a sibling Ranvier.Anime checkout
+// under `dev local --with-anime`.
 const bindings = (() => {
   const packaged = readdirSync(new URL("fable_modules/", generated)).find(name => /^Fable\.Ranvier\.Anime(\.Traced)?\.\d/.test(name));
   if (packaged) return `fable_modules/${packaged}/`;
@@ -70,15 +72,19 @@ const bindings = (() => {
   if (local) return `${local.replaceAll("\\", "/")}/`;
   throw new Error("The generated output holds no Fable.Ranvier.Anime modules.");
 })();
+// Each module by the name the report gives it; the bindings' folder varies with the package version and the checkout.
 const modules = [
-  ...readdirSync(new URL("src/Ranvier.View.Anime/", generated)).map(file => `src/Ranvier.View.Anime/${file}`),
-  ...readdirSync(new URL(bindings, generated)).filter(file => file.endsWith(".js")).map(file => `${bindings}${file}`)
+  ...readdirSync(new URL("src/Ranvier.View.Anime/", generated)).map(file => [`src/Ranvier.View.Anime/${file}`, `src/Ranvier.View.Anime/${file}`]),
+  ...readdirSync(new URL(bindings, generated), { recursive: true })
+    .map(file => file.replaceAll("\\", "/"))
+    .filter(file => file.endsWith(".js"))
+    .map(file => [`Fable.Ranvier.Anime/${file}`, bindings + file])
 ];
-for (const module of modules) {
+for (const [name, module] of modules) {
   const text = readFileSync(new URL(module, generated), "utf8");
   const calls = [...text.matchAll(helpers)].map(match => match[0]);
   breach ||= calls.length !== 0;
-  result.helpers[module] = calls.length;
+  result.helpers[name] = calls.length;
 }
 
 result.withinBudget = !breach;
