@@ -455,6 +455,9 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// <summary>Largest observed pending callback count.</summary>
     member _.PeakPostedWork = posted.Peak
 
+    member internal _.SnapshotDeviceScale = deviceScale
+
+    member internal _.SnapshotViewportSize = struct (viewportWidth, viewportHeight)
     member internal _.HasPendingWork = posted.Count > 0
 
     member internal _.SetOwnerWake(callback) =
