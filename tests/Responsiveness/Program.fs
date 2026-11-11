@@ -27,7 +27,7 @@ let percentile quantile (values: int64 array) =
         * 1000.0
         / float Stopwatch.Frequency
 
-let sample scenario seconds lines unbounded visible renderer tracing interactive pipeline boundedIme output repetition =
+let sample scenario seconds operations lines unbounded visible renderer tracing interactive pipeline boundedIme output repetition =
     use window =
         Window.Create ("Ranvier responsiveness", 800, 600, hidden = not visible, ?renderer = renderer)
 
@@ -123,7 +123,10 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
     let clock = Stopwatch.StartNew ()
     let mutable iteration = 0
 
-    while clock.Elapsed.TotalSeconds < seconds do
+    while (if operations > 0 then
+               iteration < operations
+           else
+               clock.Elapsed.TotalSeconds < seconds) do
         let started = Stopwatch.GetTimestamp ()
 
         match scenario with
@@ -241,6 +244,15 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
 
     let stats =
         {|
+            schemaVersion = 1
+            benchmarkProtocol = "owner-turn-v1"
+            machineId = Environment.MachineName
+            sourceCommit = Environment.GetEnvironmentVariable "RANVIER_BENCH_COMMIT"
+            pendingWork =
+                if scenario = "posted" || scenario = "publication" then
+                    -1
+                else
+                    0
             scenario = scenario
             repetition = repetition
             seconds = seconds
@@ -275,6 +287,8 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
             nativeDropped = nativeDropped
             gpuFrames = window.GpuFramesPresented
             cpuFrames = window.CpuFramesPresented
+            fullCpuPaints = window.FullCpuPaints
+            dirtyCpuPaints = window.DirtyCpuPaints
             turnP50Ms = percentile 0.50 (turnDurations.ToArray ())
             turnP95Ms = percentile 0.95 (turnDurations.ToArray ())
             turnP99Ms = percentile 0.99 (turnDurations.ToArray ())
@@ -286,6 +300,7 @@ let sample scenario seconds lines unbounded visible renderer tracing interactive
     let prefix = Path.Combine (output, $"{scenario}-{repetition}")
     let options = JsonSerializerOptions (IncludeFields = true)
     File.WriteAllText (prefix + ".json", JsonSerializer.Serialize (stats, options))
+    File.WriteAllText (prefix + "-turns.json", JsonSerializer.Serialize (turnDurations.ToArray (), options))
     File.WriteAllText (prefix + "-managed.json", JsonSerializer.Serialize (events, options))
     File.WriteAllText (prefix + "-native.json", JsonSerializer.Serialize (nativeEvents, options))
     printfn "%s" (JsonSerializer.Serialize stats)
@@ -301,6 +316,11 @@ let main args =
         Double.Parse (option "--seconds" "60" args, Globalization.CultureInfo.InvariantCulture)
 
     let repetitions = int (option "--repetitions" "5" args)
+    let operations = int (option "--iterations" "0" args)
+
+    if operations < 0 then
+        invalidArg "--iterations" "must be non-negative"
+
     let lines = int (option "--lines" "100000" args)
 
     if
@@ -340,6 +360,7 @@ let main args =
             sample
                 name
                 seconds
+                operations
                 lines
                 (Array.contains "--unbounded-dom" args)
                 (Array.contains "--visible" args)

@@ -31,6 +31,8 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     let mutable gpuHeight = 0
     let mutable gpuFrames = 0L
     let mutable cpuFrames = 0L
+    let mutable fullCpuPaints = 0L
+    let mutable dirtyCpuPaints = 0L
     let mutable lastGpu = false
     let mutable pendingEglFrame = 0n
 
@@ -170,10 +172,16 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
             let painted =
                 if fullPaint then
                     host.Paint pixels
+                    fullCpuPaints <- fullCpuPaints + 1L
                     fullPaint <- false
                     true
                 else
-                    (host.PaintDirty pixels).IsSome
+                    let changed = (host.PaintDirty pixels).IsSome
+
+                    if changed then
+                        dirtyCpuPaints <- dirtyCpuPaints + 1L
+
+                    changed
 
             if painted then
                 use start = fixed pixels
@@ -834,7 +842,13 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
         | None -> false
 
     /// <summary>Requires a full CPU repaint after viewport or display-scale changes.</summary>
-    member _.Invalidate() =
+    member _.FullCpuPaints = fullCpuPaints
+    member _.DirtyCpuPaints = dirtyCpuPaints
+
+    member _.InvalidateContent() =
+        pipelineNeedsSubmit <- true
+
+    member _.InvalidateAll() =
         fullPaint <- true
         pipelineNeedsSubmit <- true
 

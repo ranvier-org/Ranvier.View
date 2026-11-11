@@ -52,3 +52,16 @@ a complete document buffer or qualify physical platform IMEs.
 `posted` is the deliberately unbounded ordinary-post control. `publication` uses one detached-result slot, one worker at a time, and owner-side document/text/project/request revision validation before changing the visible decoration. The sample cancels its worker on shutdown and checks revisions regardless of cancellation. The document ID is a fresh open-document generation, so reopening a path cannot accept an old result. For reactive values, use Ranvier core async/stream primitives instead of this host transport.
 
 `LatestPublication` transfers ownership of every published value, including values rejected after disposal. Its apply callback borrows the payload; the optional release callback runs once afterward or when replaced/rejected, on whichever thread owns that operation. Release must be thread-safe and cannot access native handles. Dispose clears pending payloads; a delivery already claimed may complete. Revision validation is application policy, not inferred by the generic slot.
+# Regression comparison
+
+Use `--iterations 600 --repetitions 5 --no-trace` for matched fixed-work cohorts.
+Run baseline and candidate in interleaved fresh processes on the same machine,
+with identical renderer, viewport and editor options. Set `RANVIER_BENCH_COMMIT`
+to the tested commit. Keep the raw JSON and runtime receipt.
+
+`python tests/Responsiveness/compare.py BASELINE CANDIDATE --scenario typing`
+fails for a median p95 increase exceeding both 15% and 0.5 ms, or per-operation
+allocation exceeding both 20% and 256 bytes. It rejects unmatched conditions,
+invalid data and unfinished work. Queue workloads currently mark unknown pending
+counts as -1 and cannot pass this timing gate. Shared CI runners enforce structural
+contracts; timing acceptance requires matched controlled runs.

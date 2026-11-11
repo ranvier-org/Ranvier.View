@@ -459,7 +459,7 @@ type Window
         linuxAccessibility
         |> Option.iter (fun bridge -> bridge.Update ())
 
-        presenter.Invalidate ()
+        presenter.InvalidateAll ()
         fullPaint <- true
 
     let css (value: float32) =
@@ -1640,7 +1640,7 @@ type Window
     /// chain the present runs on its own thread, so a present that blocks leaves this call and <c>Step</c> running.
     /// </remarks>
     member this.Present() =
-        presenter.Invalidate ()
+        presenter.InvalidateAll ()
         this.PresentPending ()
 
     member private this.PresentPending() =
@@ -1653,8 +1653,10 @@ type Window
             onPage <- outer
 
     member private _.PresentFrame() =
-        if host.FrameRequested || fullPaint || framePending then
-            presenter.Invalidate ()
+        if fullPaint then
+            presenter.InvalidateAll ()
+        elif host.FrameRequested || framePending then
+            presenter.InvalidateContent ()
 
         flushHeld HeldKind.Barrier
         host.Frame ()
@@ -1934,6 +1936,8 @@ type Window
 
     /// <summary>The number of presentation attempts that took the CPU path.</summary>
     member internal _.CpuFramesPresented = presenter.CpuFramesPresented
+    member internal _.FullCpuPaints = presenter.FullCpuPaints
+    member internal _.DirtyCpuPaints = presenter.DirtyCpuPaints
 
     /// <summary>The D3D11 swap chain presenting this window's frames on its own thread, when it has one.</summary>
     member internal _.SwapChain = presenter.SwapChain

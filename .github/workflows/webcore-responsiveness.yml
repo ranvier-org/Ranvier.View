@@ -65,6 +65,7 @@ jobs:
       - name: Build consumers against the staged runtime
         shell: bash
         run: |
+          python -m unittest discover -s tests/Responsiveness -p test_compare.py
           dotnet build tests/Ranvier.View.WebCore.Tests -c Release -p:RanvierWebCoreNativeDir="$PWD/artifacts/native" -o artifacts/tests
           dotnet build tests/Responsiveness -c Release -p:RanvierWebCoreNativeDir="$PWD/artifacts/native" -o artifacts/fixture
       - name: Run integration and bounded input/presentation traces
