@@ -1,4 +1,4 @@
-// Type checks on .NET over Fable.Ranvier.Anime (fable/Ranvier.View.Anime.Browser), where the anime.js bindings compile.
+// Type checks on .NET over Fable.Ranvier.Anime (src/Fable.Ranvier.View.Anime), where the anime.js bindings compile.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,7 +15,7 @@ function dotnet(args, success = true) {
   return log;
 }
 const project = path.join(output, 'Types.fsproj');
-await fs.writeFile(project, `<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include="${path.join(root, 'fable/Ranvier.View.Anime.Browser/Ranvier.View.Anime.Browser.fsproj')}"/><PackageReference Include="Ranvier.Css.View" Version="$(RanvierCssAddonsVersion)"/><Compile Include="${path.join(root, 'docs/samples/css-anime/Example.fs')}"/><Compile Include="Types.fs"/></ItemGroup><ItemGroup Condition="'$(UseLocalRanvierCss)' == 'true'"><ProjectReference Include="$(RanvierCssRoot)/src/Ranvier.Css.Bindings/Ranvier.Css.Bindings.fsproj"/></ItemGroup><ItemGroup Condition="'$(UseLocalRanvierCss)' != 'true'"><PackageReference Include="Ranvier.Css.Bindings" Version="$(RanvierCssAddonsVersion)"/></ItemGroup></Project>`);
+await fs.writeFile(project, `<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include="${path.join(root, 'src/Fable.Ranvier.View.Anime/Fable.Ranvier.View.Anime.fsproj')}"/><PackageReference Include="Ranvier.Css.View" Version="$(RanvierCssAddonsVersion)"/><Compile Include="${path.join(root, 'docs/samples/css-anime/Example.fs')}"/><Compile Include="Types.fs"/></ItemGroup><ItemGroup Condition="'$(UseLocalRanvierCss)' == 'true'"><ProjectReference Include="$(RanvierCssRoot)/src/Ranvier.Css.Bindings/Ranvier.Css.Bindings.fsproj"/></ItemGroup><ItemGroup Condition="'$(UseLocalRanvierCss)' != 'true'"><PackageReference Include="Ranvier.Css.Bindings" Version="$(RanvierCssAddonsVersion)"/></ItemGroup></Project>`);
 const prefix = `module Types
 open Ranvier.Css
 open Ranvier.Anime

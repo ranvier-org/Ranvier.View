@@ -16,6 +16,7 @@
     <Project Path="src/Ranvier.View/Ranvier.View.fsproj" />
     <Project Path="src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj" />
     <Project Path="src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj" />
+    <Project Path="src/Fable.Ranvier.View.Anime/Fable.Ranvier.View.Anime.fsproj" />
     <Project Path="src/Fable.Ranvier/Fable.Ranvier.fsproj" />
     <Project Path="src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />
     <Project Path="src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj" />
@@ -31,7 +32,6 @@
     <Project Path="tests/Ranvier.View.WebCore.Tests/Ranvier.View.WebCore.Tests.fsproj" />
     <Project Path="tests/Ranvier.View.WebCore.AotSmoke/Ranvier.View.WebCore.AotSmoke.fsproj" />
     <Project Path="fable/Ranvier.View.Anime.Tests/Ranvier.View.Anime.Tests.fsproj" />
-    <Project Path="fable/Ranvier.View.Anime.Browser/Ranvier.View.Anime.Browser.fsproj" />
   </Folder>
   <Folder Name="/experiments/Ranvier.View.Checks/">
     <Project Path="experiments/Ranvier.View.Checks/RepresentationChecks.fsproj" />

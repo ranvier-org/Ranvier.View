@@ -18,6 +18,7 @@ module Spec =
             "src/Ranvier.View/Ranvier.View.fsproj"
             "src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj"
             "src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj"
+            "src/Fable.Ranvier.View.Anime/Fable.Ranvier.View.Anime.fsproj"
             "src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj"
             "src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj"
         ]

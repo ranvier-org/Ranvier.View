@@ -60,7 +60,7 @@ Try this in the [browser editor](getting-started.md).
 | DOM helper library | `src/Fable.Ranvier` | Proof of concept, not packaged. See [Other authoring layers](authored.md). |
 | anime.js bindings, owners and signals for animations, and the portable animation API | `Fable.Ranvier.Anime` | Alpha. Compiles for .NET and Fable. Published from [Ranvier.Anime](https://ranvier-org.github.io/Ranvier.Anime/); see [Animation](motion.md). |
 | the portable animation API on a native .NET engine | `Ranvier.Anime` | Release candidate. .NET 10. Published from [Ranvier.Anime](https://ranvier-org.github.io/Ranvier.Anime/). |
-| Motion template parts | `Ranvier.View.Anime` | Alpha. See [Motion parts](motion-parts.md). |
+| Motion template parts | `Fable.Ranvier.View.Anime`, and `Ranvier.View.Anime` on .NET hosts | Alpha. See [Motion parts](motion-parts.md). |
 | Wire codecs for state transfer | `Ranvier.Wire` | Preview. See [State transfer](../server/state-transfer.md). |
 | Runnable reference | `examples/Fable.Ranvier.Playground` | Vite app and test suite. |
 

@@ -10,9 +10,9 @@
         <!-- The traced build packs as Ranvier.View.Anime.Traced and depends on the traced view and anime packages. -->
         <PackageId Condition="'$(RanvierTrace)' == 'true'">Ranvier.View.Anime.Traced</PackageId>
         <Title>Ranvier.View.Anime</Title>
-        <Description>Motion parts for Ranvier.View templates: lifecycle, enter and exit, FLIP and signal-driven animation, over anime.js under Fable and the native Ranvier.Anime on .NET, omitted by the server renderer.</Description>
-        <Description Condition="'$(RanvierTrace)' == 'true'">The traced build of Ranvier.View.Anime: motion parts for Ranvier.View templates over anime.js and the native Ranvier.Anime. Depends on the traced view and anime packages.</Description>
-        <PackageTags>reactive;signals;view;animation;animejs;native;fable;fsharp</PackageTags>
+        <Description>Motion parts for Ranvier.View templates over the native Ranvier.Anime, for .NET hosts: lifecycle, enter and exit, FLIP and signal-driven animation, omitted by the server renderer. Fable projects use Fable.Ranvier.View.Anime.</Description>
+        <Description Condition="'$(RanvierTrace)' == 'true'">The traced build of Ranvier.View.Anime: motion parts for Ranvier.View templates over the native Ranvier.Anime. Depends on the traced view and anime packages.</Description>
+        <PackageTags>reactive;signals;view;animation;native;fsharp</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>Alpha release. The API may change before 1.0.</PackageReleaseNotes>
         <!-- Set by ShipIt from CHANGELOG.md. -->
@@ -21,7 +21,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Motion.fs" />
+        <Compile Include="../Fable.Ranvier.View.Anime/Motion.fs" Link="Motion.fs" />
         <None Include="README.md" Pack="true" PackagePath="\" />
         <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />
     </ItemGroup>
@@ -30,21 +30,17 @@
         <ProjectReference Include="../Ranvier.View/Ranvier.View.fsproj" />
     </ItemGroup>
 
-    <!-- One source over the portable surface: Ranvier.Anime on .NET hosts, Fable.Ranvier.Anime (anime.js) under Fable. -->
-    <ItemGroup Condition="'$(UseLocalRanvierAnime)' == 'true' and '$(FABLE_COMPILER)' != 'true'">
+    <!-- The native engine. The same Motion.fs over anime.js is Fable.Ranvier.View.Anime, which a Fable project references. -->
+    <ItemGroup Condition="'$(UseLocalRanvierAnime)' == 'true'">
         <ProjectReference Include="$(RanvierAnimeRoot)/src/Ranvier.Anime/Ranvier.Anime.fsproj" />
     </ItemGroup>
-    <ItemGroup Condition="'$(UseLocalRanvierAnime)' == 'true' and '$(FABLE_COMPILER)' == 'true'">
-        <ProjectReference Include="$(RanvierAnimeRoot)/src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj" />
-    </ItemGroup>
-    <ItemGroup Condition="'$(UseLocalRanvierAnime)' != 'true' and '$(FABLE_COMPILER)' != 'true'">
+    <ItemGroup Condition="'$(UseLocalRanvierAnime)' != 'true'">
         <PackageReference Include="Ranvier.Anime$(RanvierPackageSuffix)" Version="$(RanvierNativeAnimeVersion)" />
-    </ItemGroup>
-    <ItemGroup Condition="'$(UseLocalRanvierAnime)' != 'true' and '$(FABLE_COMPILER)' == 'true'">
-        <PackageReference Include="Fable.Ranvier.Anime$(RanvierPackageSuffix)" Version="$(RanvierAnimeVersion)" />
     </ItemGroup>
 
     <ItemGroup>
+        <!-- A .NET package: Fable projects reference Fable.Ranvier.View.Anime, so this one ships no Fable sources. -->
+        <PackageReference Remove="Fable.Package.SDK" />
         <!-- Ranvier.Anime requires FSharp.Core 10.0.100. -->
         <PackageReference Update="FSharp.Core" Version="10.0.100" />
     </ItemGroup>

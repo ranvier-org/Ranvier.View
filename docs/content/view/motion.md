@@ -17,9 +17,10 @@ lifecycle of lists and arms. On .NET hosts the engine is `Ranvier.Anime`, a nati
 | `Fable.Ranvier.Anime` | `Fable.Ranvier.Anime` | the anime.js bindings, `Reactive` (owners and signals) and `Testing` (a manual clock), from [Ranvier.Anime](https://ranvier-org.github.io/Ranvier.Anime/) | `Ranvier` |
 | `Fable.Ranvier.Anime` | `Ranvier.Anime` | the portable API over anime.js: `Anime.animate target specs options`, the option records and the contracts the binding objects inherit | `Ranvier` |
 | `Ranvier.Anime` | `Ranvier.Anime` | the same portable API on the native .NET engine, with `AnimeHost` for the host's services | `Ranvier`, `Ranvier.Dom` |
-| `Ranvier.View.Anime` | `Ranvier.View.Anime` | the `Motion.*` template parts, one source over the portable API | `Ranvier.View`, and `Fable.Ranvier.Anime` under Fable or `Ranvier.Anime` on .NET |
+| `Fable.Ranvier.View.Anime` | `Ranvier.View.Anime` | the `Motion.*` template parts over anime.js, for Fable projects | `Ranvier.View`, `Fable.Ranvier.Anime` |
+| `Ranvier.View.Anime` | `Ranvier.View.Anime` | the same parts, from the same source, over the native engine, for .NET hosts | `Ranvier.View`, `Ranvier.Anime` |
 
-Use `Ranvier.View.Anime` for template motion, or `Fable.Ranvier.Anime` to animate an element
+Use `Fable.Ranvier.View.Anime` for template motion, or `Fable.Ranvier.Anime` to animate an element
 directly. This page covers the bindings, which run in the browser; [Motion parts](motion-parts.md)
 uses the portable API, which compiles for both engines. Install the JavaScript engine:
 

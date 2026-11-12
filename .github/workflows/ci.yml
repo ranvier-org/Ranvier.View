@@ -579,7 +579,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: anime-packages
-          path: artifacts/native-delivery-excluded/Ranvier.View.Anime*.nupkg
+          path: artifacts/native-delivery-excluded/*Ranvier.View.Anime*.nupkg
           if-no-files-found: error
       - uses: actions/upload-artifact@v7
         with:

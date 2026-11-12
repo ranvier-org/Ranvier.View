@@ -17,7 +17,22 @@ See the [motion guide](https://ranvier-org.github.io/Ranvier/view/motion/) for a
 for rationale, and the [seam note](https://github.com/ranvier-org/Ranvier/blob/master/docs/research/2026-10-21-motion-seam.md)
 for the runtime hooks.
 
-Install the JavaScript package beside it:
+## Packages
+
+The parts ship as two packages built from the same `Motion.fs`, one per engine. Reference the one for the compiler
+that builds the project:
+
+| Project | Package | Engine |
+|---|---|---|
+| Fable, and the .NET side of an isomorphic project | `Fable.Ranvier.View.Anime` | anime.js through `Fable.Ranvier.Anime` |
+| .NET host such as WebCore | `Ranvier.View.Anime` (net10.0) | the native `Ranvier.Anime` |
+
+Both have the namespace `Ranvier.View.Anime` and a `.Traced` variant. Fable type checks a project against the
+package's assembly, so a Fable project needs the assembly compiled over the anime.js bindings: `Ranvier.View.Anime`
+does not compile under Fable. On .NET the bindings in `Fable.Ranvier.View.Anime` are inert, which is what a server
+render needs.
+
+With `Fable.Ranvier.View.Anime`, install the JavaScript package beside it:
 
 ```shell
 npm install animejs@4.5.0
@@ -178,8 +193,8 @@ let toasts =
 
 ## One API, two engines
 
-The project is one source: `Motion.fs` compiles under Fable against `Fable.Ranvier.Anime` and on .NET against
-`Ranvier.Anime`, and calls only the portable API the two share. A template that does the same compiles unchanged on
+The parts are one source: `Motion.fs` compiles against `Fable.Ranvier.Anime` in `Fable.Ranvier.View.Anime` and against
+`Ranvier.Anime` in `Ranvier.View.Anime`, and calls only the portable API the two share. A template that does the same compiles unchanged on
 both, play functions included:
 
 - **Animations.** `Anime.animate target specs options`, `Anime.animateTargets` and `Anime.timeline ()`, with

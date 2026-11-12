@@ -22,7 +22,9 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\Ranvier.View.Dom\Ranvier.View.Dom.fsproj" />
-        <ProjectReference Include="..\..\src\Ranvier.View.Anime\Ranvier.View.Anime.fsproj" />
+        <!-- Each engine's package project: the native one on .NET, the anime.js one under Fable. -->
+        <ProjectReference Include="..\..\src\Ranvier.View.Anime\Ranvier.View.Anime.fsproj" Condition="'$(FABLE_COMPILER)' != 'true'" />
+        <ProjectReference Include="..\..\src\Fable.Ranvier.View.Anime\Fable.Ranvier.View.Anime.fsproj" Condition="'$(FABLE_COMPILER)' == 'true'" />
         <PackageReference Update="FSharp.Core" Version="10.1.401" />
     </ItemGroup>
 

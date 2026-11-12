@@ -1,4 +1,4 @@
-"""Select the Ranvier.View.Anime publication pair: both packages, at the project's version, and nothing else."""
+"""Select the Anime publication set: the native and Fable packages, each untraced and traced, at the project's version."""
 
 import argparse
 import importlib.util
@@ -6,7 +6,8 @@ from pathlib import Path
 import re
 import sys
 
-IDS = ('Ranvier.View.Anime', 'Ranvier.View.Anime.Traced')
+# Ranvier.View.Anime is the motion parts over the native engine, Fable.Ranvier.View.Anime the same source over anime.js.
+IDS = ('Ranvier.View.Anime', 'Ranvier.View.Anime.Traced', 'Fable.Ranvier.View.Anime', 'Fable.Ranvier.View.Anime.Traced')
 
 
 def load_selector():

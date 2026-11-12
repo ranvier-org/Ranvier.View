@@ -47,7 +47,7 @@
   <ItemGroup>
     <ProjectReference Include="../../../src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj" />
     <ProjectReference Include="../../../experiments/Ranvier.View.Twin/Ranvier.View.Twin.fsproj" />
-    <ProjectReference Include="../../../fable/Ranvier.View.Anime.Browser/Ranvier.View.Anime.Browser.fsproj" />
+    <ProjectReference Include="../../../src/Fable.Ranvier.View.Anime/Fable.Ranvier.View.Anime.fsproj" />
     <ProjectReference Include="../../../experiments/Ranvier.View.Arms/Ranvier.View.Arms.fsproj" />
     <ProjectReference Include="../../../src/Fable.Ranvier/Fable.Ranvier.fsproj" />
     <PackageReference Update="FSharp.Core" Version="10.1.403" />

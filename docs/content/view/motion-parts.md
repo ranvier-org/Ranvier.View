@@ -3,7 +3,7 @@ title: Motion parts
 description: Template parts that animate elements on placement, on entering and leaving lists and arms, on reorder, and from signals.
 ---
 
-`Ranvier.View.Anime` adds `Motion.*` parts beside a tag's attributes and events. They start
+`Fable.Ranvier.View.Anime`, and `Ranvier.View.Anime` on .NET hosts, add `Motion.*` parts beside a tag's attributes and events. They start
 animations after placement and clean them up with the instance. The parts are one source over the
 portable API of the namespace `Ranvier.Anime`: under Fable it is `Fable.Ranvier.Anime`'s, over
 anime.js, and on .NET hosts `Ranvier.Anime`'s, the native engine. The

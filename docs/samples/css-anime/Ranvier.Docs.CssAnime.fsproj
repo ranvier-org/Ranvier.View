@@ -5,7 +5,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../../fable/Ranvier.View.Anime.Browser/Ranvier.View.Anime.Browser.fsproj" />
+    <ProjectReference Include="../../../src/Fable.Ranvier.View.Anime/Fable.Ranvier.View.Anime.fsproj" />
     <Compile Include="Example.fs" />
   </ItemGroup>
     <ItemGroup Condition="'$(UseLocalRanvierCss)' == 'true'">
