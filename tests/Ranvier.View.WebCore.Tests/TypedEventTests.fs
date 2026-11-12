@@ -18,7 +18,8 @@ type TypedSlider =
         Slider: Slider
     }
 
-    static member Create(_: Setup, slider: Slider) = { Slider = slider }
+    static member Create(_: Setup, slider: Slider) =
+        { Slider = slider }
 
     static member View =
         div () {
@@ -34,7 +35,8 @@ type NamedSlider =
         Slider: Slider
     }
 
-    static member Create(_: Setup, slider: Slider) = { Slider = slider }
+    static member Create(_: Setup, slider: Slider) =
+        { Slider = slider }
 
     static member View =
         div () {
@@ -50,7 +52,8 @@ type BrokenImage =
         Errors: Signal<int>
     }
 
-    static member Create(_: Setup, errors: Signal<int>) = { Errors = errors }
+    static member Create(_: Setup, errors: Signal<int>) =
+        { Errors = errors }
 
     static member View =
         div () { img (Attrs.attribute ("src", "missing://image.png"), Events.onError (fun s _ -> s.Errors.Value <- s.Errors.Value + 1)) }

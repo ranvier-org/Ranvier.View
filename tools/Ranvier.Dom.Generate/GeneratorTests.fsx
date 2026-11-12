@@ -129,6 +129,7 @@ let run (folder: string) =
         check
             (text.Contains $"let on{widened}<'native when 'native :> Dom.HTMLElement> (handler: Dom.Event -> unit)")
             $"on{widened} takes a plain Event, which every dispatch of it satisfies"
+
     check (text.Contains "Dom.FileList") "the file list uses the shared contract"
 
     check
