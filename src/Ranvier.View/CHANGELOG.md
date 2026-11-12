@@ -1,5 +1,5 @@
 ---
-last_commit_released: 85021719b00d17b8ff3e989ad79a8fa32cea6492
+last_commit_released: 606e0e63e7ab1c64511ede7bbc86a0fae7f817c3
 pre_release: rc
 include:
   - ../Ranvier.View.Dom/
@@ -16,6 +16,14 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.49-rc.4 - 2026-11-12
+
+### 🏗️ Breaking changes
+
+* *(view)* Typed onInput, onError, onAbort, onProgress and onResize take a plain Event (#143) ([606e0e6](https://github.com/ranvier-org/Ranvier.View/commit/606e0e63e7ab1c64511ede7bbc86a0fae7f817c3))
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/85021719b00d17b8ff3e989ad79a8fa32cea6492..606e0e63e7ab1c64511ede7bbc86a0fae7f817c3)</small></strong>
 
 ## 0.1.49-rc.3 - 2026-11-12
 
