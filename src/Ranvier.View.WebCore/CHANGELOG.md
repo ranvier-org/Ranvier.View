@@ -1,5 +1,5 @@
 ---
-last_commit_released: d62f5615106f92d91f56b8ffaa006a1a3a104a77
+last_commit_released: 85021719b00d17b8ff3e989ad79a8fa32cea6492
 pre_release: rc
 depends_on:
   - ../Ranvier.View/
@@ -12,6 +12,14 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.0-rc.8 - 2026-11-12
+
+### 🔗 Dependencies
+
+* `src/Ranvier.View` updated to 0.1.49-rc.3
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/d62f5615106f92d91f56b8ffaa006a1a3a104a77..85021719b00d17b8ff3e989ad79a8fa32cea6492)</small></strong>
 
 ## 0.1.0-rc.7 - 2026-11-12
 
