@@ -1,5 +1,5 @@
 ---
-last_commit_released: ca95dc744b662a837925ba50ac1b97fb7cb48d0c
+last_commit_released: 85021719b00d17b8ff3e989ad79a8fa32cea6492
 pre_release: rc
 include:
   - ../Ranvier.View.Dom/
@@ -16,6 +16,14 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.49-rc.3 - 2026-11-12
+
+### 🏗️ Breaking changes
+
+* *(view-anime)* Motion parts over the unified Ranvier.Anime API (#134) ([8502171](https://github.com/ranvier-org/Ranvier.View/commit/85021719b00d17b8ff3e989ad79a8fa32cea6492))
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/ca95dc744b662a837925ba50ac1b97fb7cb48d0c..85021719b00d17b8ff3e989ad79a8fa32cea6492)</small></strong>
 
 ## 0.1.49-rc.2
 

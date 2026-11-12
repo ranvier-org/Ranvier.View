@@ -1,5 +1,5 @@
 ---
-last_commit_released: 3331a3075863963e22924e99991b85f70d0ff1cf
+last_commit_released: 85021719b00d17b8ff3e989ad79a8fa32cea6492
 pre_release: rc
 include:
   - ../Fable.Ranvier.View.Anime/
@@ -16,6 +16,14 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.46-rc.2 - 2026-11-12
+
+### 🏗️ Breaking changes
+
+* *(view-anime)* Motion parts over the unified Ranvier.Anime API (#134) ([8502171](https://github.com/ranvier-org/Ranvier.View/commit/85021719b00d17b8ff3e989ad79a8fa32cea6492))
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/3331a3075863963e22924e99991b85f70d0ff1cf..85021719b00d17b8ff3e989ad79a8fa32cea6492)</small></strong>
 
 ## 0.1.46-rc.1 - 2026-11-10
 
