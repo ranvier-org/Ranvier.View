@@ -4853,7 +4853,7 @@ module Properties =
 
 module Events =
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onAbort<'native when 'native :> Dom.HTMLElement> (handler: Dom.UIEvent -> unit) : Typed.Modifier<'native> =
+    let onAbort<'native when 'native :> Dom.HTMLElement> (handler: Dom.Event -> unit) : Typed.Modifier<'native> =
         Typed.listener "abort" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
@@ -5001,7 +5001,7 @@ module Events =
         Typed.listener "ended" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onError<'native when 'native :> Dom.HTMLElement> (handler: Dom.ErrorEvent -> unit) : Typed.Modifier<'native> =
+    let onError<'native when 'native :> Dom.HTMLElement> (handler: Dom.Event -> unit) : Typed.Modifier<'native> =
         Typed.listener "error" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
@@ -5033,7 +5033,7 @@ module Events =
         Typed.listener "gotpointercapture" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput<'native when 'native :> Dom.HTMLElement> (handler: Dom.InputEvent -> unit) : Typed.Modifier<'native> =
+    let onInput<'native when 'native :> Dom.HTMLElement> (handler: Dom.Event -> unit) : Typed.Modifier<'native> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
@@ -5153,7 +5153,7 @@ module Events =
         Typed.listener "pointerup" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onProgress<'native when 'native :> Dom.HTMLElement> (handler: Dom.ProgressEvent -> unit) : Typed.Modifier<'native> =
+    let onProgress<'native when 'native :> Dom.HTMLElement> (handler: Dom.Event -> unit) : Typed.Modifier<'native> =
         Typed.listener "progress" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
@@ -5165,7 +5165,7 @@ module Events =
         Typed.listener "reset" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onResize<'native when 'native :> Dom.HTMLElement> (handler: Dom.UIEvent -> unit) : Typed.Modifier<'native> =
+    let onResize<'native when 'native :> Dom.HTMLElement> (handler: Dom.Event -> unit) : Typed.Modifier<'native> =
         Typed.listener "resize" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
@@ -5417,7 +5417,7 @@ module A =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLAnchorElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLAnchorElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``abbr`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -5429,7 +5429,7 @@ module Abbr =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``address`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -5441,7 +5441,7 @@ module Address =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``area`` ops (modifiers: Typed.Modifier<Dom.HTMLAreaElement> array) =
@@ -5539,7 +5539,7 @@ module Area =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLAreaElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLAreaElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``article`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -5551,7 +5551,7 @@ module Article =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``aside`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -5563,7 +5563,7 @@ module Aside =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``audio`` ops (modifiers: Typed.Modifier<Dom.HTMLAudioElement> array) children =
@@ -5579,7 +5579,7 @@ module Audio =
         Typed.listener "encrypted" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLAudioElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLAudioElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
@@ -5595,7 +5595,7 @@ module B =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``base`` ops (modifiers: Typed.Modifier<Dom.HTMLBaseElement> array) =
@@ -5625,7 +5625,7 @@ module Base =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLBaseElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLBaseElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``bdi`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -5637,7 +5637,7 @@ module Bdi =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``bdo`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -5649,7 +5649,7 @@ module Bdo =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``blockquote`` ops (modifiers: Typed.Modifier<Dom.HTMLQuoteElement> array) children =
@@ -5670,7 +5670,7 @@ module Blockquote =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLQuoteElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLQuoteElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``body`` ops (modifiers: Typed.Modifier<Dom.HTMLBodyElement> array) children =
@@ -5760,7 +5760,7 @@ module Body =
         Typed.listener "hashchange" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLBodyElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLBodyElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
@@ -5829,7 +5829,7 @@ module Br =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLBRElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLBRElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``button`` ops (modifiers: Typed.Modifier<Dom.HTMLButtonElement> array) children =
@@ -5949,7 +5949,7 @@ module Button =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLButtonElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLButtonElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``canvas`` ops (modifiers: Typed.Modifier<Dom.HTMLCanvasElement> array) children =
@@ -5979,7 +5979,7 @@ module Canvas =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLCanvasElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLCanvasElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``caption`` ops (modifiers: Typed.Modifier<Dom.HTMLTableCaptionElement> array) children =
@@ -6000,7 +6000,7 @@ module Caption =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTableCaptionElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTableCaptionElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``cite`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -6012,7 +6012,7 @@ module Cite =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``code`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -6024,7 +6024,7 @@ module Code =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``col`` ops (modifiers: Typed.Modifier<Dom.HTMLTableColElement> array) =
@@ -6090,7 +6090,7 @@ module Col =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTableColElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTableColElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``colgroup`` ops (modifiers: Typed.Modifier<Dom.HTMLTableColElement> array) children =
@@ -6156,7 +6156,7 @@ module Colgroup =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTableColElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTableColElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``data`` ops (modifiers: Typed.Modifier<Dom.HTMLDataElement> array) children =
@@ -6177,7 +6177,7 @@ module Data =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLDataElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLDataElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``datalist`` ops (modifiers: Typed.Modifier<Dom.HTMLDataListElement> array) children =
@@ -6192,7 +6192,7 @@ module Datalist =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLDataListElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLDataListElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``dd`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -6204,7 +6204,7 @@ module Dd =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``del`` ops (modifiers: Typed.Modifier<Dom.HTMLModElement> array) children =
@@ -6234,7 +6234,7 @@ module Del =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLModElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLModElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``details`` ops (modifiers: Typed.Modifier<Dom.HTMLDetailsElement> array) children =
@@ -6264,7 +6264,7 @@ module Details =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLDetailsElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLDetailsElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``dfn`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -6276,7 +6276,7 @@ module Dfn =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``dialog`` ops (modifiers: Typed.Modifier<Dom.HTMLDialogElement> array) children =
@@ -6315,7 +6315,7 @@ module Dialog =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLDialogElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLDialogElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``div`` ops (modifiers: Typed.Modifier<Dom.HTMLDivElement> array) children =
@@ -6345,7 +6345,7 @@ module Div =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLDivElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLDivElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``dl`` ops (modifiers: Typed.Modifier<Dom.HTMLDListElement> array) children =
@@ -6366,7 +6366,7 @@ module Dl =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLDListElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLDListElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``dt`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -6378,7 +6378,7 @@ module Dt =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``em`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -6390,7 +6390,7 @@ module Em =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``embed`` ops (modifiers: Typed.Modifier<Dom.HTMLEmbedElement> array) =
@@ -6468,7 +6468,7 @@ module Embed =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLEmbedElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLEmbedElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``fieldset`` ops (modifiers: Typed.Modifier<Dom.HTMLFieldSetElement> array) children =
@@ -6516,7 +6516,7 @@ module Fieldset =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLFieldSetElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLFieldSetElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``figcaption`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -6528,7 +6528,7 @@ module Figcaption =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``figure`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -6540,7 +6540,7 @@ module Figure =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``footer`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -6552,7 +6552,7 @@ module Footer =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``form`` ops (modifiers: Typed.Modifier<Dom.HTMLFormElement> array) children =
@@ -6663,7 +6663,7 @@ module Form =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLFormElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLFormElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``h1`` ops (modifiers: Typed.Modifier<Dom.HTMLHeadingElement> array) children =
@@ -6684,7 +6684,7 @@ module H1 =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``h2`` ops (modifiers: Typed.Modifier<Dom.HTMLHeadingElement> array) children =
@@ -6705,7 +6705,7 @@ module H2 =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``h3`` ops (modifiers: Typed.Modifier<Dom.HTMLHeadingElement> array) children =
@@ -6726,7 +6726,7 @@ module H3 =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``h4`` ops (modifiers: Typed.Modifier<Dom.HTMLHeadingElement> array) children =
@@ -6747,7 +6747,7 @@ module H4 =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``h5`` ops (modifiers: Typed.Modifier<Dom.HTMLHeadingElement> array) children =
@@ -6768,7 +6768,7 @@ module H5 =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``h6`` ops (modifiers: Typed.Modifier<Dom.HTMLHeadingElement> array) children =
@@ -6789,7 +6789,7 @@ module H6 =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLHeadingElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``head`` ops (modifiers: Typed.Modifier<Dom.HTMLHeadElement> array) children =
@@ -6801,7 +6801,7 @@ module Head =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLHeadElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLHeadElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``header`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -6813,7 +6813,7 @@ module Header =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``hgroup`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -6825,7 +6825,7 @@ module Hgroup =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``hr`` ops (modifiers: Typed.Modifier<Dom.HTMLHRElement> array) =
@@ -6882,7 +6882,7 @@ module Hr =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLHRElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLHRElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``html`` ops (modifiers: Typed.Modifier<Dom.HTMLHtmlElement> array) children =
@@ -6903,7 +6903,7 @@ module Html =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLHtmlElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLHtmlElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``i`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -6915,7 +6915,7 @@ module I =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``iframe`` ops (modifiers: Typed.Modifier<Dom.HTMLIFrameElement> array) children =
@@ -7084,7 +7084,7 @@ module Iframe =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLIFrameElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLIFrameElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``img`` ops (modifiers: Typed.Modifier<Dom.HTMLImageElement> array) =
@@ -7267,7 +7267,7 @@ module Img =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLImageElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLImageElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``input`` ops (modifiers: Typed.Modifier<Dom.HTMLInputElement> array) =
@@ -7662,7 +7662,7 @@ module Input =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLInputElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLInputElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``ins`` ops (modifiers: Typed.Modifier<Dom.HTMLModElement> array) children =
@@ -7692,7 +7692,7 @@ module Ins =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLModElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLModElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``kbd`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -7704,7 +7704,7 @@ module Kbd =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``label`` ops (modifiers: Typed.Modifier<Dom.HTMLLabelElement> array) children =
@@ -7731,7 +7731,7 @@ module Label =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLLabelElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLLabelElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``legend`` ops (modifiers: Typed.Modifier<Dom.HTMLLegendElement> array) children =
@@ -7755,7 +7755,7 @@ module Legend =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLLegendElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLLegendElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``li`` ops (modifiers: Typed.Modifier<Dom.HTMLLIElement> array) children =
@@ -7785,7 +7785,7 @@ module Li =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLLIElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLLIElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``link`` ops (modifiers: Typed.Modifier<Dom.HTMLLinkElement> array) =
@@ -7941,7 +7941,7 @@ module Link =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLLinkElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLLinkElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``main`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -7953,7 +7953,7 @@ module Main =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``map`` ops (modifiers: Typed.Modifier<Dom.HTMLMapElement> array) children =
@@ -7977,7 +7977,7 @@ module Map =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLMapElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLMapElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``mark`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -7989,7 +7989,7 @@ module Mark =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``menu`` ops (modifiers: Typed.Modifier<Dom.HTMLMenuElement> array) children =
@@ -8010,7 +8010,7 @@ module Menu =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLMenuElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLMenuElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``meta`` ops (modifiers: Typed.Modifier<Dom.HTMLMetaElement> array) =
@@ -8067,7 +8067,7 @@ module Meta =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLMetaElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLMetaElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``meter`` ops (modifiers: Typed.Modifier<Dom.HTMLMeterElement> array) children =
@@ -8136,7 +8136,7 @@ module Meter =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLMeterElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLMeterElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``nav`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -8148,7 +8148,7 @@ module Nav =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``noscript`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -8160,7 +8160,7 @@ module Noscript =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``object`` ops (modifiers: Typed.Modifier<Dom.HTMLObjectElement> array) children =
@@ -8378,7 +8378,7 @@ module Object =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLObjectElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLObjectElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``ol`` ops (modifiers: Typed.Modifier<Dom.HTMLOListElement> array) children =
@@ -8426,7 +8426,7 @@ module Ol =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLOListElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLOListElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``optgroup`` ops (modifiers: Typed.Modifier<Dom.HTMLOptGroupElement> array) children =
@@ -8456,7 +8456,7 @@ module Optgroup =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLOptGroupElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLOptGroupElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``option`` ops (modifiers: Typed.Modifier<Dom.HTMLOptionElement> array) children =
@@ -8537,7 +8537,7 @@ module Option =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLOptionElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLOptionElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``output`` ops (modifiers: Typed.Modifier<Dom.HTMLOutputElement> array) children =
@@ -8597,7 +8597,7 @@ module Output =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLOutputElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLOutputElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``p`` ops (modifiers: Typed.Modifier<Dom.HTMLParagraphElement> array) children =
@@ -8618,7 +8618,7 @@ module P =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLParagraphElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLParagraphElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``picture`` ops (modifiers: Typed.Modifier<Dom.HTMLPictureElement> array) children =
@@ -8630,7 +8630,7 @@ module Picture =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLPictureElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLPictureElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``pre`` ops (modifiers: Typed.Modifier<Dom.HTMLPreElement> array) children =
@@ -8651,7 +8651,7 @@ module Pre =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLPreElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLPreElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``progress`` ops (modifiers: Typed.Modifier<Dom.HTMLProgressElement> array) children =
@@ -8687,7 +8687,7 @@ module Progress =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLProgressElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLProgressElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``q`` ops (modifiers: Typed.Modifier<Dom.HTMLQuoteElement> array) children =
@@ -8708,7 +8708,7 @@ module Q =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLQuoteElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLQuoteElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``rp`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -8720,7 +8720,7 @@ module Rp =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``rt`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -8732,7 +8732,7 @@ module Rt =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``ruby`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -8744,7 +8744,7 @@ module Ruby =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``s`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -8756,7 +8756,7 @@ module S =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``samp`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -8768,7 +8768,7 @@ module Samp =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``script`` ops (modifiers: Typed.Modifier<Dom.HTMLScriptElement> array) children =
@@ -8917,7 +8917,7 @@ module Script =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLScriptElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLScriptElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``search`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -8929,7 +8929,7 @@ module Search =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``section`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -8941,7 +8941,7 @@ module Section =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``select`` ops (modifiers: Typed.Modifier<Dom.HTMLSelectElement> array) children =
@@ -9064,7 +9064,7 @@ module Select =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLSelectElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLSelectElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``slot`` ops (modifiers: Typed.Modifier<Dom.HTMLSlotElement> array) children =
@@ -9085,7 +9085,7 @@ module Slot =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLSlotElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLSlotElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``small`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -9097,7 +9097,7 @@ module Small =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``source`` ops (modifiers: Typed.Modifier<Dom.HTMLSourceElement> array) =
@@ -9172,7 +9172,7 @@ module Source =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLSourceElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLSourceElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``span`` ops (modifiers: Typed.Modifier<Dom.HTMLSpanElement> array) children =
@@ -9184,7 +9184,7 @@ module Span =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLSpanElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLSpanElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``strong`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -9196,7 +9196,7 @@ module Strong =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``style`` ops (modifiers: Typed.Modifier<Dom.HTMLStyleElement> array) children =
@@ -9238,7 +9238,7 @@ module Style =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLStyleElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLStyleElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``sub`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -9250,7 +9250,7 @@ module Sub =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``summary`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -9262,7 +9262,7 @@ module Summary =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``sup`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -9274,7 +9274,7 @@ module Sup =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``table`` ops (modifiers: Typed.Modifier<Dom.HTMLTableElement> array) children =
@@ -9382,7 +9382,7 @@ module Table =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTableElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTableElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``tbody`` ops (modifiers: Typed.Modifier<Dom.HTMLTableSectionElement> array) children =
@@ -9433,7 +9433,7 @@ module Tbody =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTableSectionElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTableSectionElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``td`` ops (modifiers: Typed.Modifier<Dom.HTMLTableCellElement> array) children =
@@ -9574,7 +9574,7 @@ module Td =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTableCellElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTableCellElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``template`` ops (modifiers: Typed.Modifier<Dom.HTMLTemplateElement> array) children =
@@ -9634,7 +9634,7 @@ module Template =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTemplateElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTemplateElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``textarea`` ops (modifiers: Typed.Modifier<Dom.HTMLTextAreaElement> array) children =
@@ -9820,7 +9820,7 @@ module Textarea =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTextAreaElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTextAreaElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``tfoot`` ops (modifiers: Typed.Modifier<Dom.HTMLTableSectionElement> array) children =
@@ -9871,7 +9871,7 @@ module Tfoot =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTableSectionElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTableSectionElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``th`` ops (modifiers: Typed.Modifier<Dom.HTMLTableCellElement> array) children =
@@ -10012,7 +10012,7 @@ module Th =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTableCellElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTableCellElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``thead`` ops (modifiers: Typed.Modifier<Dom.HTMLTableSectionElement> array) children =
@@ -10063,7 +10063,7 @@ module Thead =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTableSectionElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTableSectionElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``time`` ops (modifiers: Typed.Modifier<Dom.HTMLTimeElement> array) children =
@@ -10084,7 +10084,7 @@ module Time =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTimeElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTimeElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``title`` ops (modifiers: Typed.Modifier<Dom.HTMLTitleElement> array) children =
@@ -10105,7 +10105,7 @@ module Title =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTitleElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTitleElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``tr`` ops (modifiers: Typed.Modifier<Dom.HTMLTableRowElement> array) children =
@@ -10171,7 +10171,7 @@ module Tr =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTableRowElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTableRowElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``track`` ops (modifiers: Typed.Modifier<Dom.HTMLTrackElement> array) =
@@ -10268,7 +10268,7 @@ module Track =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLTrackElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLTrackElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``u`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -10280,7 +10280,7 @@ module U =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``ul`` ops (modifiers: Typed.Modifier<Dom.HTMLUListElement> array) children =
@@ -10310,7 +10310,7 @@ module Ul =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLUListElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLUListElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``var`` ops (modifiers: Typed.Modifier<Dom.HTMLElement> array) children =
@@ -10322,7 +10322,7 @@ module Var =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 let ``video`` ops (modifiers: Typed.Modifier<Dom.HTMLVideoElement> array) children =
@@ -10407,7 +10407,7 @@ module Video =
         Typed.listener "enterpictureinpicture" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLVideoElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLVideoElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
@@ -10427,7 +10427,7 @@ module Wbr =
         Typed.listener "click" (fun event -> handler (unbox event))
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    let onInput (handler: Dom.InputEvent -> unit) : Typed.Modifier<Dom.HTMLElement> =
+    let onInput (handler: Dom.Event -> unit) : Typed.Modifier<Dom.HTMLElement> =
         Typed.listener "input" (fun event -> handler (unbox event))
 
 module Attrs =

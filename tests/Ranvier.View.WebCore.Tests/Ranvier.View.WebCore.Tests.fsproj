@@ -33,6 +33,7 @@
     <Compile Include="LatestPublicationTests.fs" />
         <Compile Include="ObservationLifetimeTests.fs" />
         <Compile Include="MountTests.fs" />
+        <Compile Include="TypedEventTests.fs" />
         <Compile Include="ExitLifetimeTests.fs" />
         <Compile Include="SvgTests.fs" />
         <Compile Include="InputTests.fs" />

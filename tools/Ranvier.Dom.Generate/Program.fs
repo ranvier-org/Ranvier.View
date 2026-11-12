@@ -450,6 +450,23 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
         |> Array.map _.Name
         |> Set.ofArray
 
+    // The TypeScript event maps give these a subclass that elements do not always dispatch: `input` is an InputEvent
+    // from text editing and a plain Event from range, checkbox, radio, file and select controls; `error`, `abort`,
+    // `progress` and `resize` on img and media elements are plain Events. A handler typed to the subclass fails its
+    // cast on .NET, so these take the type every dispatch satisfies.
+    let widenedEvents =
+        Map
+            [
+                "abort", "UIEvent"
+                "error", "ErrorEvent"
+                "input", "InputEvent"
+                "progress", "ProgressEvent"
+                "resize", "UIEvent"
+            ]
+
+    let plainEvent = (property eventMapNative "change").PropertyType
+    require (plainEvent.Name = "Event") "The change event is no longer a plain Event"
+
     let voidTags =
         set
             [
@@ -872,10 +889,19 @@ let generate compilerRoot policyRoot packageRoot output (templateOutput: string 
 
                     require (nativeType eventDeclaration = eventDefinition) $"Event-map native type mismatch: {eventInfo.Name}"
 
+                    let dispatched =
+                        match widenedEvents.TryFind eventInfo.Name with
+                        | Some narrow ->
+                            require
+                                (eventDefinition.Name.Split('`')[0] = narrow)
+                                $"Widened event {eventInfo.Name} is no longer typed {narrow} in {mapNative.Name}"
+
+                            plainEvent
+                        | None -> eventProperty.PropertyType
+
                     match events.TryGetValue eventInfo.Name with
-                    | true, previous ->
-                        require (previous = eventProperty.PropertyType) $"Conflicting inherited event type: {native.Name}.{eventInfo.Name}"
-                    | _ -> events.Add (eventInfo.Name, eventProperty.PropertyType)
+                    | true, previous -> require (previous = dispatched) $"Conflicting inherited event type: {native.Name}.{eventInfo.Name}"
+                    | _ -> events.Add (eventInfo.Name, dispatched)
 
         for event in events |> Seq.sortBy _.Key do
             let eventType = typeName declarations event.Value

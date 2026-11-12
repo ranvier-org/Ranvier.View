@@ -49,7 +49,7 @@ let private lifecycle (ops: Operations<'view>) run queued generated =
                     H.Input.titleStatic "static"
                     H.Input.valueReactive read
                     H.Input.checkedReactive (fun () -> checkedValue.Value)
-                    H.Input.onInput onInput
+                    H.Input.onInput (fun event -> onInput (unbox event))
                 |]
         else
             Typed.input

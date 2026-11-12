@@ -30,9 +30,12 @@ let basket =
     )
 ```
 
-- A handler receives the instance and the event. `Events.onClick`, `Events.onInput` and the other
-  generated members type the event (`PointerEvent`, `InputEvent`, ...); `Events.on (name, handler)`
+- A handler receives the instance and the event. `Events.onClick`, `Events.onKeydown` and the other
+  generated members type the event (`PointerEvent`, `KeyboardEvent`, ...); `Events.on (name, handler)`
   takes any event name with an `Event`.
+- `Events.onInput`, `onError`, `onAbort`, `onProgress` and `onResize` take a plain `Event`: an element
+  does not always dispatch the subclass. A range, checkbox or select fires `input` as an `Event`, and
+  only text editing fires an `InputEvent`; a handler that needs `inputType` or `data` unboxes the event.
 - **Handlers run unbatched.** Each signal write propagates before the next statement. Wrap several
   writes in [`Api.batch`](https://ranvier-org.github.io/Ranvier/guide/batch/) so effects run once, after the batch.
 - Reads in a handler are untracked.
