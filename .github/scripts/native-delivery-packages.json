@@ -31,6 +31,8 @@
   "excluded_package_ids": [
     "Ranvier.View.Anime",
     "Ranvier.View.Anime.Traced",
+    "Fable.Ranvier.View.Anime",
+    "Fable.Ranvier.View.Anime.Traced",
     "Fable.Ranvier.Anime",
     "Fable.Ranvier.Anime.Traced",
     "Ranvier.Analyzers",

@@ -2,28 +2,28 @@
   "glue": {
     "presence": {
       "motion": {
-        "raw": 255870,
-        "gzip": 76817
+        "raw": 257111,
+        "gzip": 77091
       },
       "handWritten": {
-        "raw": 254037,
-        "gzip": 76134
+        "raw": 255211,
+        "gzip": 76385
       },
-      "deltaGzip": 683,
+      "deltaGzip": 706,
       "budgetGzip": 900,
       "withinBudget": true
     },
     "flip": {
       "motion": {
-        "raw": 284145,
-        "gzip": 84689
+        "raw": 286545,
+        "gzip": 85409
       },
       "handWritten": {
-        "raw": 281843,
-        "gzip": 84102
+        "raw": 283017,
+        "gzip": 84338
       },
-      "deltaGzip": 587,
-      "budgetGzip": 600,
+      "deltaGzip": 1071,
+      "budgetGzip": 1100,
       "withinBudget": true
     }
   },
@@ -125,11 +125,15 @@
     }
   },
   "helpers": {
-    "src/Ranvier.View.Anime/Motion.js": 0,
-    "fable_modules/Fable.Ranvier.Anime.0.1.45-rc.1/Css.fs.js": 0,
-    "fable_modules/Fable.Ranvier.Anime.0.1.45-rc.1/Params.fs.js": 0,
-    "fable_modules/Fable.Ranvier.Anime.0.1.45-rc.1/Reactive.fs.js": 0,
-    "fable_modules/Fable.Ranvier.Anime.0.1.45-rc.1/Testing.fs.js": 0
+    "src/Fable.Ranvier.View.Anime/Motion.js": 0,
+    "Fable.Ranvier.Anime/Css.fs.js": 0,
+    "Fable.Ranvier.Anime/Params.fs.js": 0,
+    "Fable.Ranvier.Anime/Reactive.fs.js": 0,
+    "Fable.Ranvier.Anime/Testing.fs.js": 0,
+    "Fable.Ranvier.Anime/Portable/Anime.fs.js": 0,
+    "Fable.Ranvier.Anime/Portable/Contracts.fs.js": 0,
+    "Fable.Ranvier.Anime/Portable/Motion.fs.js": 0,
+    "Fable.Ranvier.Anime/Portable/Reactive.fs.js": 0
   },
   "withinBudget": true
 }

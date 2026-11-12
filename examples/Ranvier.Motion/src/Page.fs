@@ -58,6 +58,10 @@ type Point =
 [<Emit("({ x: $0, y: $1 })")>]
 let point (x: float) (y: float) : Point = jsNative
 
+/// <summary>anime's <c>outQuart</c> ease, as a function an option record holds where the template is defined.</summary>
+let outQuart (progress: float) =
+    1. - (1. - progress) ** 4.
+
 /// <summary>The next state of the Park–Miller generator, in 1..2147483646 for a seed in that range.</summary>
 /// <remarks>The sequence is identical under Fable and on .NET.</remarks>
 let nextSeed (seed: int) =

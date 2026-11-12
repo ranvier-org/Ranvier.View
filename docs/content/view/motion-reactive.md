@@ -1,16 +1,16 @@
 ---
 title: Owning and driving animations
-description: "Ranvier.Anime.Reactive: animations reverted by owners, playback as memos, signals that seek and drive, and the reduced-motion policy."
+description: "Fable.Ranvier.Anime.Reactive: animations reverted by owners, playback as memos, signals that seek and drive, and the reduced-motion policy."
 ---
 
-`Ranvier.Anime.Reactive` connects anime objects to owners and signals. It works with the core
+`Fable.Ranvier.Anime.Reactive` connects anime objects to owners and signals. It works with the core
 without the view layer. Use the opens from [Animation](motion.md#animating-an-element) plus
 `open global.Ranvier`.
 
 ```fsharp
 open global.Ranvier
 open Fable.Core
-open Ranvier.Anime
+open Fable.Ranvier.Anime
 
 /// Fades the panel in, marks it shown once the fade completes, and scales the bar with the level.
 let animatePanel (panel: TS.Dom.Element) (bar: TS.Dom.Element) (level: Signal<float>) (shown: Signal<bool>) =
@@ -82,8 +82,9 @@ the property's current value, so a change while a previous one plays continues f
 ## Typed CSS variables
 
 Use `Motion.followCss variable parameters read` as a view attribute to animate a typed custom
-property. The reader returns a numeric CSS token such as `Css.px target.Value`; use the existing
-`AnimatableProp(duration = 300., ease = Ease.outQuart)` for timing. The first value is set immediately,
+property. The reader returns a numeric CSS token such as `Css.px target.Value`; the timing is a
+`ComposedAnimationOptions` of the portable API, such as
+`{ ComposedAnimationOptions.Default with Duration = 300. }`. The first value is set immediately,
 and subsequent changes animate from the current value. The part participates in Motion's exit
 lifecycle and restores the original inline value and priority on ordinary disposal.
 

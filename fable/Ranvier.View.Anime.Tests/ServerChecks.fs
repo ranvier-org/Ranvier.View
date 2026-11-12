@@ -31,13 +31,26 @@ let private selectedBoard =
                 Selected = Api.createSignal true
             })
         (section () {
-            ul (Attrs.className "cards", Motion.flip (LayoutParams (duration = 350, ease = Ease.outQuart))) {
+            ul (Attrs.className "cards", Motion.flip (LayoutOptions.Default.WithDuration 350u)) {
                 forEach
                     (fun card -> card.Id)
                     (fun b -> b.Cards.Value)
                     (li (
-                        Motion.presence (fun _ el -> Anime.animate (el, Anim (opacity = Value.fromTo (0, 1), duration = 240))) (fun _ el ->
-                            Anime.animate (el, Anim (opacity = 0, duration = 180)))
+                        Motion.presence
+                            (fun _ el ->
+                                Anime.animate
+                                    el
+                                    [| PropertySpec.Scalar ("opacity", 1., fromValue = 0.) |]
+                                    { ComposedAnimationOptions.Default with
+                                        Duration = 240.
+                                    })
+                            (fun _ el ->
+                                Anime.animate
+                                    el
+                                    [| PropertySpec.Scalar ("opacity", 0.) |]
+                                    { ComposedAnimationOptions.Default with
+                                        Duration = 180.
+                                    })
                     ) {
                         fun current -> (current ()).Title
                     })
@@ -69,8 +82,20 @@ let private notes =
                 id
                 (fun (n: Notes) -> n.Notes)
                 (li (
-                    Motion.enter (fun _ el -> Anime.animate (el, Anim (x = Value.fromTo (40, 0), duration = 200))),
-                    Motion.exit (fun _ el -> Anime.animate (el, Anim (x = 40, duration = 200)))
+                    Motion.enter (fun _ el ->
+                        Anime.animate
+                            el
+                            [| PropertySpec.Scalar ("x", 0., fromValue = 40.) |]
+                            { ComposedAnimationOptions.Default with
+                                Duration = 200.
+                            }),
+                    Motion.exit (fun _ el ->
+                        Anime.animate
+                            el
+                            [| PropertySpec.Scalar ("x", 40.) |]
+                            { ComposedAnimationOptions.Default with
+                                Duration = 200.
+                            })
                 ) {
                     fun (note: string) -> note
                 })
@@ -103,7 +128,7 @@ let private storyTwin =
             })
         (article () {
             h2 () { "Ranvier" }
-            section () { fun s -> sprintf "%.0f %%" (s.Progress.Value * 100.) }
+            section () { fun s -> string (round (s.Progress.Value * 100.)) + " %" }
             div (Attrs.className "puck") { "drag" }
         })
 
@@ -125,7 +150,7 @@ let private presets =
     Component.template
         (fun _ () -> { Books = [| "a"; "b" |] })
         (div () {
-            ul (Motion.flip (LayoutParams (duration = 300))) {
+            ul (Motion.flip (LayoutOptions.Default.WithDuration 300u)) {
                 forEachFixed id (fun (s: Shelf) -> s.Books) (li (Motion.rise) { fun (book: string) -> book })
             }
 

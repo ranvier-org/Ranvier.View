@@ -3,7 +3,7 @@ module MotionReactive
 
 open global.Ranvier
 open Fable.Core
-open Ranvier.Anime
+open Fable.Ranvier.Anime
 
 /// Fades the panel in, marks it shown once the fade completes, and scales the bar with the level.
 let animatePanel (panel: TS.Dom.Element) (bar: TS.Dom.Element) (level: Signal<float>) (shown: Signal<bool>) =

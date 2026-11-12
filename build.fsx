@@ -18,6 +18,7 @@ module Spec =
             "src/Ranvier.View/Ranvier.View.fsproj"
             "src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj"
             "src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj"
+            "src/Fable.Ranvier.View.Anime/Fable.Ranvier.View.Anime.fsproj"
             "src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj"
             "src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj"
         ]
@@ -752,9 +753,14 @@ module Stage =
 
                             if
                                 withAnime
-                                && not (File.Exists (Path.Combine (animeRoot, "src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj")))
+                                && not (
+                                    File.Exists (Path.Combine (animeRoot, "src/Fable.Ranvier.Anime/Fable.Ranvier.Anime.fsproj"))
+                                    && File.Exists (Path.Combine (animeRoot, "src/Ranvier.Anime/Ranvier.Anime.fsproj"))
+                                )
                             then
-                                invalidArg "ranvier-anime-root" "The path is not a Ranvier.Anime checkout."
+                                invalidArg
+                                    "ranvier-anime-root"
+                                    "The path is not a Ranvier.Anime checkout with Fable.Ranvier.Anime and Ranvier.Anime."
 
                             let escape (path: string) =
                                 Security.SecurityElement.Escape path

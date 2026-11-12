@@ -121,7 +121,7 @@ jobs:
                               '--api-key', os.environ['NUGET_API_KEY'], '--skip-duplicate'], check=True)
           PY
 
-  # Ranvier.View.Anime depends on the native View cohort, so it follows that cohort to NuGet.
+  # Ranvier.View.Anime and Fable.Ranvier.View.Anime depend on the native View cohort, so they follow that cohort to NuGet.
   publish-anime:
     needs: publish
     if: >-
@@ -150,14 +150,14 @@ jobs:
           path: anime
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ github.token }}
-      - name: Select the Ranvier.View.Anime pair at the project version
+      - name: Select the native and Fable Anime packages at the project version
         run: python3 -I .github/scripts/anime_packages.py --directory anime --project src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj > anime-packages.txt
       - name: Authenticate to NuGet with trusted publishing
         id: login
         uses: NuGet/login@v1
         with:
           user: ${{ vars.NUGET_USER || 'shayan.habibi' }}
-      - name: Publish Ranvier.View.Anime untraced and traced
+      - name: Publish Ranvier.View.Anime and Fable.Ranvier.View.Anime, untraced and traced
         env:
           NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |

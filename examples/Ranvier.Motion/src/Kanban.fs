@@ -6,6 +6,7 @@ module Kanban
 
 open global.Ranvier
 open Ranvier.Anime
+open Fable.Ranvier.Anime
 open Ranvier.Elmish
 open Ranvier.View
 open Ranvier.View.Dom
@@ -200,17 +201,20 @@ let dropLane (column: int) (width: float) (dx: float) =
         max 0 (min (lanes.Length - 1) (column + int (System.Math.Round (dx / width))))
 
 let private enterCard (_: CardRow) (element: Fable.Core.TS.Dom.Element) =
-    Anime.animate (element, Anim (opacity = Value.fromTo (0, 1), scale = Value.fromTo (0.85, 1), duration = 320, ease = Ease.outBack))
+    Fable.Ranvier.Anime.Anime.animate (
+        element,
+        Anim (opacity = Value.fromTo (0, 1), scale = Value.fromTo (0.85, 1), duration = 320, ease = Ease.outBack)
+    )
 
 let private leaveCard (_: CardRow) (element: Fable.Core.TS.Dom.Element) =
-    Anime.animate (element, Anim (opacity = 0, scale = 0.8, duration = 240, ease = Ease.inQuad))
+    Fable.Ranvier.Anime.Anime.animate (element, Anim (opacity = 0, scale = 0.8, duration = 240, ease = Ease.inQuad))
 
 // Returns the card to its slot along a spring, through the position signal the draggable follows.
 let private springHome (graph: Graph) (row: CardRow) (struct (x, y)) =
     let point = Page.point x y
 
     row.Spring.Play (fun () ->
-        Anime.animate (
+        Fable.Ranvier.Anime.Anime.animate (
             Targets.object point,
             Anim (
                 x = 0,
@@ -263,12 +267,17 @@ let private cardRow (board: Board) =
             Attrs.data ("id", fun (row: CardRow) -> Some (string (row.Current ()).Card.Id)),
             Attrs.data ("lane", fun (row: CardRow) -> Some (string (row.Current ()).Card.Column)),
             Motion.presence enterCard leaveCard,
-            Motion.drag (DraggableParams (velocityMultiplier = 0., cursor = false)) (fun (row: CardRow) ->
-                {
-                    Position = row.Position
-                    Dragging = ValueSome row.Dragging
-                    Slot = ValueSome row.Spring
-                }),
+            Motion.drag
+                { NativeDraggableOptions.Default with
+                    Cursor = false
+                    Extra = DraggableParams (velocityMultiplier = 0.)
+                }
+                (fun (row: CardRow) ->
+                    {
+                        Position = row.Position
+                        Dragging = ValueSome row.Dragging
+                        Slot = ValueSome row.Spring
+                    }),
             Hooks.mounted (fun (row: CardRow) element ->
                 row.Element.Value <- box element
                 fun () -> row.Element.Value <- null)
@@ -358,7 +367,10 @@ let view (board: Board) : Component<unit> =
 
                 ul (
                     Attrs.className "board",
-                    Motion.flip (LayoutParams (duration = 420, ease = Ease.outQuart)),
+                    Motion.flip
+                        { LayoutOptions.Default.WithDuration 420u with
+                            Ease = Page.outQuart
+                        },
                     Hooks.mounted (fun (b: Board) element ->
                         b.Element.Value <- box element
                         fun () -> b.Element.Value <- null)

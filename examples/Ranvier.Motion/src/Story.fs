@@ -9,6 +9,7 @@ module Story
 open Fable.Core
 open global.Ranvier
 open Ranvier.Anime
+open Fable.Ranvier.Anime
 open Ranvier.View
 open Ranvier.View.Sugar
 open Ranvier.View.Anime
@@ -100,7 +101,14 @@ let private percent (value: float) =
     sprintf "%.0f%%" (value * 100.)
 
 let private scrubbed =
-    ScrollParams (enter = "bottom top", leave = "top bottom", sync = 0.25)
+    { ScrollParams.Default with
+        Options =
+            { ScrollOptions.Default with
+                Enter = { Container = "bottom"; Target = "top" }
+                Leave = { Container = "top"; Target = "bottom" }
+                Sync = ScrollSync.Smooth 0.25
+            }
+    }
 
 let private bound (read: Story -> Chapter) (story: Story) =
     let chapter = read story
@@ -114,7 +122,7 @@ let private bound (read: Story -> Chapter) (story: Story) =
 let private chapterTimeline (index: int) (_: Story) (section: TS.Dom.Element) =
     let side = if index % 2 = 0 then -1. else 1.
 
-    Anime
+    Fable.Ranvier.Anime.Anime
         .timeline(TimelineParams (autoplay = false))
         .add(
             within section ".chapter-copy",
@@ -133,7 +141,7 @@ let private chapterTimeline (index: int) (_: Story) (section: TS.Dom.Element) =
         )
 
 let private galleryTimeline (_: Story) (section: TS.Dom.Element) =
-    Anime.animate (
+    Fable.Ranvier.Anime.Anime.animate (
         within section ".tile",
         Anim (
             y = Value.fromTo (60, 0),
@@ -147,14 +155,14 @@ let private galleryTimeline (_: Story) (section: TS.Dom.Element) =
     )
 
 let private rise (_: Story) (element: TS.Dom.Element) =
-    Anime.animate (element, Anim (y = Value.fromTo (14, 0), opacity = Value.fromTo (0, 1), duration = 600, ease = Ease.outQuart))
+    Fable.Ranvier.Anime.Anime.animate (element, Anim (y = Value.fromTo (14, 0), opacity = Value.fromTo (0, 1), duration = 600, ease = Ease.outQuart))
 
 let private bob (_: Story) (element: TS.Dom.Element) =
-    Anime.animate (element, Anim (y = 8, duration = 900, loop = Loop.forever, alternate = true, ease = Ease.inOutSine))
+    Fable.Ranvier.Anime.Anime.animate (element, Anim (y = 8, duration = 900, loop = Loop.forever, alternate = true, ease = Ease.inOutSine))
 
-let private letters (_: Story) (splitter: TextSplitter) =
-    Anime.animate (
-        splitter.chars,
+let private letters (_: Story) (splitter: Ranvier.Anime.TextSplitter) =
+    Fable.Ranvier.Anime.Anime.animate (
+        Targets.object splitter.Chars,
         Anim (
             y = Value.fromTo (28, 0),
             opacity = Value.fromTo (0, 1),
@@ -166,7 +174,10 @@ let private letters (_: Story) (splitter: TextSplitter) =
     )
 
 let private popIn (_: string) (element: TS.Dom.Element) =
-    Anime.animate (element, Anim (scale = Value.fromTo (0.4, 1), opacity = Value.fromTo (0, 1), duration = 420, ease = Ease.outBack))
+    Fable.Ranvier.Anime.Anime.animate (
+        element,
+        Anim (scale = Value.fromTo (0.4, 1), opacity = Value.fromTo (0, 1), duration = 420, ease = Ease.outBack)
+    )
 
 /// <summary>
 /// The page around the story's article: the document's title and viewport entries, the site header and the introduction.
@@ -229,7 +240,14 @@ let view: Component<Story -> unit> =
                     header (Attrs.className "hero") {
                         p (Attrs.className "eyebrow", Motion.appear rise) { "Rendered on .NET · hydrated in the browser" }
 
-                        h1 (Attrs.className "headline", Motion.split (SplitParams (chars = true, words = true)) letters) {
+                        h1 (
+                            Attrs.className "headline",
+                            Motion.split
+                                { TextSplitterOptions.Default with
+                                    Chars = SplitMode.Enabled
+                                }
+                                letters
+                        ) {
                             "Motion, owned by the view."
                         }
 

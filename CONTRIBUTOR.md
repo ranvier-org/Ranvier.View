@@ -84,7 +84,7 @@ graph: `Ranvier.View` with `Ranvier.View.Dom`, then `Ranvier.View.WebCore`, then
 | `src/Ranvier.View` | `Ranvier.View`, `Ranvier.View.Dom` | `rc` |
 | `src/Ranvier.View.WebCore` | `Ranvier.View.WebCore` | `rc` |
 | `src/Ranvier.View.WebCore.Sdl` | `Ranvier.View.WebCore.Sdl` | `rc` |
-| `src/Ranvier.View.Anime` | `Ranvier.View.Anime` | `rc` |
+| `src/Ranvier.View.Anime` | `Ranvier.View.Anime`, `Fable.Ranvier.View.Anime` | `rc` |
 | `tools/Ranvier.Analyzers.Host` | `Ranvier.Analyzers.Host` | `preview` |
 | `tools/Ranvier.Analyzers` | `Ranvier.Analyzers` | `preview` |
 

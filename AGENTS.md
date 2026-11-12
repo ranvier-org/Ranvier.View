@@ -5,7 +5,7 @@
 Ranvier.View holds the view layer of [Ranvier](https://github.com/ranvier-org/Ranvier): `Ranvier.View`,
 `Ranvier.View.Dom`, `Ranvier.View.Anime` and the `Ranvier.Analyzers` package, with the
 experiments, examples and docs that exercise them. The core packages (`Ranvier`, `Ranvier.Elmish`, `Ranvier.Wire`),
-the CSS packages (`Ranvier.Css*`) and `Fable.Ranvier.Anime` come from NuGet; `dotnet fsi build.fsx -- dev local` switches the core to a
+the CSS packages (`Ranvier.Css*`) and the anime packages (`Fable.Ranvier.Anime`, `Ranvier.Anime`) come from NuGet; `dotnet fsi build.fsx -- dev local` switches the core to a
 sibling checkout (`--with-css` adds Ranvier.Css, `--with-anime` adds Ranvier.Anime). Read `.claude/rules/view-uses-core.md` before changing view state:
 a view-side duplicate of a core primitive belongs in the core repository.
 

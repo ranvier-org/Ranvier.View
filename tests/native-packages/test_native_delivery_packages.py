@@ -18,7 +18,8 @@ NATIVE_VIEW = (
     'Ranvier.View.WebCore', 'Ranvier.View.WebCore.Traced',
     'Ranvier.View.WebCore.Sdl', 'Ranvier.View.WebCore.Sdl.Traced',
 )
-ANIME = ('Ranvier.View.Anime', 'Ranvier.View.Anime.Traced', 'Fable.Ranvier.Anime', 'Fable.Ranvier.Anime.Traced')
+ANIME = ('Ranvier.View.Anime', 'Ranvier.View.Anime.Traced', 'Fable.Ranvier.View.Anime', 'Fable.Ranvier.View.Anime.Traced',
+         'Fable.Ranvier.Anime', 'Fable.Ranvier.Anime.Traced')
 
 
 def package(path, identity):

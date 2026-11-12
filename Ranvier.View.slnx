@@ -16,6 +16,7 @@
     <Project Path="src/Ranvier.View/Ranvier.View.fsproj" />
     <Project Path="src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj" />
     <Project Path="src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj" />
+    <Project Path="src/Fable.Ranvier.View.Anime/Fable.Ranvier.View.Anime.fsproj" />
     <Project Path="src/Fable.Ranvier/Fable.Ranvier.fsproj" />
     <Project Path="src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj" />
     <Project Path="src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj" />

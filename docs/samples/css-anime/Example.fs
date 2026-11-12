@@ -3,6 +3,7 @@ module CssAnimeExample
 
 open global.Ranvier
 open Ranvier.Anime
+open Fable.Ranvier.Anime
 open Ranvier.Css
 open Ranvier.Css.View
 open Ranvier.View
@@ -25,13 +26,13 @@ let card =
         (div [|
             yield Attrs.className "card"
             yield! styles { cardStyle }
-            yield Motion.followCss gap (AnimatableProp(duration = 300., ease = Ease.outQuart)) (fun (target: Signal<float>) -> Css.px target.Value)
+            yield Motion.followCss gap { ComposedAnimationOptions.Default with Duration = 300.; Ease = fun t -> 1. - (1. - t) ** 4. } (fun (target: Signal<float>) -> Css.px target.Value)
         |] { "Animated typed CSS" })
 
-/// <summary>Explicit endpoints usable with Motion.on, Motion.enter, timelines and Reactive.own.</summary>
+/// <summary>Explicit endpoints with the anime.js bindings, usable with Motion.on, Motion.enter, timelines and Reactive.own.</summary>
 let enter (element: Fable.Core.TS.Dom.Element) =
-    Anime.animate(element, Anim(duration = 300, ease = Ease.outQuart).With(gap, Css.px 0., Css.px 100.))
+    Fable.Ranvier.Anime.Anime.animate(element, Anim(duration = 300, ease = Ease.outQuart).With(gap, Css.px 0., Css.px 100.))
 
 /// <summary>A custom-property animation with typed numeric keyframes.</summary>
 let pulse (element: Fable.Core.TS.Dom.Element) =
-    Anime.animate(element, Anim(duration = 600).With(gap, [| Css.px 0.; Css.px 100.; Css.px 20. |]))
+    Fable.Ranvier.Anime.Anime.animate(element, Anim(duration = 600).With(gap, [| Css.px 0.; Css.px 100.; Css.px 20. |]))

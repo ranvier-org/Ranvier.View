@@ -23,8 +23,10 @@ coordinated development.
 | --- | --- |
 | `Ranvier.View` | Typed templates, view sugar, keyed lists, arms, boundaries and server HTML rendering. |
 | `Ranvier.View.Dom` | The browser renderer: mounting, hydration of server HTML, delegated events and generated HTML bindings. |
-| `Ranvier.View.Anime` | Motion parts for templates over anime.js, omitted by the server renderer. |
-| `Fable.Ranvier.Anime` | Typed anime.js bindings for Fable, published from [ranvier-org/Ranvier.Anime](https://github.com/ranvier-org/Ranvier.Anime). |
+| `Fable.Ranvier.View.Anime` | Motion parts for templates over anime.js, for Fable projects; omitted by the server renderer. |
+| `Ranvier.View.Anime` | The same motion parts over the native `Ranvier.Anime`, for .NET hosts. |
+| `Fable.Ranvier.Anime` | Typed anime.js bindings for Fable and the portable animation API over them, published from [ranvier-org/Ranvier.Anime](https://github.com/ranvier-org/Ranvier.Anime). |
+| `Ranvier.Anime` | The native .NET port of anime.js with the same portable API, published from [ranvier-org/Ranvier.Anime](https://github.com/ranvier-org/Ranvier.Anime). |
 | `Ranvier.Analyzers` | F# analyzers that report Ranvier traps at build time. |
 
 The four libraries share a version and depend on each other at exactly it. Each also packs as a `.Traced` package

@@ -11,7 +11,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / '.github/scripts/anime_packages.py'
 PROJECT = 'src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj'
-ANIME = ('Ranvier.View.Anime', 'Ranvier.View.Anime.Traced')
+ANIME = ('Ranvier.View.Anime', 'Ranvier.View.Anime.Traced', 'Fable.Ranvier.View.Anime', 'Fable.Ranvier.View.Anime.Traced')
 
 
 def package(path, identity, version):
@@ -45,22 +45,26 @@ class AnimePublicationTests(unittest.TestCase):
             capture_output=True, text=True, timeout=15,
         )
 
-    def test_exact_pair_at_the_project_version_is_selected_untraced_first(self):
+    def test_exact_set_at_the_project_version_is_selected_native_first_and_untraced_first(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             directory = self.workspace(root)
+            package(directory / 'd.nupkg', 'Fable.Ranvier.View.Anime.Traced', '0.1.46-rc.1')
+            package(directory / 'c.nupkg', 'Fable.Ranvier.View.Anime', '0.1.46-rc.1')
             package(directory / 'b.nupkg', 'Ranvier.View.Anime.Traced', '0.1.46-rc.1')
             package(directory / 'a-renamed.nupkg', 'Ranvier.View.Anime', '0.1.46-rc.1')
             result = self.select(root)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual([Path(line).name for line in result.stdout.splitlines()], ['a-renamed.nupkg', 'b.nupkg'])
+            self.assertEqual([Path(line).name for line in result.stdout.splitlines()], ['a-renamed.nupkg', 'b.nupkg', 'c.nupkg', 'd.nupkg'])
 
     def test_incomplete_foreign_duplicate_or_stale_packages_are_rejected(self):
+        complete = [(identity, '0.1.46-rc.1') for identity in ANIME]
         cases = {
-            'missing traced': [('Ranvier.View.Anime', '0.1.46-rc.1')],
-            'foreign package': [('Ranvier.View.Anime', '0.1.46-rc.1'), ('Ranvier.View.Anime.Traced', '0.1.46-rc.1'), ('Fable.Ranvier.Anime', '0.1.46-rc.1')],
-            'duplicate id': [('Ranvier.View.Anime', '0.1.46-rc.1'), ('ranvier.view.anime', '0.1.46-rc.1'), ('Ranvier.View.Anime.Traced', '0.1.46-rc.1')],
-            'stale version': [('Ranvier.View.Anime', '0.1.45'), ('Ranvier.View.Anime.Traced', '0.1.46-rc.1')],
+            'missing traced': [row for row in complete if row[0] != 'Ranvier.View.Anime.Traced'],
+            'missing Fable': [row for row in complete if not row[0].startswith('Fable.')],
+            'foreign package': complete + [('Fable.Ranvier.Anime', '0.1.46-rc.1')],
+            'duplicate id': complete + [('ranvier.view.anime', '0.1.46-rc.1')],
+            'stale version': [('Ranvier.View.Anime', '0.1.45')] + complete[1:],
         }
         for name, packages in cases.items():
             with self.subTest(name), tempfile.TemporaryDirectory() as temporary:
@@ -78,10 +82,10 @@ class AnimePublicationTests(unittest.TestCase):
         upload = next(i for i, line in enumerate(lines) if line.strip() == 'name: anime-packages')
         self.assertLess(selector, upload)
         path = next(line for line in lines[upload:] if line.strip().startswith('path:'))
-        self.assertIn('artifacts/native-delivery-excluded/Ranvier.View.Anime', path)
+        self.assertIn('artifacts/native-delivery-excluded/*Ranvier.View.Anime*.nupkg', path)
         self.assertTrue(any('tests/native-packages/test_anime_publication.py' in line for line in lines))
 
-    def test_publish_route_verifies_the_pair_before_login_and_follows_the_native_cohort(self):
+    def test_publish_route_verifies_the_set_before_login_and_follows_the_native_cohort(self):
         block = job_block('publish.yml', 'publish-anime')
         native = job_block('publish.yml', 'publish')
         condition = lambda text: re.search(r'(?ms)^    if: >-\n(.*?)^    runs-on:', text).group(1)
@@ -107,9 +111,9 @@ class AnimePublicationTests(unittest.TestCase):
             self.assertIn('found nothing', empty.stderr)
             for identity in ANIME:
                 package(directory / f'{identity}.nupkg', identity, '0.1.46-rc.1')
-            pair = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=15)
-            self.assertEqual(pair.returncode, 0, pair.stderr)
-            self.assertEqual(len(pair.stdout.splitlines()), 2)
+            complete = subprocess.run(command, cwd=root, capture_output=True, text=True, timeout=15)
+            self.assertEqual(complete.returncode, 0, complete.stderr)
+            self.assertEqual(len(complete.stdout.splitlines()), len(ANIME))
 
 
 if __name__ == '__main__':

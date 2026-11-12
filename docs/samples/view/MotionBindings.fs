@@ -2,7 +2,7 @@
 module MotionBindings
 
 open Fable.Core
-open Ranvier.Anime
+open Fable.Ranvier.Anime
 
 let reveal (card: TS.Dom.Element) =
     Anime.animate (card, Anim (x = 100, opacity = Value.fromTo (0, 1), duration = 400, ease = Ease.outQuart))

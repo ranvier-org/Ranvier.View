@@ -2,7 +2,7 @@
 module MotionTesting
 
 open Fable.Core
-open Ranvier.Anime
+open Fable.Ranvier.Anime
 
 [<Emit("document.body.appendChild(document.createElement($0))")>]
 let createElement (tag: string) : TS.Dom.Element = jsNative

@@ -8,17 +8,21 @@ The animation packages are published at `0.1.1-alpha.1`; their APIs may change.
 See [installation and the dependency feed](../guide/introduction.md#installation).
 :::
 
-Ranvier animates with [anime.js](https://animejs.com) 4.5.0. anime is the engine; Ranvier supplies
-typed F# over it, ownership and signals, and the template parts that tie animations to the lifecycle
-of lists and arms.
+Ranvier animates with [anime.js](https://animejs.com) 4.5.0 in the browser. anime is the engine; Ranvier
+supplies typed F# over it, ownership and signals, and the template parts that tie animations to the
+lifecycle of lists and arms. On .NET hosts the engine is `Ranvier.Anime`, a native port of anime.js.
 
 | Package | Namespace | Holds | Depends on |
 | --- | --- | --- | --- |
-| `Fable.Ranvier.Anime` | `Ranvier.Anime` | the bindings, `Reactive` (owners and signals) and `Testing` (a manual clock), from [Ranvier.Anime](https://ranvier-org.github.io/Ranvier.Anime/) | `Ranvier` |
-| `Ranvier.View.Anime` | `Ranvier.View.Anime` | the `Motion.*` template parts | `Ranvier.View` and `Fable.Ranvier.Anime` |
+| `Fable.Ranvier.Anime` | `Fable.Ranvier.Anime` | the anime.js bindings, `Reactive` (owners and signals) and `Testing` (a manual clock), from [Ranvier.Anime](https://ranvier-org.github.io/Ranvier.Anime/) | `Ranvier` |
+| `Fable.Ranvier.Anime` | `Ranvier.Anime` | the portable API over anime.js: `Anime.animate target specs options`, the option records and the contracts the binding objects inherit | `Ranvier` |
+| `Ranvier.Anime` | `Ranvier.Anime` | the same portable API on the native .NET engine, with `AnimeHost` for the host's services | `Ranvier`, `Ranvier.Dom` |
+| `Fable.Ranvier.View.Anime` | `Ranvier.View.Anime` | the `Motion.*` template parts over anime.js, for Fable projects | `Ranvier.View`, `Fable.Ranvier.Anime` |
+| `Ranvier.View.Anime` | `Ranvier.View.Anime` | the same parts, from the same source, over the native engine, for .NET hosts | `Ranvier.View`, `Ranvier.Anime` |
 
-Use `Ranvier.View.Anime` for template motion, or `Fable.Ranvier.Anime` to animate an element
-directly. Install the JavaScript engine:
+Use `Fable.Ranvier.View.Anime` for template motion, or `Fable.Ranvier.Anime` to animate an element
+directly. This page covers the bindings, which run in the browser; [Motion parts](motion-parts.md)
+uses the portable API, which compiles for both engines. Install the JavaScript engine:
 
 ```shell
 npm install animejs@4.5.0
@@ -32,7 +36,7 @@ npm install animejs@4.5.0
 
 ```fsharp
 open Fable.Core
-open Ranvier.Anime
+open Fable.Ranvier.Anime
 
 let reveal (card: TS.Dom.Element) =
     Anime.animate (card, Anim (x = 100, opacity = Value.fromTo (0, 1), duration = 400, ease = Ease.outQuart))
@@ -204,12 +208,16 @@ let travel (dot: TS.Dom.Element) (edge: TS.Dom.Element) =
 
 `AnimatableParams (x = 400)` is the duration of the `x` property alone; `AnimatableProp (unit = "px",
 duration = 400, ease = Ease.outQuad)` gives a property its own unit and ease. anime appends a unit only
-from a property's own entry; `Motion.follow` also gives the followed property the shared `unit`.
+from a property's own entry; `Motion.follow` also gives the followed property its options' `Unit`.
 
 ## On .NET
 
-The bindings compile on .NET, so portable templates can reference them. The parameter constructors
+The `Fable.Ranvier.Anime` assembly compiles on .NET, so a project that references it there, such as
+the server of a browser page, can share templates that use the bindings. The parameter constructors
 and the inline conversions are inert placeholders on .NET; `[<Emit>]` and `[<Import>]` members
 (`Anime.animate`, `Value.stagger`, `Value.from`, `Ease.spring`, `Ease.outBackBy`, `At.after` and the
-other functions above) raise when evaluated there. Portable code creates anime objects inside the
+other functions above) raise when evaluated there. Such code creates anime objects inside the
 functions that run in the browser: play functions, hooks and event handlers.
+
+`Ranvier.Anime`, the native engine, has no bindings: code for a .NET host is written against the
+portable API in the namespace `Ranvier.Anime`, which both packages hold.

@@ -3,7 +3,7 @@ module PhysicsChecks
 
 open Fable.Core
 open global.Ranvier
-open Ranvier.Anime
+open Fable.Ranvier.Anime
 open Ranvier.View
 open Physics
 open Harness
@@ -116,7 +116,7 @@ let private grabStopsSpring queued (clock: Clock) =
     run clock 16. 1500.
     let after = puckOf graph page
     let struct (x, _) = held
-    equal (true, true, null, held) (x > 0. && x < 120., spring.cancelled, page.Playground.Spring.Running, after)
+    equal (true, true, null, held) (x > 0. && x < 120., spring.Cancelled, page.Playground.Spring.Running, after)
 
 let private repeatReplaces queued (clock: Clock) =
     let graph, _, page = mounted queued
@@ -129,7 +129,7 @@ let private repeatReplaces queued (clock: Clock) =
     let second = page.Playground.Spring.Running
     run clock 16. 3000.
     let home = puckOf graph page
-    equal (true, false, true, struct (0., 0.)) (first.cancelled, not second.completed, obj.ReferenceEquals (first, second) |> not, home)
+    equal (true, false, true, struct (0., 0.)) (first.Cancelled, not second.Completed, obj.ReferenceEquals (first, second) |> not, home)
 
 let private disposalStopsSpring queued (clock: Clock) =
     let graph, _, page = mounted queued
@@ -140,7 +140,7 @@ let private disposalStopsSpring queued (clock: Clock) =
     run clock 16. 80.
     release ()
     run clock 16. 500.
-    equal (true, true) (spring.cancelled, spring.progress < 1.)
+    equal (true, true) (spring.Cancelled, (unbox<ITickable> spring).progress < 1.)
 
 let cases: Case list =
     [

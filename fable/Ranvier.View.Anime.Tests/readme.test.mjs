@@ -1,5 +1,6 @@
 // The F# samples of src/Ranvier.View.Anime/README.md are the declarations of Fixtures.fs: the opening block's
-// lines open Fixtures.fs, and every other block appears in Fixtures.fs verbatim.
+// lines open Fixtures.fs, and every other block appears in Fixtures.fs verbatim. The host installation sample needs a
+// WebCore host and is compiled in ranvier-org/Ranvier.Anime (tests/Ranvier.Anime.NativeSmoke/MotionFixtures.fs).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -14,6 +15,7 @@ test("the opening block's lines open Fixtures.fs", () => {
 });
 
 test("every other README sample is in Fixtures.fs", () => {
-  assert.ok(samples.length > 0);
-  for (const sample of samples) assert.ok(fixtures.includes(sample), sample.split("\n")[0]);
+  const compiledHere = samples.filter(sample => !sample.startsWith("let installMotion (host: WebCoreHost) ="));
+  assert.equal(samples.length - compiledHere.length, 1);
+  for (const sample of compiledHere) assert.ok(fixtures.includes(sample), sample.split("\n")[0]);
 });

@@ -1,3 +1,4 @@
+// Type checks on .NET over Fable.Ranvier.Anime (src/Fable.Ranvier.View.Anime), where the anime.js bindings compile.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,10 +15,11 @@ function dotnet(args, success = true) {
   return log;
 }
 const project = path.join(output, 'Types.fsproj');
-await fs.writeFile(project, `<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include="${path.join(root, 'src/Ranvier.View.Anime/Ranvier.View.Anime.fsproj')}"/><PackageReference Include="Ranvier.Css.View" Version="$(RanvierCssAddonsVersion)"/><Compile Include="${path.join(root, 'docs/samples/css-anime/Example.fs')}"/><Compile Include="Types.fs"/></ItemGroup><ItemGroup Condition="'$(UseLocalRanvierCss)' == 'true'"><ProjectReference Include="$(RanvierCssRoot)/src/Ranvier.Css.Bindings/Ranvier.Css.Bindings.fsproj"/></ItemGroup><ItemGroup Condition="'$(UseLocalRanvierCss)' != 'true'"><PackageReference Include="Ranvier.Css.Bindings" Version="$(RanvierCssAddonsVersion)"/></ItemGroup></Project>`);
+await fs.writeFile(project, `<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include="${path.join(root, 'src/Fable.Ranvier.View.Anime/Fable.Ranvier.View.Anime.fsproj')}"/><PackageReference Include="Ranvier.Css.View" Version="$(RanvierCssAddonsVersion)"/><Compile Include="${path.join(root, 'docs/samples/css-anime/Example.fs')}"/><Compile Include="Types.fs"/></ItemGroup><ItemGroup Condition="'$(UseLocalRanvierCss)' == 'true'"><ProjectReference Include="$(RanvierCssRoot)/src/Ranvier.Css.Bindings/Ranvier.Css.Bindings.fsproj"/></ItemGroup><ItemGroup Condition="'$(UseLocalRanvierCss)' != 'true'"><PackageReference Include="Ranvier.Css.Bindings" Version="$(RanvierCssAddonsVersion)"/></ItemGroup></Project>`);
 const prefix = `module Types
 open Ranvier.Css
 open Ranvier.Anime
+open Fable.Ranvier.Anime
 let gap: CustomProperty<CssValue.Length.Value> = CustomProperty.create "--gap"
 `;
 await fs.writeFile(path.join(output, 'Types.fs'), prefix + `
@@ -31,7 +33,7 @@ let expression = Css.width (CssValue.Length.calc (CssValue.Length.variable "--ga
 dotnet(['build', project, '-c', 'Release']);
 // The bindings' own wrong-dimension cases are checked in ranvier-org/Ranvier.Anime.
 const cases = [
-  'let invalid = Ranvier.View.Anime.Motion.followCss gap (AnimatableProp()) (fun (_:unit) -> Css.deg 42.)',
+  'let invalid = Ranvier.View.Anime.Motion.followCss gap ComposedAnimationOptions.Default (fun (_:unit) -> Css.deg 42.)',
 ];
 for (const source of cases) {
   await fs.writeFile(path.join(output, 'Types.fs'), prefix + source + '\n');
