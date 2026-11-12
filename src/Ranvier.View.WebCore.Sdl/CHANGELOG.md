@@ -1,5 +1,5 @@
 ---
-last_commit_released: 5ce897e2158038bec5cbb947cd4c7224d037ea18
+last_commit_released: d62f5615106f92d91f56b8ffaa006a1a3a104a77
 pre_release: rc
 depends_on:
   - ../Ranvier.View.WebCore/
@@ -15,6 +15,22 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.0-rc.11 - 2026-11-12
+
+### 🐞 Bug Fixes
+
+* *(sdl)* Draw the crosshair cursor on Windows (#135) ([437c40f](https://github.com/ranvier-org/Ranvier.View/commit/437c40f66d76f5679c5fcdf8f6231126a26cc1e0))
+
+### ⚡ Performance Improvements
+
+* *(webcore)* Native rc.8, cheaper repaints while the pointer moves (#137) ([d62f561](https://github.com/ranvier-org/Ranvier.View/commit/d62f5615106f92d91f56b8ffaa006a1a3a104a77))
+
+### 🔗 Dependencies
+
+* `src/Ranvier.View.WebCore` updated to 0.1.0-rc.7
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/5ce897e2158038bec5cbb947cd4c7224d037ea18..d62f5615106f92d91f56b8ffaa006a1a3a104a77)</small></strong>
 
 ## 0.1.0-rc.10 - 2026-11-11
 
