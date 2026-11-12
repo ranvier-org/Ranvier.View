@@ -80,6 +80,44 @@ module internal Sdl =
         | 34 -> SDL_SystemCursor.SDL_SYSTEM_CURSOR_NWSE_RESIZE
         | _ -> SDL_SystemCursor.SDL_SYSTEM_CURSOR_DEFAULT
 
+    /// <summary>The CSS crosshair cursor's RV_CURSOR_* value.</summary>
+    [<Literal>]
+    let crosshair = 4
+
+    /// <summary>The side, in pixels, of the crosshair drawn for a display scale: odd, so one pixel is the centre.</summary>
+    let crosshairSize (scale: float32) =
+        2
+        * int (Math.Round (float (11.0f * max 1.0f scale)))
+        + 1
+
+    /// <summary>
+    /// A crosshair as RGBA pixels, <c>size</c> on a side: black arms through the centre with a white edge, on
+    /// transparent. Windows' own crosshair inverts the pixels under it, which the system composes in software, and over
+    /// a window presented straight to the screen that box lags the frame and shears as the pointer moves.
+    /// </summary>
+    let crosshairPixels (size: int) =
+        let pixels = Array.zeroCreate<byte>(size * size * 4)
+        let centre = size / 2
+        // The arm is one pixel wide per 100% of scale, the edge as wide again on each side.
+        let arm = max 1 (size / 23)
+        let half = (arm - 1) / 2
+
+        for y in 0 .. size - 1 do
+            for x in 0 .. size - 1 do
+                let dx = abs (x - centre)
+                let dy = abs (y - centre)
+                let offset = (y * size + x) * 4
+
+                if dx <= half || dy <= half then
+                    pixels[offset + 3] <- 255uy
+                elif dx <= half + arm || dy <= half + arm then
+                    pixels[offset] <- 255uy
+                    pixels[offset + 1] <- 255uy
+                    pixels[offset + 2] <- 255uy
+                    pixels[offset + 3] <- 255uy
+
+        pixels
+
     /// <summary>The UTF-16 offset of the code point at <c>index</c> in <c>text</c>, as SDL counts an input method's cursor.</summary>
     let utf16Offset (text: string) (index: int) =
         let mutable offset = 0
@@ -239,6 +277,8 @@ type Window
 
     let id = SDL3.SDL_GetWindowID window
     let cursors = Dictionary<SDL_SystemCursor, nativeint>()
+    // Crosshairs drawn by Sdl.crosshairPixels, by their side in pixels.
+    let crosshairs = Dictionary<int, nativeint>()
     let touches = TouchFrames ()
     let pens = PenSamples ()
     let touchInput = WebCoreHost.Has "touch-input"
@@ -506,12 +546,38 @@ type Window
             if next = noCursor then
                 SDL3.SDL_HideCursor () |> ignore
             else
-                let system = Sdl.cursor next
                 let mutable created = 0n
 
-                if not (cursors.TryGetValue (system, &created)) then
-                    created <- NativePtr.toNativeInt (SDL3.SDL_CreateSystemCursor system)
-                    cursors[system] <- created
+                if
+                    next = Sdl.crosshair
+                    && OperatingSystem.IsWindows ()
+                then
+                    let size =
+                        match SDL3.SDL_GetWindowDisplayScale window with
+                        | scale when scale > 0.0f -> Sdl.crosshairSize scale
+                        | _ -> Sdl.crosshairSize 1.0f
+
+                    if not (crosshairs.TryGetValue (size, &created)) then
+                        let rgba = Sdl.crosshairPixels size
+                        use pixels = fixed rgba
+
+                        // ABGR8888 is R, G, B, A in byte order on the little-endian platforms SDL windows run on here.
+                        let surface =
+                            SDL3.SDL_CreateSurfaceFrom (size, size, SDL_PixelFormat.SDL_PIXELFORMAT_ABGR8888, NativePtr.toNativeInt pixels, size * 4)
+
+                        if not (NativePtr.isNullPtr surface) then
+                            created <- NativePtr.toNativeInt (SDL3.SDL_CreateColorCursor (surface, size / 2, size / 2))
+                            SDL3.SDL_DestroySurface surface
+
+                        if created <> 0n then
+                            crosshairs[size] <- created
+
+                if created = 0n then
+                    let system = Sdl.cursor next
+
+                    if not (cursors.TryGetValue (system, &created)) then
+                        created <- NativePtr.toNativeInt (SDL3.SDL_CreateSystemCursor system)
+                        cursors[system] <- created
 
                 SDL3.SDL_SetCursor (NativePtr.ofNativeInt created)
                 |> ignore
@@ -1931,6 +1997,9 @@ type Window
     member internal _.ReadPixels() : struct (int * int * byte array) =
         presenter.ReadPixels ()
 
+    /// <summary>The number of crosshair cursors the window drew in place of the system's.</summary>
+    member internal _.DrawnCrosshairs = crosshairs.Count
+
     /// <summary>The number of shared GPU frames presented to the window.</summary>
     member internal _.GpuFramesPresented = presenter.GpuFramesPresented
 
@@ -2057,6 +2126,9 @@ type Window
                         raise (Sdl.failure "SDL_GL_MakeCurrent"))
 
                 for created in cursors.Values do
+                    SDL3.SDL_DestroyCursor (NativePtr.ofNativeInt created)
+
+                for created in crosshairs.Values do
                     SDL3.SDL_DestroyCursor (NativePtr.ofNativeInt created)
 
                 SDL3.SDL_StopTextInput window |> ignore

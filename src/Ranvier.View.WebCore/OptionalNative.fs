@@ -6,6 +6,18 @@ open System.Runtime.InteropServices
 // compatible with older runtimes until the coordinated native package release is available.
 module internal OptionalNative =
     [<DllImport("RanvierWebCoreHost")>]
+    extern int rv_host_snapshot_pixels(nativeint host, nativeint element, nativeint options, nativeint& result, int& width, int& height)
+
+    [<DllImport("RanvierWebCoreHost")>]
+    extern int rv_snapshot_pixels_copy(nativeint pixels, byte[] buffer, int64 capacity, int64& length)
+
+    [<DllImport("RanvierWebCoreHost")>]
+    extern int rv_snapshot_pixels_encode(nativeint pixels, int encoding, double quality, nativeint& result)
+
+    [<DllImport("RanvierWebCoreHost")>]
+    extern void rv_snapshot_pixels_release(nativeint pixels)
+
+    [<DllImport("RanvierWebCoreHost")>]
     extern int rv_host_snapshot_bounded(
         nativeint host,
         nativeint element,

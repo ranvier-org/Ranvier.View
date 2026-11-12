@@ -8,7 +8,7 @@ mouse, wheel, keyboard, input method and focus events to the page. It also sets 
 ## Install
 
 ```sh
-dotnet add package Ranvier.View.WebCore.Sdl --version 0.1.0-rc.9
+dotnet add package Ranvier.View.WebCore.Sdl --version 0.1.0-rc.11
 ```
 
 Use `Ranvier.View.WebCore.Sdl.Traced` for a traced build. Backend, shared contracts, canonical interop,
@@ -21,8 +21,8 @@ aggregate's win-x64 GPU assets and add the matching CPU runtime in the applicati
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="[0.1.1-rc.6]" ExcludeAssets="all" />
-  <PackageReference Include="Ranvier.WebCore.Native.Cpu.win-x64" Version="[0.1.1-rc.6]" />
+  <PackageReference Include="Ranvier.WebCore.Native.win-x64" Version="[0.1.1-rc.8]" ExcludeAssets="all" />
+  <PackageReference Include="Ranvier.WebCore.Native.Cpu.win-x64" Version="[0.1.1-rc.8]" />
 </ItemGroup>
 ```
 

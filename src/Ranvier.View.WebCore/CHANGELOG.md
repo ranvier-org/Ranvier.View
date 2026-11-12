@@ -1,5 +1,5 @@
 ---
-last_commit_released: fffe5dc0149737f6d479a5498f5f8dffa280f9b7
+last_commit_released: d62f5615106f92d91f56b8ffaa006a1a3a104a77
 pre_release: rc
 depends_on:
   - ../Ranvier.View/
@@ -12,6 +12,22 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.0-rc.7 - 2026-11-12
+
+### ⚡ Performance Improvements
+
+* *(webcore)* Native rc.8, cheaper repaints while the pointer moves (#137) ([d62f561](https://github.com/ranvier-org/Ranvier.View/commit/d62f5615106f92d91f56b8ffaa006a1a3a104a77))
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/5ce897e2158038bec5cbb947cd4c7224d037ea18..d62f5615106f92d91f56b8ffaa006a1a3a104a77)</small></strong>
+
+## 0.1.0-rc.6 - 2026-11-11
+
+### ⚡ Performance Improvements
+
+* *(webcore)* Encode snapshots from owned native pixels (#132) ([5ce897e](https://github.com/ranvier-org/Ranvier.View/commit/5ce897e2158038bec5cbb947cd4c7224d037ea18))
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/fffe5dc0149737f6d479a5498f5f8dffa280f9b7..5ce897e2158038bec5cbb947cd4c7224d037ea18)</small></strong>
 
 ## 0.1.0-rc.5 - 2026-11-11
 

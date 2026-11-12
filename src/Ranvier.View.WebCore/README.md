@@ -22,11 +22,17 @@ shared with SDL's event pump.
 the previous pending preview. A waiting preview paints when admitted, so it observes the
 document at that point. Capacity is shared across services for the same host.
 
-Encoded requests send only copied RGBA pixels to the worker. Raw RGBA requests return that owned array directly without an encoder dispatch or second copy. Completion returns to the owner queue. Cancellation,
+With native ABI 71 (`snapshot-pixels-v1`), encoded requests transfer an immutable native pixel handle
+to the worker without an intermediate managed RGBA array. Raw requests copy once into the owned public
+array and do not dispatch an encoder. ABI 70 retains the copied-pixel fallback. Completion returns to the owner queue. Cancellation,
 service disposal, host disposal and document replacement suppress stale completion; a codec
 already running keeps its slot until it returns. Encoding supports PNG, JPEG, WEBP and raw RGBA,
 subject to the host's advertised formats, dimensions up to 8192 and 64 MiB of input pixels.
-Capture itself still runs on the owner thread.
+Layout and first/changed capture painting still run on the owner thread. ABI 71 can reuse an unchanged
+viewport capture with the same crop, scale and color space; rendering invalidations and updates discard
+that cache. Element captures always repaint. The native cache retains at most one 64 MiB pixel buffer
+per host, in addition to admitted capture/codec memory. Retained public images never change when the
+cache is invalidated.
 
 `BackgroundSnapshots.forHostWithByteBudget maximumRawBytes host` adds a raw-pixel ceiling between 1 byte and 64 MiB. Smaller budgets are checked before capture and rechecked after a queued preview waits through a resize. Viewports use CSS dimensions and the requested scale; crops are conservatively rounded. Uncropped elements reserve 64 MiB because their paint bounds can include overflow and shadows. Codec workspace and encoded output are additional memory; retained public results remain caller-owned. The default ceiling uses native clipping and native size validation.
 
