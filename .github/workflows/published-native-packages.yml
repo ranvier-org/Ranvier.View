@@ -30,7 +30,9 @@ permissions:
   contents: read
 
 jobs:
-  # A release dispatches this workflow as soon as it pushes, before NuGet has indexed the packages.
+  # A release dispatches this workflow as soon as it pushes, before NuGet has listed the packages. NuGet validates each
+  # package on its own schedule, so the wait follows the Ranvier dependencies of the four named packages: a restore
+  # failed with NU1102 on Ranvier.View while the packages that depend on it were already listed.
   indexed:
     name: Wait for NuGet to index the packages
     runs-on: ubuntu-latest
@@ -40,22 +42,44 @@ jobs:
       SDL_VERSION: ${{ inputs.sdl_package_version }}
     steps:
       - run: |
-          set -u
-          for attempt in $(seq 1 40); do
-            missing=0
-            for package in "ranvier.view.webcore:$VIEW_VERSION" "ranvier.view.webcore.traced:$VIEW_VERSION"                            "ranvier.view.webcore.sdl:$SDL_VERSION" "ranvier.view.webcore.sdl.traced:$SDL_VERSION"; do
-              id="${package%%:*}"
-              version="${package#*:}"
-              curl -fsSL "https://api.nuget.org/v3-flatcontainer/$id/index.json" | jq -e --arg v "$version" '.versions | index($v)' >/dev/null || missing=1
-            done
-            if [ "$missing" = 0 ]; then
-              echo "Indexed after $attempt checks"
-              exit 0
-            fi
-            sleep 60
-          done
-          echo "NuGet did not index the packages in time" >&2
-          exit 1
+          python3 -I - <<'PY'
+          import os, re, sys, time, urllib.error, urllib.request
+
+          view, sdl = os.environ['VIEW_VERSION'], os.environ['SDL_VERSION']
+          pending = {('ranvier.view.webcore', view), ('ranvier.view.webcore.traced', view),
+                     ('ranvier.view.webcore.sdl', sdl), ('ranvier.view.webcore.sdl.traced', sdl)}
+          listed = set()
+          dependency = re.compile(r'<dependency\s+id="(Ranvier\.[^"]+)"\s+version="\[?([^",\]]+)')
+
+          def nuspec(identity, version):
+              url = f'https://api.nuget.org/v3-flatcontainer/{identity}/{version}/{identity}.nuspec'
+              try:
+                  with urllib.request.urlopen(url, timeout=30) as response:
+                      return response.read().decode('utf-8-sig')
+              except (urllib.error.URLError, TimeoutError):
+                  return None
+
+          for attempt in range(1, 41):
+              while True:
+                  found = {package: nuspec(*package) for package in sorted(pending)}
+                  found = {package: text for package, text in found.items() if text is not None}
+                  if not found:
+                      break
+                  for package, text in found.items():
+                      print(f'listed: {package[0]} {package[1]}', flush=True)
+                      listed.add(package)
+                      pending.discard(package)
+                      for identity, version in dependency.findall(text):
+                          row = (identity.lower(), version.lower().split('+')[0])
+                          if row not in listed:
+                              pending.add(row)
+              if not pending:
+                  print(f'Indexed after {attempt} checks')
+                  sys.exit(0)
+              print('waiting for ' + ', '.join(f'{identity} {version}' for identity, version in sorted(pending)), flush=True)
+              time.sleep(60)
+          sys.exit('NuGet did not index the packages in time')
+          PY
 
   acceptance:
     name: Published (${{ matrix.trace }}, ${{ matrix.flavor }})
