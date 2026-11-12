@@ -74,7 +74,7 @@ const bindings = (() => {
 })();
 // Each module by the name the report gives it; the bindings' folder varies with the package version and the checkout.
 const modules = [
-  ...readdirSync(new URL("src/Ranvier.View.Anime/", generated)).map(file => [`src/Ranvier.View.Anime/${file}`, `src/Ranvier.View.Anime/${file}`]),
+  ...readdirSync(new URL("src/Fable.Ranvier.View.Anime/", generated)).map(file => [`src/Fable.Ranvier.View.Anime/${file}`, `src/Fable.Ranvier.View.Anime/${file}`]),
   ...readdirSync(new URL(bindings, generated), { recursive: true })
     .map(file => file.replaceAll("\\", "/"))
     .filter(file => file.endsWith(".js"))

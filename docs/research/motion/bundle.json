@@ -125,7 +125,7 @@
     }
   },
   "helpers": {
-    "src/Ranvier.View.Anime/Motion.js": 0,
+    "src/Fable.Ranvier.View.Anime/Motion.js": 0,
     "Fable.Ranvier.Anime/Css.fs.js": 0,
     "Fable.Ranvier.Anime/Params.fs.js": 0,
     "Fable.Ranvier.Anime/Reactive.fs.js": 0,
