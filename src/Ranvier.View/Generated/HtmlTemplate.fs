@@ -5691,7 +5691,7 @@ type Groups.VideoProperties<'inst> with
 #endif
 type EventBuilder<'inst> with
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    member _.onAbort<'native when 'native :> Dom.Element>(handler: 'inst -> Dom.UIEvent -> unit) : Part<'native, 'inst> =
+    member _.onAbort<'native when 'native :> Dom.Element>(handler: 'inst -> Dom.Event -> unit) : Part<'native, 'inst> =
         TemplateParts.event "abort" handler
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
@@ -5839,7 +5839,7 @@ type EventBuilder<'inst> with
         TemplateParts.event "ended" handler
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    member _.onError<'native when 'native :> Dom.Element>(handler: 'inst -> Dom.ErrorEvent -> unit) : Part<'native, 'inst> =
+    member _.onError<'native when 'native :> Dom.Element>(handler: 'inst -> Dom.Event -> unit) : Part<'native, 'inst> =
         TemplateParts.event "error" handler
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
@@ -5871,7 +5871,7 @@ type EventBuilder<'inst> with
         TemplateParts.event "gotpointercapture" handler
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    member _.onInput<'native when 'native :> Dom.Element>(handler: 'inst -> Dom.InputEvent -> unit) : Part<'native, 'inst> =
+    member _.onInput<'native when 'native :> Dom.Element>(handler: 'inst -> Dom.Event -> unit) : Part<'native, 'inst> =
         TemplateParts.event "input" handler
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
@@ -5991,7 +5991,7 @@ type EventBuilder<'inst> with
         TemplateParts.event "pointerup" handler
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    member _.onProgress<'native when 'native :> Dom.Element>(handler: 'inst -> Dom.ProgressEvent -> unit) : Part<'native, 'inst> =
+    member _.onProgress<'native when 'native :> Dom.Element>(handler: 'inst -> Dom.Event -> unit) : Part<'native, 'inst> =
         TemplateParts.event "progress" handler
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
@@ -6003,7 +6003,7 @@ type EventBuilder<'inst> with
         TemplateParts.event "reset" handler
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
-    member _.onResize<'native when 'native :> Dom.Element>(handler: 'inst -> Dom.UIEvent -> unit) : Part<'native, 'inst> =
+    member _.onResize<'native when 'native :> Dom.Element>(handler: 'inst -> Dom.Event -> unit) : Part<'native, 'inst> =
         TemplateParts.event "resize" handler
 
     /// <summary>Handles the event unbatched; a handler that groups several writes wraps them in <c>Api.batch</c>, and effects then run once, after the outermost batch.</summary>
