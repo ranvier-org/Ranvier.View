@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <!--
+    A native Ranvier app under the hot reload host. `dotnet run` runs the app; passing the argument `dev` runs it under
+    the host (fine-grained patching by default; `-hmr fsi` or `-hmr alc` selects a remount strategy). The bench folder
+    drives scripted edits against the live window: `pwsh bench/run.ps1 -Strategy fine`.
+    -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    </PropertyGroup>
+    <!-- `-p:HmrStamp=true` compiles through experiments/Ranvier.View.Hmr.Fsc (build it first). -->
+    <PropertyGroup Condition="'$(HmrStamp)' == 'true'">
+        <DotnetFscCompilerPath>"$(MSBuildThisFileDirectory)../../experiments/Ranvier.View.Hmr.Fsc/bin/Debug/net10.0/Ranvier.View.Hmr.Fsc.dll"</DotnetFscCompilerPath>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="Shared.fs" />
+        <Compile Include="Counter.fs" />
+        <Compile Include="Todos.fs" />
+        <Compile Include="Edge.fs" />
+        <Compile Include="App.fs" />
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../src/Ranvier.View/Ranvier.View.fsproj" />
+        <ProjectReference Include="../../src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj" />
+        <ProjectReference Include="../../src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj" />
+        <ProjectReference Include="../../src/Ranvier.View.WebCore.Hmr/Ranvier.View.WebCore.Hmr.fsproj" />
+    </ItemGroup>
+</Project>

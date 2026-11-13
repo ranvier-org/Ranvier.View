@@ -1,0 +1,254 @@
+[
+  {
+    "op": "click",
+    "selector": "#edge-inc",
+    "times": 3
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-memo",
+    "text": "memo=6"
+  },
+  {
+    "op": "probe",
+    "name": "edge.effect.v1",
+    "value": 1
+  },
+  {
+    "op": "click",
+    "selector": "#edge-shared",
+    "times": 1
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-shared-value",
+    "text": "shared=1"
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-echo",
+    "text": "v1 saw shared=1"
+  },
+  {
+    "op": "probe",
+    "name": "edge.effect.v1",
+    "value": 2
+  },
+  {
+    "op": "click",
+    "selector": "#edge-rows li[data-row=b]",
+    "times": 1
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-rows li[data-row=b]",
+    "text": "[x] b"
+  },
+  {
+    "op": "edit",
+    "name": "E1 memo logic in setup",
+    "file": "Edge.fs",
+    "find": "count.Value * 2",
+    "replace": "count.Value * 3"
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-memo",
+    "text": "memo=9"
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-read",
+    "text": "count=3"
+  },
+  {
+    "op": "probe",
+    "name": "edge.effect.v1",
+    "value": 3
+  },
+  {
+    "op": "revert",
+    "name": "E1 revert",
+    "file": "Edge.fs"
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-memo",
+    "text": "memo=6"
+  },
+  {
+    "op": "probe",
+    "name": "edge.effect.v1",
+    "value": 4
+  },
+  {
+    "op": "edit",
+    "name": "E2 reader gains a dependency",
+    "file": "Edge.fs",
+    "find": "$\"count={s.Count.Value}\"",
+    "replace": "$\"count={s.Count.Value} step={s.Step.Value}\""
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-read",
+    "text": "count=3 step=1"
+  },
+  {
+    "op": "click",
+    "selector": "#edge-step",
+    "times": 1
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-read",
+    "text": "count=3 step=2"
+  },
+  {
+    "op": "probe",
+    "name": "edge.effect.v1",
+    "value": 4
+  },
+  {
+    "op": "revert",
+    "name": "E2 revert",
+    "file": "Edge.fs"
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-read",
+    "text": "count=3"
+  },
+  {
+    "op": "edit",
+    "name": "E3 effect body (tag v1 -> v2)",
+    "file": "Edge.fs",
+    "find": "let tag = \"v1\"",
+    "replace": "let tag = \"v2\""
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-echo",
+    "text": "v2 saw shared=1"
+  },
+  {
+    "op": "probe",
+    "name": "edge.effect.v2",
+    "value": 1
+  },
+  {
+    "op": "click",
+    "selector": "#edge-shared",
+    "times": 1
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-echo",
+    "text": "v2 saw shared=2"
+  },
+  {
+    "op": "probe",
+    "name": "edge.effect.v2",
+    "value": 2
+  },
+  {
+    "op": "probe",
+    "name": "edge.effect.v1",
+    "value": 4
+  },
+  {
+    "op": "revert",
+    "name": "E3 revert",
+    "file": "Edge.fs"
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-echo",
+    "text": "v1 saw shared=2"
+  },
+  {
+    "op": "edit",
+    "name": "E4 reader of a module-level store",
+    "file": "Edge.fs",
+    "find": "$\"shared={shared.Value.Value}\"",
+    "replace": "$\"shared is {shared.Value.Value}\""
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-shared-value",
+    "text": "shared is 2"
+  },
+  {
+    "op": "click",
+    "selector": "#edge-shared",
+    "times": 1
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-shared-value",
+    "text": "shared is 3"
+  },
+  {
+    "op": "revert",
+    "name": "E4 revert",
+    "file": "Edge.fs"
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-shared-value",
+    "text": "shared=3"
+  },
+  {
+    "op": "edit",
+    "name": "E5 row template text (row state)",
+    "file": "Edge.fs",
+    "find": "\"[x] \"",
+    "replace": "\"[done] \""
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-rows li[data-row=b]",
+    "text": "[done] b"
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-rows li[data-row=a]",
+    "text": "[ ] a"
+  },
+  {
+    "op": "revert",
+    "name": "E5 revert",
+    "file": "Edge.fs"
+  },
+  {
+    "op": "edit",
+    "name": "E6 row structure (fallback, row state)",
+    "file": "Edge.fs",
+    "find": "                    t.text (fun r ->\n",
+    "replace": "                    t.span [||] [| t.text \"*\" |]\n                    t.text (fun r ->\n"
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-rows li[data-row=b]",
+    "text": "*[x] b"
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-memo",
+    "text": "memo=6"
+  },
+  {
+    "op": "revert",
+    "name": "E6 revert",
+    "file": "Edge.fs"
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-rows li[data-row=b]",
+    "text": "[x] b"
+  },
+  {
+    "op": "expect",
+    "selector": "#edge-shared-value",
+    "text": "shared=3"
+  }
+]

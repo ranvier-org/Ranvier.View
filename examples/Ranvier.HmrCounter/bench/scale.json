@@ -1,0 +1,11 @@
+[
+  { "op": "click", "selector": "#counter-button", "times": 2 },
+  { "op": "edit", "name": "S1 static text", "file": "Counter.fs", "find": "t.text \"Counter\"", "replace": "t.text \"Counter (edited)\"" },
+  { "op": "expect", "selector": "#counter-title", "text": "Counter (edited)" },
+  { "op": "expect", "selector": "#counter-button", "text": "Clicked 2 times" },
+  { "op": "revert", "name": "S1 revert", "file": "Counter.fs" },
+  { "op": "edit", "name": "S8 list row reader (Todos.fs)", "file": "Todos.fs", "find": "\"- \" + (read ()).Text", "replace": "\"* \" + (read ()).Text" },
+  { "op": "expect", "selector": "#todo-list li", "text": "* Try hot reload" },
+  { "op": "revert", "name": "S8 revert", "file": "Todos.fs" },
+  { "op": "expect", "selector": "#todo-list li", "text": "- Try hot reload" }
+]

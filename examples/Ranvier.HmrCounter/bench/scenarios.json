@@ -1,0 +1,212 @@
+[
+  {
+    "op": "click",
+    "selector": "#counter-button",
+    "times": 3
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-button",
+    "text": "Clicked 3 times"
+  },
+  {
+    "op": "edit",
+    "name": "S1 static text",
+    "file": "Counter.fs",
+    "find": "t.text \"Counter\"",
+    "replace": "t.text \"Counter (edited)\""
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-title",
+    "text": "Counter (edited)"
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-button",
+    "text": "Clicked 3 times"
+  },
+  {
+    "op": "revert",
+    "name": "S1 revert",
+    "file": "Counter.fs"
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-title",
+    "text": "Counter"
+  },
+  {
+    "op": "edit",
+    "name": "S2 static attribute",
+    "file": "Counter.fs",
+    "find": "border:2px solid #4a7",
+    "replace": "border:2px solid #c33"
+  },
+  {
+    "op": "expect",
+    "selector": "#counter",
+    "attr": "style",
+    "contains": "#c33"
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-button",
+    "text": "Clicked 3 times"
+  },
+  {
+    "op": "revert",
+    "name": "S2 revert",
+    "file": "Counter.fs"
+  },
+  {
+    "op": "edit",
+    "name": "S3 reader logic",
+    "file": "Counter.fs",
+    "find": "$\"Clicked {s.Count.Value} times\"",
+    "replace": "$\"Count = {s.Count.Value}\""
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-button",
+    "text": "Count = 3"
+  },
+  {
+    "op": "revert",
+    "name": "S3 revert",
+    "file": "Counter.fs"
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-button",
+    "text": "Clicked 3 times"
+  },
+  {
+    "op": "edit",
+    "name": "S4 handler logic",
+    "file": "Counter.fs",
+    "find": "s.Count.Value + s.Step.Value",
+    "replace": "s.Count.Value + 10 * s.Step.Value"
+  },
+  {
+    "op": "click",
+    "selector": "#counter-button",
+    "times": 1
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-button",
+    "text": "Clicked 13 times"
+  },
+  {
+    "op": "revert",
+    "name": "S4 revert",
+    "file": "Counter.fs"
+  },
+  {
+    "op": "click",
+    "selector": "#counter-button",
+    "times": 1
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-button",
+    "text": "Clicked 14 times"
+  },
+  {
+    "op": "edit",
+    "name": "S5 structure (new element)",
+    "file": "Counter.fs",
+    "find": "                    t.button\n",
+    "replace": "                    t.p [| t.Attrs.attribute (\"id\", \"counter-note\") |] [| t.text \"added by HMR\" |]\n                    t.button\n"
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-note",
+    "text": "added by HMR"
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-button",
+    "text": "Clicked 14 times"
+  },
+  {
+    "op": "revert",
+    "name": "S5 revert",
+    "file": "Counter.fs"
+  },
+  {
+    "op": "edit",
+    "name": "S6a state type, broken intermediate",
+    "error": true,
+    "file": "Counter.fs",
+    "find": "        Step: Signal<int>\n",
+    "replace": "        Step: Signal<int>\n        Label: Signal<string>\n"
+  },
+  {
+    "op": "edit",
+    "name": "S6b use new field",
+    "file": "Counter.fs",
+    "find": "                Step = Api.createSignal 1\n",
+    "replace": "                Step = Api.createSignal 1\n                Label = Api.createSignal \"label\"\n"
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-button",
+    "text": "Clicked 14 times"
+  },
+  {
+    "op": "revert",
+    "name": "S6 revert",
+    "file": "Counter.fs"
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-button",
+    "text": "Clicked 14 times"
+  },
+  {
+    "op": "edit",
+    "name": "S7 comment only",
+    "file": "Counter.fs",
+    "find": "let counter: Component<string> =",
+    "replace": "// HMR bench comment\nlet counter: Component<string> ="
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-button",
+    "text": "Clicked 14 times"
+  },
+  {
+    "op": "revert",
+    "name": "S7 revert",
+    "file": "Counter.fs"
+  },
+  {
+    "op": "edit",
+    "name": "S8 list row reader (Todos.fs)",
+    "file": "Todos.fs",
+    "find": "\"- \" + (read ()).Text",
+    "replace": "\"* \" + (read ()).Text"
+  },
+  {
+    "op": "expect",
+    "selector": "#todo-list li",
+    "text": "* Try hot reload"
+  },
+  {
+    "op": "expect",
+    "selector": "#counter-button",
+    "text": "Clicked 14 times"
+  },
+  {
+    "op": "revert",
+    "name": "S8 revert",
+    "file": "Todos.fs"
+  },
+  {
+    "op": "expect",
+    "selector": "#todo-list li",
+    "text": "- Try hot reload"
+  }
+]

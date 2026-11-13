@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <RootNamespace>Ranvier.View.WebCore.Hmr</RootNamespace>
+        <AssemblyName>Ranvier.View.WebCore.Hmr</AssemblyName>
+        <PackageId>Ranvier.View.WebCore.Hmr</PackageId>
+        <PackageId Condition="'$(RanvierTrace)' == 'true'">Ranvier.View.WebCore.Hmr.Traced</PackageId>
+        <Title>Ranvier.View.WebCore.Hmr</Title>
+        <Description>Hot reload for native Ranvier apps in development: `dotnet run -- dev` keeps the SDL window and WebCore page alive and patches edited components into them, keeping their state.</Description>
+        <PackageTags>reactive;signals;view;webcore;native;hot-reload;hmr;fsharp</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageReleaseNotes>Experimental development tool. JIT only; reference it from Debug builds.</PackageReleaseNotes>
+        <Version>0.1.0-alpha.0</Version>
+        <IsPackable>true</IsPackable>
+        <IsAotCompatible>false</IsAotCompatible>
+        <!-- The checker gate: the traced build matches the traced Ranvier core of a Debug build. -->
+        <RanvierFSharpVersion>0.1.0-preview.3</RanvierFSharpVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="Reflect.fs" />
+        <Compile Include="Transplant.fs" />
+        <Compile Include="Fingerprint.fs" />
+        <Compile Include="Remount.fs" />
+        <Compile Include="Fine.fs" />
+        <Compile Include="Stamps.fs" />
+        <Compile Include="Delivery.fs" />
+        <Compile Include="Dev.fs" />
+        <None Include="README.md" Pack="true" PackagePath="\" />
+        <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../Ranvier.View/Ranvier.View.fsproj" />
+        <ProjectReference Include="../Ranvier.View.Dom/Ranvier.View.Dom.fsproj" />
+        <ProjectReference Include="../Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Ranvier.FSharp.Checker$(RanvierPackageSuffix)" Version="$(RanvierFSharpVersion)" />
+        <!-- Ranvier.FSharp.Checker requires FSharp.Core 10.1.403. -->
+        <PackageReference Update="FSharp.Core" Version="10.1.403" />
+    </ItemGroup>
+
+</Project>

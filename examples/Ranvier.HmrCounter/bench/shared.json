@@ -1,0 +1,231 @@
+[
+  {
+    "op": "click",
+    "selector": "[data-badge=alpha] button",
+    "times": 1
+  },
+  {
+    "op": "click",
+    "selector": "[data-badge=beta] button",
+    "times": 2
+  },
+  {
+    "op": "click",
+    "selector": "[data-badge=gamma] button",
+    "times": 3
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=alpha] button",
+    "text": "alpha: 1"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=beta] button",
+    "text": "beta: 2"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=gamma] button",
+    "text": "gamma: 3"
+  },
+  {
+    "op": "edit",
+    "name": "B1 static text (3 instances, 2 files)",
+    "file": "Shared.fs",
+    "find": "t.text \" clicks\"",
+    "replace": "t.text \" taps\""
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=alpha]",
+    "text": "alpha: 1 taps"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=beta]",
+    "text": "beta: 2 taps"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=gamma]",
+    "text": "gamma: 3 taps"
+  },
+  {
+    "op": "revert",
+    "name": "B1 revert",
+    "file": "Shared.fs"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=gamma]",
+    "text": "gamma: 3 clicks"
+  },
+  {
+    "op": "edit",
+    "name": "B2 reader logic",
+    "file": "Shared.fs",
+    "find": "$\"{s.Label}: {s.Clicks.Value}\"",
+    "replace": "$\"{s.Label} = {s.Clicks.Value}\""
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=alpha] button",
+    "text": "alpha = 1"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=beta] button",
+    "text": "beta = 2"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=gamma] button",
+    "text": "gamma = 3"
+  },
+  {
+    "op": "revert",
+    "name": "B2 revert",
+    "file": "Shared.fs"
+  },
+  {
+    "op": "edit",
+    "name": "B3 handler logic",
+    "file": "Shared.fs",
+    "find": "s.Clicks.Value + 1",
+    "replace": "s.Clicks.Value + 10"
+  },
+  {
+    "op": "click",
+    "selector": "[data-badge=beta] button",
+    "times": 1
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=beta] button",
+    "text": "beta: 12"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=alpha] button",
+    "text": "alpha: 1"
+  },
+  {
+    "op": "revert",
+    "name": "B3 revert",
+    "file": "Shared.fs"
+  },
+  {
+    "op": "click",
+    "selector": "[data-badge=alpha] button",
+    "times": 1
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=alpha] button",
+    "text": "alpha: 2"
+  },
+  {
+    "op": "edit",
+    "name": "B4 setup (initial value)",
+    "file": "Shared.fs",
+    "find": "Clicks = Api.createSignal 0",
+    "replace": "Clicks = Api.createSignal 100"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=alpha] button",
+    "text": "alpha: 2"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=beta] button",
+    "text": "beta: 12"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=gamma] button",
+    "text": "gamma: 3"
+  },
+  {
+    "op": "revert",
+    "name": "B4 revert",
+    "file": "Shared.fs"
+  },
+  {
+    "op": "edit",
+    "name": "B5 structure (fallback)",
+    "file": "Shared.fs",
+    "find": "                    t.text \" clicks\"\n",
+    "replace": "                    t.text \" clicks\"\n                    t.b [||] [| t.text \"!\" |]\n"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=alpha]",
+    "text": "alpha: 2 clicks!"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=beta] button",
+    "text": "beta: 12"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=gamma] button",
+    "text": "gamma: 3"
+  },
+  {
+    "op": "revert",
+    "name": "B5 revert",
+    "file": "Shared.fs"
+  },
+  {
+    "op": "edit",
+    "name": "B6 state type (new field)",
+    "file": "Shared.fs",
+    "find": "Clicks: Signal<int> }",
+    "replace": "Clicks: Signal<int>; Hover: Signal<bool> }",
+    "find2": "                Clicks = Api.createSignal 0\n",
+    "replace2": "                Clicks = Api.createSignal 0\n                Hover = Api.createSignal false\n"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=alpha] button",
+    "text": "alpha: 2"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=beta] button",
+    "text": "beta: 12"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=gamma] button",
+    "text": "gamma: 3"
+  },
+  {
+    "op": "click",
+    "selector": "[data-badge=gamma] button",
+    "times": 1
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=gamma] button",
+    "text": "gamma: 4"
+  },
+  {
+    "op": "revert",
+    "name": "B6 revert",
+    "file": "Shared.fs"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=alpha] button",
+    "text": "alpha: 2"
+  },
+  {
+    "op": "expect",
+    "selector": "[data-badge=gamma] button",
+    "text": "gamma: 4"
+  }
+]
