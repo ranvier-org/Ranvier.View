@@ -75,7 +75,8 @@ type private StepResult =
         Report: Report option
     }
 
-type internal DevHost(argv: string array, title: string, width: int, height: int, root: TemplateComponent, propsOf: Window -> obj, callerFile: string)
+type internal DevHost
+    (argv: string array, title: string, width: int, height: int, root: TemplateComponent, propsOf: Window -> obj, ownsProps: bool, callerFile: string)
     =
     let arg name =
         match Array.tryFindIndex ((=) name) argv with
@@ -1348,6 +1349,15 @@ type internal DevHost(argv: string array, title: string, width: int, height: int
         running.Value <- false
         unmount ()
         work.CompleteAdding ()
+
+        // The tree's GPU surfaces went with it. Resources the props hold were built on the window, so they go next,
+        // and the window last: a process that exits with both alive can stall in the driver's teardown.
+        if ownsProps then
+            match props with
+            | :? IDisposable as resources -> resources.Dispose ()
+            | _ -> ()
+
+        (window :> IDisposable).Dispose()
         0
 
 and private TaskCompletionSourceSlim<'T>() =
@@ -1368,10 +1378,18 @@ and private TaskCompletionSourceSlim<'T>() =
 [<AbstractClass; Sealed>]
 type Dev =
     static member private Start
-        (argv: string array, title: string, width: int, height: int, root: Component<'props>, propsOf: Window -> 'props, callerFile: string)
-        : int =
+        (
+            argv: string array,
+            title: string,
+            width: int,
+            height: int,
+            root: Component<'props>,
+            propsOf: Window -> 'props,
+            ownsProps: bool,
+            callerFile: string
+        ) : int =
         if Array.contains "dev" argv then
-            DevHost(argv, title, width, height, root, (fun window -> box (propsOf window)), callerFile).Run()
+            DevHost(argv, title, width, height, root, (fun window -> box (propsOf window)), ownsProps, callerFile).Run()
         else
             // The plain app: what `Window.run` does, plus optional timing output for the comparison runs.
             let started = Stopwatch.GetTimestamp ()
@@ -1394,10 +1412,11 @@ type Dev =
             |> ignore
 
             let beforeMount = elapsed ()
+            let props = propsOf window
 
             let mounted =
                 Mounting.mount graph None (fun errors -> raise (AggregateException (errors: exn seq))) container None (fun context ->
-                    Program.run (Component.render root (propsOf window)) context.Backend)
+                    Program.run (Component.render root props) context.Backend)
 
             Console.WriteLine ($"[app] mount {elapsed () - beforeMount:F1} ms")
             let mutable first = true
@@ -1412,6 +1431,13 @@ type Dev =
 
             graph.Run (fun () -> mounted.Dispose ())
             graph.Dispose ()
+
+            // As in the dev host: the props' resources go before the window they were built on.
+            if ownsProps then
+                match box props with
+                | :? IDisposable as resources -> resources.Dispose ()
+                | _ -> ()
+
             0
 
     /// Runs a native Ranvier app. With `dev` among the arguments, runs it under the hot reload host instead.
@@ -1425,10 +1451,11 @@ type Dev =
             props: 'props,
             [<CallerFilePath; Optional; DefaultParameterValue("")>] callerFile: string
         ) : int =
-        Dev.Start (argv, title, width, height, root, (fun _ -> props), callerFile)
+        Dev.Start (argv, title, width, height, root, (fun _ -> props), false, callerFile)
 
     /// As Run, with the root's props built from the window: a GPU context created here lives as long as the
-    /// window and survives every reload.
+    /// window and survives every reload. Props that implement IDisposable belong to the host, which disposes them
+    /// after the tree unmounts and before the window.
     static member RunWith
         (
             argv: string array,
@@ -1439,4 +1466,4 @@ type Dev =
             propsOf: Window -> 'props,
             [<CallerFilePath; Optional; DefaultParameterValue("")>] callerFile: string
         ) : int =
-        Dev.Start (argv, title, width, height, root, propsOf, callerFile)
+        Dev.Start (argv, title, width, height, root, propsOf, true, callerFile)
