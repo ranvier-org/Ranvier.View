@@ -84,6 +84,9 @@ type internal EglRenderer private (renderer: nativeptr<SDL_Renderer>, window: na
     /// <summary>The borrowed EGL consumer context used to configure its native frame pool.</summary>
     member _.Context = NativePtr.toNativeInt context
 
+    /// <summary>The configured process EGL display handle, or zero before configuration.</summary>
+    static member CurrentDisplay = EglCohort.display
+
     /// <summary>Finishes the single pending constructor cleanup before allocating another window.</summary>
     static member RetryFailedConstruction() =
         FailedConstruction.retry ()

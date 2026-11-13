@@ -92,22 +92,58 @@ module private D3D11Native =
         val mutable RowPitch: uint32
         val mutable DepthPitch: uint32
 
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type GetAdapter = delegate of nativeint * byref<nativeint> -> int
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
+    type GetAdapterDesc = delegate of nativeint * nativeint -> int
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type SetFrameLatency = delegate of nativeint * uint32 -> int
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type GetObject = delegate of nativeint * byref<Guid> * byref<nativeint> -> int
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type GetBuffer = delegate of nativeint * uint32 * byref<Guid> * byref<nativeint> -> int
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type CreateSwapChain = delegate of nativeint * nativeint * nativeint * byref<SwapChainDesc> * nativeint * nativeint * byref<nativeint> -> int
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type MakeWindowAssociation = delegate of nativeint * nativeint * uint32 -> int
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type CreateTexture = delegate of nativeint * byref<TextureDesc> * nativeint * byref<nativeint> -> int
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type CreateTargetView = delegate of nativeint * nativeint * nativeint * byref<nativeint> -> int
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type Present = delegate of nativeint * uint32 * uint32 -> int
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type ResizeBuffers = delegate of nativeint * uint32 * uint32 * uint32 * uint32 * uint32 -> int
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type ContextCall = delegate of nativeint -> unit
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type CopyResource = delegate of nativeint * nativeint * nativeint -> unit
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type CopyRegion = delegate of nativeint * nativeint * uint32 * uint32 * uint32 * uint32 * nativeint * uint32 * byref<Box> -> unit
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type UpdateResource = delegate of nativeint * nativeint * uint32 * nativeint * nativeint * uint32 * uint32 -> unit
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type ClearView = delegate of nativeint * nativeint * nativeint -> unit
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type Map = delegate of nativeint * nativeint * uint32 * int * uint32 * byref<Mapped> -> int
+
+    [<UnmanagedFunctionPointer(CallingConvention.StdCall)>]
     type Unmap = delegate of nativeint * nativeint * uint32 -> unit
 
     [<DllImport("d3d11.dll")>]
@@ -132,6 +168,80 @@ module private D3D11Native =
         if value <> 0n then
             Marshal.Release value |> ignore
 
+    /// <summary>Queries the PCI vendor/device IDs and 64-bit LUID of a D3D11 device's DXGI adapter.</summary>
+    let tryQueryAdapterIdentity (d3dDevice: nativeint) : struct (uint32 * uint32 * int64) voption =
+        if d3dDevice = 0n then
+            ValueNone
+        else
+            let mutable dxgiDevice = 0n
+            let mutable adapter = 0n
+
+            try
+                let mutable id = dxgiDeviceId
+
+                if
+                    Marshal.QueryInterface (d3dDevice, &id, &dxgiDevice)
+                    >= 0
+                    && dxgiDevice <> 0n
+                    && (comMethod<GetAdapter> dxgiDevice 7).Invoke(dxgiDevice, &adapter)
+                       >= 0
+                    && adapter <> 0n
+                then
+                    // DXGI_ADAPTER_DESC: WCHAR[128] (256B), VendorId (4B @ 256), DeviceId (4B @ 260),
+                    // SubSysId (4B @ 264), Revision (4B @ 268), 3 * SIZE_T (@ 272), LUID (8B @ 272 + 3 * IntPtr.Size).
+                    let descBuf = Microsoft.FSharp.NativeInterop.NativePtr.stackalloc<byte> 320
+                    let descPtr = Microsoft.FSharp.NativeInterop.NativePtr.toNativeInt descBuf
+
+                    if
+                        (comMethod<GetAdapterDesc> adapter 8).Invoke(adapter, descPtr)
+                        >= 0
+                    then
+                        let vendorId = uint32 (Marshal.ReadInt32 (descPtr, 256))
+                        let deviceId = uint32 (Marshal.ReadInt32 (descPtr, 260))
+                        let luid = Marshal.ReadInt64 (descPtr, 272 + 3 * IntPtr.Size)
+                        ValueSome (struct (vendorId, deviceId, luid))
+                    else
+                        ValueNone
+                else
+                    ValueNone
+            finally
+                drop adapter
+                drop dxgiDevice
+
+    /// <summary>Creates a producer D3D11 device and immediate context on the same DXGI adapter as <c>consumerDevice</c>.</summary>
+    let tryCreateProducerDevice (consumerDevice: nativeint) : struct (nativeint * nativeint) voption =
+        let mutable dxgiDevice = 0n
+        let mutable adapter = 0n
+
+        try
+            let mutable id = dxgiDeviceId
+
+            if
+                consumerDevice <> 0n
+                && Marshal.QueryInterface (consumerDevice, &id, &dxgiDevice)
+                   >= 0
+                && dxgiDevice <> 0n
+            then
+                (comMethod<GetAdapter> dxgiDevice 7).Invoke(dxgiDevice, &adapter)
+                |> ignore
+
+            let mutable created = 0n
+            let mutable immediate = 0n
+            let mutable level = 0
+            // D3D_DRIVER_TYPE_UNKNOWN (0) is required when an explicit IDXGIAdapter is supplied; 1 is HARDWARE.
+            let driverType = if adapter <> 0n then 0 else 1
+
+            if
+                D3D11CreateDevice (adapter, driverType, 0n, 0u, 0n, 0u, 7u, &created, &level, &immediate)
+                >= 0
+            then
+                ValueSome (struct (created, immediate))
+            else
+                ValueNone
+        finally
+            drop adapter
+            drop dxgiDevice
+
 /// <summary>
 /// A D3D11 device and flip-model swap chain on a window, with a thread that copies a frame to the back buffer and
 /// presents it. A present that blocks holds only that thread.
@@ -155,12 +265,18 @@ type internal D3D11SwapChain private (hwnd: nativeint, wakeEvent: uint32) =
     let mutable cpuTexture = 0n
     let mutable cpuWidth = 0
     let mutable cpuHeight = 0
+    let mutable readTexture = 0n
+    let mutable readWidth = 0
+    let mutable readHeight = 0
     let mutable lost = false
     let mutable disposed = false
+    let mutable createTexCall: D3D11Native.CreateTexture = null
     let mutable presentCall: D3D11Native.Present = null
     let mutable copyResource: D3D11Native.CopyResource = null
     let mutable copyRegion: D3D11Native.CopyRegion = null
     let mutable clearView: D3D11Native.ClearView = null
+    let mutable mapCall: D3D11Native.Map = null
+    let mutable unmapCall: D3D11Native.Unmap = null
     let mutable flush: D3D11Native.ContextCall = null
     // Opaque black, pinned for ClearRenderTargetView across every frame whose size differs from the back buffer.
     let black = GCHandle.Alloc ([| 0.0f; 0.0f; 0.0f; 1.0f |], GCHandleType.Pinned)
@@ -218,6 +334,10 @@ type internal D3D11SwapChain private (hwnd: nativeint, wakeEvent: uint32) =
 
     let teardown () =
         releaseBuffers ()
+        D3D11Native.drop readTexture
+        readTexture <- 0n
+        readWidth <- 0
+        readHeight <- 0
         D3D11Native.drop cpuTexture
         cpuTexture <- 0n
         cpuWidth <- 0
@@ -297,7 +417,10 @@ type internal D3D11SwapChain private (hwnd: nativeint, wakeEvent: uint32) =
             if createSwapChain () && createBuffers () then
                 backWidth <- wantedWidth
                 backHeight <- wantedHeight
+                createTexCall <- D3D11Native.comMethod<D3D11Native.CreateTexture> device 5
                 presentCall <- D3D11Native.comMethod<D3D11Native.Present> swapChain 8
+                mapCall <- D3D11Native.comMethod<D3D11Native.Map> context 14
+                unmapCall <- D3D11Native.comMethod<D3D11Native.Unmap> context 15
                 copyRegion <- D3D11Native.comMethod<D3D11Native.CopyRegion> context 46
                 copyResource <- D3D11Native.comMethod<D3D11Native.CopyResource> context 47
                 clearView <- D3D11Native.comMethod<D3D11Native.ClearView> context 50
@@ -523,54 +646,75 @@ type internal D3D11SwapChain private (hwnd: nativeint, wakeEvent: uint32) =
 
         cpuTexture
 
-    /// <summary>The tightly packed RGBA bytes of <c>texture</c>, top down, on the thread that owns the device.</summary>
-    member _.Read(texture: nativeint, width: int, height: int) =
-        let mutable desc: D3D11Native.TextureDesc =
-            {
-                Width = uint32 width
-                Height = uint32 height
-                MipLevels = 1u
-                ArraySize = 1u
-                Format = D3D11Native.FormatRgba8
-                SampleCount = 1u
-                SampleQuality = 0u
-                // D3D11_USAGE_STAGING with D3D11_CPU_ACCESS_READ.
-                Usage = 3
-                BindFlags = 0u
-                CpuAccessFlags = 0x20000u
-                MiscFlags = 0u
-            }
+    /// <summary>Copies tightly packed top-down RGBA8 bytes of <c>texture</c> into <c>destination</c> on the owner thread.</summary>
+    member _.ReadInto(texture: nativeint, width: int, height: int, destination: Span<byte>) =
+        if destination.Length < width * height * 4 then
+            invalidArg "destination" "Destination span is smaller than width * height * 4 bytes"
 
-        let mutable staging = 0n
+        if
+            readTexture = 0n
+            || readWidth <> width
+            || readHeight <> height
+        then
+            D3D11Native.drop readTexture
+            readTexture <- 0n
 
-        if (D3D11Native.comMethod<D3D11Native.CreateTexture> device 5).Invoke(device, &desc, 0n, &staging) < 0 then
-            invalidOp "ID3D11Device::CreateTexture2D failed"
+            let mutable desc: D3D11Native.TextureDesc =
+                {
+                    Width = uint32 width
+                    Height = uint32 height
+                    MipLevels = 1u
+                    ArraySize = 1u
+                    Format = D3D11Native.FormatRgba8
+                    SampleCount = 1u
+                    SampleQuality = 0u
+                    // D3D11_USAGE_STAGING with D3D11_CPU_ACCESS_READ.
+                    Usage = 3
+                    BindFlags = 0u
+                    CpuAccessFlags = 0x20000u
+                    MiscFlags = 0u
+                }
+
+            let mutable created = 0n
+
+            if
+                createTexCall.Invoke (device, &desc, 0n, &created) < 0
+                || created = 0n
+            then
+                invalidOp "ID3D11Device::CreateTexture2D failed"
+
+            readTexture <- created
+            readWidth <- width
+            readHeight <- height
+
+        copyResource.Invoke (context, readTexture, texture)
+        let mutable mapped = D3D11Native.Mapped ()
+
+        // D3D11_MAP_READ.
+        if mapCall.Invoke (context, readTexture, 0u, 1, 0u, &mapped) < 0 then
+            invalidOp "ID3D11DeviceContext::Map failed"
 
         try
-            copyResource.Invoke (context, staging, texture)
-            let mutable mapped = D3D11Native.Mapped ()
+            let rowBytes = width * 4
 
-            // D3D11_MAP_READ.
-            if (D3D11Native.comMethod<D3D11Native.Map> context 14).Invoke(context, staging, 0u, 1, 0u, &mapped) < 0 then
-                invalidOp "ID3D11DeviceContext::Map failed"
-
-            try
-                let bytes = Array.zeroCreate<byte>(width * height * 4)
-
-                for row in 0 .. height - 1 do
-                    Marshal.Copy (
-                        mapped.Data
-                        + nativeint (row * int mapped.RowPitch),
-                        bytes,
-                        row * width * 4,
-                        width * 4
+            for row in 0 .. height - 1 do
+                let src =
+                    ReadOnlySpan<byte>(
+                        (mapped.Data
+                         + nativeint (row * int mapped.RowPitch))
+                            .ToPointer(),
+                        rowBytes
                     )
 
-                bytes
-            finally
-                (D3D11Native.comMethod<D3D11Native.Unmap> context 15).Invoke(context, staging, 0u)
+                src.CopyTo (destination.Slice (row * rowBytes, rowBytes))
         finally
-            D3D11Native.drop staging
+            unmapCall.Invoke (context, readTexture, 0u)
+
+    /// <summary>The tightly packed RGBA bytes of <c>texture</c>, top down, on the thread that owns the device.</summary>
+    member this.Read(texture: nativeint, width: int, height: int) =
+        let bytes = Array.zeroCreate<byte>(width * height * 4)
+        this.ReadInto (texture, width, height, Span<byte> bytes)
+        bytes
 
     interface IDisposable with
         member this.Dispose() =
