@@ -48,6 +48,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     let mutable presentedTraceFrame: int64 voption = ValueNone
     let mutable retryAt = 0L
     let mutable retryMilliseconds = 16
+    let mutable beforeGpuFrame: unit -> unit = ignore
 
     let documentChanged =
         host.DocumentReplaced.Subscribe (fun _ ->
@@ -309,6 +310,9 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     let acquireForSwapChain () =
         let mutable frame = 0n
 
+        if gpuEnabled then
+            beforeGpuFrame ()
+
         if
             gpuEnabled
             && RanvierWebCoreAbi.Native.rv_host_acquire_d3d11_frame (host.Handle, device (), &frame) = 0
@@ -436,6 +440,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                             not pipelinePending
                             && (pipelineNeedsSubmit || exposed)
                         then
+                            beforeGpuFrame ()
                             let status = OptionalNative.rv_host_submit_gpu_frame (host.Handle, pipelineId + 1UL)
 
                             if status = 0 then
@@ -597,6 +602,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                             not pipelinePending
                             && (pipelineNeedsSubmit || exposed)
                         then
+                            beforeGpuFrame ()
                             let status = OptionalNative.rv_host_submit_gpu_frame (host.Handle, pipelineId + 1UL)
 
                             if status = 0 then
@@ -708,7 +714,9 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                 match egl, metal with
                 | Some consumer, _ -> consumer.Acquire (host.Handle, &frame)
                 | _, Some consumer -> consumer.Acquire (host.Handle, &frame)
-                | None, None -> RanvierWebCoreAbi.Native.rv_host_acquire_d3d11_frame (host.Handle, device (), &frame)
+                | None, None ->
+                    beforeGpuFrame ()
+                    RanvierWebCoreAbi.Native.rv_host_acquire_d3d11_frame (host.Handle, device (), &frame)
 
         if acquired <> 0 then
             ValueNone
@@ -917,6 +925,18 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
             true
 
     /// <summary>Captures the rendered page as physical dimensions and top-down straight RGBA bytes.</summary>
+    member _.GpuCompositingEnabled = gpuEnabled
+    member _.D3D11Device = device ()
+    member _.Egl = egl
+
+    member _.MetalQueue =
+        match metal with
+        | Some consumer -> consumer.Queue
+        | None -> 0n
+
+    member _.SetBeforeGpuFrame(hook: unit -> unit) =
+        beforeGpuFrame <- hook
+
     member this.ReadPixels() =
         match swapChain with
         | Some chain -> readFromSwapChain chain

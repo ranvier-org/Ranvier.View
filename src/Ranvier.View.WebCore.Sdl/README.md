@@ -156,6 +156,16 @@ On Windows 11 a custom frame has rounded corners and the compositor's shadow; ea
 run with a custom frame; macOS has no traffic lights in one. [The design record](../../docs/research/custom-window-shell-api.md)
 holds the evidence and the open items.
 
+## External GPU surfaces
+
+`window.BindGpuSurface element` binds an external 3D or compute renderer to a composited DOM element with zero third-party
+GPU package dependencies in `Ranvier.View.WebCore.Sdl`:
+
+- Promotes `element` to a composited stacking context so HTML, CSS and SVG children composite naturally over the surface.
+- Disables accidental text/element drag-highlighting across `element` by default (`preventSelection = true`) while keeping pointer, wheel and focus events intact.
+- Uses WebCore's native GPU texture transport when available (`D3D11SharedTexture` with keyed-mutex retention and `AcquireSharedStagingHandle` / `CommitSharedStaging` NT-handle interop on Windows, `MetalIOSurface` on macOS, `EglImage` on Linux) and falls back automatically to an internal DOM `<canvas>` (`CpuFallback`) on software or Slim CPU runtimes.
+- Disposing the returned `GpuSurface` (or closing the `Window`) unbinds native resources on the owner thread.
+
 ## Moving and resizing
 
 Every window, with either frame, keeps rendering during the platform's modal move or resize loop: the page's frames run

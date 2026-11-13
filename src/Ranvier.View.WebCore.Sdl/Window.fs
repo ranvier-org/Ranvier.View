@@ -440,6 +440,12 @@ type Window
     // Page code is running inside a native callback, where SDL cannot destroy this window.
     let mutable callbackDepth = 0
     let mutable disposePending = false
+    let gpuSurfaces = Collections.Generic.HashSet<GpuSurface>()
+
+    do
+        presenter.SetBeforeGpuFrame (fun () ->
+            for surface in gpuSurfaces do
+                surface.PrepareForComposition ())
 
     let guarded fallback (call: unit -> 'T) : 'T =
         try
@@ -1993,18 +1999,41 @@ type Window
 
         alive ()
 
-    /// <summary>The rendered page's physical dimensions and top-down RGBA bytes.</summary>
-    member internal _.ReadPixels() : struct (int * int * byte array) =
+    /// <summary>
+    /// Binds a composited external GPU surface to <c>element</c> so HTML, CSS, and SVG overlays composite naturally over it.
+    /// By default (<c>preventSelection = true</c>), dragging across <c>element</c> does not highlight or drag-select it.
+    /// </summary>
+    member _.BindGpuSurface(element: Ranvier.Dom.Element, ?preventSelection: bool) : GpuSurface =
+        if disposed then
+            raise (ObjectDisposedException (nameof Window))
+
+        let surface =
+            new GpuSurface (
+                host,
+                presenter,
+                element,
+                defaultArg preventSelection true,
+                fun disposedSurface -> gpuSurfaces.Remove disposedSurface |> ignore
+            )
+
+        gpuSurfaces.Add surface |> ignore
+        surface
+
+    /// <summary>The rendered window's composited physical dimensions and top-down RGBA bytes.</summary>
+    member _.ReadPixels() : struct (int * int * byte array) =
         presenter.ReadPixels ()
+
+    /// <summary>True when hardware GPU compositing is active on this window.</summary>
+    member _.IsGpuComposited = presenter.GpuCompositingEnabled
 
     /// <summary>The number of crosshair cursors the window drew in place of the system's.</summary>
     member internal _.DrawnCrosshairs = crosshairs.Count
 
     /// <summary>The number of shared GPU frames presented to the window.</summary>
-    member internal _.GpuFramesPresented = presenter.GpuFramesPresented
+    member _.GpuFramesPresented = presenter.GpuFramesPresented
 
     /// <summary>The number of presentation attempts that took the CPU path.</summary>
-    member internal _.CpuFramesPresented = presenter.CpuFramesPresented
+    member _.CpuFramesPresented = presenter.CpuFramesPresented
     member internal _.FullCpuPaints = presenter.FullCpuPaints
     member internal _.DirtyCpuPaints = presenter.DirtyCpuPaints
 
@@ -2109,6 +2138,10 @@ type Window
                                 (graph :> IDisposable).Dispose()
                                 cleanupCompleted "graph")
                             (fun () ->
+                                for surface in Seq.toArray gpuSurfaces do
+                                    surface.DisposeCore true
+
+                                gpuSurfaces.Clear ()
                                 (presenter :> IDisposable).Dispose()
                                 cleanupCompleted "presenter")
                             (fun () ->
@@ -2162,3 +2195,12 @@ module Window =
             match box state with
             | :? IDisposable as disposable -> disposable.Dispose ()
             | _ -> ()
+
+/// <summary>Binds composited external GPU surfaces onto DOM elements in SDL WebCore windows.</summary>
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module GpuSurface =
+    /// <summary>
+    /// Binds <c>element</c> as a composited external GPU surface in <c>window</c>, disabling drag-highlighting by default.
+    /// </summary>
+    let bind (element: Ranvier.Dom.Element) (window: Window) : GpuSurface =
+        window.BindGpuSurface element
