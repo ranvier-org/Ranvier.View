@@ -168,6 +168,41 @@ baseline became a **lazy first-touch baseline** per file (and per dependent file
 For comparison on the cross-file suite: P2 `fsi` 15/17 (only the edited file re-evaluates, so callers keep the
 old helper), P1 `alc` 17/17 (recompiles everything).
 
+## 3D through Ranvier.Wgpu
+
+Tested with `Ranvier.Wgpu` / `Ranvier.Wgpu.Sdl` 0.1.0-alpha.1 (wgpu-native 29) and the `GpuSurface` compositing of
+#145 (`Ranvier.View.WebCore.Sdl` 0.1.0-rc.13-gpu.4), on the GPU path: DX12 renders into a D3D11 shared texture that
+the page composites beneath its HTML. The sample is a lit sphere on a `<canvas>` with an HTML overlay; it renders on
+demand, and the bench counts renders and samples the presented frame at the canvas.
+
+The shape that keeps 3D state across reloads:
+
+- `Dev.RunWith` builds the root props from the window, so the `WgpuContext` lives as long as the window and no
+  reload creates a device.
+- The props type lives in a file reloads do not redefine: every new setup receives the original props object.
+- Meshes and batches are created in setup and released through `OnCleanup`, so a setup edit rebuilds them and the
+  bridge disposes the old ones with the old setup's scope.
+- The surface is bound in the canvas's `mounted` hook and held in a signal; the render effect in setup reads it. A
+  bridged setup renders into the same surface; a remount binds a new one.
+
+| Edit (fine) | Applied as | GPU renders | Save → presented |
+| --- | --- | --- | --- |
+| overlay text, overlay reader, camera handler | cell write or rebind | 0 | ~118–137 ms |
+| batch colour in setup | bridge: new batch, old one disposed | 1, into the same surface | ~122–132 ms (apply 3–6 ms) |
+| module-level value read by the render effect | forced rebind of its dependents | 1 | ~133 ms |
+| structure around the canvas | remount; surface bound again | 1 | ~139–160 ms (apply 22–33 ms) |
+| compile error | blocked | 0 | ~81 ms |
+
+All 43 steps pass under `fine`. Under `fsi` every visual check passes, but each save remounts and rebuilds the GPU
+batch and surface: 14 renders for the scenario against 8. Under `alc` every reload fails with
+`InvalidCastException: [A]GpuProps cannot be cast to [B]GpuProps`: the reloaded assembly has its own copy of the
+props type, so `alc` needs root props types in an assembly it does not reload.
+
+Two host changes came out of it. A module-level value lives in a static field, so a change to it leaves the IL of
+the closures that read it unchanged: their components are now rebound when the checker reports them as dependents
+of a changed value. And an FSI baseline is compiled with the same aliasing as a reload, or the first edit of a file
+reads an alias getter where the baseline read a static field and bridges for nothing.
+
 ## Recommended next steps
 
 1. **The remaining piece of a fingerprinting FSC is a per-lambda identity that survives the assembly boundary.**

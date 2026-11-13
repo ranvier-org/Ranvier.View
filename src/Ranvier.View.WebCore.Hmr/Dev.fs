@@ -75,7 +75,8 @@ type private StepResult =
         Report: Report option
     }
 
-type internal DevHost(argv: string array, title: string, width: int, height: int, root: TemplateComponent, props: obj, callerFile: string) =
+type internal DevHost(argv: string array, title: string, width: int, height: int, root: TemplateComponent, propsOf: Window -> obj, callerFile: string)
+    =
     let arg name =
         match Array.tryFindIndex ((=) name) argv with
         | Some i when i + 1 < argv.Length -> Some argv[i + 1]
@@ -153,6 +154,8 @@ type internal DevHost(argv: string array, title: string, width: int, height: int
     let mutable container: Element = Unchecked.defaultof<_>
     let mutable awaitingPresent: Report option = None
     let mutable rootKey = ""
+    /// The root's props, built from the window once it exists (a GPU context lives as long as the window).
+    let mutable props: obj = null
     let mutable generation = 0
 
     let alc = lazy (Delivery.AlcDelivery project)
@@ -338,6 +341,22 @@ type internal DevHost(argv: string array, title: string, width: int, height: int
 
         result
 
+    /// The aliasing a reload applies to a file with no changed value: a baseline must compile the same shape, or its
+    /// closures' IL differs from the first edit's (an alias getter in place of a static field).
+    let unchangedAlias (f: string) (moduleName: string) (d: Delivery.Declaration) =
+        if
+            d.IsValue
+            && d.IsPublic
+            && not d.IsMutable
+            && not (isNull d.Name)
+            && not (componentKeys.Contains (moduleName + "." + d.Name))
+        then
+            match definedIn.TryGetValue (struct (f, d.Name)) with
+            | true, m -> Some m
+            | _ -> Some moduleName
+        else
+            None
+
     /// The FSI baseline of one file, the first time it is touched: fingerprints of its mounted code as FSI
     /// compiles it, so its first edit compares FSI output with FSI output (reloaded code always sits in another
     /// assembly than the types it uses, so its IL never matches the app's own compile).
@@ -345,7 +364,7 @@ type internal DevHost(argv: string array, title: string, width: int, height: int
         if baselined.Add f then
             match Delivery.declarations f text with
             | Some (moduleName, decls) ->
-                match shadowLoad f moduleName decls (fun _ -> None) [] false with
+                match shadowLoad f moduleName decls (unchangedAlias f moduleName) [] false with
                 | Ok e ->
                     use done' = new ManualResetEventSlim false
 
@@ -520,6 +539,32 @@ type internal DevHost(argv: string array, title: string, width: int, height: int
 
                 Some (gate.Value.Dependents (changedSet, isComponent))
 
+        let forced =
+            match dependents with
+            | Some _ ->
+                let values = HashSet<struct (string * string)>()
+
+                for f in files do
+                    match Delivery.declarations f (File.ReadAllText f) with
+                    | Some (moduleName, decls) ->
+                        for d in decls do
+                            let key = struct (Path.GetFileName f, $"{moduleName}.{d.Name}:Value")
+
+                            if
+                                d.IsValue
+                                && not (isNull d.Name)
+                                && changedSet.Contains key
+                                && not (componentKeys.Contains $"{moduleName}.{d.Name}")
+                            then
+                                values.Add key |> ignore
+                    | None -> ()
+
+                if values.Count = 0 then
+                    HashSet ()
+                else
+                    gate.Value.Dependents (values, (fun _ -> false))
+            | None -> HashSet ()
+
         match dependents with
         | Some deps when
             loads
@@ -625,10 +670,13 @@ type internal DevHost(argv: string array, title: string, width: int, height: int
                             registry.Register (k, d)
                             engine.MarkReloaded k
 
+                        let rebind (f: string) (k: string) =
+                            forced.Contains (struct (Path.GetFileName f, k + ":Value"))
+
                         let results =
                             graph.Run (fun () ->
                                 patchable
-                                |> List.map (fun (_, k, d, whole) -> k, engine.Patch (k, d, whole)))
+                                |> List.map (fun (f, k, d, whole) -> k, engine.Patch (k, d, whole || rebind f k)))
 
                         let untouched =
                             if skipped > 0 then
@@ -747,7 +795,7 @@ type internal DevHost(argv: string array, title: string, width: int, height: int
                     if f <> project.Entry then
                         match Delivery.declarations f (File.ReadAllText f) with
                         | Some (moduleName, decls) ->
-                            match shadowLoad f moduleName decls (fun _ -> None) [] false with
+                            match shadowLoad f moduleName decls (unchangedAlias f moduleName) [] false with
                             | Ok e ->
                                 baselined.Add f |> ignore
                                 use done' = new ManualResetEventSlim false
@@ -1057,6 +1105,64 @@ type internal DevHost(argv: string array, title: string, width: int, height: int
                             Detail = $"saw '{seen}'"
                             Report = None
                         }
+                | "pixel" ->
+                    // The presented frame at the centre of an element: which of r, g, b dominates.
+                    let deadline = Stopwatch.StartNew ()
+                    let mutable ok = false
+                    let mutable seen = ""
+
+                    while not ok && deadline.Elapsed.TotalSeconds < 4.0 do
+                        let struct (r, g, b) =
+                            onUi (fun () ->
+                                let rect = (query step.selector).getBoundingClientRect()
+                                // attr "corner": the bottom-left background, clear of overlays; otherwise the centre.
+                                let corner = step.attr = "corner"
+
+                                let x =
+                                    if corner then
+                                        int rect.x + 6
+                                    else
+                                        int (rect.x + rect.width / 2.0)
+
+                                let y =
+                                    if corner then
+                                        int (rect.y + rect.height) - 6
+                                    else
+                                        int (rect.y + rect.height / 2.0)
+                                // Window.ReadPixels is internal to the presenter; the bench reads it reflectively.
+                                let read =
+                                    typeof<Window>
+                                        .GetMethod(
+                                            "ReadPixels",
+                                            Reflection.BindingFlags.Instance
+                                            ||| Reflection.BindingFlags.Public
+                                            ||| Reflection.BindingFlags.NonPublic
+                                        )
+
+                                let struct (w, _, pixels) =
+                                    read.Invoke (window, [||]) :?> struct (int * int * byte array)
+
+                                let i = (y * w + x) * 4
+                                struct (pixels[i], pixels[i + 1], pixels[i + 2]))
+
+                        let dominant =
+                            if r >= g && r >= b then "r"
+                            elif g >= b then "g"
+                            else "b"
+
+                        seen <- $"rgb({r},{g},{b}) dominant {dominant}"
+                        ok <- dominant = step.text
+
+                        if not ok then
+                            Thread.Sleep 50
+
+                    results.Add
+                        {
+                            Name = $"pixel {step.selector} dominant {step.text}"
+                            Ok = ok
+                            Detail = seen
+                            Report = None
+                        }
                 | "probe" ->
                     // AppDomain data written by the app's own probes (shared by every code generation).
                     let seen =
@@ -1170,6 +1276,7 @@ type internal DevHost(argv: string array, title: string, width: int, height: int
                 Window.create (title, width, height)
 
         graph <- new Graph ()
+        props <- propsOf window
         let ms, _ = remount ()
         let mutable firstFrame = true
 
@@ -1260,19 +1367,11 @@ and private TaskCompletionSourceSlim<'T>() =
 
 [<AbstractClass; Sealed>]
 type Dev =
-    /// Runs a native Ranvier app. With `dev` among the arguments, runs it under the hot reload host instead.
-    static member Run
-        (
-            argv: string array,
-            title: string,
-            width: int,
-            height: int,
-            root: Component<'props>,
-            props: 'props,
-            [<CallerFilePath; Optional; DefaultParameterValue("")>] callerFile: string
-        ) : int =
+    static member private Start
+        (argv: string array, title: string, width: int, height: int, root: Component<'props>, propsOf: Window -> 'props, callerFile: string)
+        : int =
         if Array.contains "dev" argv then
-            DevHost(argv, title, width, height, root, box props, callerFile).Run()
+            DevHost(argv, title, width, height, root, (fun window -> box (propsOf window)), callerFile).Run()
         else
             // The plain app: what `Window.run` does, plus optional timing output for the comparison runs.
             let started = Stopwatch.GetTimestamp ()
@@ -1298,7 +1397,7 @@ type Dev =
 
             let mounted =
                 Mounting.mount graph None (fun errors -> raise (AggregateException (errors: exn seq))) container None (fun context ->
-                    Program.run (Component.render root props) context.Backend)
+                    Program.run (Component.render root (propsOf window)) context.Backend)
 
             Console.WriteLine ($"[app] mount {elapsed () - beforeMount:F1} ms")
             let mutable first = true
@@ -1314,3 +1413,30 @@ type Dev =
             graph.Run (fun () -> mounted.Dispose ())
             graph.Dispose ()
             0
+
+    /// Runs a native Ranvier app. With `dev` among the arguments, runs it under the hot reload host instead.
+    static member Run
+        (
+            argv: string array,
+            title: string,
+            width: int,
+            height: int,
+            root: Component<'props>,
+            props: 'props,
+            [<CallerFilePath; Optional; DefaultParameterValue("")>] callerFile: string
+        ) : int =
+        Dev.Start (argv, title, width, height, root, (fun _ -> props), callerFile)
+
+    /// As Run, with the root's props built from the window: a GPU context created here lives as long as the
+    /// window and survives every reload.
+    static member RunWith
+        (
+            argv: string array,
+            title: string,
+            width: int,
+            height: int,
+            root: Component<'props>,
+            propsOf: Window -> 'props,
+            [<CallerFilePath; Optional; DefaultParameterValue("")>] callerFile: string
+        ) : int =
+        Dev.Start (argv, title, width, height, root, propsOf, callerFile)

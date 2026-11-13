@@ -30,6 +30,9 @@ dotnet run -- dev -hmr alc       # remount after an in-process compile into a co
 
 Components stay ordinary `Component.define` code. The window title shows each reload's path and time.
 
+A root whose props need the window (a GPU context, for instance) uses `Dev.RunWith (argv, title, width, height, root, fun window -> props)`:
+the props are built once per window and survive every reload.
+
 ## Strategies
 
 | Strategy | Save to presented | Keeps |
