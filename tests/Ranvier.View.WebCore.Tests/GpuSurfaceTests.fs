@@ -134,7 +134,7 @@ let tests =
 
                     let styleAttr = stage.getAttribute "style"
                     Expect.stringContains styleAttr "position:absolute" "caller inline style is preserved"
-                    Expect.stringContains styleAttr "will-change:transform" "composited layer promotion is applied"
+                    Expect.isFalse (styleAttr.Contains "will-change:transform") "CPU fallback avoids offscreen GL layer promotion"
                     Expect.stringContains styleAttr "isolation:isolate" "stacking context isolation is applied"
                     Expect.stringContains styleAttr "-webkit-user-select:none" "webkit selection is disabled"
                     Expect.stringContains styleAttr "user-select:none" "standard selection is disabled"
@@ -244,7 +244,7 @@ let tests =
                     Expect.equal (rgbaSpanAt rw readBuf 72 24) (0uy, 255uy, 0uy, 255uy) "SVG overlay composites on top"
                     Expect.equal (rgbaSpanAt rw readBuf 170 120) (255uy, 255uy, 255uy, 255uy) "outside stage stays white"
 
-                    stage.setAttribute ("style", "position:absolute;left:0;top:0;width:160px;height:120px;will-change:transform;isolation:isolate")
+                    stage.setAttribute ("style", "position:absolute;left:0;top:0;width:160px;height:120px;isolation:isolate")
 
                     let cyan = solidPixels 160 120 (0uy, 200uy, 255uy, 255uy)
                     surface.PresentPixels (ReadOnlySpan<byte> cyan, 160, 120)
@@ -368,6 +368,7 @@ let tests =
                         use auxSurface = aux |> GpuSurface.bind window
                         Expect.equal surface.Kind GpuSurfaceKind.D3D11SharedTexture "hardware window binds D3D11 shared texture"
                         Expect.isTrue surface.IsHardwareComposited "hardware composited GPU transport active"
+                        Expect.stringContains (stage.getAttribute "style") "will-change:transform" "hardware surface promotes composited layer"
 
                         let d3d =
                             match surface.Backend, auxSurface.Backend with

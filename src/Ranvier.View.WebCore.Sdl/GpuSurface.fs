@@ -459,7 +459,8 @@ type GpuSurface internal (host: WebCoreHost, presenter: Presenter, element: Elem
         let additions = ResizeArray<string>()
 
         if
-            not (
+            kind <> GpuSurfaceKind.CpuFallback
+            && not (
                 lowerStyle.Contains "will-change:transform"
                 || lowerStyle.Contains "will-change: transform"
             )
