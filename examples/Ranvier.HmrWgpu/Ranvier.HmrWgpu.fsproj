@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <!--
+    A Ranvier.Wgpu scene composited into the WebCore page (GpuSurface) under the hot reload host. `dotnet run` runs
+    the app; passing the argument `dev` runs it under the host. The bench drives scripted edits against the live window and
+    counts GPU renders: `pwsh bench/run.ps1 -Strategy fine`.
+    -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="Gpu.fs" />
+        <Compile Include="Scene.fs" />
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../src/Ranvier.View/Ranvier.View.fsproj" />
+        <ProjectReference Include="../../src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj" />
+        <ProjectReference Include="../../src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj" />
+        <ProjectReference Include="../../src/Ranvier.View.WebCore.Hmr/Ranvier.View.WebCore.Hmr.fsproj" />
+        <!--
+        Its WebCore.Sdl dependency resolves to the project above: `.Traced` (the RanvierTrace=true default for
+        -c Debug) depends on Ranvier.View.WebCore.Sdl.Traced, the untraced package on Ranvier.View.WebCore.Sdl.
+        -->
+        <PackageReference Include="Ranvier.Wgpu.Sdl$(RanvierPackageSuffix)" Version="0.1.0-alpha.2" />
+    </ItemGroup>
+</Project>

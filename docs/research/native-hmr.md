@@ -170,10 +170,11 @@ old helper), P1 `alc` 17/17 (recompiles everything).
 
 ## 3D through Ranvier.Wgpu
 
-Tested with `Ranvier.Wgpu` / `Ranvier.Wgpu.Sdl` 0.1.0-alpha.1 (wgpu-native 29) and the `GpuSurface` compositing of
-#145 (`Ranvier.View.WebCore.Sdl` 0.1.0-rc.13-gpu.4), on the GPU path: DX12 renders into a D3D11 shared texture that
-the page composites beneath its HTML. The sample is a lit sphere on a `<canvas>` with an HTML overlay; it renders on
-demand, and the bench counts renders and samples the presented frame at the canvas.
+The sample is `examples/Ranvier.HmrWgpu`, on the published `Ranvier.Wgpu` / `Ranvier.Wgpu.Sdl` 0.1.0-alpha.2
+(`.Traced` in traced builds) and this repository's `GpuSurface` compositing (#145), on the GPU path: DX12 renders
+into a D3D11 shared texture that the page composites beneath its HTML. It is a lit sphere on a `<canvas>` with an
+HTML overlay; it renders on demand, and the bench (`pwsh bench/run.ps1 -Strategy fine`) counts renders and samples
+the presented frame at the canvas.
 
 The shape that keeps 3D state across reloads:
 
@@ -187,14 +188,15 @@ The shape that keeps 3D state across reloads:
 
 | Edit (fine) | Applied as | GPU renders | Save → presented |
 | --- | --- | --- | --- |
-| overlay text, overlay reader, camera handler | cell write or rebind | 0 | ~118–137 ms |
-| batch colour in setup | bridge: new batch, old one disposed | 1, into the same surface | ~122–132 ms (apply 3–6 ms) |
-| module-level value read by the render effect | forced rebind of its dependents | 1 | ~133 ms |
-| structure around the canvas | remount; surface bound again | 1 | ~139–160 ms (apply 22–33 ms) |
-| compile error | blocked | 0 | ~81 ms |
+| overlay text, overlay reader, camera handler | cell write or rebind | 0 | ~122–163 ms |
+| batch colour in setup | bridge: new batch, old one disposed | 1, into the same surface | ~125–136 ms (apply 3–6 ms) |
+| module-level value read by the render effect | forced rebind of its dependents | 1 | ~133–141 ms |
+| structure around the canvas | remount; surface bound again | 1 | ~142–169 ms (apply 23–34 ms) |
+| compile error | blocked | 0 | ~88 ms |
 
-All 43 steps pass under `fine`. Under `fsi` every visual check passes, but each save remounts and rebuilds the GPU
-batch and surface: 14 renders for the scenario against 8. Under `alc` every reload fails with
+All 43 steps pass under `fine` on the published packages. In the prototype runs (0.1.0-alpha.1), `fsi` passed every
+visual check but remounted and rebuilt the GPU batch and surface on each save: 14 renders for the scenario against
+8. Under `alc` every reload fails with
 `InvalidCastException: [A]GpuProps cannot be cast to [B]GpuProps`: the reloaded assembly has its own copy of the
 props type, so `alc` needs root props types in an assembly it does not reload.
 
@@ -230,6 +232,7 @@ reads an alias getter where the baseline read a static field and bridges for not
 - `examples/Ranvier.HmrCounter/`: the app (`Shared.fs`, `Counter.fs`, `Todos.fs`, `Edge.fs`, `App.fs`).
 - `examples/Ranvier.HmrCounter/bench/`: scenarios (`scenarios.json`, `scale.json`, `edge.json`, `shared.json`, `cross.json`, `drift.json`),
   `run.ps1` (timeout, log, restores sources), `summarize.py`, `results/`.
+- `examples/Ranvier.HmrWgpu/`: the 3D sample (`Gpu.fs` props, `Scene.fs`) and its scenario, `bench/wgpu.json`.
 
 Unattended bench runs use `-software`: one GPU-presented run hung in a kernel wait (D3D11 present)
 and could not be killed from user mode. That's worth a separate look.
