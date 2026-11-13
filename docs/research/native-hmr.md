@@ -185,6 +185,8 @@ The shape that keeps 3D state across reloads:
   bridge disposes the old ones with the old setup's scope.
 - The surface is bound in the canvas's `mounted` hook and held in a signal; the render effect in setup reads it. A
   bridged setup renders into the same surface; a remount binds a new one.
+- On exit the host disposes the tree, then props that implement `IDisposable` (the sample's `GpuProps` disposes its
+  context), then the window.
 
 | Edit (fine) | Applied as | GPU renders | Save → presented |
 | --- | --- | --- | --- |
@@ -200,10 +202,15 @@ visual check but remounted and rebuilt the GPU batch and surface on each save: 1
 `InvalidCastException: [A]GpuProps cannot be cast to [B]GpuProps`: the reloaded assembly has its own copy of the
 props type, so `alc` needs root props types in an assembly it does not reload.
 
-Two host changes came out of it. A module-level value lives in a static field, so a change to it leaves the IL of
+Three host changes came out of it. A module-level value lives in a static field, so a change to it leaves the IL of
 the closures that read it unchanged: their components are now rebound when the checker reports them as dependents
-of a changed value. And an FSI baseline is compiled with the same aliasing as a reload, or the first edit of a file
-reads an alias getter where the baseline read a static field and bridges for nothing.
+of a changed value. An FSI baseline is compiled with the same aliasing as a reload, or the first edit of a file
+reads an alias getter where the baseline read a static field and bridges for nothing. And the host releases what
+it built in order on exit. Before that, it returned without disposing the window or the props, and neither of two GPU
+runs exited cleanly: one hung until the runner killed it, the other reported exit code 0 but stayed resident in
+kernel teardown for about ten minutes. While it stayed, `taskkill` found no running instance and every new D3D11
+device in any process failed to create. With the ordered teardown, three bench runs and two plain runs each exited
+within seconds.
 
 ## Recommended next steps
 
