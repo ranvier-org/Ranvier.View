@@ -49,6 +49,10 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
     let mutable retryAt = 0L
     let mutable retryMilliseconds = 16
     let mutable beforeGpuFrame: unit -> unit = ignore
+    let mutable adapterConsumerDevice = 0n
+    let mutable adapterIdentity: struct (uint32 * uint32 * int64) voption = ValueNone
+    let mutable sharedProducerDevice = 0n
+    let mutable sharedProducerContext = 0n
 
     let documentChanged =
         host.DocumentReplaced.Subscribe (fun _ ->
@@ -63,6 +67,21 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
         | None ->
             use key = fixed PresentationNative.utf8 "SDL.renderer.d3d11.device"
             SDL3.SDL_GetPointerProperty (SDL3.SDL_GetRendererProperties renderer, key, 0n)
+
+    let releaseSharedProducer () =
+        D3D11Native.drop sharedProducerContext
+        sharedProducerContext <- 0n
+        D3D11Native.drop sharedProducerDevice
+        sharedProducerDevice <- 0n
+
+    let refreshAdapterState () =
+        if OperatingSystem.IsWindows () then
+            let current = device ()
+
+            if current <> adapterConsumerDevice then
+                releaseSharedProducer ()
+                adapterConsumerDevice <- current
+                adapterIdentity <- D3D11Native.tryQueryAdapterIdentity current
 
     let gpuEnabled =
         ((OperatingSystem.IsWindows ()
@@ -197,7 +216,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
         else
             false
 
-    let capture () =
+    let captureConvertedSurface () =
         let surface = SDL3.SDL_RenderReadPixels (renderer, NativePtr.nullPtr)
 
         if not (NativePtr.isNullPtr surface) then
@@ -215,6 +234,30 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
         if NativePtr.isNullPtr converted then
             raise (PresentationNative.failure "SDL_ConvertSurface")
+
+        converted
+
+    let copyConvertedSurface (converted: nativeptr<SDL_Surface>) (destination: Span<byte>) =
+        try
+            let image = NativePtr.read converted
+            let rowBytes = image.w * 4
+            let needed = rowBytes * image.h
+
+            if destination.Length < needed then
+                invalidArg "destination" "Destination span is smaller than width * height * 4 bytes"
+
+            for row in 0 .. image.h - 1 do
+                let src =
+                    ReadOnlySpan<byte>((image.pixels + nativeint (row * image.pitch)).ToPointer(), rowBytes)
+
+                src.CopyTo (destination.Slice (row * rowBytes, rowBytes))
+
+            struct (image.w, image.h)
+        finally
+            SDL3.SDL_DestroySurface converted
+
+    let capture () =
+        let converted = captureConvertedSurface ()
 
         try
             let image = NativePtr.read converted
@@ -510,6 +553,34 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
                             true
     // Top-down RGBA of the page. A GPU frame reads as opaque, as it appears composited over the window's black.
+    let readFromSwapChainInto (chain: D3D11SwapChain) (destination: Span<byte>) =
+        waitSwapChain chain
+
+        if not (chain.Prepare ()) then
+            invalidOp "The window's D3D11 device is lost"
+
+        let gpu = if lastGpu then acquireForSwapChain () else ValueNone
+
+        match gpu with
+        | ValueSome (struct (texture, width, height)) ->
+            try
+                chain.ReadInto (texture, width, height, destination)
+                let total = width * height * 4
+
+                for index in 3..4 .. total - 1 do
+                    destination[index] <- 255uy
+
+                struct (width, height)
+            finally
+                releaseHeldFrame ()
+        | ValueNone ->
+            if lastGpu then
+                fullPaint <- true
+
+            paintForSwapChain () |> ignore
+            chain.ReadInto (uploadCpu chain, cpuWidth, cpuHeight, destination)
+            struct (cpuWidth, cpuHeight)
+
     let readFromSwapChain (chain: D3D11SwapChain) =
         waitSwapChain chain
 
@@ -602,7 +673,6 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                             not pipelinePending
                             && (pipelineNeedsSubmit || exposed)
                         then
-                            beforeGpuFrame ()
                             let status = OptionalNative.rv_host_submit_gpu_frame (host.Handle, pipelineId + 1UL)
 
                             if status = 0 then
@@ -924,19 +994,64 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
             true
 
-    /// <summary>Captures the rendered page as physical dimensions and top-down straight RGBA bytes.</summary>
+    /// <summary>Whether accelerated GPU composition is active on this presenter.</summary>
     member _.GpuCompositingEnabled = gpuEnabled
+
+    /// <summary>The consumer <c>ID3D11Device*</c> handle on Windows when available, or zero.</summary>
     member _.D3D11Device = device ()
+
+    /// <summary>The physical backing dimensions of the window's page in pixels.</summary>
+    member _.PixelSize = host.PaintSize
+
+    /// <summary>The PCI vendor and device IDs of the window's active D3D11 adapter on Windows.</summary>
+    member _.GpuAdapterVendorDevice =
+        refreshAdapterState ()
+
+        match adapterIdentity with
+        | ValueSome (struct (vendorId, deviceId, _)) -> ValueSome (struct (vendorId, deviceId))
+        | ValueNone -> ValueNone
+
+    /// <summary>The 64-bit locally unique identifier (LUID) of the window's active D3D11 adapter on Windows.</summary>
+    member _.GpuAdapterLuid =
+        refreshAdapterState ()
+
+        match adapterIdentity with
+        | ValueSome (struct (_, _, luid)) -> ValueSome luid
+        | ValueNone -> ValueNone
+
+    /// <summary>Acquires the window's shared producer D3D11 device and immediate context on the consumer adapter.</summary>
+    member _.AcquireSharedProducerD3D11() =
+        refreshAdapterState ()
+
+        if adapterConsumerDevice = 0n then
+            ValueNone
+        elif
+            sharedProducerDevice <> 0n
+            && sharedProducerContext <> 0n
+        then
+            ValueSome (struct (sharedProducerDevice, sharedProducerContext))
+        else
+            match D3D11Native.tryCreateProducerDevice adapterConsumerDevice with
+            | ValueSome (struct (dev, ctx)) ->
+                sharedProducerDevice <- dev
+                sharedProducerContext <- ctx
+                ValueSome (struct (dev, ctx))
+            | ValueNone -> ValueNone
+
+    /// <summary>The Linux EGL consumer renderer when active.</summary>
     member _.Egl = egl
 
+    /// <summary>The macOS <c>MTLCommandQueue</c> handle when Metal presentation is active, or zero.</summary>
     member _.MetalQueue =
         match metal with
         | Some consumer -> consumer.Queue
         | None -> 0n
 
+    /// <summary>Registers the pre-composition hook invoked before Windows D3D11 GPU frame acquisition.</summary>
     member _.SetBeforeGpuFrame(hook: unit -> unit) =
         beforeGpuFrame <- hook
 
+    /// <summary>Captures the rendered page as physical dimensions and top-down straight RGBA bytes.</summary>
     member this.ReadPixels() =
         match swapChain with
         | Some chain -> readFromSwapChain chain
@@ -958,12 +1073,36 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                 draw cpuTexture cpuWidth cpuHeight
                 capture ()
 
+    /// <summary>Copies the rendered page as top-down straight RGBA8 bytes into <c>destination</c> and returns <c>(width, height)</c>.</summary>
+    member this.ReadPixelsInto(destination: Span<byte>) =
+        match swapChain with
+        | Some chain -> readFromSwapChainInto chain destination
+        | None ->
+            match
+                (if lastGpu then
+                     this.WithGpu (fun texture width height ->
+                         draw texture width height
+                         captureConvertedSurface ())
+                 else
+                     ValueNone)
+            with
+            | ValueSome converted -> copyConvertedSurface converted destination
+            | ValueNone ->
+                if lastGpu then
+                    fullPaint <- true
+
+                updateCpu () |> ignore
+                draw cpuTexture cpuWidth cpuHeight
+                let converted = captureConvertedSurface ()
+                copyConvertedSurface converted destination
+
     interface IDisposable with
         member _.Dispose() =
             documentChanged.Dispose ()
             swapChain |> Option.iter waitSwapChain
             releasePendingEglFrame ()
             releasePendingMetalFrame ()
+            releaseSharedProducer ()
 
             egl
             |> Option.iter (fun consumer ->
