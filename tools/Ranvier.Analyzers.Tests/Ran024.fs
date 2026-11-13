@@ -5,7 +5,7 @@ open Ranvier.Analyzers
 open Ranvier.Analyzers.Tests.Options
 
 let private header =
-    "module Fixture\nopen Ranvier\nopen Ranvier.View\nopen Ranvier.View.Sugar\n"
+    "module Fixture\nopen Ranvier\nopen Ranvier.View\nopen Ranvier.View.Dsl\n"
 
 let private findings (body: string) =
     run Analyzers.ran024Cli (context (ranvier.Force ()) (header + body))
@@ -89,5 +89,16 @@ let tests =
                     "let row = Component.template (fun _ () -> ()) (tr () { td () { \"x\" } })\nlet c = Component.template (fun _ () -> ()) (table () { renderOf row () })\n"
 
                 Expect.isEmpty (codes body) "false negative by design"
+            }
+
+            test "legacy Ranvier.View.Sugar nesting still triggers RAN024" {
+                let legacy =
+                    "module Legacy\n#nowarn \"44\"\nopen Ranvier\nopen Ranvier.View\nopen Ranvier.View.Sugar\nlet c = Component.template (fun _ () -> ()) (table () { tr () { td () { \"x\" } } })\n"
+
+                Expect.equal
+                    (run Analyzers.ran024Cli (context (ranvier.Force ()) legacy)
+                     |> List.map _.Code)
+                    [ "RAN024" ]
+                    "legacy sugar"
             }
         ]

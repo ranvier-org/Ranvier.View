@@ -67,7 +67,14 @@ let normalise (text: string) =
     let ordinals = Collections.Generic.Dictionary<string, int>()
 
     let core =
-        Regex.Replace (text.Replace ("\r\n", "\n"), @"""\./(?:(?:[\w.-]+/)*src/Ranvier|fable_modules/Ranvier(?:\.Traced)?\.\d[^/""]*)/", "\"<core>/")
+        let prefixed =
+            Regex.Replace (
+                text.Replace ("\r\n", "\n"),
+                @"""\./(?:(?:[\w.-]+/)*src/Ranvier|fable_modules/Ranvier(?:\.Traced)?\.\d[^/""]*)/",
+                "\"<core>/"
+            )
+
+        Regex.Replace (prefixed, @"""<core>/([^""]+?)\.fs\.js""", "\"<core>/$1.js\"")
 
     Regex.Replace (
         Regex.Replace (core, @"fable-library-js\.\d+\.\d+\.\d+", "fable-library-js"),

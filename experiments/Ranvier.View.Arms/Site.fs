@@ -2,7 +2,7 @@
 module internal Ranvier.View.Arms.Site
 
 open Ranvier.View.Template
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 #if !FABLE_COMPILER
 /// <summary>

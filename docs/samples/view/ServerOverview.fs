@@ -4,7 +4,7 @@ module ServerOverview
 open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Dom
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Counter
 
 let overview (graph: Graph) (report: exn list -> unit) host (props: CounterProps) =

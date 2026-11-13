@@ -7,7 +7,7 @@ open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Representation
 open Ranvier.View.Template
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Arms
 
 type Load =
@@ -23,12 +23,12 @@ let private mountAll (graph: Graph) (host: HTMLElement) (views: Program.View lis
 let private matchLoader () =
     Component.template
         (fun _ (state: Signal<Load>) -> state)
-        (div (Attrs.className "loader") {
+        (div (div.className "loader") {
             Arms.Match (
                 (fun (state: Signal<Load>) -> state.Value),
                 function
                 | Idle -> span () { "Not started" }
-                | Loading percent -> progress (Attrs.attribute ("max", "100"), Attrs.attribute ("value", fun _ -> Some (string percent))) { }
+                | Loading percent -> progress (progress.attribute ("max", "100"), progress.attribute ("value", fun _ -> Some (string percent))) { }
                 | Loaded (text, count) ->
                     pre () {
                         fun _ -> text
@@ -42,7 +42,9 @@ let private explicitLoader () =
     let idle = armOf (span () { "Not started" })
 
     let loading =
-        armOf (progress (Attrs.attribute ("max", "100"), Attrs.attribute ("value", fun (payload: unit -> int) -> Some (string (payload ())))) { })
+        armOf (
+            progress (progress.attribute ("max", "100"), progress.attribute ("value", fun (payload: unit -> int) -> Some (string (payload ())))) { }
+        )
 
     let loaded =
         armOf (
@@ -55,7 +57,7 @@ let private explicitLoader () =
 
     Component.template
         (fun _ (state: Signal<Load>) -> state)
-        (div (Attrs.className "loader") {
+        (div (div.className "loader") {
             matchWith (fun (state: Signal<Load>) -> state.Value) (function
                 | Idle -> arm idle ()
                 | Loading percent -> arm loading percent
@@ -65,7 +67,7 @@ let private explicitLoader () =
 let private matchRich () =
     Component.template
         (fun _ (state: Signal<Load>) -> state)
-        (div (Attrs.className "rich") {
+        (div (div.className "rich") {
             Arms.Match (
                 (fun (state: Signal<Load>) -> state.Value),
                 function
@@ -85,7 +87,7 @@ let private explicitRich () =
 
     Component.template
         (fun _ (state: Signal<Load>) -> state)
-        (div (Attrs.className "rich") {
+        (div (div.className "rich") {
             matchWith (fun (state: Signal<Load>) -> state.Value) (function
                 | Idle
                 | Loading 0 -> arm idle ()
@@ -143,8 +145,8 @@ let private arrayLoader () =
             armOf (span () { "Not started" })
             armOf (
                 progress (
-                    Attrs.attribute ("max", "100"),
-                    Attrs.attribute ("value", fun (values: unit -> obj array) -> Some (string (unbox<int> (values ()).[1])))
+                    progress.attribute ("max", "100"),
+                    progress.attribute ("value", fun (values: unit -> obj array) -> Some (string (unbox<int> (values ()).[1])))
                 ) {
                     }
             )
@@ -159,7 +161,7 @@ let private arrayLoader () =
 
     Component.template
         (fun _ (state: Signal<Load>) -> state)
-        (div (Attrs.className "loader") {
+        (div (div.className "loader") {
             directSite
                 (fun (state: Signal<Load>) -> state.Value)
                 (fun instance ->

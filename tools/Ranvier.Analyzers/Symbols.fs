@@ -675,6 +675,9 @@ module View =
     let Elements = Root + ".Sugar.Elements"
 
     [<Literal>]
+    let SugarSvgElements = Root + ".Sugar.SvgElements"
+
+    [<Literal>]
     let Source = Root + ".Template.Source`2"
 
     [<Literal>]
@@ -688,6 +691,42 @@ module View =
 
     [<Literal>]
     let ComponentTag = Root + ".Sugar.Builders.ComponentTag`2"
+
+    [<Literal>]
+    let Dsl = Root + ".Dsl.Builders"
+
+    [<Literal>]
+    let DslComponent = Root + ".Dsl.Builders.Component"
+
+    [<Literal>]
+    let DslPart = Root + ".Dsl.Builders.Part"
+
+    [<Literal>]
+    let DslTagBase = Root + ".Dsl.Builders.TagBase`2"
+
+    [<Literal>]
+    let DslComponentTag = Root + ".Dsl.Builders.ComponentTag`2"
+
+    [<Literal>]
+    let DslPropsPrefix = Root + ".Dsl.Props."
+
+    [<Literal>]
+    let DslElements = Root + ".Dsl.Elements"
+
+    [<Literal>]
+    let DslElement = Root + ".Dsl.Elements.Element`2"
+
+    [<Literal>]
+    let DslTagScope = Root + ".Dsl.Elements.TagScope`2"
+
+    [<Literal>]
+    let DslHtmlElement = Root + ".Dsl.Elements.HtmlElement`2"
+
+    [<Literal>]
+    let DslSvgElements = Root + ".Dsl.SvgElements"
+
+    [<Literal>]
+    let HtmlTemplateGroupsPrefix = Root + ".HtmlTemplate.Groups."
 
     /// Whether `m` belongs to the view layer, by its enclosing entity's namespace.
     let isViewMember (m: FSharpMemberOrFunctionOrValue) : bool =
@@ -704,7 +743,7 @@ module View =
     let isRegionLambda (m: FSharpMemberOrFunctionOrValue) (index: int) : bool =
         let entity = enclosing m
 
-        (entity = Builder || entity = Sugar)
+        (entity = Builder || entity = Sugar || entity = Dsl)
         && (match m.LogicalName, index with
             | ("matchWith" | "branch"), 1 -> true
             | ("each" | "forEach" | "forEachFixed"), (0 | 1) -> true
@@ -714,8 +753,8 @@ module View =
     let isDefinitionCreator (m: FSharpMemberOrFunctionOrValue) =
         match enclosing m, m.LogicalName with
         | Component, "define"
-        | SugarComponent, ("template" | "ofMembers" | "ofClass")
-        | Sugar, ("armOf" | "show" | "showElse") -> true
+        | (SugarComponent | DslComponent), ("template" | "ofMembers" | "ofClass")
+        | (Sugar | Dsl), ("armOf" | "show" | "showElse") -> true
         | _ -> false
 
     [<Literal>]
@@ -724,12 +763,22 @@ module View =
     [<Literal>]
     let WidgetPart = "Hooks.widget"
 
-    /// The name of the content part that `expr` is: `UnsafeHtmlPart` or `WidgetPart`.
-    let rec contentPart (expr: FSharpExpr) : string option =
+    /// The raw-HTML flag and display name of the content part that `expr` is.
+    let rec contentPart (expr: FSharpExpr) : (bool * string) option =
         match expr with
         | Coerce (_, inner) -> contentPart inner
-        | Call (_, m, _, _, _) when enclosing m = Unsafe && m.LogicalName = "html" -> Some UnsafeHtmlPart
-        | Call (_, m, _, _, _) when enclosing m = Hooks && m.LogicalName = "widget" -> Some WidgetPart
+        | Call (_, m, _, _, _) when enclosing m = Unsafe && m.LogicalName = "html" -> Some (true, UnsafeHtmlPart)
+        | Call (_, m, _, _, _) when enclosing m = Hooks && m.LogicalName = "widget" -> Some (false, WidgetPart)
+        | Call (_, m, _, _, _) when
+            enclosing m = DslTagBase
+            && m.LogicalName = "unsafeHtml"
+            ->
+            Some (true, "unsafeHtml")
+        | Call (_, m, _, _, _) when
+            enclosing m = DslTagBase
+            && m.LogicalName = "widget"
+            ->
+            Some (false, "widget")
         | _ -> None
 
     /// The void HTML elements.
@@ -790,53 +839,70 @@ module View =
     /// Whether `m` yields or builds a text node: the element CE's `Yield` or the builder's `text`.
     let isTextMember (m: FSharpMemberOrFunctionOrValue) : bool =
         isMember Element "Yield" m
+        || isMember DslElement "Yield" m
         || isMember Builder "text" m
 
     /// Whether `m` is a child of an element CE: its `Yield` or `YieldFrom`.
     let isChildYield (m: FSharpMemberOrFunctionOrValue) : bool =
         isMember Element "Yield" m
         || isMember Element "YieldFrom" m
+        || isMember DslElement "Yield" m
+        || isMember DslElement "YieldFrom" m
 
-    /// Whether `m` is the sugar's `renderOf`, whose props are fixed when the template is built.
+    /// Whether `m` is the sugar's or DSL's `renderOf`, whose props are fixed when the template is built.
     let isRenderOf (m: FSharpMemberOrFunctionOrValue) : bool =
         isMember Sugar "renderOf" m
+        || isMember Dsl "renderOf" m
 
-    /// Whether `m` defines a component from a setup function: `Component.define` or the sugar's `Component.template`.
+    /// Whether `m` defines a component from a setup function: `Component.define` or `Component.template`.
     let isSetupDefinition (m: FSharpMemberOrFunctionOrValue) : bool =
         isMember Component "define" m
         || isMember SugarComponent "template" m
+        || isMember DslComponent "template" m
 
-    /// Whether `m` inlines a child template with a props reader: the sugar's or the builder's `render`.
+    /// Whether `m` inlines a child template with a props reader: `render` on the DSL, sugar or builder.
     let isRender (m: FSharpMemberOrFunctionOrValue) : bool =
         isMember Sugar "render" m
+        || isMember Dsl "render" m
         || isMember Builder "render" m
 
-    /// Whether `m` renders a keyed list: the builder's `each`, the sugar's `each`, `forEach` and `forEachFixed`.
+    /// Whether `m` renders a keyed list: the builder's `each`, or the DSL/sugar's `each`, `forEach` and `forEachFixed`.
     let isKeyed (m: FSharpMemberOrFunctionOrValue) : bool =
         isMember Builder "each" m
         || isMember Sugar "each" m
         || isMember Sugar "forEach" m
         || isMember Sugar "forEachFixed" m
+        || isMember Dsl "each" m
+        || isMember Dsl "forEach" m
+        || isMember Dsl "forEachFixed" m
 
     /// Whether `m` is the element CE's `Delay`, or the body argument of its `For`: code that runs when the template is
     /// built, with the CE.
     let isElementBuildLambda (m: FSharpMemberOrFunctionOrValue) (index: int) : bool =
         isMember Element "Delay" m
+        || isMember DslElement "Delay" m
         || (isMember Element "For" m && index = 1)
+        || (isMember DslElement "For" m && index = 1)
 
     /// Whether argument `index` of the element CE's member `m` is CE structure built once: `Run`, `Combine`, or the
     /// sequence of `For`.
     let isElementStructure (m: FSharpMemberOrFunctionOrValue) (index: int) : bool =
         isMember Element "Run" m
         || isMember Element "Combine" m
+        || isMember DslElement "Run" m
+        || isMember DslElement "Combine" m
         || (isMember Element "For" m && index = 0)
+        || (isMember DslElement "For" m && index = 0)
 
     /// Whether `m` constructs a component tag: a type whose base types include `ComponentTag`.
     let isComponentTagConstructor (m: FSharpMemberOrFunctionOrValue) : bool =
         let rec inherits (t: FSharpType option) (depth: int) =
             match t with
             | Some t when depth < 8 && t.HasTypeDefinition ->
-                t.TypeDefinition.TryFullName = Some ComponentTag
+                let fullName = t.TypeDefinition.TryFullName
+
+                fullName = Some ComponentTag
+                || fullName = Some DslComponentTag
                 || inherits t.TypeDefinition.BaseType (depth + 1)
             | _ -> false
 
@@ -845,9 +911,33 @@ module View =
             | Some entity -> inherits entity.BaseType 0
             | None -> false)
 
-    /// Whether `m` is the sugar's `forEach`, whose rows follow the current item.
+    /// Whether `m` is `forEach`, whose rows follow the current item.
     let isForEach (m: FSharpMemberOrFunctionOrValue) : bool =
         isMember Sugar "forEach" m
+        || isMember Dsl "forEach" m
+
+    /// Whether `entity` declares attribute part builders (`Attrs` or DSL tag classes / scopes).
+    let isAttributePartEntity (entity: string) : bool =
+        entity = Attributes
+        || entity = DslTagBase
+        || entity = DslTagScope
+        || entity = DslHtmlElement
+        || entity.StartsWith (DslElements + ".", StringComparison.Ordinal)
+        || (entity.StartsWith (HtmlTemplateGroupsPrefix, StringComparison.Ordinal)
+            && entity.Contains ("Attributes", StringComparison.Ordinal))
+
+    /// Whether `entity` declares property part builders (`Props` or DSL `.props` scopes).
+    let isPropertyPartEntity (entity: string) : bool =
+        entity = Properties
+        || entity.StartsWith (DslPropsPrefix, StringComparison.Ordinal)
+        || (entity.StartsWith (HtmlTemplateGroupsPrefix, StringComparison.Ordinal)
+            && entity.Contains ("Properties", StringComparison.Ordinal))
+
+    /// Whether `m` is `Part.batch` or `<tag>.batch`.
+    let isBatchPartCall (m: FSharpMemberOrFunctionOrValue) : bool =
+        m.LogicalName = "batch"
+        && (let entity = enclosing m
+            entity = DslPart || entity = DslTagBase)
 
 /// The calls that make a list key unstable.
 module Keys =

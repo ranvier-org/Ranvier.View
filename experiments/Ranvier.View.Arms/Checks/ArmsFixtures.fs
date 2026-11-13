@@ -8,7 +8,7 @@ open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Representation
 open Ranvier.View.Template
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Arms
 
 type Load =
@@ -120,7 +120,7 @@ let loadSteps =
 let private idleArm = armOf (span () { "Not started" })
 
 let private loadingArm =
-    armOf (progress (Attrs.attribute ("max", "100"), Attrs.attribute ("value", fun (payload: unit -> int) -> Some (string (payload ())))) { })
+    armOf (progress (progress.attribute ("max", "100"), progress.attribute ("value", fun (payload: unit -> int) -> Some (string (payload ())))) { })
 
 let private loadedArm =
     armOf (
@@ -142,12 +142,12 @@ let private italicArm = armOf (i () { fun (payload: unit -> string) -> payload (
 let loader =
     Component.template
         (fun _ (state: Signal<Load>) -> state)
-        (div (Attrs.className "loader") {
+        (div (div.className "loader") {
             Arms.Match (
                 read,
                 function
                 | Idle -> span () { "Not started" }
-                | Loading percent -> progress (Attrs.attribute ("max", "100"), Attrs.attribute ("value", fun _ -> Some (string percent))) { }
+                | Loading percent -> progress (progress.attribute ("max", "100"), progress.attribute ("value", fun _ -> Some (string percent))) { }
                 | Loaded (text, count) ->
                     pre () {
                         fun _ -> text
@@ -160,7 +160,7 @@ let loader =
 let loaderTwin =
     Component.template
         (fun _ (state: Signal<Load>) -> state)
-        (div (Attrs.className "loader") {
+        (div (div.className "loader") {
             matchWith read (function
                 | Idle -> arm idleArm ()
                 | Loading percent -> arm loadingArm percent
@@ -174,8 +174,8 @@ let private loaderArrayArms: Component<unit -> obj array> array =
         armOf (span () { "Not started" })
         armOf (
             progress (
-                Attrs.attribute ("max", "100"),
-                Attrs.attribute ("value", fun (values: unit -> obj array) -> Some (string (unbox<int> (values ()).[1])))
+                progress.attribute ("max", "100"),
+                progress.attribute ("value", fun (values: unit -> obj array) -> Some (string (unbox<int> (values ()).[1])))
             ) {
                 }
         )
@@ -191,7 +191,7 @@ let private loaderArrayArms: Component<unit -> obj array> array =
 let loaderArray =
     Component.template
         (fun _ (state: Signal<Load>) -> state)
-        (div (Attrs.className "loader") {
+        (div (div.className "loader") {
             matchWith id (fun (instance: Signal<Load>) ->
                 let values =
                     match read instance with
@@ -206,13 +206,13 @@ let loaderArray =
 let rich =
     Component.template
         (fun _ (state: Signal<Load>) -> state)
-        (div (Attrs.className "loader") {
+        (div (div.className "loader") {
             Arms.Match (
                 read,
                 function
                 | Idle
                 | Loading 0 -> span () { "Not started" }
-                | Loading percent -> progress (Attrs.attribute ("max", "100"), Attrs.attribute ("value", fun _ -> Some (string percent))) { }
+                | Loading percent -> progress (progress.attribute ("max", "100"), progress.attribute ("value", fun _ -> Some (string percent))) { }
                 | Loaded (_, 0) -> span () { "Empty" }
                 | Loaded (text, count) when count > 99 -> b () { fun _ -> text }
                 | Loaded (text, count) ->
@@ -227,7 +227,7 @@ let rich =
 let richTwin =
     Component.template
         (fun _ (state: Signal<Load>) -> state)
-        (div (Attrs.className "loader") {
+        (div (div.className "loader") {
             matchWith read (function
                 | Idle
                 | Loading 0 -> arm idleArm ()
@@ -241,7 +241,7 @@ let richTwin =
 let rows =
     Component.template
         (fun _ (state: Signal<Load>) -> state)
-        (div (Attrs.className "loader") {
+        (div (div.className "loader") {
             Arms.Match (
                 read,
                 function
@@ -256,7 +256,7 @@ let private rowsArm =
 let rowsTwin =
     Component.template
         (fun _ (state: Signal<Load>) -> state)
-        (div (Attrs.className "loader") {
+        (div (div.className "loader") {
             matchWith read (function
                 | Loaded (_, count) -> arm rowsArm count
                 | _ -> arm otherArm ())
@@ -572,14 +572,14 @@ let functions =
             Arms.Match (
                 read,
                 function
-                | Loaded _ -> b (Attrs.attribute ("title", title)) { text }
+                | Loaded _ -> b (b.attribute ("title", title)) { text }
                 | _ -> span () { "Other" }
             )
         })
 
 let private functionsArm =
     armOf (
-        b (Attrs.attribute ("title", fun (payload: unit -> Signal<Load>) -> titleOf (payload ()))) {
+        b (b.attribute ("title", fun (payload: unit -> Signal<Load>) -> titleOf (payload ()))) {
             fun (payload: unit -> Signal<Load>) -> nameOf (payload ())
         }
     )
@@ -595,7 +595,7 @@ let functionsTwin =
 
 // A helper view of the enclosing instance type that takes a reader (Review Focus 3).
 let private labelled (label: 'inst -> string) : TemplateView<'inst> =
-    b (Attrs.className "label") { label }
+    b (b.className "label") { label }
 
 let helper =
     Component.template
@@ -623,7 +623,7 @@ let helperTwin =
 
 // A helper view value of the enclosing instance type, spliced beside the generic helper and as a whole case body.
 let private badge: TemplateView<Signal<Load>> =
-    i (Attrs.className "badge") {
+    i (i.className "badge") {
         fun (state: Signal<Load>) ->
             match state.Value with
             | Loaded (_, count) -> string count
@@ -758,7 +758,7 @@ let localsTwin =
 
 // A helper view over the concrete instance type that reads the instance and takes a reader.
 let private status (label: Signal<Load> -> string) : TemplateView<Signal<Load>> =
-    b (Attrs.className "status") {
+    b (b.className "status") {
         label
         fun (s: Signal<Load>) -> nameOf s
     }
@@ -780,7 +780,7 @@ let statused =
 // values after the instance moves to another case.
 let private statusOf (label: (unit -> 'payload) -> string) =
     Component.define (fun _ (current: (unit -> 'payload) * Signal<Load>) -> current) (fun _ ->
-        b (Attrs.className "status") {
+        b (b.className "status") {
             fun (payload: unit -> 'payload, _: Signal<Load>) -> label payload
             fun (_: unit -> 'payload, state: Signal<Load>) -> nameOf state
         })
@@ -812,7 +812,7 @@ let statusedTwin =
 // A helper view over the concrete instance type that takes a view built in the case body, as the whole body and inside
 // it; the view reads a function and a view bound in the body.
 let private card (content: TemplateView<Signal<Load>>) : TemplateView<Signal<Load>> =
-    b (Attrs.className "card") { content }
+    b (b.className "card") { content }
 
 let carded =
     Component.template
@@ -844,7 +844,7 @@ let carded =
 // The twin of card over the arm's payload thunk and the instance. Its readers read the payload, which keeps the arm's
 // values after the instance moves to another case.
 let private cardOf (content: TemplateView<(unit -> 'payload) * Signal<Load>>) =
-    Component.define (fun _ (current: (unit -> 'payload) * Signal<Load>) -> current) (fun _ -> b (Attrs.className "card") { content })
+    Component.define (fun _ (current: (unit -> 'payload) * Signal<Load>) -> current) (fun _ -> b (b.className "card") { content })
 
 let private loadedCard =
     cardOf (span () { fun (payload: unit -> string * Signal<Load>, state: Signal<Load>) -> fst (payload ()) + nameOf state })
@@ -1074,14 +1074,14 @@ let editor =
             Arms.Match (
                 (fun (editor: Editor) -> editor.State.Value),
                 function
-                | Loaded (text, _) -> button (Events.onClick (fun (editor: Editor) _ -> editor.Saved.Value <- text)) { fun _ -> text }
+                | Loaded (text, _) -> button (button.onClick (fun (editor: Editor) _ -> editor.Saved.Value <- text)) { fun _ -> text }
                 | _ -> span () { "Other" }
             )
         })
 
 let private saveArm =
     armOf (
-        button (Events.onClick (fun (payload: unit -> string * Signal<string>) _ -> (snd (payload ())).Value <- fst (payload ()))) {
+        button (button.onClick (fun (payload: unit -> string * Signal<string>) _ -> (snd (payload ())).Value <- fst (payload ()))) {
             fun (payload: unit -> string * Signal<string>) -> fst (payload ())
         }
     )

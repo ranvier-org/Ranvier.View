@@ -4,7 +4,7 @@ module SugarServerChecks
 open System
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open SugarFixtures
 
 let private equal expected actual =
@@ -42,14 +42,14 @@ let private showOffMarkup () =
 
     equal
         ("<!--[r--><div>before<!--[a:"
-         + structuralHash (Ranvier.View.Sugar.Builders.emptyArm ())
+         + structuralHash (Ranvier.View.Dsl.Builders.emptyArm ())
          + "--><!--ranvier:row--><!--]-->after</div><!--]-->")
         (Server.render omit showSugar hidden)
 
 #if !FABLE_COMPILER
 let private emptyArmField () =
     let holder =
-        typeof<TemplateBuilder<unit>>.Assembly.GetType("Ranvier.View.Sugar.Builders+EmptyArm", true)
+        typeof<TemplateBuilder<unit>>.Assembly.GetType("Ranvier.View.Dsl.Builders+EmptyArm", true)
 
     let field =
         holder.GetField (
@@ -92,7 +92,7 @@ let private emptyArmOnce () =
                     for index in 0..15 ->
                         Threading.Thread (fun () ->
                             barrier.SignalAndWait ()
-                            arms[index] <- Ranvier.View.Sugar.Builders.emptyArm () :> obj)
+                            arms[index] <- Ranvier.View.Dsl.Builders.emptyArm () :> obj)
                 |]
 
             for thread in threads do
@@ -128,9 +128,7 @@ let private mountedStillRejected () =
     let mixed =
         Component.template
             (fun _ () -> ())
-            (div (Hooks.motion (System.Func<_, _, _, _>(fun _ _ _ -> ignore)), Hooks.mounted (fun _ (_: Ranvier.Dom.HTMLDivElement) -> ignore)) {
-                "x"
-            })
+            (div (div.motion (System.Func<_, _, _, _>(fun _ _ _ -> ignore)), div.mounted (fun _ (_: Ranvier.Dom.HTMLDivElement) -> ignore)) { "x" })
 
     let message =
         try

@@ -6,7 +6,7 @@ open Ranvier
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Dom.Scheduling
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.WebCore
 open Ranvier.View.WebCore.Tests.Support
 
@@ -33,8 +33,8 @@ let private shown =
             show
                 (fun s -> s.On.Value)
                 (path (
-                    Attrs.attribute ("d", "M0 0L1 1"),
-                    Hooks.mounted (fun (s: Chart) (node: SVGPathElement) ->
+                    path.attribute ("d", "M0 0L1 1"),
+                    path.mounted (fun (s: Chart) (node: SVGPathElement) ->
                         s.Paths.Add node
                         ignore)
                 ) {
@@ -50,7 +50,7 @@ let private listed =
                 forEach
                     id
                     (fun (s: Chart) -> s.Points.Value)
-                    (circle (Attrs.attribute ("r", fun (point: unit -> int) -> Some (string (point ())))) { () })
+                    (circle (circle.attribute ("r", fun (point: unit -> int) -> Some (string (point ())))) { () })
             }
         })
 

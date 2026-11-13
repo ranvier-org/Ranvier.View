@@ -3,7 +3,7 @@ module CounterExplicit
 
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Counter
 
 type Counter = { Count: Signal<int>; Label: string }

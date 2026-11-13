@@ -127,8 +127,8 @@ each checked for drift in CI:
 | Entry | Against | Δ gzip | Budget |
 | --- | --- | --: | --: |
 | `Anime.animate (el, Anim (...))` | the same call written in JavaScript | 0 B | 64 B |
-| rows with `Motion.presence` | the same rows with `Hooks.motion` and `Hooks.exit` calling `animate` by hand | +706 B | 900 B |
-| a list with `Motion.flip` | the same list with `Hooks.reflow` calling `createLayout` by hand | +1071 B | 1100 B |
+| rows with `Motion.presence` | the same rows with `<tag>.motion` and `<tag>.exit` calling `animate` by hand | +706 B | 900 B |
+| a list with `Motion.flip` | the same list with `<tag>.reflow` calling `createLayout` by hand | +1071 B | 1100 B |
 | the view's motion, exit and reflow hook kinds | the view before them, in a bundle using none of them | +447 B | 450 B |
 
 The last row is the Playground's `sugar-size.mjs` explicit entry, recorded in the

@@ -5,7 +5,7 @@ open Fable.Core.TS
 open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Dom
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Counter
 
 let mountSynchronous (graph: Graph) (host: Dom.HTMLElement) (report: exn list -> unit) =

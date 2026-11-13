@@ -6,7 +6,8 @@ open global.Ranvier
 open Ranvier.View.Representation
 open Ranvier.View.Template
 
-module private SharedPropertyReceivers =
+[<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+module SharedPropertyReceivers =
 #if FABLE_COMPILER
     let get_HTMLHyperlinkElementUtils_hash (node: obj) : string =
         Native.expando node "hash"

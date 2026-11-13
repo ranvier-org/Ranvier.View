@@ -6,7 +6,7 @@ open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Dom.Scheduling
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Testing
 
 let private equal expected actual =
@@ -69,17 +69,17 @@ let private shown (kind: Kind) =
     | ForEach -> "12", ""
 
 let private pendingView =
-    Component.template (fun _ () -> ()) (p (Attrs.className "pending") { "pending" })
+    Component.template (fun _ () -> ()) (p (p.className "pending") { "pending" })
 
 let private failedView =
-    Component.template (fun _ (failure: BoundaryFailure) -> failure) (p (Attrs.className "failed") { fun failure -> failure.Error.Message })
+    Component.template (fun _ (failure: BoundaryFailure) -> failure) (p (p.className "failed") { fun failure -> failure.Error.Message })
 
 /// <summary>A boundary whose content shows the status's <c>IsPending</c> as <c>*</c> or <c>.</c>, then the region.</summary>
 let private bounded (kind: Kind) (flight: Signal<AsyncSource<int>>) =
     let content =
         Component.template
             (fun _ (status: BoundaryStatus) -> status)
-            (div (Attrs.className "level") {
+            (div (div.className "level") {
                 fun (status: BoundaryStatus) -> if status.IsPending () then "*" else "."
                 region kind flight
             })
@@ -87,7 +87,7 @@ let private bounded (kind: Kind) (flight: Signal<AsyncSource<int>>) =
     Component.template (fun _ () -> ()) (section () { boundary pendingView failedView content })
 
 let private unbounded (kind: Kind) (flight: Signal<AsyncSource<int>>) =
-    Component.template (fun _ () -> ()) (div (Attrs.className "level") { region kind flight })
+    Component.template (fun _ () -> ()) (div (div.className "level") { region kind flight })
 
 /// <summary>The pending view count, the error view count and the content's text.</summary>
 let private state (root: HTMLElement) =
@@ -187,7 +187,7 @@ let private removedPendingRegion queued () =
     let content =
         Component.template
             (fun _ (status: BoundaryStatus) -> status)
-            (div (Attrs.className "level") {
+            (div (div.className "level") {
                 "["
                 show (fun _ -> outer.Value) (span () { region Show flight })
                 "]"
@@ -217,7 +217,7 @@ let private removedRefetchingRegion queued () =
     let content =
         Component.template
             (fun _ (status: BoundaryStatus) -> status)
-            (div (Attrs.className "level") {
+            (div (div.className "level") {
                 fun (status: BoundaryStatus) -> if status.IsPending () then "*" else "."
                 "["
                 show (fun _ -> outer.Value) (span () { region Show flight })
@@ -270,7 +270,7 @@ let private armSetupReadsPending initial queued () =
     let content =
         Component.template
             (fun _ (status: BoundaryStatus) -> status)
-            (div (Attrs.className "level") {
+            (div (div.className "level") {
                 fun (status: BoundaryStatus) -> if status.IsPending () then "*" else "."
                 matchWith (fun _ -> flag.Value) (fun shown -> if shown then arm readingArm () else arm plainArm ())
             })

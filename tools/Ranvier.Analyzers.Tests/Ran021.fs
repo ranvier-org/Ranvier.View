@@ -6,7 +6,7 @@ open Ranvier.Analyzers
 open Ranvier.Analyzers.Tests.Options
 
 let private header =
-    "module Fixture\nopen System\nopen Ranvier\nopen Ranvier.View\nopen Ranvier.View.Sugar\ntype Todo = { Id: int; Label: string }\ntype Plain(id: int) =\n    member _.Id = id\nlet todos = createSignal [| { Id = 1; Label = \"a\" } |]\nlet row = li () { fun (row: unit -> Todo) -> (row ()).Label }\n"
+    "module Fixture\nopen System\nopen Ranvier\nopen Ranvier.View\nopen Ranvier.View.Dsl\ntype Todo = { Id: int; Label: string }\ntype Plain(id: int) =\n    member _.Id = id\nlet todos = createSignal [| { Id = 1; Label = \"a\" } |]\nlet row = li () { fun (row: unit -> Todo) -> (row ()).Label }\n"
 
 let private findings (key: string) =
     let body =

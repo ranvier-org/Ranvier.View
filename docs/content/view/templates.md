@@ -12,7 +12,7 @@ end of the page builds the same trees. Every sample on this page compiles with t
 open Ranvier.Dom
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 ```
 
 ## Elements
@@ -20,9 +20,9 @@ open Ranvier.View.Sugar
 A tag takes its parts as arguments and its children as a computation-expression body:
 
 ```fsharp
-div (Attrs.className "panel", Attrs.id "main") {
+div (div.className "panel", div.id "main") {
     h2 () { "Totals" }
-    input (Attrs.attribute ("type", "search"))
+    input (input.attribute ("type", "search"))
     p () { }
 }
 ```
@@ -33,7 +33,7 @@ div (Attrs.className "panel", Attrs.id "main") {
   body. Inside a body it is yielded as it is. In every other position that takes a view (a template
   root, the content of `show`, an `armOf` view, a `fragment` child, a row view) write its `View`:
   `(img (parts)).View`.
-- An element's parts are typed by its DOM interface. `Props.Input.value` applies to `input` only, and
+- An element's parts are typed by its DOM interface. `input.props.value` applies to `input` only, and
   any other tag fails to compile with it.
 
 ```fsharp
@@ -41,10 +41,10 @@ type Avatar = { Shown: Signal<bool> }
 
 let avatar =
     Component.template (fun _ (shown: Signal<bool>) -> { Shown = shown }) (
-        span (Attrs.className "avatar") { show (fun a -> a.Shown.Value) (img (Attrs.attribute ("alt", "avatar"))).View }
+        span (span.className "avatar") { show (fun a -> a.Shown.Value) (img (img.attribute ("alt", "avatar"))).View }
     )
 
-let rule = Component.template (fun _ () -> ()) (hr (Attrs.className "rule")).View
+let rule = Component.template (fun _ () -> ()) (hr (hr.className "rule")).View
 ```
 
 ## Element names
@@ -81,7 +81,7 @@ type Greeting = { Name: Signal<string>; Shout: Memo<string> }
 let greeting =
     Component.template
         (fun _ (name: Signal<string>) -> { Name = name; Shout = createMemo (fun _ -> name.Value.ToUpper ()) })
-        (p (Attrs.className "greeting") {
+        (p (p.className "greeting") {
             "Hello, "
             fun g -> g.Name.Value
             "! "
@@ -122,7 +122,7 @@ let header =
                         th () { column }
 
                     if columns.Length > 2 then
-                        th (Attrs.className "actions") { }
+                        th (th.className "actions") { }
                 }
             }
         }
@@ -148,11 +148,11 @@ type Chore =
 let chore =
     Component.template (fun _ (chore: Chore) -> chore) (
         li (
-            Attrs.className "chore",
-            Attrs.title (fun c -> c.Title.Value),
-            Attrs.data ("owner", fun c -> Some c.Owner),
-            Attrs.attribute ("aria-describedby", fun c -> c.Note.Value |> Option.map (fun _ -> "note")),
-            Attrs.hidden (from (fun c -> c.Done))
+            li.className "chore",
+            li.title (fun c -> c.Title.Value),
+            li.data ("owner", fun c -> Some c.Owner),
+            li.attribute ("aria-describedby", fun c -> c.Note.Value |> Option.map (fun _ -> "note")),
+            li.hidden (from (fun c -> c.Done))
         ) {
             fun c -> c.Title.Value
         }
@@ -163,20 +163,21 @@ let chore =
   `aria*` members) take a `string`, a `string option`, a reader returning either, or a source.
 - **Optional values** remove the attribute when they are `None`. A reader returning `null` also
   removes it.
-- **Boolean attributes** (`hidden`, `inert`, `Attrs.Button.disabled`, `Attrs.Input.required`, ...)
+- **Boolean attributes** (`hidden`, `inert`, `button.disabled`, `input.required`, ...)
   take a `bool` and are present with an empty value while it is `true`. ARIA booleans
   (`ariaExpanded`, `ariaBusy`, ...) write `"true"` or `"false"`.
-- **Element groups** hold the attributes of one element: `Attrs.Button`, `Attrs.Input`,
-  `Attrs.Select`, `Attrs.TextArea` and `Attrs.Option`.
-- **`data` and `aria`** take a suffix: `Attrs.data ("owner", ...)` writes `data-owner`.
-- **Any other attribute** goes through `Attrs.attribute (name, value)`, where `value` is a `string`,
+- **Element members** live directly on each tag class: `button.*`, `input.*`, `select.*`,
+  `textarea.*` and `option'.*`, alongside shared members on `el` and every tag.
+- **`data` and `aria`** take a suffix: `li.data ("owner", ...)` writes `data-owner`.
+- **Any other attribute** goes through `<tag>.attribute (name, value)`, where `value` is a `string`,
   a reader returning `string option`, or a source of `string option`.
+- **Styles** use `<tag>.style (name, value)` or [Ranvier.Css](https://ranvier-org.github.io/Ranvier.Css/).
 
 ## Properties
 
-`Props` writes DOM properties: an input's current `value`, a button's `disabled` state, a checkbox's
-`checked` state. `Attrs.Input.value` writes the `value` attribute, which is the input's default value;
-`Props.Input.value` writes the live value.
+`<tag>.props` writes DOM properties: an input's current `value`, a button's `disabled` state, a checkbox's
+`checked` state. `input.value` writes the `value` attribute, which is the input's default value;
+`input.props.value` writes the live value.
 
 ```fsharp
 type Field = { Text: Signal<string>; Busy: Signal<bool> }
@@ -185,11 +186,11 @@ let field =
     Component.template (fun _ (field: Field) -> field) (
         form () {
             input (
-                Props.Input.value (from (fun f -> f.Text)),
-                Events.onInput (fun f event -> f.Text.Value <- (unbox<Dom.HTMLInputElement> event.currentTarget).value)
+                input.props.value (from (fun f -> f.Text)),
+                input.onInput (fun f event -> f.Text.Value <- (unbox<Dom.HTMLInputElement> event.currentTarget).value)
             )
 
-            button (Props.Button.disabled (fun f -> f.Busy.Value || f.Text.Value = "")) { "Save" }
+            button (button.props.disabled (fun f -> f.Busy.Value || f.Text.Value = "")) { "Save" }
         }
     )
 ```
@@ -198,8 +199,8 @@ Each generated property has a server form: `value` is written as the `value` att
 and `checked` as presence attributes, and a textarea's value as its child text. The field above
 renders as `<form><input value=""><button disabled="">Save</button></form>` for an empty text.
 
-A property outside the generated set goes through `Props.propertyStatic`, `Props.propertyWith` or
-`Props.propertyFrom` with a writer of the native element:
+A property outside the generated set goes through `<tag>.props.propertyStatic`, `<tag>.props.propertyWith` or
+`<tag>.props.propertyFrom` with a writer of the native element:
 
 ```fsharp
 type Selection = { Partial: Signal<bool> }
@@ -208,8 +209,8 @@ let selectAll =
     Component.template (fun _ (selection: Selection) -> selection) (
         label () {
             input (
-                Attrs.attribute ("type", "checkbox"),
-                Props.propertyWith ((fun (box: Dom.HTMLInputElement) partial -> box.indeterminate <- partial), (fun s -> s.Partial.Value), primitiveSame)
+                input.attribute ("type", "checkbox"),
+                input.props.propertyWith ((fun (box: Dom.HTMLInputElement) partial -> box.indeterminate <- partial), (fun s -> s.Partial.Value), primitiveSame)
             )
 
             "Select all"

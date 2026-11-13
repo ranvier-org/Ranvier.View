@@ -5,7 +5,7 @@ open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Representation
 open Ranvier.View.Template
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Arms
 
 let site =

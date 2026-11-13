@@ -15,7 +15,7 @@ type Disclosure = { Open: Signal<bool>; Body: string }
 let disclosure =
     Component.template (fun _ (d: Disclosure) -> d) (
         div () {
-            button (Events.onClick (fun d _ -> d.Open.Value <- not d.Open.Value)) { "Details" }
+            button (button.onClick (fun d _ -> d.Open.Value <- not d.Open.Value)) { "Details" }
             show (fun d -> d.Open.Value) (p () { fun d -> d.Body })
         }
     )
@@ -43,12 +43,12 @@ type Load =
     | Loaded of string
 
 let private idleArm = armOf (span () { "Not started" })
-let private loadingArm = armOf (progress (Attrs.attribute ("max", "100"), Attrs.attribute ("value", fun p -> Some (string (p ())))) { })
+let private loadingArm = armOf (progress (progress.attribute ("max", "100"), progress.attribute ("value", fun p -> Some (string (p ())))) { })
 let private loadedArm = armOf (pre () { fun text -> text () })
 
 let loader =
     Component.template (fun _ (state: Signal<Load>) -> state) (
-        div (Attrs.className "loader") {
+        div (div.className "loader") {
             matchWith (fun (state: Signal<Load>) -> state.Value) (function
                 | Idle -> arm idleArm ()
                 | Loading percent -> arm loadingArm percent
@@ -109,12 +109,12 @@ open Ranvier.View.Arms
 
 let loaderMatch =
     Component.template (fun _ (state: Signal<Load>) -> state) (
-        div (Attrs.className "loader") {
+        div (div.className "loader") {
             Arms.Match (
                 (fun (state: Signal<Load>) -> state.Value),
                 function
                 | Idle -> span () { "Not started" }
-                | Loading percent -> progress (Attrs.attribute ("max", "100"), Attrs.attribute ("value", fun _ -> Some (string percent))) { }
+                | Loading percent -> progress (progress.attribute ("max", "100"), progress.attribute ("value", fun _ -> Some (string percent))) { }
                 | Loaded "" -> span () { "Empty" }
                 | Loaded text -> pre () { fun _ -> text }
             )
@@ -162,7 +162,7 @@ the instance type, such as a shared `badge`. Pass a pattern variable to the help
 
 ```fsharp
 let private labelled (label: 'inst -> string) : TemplateView<'inst> =
-    b (Attrs.className "label") { label }
+    b (b.className "label") { label }
 
 let private loaderLabel =
     Component.template (fun _ (state: Signal<Load>) -> state) (

@@ -332,7 +332,7 @@ jobs:
         run: |
           dotnet build tools/Ranvier.Analyzers.Tests/Ranvier.Analyzers.Tests.fsproj -c Release --nologo -v q
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Qualify all 234 tests with the actual compiler identity
+      - name: Qualify all 239 tests with the actual compiler identity
         run: |
           $compilerSha = (Get-Content tools/Ranvier.Analyzers.Host/vendor-spec.json -Raw | ConvertFrom-Json).compilerSha256
           python tools/Ranvier.Analyzers.Host/tests/run_provider_qualification.py --dotnet dotnet --project tools/Ranvier.Analyzers.Tests/Ranvier.Analyzers.Tests.fsproj --evidence-dir "${{ runner.temp }}/ranvier-provider-proof" --compiler-sha256 $compilerSha

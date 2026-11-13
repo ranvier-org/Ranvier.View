@@ -4,15 +4,15 @@ module Collections
 open Ranvier.Dom
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 type Todo = { Id: int; Label: Signal<string>; Done: Signal<bool> }
 
 let todoList =
     Component.template (fun _ (todos: Signal<Todo array>) -> todos) (
-        ul (Attrs.className "todos") {
+        ul (ul.className "todos") {
             forEachFixed (fun (todo: Todo) -> todo.Id) (fun (todos: Signal<_ array>) -> todos.Value) (
-                li (Attrs.className (fun todo -> if todo.Done.Value then "done" else "open")) {
+                li (li.className (fun todo -> if todo.Done.Value then "done" else "open")) {
                     from (fun todo -> todo.Label)
                 }
             )

@@ -3,6 +3,6 @@ module Sugar
 
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 let note = Component.template (fun _ () -> ()) (div () { "opened" })

@@ -1,5 +1,8 @@
 namespace Ranvier.View.Sugar
 
+#nowarn "44"
+
+open System
 open Ranvier.View.Representation
 open Ranvier.View.Template
 
@@ -42,7 +45,7 @@ module Builders =
         EmptyArm.Get ()
 
     /// <summary>A void element, accepted as a child by <c>Element</c>.</summary>
-    [<AbstractClass>]
+    [<AbstractClass; Obsolete("Use Ranvier.View.Dsl instead.")>]
     type VoidElement<'inst> internal (view: TemplateView<'inst>) =
         /// <summary>The element's view, for a position that takes a <c>TemplateView</c>.</summary>
         member _.View = view
@@ -52,7 +55,7 @@ module Builders =
     /// A string yields static text, an <c>'inst -> string</c> a text slot, a <c>Source</c> a direct text slot, and a
     /// void element its view. A yielded lambda gets its instance type from its own body.
     /// </remarks>
-    [<AbstractClass>]
+    [<AbstractClass; Obsolete("Use Ranvier.View.Dsl instead.")>]
     type Element<'native, 'inst> internal (tag: Tag, parts: Part<'native, 'inst> array) =
         member inline _.Yield(view: TemplateView<'inst>) : TemplateView<'inst> array =
             [| view |]
@@ -84,45 +87,60 @@ module Builders =
         member _.Run(children: TemplateView<'inst> array) : TemplateView<'inst> =
             TemplateParts.element tag parts children
 
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let Attrs<'inst> : AttributeBuilder<'inst> = AttributeBuilder<'inst>()
+
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let Props<'inst> : PropertyBuilder<'inst> = PropertyBuilder<'inst>()
+
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let Events<'inst> : EventBuilder<'inst> = EventBuilder<'inst>()
+
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let Hooks<'inst> : HookBuilder<'inst> = HookBuilder<'inst>()
 
-    [<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+    [<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never); Obsolete("Use Ranvier.View.Dsl instead.")>]
     let sourceOf<'inst, 'value> (read: System.Func<obj, obj>) : Source<'inst, 'value> =
         Source read
 
     /// <summary>A source over the signal or memo returned by <c>accessor</c>.</summary>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let inline from<'inst, ^s, 'value when ^s: (member Value: 'value)> ([<InlineIfLambda>] accessor: 'inst -> ^s) : Source<'inst, 'value> =
         sourceOf (System.Func<obj, obj>(fun instance -> box ((^s: (member Value: 'value) (accessor (unbox<'inst> instance))))))
 
     /// <summary>A text slot; the same node as a yielded reader.</summary>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let text (read: 'inst -> string) : TemplateView<'inst> =
         TemplateParts.readText read
 
     /// <summary>The children as one view, with no element of their own.</summary>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let fragment (children: TemplateView<'inst> array) : TemplateView<'inst> =
         TemplateBuilder<'inst>().fragment children
 
     /// <summary>An arm definition whose instance is its props.</summary>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let armOf (view: TemplateView<unit -> 'payload>) : Component<unit -> 'payload> =
         Component.define (fun _ payload -> payload) (fun _ -> view)
 
     /// <summary>An arm that renders <c>definition</c>; its props read the payload of the arm currently selected.</summary>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let arm (definition: Component<unit -> 'payload>) (payload: 'payload) : Arm =
         TemplateParts.arm definition payload
 
     /// <summary>Renders the arm that <c>arms</c> selects for the instance's union value, between region markers.</summary>
     /// <remarks>Arms are compared by key under <c>=</c>; a <c>matchWith</c> key is the arm's definition. Selecting another definition remounts, and selecting the same definition updates the payload read by its props. Writing <c>arms</c> as a <c>function</c> match lets the compiler check that every case has an arm. A remount runs the previous arm's cleanups and removes its nodes before the new arm is set up.</remarks>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let matchWith (read: 'inst -> 'union) (arms: 'union -> Arm) : TemplateView<'inst> =
         TemplateBuilder<'inst>().matchWith read arms
 
     /// <summary>Renders the arm selected for the instance's key, between region markers; a key change under <c>=</c> or a change of the selected definition remounts the arm.</summary>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let branch<'inst, 'key when 'key: equality> (key: 'inst -> 'key) (arms: 'key -> Arm) : TemplateView<'inst> =
         TemplateBuilder<'inst>().branch key arms
 
     /// <summary>Renders one <c>row</c> instance per item, between region markers; items with equal keys under <c>=</c> keep their row, whose props read the current item.</summary>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let each<'inst, 'item, 'key when 'key: equality>
         (key: 'item -> 'key)
         (items: 'inst -> 'item array)
@@ -131,6 +149,7 @@ module Builders =
         TemplateBuilder<'inst>().each key items row
 
     /// <summary>One row per item; a row reads its current item, and items with equal keys keep their row.</summary>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let forEach<'inst, 'item, 'key when 'key: equality>
         (key: 'item -> 'key)
         (items: 'inst -> 'item array)
@@ -139,6 +158,7 @@ module Builders =
         each key items (Component.define (fun _ (current: unit -> 'item) -> current) (fun _ -> row))
 
     /// <summary>One row per item; a row's instance is the item it was created for, and items with equal keys keep their row.</summary>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let forEachFixed<'inst, 'item, 'key when 'key: equality>
         (key: 'item -> 'key)
         (items: 'inst -> 'item array)
@@ -147,6 +167,7 @@ module Builders =
         each key items (Component.define (fun _ (current: unit -> 'item) -> current ()) (fun _ -> row))
 
     /// <summary>Renders <c>content</c> while <c>condition</c> holds; a change to false runs its cleanups and removes its nodes.</summary>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let show (condition: 'inst -> bool) (content: TemplateView<'inst>) : TemplateView<'inst> =
         let shown =
             Component.define (fun _ (current: unit -> 'inst) -> current ()) (fun _ -> content)
@@ -158,6 +179,7 @@ module Builders =
             | ValueNone -> arm hidden ())
 
     /// <summary>Renders <c>content</c> while <c>condition</c> holds and <c>fallback</c> otherwise; each change of the condition remounts.</summary>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let showElse (condition: 'inst -> bool) (content: TemplateView<'inst>) (fallback: TemplateView<'inst>) : TemplateView<'inst> =
         let shown =
             Component.define (fun _ (current: unit -> 'inst) -> current ()) (fun _ -> content)
@@ -176,29 +198,34 @@ module Builders =
              | Choice2Of2 instance -> arm other instance)
 
     /// <summary>A boundary between region markers: <c>content</c> once every binding under it has read a value, <c>pending</c> until then, and <c>failed</c> after a failure under the content.</summary>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let boundary (pending: Component<unit>) (failed: Component<BoundaryFailure>) (content: Component<BoundaryStatus>) : TemplateView<'inst> =
         TemplateBuilder<'inst>().boundary pending failed content
 
     /// <summary>Inlines a child template; its props are read from the instance, untracked, once per instance.</summary>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let render (definition: Component<'props>) (props: 'inst -> 'props) : TemplateView<'inst> =
         TemplateBuilder<'inst>().render definition props
 
     /// <summary>Inlines a child template with fixed props.</summary>
+    [<Obsolete("Use Ranvier.View.Dsl instead.")>]
     let renderOf (definition: Component<'props>) (props: 'props) : TemplateView<'inst> =
         TemplateBuilder<'inst>().render definition (fun _ -> props)
 
     /// <summary>A component used as a tag: yields the child view of <c>definition</c>.</summary>
     /// <remarks>Subclasses take a private primary constructor and public overloads.</remarks>
-    [<AbstractClass>]
+    [<AbstractClass; Obsolete("Use Ranvier.View.Dsl instead.")>]
     type ComponentTag<'props, 'inst>(definition: Component<'props>, props: 'inst -> 'props) =
         inherit VoidElement<'inst>(TemplateBuilder<'inst>().render definition props)
 
     module Component =
         /// <summary>Defines a component from per-instance setup and a template shared by every instance.</summary>
+        [<Obsolete("Use Ranvier.View.Dsl instead.")>]
         let template (setup: Setup -> 'props -> 'inst) (view: TemplateView<'inst>) : Component<'props> =
             Component.define setup (fun _ -> view)
 
         /// <summary>A component from the type's static <c>Create</c> (setup) and <c>View</c> (template, read once).</summary>
+        [<Obsolete("Use Ranvier.View.Dsl instead.")>]
         let inline ofMembers< ^T, 'props when ^T: (static member Create: Setup * 'props -> ^T) and ^T: (static member View: TemplateView< ^T >)>
             ()
             : Component<'props> =
@@ -206,5 +233,6 @@ module Builders =
                 (^T: (static member View: TemplateView< ^T >) ()))
 
         /// <summary>A component from a constructor (setup) and the type's static <c>View</c> (template, read once).</summary>
+        [<Obsolete("Use Ranvier.View.Dsl instead.")>]
         let inline ofClass ([<InlineIfLambda>] create: Setup * 'props -> ^T) : Component<'props> =
             Component.define (fun setup props -> create (setup, props)) (fun _ -> (^T: (static member View: TemplateView< ^T >) ()))

@@ -4,13 +4,13 @@ module Templates
 open Ranvier.Dom
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 let elements =
     Component.template (fun _ () -> ()) (
-        div (Attrs.className "panel", Attrs.id "main") {
+        div (div.className "panel", div.id "main") {
             h2 () { "Totals" }
-            input (Attrs.attribute ("type", "search"))
+            input (input.attribute ("type", "search"))
             p () { }
         }
     )
@@ -19,17 +19,17 @@ type Avatar = { Shown: Signal<bool> }
 
 let avatar =
     Component.template (fun _ (shown: Signal<bool>) -> { Shown = shown }) (
-        span (Attrs.className "avatar") { show (fun a -> a.Shown.Value) (img (Attrs.attribute ("alt", "avatar"))).View }
+        span (span.className "avatar") { show (fun a -> a.Shown.Value) (img (img.attribute ("alt", "avatar"))).View }
     )
 
-let rule = Component.template (fun _ () -> ()) (hr (Attrs.className "rule")).View
+let rule = Component.template (fun _ () -> ()) (hr (hr.className "rule")).View
 
 type Greeting = { Name: Signal<string>; Shout: Memo<string> }
 
 let greeting =
     Component.template
         (fun _ (name: Signal<string>) -> { Name = name; Shout = createMemo (fun _ -> name.Value.ToUpper ()) })
-        (p (Attrs.className "greeting") {
+        (p (p.className "greeting") {
             "Hello, "
             fun g -> g.Name.Value
             "! "
@@ -47,7 +47,7 @@ let header =
                         th () { column }
 
                     if columns.Length > 2 then
-                        th (Attrs.className "actions") { }
+                        th (th.className "actions") { }
                 }
             }
         }
@@ -62,11 +62,11 @@ type Chore =
 let chore =
     Component.template (fun _ (chore: Chore) -> chore) (
         li (
-            Attrs.className "chore",
-            Attrs.title (fun c -> c.Title.Value),
-            Attrs.data ("owner", fun c -> Some c.Owner),
-            Attrs.attribute ("aria-describedby", fun c -> c.Note.Value |> Option.map (fun _ -> "note")),
-            Attrs.hidden (from (fun c -> c.Done))
+            li.className "chore",
+            li.title (fun c -> c.Title.Value),
+            li.data ("owner", fun c -> Some c.Owner),
+            li.attribute ("aria-describedby", fun c -> c.Note.Value |> Option.map (fun _ -> "note")),
+            li.hidden (from (fun c -> c.Done))
         ) {
             fun c -> c.Title.Value
         }
@@ -78,11 +78,11 @@ let field =
     Component.template (fun _ (field: Field) -> field) (
         form () {
             input (
-                Props.Input.value (from (fun f -> f.Text)),
-                Events.onInput (fun f event -> f.Text.Value <- (unbox<Dom.HTMLInputElement> event.currentTarget).value)
+                input.props.value (from (fun f -> f.Text)),
+                input.onInput (fun f event -> f.Text.Value <- (unbox<Dom.HTMLInputElement> event.currentTarget).value)
             )
 
-            button (Props.Button.disabled (fun f -> f.Busy.Value || f.Text.Value = "")) { "Save" }
+            button (button.props.disabled (fun f -> f.Busy.Value || f.Text.Value = "")) { "Save" }
         }
     )
 
@@ -92,8 +92,8 @@ let selectAll =
     Component.template (fun _ (selection: Selection) -> selection) (
         label () {
             input (
-                Attrs.attribute ("type", "checkbox"),
-                Props.propertyWith ((fun (box: Dom.HTMLInputElement) partial -> box.indeterminate <- partial), (fun s -> s.Partial.Value), primitiveSame)
+                input.attribute ("type", "checkbox"),
+                input.props.propertyWith ((fun (box: Dom.HTMLInputElement) partial -> box.indeterminate <- partial), (fun s -> s.Partial.Value), primitiveSame)
             )
 
             "Select all"

@@ -3,10 +3,10 @@
 import { readFileSync } from "node:fs";
 
 const portable = new URL("../../generated-tests/src/Ranvier.View/", import.meta.url);
-const generatedSource = new URL("../../../../src/Ranvier.View/Generated/HtmlTemplateSugar.fs", import.meta.url);
+const generatedSource = new URL("../../../../src/Ranvier.View/Generated/HtmlDsl.fs", import.meta.url);
 
 /** Bundle module paths (as in `//#region` comments and frame `module` fields) of the sugar layer. */
-export const sugarModules = ["src/Ranvier.View/TemplateSugar.js", "src/Ranvier.View/Generated/HtmlTemplateSugar.js"];
+export const sugarModules = ["src/Ranvier.View/Dsl.js", "src/Ranvier.View/Generated/HtmlDsl.js", "src/Ranvier.View/SvgDsl.js"];
 export const isSugarModule = path => sugarModules.some(module => path.endsWith(module));
 
 /** A JavaScript source with comments removed and string and template literals emptied; line breaks are kept. */
@@ -38,11 +38,15 @@ let derived;
 export function sugarDeclarations() {
   if (derived) return derived;
   const tagSource = [...readFileSync(generatedSource, "utf8").matchAll(/^\s*type ([a-z][a-z0-9']*)<'i> private \(ps:/gm)].map(match => match[1].replace("'", "$0027"));
-  const tagsEmitted = readFileSync(new URL("Generated/HtmlTemplateSugar.js", portable), "utf8");
-  const tagClasses = [...tagsEmitted.matchAll(/^export class ([a-z][a-z0-9$]*)\$1 extends (?:Element\$2|VoidElement\$1) /gm)].map(match => match[1]);
+  const tagsEmitted = readFileSync(new URL("Generated/HtmlDsl.js", portable), "utf8");
+  const tagClasses = [...tagsEmitted.matchAll(/^export class Elements_([a-z][a-z0-9$]*)\$1 extends (?:Elements_HtmlElement\$2|Elements_HtmlVoidElement\$2) /gm)].map(match => match[1]);
   if (tagSource.length !== tagClasses.length || tagSource.some((tag, index) => tag !== tagClasses[index]))
-    throw Error(`Tag classes differ: ${tagSource.length} in HtmlTemplateSugar.fs, ${tagClasses.length} emitted in HtmlTemplateSugar.js`);
-  const names = new Set([...declarations(readFileSync(new URL("TemplateSugar.js", portable), "utf8")), ...declarations(tagsEmitted)]);
+    throw Error(`Tag classes differ: ${tagSource.length} in HtmlDsl.fs, ${tagClasses.length} emitted in HtmlDsl.js`);
+  const names = new Set([
+    ...declarations(readFileSync(new URL("Dsl.js", portable), "utf8")),
+    ...declarations(tagsEmitted),
+    ...declarations(readFileSync(new URL("SvgDsl.js", portable), "utf8")),
+  ]);
   return (derived = { tagClasses, names });
 }
 

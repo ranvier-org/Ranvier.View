@@ -3,7 +3,7 @@ module Fixtures.Bad.AM002
 #if BAD_AM002
 open global.Ranvier
 open Ranvier.View.Template
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Arms
 open Fixtures.Types
 

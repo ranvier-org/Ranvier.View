@@ -18,7 +18,7 @@ import sys
 import time
 
 
-EXPECTED_TESTS = 234
+EXPECTED_TESTS = 239
 EXPECTED_COMPILER_VERSION = "43.12.402.0"
 ANSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 EXPECTO_SUMMARY = re.compile(
@@ -44,7 +44,7 @@ def require_process_success(process_receipt: dict) -> None:
 
 
 def parse_expecto_summary(log_text: str) -> dict[str, int]:
-    """Parse the actual Expecto summary shape used by retained 234-test logs."""
+    """Parse the actual Expecto summary shape used by retained 239-test logs."""
     text = ANSI.sub("", log_text).replace("\r", "")
     matches = list(EXPECTO_SUMMARY.finditer(text))
     if len(matches) != 1:

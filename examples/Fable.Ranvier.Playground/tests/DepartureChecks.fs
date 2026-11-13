@@ -9,7 +9,7 @@ open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Testing
 open CheckSupport
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 type Rows =
     {
@@ -52,10 +52,10 @@ let private contexts =
                 forEach
                     id
                     (fun (s: Rows) -> s.Items.Value)
-                    (li (Hooks.motion (System.Func<_, _, _, _> rowMotion)) { fun (row: unit -> int) -> string (row ()) })
+                    (li (li.motion (System.Func<_, _, _, _> rowMotion)) { fun (row: unit -> int) -> string (row ()) })
             }
 
-            show (fun s -> s.Shown.Value) (span (Hooks.motion (System.Func<_, _, _, _> shownMotion)) { "on" })
+            show (fun s -> s.Shown.Value) (span (span.motion (System.Func<_, _, _, _> shownMotion)) { "on" })
         })
 
 let private innerMotion (row: unit -> int) (_: HTMLElement) (motion: MotionContext) =
@@ -70,11 +70,11 @@ let private nested =
             forEach
                 id
                 (fun (s: Rows) -> s.Items.Value)
-                (li (Hooks.motion (System.Func<_, _, _, _> rowMotion)) {
+                (li (li.motion (System.Func<_, _, _, _> rowMotion)) {
                     forEach
                         id
                         (fun (row: unit -> int) -> [| row () * 10; row () * 10 + 1 |])
-                        (b (Hooks.motion (System.Func<_, _, _, _> innerMotion)) { fun (row: unit -> int) -> string (row ()) })
+                        (b (b.motion (System.Func<_, _, _, _> innerMotion)) { fun (row: unit -> int) -> string (row ()) })
                 })
         })
 
@@ -162,10 +162,10 @@ let private pendingFirstPass bounded queued () =
                 forEach
                     id
                     (fun (_: 'inst) -> Array.init source.Value.Value (fun index -> index + 1))
-                    (li (Hooks.motion (System.Func<_, _, _, _> pendingRowMotion)) { fun (row: unit -> int) -> string (row ()) })
+                    (li (li.motion (System.Func<_, _, _, _> pendingRowMotion)) { fun (row: unit -> int) -> string (row ()) })
             }
 
-            show (fun _ -> source.Value.Value > 0) (span (Hooks.motion (System.Func<_, _, _, _> pendingArmMotion)) { "on" })
+            show (fun _ -> source.Value.Value > 0) (span (span.motion (System.Func<_, _, _, _> pendingArmMotion)) { "on" })
         }
 
     let content =
@@ -262,15 +262,15 @@ let private exiting =
                 forEach
                     id
                     (fun (s: Rows) -> s.Items.Value)
-                    (li (Hooks.exit (System.Func<_, _, _, _>(fun (_: unit -> int) (node: HTMLLIElement) finish -> exitOf node finish))) {
+                    (li (li.exit (System.Func<_, _, _, _>(fun (_: unit -> int) (node: HTMLLIElement) finish -> exitOf node finish))) {
                         fun (row: unit -> int) -> string (row ())
                     })
             }
 
             showElse
                 (fun s -> s.Shown.Value)
-                (span (Hooks.exit (System.Func<_, _, _, _>(fun (_: Rows) (node: HTMLSpanElement) finish -> exitOf node finish))) { "on" })
-                (em (Hooks.exit (System.Func<_, _, _, _>(fun (_: Rows) (node: HTMLElement) finish -> exitOf node finish))) { "off" })
+                (span (span.exit (System.Func<_, _, _, _>(fun (_: Rows) (node: HTMLSpanElement) finish -> exitOf node finish))) { "on" })
+                (em (em.exit (System.Func<_, _, _, _>(fun (_: Rows) (node: HTMLElement) finish -> exitOf node finish))) { "off" })
         })
 
 /// <summary>A list whose row roots' exits call <c>finish</c> at once.</summary>
@@ -282,7 +282,7 @@ let private immediate =
                 id
                 (fun (s: Rows) -> s.Items.Value)
                 (li (
-                    Hooks.exit (
+                    li.exit (
                         System.Func<_, _, _, _>(fun (_: unit -> int) (_: HTMLLIElement) finish ->
                             finish ()
                             ignore)
@@ -489,7 +489,7 @@ let private grouped =
                         forEach
                             (fun (pair: int * int) -> pair)
                             (fun (row: unit -> int) -> [| for inner in (sharedInner ()).Value.Value -> row (), inner |])
-                            (b (Hooks.exit (System.Func<_, _, _, _>(fun (_: unit -> int * int) (node: HTMLElement) finish -> exitOf node finish))) {
+                            (b (b.exit (System.Func<_, _, _, _>(fun (_: unit -> int * int) (node: HTMLElement) finish -> exitOf node finish))) {
                                 fun (pair: unit -> int * int) -> string (fst (pair ())) + string (snd (pair ()))
                             })
                     }
@@ -598,12 +598,12 @@ let private measured =
     Component.template
         (fun _ (state: Pair) -> state)
         (div () {
-            ul (Hooks.reflow (fun (_: Pair) (node: HTMLUListElement) -> measuring "ul" node)) {
+            ul (ul.reflow (fun (_: Pair) (node: HTMLUListElement) -> measuring "ul" node)) {
                 forEach id (fun (s: Pair) -> s.Left.Value) (li () { fun (row: unit -> int) -> "L" + string (row ()) })
                 forEach id (fun (s: Pair) -> s.Right.Value) (li () { fun (row: unit -> int) -> "R" + string (row ()) })
             }
 
-            p (Hooks.reflow (fun (_: Pair) (node: HTMLParagraphElement) -> measuring "p" node)) {
+            p (p.reflow (fun (_: Pair) (node: HTMLParagraphElement) -> measuring "p" node)) {
                 showElse (fun (s: Pair) -> s.Shown.Value) (b () { "on" }) (i () { "off" })
             }
         })
@@ -666,7 +666,7 @@ let private reflowAfterQueuedCommits () =
     let template =
         Component.template
             (fun _ (state: Rows) -> state)
-            (ul (Hooks.reflow (fun (_: Rows) (node: HTMLUListElement) -> measuring "ul" node)) {
+            (ul (ul.reflow (fun (_: Rows) (node: HTMLUListElement) -> measuring "ul" node)) {
                 forEach id (fun (s: Rows) -> s.Items.Value) (li () { fun (row: unit -> int) -> string (row ()) })
             })
 
@@ -688,7 +688,7 @@ let private measuredArm =
         (div () {
             show
                 (fun (s: Rows) -> s.Shown.Value)
-                (ul (Hooks.reflow (fun (_: Rows) (node: HTMLUListElement) -> measuring "ul" node)) {
+                (ul (ul.reflow (fun (_: Rows) (node: HTMLUListElement) -> measuring "ul" node)) {
                     forEach id (fun (s: Rows) -> s.Items.Value) (li () { fun (row: unit -> int) -> string (row ()) })
                 })
         })
@@ -712,7 +712,7 @@ let private failingMeasure (_: Rows) (_: HTMLUListElement) =
 let private failingReflow =
     Component.template
         (fun _ (state: Rows) -> state)
-        (ul (Hooks.reflow failingMeasure) { forEach id (fun (s: Rows) -> s.Items.Value) (li () { fun (row: unit -> int) -> string (row ()) }) })
+        (ul (ul.reflow failingMeasure) { forEach id (fun (s: Rows) -> s.Items.Value) (li () { fun (row: unit -> int) -> string (row ()) }) })
 
 let private reflowFailuresReported queued () =
     use graph = new Graph ()
@@ -801,7 +801,7 @@ let private nestedContent =
             forEach
                 id
                 (fun (s: Rows) -> s.Items.Value)
-                (li (Hooks.exit (System.Func<_, _, _, _>(fun (_: unit -> int) (node: HTMLLIElement) finish -> exitOf node finish))) {
+                (li (li.exit (System.Func<_, _, _, _>(fun (_: unit -> int) (node: HTMLLIElement) finish -> exitOf node finish))) {
                     forEach id (fun (row: unit -> int) -> [| row () * 10 + 1; row () * 10 + 2 |]) (b () { fun (row: unit -> int) -> string (row ()) })
                     show (fun (_: unit -> int) -> true) (i () { "x" })
                     boundary waiting failed ready
@@ -859,7 +859,7 @@ let private raisingFirstRoot =
                 (fragment
                     [|
                         b (
-                            Hooks.exit (
+                            b.exit (
                                 System.Func<_, _, _, _>(fun (_: unit -> int) (_: HTMLElement) _ -> raise (InvalidOperationException "exit failed"))
                             )
                         ) {
@@ -905,18 +905,18 @@ let private pendingExits =
                 id
                 (fun (s: Rows) -> s.Items.Value)
                 (li (
-                    Hooks.motion (System.Func<_, _, _, _> pendingMotion),
-                    Hooks.exit (System.Func<_, _, _, _>(fun (_: unit -> int) (node: HTMLLIElement) finish -> exitOf node finish))
+                    li.motion (System.Func<_, _, _, _> pendingMotion),
+                    li.exit (System.Func<_, _, _, _>(fun (_: unit -> int) (node: HTMLLIElement) finish -> exitOf node finish))
                 ) {
-                    b (Hooks.motion (System.Func<_, _, _, _> pendingMotion)) { fun (row: unit -> int) -> string (row ()) }
+                    b (b.motion (System.Func<_, _, _, _> pendingMotion)) { fun (row: unit -> int) -> string (row ()) }
                 })
 
             forEach
                 id
                 (fun (s: Rows) -> if s.Shown.Value then [| 7 |] else [||])
                 (li (
-                    Hooks.exit (System.Func<_, _, _, _>(fun (_: unit -> int) (node: HTMLLIElement) finish -> exitOf node finish)),
-                    Hooks.motion (System.Func<_, _, _, _> pendingMotion)
+                    li.exit (System.Func<_, _, _, _>(fun (_: unit -> int) (node: HTMLLIElement) finish -> exitOf node finish)),
+                    li.motion (System.Func<_, _, _, _> pendingMotion)
                 ) {
                     "after"
                 })

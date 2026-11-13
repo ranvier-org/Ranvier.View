@@ -10,7 +10,7 @@ open Fable.Ranvier.Anime
 #endif
 open Ranvier.Anime
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Anime
 
 type Card = { Id: int; Title: string }
@@ -30,7 +30,7 @@ let board =
             })
         (section () {
             ul (
-                Attrs.className "cards",
+                ul.className "cards",
                 Motion.flip
                     { LayoutOptions.Default.WithDuration 350u with
                         Ease = fun t -> 1. - (1. - t) ** 4.
@@ -156,7 +156,7 @@ let gauge =
             })
         (div () {
             div (
-                Attrs.className "bar",
+                div.className "bar",
                 Motion.follow
                     "scaleX"
                     { ComposedAnimationOptions.Default with
@@ -240,7 +240,7 @@ let story =
             }
 
             div (
-                Attrs.className "puck",
+                div.className "puck",
                 Motion.drag NativeDraggableOptions.Default (fun s ->
                     {
                         Position = s.Puck
@@ -322,7 +322,7 @@ let tile =
             })
         (div () {
             div (
-                Attrs.className "tile",
+                div.className "tile",
                 Motion.drag NativeDraggableOptions.Default (fun t ->
                     {
                         Position = t.Offset
@@ -333,6 +333,6 @@ let tile =
                 "drag"
             }
 
-            button (Events.onClick (fun (t: Tile) _ -> springHome t)) { "Home" }
+            button (button.onClick (fun (t: Tile) _ -> springHome t)) { "Home" }
         })
 #endif

@@ -45,7 +45,7 @@ module Counter
 
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 type CounterProps = { Start: int; Label: string }
 
@@ -56,10 +56,10 @@ type Counter =
         { Count = createSignal props.Start; Label = props.Label }
 
     static member View =
-        div (Attrs.className "counter") {
-            span (Attrs.className "label") { fun c -> c.Label }
+        div (div.className "counter") {
+            span (span.className "label") { fun c -> c.Label }
 
-            button (Attrs.attribute ("type", "button"), Events.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) {
+            button (button.attribute ("type", "button"), button.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) {
                 fun c -> string c.Count.Value
             }
         }
@@ -73,11 +73,11 @@ let counter = Component.ofMembers<Counter, _> ()
   every instance shares it.
 - A string inside an element body is static text. A `fun c -> ...` is a text binding: it reads the
   instance and re-runs when a signal it read changes.
-- `Events.onClick` receives the instance and the event.
+- `button.onClick` receives the instance and the event.
 
 The three open lines are the same in every view file: `Ranvier` for signals, `Ranvier.View` for the
-template types, and `Ranvier.View.Sugar` for the lowercase tags, `Attrs`, `Events` and
-`Component.ofMembers`. [Sugar](sugar.md) describes that vocabulary and its rules.
+template types, and `Ranvier.View.Dsl` for the lowercase tags, element parts and
+`Component.ofMembers`. [Sugar and DSL](sugar.md) describes that vocabulary and its rules.
 
 :::details The same component without the sugar
 Every sugar form lowers to `Component.define setup build`, where `build` receives a
@@ -191,7 +191,7 @@ styles, then run again. The first run loads the browser compiler; later runs reu
 ```fsharp live
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 let price = 4
 
@@ -204,27 +204,27 @@ type CoffeeCart =
         { Count = count; Total = createMemo (fun _ -> count.Value * price) }
 
     static member View =
-        div (Attrs.attribute ("style", "max-width:320px;padding:16px;border-radius:18px;background:#172b26;color:#f3faf5;font-family:system-ui;line-height:1.3")) {
-            p (Attrs.attribute ("style", "margin:0;color:#a4d7b8;font-size:12px;letter-spacing:2px")) { "THE REACTIVE CAFÉ" }
-            h2 (Attrs.attribute ("style", "margin:6px 0 3px;font-size:22px;color:inherit")) { "Coffee for the crew" }
-            p (Attrs.attribute ("style", "margin:0 0 8px;color:#c6d9ce;font-size:13px")) { sprintf "Freshly brewed. $%d a cup." price }
-            div (Attrs.attribute ("style", "display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px")) {
+        div (div.attribute ("style", "max-width:320px;padding:16px;border-radius:18px;background:#172b26;color:#f3faf5;font-family:system-ui;line-height:1.3")) {
+            p (p.attribute ("style", "margin:0;color:#a4d7b8;font-size:12px;letter-spacing:2px")) { "THE REACTIVE CAFÉ" }
+            h2 (h2.attribute ("style", "margin:6px 0 3px;font-size:22px;color:inherit")) { "Coffee for the crew" }
+            p (p.attribute ("style", "margin:0 0 8px;color:#c6d9ce;font-size:13px")) { sprintf "Freshly brewed. $%d a cup." price }
+            div (div.attribute ("style", "display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px")) {
                 span () { fun c -> sprintf "%d %s" c.Count.Value (if c.Count.Value = 1 then "cup" else "cups") }
-                strong (Attrs.attribute ("style", "font-size:28px"), Attrs.aria ("live", "polite")) {
+                strong (strong.attribute ("style", "font-size:28px"), strong.aria ("live", "polite")) {
                     fun c -> sprintf "$%d" c.Total.Value
                 }
             }
-            div (Attrs.attribute ("style", "display:flex;gap:10px")) {
+            div (div.attribute ("style", "display:flex;gap:10px")) {
                 button (
-                    Attrs.attribute ("type", "button"),
-                    Attrs.attribute ("style", "padding:8px 14px;border:0;border-radius:10px;background:#b9f3ce;color:#172b26;font:inherit;cursor:pointer"),
-                    Events.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)
+                    button.attribute ("type", "button"),
+                    button.attribute ("style", "padding:8px 14px;border:0;border-radius:10px;background:#b9f3ce;color:#172b26;font:inherit;cursor:pointer"),
+                    button.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)
                 ) { "Add a cup" }
                 button (
-                    Attrs.attribute ("type", "button"),
-                    Attrs.attribute ("style", "padding:8px 14px;border:1px solid #729783;border-radius:10px;background:transparent;color:inherit;font:inherit;cursor:pointer"),
-                    Props.Button.disabled (fun c -> c.Count.Value = 0),
-                    Events.onClick (fun c _ -> c.Count.Value <- 0)
+                    button.attribute ("type", "button"),
+                    button.attribute ("style", "padding:8px 14px;border:1px solid #729783;border-radius:10px;background:transparent;color:inherit;font:inherit;cursor:pointer"),
+                    button.props.disabled (fun c -> c.Count.Value = 0),
+                    button.onClick (fun c _ -> c.Count.Value <- 0)
                 ) { "Reset" }
             }
         }

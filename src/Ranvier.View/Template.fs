@@ -2243,6 +2243,7 @@ type Part<'native, 'inst> =
     | EventPart of string * Func<obj, obj, unit>
     | PlacedPart of PlacedKind * Func<obj, obj, obj, obj>
     | ComposableClass of Part<'native, 'inst>
+    | BatchPart of Part<'native, 'inst> array
     | NoPart
 
 #if !FABLE_COMPILER
@@ -2284,6 +2285,17 @@ type Part<'native, 'inst> =
                 "ComposableClass",
                 [
                     Some (fun p -> (NativeDisplay.known context n0 (v0_0) (fun retained -> retained.NativeDisplay (context, n0, p))))
+                ]
+            | Part.BatchPart (v0_0) ->
+                "BatchPart",
+                [
+                    Some (fun p ->
+                        NativeDisplay.array
+                            context
+                            n0
+                            (fun c d p2 (item: Part<'native, 'inst>) ->
+                                NativeDisplay.known c d item (fun retained -> retained.NativeDisplay (c, d, p2)))
+                            v0_0)
                 ]
             | Part.NoPart -> "NoPart", [])
 
@@ -2419,6 +2431,45 @@ let private mergeClassValues (values: string option array) =
 
     if present then Some (String.Join (" ", tokens)) else None
 
+let rec private countParts (parts: Part<'native, 'inst> array) =
+    let mutable total = 0
+
+    for part in parts do
+        match part with
+        | BatchPart inner -> total <- total + countParts inner
+        | _ -> total <- total + 1
+
+    total
+
+let rec private copyParts (target: Part<'native, 'inst> array) (index: int byref) (parts: Part<'native, 'inst> array) =
+    for part in parts do
+        match part with
+        | BatchPart inner -> copyParts target &index inner
+        | _ ->
+            target[index] <- part
+            index <- index + 1
+
+let private flattenParts (parts: Part<'native, 'inst> array) : Part<'native, 'inst> array =
+    let mutable batched = false
+
+    for part in parts do
+        match part with
+        | BatchPart _ -> batched <- true
+        | _ -> ()
+
+    if not batched then
+        parts
+    else
+        let total = countParts parts
+
+        if total = 0 then
+            [||]
+        else
+            let flattened = Array.zeroCreate total
+            let mutable index = 0
+            copyParts flattened &index parts
+            flattened
+
 let private mergeClassParts (parts: Part<'native, 'inst> array) =
     let composable =
         parts
@@ -2505,7 +2556,7 @@ let private elementNode tag (parts: Part<'native, 'inst> array) (children: Templ
     let events = ResizeArray ()
     let placed = ResizeArray ()
 
-    for part in mergeClassParts parts do
+    for part in flattenParts parts |> mergeClassParts do
         match part with
         | StaticAttribute (name, value) ->
             validateAttribute name
@@ -2515,6 +2566,7 @@ let private elementNode tag (parts: Part<'native, 'inst> array) (children: Templ
         | EventPart (name, handler) -> events.Add (name, handler)
         | PlacedPart (kind, hook) -> placed.Add (kind, hook)
         | ComposableClass _ -> invalidOp "A composable class part must wrap a class attribute or reflected class property."
+        | BatchPart _ -> invalidOp "BatchPart must be flattened before constructing an element."
         | NoPart -> ()
 
     let rawContents =
@@ -2595,7 +2647,33 @@ let private elementNode tag (parts: Part<'native, 'inst> array) (children: Templ
     )
 
 /// <summary>Part constructors used by the generated template catalogue.</summary>
-module internal TemplateParts =
+[<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+module TemplateParts =
+    let none<'native, 'inst> : Part<'native, 'inst> = NoPart
+
+    let batch (parts: Part<'native, 'inst> array) : Part<'native, 'inst> =
+        BatchPart parts
+
+    let composableClass (part: Part<'native, 'inst>) : Part<'native, 'inst> =
+        match part with
+        | StaticAttribute ("class", _)
+        | DynamicPart { Target = AttributeTarget "class" }
+        | StaticProperty ({ Html = AsAttribute ("class", _) }, _)
+        | DynamicPart {
+                          Target = PropertyTarget { Html = AsAttribute ("class", _) }
+                      } -> ComposableClass part
+        | _ -> invalidArg "part" "Expected a class attribute or reflected class property."
+
+    let isolatedPart (part: Part<'native, 'inst>) : Part<'native, 'inst> =
+        match part with
+        | DynamicPart slot -> DynamicPart { slot with Mode = IsolatedMode }
+        | _ -> invalidArg "part" "Only dynamic parts can be isolated"
+
+    let isolatedView (view: TemplateView<'inst>) : TemplateView<'inst> =
+        match view with
+        | TemplateView (TextSlotNode slot) -> TemplateView (TextSlotNode { slot with Mode = IsolatedMode })
+        | _ -> invalidArg "view" "Only text slots can be isolated"
+
     let element tag (parts: Part<'native, 'inst> array) (children: TemplateView<'inst> array) : TemplateView<'inst> =
         elementNode tag parts children
 
@@ -2659,6 +2737,113 @@ module internal TemplateParts =
     let sourceText (source: Source<'inst, string>) : TemplateView<'inst> =
         TemplateView (TextSlotNode (sourceSlot TextTarget source primitiveSame))
 
+    let propertyWith
+        (html: PropertySerialization)
+        (write: 'native -> 'value -> unit)
+        (read: 'inst -> 'value)
+        (same: Func<obj, obj, bool>)
+        : Part<'native, 'inst> =
+        DynamicPart (slot (PropertyTarget (portable html write)) RenderMode read same)
+
+    let propertyFrom
+        (html: PropertySerialization)
+        (write: 'native -> 'value -> unit)
+        (source: Source<'inst, 'value>)
+        (same: Func<obj, obj, bool>)
+        : Part<'native, 'inst> =
+        DynamicPart (sourceSlot (PropertyTarget (portable html write)) source same)
+
+    let placedHook (hook: 'inst -> 'native -> (unit -> unit)) =
+        Func<obj, obj, obj, obj>(fun instance node _ -> box (hook (unbox instance) (unbox node)))
+
+    let mounted (hook: 'inst -> 'native -> (unit -> unit)) : Part<'native, 'inst> =
+        PlacedPart (PlacedKind.Mounted, placedHook hook)
+
+    let refNode (select: 'inst -> NodeRef<'native>) : Part<'native, 'inst> =
+        PlacedPart (PlacedKind.Mounted, Func<obj, obj, obj, obj>(fun instance node _ -> box ((select (unbox instance)).Place node)))
+
+    let widget (attach: 'inst -> 'native -> (unit -> unit)) : Part<'native, 'inst> =
+        PlacedPart (PlacedKind.Widget, placedHook attach)
+
+    let lend (attach: 'inst -> 'native -> (unit -> unit)) : Part<'native, 'inst> =
+        PlacedPart (PlacedKind.Lent, placedHook attach)
+
+    let motion (hook: Func<'inst, 'native, MotionContext, unit -> unit>) : Part<'native, 'inst> =
+        PlacedPart (
+            PlacedKind.Motion,
+            Func<obj, obj, obj, obj>(fun instance node flags ->
+                let flags: int = unbox flags
+
+                box (
+                    hook.Invoke (
+                        unbox instance,
+                        unbox node,
+                        {
+                            Hydrated = flags &&& 1 <> 0
+                            Inserted = flags &&& 2 <> 0
+                            ExitPending = fun () -> Departures.exitFollows (unbox node)
+                        }
+                    )
+                ))
+        )
+
+    let exit (exit: Func<'inst, 'native, unit -> unit, unit -> unit>) : Part<'native, 'inst> =
+        PlacedPart (
+            PlacedKind.Exit,
+            Func<obj, obj, obj, obj>(fun instance node _ ->
+                box (Departures.register (unbox node) (Func<_, _>(fun finish -> exit.Invoke (unbox instance, unbox node, finish)))))
+        )
+
+    let reflow (measure: Func<'inst, 'native, Reflow>) : Part<'native, 'inst> =
+        PlacedPart (
+            PlacedKind.Reflow,
+            Func<obj, obj, obj, obj>(fun instance node _ ->
+                box (Departures.registerReflow (unbox node) (measure.Invoke (unbox instance, unbox node))))
+        )
+
+    let both (first: Part<'native, 'inst>) (second: Part<'native, 'inst>) : Part<'native, 'inst> =
+        match first, second with
+        | PlacedPart (PlacedKind.Motion, firstHook), PlacedPart (kind, secondHook)
+        | PlacedPart (kind, firstHook), PlacedPart (PlacedKind.Motion, secondHook) ->
+            PlacedPart (
+                kind,
+                Func<obj, obj, obj, obj>(fun instance node flags ->
+                    let before: unit -> unit = unbox (firstHook.Invoke (instance, node, flags))
+
+                    let after: unit -> unit =
+                        try
+                            unbox (secondHook.Invoke (instance, node, flags))
+                        with _ ->
+                            if not (isNull (box before)) then
+                                before ()
+
+                            reraise ()
+
+                    box (fun () ->
+                        try
+                            if not (isNull (box after)) then
+                                after ()
+                        finally
+                            if not (isNull (box before)) then
+                                before ()))
+            )
+        | _ -> invalidArg "second" "Hooks.both combines two hook parts, at most one of them other than a motion hook"
+
+    let unsafeHtml (content: UnsafeHtml) : Part<'native, 'inst> =
+        DynamicPart
+            {
+                Slot.Target = ContentTarget
+                Mode = RenderMode
+                Read = Func<obj, obj>(fun _ -> box content)
+                Same = contentSame
+            }
+
+    let readUnsafeHtml (read: 'inst -> UnsafeHtml) : Part<'native, 'inst> =
+        DynamicPart (slot ContentTarget RenderMode read contentSame)
+
+    let sourceUnsafeHtml (source: Source<'inst, UnsafeHtml>) : Part<'native, 'inst> =
+        DynamicPart (sourceSlot ContentTarget source contentSame)
+
     let arm (definition: Component<unit -> 'payload>) (payload: 'payload) : Arm =
         let template = definition :> TemplateComponent
 
@@ -2685,14 +2870,7 @@ type AttributeBuilder<'inst> internal () =
     /// <summary>Marks a class attribute or reflected class property for ordered merging with the element's other class sources.</summary>
     /// <exception cref="T:System.ArgumentException">The part does not write a class attribute or reflected class property.</exception>
     member _.composableClass(part: Part<'native, 'inst>) : Part<'native, 'inst> =
-        match part with
-        | StaticAttribute ("class", _)
-        | DynamicPart { Target = AttributeTarget "class" }
-        | StaticProperty ({ Html = AsAttribute ("class", _) }, _)
-        | DynamicPart {
-                          Target = PropertyTarget { Html = AsAttribute ("class", _) }
-                      } -> ComposableClass part
-        | _ -> invalidArg "part" "Expected a class attribute or reflected class property."
+        TemplateParts.composableClass part
 
     member _.attribute(name: string, value: string) : Part<'native, 'inst> =
         TemplateParts.attribute name value
@@ -2725,12 +2903,12 @@ type PropertyBuilder<'inst> internal () =
     member _.propertyWith
         (write: 'native -> 'value -> unit, read: 'inst -> 'value, same: Func<obj, obj, bool>, html: PropertySerialization)
         : Part<'native, 'inst> =
-        DynamicPart (slot (PropertyTarget (portable html write)) RenderMode read same)
+        TemplateParts.propertyWith html write read same
 
     member _.propertyFrom
         (write: 'native -> 'value -> unit, source: Source<'inst, 'value>, same: Func<obj, obj, bool>, html: PropertySerialization)
         : Part<'native, 'inst> =
-        DynamicPart (sourceSlot (PropertyTarget (portable html write)) source same)
+        TemplateParts.propertyFrom html write source same
 
 /// <summary>Event parts: one shared handler per template, given the instance and the event.</summary>
 [<Sealed>]
@@ -2742,30 +2920,27 @@ type EventBuilder<'inst> internal () =
     member _.on(eventName: string, handler: 'inst -> Event -> unit) : Part<'native, 'inst> =
         TemplateParts.event eventName handler
 
-let private placedHook (hook: 'inst -> 'native -> (unit -> unit)) =
-    Func<obj, obj, obj, obj>(fun instance node _ -> box (hook (unbox instance) (unbox node)))
-
 /// <summary>Hook parts: code that runs once the element is placed in the mount's host.</summary>
 [<Sealed>]
 type HookBuilder<'inst> internal () =
     /// <summary>Runs once the element is placed; the returned cleanup runs when the instance is disposed, before its nodes leave.</summary>
     member _.mounted(hook: 'inst -> 'native -> (unit -> unit)) : Part<'native, 'inst> =
-        PlacedPart (PlacedKind.Mounted, placedHook hook)
+        TemplateParts.mounted hook
 
     /// <summary>
     /// Sets the <c>NodeRef</c> selected from the instance to the element while the element is placed, and to <c>None</c>
     /// once the instance is disposed.
     /// </summary>
     member _.ref(select: 'inst -> NodeRef<'native>) : Part<'native, 'inst> =
-        PlacedPart (PlacedKind.Mounted, Func<obj, obj, obj, obj>(fun instance node _ -> box ((select (unbox instance)).Place node)))
+        TemplateParts.refNode select
 
     /// <summary>The widget owns the element's content once placed, and the template declares the element empty. The cleanup destroys the widget.</summary>
     member _.widget(attach: 'inst -> 'native -> (unit -> unit)) : Part<'native, 'inst> =
-        PlacedPart (PlacedKind.Widget, placedHook attach)
+        TemplateParts.widget attach
 
     /// <summary>The integration borrows the element once placed; the cleanup removes what it added. The integration keeps the element under its parent; moving it is reported after the cleanup.</summary>
     member _.lend(attach: 'inst -> 'native -> (unit -> unit)) : Part<'native, 'inst> =
-        PlacedPart (PlacedKind.Lent, placedHook attach)
+        TemplateParts.lend attach
 
     /// <summary>
     /// Runs once the element is placed, with whether the element was adopted from server HTML and whether its row or arm
@@ -2773,23 +2948,7 @@ type HookBuilder<'inst> internal () =
     /// The server omits the hook.
     /// </summary>
     member _.motion(hook: Func<'inst, 'native, MotionContext, unit -> unit>) : Part<'native, 'inst> =
-        PlacedPart (
-            PlacedKind.Motion,
-            Func<obj, obj, obj, obj>(fun instance node flags ->
-                let flags: int = unbox flags
-
-                box (
-                    hook.Invoke (
-                        unbox instance,
-                        unbox node,
-                        {
-                            Hydrated = flags &&& 1 <> 0
-                            Inserted = flags &&& 2 <> 0
-                            ExitPending = fun () -> Departures.exitFollows (unbox node)
-                        }
-                    )
-                ))
-        )
+        TemplateParts.motion hook
 
     /// <summary>
     /// On a row or arm root element: when the row is retired, its node stays in place with its content and <c>exit</c>
@@ -2797,22 +2956,14 @@ type HookBuilder<'inst> internal () =
     /// the removal is forced. An exit applies once the element is placed. The server omits the hook.
     /// </summary>
     member _.exit(exit: Func<'inst, 'native, unit -> unit, unit -> unit>) : Part<'native, 'inst> =
-        PlacedPart (
-            PlacedKind.Exit,
-            Func<obj, obj, obj, obj>(fun instance node _ ->
-                box (Departures.register (unbox node) (Func<_, _>(fun finish -> exit.Invoke (unbox instance, unbox node, finish)))))
-        )
+        TemplateParts.exit exit
 
     /// <summary>
     /// On a region's parent element: <c>Before</c> runs before the first region pass under the element in a flush,
     /// <c>After</c> once the pass's nodes and commits are in place. The server omits the hook.
     /// </summary>
     member _.reflow(measure: Func<'inst, 'native, Reflow>) : Part<'native, 'inst> =
-        PlacedPart (
-            PlacedKind.Reflow,
-            Func<obj, obj, obj, obj>(fun instance node _ ->
-                box (Departures.registerReflow (unbox node) (measure.Invoke (unbox instance, unbox node))))
-        )
+        TemplateParts.reflow measure
 
     /// <summary>
     /// <c>first</c> and <c>second</c> on one element as one part: the hook of <c>second</c> runs after the hook of
@@ -2821,32 +2972,7 @@ type HookBuilder<'inst> internal () =
     /// raises, the cleanup of <c>first</c> runs.
     /// </summary>
     member _.both(first: Part<'native, 'inst>, second: Part<'native, 'inst>) : Part<'native, 'inst> =
-        match first, second with
-        | PlacedPart (PlacedKind.Motion, firstHook), PlacedPart (kind, secondHook)
-        | PlacedPart (kind, firstHook), PlacedPart (PlacedKind.Motion, secondHook) ->
-            PlacedPart (
-                kind,
-                Func<obj, obj, obj, obj>(fun instance node flags ->
-                    let before: unit -> unit = unbox (firstHook.Invoke (instance, node, flags))
-
-                    let after: unit -> unit =
-                        try
-                            unbox (secondHook.Invoke (instance, node, flags))
-                        with _ ->
-                            if not (isNull (box before)) then
-                                before ()
-
-                            reraise ()
-
-                    box (fun () ->
-                        try
-                            if not (isNull (box after)) then
-                                after ()
-                        finally
-                            if not (isNull (box before)) then
-                                before ()))
-            )
-        | _ -> invalidArg "second" "Hooks.both combines two hook parts, at most one of them other than a motion hook"
+        TemplateParts.both first second
 
 /// <summary>Raw-HTML parts: the element's whole content, parsed without escaping.</summary>
 [<Sealed>]
@@ -2856,20 +2982,14 @@ type UnsafeBuilder<'inst> internal () =
     /// handlers and URLs in the markup run as <c>UnsafeHtml</c> states for the client and for server HTML.
     /// </summary>
     member _.html(content: UnsafeHtml) : Part<'native, 'inst> =
-        DynamicPart
-            {
-                Slot.Target = ContentTarget
-                Mode = RenderMode
-                Read = Func<obj, obj>(fun _ -> box content)
-                Same = contentSame
-            }
+        TemplateParts.unsafeHtml content
 
     /// <summary>
     /// The element's content, parsed as HTML without escaping and parsed again when the reader returns different
     /// markup. Scripts, handlers and URLs in the markup run as <c>UnsafeHtml</c> states for the client and for server HTML.
     /// </summary>
     member _.html(read: 'inst -> UnsafeHtml) : Part<'native, 'inst> =
-        DynamicPart (slot ContentTarget RenderMode read contentSame)
+        TemplateParts.readUnsafeHtml read
 
 let private metaKeys = [| "name"; "property"; "http-equiv"; "charset" |]
 
@@ -2890,7 +3010,7 @@ let private headParts (keys: string array) (parts: Part<'native, 'inst> array) =
     let attributes = ResizeArray<string * string>()
     let slots = ResizeArray<string * Func<obj, obj>>()
 
-    for part in parts do
+    for part in flattenParts parts do
         match part with
         | StaticAttribute (name, value) ->
             rejectMark name
@@ -2906,6 +3026,7 @@ let private headParts (keys: string array) (parts: Part<'native, 'inst> array) =
                 slots.Add ((name, slot.Read))
             | _ -> raise (ArgumentException ("Document entries take attribute parts only", "parts"))
         | NoPart -> ()
+        | BatchPart _ -> invalidOp "BatchPart must be flattened before constructing a document entry."
         | _ -> raise (ArgumentException ("Document entries take attribute parts only", "parts"))
 
     attributes.ToArray (), slots.ToArray ()
@@ -3155,3 +3276,123 @@ module Component =
     /// <summary>Renders an instance in any representation through the default expansion.</summary>
     let renderWith (ops: Operations<'view>) (definition: Component<'props>) (props: 'props) : 'view =
         expandWith ops (definition :> TemplateComponent) (box props)
+
+[<System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)>]
+module DslParts =
+    let documentTitle (value: string) : TemplateView<'inst> =
+        headView HeadKind.Title "title" ([||], [||]) (Func<obj, obj>(fun _ -> box value))
+
+    let readDocumentTitle (read: 'inst -> string) : TemplateView<'inst> =
+        headView HeadKind.Title "title" ([||], [||]) (Func<obj, obj>(fun instance -> box (read (unbox instance))))
+
+    let sourceDocumentTitle (Source read: Source<'inst, string>) : TemplateView<'inst> =
+        headView HeadKind.Title "title" ([||], [||]) read
+
+    let documentMeta (parts: Part<HTMLMetaElement, 'inst> array) : TemplateView<'inst> =
+        let attributes, slots = headParts metaKeys parts
+
+        let key =
+            metaKeys
+            |> Array.tryPick (fun name ->
+                staticValue name attributes
+                |> Option.map (fun value ->
+                    if name = "charset" then
+                        "meta:charset"
+                    else
+                        "meta:" + name + "=" + value))
+            |> Option.defaultWith (fun () ->
+                raise (ArgumentException ("A meta entry needs a static name, property, http-equiv or charset attribute", "parts")))
+
+        headView HeadKind.Meta key (attributes, slots) null
+
+    let documentLink (parts: Part<HTMLLinkElement, 'inst> array) : TemplateView<'inst> =
+        let attributes, slots = headParts linkKeys parts
+        headView HeadKind.Link (linkKey attributes null) (attributes, slots) null
+
+    let documentKeyedLink (key: string) (parts: Part<HTMLLinkElement, 'inst> array) : TemplateView<'inst> =
+        if String.IsNullOrEmpty key then
+            raise (ArgumentException ("A link key cannot be empty", "key"))
+
+        let attributes, slots = headParts linkKeys parts
+        headView HeadKind.Link (linkKey attributes key) (attributes, slots) null
+
+    let fragment (children: TemplateView<'inst> array) : TemplateView<'inst> =
+        TemplateView (FragmentNode (Array.map nodeOf children))
+
+    let viewHole (read: 'inst -> Program.View) : TemplateView<'inst> =
+        TemplateView (
+            RegionNode
+                {
+                    Items = Func<obj, obj array>(fun instance -> [| box ((null: obj), box (read (unbox instance))) |])
+                    Key = KeyedItems.pairKey
+                    Row = ViewRow
+                }
+        )
+
+    let boundary (pending: Component<unit>) (failed: Component<BoundaryFailure>) (content: Component<BoundaryStatus>) : TemplateView<'inst> =
+        let views =
+            {
+                Pending = fun backend -> backend.Template (pending, box ())
+                Failed = fun failure backend -> backend.Template (failed, box failure)
+                Content = fun status backend -> backend.Template (content, box status)
+            }
+
+        TemplateView (
+            RegionNode
+                {
+                    Items = Func<obj, obj array>(fun _ -> [| box ((null: obj), box views) |])
+                    Key = KeyedItems.pairKey
+                    Row = BoundaryRow
+                }
+        )
+
+    let matchWith (read: 'inst -> 'union) (arms: 'union -> Arm) : TemplateView<'inst> =
+        TemplateView (
+            RegionNode
+                {
+                    Items =
+                        Func<obj, obj array>(fun instance ->
+                            let arm = regionRead (fun () -> arms (read (unbox instance)))
+                            [| box (box arm.Definition, box arm) |])
+                    Key = KeyedItems.pairKey
+                    Row = ArmRow
+                }
+        )
+
+    let branch<'inst, 'key when 'key: equality> (key: 'inst -> 'key) (arms: 'key -> Arm) : TemplateView<'inst> =
+        TemplateView (
+            RegionNode
+                {
+                    Items =
+                        Func<obj, obj array>(fun instance ->
+                            let current = key (unbox instance)
+                            let arm = regionRead (fun () -> arms current)
+                            [| box (box (box current, arm.Definition), box arm) |])
+                    Key = KeyedItems.pairKey
+                    Row = ArmRow
+                }
+        )
+
+    let each<'inst, 'item, 'key when 'key: equality>
+        (key: 'item -> 'key)
+        (items: 'inst -> 'item array)
+        (row: Component<unit -> 'item>)
+        : TemplateView<'inst> =
+        TemplateView (
+            RegionNode
+                {
+                    Items = Func<obj, obj array>(fun instance -> regionRead (fun () -> KeyedItems.boxAll (items (unbox instance))))
+                    Key = Func<obj, obj>(fun item -> box (key (unbox<'item> item)))
+                    Row = ItemRow (row :> TemplateComponent, Func<(unit -> obj), obj>(fun current -> box (fun () -> unbox<'item>(current ()))))
+                }
+        )
+
+    let renderChild (definition: Component<'props>) (props: 'inst -> 'props) : TemplateView<'inst> =
+        TemplateView (ChildNode (definition :> TemplateComponent, Func<obj, obj>(fun instance -> box (props (unbox instance)))))
+
+    let defineView (setup: Setup -> 'props -> 'inst) (TemplateView root: TemplateView<'inst>) : Component<'props> =
+#if DEBUG && FABLE_COMPILER
+        if RegionReads.depth > 0 then
+            raise (InvalidOperationException ("a template definition was created while a region was read; bind it in the template's build function"))
+#endif
+        Component<'props>(Func<Setup, obj, obj>(fun context props -> box (setup context (unbox props))), root)

@@ -5,7 +5,7 @@ open Ranvier.Analyzers
 open Ranvier.Analyzers.Tests.Options
 
 let private header =
-    "module Fixture\nopen Ranvier\nopen Ranvier.View\nopen Ranvier.View.Sugar\nlet markup = UnsafeHtml.Trust \"<b>x</b>\"\nlet attach (_: unit) (_: 'native) = fun () -> ()\n"
+    "module Fixture\nopen Ranvier\nopen Ranvier.View\nopen Ranvier.View.Dsl\nlet markup = UnsafeHtml.Trust \"<b>x</b>\"\nlet attach (_: unit) (_: 'native) = fun () -> ()\n"
 
 let private findings (body: string) =
     run Analyzers.ran023Cli (context (ranvier.Force ()) (header + body))
@@ -45,9 +45,20 @@ let tests =
 
             test "a content part and sugar children" {
                 Expect.equal
-                    (codes "let c = Component.define (fun _ () -> ()) (fun t -> div (t.Unsafe.html markup) { \"x\" })\n")
+                    (codes "let c = Component.template (fun _ () -> ()) (div (div.unsafeHtml markup) { \"x\" })\n")
                     [ "RAN023" ]
                     "sugar children"
+            }
+
+            test "two DSL content parts inside Part.batch" {
+                Expect.equal
+                    (codes "let c = Component.template (fun _ () -> ()) (div (Part.batch [| div.unsafeHtml markup; div.widget attach |]) { })\n")
+                    [ "RAN023" ]
+                    "batched content parts"
+            }
+
+            test "raw HTML on a DSL void element" {
+                Expect.equal (codes "let c = Component.template (fun _ () -> ()) (div () { br (br.unsafeHtml markup) })\n") [ "RAN023" ] "dsl void"
             }
 
             test "raw HTML on a void element" {

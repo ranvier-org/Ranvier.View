@@ -4,7 +4,7 @@ module Fixtures.Bad.AM007
 open System
 open global.Ranvier
 open Ranvier.View.Template
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Arms
 open Fixtures.Types
 

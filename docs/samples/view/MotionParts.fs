@@ -4,7 +4,7 @@ module MotionParts
 open global.Ranvier
 open Ranvier.Anime
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Anime
 
 type Task = { Id: int; Title: string }
@@ -23,7 +23,7 @@ let taskList =
                 Done = Api.createSignal 0.
             })
         (section () {
-            ul (Attrs.className "tasks", Motion.flip (LayoutOptions.Default.WithDuration 300u)) {
+            ul (ul.className "tasks", Motion.flip (LayoutOptions.Default.WithDuration 300u)) {
                 forEach
                     (fun task -> task.Id)
                     (fun l -> l.Tasks.Value)
@@ -36,7 +36,7 @@ let taskList =
                     })
             }
 
-            div (Attrs.className "progress", Motion.follow "scaleX" { ComposedAnimationOptions.Default with Duration = 400. } (fun l -> l.Done.Value)) { () }
+            div (div.className "progress", Motion.follow "scaleX" { ComposedAnimationOptions.Default with Duration = 400. } (fun l -> l.Done.Value)) { () }
         })
 
 open Fable.Ranvier.Anime
@@ -74,7 +74,7 @@ let handle =
             })
         (div () {
             div (
-                Attrs.className "handle",
+                div.className "handle",
                 Motion.drag NativeDraggableOptions.Default (fun h ->
                     {
                         Position = h.Offset
@@ -85,5 +85,5 @@ let handle =
                 "drag"
             }
 
-            button (Events.onClick (fun (h: Handle) _ -> springBack h)) { "Back" }
+            button (button.onClick (fun (h: Handle) _ -> springBack h)) { "Back" }
         })

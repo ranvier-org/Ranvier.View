@@ -67,7 +67,29 @@ test("the runs at 22d86d44 leave the pool after the three shared DOM fixture mig
   for (const n of [1, 2, 3, 4, 5, 6]) {
     const run = committed.find(r => r.path === `docs/research/arms-match/arms-match-22d86d44-${n}.json`);
     assert.ok(run, String(n));
-    assert.deepEqual(outOfDate(run), ["tests/KeyedRowsPerf.fs", "tests/KeyedRowsSugarPerf.fs", "tests/KeyedRowsArmsMatchPerf.fs"]);
+    assert.deepEqual(outOfDate(run), [
+      "benchmarks/frameworks/keyed-rows.mjs",
+      "tests/KeyedRowsPerf.fs",
+      "tests/KeyedRowsSugarPerf.fs",
+      "tests/KeyedRowsArmsMatchPerf.fs",
+      "../../experiments/Ranvier.View.Arms/Arms.fs",
+      "../../experiments/Ranvier.View.Arms/Site.fs"
+    ]);
+    assert.ok(!runs.includes(run), String(n));
+  }
+});
+
+test("the runs at 9f831525 leave the pool after the Ranvier.View.Dsl migration", () => {
+  for (const n of [1, 2, 3, 4]) {
+    const run = committed.find(r => r.path === `docs/research/arms-match/arms-match-9f831525-${n}.json`);
+    assert.ok(run, String(n));
+    assert.deepEqual(outOfDate(run), [
+      "benchmarks/frameworks/keyed-rows.mjs",
+      "tests/KeyedRowsSugarPerf.fs",
+      "tests/KeyedRowsArmsMatchPerf.fs",
+      "../../experiments/Ranvier.View.Arms/Arms.fs",
+      "../../experiments/Ranvier.View.Arms/Site.fs"
+    ]);
     assert.ok(!runs.includes(run), String(n));
   }
 });

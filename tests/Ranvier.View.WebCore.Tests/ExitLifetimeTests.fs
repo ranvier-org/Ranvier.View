@@ -6,7 +6,7 @@ open Expecto
 open Ranvier.Dom
 open Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.WebCore
 open Ranvier.View.WebCore.Tests.Support
 
@@ -23,7 +23,7 @@ let private exiting =
                 id
                 (fun (s: Rows) -> s.Items.Value)
                 (li (
-                    Hooks.exit (
+                    li.exit (
                         System.Func<_, _, _, _>(fun (_: unit -> int) (_: HTMLLIElement) finish ->
                             finishes.Add finish
                             ignore)

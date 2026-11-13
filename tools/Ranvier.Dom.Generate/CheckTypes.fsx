@@ -31,16 +31,16 @@ open Ranvier.View.Dom.Generated.Html.Authoring
 open Ranvier.View.Template
 """
 
-// The free sugar is opened without Generated.Html.Authoring (spec §4 scope rule).
+// The DSL is opened without Generated.Html.Authoring.
 let sugarPrefix =
     """module GeneratedTypeCheck
 open Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 """
 
 let generatedSugar =
-    Regex.Replace (File.ReadAllText (Path.Combine (root, "src/Ranvier.View/Generated/HtmlTemplateSugar.fs")), @"\s+", " ")
+    Regex.Replace (File.ReadAllText (Path.Combine (root, "src/Ranvier.View/Generated/HtmlDsl.fs")), @"\s+", " ")
 
 let pairs pattern =
     [
@@ -52,24 +52,24 @@ let fail (message: string) =
     exit 1
 
 let tagClasses =
-    pairs @"type (\w+'?)<'i> private \(ps: Part<[^>]*>[^)]*\) = inherit (Element|VoidElement)"
+    pairs @"type (\w+'?)<'i> private \(ps: Part<[^>]*>[^)]*\) = inherit (HtmlElement|HtmlVoidElement)"
 
 if tagClasses.Length <> 112 then
-    fail "the generated sugar file must declare a class for every HTML tag"
+    fail "the generated DSL file must declare a class for every HTML tag"
 
 let allTagClasses =
     tagClasses
     |> List.map (fun (name, kind) ->
         "            "
         + name
-        + (if kind = "Element" then "() { }" else "()"))
+        + (if kind = "HtmlElement" then "() { }" else "()"))
     |> String.concat "\n"
 
 let allTagClassesBody =
     """
 let view =
     Component.template (fun _ () -> ()) (
-        article (Attrs.className "a") {
+        article (article.className "a") {
 """
     + allTagClasses
     + """
@@ -228,9 +228,9 @@ let view = Component.define (fun _ (p: R) -> p) (fun t -> t.br [||] [||])
 type FreeRow = { Value: global.Ranvier.Signal<string>; Count: global.Ranvier.Signal<int> }
 let view =
     Component.template (fun _ (p: FreeRow) -> p) (
-        div (Attrs.className "x", Attrs.title (from (fun r -> r.Value))) {
+        div (div.className "x", div.title (from (fun r -> r.Value))) {
             "static"
-            input (Props.Input.value (from (fun r -> r.Value)))
+            input (input.props.value (from (fun r -> r.Value)))
             span () { fun r -> string r.Count.Value }
         })
 """
@@ -239,20 +239,20 @@ let view =
             "free input part on div"
             """
 type FreeRow = { Value: global.Ranvier.Signal<string> }
-let view = Component.template (fun _ (p: FreeRow) -> p) (div (Props.Input.value (from (fun r -> r.Value))) { "x" })
+let view = Component.template (fun _ (p: FreeRow) -> p) (div (input.props.value (from (fun r -> r.Value))) { "x" })
 """
             (Some "FS0041")
         free
             "free generated part of another element"
             """
-let view = Component.template (fun _ () -> ()) (span (Props.Input.value "x") { "y" })
+let view = Component.template (fun _ () -> ()) (span (input.props.value "x") { "y" })
 """
             (Some "FS0041")
         free
             "free part of another element"
             """
-let part: Part<Dom.HTMLButtonElement, unit> = Props.Button.disabled true
-let view = Component.template (fun _ () -> ()) (span (Attrs.className "x", part) { "y" })
+let part: Part<Dom.HTMLButtonElement, unit> = button.props.disabled true
+let view = Component.template (fun _ () -> ()) (span (span.className "x", part) { "y" })
 """
             (Some "FS0001")
         free
@@ -276,14 +276,14 @@ let view =
 type FreeItem = { Id: int }
 let view =
     Component.template (fun _ (items: FreeItem array) -> items) (
-        div () { forEach (fun (item: FreeItem) -> item.Id) id (span (Attrs.title (fun (items: FreeItem array) -> string items.Length)) { "r" }) })
+        div () { forEach (fun (item: FreeItem) -> item.Id) id (span (span.title (fun (items: FreeItem array) -> string items.Length)) { "r" }) })
 """
             (Some "FS0193")
         free
             "free outer instance inside a row through a pre-bound outer part"
             """
 type FreeItem = { Id: int }
-let count: Part<Dom.HTMLSpanElement, FreeItem array> = Attrs.title (fun (items: FreeItem array) -> string items.Length)
+let count: Part<Dom.HTMLSpanElement, FreeItem array> = span.title (fun (items: FreeItem array) -> string items.Length)
 let view =
     Component.template (fun _ (items: FreeItem array) -> items) (
         div () { forEach (fun (item: FreeItem) -> item.Id) id (span (count) { "r" }) })
@@ -427,15 +427,15 @@ let childArm = armOf (childOf { Start = 1 }).View
 let view =
     Component.template (fun _ (s: Shown) -> s) (
         div () {
-            show (fun s -> s.On.Value) (img (Attrs.title (fun s -> s.Src))).View
+            show (fun s -> s.On.Value) (img (img.title (fun s -> s.Src))).View
             show (fun s -> s.On.Value) (childOf { Start = 2 }).View
             matchWith (fun s -> s.On.Value) (fun _ -> arm breakArm ())
             matchWith (fun s -> s.On.Value) (fun _ -> arm childArm ())
             fragment [| (br ()).View; (hr ()).View; (childOf { Start = 3 }).View |]
-            forEachFixed (fun (n: int) -> n) (fun _ -> [| 1; 2 |]) (img (Attrs.title (fun (n: int) -> string n))).View
+            forEachFixed (fun (n: int) -> n) (fun _ -> [| 1; 2 |]) (img (img.title (fun (n: int) -> string n))).View
             forEachFixed (fun (n: int) -> n) (fun _ -> [| 1; 2 |]) (childOf (fun n -> { Start = n })).View
         })
-let voidRoot = Component.template (fun _ () -> ()) (input (Attrs.className "root")).View
+let voidRoot = Component.template (fun _ () -> ()) (input (input.className "root")).View
 let tagRoot = Component.template (fun _ () -> ()) (childOf { Start = 4 }).View
 """
             None
@@ -447,20 +447,48 @@ let view = Component.template (fun _ () -> ()) (div () { show (fun _ -> true) (i
             (Some "FS0193")
         case "open of Generated.Html" "open Ranvier.View.Dom.Generated.Html\nlet view = ()" (Some "FS0892")
         free
-            "the sugar, then Generated.Html.Authoring, collides"
+            "the DSL beside Generated.Html.Authoring does not collide"
             """
 open Ranvier.View.Dom.Generated.Html.Authoring
-let view = Component.template (fun _ () -> ()) (div (Attrs.className "x") { "y" })
+let view = Component.template (fun _ () -> ()) (div (div.className "x") { "y" })
 """
-            (Some "FS0041")
+            None
         free
             "qualified Generated.Html beside the sugar"
             """
 module H = Ranvier.View.Dom.Generated.Html
 let tree = H.div Tree.ops [||] [| Tree.ops.Text "x" |]
-let view = Component.template (fun _ () -> ()) (div (Attrs.className "x") { "y" })
+let view = Component.template (fun _ () -> ()) (div (div.className "x") { "y" })
 """
             None
+        free
+            "DSL style, batch, none, Document, el, unsafeHtml, and SVG"
+            """
+let headView = Component.template (fun _ () -> ()) (Document.title "Hi")
+let svgView =
+    Component.template (fun _ () -> ()) (
+        svg (svg.attribute ("viewBox", "0 0 10 10")) { path (path.attribute ("d", "M0 0")) { } }
+    )
+let htmlView =
+    Component.template (fun _ (on: bool) -> on) (
+        div (
+            div.style "color: red",
+            div.batch [| el.className "x"; div.none |],
+            Part.batch [| Part.none; div.attribute ("data-k", "v") |]
+        ) { "hi" }
+    )
+let unsafeView =
+    Component.template (fun _ () -> ()) (
+        div (div.unsafeHtml (fun _ -> UnsafeHtml.Trust "<b>raw</b>")) { }
+    )
+"""
+            None
+        free
+            "obsolete Ranvier.View.Sugar fails with FS0044"
+            """
+let old = Ranvier.View.Sugar.Builders.text (fun () -> "hi")
+"""
+            (Some "FS0044")
     ]
 
 let duplicates =
@@ -483,7 +511,13 @@ let selected =
 
 let dotnet (args: string list) =
     let info =
-        ProcessStartInfo ("dotnet", args, RedirectStandardOutput = true, RedirectStandardError = true)
+        ProcessStartInfo (
+            "dotnet",
+            args,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            WorkingDirectory = root
+        )
 
     use proc = Process.Start info
     let stderr = proc.StandardError.ReadToEndAsync ()
@@ -523,7 +557,7 @@ let failures =
         File.WriteAllText (
             fsproj,
             $"""<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><TargetFramework>net10.0</TargetFramework><GenerateDocumentationFile>false</GenerateDocumentationFile></PropertyGroup>
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><GenerateDocumentationFile>false</GenerateDocumentationFile><WarningsAsErrors>FS0044</WarningsAsErrors></PropertyGroup>
   <ItemGroup><Compile Include="Check.fs" /><ProjectReference Include="{project}" /><PackageReference Update="FSharp.Core" Version="10.1.401" /></ItemGroup>
 </Project>
 """
@@ -534,7 +568,7 @@ let failures =
         File.WriteAllText (
             browserProject,
             $"""<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><TargetFramework>net10.0</TargetFramework><GenerateDocumentationFile>false</GenerateDocumentationFile></PropertyGroup>
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework><GenerateDocumentationFile>false</GenerateDocumentationFile><WarningsAsErrors>FS0044</WarningsAsErrors></PropertyGroup>
   <ItemGroup><Compile Include="../Check.fs" /><ProjectReference Include="{root.Replace ('\\', '/')}/src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj" /><PackageReference Update="FSharp.Core" Version="10.1.401" /></ItemGroup>
 </Project>
 """

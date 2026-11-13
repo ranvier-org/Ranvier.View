@@ -7,7 +7,7 @@ open System
 open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Template
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Arms
 open Fixtures.Types
 
@@ -53,7 +53,7 @@ let held =
                 function
                 | Loaded (text, _) ->
                     span (
-                        Hooks.exit (
+                        span.exit (
                             Func<_, _, _, _>(fun (_: Signal<Load>) (_: Ranvier.Dom.HTMLSpanElement) finish ->
                                 if text = "" then finish ()
                                 ignore)

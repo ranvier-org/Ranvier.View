@@ -4,7 +4,7 @@ module DocumentHead
 open Ranvier.Dom
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 type Article = { Title: Signal<string>; Summary: string; Slug: string }
 

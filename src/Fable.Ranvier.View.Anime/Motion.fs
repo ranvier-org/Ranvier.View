@@ -9,7 +9,6 @@ open Ranvier.Anime
 open Ranvier.Anime.Dom
 open Ranvier.View.Representation
 open Ranvier.View.Template
-open Ranvier.View.Sugar
 
 /// <summary>
 /// The one animation an instance runs outside its parts, such as a spring a handler starts: playing another cancels the
@@ -219,13 +218,13 @@ module Motion =
 
     /// <summary>Plays on every placement, hydration included; the cleanup reverts the animation.</summary>
     let on (play: 'inst -> Element -> #IRevertible) : Part<'native, 'inst> =
-        Hooks.motion (
+        TemplateParts.motion (
             Func<_, _, _, _>(fun inst native context -> owning (nodeOf native) (settle context (play inst (elementOf native) :> IRevertible)))
         )
 
     /// <summary>Plays on every placement of an element created on the client; an element adopted from server HTML stays as served.</summary>
     let appear (play: 'inst -> Element -> #IRevertible) : Part<'native, 'inst> =
-        Hooks.motion (
+        TemplateParts.motion (
             Func<_, _, _, _>(fun inst native context ->
                 if context.Hydrated then
                     nothing
@@ -238,12 +237,12 @@ module Motion =
     /// hydrated rows and rows nested inside an entering row stay still.
     /// </summary>
     let enter (play: 'inst -> Element -> #ITickable) : Part<'native, 'inst> =
-        Hooks.motion (entering play)
+        TemplateParts.motion (entering play)
 
     /// <summary>On a row or arm root element: plays when the row is retired, and the element leaves when the tickable completes.</summary>
     /// <remarks>A forced removal, as when the mount is disposed, cancels the tickable and removes the element at once.</remarks>
     let exit (play: 'inst -> Element -> #ITickable) : Part<'native, 'inst> =
-        Hooks.exit (departure false play)
+        TemplateParts.exit (departure false play)
 
     /// <summary>
     /// On a row or arm root element: <c>enter</c> and <c>exit</c> together. The leaving element is pinned out of flow,
@@ -251,7 +250,7 @@ module Motion =
     /// </summary>
     /// <remarks>The element's offset parent is the containing block of the pinned box; position the list's container.</remarks>
     let presence (enter: 'inst -> Element -> #ITickable) (exit: 'inst -> Element -> #ITickable) : Part<'native, 'inst> =
-        Hooks.both (Hooks.motion (entering enter), Hooks.exit (departure true exit))
+        TemplateParts.both (TemplateParts.motion (entering enter)) (TemplateParts.exit (departure true exit))
 
     /// <summary>Presence that fades the element in over 240 ms and out over 180 ms.</summary>
     let fade<'native, 'inst> : Part<'native, 'inst> =
@@ -310,7 +309,7 @@ module Motion =
     /// it plays.
     /// </summary>
     let collapse<'native, 'inst> : Part<'native, 'inst> =
-        Hooks.both (Hooks.motion (entering unfold), Hooks.exit (departure false fold))
+        TemplateParts.both (TemplateParts.motion (entering unfold)) (TemplateParts.exit (departure false fold))
 
     /// <summary>
     /// FLIP for the rows of every region under the element: a layout over the element's live element children, recorded
@@ -323,36 +322,38 @@ module Motion =
     /// left to the parts. An interrupted pass restarts from the rows' laid-out boxes.
     /// </remarks>
     let flip (parameters: LayoutOptions) : Part<'native, 'inst> =
-        Hooks.reflow (fun _ native ->
-            let root = elementOf native
-            let rootNode = nodeOf native
-            let layout = Flip.create root parameters
-            let mutable recorded = false
+        TemplateParts.reflow (
+            Func<_, _, _>(fun _ native ->
+                let root = elementOf native
+                let rootNode = nodeOf native
+                let layout = Flip.create root parameters
+                let mutable recorded = false
 
-            Api.onCleanup layout.Revert
+                Api.onCleanup layout.Revert
 
-            let owned () =
-                animated.AnyUnder rootNode
-                || departing.AnyUnder rootNode
-                || arriving.AnyUnder rootNode
+                let owned () =
+                    animated.AnyUnder rootNode
+                    || departing.AnyUnder rootNode
+                    || arriving.AnyUnder rootNode
 
-            {
-                Before =
-                    fun () ->
-                        recorded <- not (reduced ())
+                {
+                    Before =
+                        fun () ->
+                            recorded <- not (reduced ())
 
-                        if recorded then
-                            layout.Record (Flip.children root departing arriving, owned ())
-                After =
-                    fun () ->
-                        if recorded then
-                            recorded <- false
-                            layout.SetOwned (owned ())
-                            layout.Animate ()
+                            if recorded then
+                                layout.Record (Flip.children root departing arriving, owned ())
+                    After =
+                        fun () ->
+                            if recorded then
+                                recorded <- false
+                                layout.SetOwned (owned ())
+                                layout.Animate ()
 
-                            for child in Flip.children root none none do
-                                arriving.Remove child
-            })
+                                for child in Flip.children root none none do
+                                    arriving.Remove child
+                })
+        )
 
     /// <summary>
     /// Starts the element's next FLIP from its current visual box, drag transform included, instead of its recorded
@@ -385,7 +386,7 @@ module Motion =
     /// cleanup restores the property's inline declaration from before the first value.
     /// </remarks>
     let follow (property: string) (parameters: ComposedAnimationOptions) (read: 'inst -> float) : Part<'native, 'inst> =
-        Hooks.motion (
+        TemplateParts.motion (
             Func<_, _, _, _>(fun inst native context ->
                 let follower = Follow.property (elementOf native) property parameters
                 Api.createEffectOn (fun () -> read inst) (fun value -> follower.To value)
@@ -403,7 +404,7 @@ module Motion =
         (parameters: ComposedAnimationOptions)
         (read: 'inst -> Ranvier.Css.Value<'syntax>)
         : Part<'native, 'inst> =
-        Hooks.motion (
+        TemplateParts.motion (
             Func<_, _, _, _>(fun inst native context ->
                 let follower =
                     Follow.css (elementOf native) property parameters (Api.untrack (fun () -> read inst))
@@ -418,7 +419,7 @@ module Motion =
     /// </summary>
     /// <remarks>The cleanup reverts the latest animation.</remarks>
     let animateOn (read: 'inst -> 'v) (play: 'inst -> Element -> 'v -> #ITickable) : Part<'native, 'inst> =
-        Hooks.motion (
+        TemplateParts.motion (
             Func<_, _, _, _>(fun inst native context ->
                 let mutable current: ITickable = null
 
@@ -441,7 +442,7 @@ module Motion =
     /// element's stroke attributes.
     /// </summary>
     let draw (parameters: ComposedAnimationOptions) (read: 'inst -> float) : Part<'native, 'inst> =
-        Hooks.motion (
+        TemplateParts.motion (
             Func<_, _, _, _>(fun inst native context ->
                 let follower =
                     Follow.draw (elementOf native) parameters (Api.untrack (fun () -> read inst))
@@ -456,7 +457,7 @@ module Motion =
     /// completed morph leaves exactly the shape read. The cleanup restores the shape the element had before the first.
     /// </summary>
     let morph (parameters: ComposedAnimationOptions) (read: 'inst -> string) : Part<'native, 'inst> =
-        Hooks.motion (
+        TemplateParts.motion (
             Func<_, _, _, _>(fun inst native context ->
                 let follower = Follow.morph (elementOf native) parameters
                 Api.createEffectOn (fun () -> read inst) (fun shape -> follower.To shape)
@@ -472,7 +473,7 @@ module Motion =
     /// <c>Scroll.observe</c> links.
     /// </remarks>
     let scroll (parameters: ScrollParams) (bind: 'inst -> ScrollBinding) (play: 'inst -> Element -> #ITickable) : Part<'native, 'inst> =
-        Hooks.motion (
+        TemplateParts.motion (
             Func<_, _, _, _>(fun inst native context ->
                 let binding = bind inst
                 let graph = Graph.Current
@@ -514,7 +515,7 @@ module Motion =
     /// binding's. On an element whose exit follows, the draggable stops where it is; otherwise the cleanup reverts it.
     /// </remarks>
     let drag (parameters: NativeDraggableOptions) (bind: 'inst -> DragBinding) : Part<'native, 'inst> =
-        Hooks.motion (
+        TemplateParts.motion (
             Func<_, _, _, _>(fun inst native context ->
                 let binding = bind inst
                 let graph = Graph.Current
@@ -574,7 +575,7 @@ module Motion =
     /// </summary>
     /// <remarks>The element's content must be static text: a text slot or region inside it stops updating once split.</remarks>
     let split (parameters: TextSplitterOptions) (play: 'inst -> TextSplitter -> #ITickable) : Part<'native, 'inst> =
-        Hooks.motion (
+        TemplateParts.motion (
             Func<_, _, _, _>(fun inst native context ->
                 let splitter = Text.split (elementOf native) parameters
                 let tickable = play inst splitter :> ITickable

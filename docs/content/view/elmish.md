@@ -35,11 +35,11 @@ type Stepper =
         { Loop = loop; Total = loop.Select id; Step = props.Step }
 
     static member View =
-        div (Attrs.className "stepper") {
+        div (div.className "stepper") {
             span () { fun s -> "+" + string s.Step.Value }
             span () { fun s -> string s.Total.Value }
-            button (Events.onClick (fun s _ -> s.Loop.Dispatch Add)) { "Add" }
-            button (Events.onClick (fun s _ -> s.Loop.Dispatch Clear)) { "Clear" }
+            button (button.onClick (fun s _ -> s.Loop.Dispatch Add)) { "Add" }
+            button (button.onClick (fun s _ -> s.Loop.Dispatch Clear)) { "Clear" }
         }
 
 let stepper = Component.ofMembers<Stepper, _> ()
@@ -79,8 +79,8 @@ type Page =
     static member View =
         section () {
             p () { fun p -> "Last report: " + string p.Last.Value }
-            button (Events.onClick (fun p _ -> p.Loop.Dispatch Bigger)) { "Bigger steps" }
-            button (Events.onClick (fun p _ -> p.Loop.Dispatch Toggle)) { "Show or hide" }
+            button (button.onClick (fun p _ -> p.Loop.Dispatch Bigger)) { "Bigger steps" }
+            button (button.onClick (fun p _ -> p.Loop.Dispatch Toggle)) { "Show or hide" }
 
             show
                 (fun p -> p.Shown.Value)

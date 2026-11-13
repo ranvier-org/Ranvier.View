@@ -2,30 +2,21 @@
 title: Sugar
 ---
 
-`open Ranvier.View.Sugar` supplies lowercase tags, `Attrs`, `Props`, `Events`, `Hooks`, control flow
-and component helpers. It produces the same template tree, server HTML and mounted resources as
-the [explicit builder](templates.md#the-explicit-form).
+`open Ranvier.View.Dsl` supplies lowercase tags (`button`, `div`, `span`, …) whose types double as their own attribute/event/prop accessors (`button.disabled`, `button.onClick`, `input.props.value`), plus `Part`, `Signal.map`, and typed helpers. It produces the same template tree, server HTML and mounted resources as the [explicit builder](templates.md#the-explicit-form).
 
-The [view sugar README](https://github.com/ranvier-org/Ranvier.View/blob/main/src/Ranvier.View/README.md)
-contains the full vocabulary, diagnostics and costs.
+The [view sugar README](https://github.com/ranvier-org/Ranvier.View/blob/main/src/Ranvier.View/README.md) contains the full vocabulary, diagnostics and costs.
 
-## Opening the sugar
+## Opening the DSL
 
 ```fsharp
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 ```
 
-`open Ranvier.View` brings in the template types and the generated members of `Attrs`, `Props` and
-`Events`, and `global.Ranvier` brings in `Signal`, `Memo` and `Api`. Two scope rules hold in a file that opens the
-sugar:
+`open Ranvier.View` brings in `TemplateBuilder` and `Component`, `open Ranvier.View.Dsl` brings in the element builders and helpers, and `global.Ranvier` brings in `Signal`, `Memo` and `Api`. Because attributes are static members on each tag type (`div.className "x"`) rather than top-level `Attrs`/`Props` bindings, `Ranvier.View.Dsl` does not collide with `Generated.Html.Authoring`:
 
-- **A file uses either the sugar or `Generated.Html.Authoring`.** Both declare `Attrs` and `Props`.
-  With `Authoring` opened after the sugar, `div (Attrs.className "x") { }` fails with FS0041; opened
-  before it, the sugar's names shadow `Authoring`'s.
-- **A local value named like a tag shadows the tag.** `let p = "note"` followed by `p () { "x" }` fails
-  with FS0003. One-letter tags (`a`, `b`, `i`, `p`, `q`, `s`, `u`) meet this most often.
+- **A local value named like a tag shadows the tag.** `let p = "note"` followed by `p () { "x" }` fails with FS0003. One-letter tags (`a`, `b`, `i`, `p`, `q`, `s`, `u`) meet this most often.
 
 `Ranvier.View.Dom.Generated.Html`, the [authored layer's](authored.md) module of the same tag
 names, requires qualified access (`open` of it fails with FS0892). An alias,
@@ -48,7 +39,7 @@ apostrophe, because `base` is an F# keyword and a generic `option` would shadow 
 | `from (fun i -> i.Signal)` | A binding over one signal or memo, for text or a part. |
 | `for`, `if` in a body | Static structure, evaluated once while the template is built. |
 
-A tag's parts are typed by its DOM interface: `span (Props.Input.value "x")` fails with FS0041. A void
+A tag's parts are typed by its DOM interface: `span (input.props.value "x")` fails with FS0041. A void
 tag is yielded as it is inside a body; anywhere else that takes a view, such as a template root or the
 content of `show`, write `(img (parts)).View`. A [component tag](components.md#a-component-as-a-tag)
 is used the same way.

@@ -5,7 +5,7 @@ open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Representation
 open Ranvier.View.Template
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Arms
 
 type Load =
@@ -16,12 +16,12 @@ type Load =
 let loader =
     Component.template
         (fun _ (state: Signal<Load>) -> state)
-        (div (Attrs.className "loader") {
+        (div (div.className "loader") {
             Arms.Match (
                 (fun (state: Signal<Load>) -> state.Value),
                 function
                 | Idle -> span () { "Not started" }
-                | Loading percent -> progress (Attrs.attribute ("max", "100"), Attrs.attribute ("value", fun _ -> Some (string percent))) { }
+                | Loading percent -> progress (progress.attribute ("max", "100"), progress.attribute ("value", fun _ -> Some (string percent))) { }
                 | Loaded (text, count) ->
                     pre () {
                         fun _ -> text
