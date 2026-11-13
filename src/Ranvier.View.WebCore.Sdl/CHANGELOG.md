@@ -1,5 +1,5 @@
 ---
-last_commit_released: e0c3a9f4fc0ab8af54d7299d9d249787a01aebe7
+last_commit_released: 54fdc4b3ddf31f701c2c5464e90b2883ef3aaa90
 pre_release: rc
 depends_on:
   - ../Ranvier.View.WebCore/
@@ -15,6 +15,18 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.0-rc.15 - 2026-11-13
+
+### 🚀 Features
+
+* *(webcore)* Update native runtime to 0.1.1-rc.9 with static Linux ICU (#151) ([54fdc4b](https://github.com/ranvier-org/Ranvier.View/commit/54fdc4b3ddf31f701c2c5464e90b2883ef3aaa90))
+
+### 🔗 Dependencies
+
+* `src/Ranvier.View.WebCore` updated to 0.1.0-rc.10
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/e0c3a9f4fc0ab8af54d7299d9d249787a01aebe7..54fdc4b3ddf31f701c2c5464e90b2883ef3aaa90)</small></strong>
 
 ## 0.1.0-rc.14 - 2026-11-13
 
