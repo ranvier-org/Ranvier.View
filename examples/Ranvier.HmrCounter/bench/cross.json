@@ -1,0 +1,22 @@
+[
+  { "op": "click", "selector": "#counter-button", "times": 3 },
+  { "op": "click", "selector": "[data-badge=beta] button", "times": 2 },
+  { "op": "expect", "selector": "#counter-hint", "text": "hint: 3" },
+
+  { "op": "edit", "name": "C1 helper body used from another file", "file": "Shared.fs", "find": "$\"hint: {n}\"", "replace": "$\"hint is {n}\"" },
+  { "op": "expect", "selector": "#counter-hint", "text": "hint is 3" },
+  { "op": "click", "selector": "#counter-button", "times": 1 },
+  { "op": "expect", "selector": "#counter-hint", "text": "hint is 4" },
+  { "op": "expect", "selector": "[data-badge=beta] button", "text": "beta: 2" },
+  { "op": "revert", "name": "C1 revert", "file": "Shared.fs" },
+  { "op": "expect", "selector": "#counter-hint", "text": "hint: 4" },
+
+  { "op": "edit", "name": "C2 component in the helper's file", "file": "Shared.fs", "find": "t.text \" clicks\"", "replace": "t.text \" taps\"" },
+  { "op": "expect", "selector": "[data-badge=beta]", "text": "beta: 2 taps" },
+  { "op": "expect", "selector": "#counter-hint", "text": "hint: 4" },
+  { "op": "revert", "name": "C2 revert", "file": "Shared.fs" },
+
+  { "op": "edit", "name": "C3 comment in the helper's file", "file": "Shared.fs", "find": "/// A helper used from another file", "replace": "// edited comment\n/// A helper used from another file" },
+  { "op": "expect", "selector": "#counter-hint", "text": "hint: 4" },
+  { "op": "revert", "name": "C3 revert", "file": "Shared.fs" }
+]

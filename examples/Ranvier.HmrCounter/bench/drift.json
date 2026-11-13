@@ -1,0 +1,1 @@
+[ { "op": "expect", "selector": "#counter-title", "text": "Counter (newer than the build)" }, { "op": "click", "selector": "#counter-button", "times": 2 }, { "op": "expect", "selector": "#counter-button", "text": "Clicked 2 times" } ]
