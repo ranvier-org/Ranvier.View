@@ -7,7 +7,7 @@ open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Representation
 open Ranvier.View.Template
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Arms
 open KeyedRowsPerf
 
@@ -26,7 +26,7 @@ let private armList =
                             Arms.Match (
                                 (fun (row: ArmRow) -> row.Mode.Value),
                                 function
-                                | Plain -> span (Attrs.className "a") { "A" }
+                                | Plain -> span (span.className "a") { "A" }
                                 | Counted count -> b () { fun _ -> string count }
                             )
                         }

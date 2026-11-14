@@ -20,10 +20,7 @@ let repository: string =
     up (DirectoryInfo AppContext.BaseDirectory)
 
 let private baseOptions =
-    lazy
-        (mkOptionsFromProject "net10.0" []
-         |> Async.AwaitTask
-         |> Async.RunSynchronously)
+    lazy ((mkOptionsFromProject "net10.0" []).GetAwaiter().GetResult())
 
 /// The base project options with a `-r:` option for each of `assemblies` that the output directory holds.
 let withReferences (assemblies: string list) : FSharpProjectOptions =
@@ -59,6 +56,7 @@ let ranvier: Lazy<FSharpProjectOptions> =
 /// Options that reference no Ranvier or Fable assembly.
 let plain: Lazy<FSharpProjectOptions> = lazy (withReferences [])
 
+let private checkerGate = obj ()
 let private checker = lazy (FSharpChecker.Create (keepAssemblyContents = true))
 
 /// A tool manifest that declares `command` at `version`.
@@ -112,25 +110,29 @@ and contextLayout
                     paths
         }
 
-    let checker = checker.Force ()
-
-    let projectResults =
-        checker.ParseAndCheckProject project
-        |> Async.RunSynchronously
-
-    let errors =
-        projectResults.Diagnostics
-        |> Array.filter (fun diagnostic -> diagnostic.Severity = FSharpDiagnosticSeverity.Error)
-
-    if errors.Length > 0 then
-        raise (Testing.CompilerDiagnosticErrors errors)
-
     let target = Array.last paths
     let sourceText = SourceText.ofString (File.ReadAllText target)
 
-    let parseResults, answer =
-        checker.ParseAndCheckFileInProject (target, 0, sourceText, project)
-        |> Async.RunSynchronously
+    let projectResults, parseResults, answer =
+        lock checkerGate (fun () ->
+            let checker = checker.Force ()
+
+            let projectResults =
+                checker.ParseAndCheckProject project
+                |> Async.RunSynchronously
+
+            let errors =
+                projectResults.Diagnostics
+                |> Array.filter (fun diagnostic -> diagnostic.Severity = FSharpDiagnosticSeverity.Error)
+
+            if errors.Length > 0 then
+                raise (Testing.CompilerDiagnosticErrors errors)
+
+            let parseResults, answer =
+                checker.ParseAndCheckFileInProject (target, 0, sourceText, project)
+                |> Async.RunSynchronously
+
+            projectResults, parseResults, answer)
 
     match answer with
     | FSharpCheckFileAnswer.Succeeded fileResults ->

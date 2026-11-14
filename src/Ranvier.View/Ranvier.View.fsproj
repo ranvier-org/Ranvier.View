@@ -31,6 +31,9 @@
     <Compile Include="ContentModel.fs" />
     <Compile Include="Template.fs" />
     <Compile Include="Generated/HtmlTemplate.fs" />
+    <Compile Include="Dsl.fs" />
+    <Compile Include="Generated/HtmlDsl.fs" />
+    <Compile Include="SvgDsl.fs" />
     <Compile Include="TemplateSugar.fs" />
     <Compile Include="Generated/HtmlTemplateSugar.fs" />
     <Compile Include="SvgSugar.fs" />

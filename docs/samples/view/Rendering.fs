@@ -3,7 +3,7 @@ module Rendering
 
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Counter
 
 let options = { Server.Options.defaults with Policy = Omit }

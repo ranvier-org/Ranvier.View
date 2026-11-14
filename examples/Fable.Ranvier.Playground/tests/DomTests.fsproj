@@ -30,6 +30,9 @@
     <Compile Include="../../../src/Ranvier.View/ContentModel.fs" Link="ContentModel.fs" />
     <Compile Include="../../../src/Ranvier.View/Template.fs" Link="Template.fs" />
     <Compile Include="../../../src/Ranvier.View/Generated/HtmlTemplate.fs" Link="Generated/HtmlTemplate.fs" />
+    <Compile Include="../../../src/Ranvier.View/Dsl.fs" Link="Dsl.fs" />
+    <Compile Include="../../../src/Ranvier.View/Generated/HtmlDsl.fs" Link="Generated/HtmlDsl.fs" />
+    <Compile Include="../../../src/Ranvier.View/SvgDsl.fs" Link="SvgDsl.fs" />
     <Compile Include="../../../src/Ranvier.View/TemplateSugar.fs" Link="TemplateSugar.fs" />
     <Compile Include="../../../src/Ranvier.View/Generated/HtmlTemplateSugar.fs" Link="Generated/HtmlTemplateSugar.fs" />
     <Compile Include="../../../src/Ranvier.View/SvgSugar.fs" Link="SvgSugar.fs" />

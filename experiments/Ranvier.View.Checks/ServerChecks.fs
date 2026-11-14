@@ -222,8 +222,7 @@ let private namesAtDefinition () =
 #endif
 
     // An SVG tag makes the SVG names available under Fable.
-    Ranvier.View.Sugar.SvgElements.svg<unit>()
-    |> ignore
+    Ranvier.View.Dsl.SvgElements.svg<unit>() |> ignore
 
     let svg =
         Component.define (fun _ () -> ()) (fun t ->

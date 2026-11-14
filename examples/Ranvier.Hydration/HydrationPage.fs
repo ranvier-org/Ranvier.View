@@ -2,7 +2,7 @@ module HydrationPage
 
 open Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.Wire
 open Ranvier.Wire.Thoth.Json.Core
 
@@ -57,25 +57,25 @@ type Counter =
         }
 
     static member View =
-        main (Attrs.className "card") {
-            p (Attrs.className "eyebrow") { "RANVIER · F# ON BOTH SIDES" }
-            h1 (Attrs.id "greeting") { fun c -> c.Greeting }
+        main (main.className "card") {
+            p (p.className "eyebrow") { "RANVIER · F# ON BOTH SIDES" }
+            h1 (h1.id "greeting") { fun c -> c.Greeting }
             p () { "Rendered in F#, interactive in your browser." }
 
-            div (Attrs.className "counter") {
+            div (div.className "counter") {
                 p () {
                     "Count: "
-                    span (Attrs.id "count", Attrs.attribute ("aria-live", "polite")) { fun c -> string c.Count.Value }
+                    span (span.id "count", span.attribute ("aria-live", "polite")) { fun c -> string c.Count.Value }
                 }
 
-                button (Attrs.id "increment", Events.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) { "Add one" }
+                button (button.id "increment", button.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) { "Add one" }
             }
 
-            p (Attrs.className "explanation") {
+            p (p.className "explanation") {
                 "The greeting and starting count arrive in the server's HTML. Hydration keeps those elements and connects the button."
             }
 
-            p (Attrs.className "explanation") {
+            p (p.className "explanation") {
                 "On the documentation site, this example uses saved server output. Run it locally to try request-specific greetings and counts."
             }
         }

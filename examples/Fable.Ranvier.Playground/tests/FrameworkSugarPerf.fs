@@ -4,7 +4,7 @@ module FrameworkSugarPerf
 open global.Ranvier
 open Ranvier.Dom
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open FrameworkPerf
 
 let private perfRowSugar =
@@ -16,10 +16,10 @@ let private perfRowSugar =
                 Disabled = props.Disabled
                 Local = Api.createSignal 0
             })
-        (div (Attrs.id (fun r -> "row-" + string r.Index), Attrs.className "panel", Attrs.title (from (fun r -> r.Source))) {
-            input (Props.Input.value (from (fun r -> r.Source)))
+        (div (div.id (fun r -> "row-" + string r.Index), div.className "panel", div.title (from (fun r -> r.Source))) {
+            input (input.props.value (from (fun r -> r.Source)))
 
-            button (Props.Button.disabled (from (fun r -> r.Disabled)), Events.onClick (fun r _ -> r.Local.Value <- r.Local.Value + 1)) {
+            button (button.props.disabled (from (fun r -> r.Disabled)), button.onClick (fun r _ -> r.Local.Value <- r.Local.Value + 1)) {
                 fun r -> string r.Local.Value
             }
         })

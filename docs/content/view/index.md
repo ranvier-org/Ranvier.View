@@ -23,7 +23,7 @@ One definition supports three paths:
 ```fsharp
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 type CounterProps = { Start: int; Label: string }
 
@@ -34,10 +34,10 @@ type Counter =
         { Count = createSignal props.Start; Label = props.Label }
 
     static member View =
-        div (Attrs.className "counter") {
-            span (Attrs.className "label") { fun c -> c.Label }
+        div (div.className "counter") {
+            span (span.className "label") { fun c -> c.Label }
 
-            button (Attrs.attribute ("type", "button"), Events.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) {
+            button (button.attribute ("type", "button"), button.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) {
                 fun c -> string c.Count.Value
             }
         }
@@ -54,7 +54,7 @@ Try this in the [browser editor](getting-started.md).
 | Piece | Package or project | Status |
 | --- | --- | --- |
 | Template components, server HTML writer | `Ranvier.View` | Alpha. Compiles for .NET and Fable. |
-| Builder sugar (free tags, control flow, declarations) | `Ranvier.View` (`Ranvier.View.Sugar`) | Alpha; the primary authoring style. See [Sugar](sugar.md). |
+| View DSL (free tags, control flow, declarations) | `Ranvier.View` (`Ranvier.View.Dsl`) | Alpha; the primary authoring style. See [Sugar and DSL](sugar.md). |
 | DOM mounting, hydration, document head | `Ranvier.View.Dom` | Alpha. Runs under Fable. |
 | Authored views (`Program.View`, `Generated.Html.Program`) | `Ranvier.View.Dom` | Alpha. See [Other authoring layers](authored.md). |
 | DOM helper library | `src/Fable.Ranvier` | Proof of concept, not packaged. See [Other authoring layers](authored.md). |

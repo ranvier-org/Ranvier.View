@@ -11,7 +11,7 @@ open Ranvier.View.Representation
 open Ranvier.View.Template
 open CheckSupport
 open TwinTrace
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Arms
 open ArmsFixtures
 
@@ -600,7 +600,7 @@ let private held =
                 function
                 | Loaded (text, count) ->
                     pre (
-                        Hooks.exit (
+                        pre.exit (
                             Func<_, _, _, _>(fun (_: Signal<Load>) (_: HTMLPreElement) finish ->
                                 exitReads.Add (text, count)
                                 finishes.Add finish
@@ -629,7 +629,7 @@ let private heldFramed =
                 | Loaded (text, count) ->
                     framed (
                         pre (
-                            Hooks.exit (
+                            pre.exit (
                                 Func<_, _, _, _>(fun (_: Signal<Load>) (_: HTMLPreElement) finish ->
                                     exitReads.Add (text, count)
                                     finishes.Add finish
@@ -687,7 +687,7 @@ let private heldRows =
                         function
                         | Loaded (text, count) ->
                             pre (
-                                Hooks.exit (
+                                pre.exit (
                                     Func<_, _, _, _>(fun (_: Row) (_: HTMLPreElement) finish ->
                                         exitReads.Add (text, count)
                                         finishes.Add finish
@@ -721,7 +721,7 @@ let private heldRowsFramed =
                         | Loaded (text, count) ->
                             rowFramed (
                                 pre (
-                                    Hooks.exit (
+                                    pre.exit (
                                         Func<_, _, _, _>(fun (_: Row) (_: HTMLPreElement) finish ->
                                             exitReads.Add (text, count)
                                             finishes.Add finish
@@ -787,17 +787,17 @@ let private heldRowReadsOwnRow (heldRows: Component<Signal<Row array>>) queued (
 let private countOf (target: HTMLElement) (selector: string) : int = jsNative
 
 let private pendingView =
-    Component.template (fun _ () -> ()) (p (Attrs.className "pending") { "pending" })
+    Component.template (fun _ () -> ()) (p (p.className "pending") { "pending" })
 
 let private failedView =
-    Component.template (fun _ (failure: BoundaryFailure) -> failure) (p (Attrs.className "failed") { fun failure -> failure.Error.Message })
+    Component.template (fun _ (failure: BoundaryFailure) -> failure) (p (p.className "failed") { fun failure -> failure.Error.Message })
 
 /// <summary>A boundary whose content is an Arms.Match site over an async value.</summary>
 let private bounded (flight: Signal<AsyncSource<int>>) =
     let content =
         Component.template
             (fun _ (status: BoundaryStatus) -> status)
-            (div (Attrs.className "level") {
+            (div (div.className "level") {
                 Arms.Match (
                     (fun (_: BoundaryStatus) -> flight.Value.Value),
                     function
@@ -816,7 +816,7 @@ let private boundedTwin (flight: Signal<AsyncSource<int>>) =
     let content =
         Component.template
             (fun _ (status: BoundaryStatus) -> status)
-            (div (Attrs.className "level") {
+            (div (div.className "level") {
                 matchWith (fun (_: BoundaryStatus) -> flight.Value.Value) (function
                     | 0 -> arm none ()
                     | n -> arm some n)
@@ -884,7 +884,7 @@ let private exitOnly =
                 function
                 | Loaded (text, count) ->
                     pre (
-                        Hooks.exit (
+                        pre.exit (
                             Func<_, _, _, _>(fun (_: Signal<Load>) (_: HTMLPreElement) finish ->
                                 exitOnlyReads.Add (sprintf "%s %d" text count)
                                 finish ()
@@ -908,7 +908,7 @@ let private exitOnlyFramed =
                 | Loaded (text, count) ->
                     framed (
                         pre (
-                            Hooks.exit (
+                            pre.exit (
                                 Func<_, _, _, _>(fun (_: Signal<Load>) (_: HTMLPreElement) finish ->
                                     exitOnlyReads.Add (sprintf "%s %d" text count)
                                     finish ()
@@ -925,7 +925,7 @@ let private exitOnlyFramed =
 let private exitOnlyLoaded =
     armOf (
         pre (
-            Hooks.exit (
+            pre.exit (
                 Func<_, _, _, _>(fun (payload: unit -> string * int) (_: HTMLPreElement) finish ->
                     let text, count = payload ()
                     exitOnlyReads.Add (sprintf "%s %d" text count)
@@ -989,8 +989,8 @@ let private handlerOnly =
                 function
                 | Loaded (text, count) ->
                     button (
-                        Events.onClick (fun (_: Signal<Load>) _ -> handlerClicks.Add (sprintf "%s %d" text count)),
-                        Hooks.exit (
+                        button.onClick (fun (_: Signal<Load>) _ -> handlerClicks.Add (sprintf "%s %d" text count)),
+                        button.exit (
                             Func<_, _, _, _>(fun (_: Signal<Load>) (_: HTMLButtonElement) finish ->
                                 handlerHolds.Add finish
                                 ignore)
@@ -1013,8 +1013,8 @@ let private handlerOnlyFramed =
                 | Loaded (text, count) ->
                     framed (
                         button (
-                            Events.onClick (fun (_: Signal<Load>) _ -> handlerClicks.Add (sprintf "%s %d" text count)),
-                            Hooks.exit (
+                            button.onClick (fun (_: Signal<Load>) _ -> handlerClicks.Add (sprintf "%s %d" text count)),
+                            button.exit (
                                 Func<_, _, _, _>(fun (_: Signal<Load>) (_: HTMLButtonElement) finish ->
                                     handlerHolds.Add finish
                                     ignore)
@@ -1030,10 +1030,10 @@ let private handlerOnlyFramed =
 let private handlerLoaded =
     armOf (
         button (
-            Events.onClick (fun (payload: unit -> string * int) _ ->
+            button.onClick (fun (payload: unit -> string * int) _ ->
                 let text, count = payload ()
                 handlerClicks.Add (sprintf "%s %d" text count)),
-            Hooks.exit (
+            button.exit (
                 Func<_, _, _, _>(fun (_: unit -> string * int) (_: HTMLButtonElement) finish ->
                     handlerHolds.Add finish
                     ignore)

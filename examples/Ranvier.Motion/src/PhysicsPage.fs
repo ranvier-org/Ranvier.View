@@ -2,7 +2,7 @@
 module PhysicsPage
 
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 /// <summary>The physics playground and its browser controls.</summary>
 let page =

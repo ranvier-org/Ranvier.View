@@ -3,7 +3,7 @@ module PageLayout
 
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 type private Info =
     {
@@ -63,17 +63,17 @@ let private info name =
     |> Array.find (fun entry -> entry.Name = name)
 
 let private navigation (prefix: string) (current: string) : TemplateView<'instance> =
-    header (Attrs.className "site-header") {
-        a (Attrs.className "brand", Attrs.attribute ("href", prefix)) {
-            span (Attrs.className "brand-mark") { () }
+    header (header.className "site-header") {
+        a (a.className "brand", a.attribute ("href", prefix)) {
+            span (span.className "brand-mark") { () }
             "Ranvier Motion"
         }
 
         nav () {
             for entry in infos do
                 a (
-                    Attrs.attribute ("href", prefix + entry.Name + "/"),
-                    Attrs.attribute ("aria-current", fun _ -> if current = entry.Name then Some "page" else None)
+                    a.attribute ("href", prefix + entry.Name + "/"),
+                    a.attribute ("aria-current", fun _ -> if current = entry.Name then Some "page" else None)
                 ) {
                     entry.Title
                 }
@@ -98,11 +98,11 @@ let private metadata (t: TemplateBuilder<'instance>) (title: string) (descriptio
         |]
 
 let private framed (entry: Info) (content: TemplateView<'instance>) : TemplateView<'instance> =
-    div (Attrs.className "frame") {
+    div (div.className "frame") {
         navigation "../" entry.Name
 
-        section (Attrs.className "intro") {
-            span (Attrs.className "tag") { entry.Tag }
+        section (section.className "intro") {
+            span (span.className "tag") { entry.Tag }
             h1 () { entry.Title }
             p () { entry.Description }
         }
@@ -114,7 +114,7 @@ let private framed (entry: Info) (content: TemplateView<'instance>) : TemplateVi
 let pageView name create view activate =
     let entry = info name
 
-    Component.define
+    Template.Component.define
         (fun _ props ->
             let state = create props
             let nested = view state
@@ -126,7 +126,7 @@ let pageView name create view activate =
         (fun t ->
             let content =
                 div (
-                    Hooks.mounted (fun (state, _) _ ->
+                    div.mounted (fun (state, _) _ ->
                         let graph = Graph.Current
                         global.Page.afterRender (fun () -> activate graph state))
                 ) {
@@ -170,13 +170,13 @@ let declaration name initial definition codec : Ranvier.View.Page.Definition<_> 
 let index: Ranvier.View.Page.Definition<unit> =
     {
         Component =
-            Component.define (fun _ () -> ()) (fun t ->
-                div (Attrs.className "frame") {
+            Template.Component.define (fun _ () -> ()) (fun t ->
+                div (div.className "frame") {
                     metadata t "Ranvier Motion" "Interactive pages animated with anime.js through Ranvier's Motion parts."
                     navigation "./" ""
 
-                    section (Attrs.className "hero") {
-                        span (Attrs.className "tag") { "anime.js 4.5 · Ranvier view sugar" }
+                    section (section.className "hero") {
+                        span (span.className "tag") { "anime.js 4.5 · Ranvier view DSL" }
                         h1 () { "Motion that belongs to the view." }
 
                         p () {
@@ -184,14 +184,14 @@ let index: Ranvier.View.Page.Definition<unit> =
                         }
                     }
 
-                    ul (Attrs.className "pages") {
+                    ul (ul.className "pages") {
                         for entry in infos do
                             li () {
-                                a (Attrs.attribute ("href", "./" + entry.Name + "/")) {
-                                    span (Attrs.className ("swatch " + entry.Name)) { () }
+                                a (a.attribute ("href", "./" + entry.Name + "/")) {
+                                    span (span.className ("swatch " + entry.Name)) { () }
                                     h2 () { entry.Title }
                                     p () { entry.Description }
-                                    span (Attrs.className "parts") { entry.Tag }
+                                    span (span.className "parts") { entry.Tag }
                                 }
                             }
                     }

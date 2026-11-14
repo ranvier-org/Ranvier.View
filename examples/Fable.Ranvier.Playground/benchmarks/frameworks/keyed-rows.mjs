@@ -41,11 +41,11 @@ if (unbuilt.length > 0) throw Error(`Not measuring a pooled run: ${unbuilt.join(
 const lock = resolve(os.tmpdir(), `ranvier-keyed-build-${createHash("sha256").update(cwd).digest("hex").slice(0, 16)}`);
 const builtBundle = !(build || process.argv.includes("--bundle")) ? undefined : await withLock(lock, () => {
   if (build) for (const [args, extra] of [
-    [["dotnet", "build", "../../experiments/Ranvier.View.Arms.FablePlugin/Ranvier.View.Arms.FablePlugin.fsproj", "-c", "Release", "-v", "q"], {}],
-    [["dotnet", "fickl", "tests/DomTests.fsproj", "--outDir", "generated-tests", "--configuration", "Release", "--noCache"], {}],
-    [["dotnet", "fickl", "benchmarks/ripple/RipplePerf.fsproj", "--outDir", "generated-ripple", "--configuration", "Release", "--noCache"], {}]
-  ]) execFileSync("rtk", args, { cwd, stdio: "inherit", windowsHide: true, env: { ...env, ...extra } });
-  execFileSync("rtk", ["node", "node_modules/vite/bin/vite.js", "build", "--config", "benchmarks/frameworks/vite.config.mjs"], { cwd, stdio: "inherit", windowsHide: true, env });
+    [["build", "../../experiments/Ranvier.View.Arms.FablePlugin/Ranvier.View.Arms.FablePlugin.fsproj", "-c", "Release", "-v", "q"], {}],
+    [["fickl", "tests/DomTests.fsproj", "--outDir", "generated-tests", "--configuration", "Release", "--noCache"], {}],
+    [["fickl", "benchmarks/ripple/RipplePerf.fsproj", "--outDir", "generated-ripple", "--configuration", "Release", "--noCache"], {}]
+  ]) execFileSync("dotnet", args, { cwd, stdio: "inherit", windowsHide: true, env: { ...env, ...extra } });
+  execFileSync(process.execPath, ["node_modules/vite/bin/vite.js", "build", "--config", "benchmarks/frameworks/vite.config.mjs"], { cwd, stdio: "inherit", windowsHide: true, env });
   return bundleHash(resolve(cwd, outDir));
 });
 

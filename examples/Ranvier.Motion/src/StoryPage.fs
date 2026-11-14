@@ -2,7 +2,7 @@
 module StoryPage
 
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 /// <summary>The story and its scroll observers.</summary>
 let page =

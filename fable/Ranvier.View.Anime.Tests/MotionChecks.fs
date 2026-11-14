@@ -9,14 +9,14 @@ open Ranvier.Anime
 open Ranvier.View
 open Ranvier.View.Dom
 open Ranvier.View.Dom.Scheduling
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Anime
 
 /// <summary>Advances the mocked <c>Date</c> and timers by the given milliseconds.</summary>
 type Clock = float -> unit
 
 [<Global>]
-let private document: Document = jsNative
+let private document: Fable.Core.TS.Dom.Document = jsNative
 
 [<Emit("$0.style.getPropertyValue($1)")>]
 let private styleOf (element: obj) (property: string) : string = jsNative
@@ -241,7 +241,7 @@ let private typedCssOnReverts queued (clock: Clock) =
         Component.template
             (fun _ () -> ())
             (div (
-                Attrs.className "user-class",
+                div.className "user-class",
                 Motion.on (fun _ node ->
                     Fable.Ranvier.Anime.Anime.animate (node, Anim(duration = 1000, ease = Ease.linear).With(gap, px 0., px 100.)))
             ) {
@@ -270,7 +270,7 @@ let private typedCssFollow queued (clock: Clock) =
     let state = graph.Run (fun () -> Api.createSignal 0.)
 
     let existing =
-        Hooks.motion (
+        div.motion (
             System.Func<_, _, _, _>(fun _ node _ ->
                 setStyle (box node) "--gap" "calc(1px + 2px)" "important"
                 fun () -> ())
@@ -280,7 +280,7 @@ let private typedCssFollow queued (clock: Clock) =
         Component.template
             (fun _ (value: Signal<float>) -> value)
             (div (
-                Attrs.className "user-class",
+                div.className "user-class",
                 existing,
                 Motion.followCss
                     gap
@@ -985,7 +985,7 @@ let private descendantsPause queued (clock: Clock) =
     mounted.Dispose ()
     equal (("0.3", "0.75", "0.7", "0.3"), (true, true)) (kept, held)
 
-/// <summary>The entries the <c>Hooks.both</c> fixtures wrote, in order.</summary>
+/// <summary>The entries the <c>both</c> fixtures wrote, in order.</summary>
 let private bothLog = ResizeArray<string>()
 
 let private logged' () =
@@ -994,7 +994,7 @@ let private logged' () =
     entries
 
 let private named (name: string) : Part<'native, 'inst> =
-    Hooks.motion (
+    el.motion (
         System.Func<_, _, _, _>(fun _ _ _ ->
             bothLog.Add (name + " run")
             fun () -> bothLog.Add (name + " cleanup"))
@@ -1021,17 +1021,17 @@ let private mountBoth (part: Part<Ranvier.Dom.HTMLDivElement, unit>) =
 
 let private bothRules (clock: Clock) =
     bothLog.Clear ()
-    let ordered = mountBoth (Hooks.both (named "first", named "second"))
+    let ordered = mountBoth (div.both (named "first", named "second"))
 
     let secondRaises =
-        mountBoth (Hooks.both (named "first", Hooks.motion (System.Func<_, _, _, _>(fun _ _ _ -> failwith "second failed"))))
+        mountBoth (div.both (named "first", div.motion (System.Func<_, _, _, _>(fun _ _ _ -> failwith "second failed"))))
 
     let cleanupRaises =
-        mountBoth (Hooks.both (named "first", Hooks.motion (System.Func<_, _, _, _>(fun _ _ _ -> fun () -> failwith "cleanup failed"))))
+        mountBoth (div.both (named "first", div.motion (System.Func<_, _, _, _>(fun _ _ _ -> fun () -> failwith "cleanup failed"))))
 
     let rejected =
         try
-            Hooks.both (Hooks.mounted (fun _ (_: HTMLDivElement) -> ignore), Hooks.lend (fun _ (_: HTMLDivElement) -> ignore))
+            div.both (div.mounted (fun _ (_: Ranvier.Dom.HTMLDivElement) -> ignore), div.lend (fun _ (_: Ranvier.Dom.HTMLDivElement) -> ignore))
             |> ignore
 
             "accepted"
@@ -1054,8 +1054,8 @@ let private plotted =
     Component.template
         (fun _ (s: Plot) -> s)
         (div () {
-            svg (Attrs.attribute ("viewBox", "0 0 10 10"), Attrs.className "chart") {
-                g (Attrs.className "axis", Events.onClick (fun (_: Plot) _ -> ())) {
+            svg (svg.attribute ("viewBox", "0 0 10 10"), svg.className "chart") {
+                g (g.className "axis", g.onClick (fun (_: Plot) _ -> ())) {
                     forEach id (fun (s: Plot) -> s.Ticks.Value) (text' () { fun (tick: unit -> int) -> string (tick ()) })
                 }
 
@@ -1255,8 +1255,8 @@ let private failureOf queued (build: unit -> Component<unit>) =
 let private mixedCaseHandlerRaises queued (clock: Clock) =
     let failures =
         [
-            failureOf queued (fun () -> Component.template (fun _ () -> ()) (div (Attrs.attribute ("oNclick", "alert(1)")) { "x" }))
-            failureOf queued (fun () -> Component.template (fun _ () -> ()) (div (Attrs.attribute ("refX refY", "1")) { "x" }))
+            failureOf queued (fun () -> Component.template (fun _ () -> ()) (div (div.attribute ("oNclick", "alert(1)")) { "x" }))
+            failureOf queued (fun () -> Component.template (fun _ () -> ()) (div (div.attribute ("refX refY", "1")) { "x" }))
             failureOf queued (fun () -> Component.define (fun _ () -> ()) (fun t -> t.element (HtmlTag "feBlend feColorMatrix") [||] [||]))
         ]
 
@@ -1469,7 +1469,7 @@ let private laned =
     Component.template
         (fun _ (state: Rows) -> state)
         (ul (
-            Attrs.data ("rects", ""),
+            ul.data ("rects", ""),
             Motion.flip
                 { LayoutOptions.Default.WithDuration 300u with
                     Ease = id

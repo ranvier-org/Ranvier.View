@@ -118,11 +118,11 @@ before any module with an SVG tag. Write the name in lowercase, or import an SVG
 defined): give the element one spelling.
 
 **"An exit hook requires a row or arm root element"** (Debug builds): a `Motion.exit`,
-`Motion.presence` or `Hooks.exit` part sits on an element other than a list row's or an arm's root.
+`Motion.presence` or `<tag>.exit` part sits on an element other than a list row's or an arm's root.
 Move it to the root. See [Leaving](motion-parts.md#leaving).
 
 **"An element takes at most one content part"** or **"An element with a content part has no template
-children"**: an element has two of `Unsafe.html` and `Hooks.widget`, or one of them with children.
+children"**: an element has two of `unsafeHtml`/`Unsafe.html` and `<tag>.widget`/`Hooks.widget`, or one of them with children.
 Give the content its own element.
 
 Shared code that catches an `Arms.Match` rejection catches `InvalidOperationException`: `BuildTimeReadException` and

@@ -9,7 +9,7 @@ open global.Ranvier
 open Ranvier.View
 open Ranvier.View.Representation
 open Ranvier.View.Template
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Arms
 
 type Load =
@@ -316,7 +316,7 @@ let private delegateReader () =
                     function
                     | Loaded (text, _) ->
                         span (
-                            Hooks.exit (
+                            span.exit (
                                 Func<_, _, _, _>(fun (_: Signal<Load>) (_: Ranvier.Dom.HTMLSpanElement) finish ->
                                     if text = "" then
                                         finish ()
@@ -331,7 +331,7 @@ let private delegateReader () =
             })
 
     let heldTwin =
-        armOf (span (Hooks.exit (Func<_, _, _, _>(fun (_: unit -> string) (_: Ranvier.Dom.HTMLSpanElement) _ -> ignore))) { "held" })
+        armOf (span (span.exit (Func<_, _, _, _>(fun (_: unit -> string) (_: Ranvier.Dom.HTMLSpanElement) _ -> ignore))) { "held" })
 
     let otherTwin = armOf (span () { "Other" })
 

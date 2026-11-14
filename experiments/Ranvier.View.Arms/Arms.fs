@@ -72,8 +72,8 @@ type Arms =
                 Arms.Match (
                     (fun (warmup: Warmup) -> warmup.Text),
                     function
-                    | Some text -> Ranvier.View.Sugar.Elements.b () { fun _ -> text }
-                    | None -> Ranvier.View.Sugar.Elements.span () { "none" }
+                    | Some text -> Ranvier.View.Dsl.Elements.b () { fun _ -> text }
+                    | None -> Ranvier.View.Dsl.Elements.span () { "none" }
                 ))
 
         let omit =

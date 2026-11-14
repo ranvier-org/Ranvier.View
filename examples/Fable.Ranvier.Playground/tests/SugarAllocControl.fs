@@ -4,7 +4,7 @@ module SugarAllocControl
 open global.Ranvier
 open Ranvier.Dom
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open FrameworkPerf
 open FrameworkMembersPerf
 

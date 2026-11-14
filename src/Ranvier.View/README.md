@@ -25,29 +25,29 @@ and cast those opaque values explicitly.
 
 The [installation guide](https://ranvier-org.github.io/Ranvier/guide/installation/#views) gives the full file.
 
-## View sugar
+## View DSL
 
-`Ranvier.View.Sugar` provides lowercase tags, reactive control flow and component declarations
+`Ranvier.View.Dsl` provides lowercase tags, reactive control flow and component declarations
 that keep setup beside the view. Each declaration lowers to one `Component.define` call and
 `TemplateBuilder` operations. The result works with server rendering, browser mounting and hydration.
 Start with the [view guide](https://ranvier-org.github.io/Ranvier/view/); the
 [design spec](https://github.com/ranvier-org/Ranvier/blob/master/docs/superpowers/specs/2026-10-20-view-sugar-v2-design.md)
 records the rationale and measurements.
 
-## Opening the sugar
+## Opening the DSL
 
 ```fsharp
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 let note =
-    Component.template (fun _ () -> ()) (div (Attrs.className "x") { span () { "hi" } })
+    Component.template (fun _ () -> ()) (div (div.className "x") { span () { "hi" } })
 ```
 
-Every sample on this page assumes these three `open` lines. `global.Ranvier` brings in `Signal`, `Memo` and `Api`. `open Ranvier.View` brings in the template types, `Component.define` and the builders (`Representation` and `Template`, auto-opened) and the generated members of `Attrs`, `Props` and `Events` (`HtmlTemplate`, auto-opened). The sugar namespace holds two auto-opened modules: `Builders` (the entry points, control flow, `render`, `renderOf`, `ComponentTag` and the `Component` declaration helpers) and `Elements` (one class per HTML tag).
+Every sample on this page assumes these three `open` lines. `global.Ranvier` brings in `Signal`, `Memo` and `Api`. `open Ranvier.View` brings in the template types, `Component.define` and the builders (`Representation` and `Template`, auto-opened) and the generated members of `Attrs`, `Props` and `Events` (`HtmlTemplate`, auto-opened). The DSL namespace holds four auto-opened modules: `Contracts` (re-exported view and control types), `Builders` (control flow, `Part`, `Document`, `render`, `renderOf`, `ComponentTag` and the `Component` declaration helpers), `Elements` (one class per HTML tag plus `el`) and `SvgElements` (one class per SVG tag).
 
-**`Generated.Html` requires qualified access.** `open Ranvier.View.Dom.Generated.Html` is a compile error (FS0892). The authored path is reached through a module alias or a qualified path, and an alias compiles beside the sugar's tags in one file:
+**`Generated.Html` requires qualified access.** `open Ranvier.View.Dom.Generated.Html` is a compile error (FS0892). The authored path is reached through a module alias or a qualified path, and an alias compiles beside the DSL's tags in one file:
 
 ```fsharp
 module H = Ranvier.View.Dom.Generated.Html
@@ -56,13 +56,8 @@ let authored = H.Program.div [||] [||]
 let templated = Component.template (fun _ () -> ()) (div () { "template" })
 ```
 
-**Scope rules.** Two rules hold in every file that opens the sugar:
-
-- **Use either Sugar or `Generated.Html.Authoring` in one file.** Both declare `Attrs` and `Props`;
-  the later `open` shadows the earlier names. Opening `Authoring` last can make Sugar tags fail
-  with FS0041. Use qualified names or a module alias when combining the APIs.
-- **Local values shadow tags.** `let p = "note"` makes `p () { "x" }` fail with FS0003.
-  Watch one-letter tags (`a`, `b`, `i`, `p`, `q`, `s`, `u`), especially in lambda parameters.
+**Scope rule.** Watch local values that shadow tags: `let p = "note"` makes `p () { "x" }` fail with FS0003.
+Watch one-letter tags (`a`, `b`, `i`, `p`, `q`, `s`, `u`), especially in lambda parameters.
 
 ## Tags
 
@@ -71,9 +66,9 @@ Each of the 112 HTML tags is a generic class named by its raw lowercase tag name
 - **`base'`**, because `base` is an F# keyword; omitting the apostrophe causes a parse error.
 - **`option'`**, because a generic `option<'i>` would shadow FSharp.Core's `'T option`.
 
-A tag takes its parts in parentheses, `div ()` or `div (Attrs.className "x", Events.onClick handler)`, and its children in braces. `Attrs`, `Props`, `Events` and `Hooks` carry every generated member: `Attrs.className`, `Attrs.data`, `Attrs.aria`, `Attrs.attribute`, `Props.Input.value`, `Props.Button.disabled`, `Events.onClick`, `Events.onInput`, `Hooks.mounted`. An element-specific member is checked against its tag: `span (Props.Input.value "x")` fails with FS0041.
+A tag takes its parts in parentheses, `div ()` or `div (div.className "x", div.onClick handler)`, and its children in braces. Each tag class exposes its inherited and element-specific attributes, events, hooks, `style`, `unsafeHtml`, `batch`, `none`, and `.props` (DOM properties): `div.className`, `div.data`, `div.aria`, `div.attribute`, `div.style`, `input.props.value`, `button.props.disabled`, `button.onClick`, `input.onInput`, `div.mounted`, `Part.batch`, `Part.none`, and `Document.title`. An element-specific member is checked against its tag: `span (input.props.value "x")` fails with FS0041.
 
-**SVG tags.** `svg`, `g`, `path`, `circle`, `ellipse`, `line`, `polyline`, `polygon`, `rect`, `text'`, `tspan`, `use'`, `defs`, `linearGradient`, `radialGradient`, `stop`, `clipPath`, `mask`, `foreignObject` and `title'` (`SvgElements`, auto-opened) are SVG elements, with the matching `SVG*Element` native types, under both commit modes, at any position and as list rows or arms; `text'`, `use'` and `title'` take an apostrophe because `text` is the sugar's text slot, `use` an F# keyword and `title` the HTML tag. An element under an SVG element other than a `foreignObject` is an SVG element too, and the content of a `foreignObject` is HTML. Tag and attribute names are lowercase, except the case-sensitive SVG names the HTML parser restores (`viewBox`, `preserveAspectRatio`, `linearGradient`, `foreignObject`, `feGaussianBlur` and the others), which are written as given, as in `Attrs.attribute ("viewBox", "0 0 10 10")`, in a bundle that uses an SVG tag (and always on .NET); the SVG tags' module sets the list when it loads, so the module that defines such a template must import an SVG tag, or follow a module that does; any other mixed-case name, such as `className`, raises; `Attrs.className`, `Attrs.id`, `Attrs.data`, `Attrs.aria`, the ARIA attributes and the shared `Events.*` members take any element. The first SVG tag of a bundle enables SVG creation; `t.element (HtmlTag "svg")` alone does not, and a bundle without an SVG tag creates HTML elements only under queued commits. Under synchronous commits a row or arm template whose root elements mix SVG and HTML names raises "A row or arm template mixes SVG and HTML root elements"; wrap them in one element. A row or arm rooted at `title'` is an SVG title under queued commits and an HTML title under synchronous commits, where its template is parsed apart from its `svg` parent; a row rooted at `image` (an SVG element without a tag here) is HTML under synchronous commits.
+**SVG tags.** `svg`, `g`, `path`, `circle`, `ellipse`, `line`, `polyline`, `polygon`, `rect`, `text'`, `tspan`, `use'`, `defs`, `linearGradient`, `radialGradient`, `stop`, `clipPath`, `mask`, `foreignObject` and `title'` (`SvgElements`, auto-opened) are SVG elements, with the matching `SVG*Element` native types, under both commit modes, at any position and as list rows or arms; `text'`, `use'` and `title'` take an apostrophe because `text` is the DSL's text slot, `use` an F# keyword and `title` the HTML tag. An element under an SVG element other than a `foreignObject` is an SVG element too, and the content of a `foreignObject` is HTML. Tag and attribute names are lowercase, except the case-sensitive SVG names the HTML parser restores (`viewBox`, `preserveAspectRatio`, `linearGradient`, `foreignObject`, `feGaussianBlur` and the others), which are written as given, as in `svg.viewBox "0 0 10 10"` or `svg.attribute ("viewBox", "0 0 10 10")`, in a bundle that uses an SVG tag (and always on .NET); the SVG tags' module sets the list when it loads, so the module that defines such a template must import an SVG tag, or follow a module that does; any other mixed-case name, such as `className`, raises; `el.className`, `el.id`, `el.data`, `el.aria`, the ARIA attributes and shared events on `<tag>` or `el` take any element. The first SVG tag of a bundle enables SVG creation; `t.element (HtmlTag "svg")` alone does not, and a bundle without an SVG tag creates HTML elements only under queued commits. Under synchronous commits a row or arm template whose root elements mix SVG and HTML names raises "A row or arm template mixes SVG and HTML root elements"; wrap them in one element. A row or arm rooted at `title'` is an SVG title under queued commits and an HTML title under synchronous commits, where its template is parsed apart from its `svg` parent; a row rooted at `image` (an SVG element without a tag here) is HTML under synchronous commits.
 
 **Elements templates refuse.** A `script` element, with or without children and in either namespace (`t.element (HtmlTag "script")`, `t.script`, an SVG `script`), raises when the template or typed view mounts under either commit mode: pages load scripts through the server document shell. A raw-text element with children (`style`, `iframe` and the others), `plaintext`, `template` and a void element with children raise as well. The server render also refuses every raw-text element, an RCDATA element (`textarea`, `title`) with element children, and attribute names on one element that differ only by case; a client-only mount accepts those last two.
 
@@ -88,9 +83,9 @@ type Gallery =
 let gallery =
     Component.template
         (fun _ (photos: string array) -> { Covered = Api.createSignal true; Photos = photos })
-        (div (Attrs.className "gallery") {
-            show (fun g -> g.Covered.Value) (img (Attrs.title "cover")).View
-            forEachFixed id (fun g -> g.Photos) (img (Attrs.title (fun (photo: string) -> photo))).View
+        (div (div.className "gallery") {
+            show (fun g -> g.Covered.Value) (img (img.title "cover")).View
+            forEachFixed id (fun g -> g.Photos) (img (img.title (fun (photo: string) -> photo))).View
             fragment [| (hr ()).View; (br ()).View |]
         })
 
@@ -118,7 +113,7 @@ let compact = false
 let profile =
     Component.template
         (fun _ (name: string) -> { Name = Api.createSignal name; Visits = Api.createSignal 0 })
-        (section (Attrs.className "profile") {
+        (section (section.className "profile") {
             h2 () { from (fun v -> v.Name) }
 
             p () {
@@ -126,19 +121,19 @@ let profile =
                 fun v -> string v.Visits.Value
             }
 
-            input (Attrs.attribute ("type", "text"), Props.Input.value (from (fun v -> v.Name)))
+            input (input.attribute ("type", "text"), input.props.value (from (fun v -> v.Name)))
 
-            button (Attrs.attribute ("type", "button"), Events.onClick (fun v _ -> v.Visits.Value <- v.Visits.Value + 1)) {
+            button (button.attribute ("type", "button"), button.onClick (fun v _ -> v.Visits.Value <- v.Visits.Value + 1)) {
                 "Visit"
             }
 
             nav () {
                 for title in sections do
-                    a (Attrs.attribute ("href", "#" + title)) { title }
+                    a (a.attribute ("href", "#" + title)) { title }
             }
 
             if not compact then
-                p (Attrs.className "note") { "Each visit is counted once." }
+                p (p.className "note") { "Each visit is counted once." }
         })
 ```
 
@@ -152,7 +147,7 @@ let profile =
 | reads a record field inside that record's own static members ([Declaring components](#declaring-components)) | none |
 | reads a label a later record also declares (`fun (row: KeyedRow) -> string row.Id`, where `ArmRow` also declares `Id`) | the record type |
 | reads a class member, including an item list held in a `Signal` (`fun (rows: Signal<_ array>) -> rows.Value`) | the class type |
-| a non-overloaded `Events.*` entry after an annotated sibling in the same tag's parts | none |
+| a non-overloaded `<tag>.on*` entry after an annotated sibling in the same tag's parts | none |
 
 A missing annotation is reported at the element, as FS0001, FS0193 or FS0041, rather than at the lambda.
 
@@ -248,10 +243,10 @@ type CounterRecord =
         { Count = Api.createSignal props.Start; Caption = props.Caption }
 
     static member View =
-        div (Attrs.className "counter") {
-            span (Attrs.className "caption") { fun c -> c.Caption }
+        div (div.className "counter") {
+            span (span.className "caption") { fun c -> c.Caption }
 
-            button (Attrs.attribute ("type", "button"), Events.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) {
+            button (button.attribute ("type", "button"), button.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) {
                 fun c -> string c.Count.Value
             }
         }
@@ -267,16 +262,16 @@ let counterRecord = Component.ofMembers<CounterRecord, _> ()
 let counterTemplate =
     Component.template
         (fun _ (props: CounterProps) -> { Count = Api.createSignal props.Start; Caption = props.Caption })
-        (div (Attrs.className "counter") {
-            span (Attrs.className "caption") { fun c -> c.Caption }
+        (div (div.className "counter") {
+            span (span.className "caption") { fun c -> c.Caption }
 
-            button (Attrs.attribute ("type", "button"), Events.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) {
+            button (button.attribute ("type", "button"), button.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) {
                 fun c -> string c.Count.Value
             }
         })
 ```
 
-**3. A class with constructor setup and static `View`, `Component.ofClass`,** for constructor-as-setup and private state. Every instance lambda is annotated with the class type; the one exception is a non-overloaded `Events.*` entry after an annotated sibling. A missing annotation surfaces as FS0193 on the whole view when `View` is annotated, and as FS0001 at `Component.ofClass` when it is not, so annotating `View` moves the error to the right line. The style has a per-instance cost under Fable (see [Costs](#costs)).
+**3. A class with constructor setup and static `View`, `Component.ofClass`,** for constructor-as-setup and private state. Every instance lambda is annotated with the class type; the one exception is a non-overloaded `<tag>.on*` entry after an annotated sibling. A missing annotation surfaces as FS0193 on the whole view when `View` is annotated, and as FS0001 at `Component.ofClass` when it is not, so annotating `View` moves the error to the right line. The style has a per-instance cost under Fable (see [Costs](#costs)).
 
 ```fsharp
 type CounterClass(setup: Setup, props: CounterProps) =
@@ -284,10 +279,10 @@ type CounterClass(setup: Setup, props: CounterProps) =
     member _.Caption = props.Caption
 
     static member View: TemplateView<CounterClass> =
-        div (Attrs.className "counter") {
-            span (Attrs.className "caption") { fun (c: CounterClass) -> c.Caption }
+        div (div.className "counter") {
+            span (span.className "caption") { fun (c: CounterClass) -> c.Caption }
 
-            button (Attrs.attribute ("type", "button"), Events.onClick (fun (c: CounterClass) _ -> c.Count.Value <- c.Count.Value + 1)) {
+            button (button.attribute ("type", "button"), button.onClick (fun (c: CounterClass) _ -> c.Count.Value <- c.Count.Value + 1)) {
                 fun (c: CounterClass) -> string c.Count.Value
             }
         }
@@ -331,7 +326,7 @@ type PanelRecord =
         { Title = props.Title; Hits = Api.createSignal 0 }
 
     static member View =
-        section (Attrs.className "panel") {
+        section (section.className "panel") {
             h2 () { fun p -> p.Title }
             render counterRecord (fun p -> { Start = 1; Caption = p.Title })
             render counterClass (fun p -> { Start = 2; Caption = p.Title + "!" })
@@ -402,10 +397,10 @@ type MvuChild =
         { Loop = loop; Total = loop.Select (fun m -> m.Sum); StepOf = props.Step }
 
     static member View =
-        div (Attrs.className "child") {
-            span (Attrs.className "step") { fun c -> string c.StepOf.Value }
-            span (Attrs.className "total") { fun c -> string c.Total.Value }
-            button (Attrs.attribute ("type", "button"), Events.onClick (fun c _ -> c.Loop.Dispatch Add)) { "Add" }
+        div (div.className "child") {
+            span (span.className "step") { fun c -> string c.StepOf.Value }
+            span (span.className "total") { fun c -> string c.Total.Value }
+            button (button.attribute ("type", "button"), button.onClick (fun c _ -> c.Loop.Dispatch Add)) { "Add" }
         }
 
 let mvuChild = Component.ofMembers<MvuChild, _> ()
@@ -427,9 +422,9 @@ type MvuParent =
           LastReport = loop.Select (fun m -> m.Last) }
 
     static member View =
-        section (Attrs.className "parent") {
-            span (Attrs.className "last") { fun p -> string p.LastReport.Value }
-            button (Attrs.attribute ("type", "button"), Events.onClick (fun p _ -> p.Loop.Dispatch Bump)) { "Bump" }
+        section (section.className "parent") {
+            span (span.className "last") { fun p -> string p.LastReport.Value }
+            button (button.attribute ("type", "button"), button.onClick (fun p _ -> p.Loop.Dispatch Bump)) { "Bump" }
 
             show
                 (fun p -> p.Visible.Value)

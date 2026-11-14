@@ -5,7 +5,7 @@ open System
 open global.Ranvier
 open Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 let private slotText (slot: Slot) =
     let target =
@@ -100,10 +100,10 @@ let benchExplicit =
 let benchSugar =
     Component.template
         benchSetup
-        (div (Attrs.id (fun r -> "row-" + string r.Index), Attrs.className "panel", Attrs.title (from (fun r -> r.Source))) {
-            input (Props.Input.value (from (fun r -> r.Source)))
+        (div (div.id (fun r -> "row-" + string r.Index), div.className "panel", div.title (from (fun r -> r.Source))) {
+            input (input.props.value (from (fun r -> r.Source)))
 
-            button (Props.Button.disabled (from (fun r -> r.Disabled)), Events.onClick (fun r _ -> r.Local.Value <- r.Local.Value + 1)) {
+            button (button.props.disabled (from (fun r -> r.Disabled)), button.onClick (fun r _ -> r.Local.Value <- r.Local.Value + 1)) {
                 fun r -> string r.Local.Value
             }
         })
@@ -142,7 +142,7 @@ let semantics =
             "start"
 
             for flag in flags do
-                span (Attrs.className flag) { flag }
+                span (span.className flag) { flag }
 
             if flags.Length = 2 then
                 "wide"
@@ -183,7 +183,7 @@ let tagsExplicit =
 
 let tagsFree =
     Component.define (fun _ () -> ()) (fun t ->
-        div (t.Attrs.className "x", t.Attrs.id "y") {
+        div (div.className "x", div.id "y") {
             span () { "a" }
             br ()
             select () { option' () { "o" } }
@@ -194,7 +194,18 @@ let headExplicit =
     Component.define (fun _ () -> ()) (fun t -> t.head [||] [| t.``base`` [| t.Attrs.attribute ("href", "/") |] |])
 
 let headFree =
-    Component.define (fun _ () -> ()) (fun t -> head () { base' (t.Attrs.attribute ("href", "/")) })
+    Component.define (fun _ () -> ()) (fun t -> head () { base' (base'.attribute ("href", "/")) })
+
+let partsExplicit =
+    Component.define (fun _ () -> ()) (fun t ->
+        t.div
+            [| t.Attrs.className "styled"; t.Attrs.attribute ("style", "color:red") |]
+            [| t.input [| t.Attrs.Input.``type`` "text"; t.Props.Input.value "ok" |] |])
+
+let partsSugar =
+    Component.template
+        (fun _ () -> ())
+        (div (Part.batch [| div.className "styled"; div.style "color:red"; Part.none |]) { input (input.type' "text", input.props.value "ok") })
 
 let elementPairs: (string * TemplateComponent * TemplateComponent) array =
     [|
@@ -202,6 +213,7 @@ let elementPairs: (string * TemplateComponent * TemplateComponent) array =
         "text forms and void tags", textsExplicit, textsSugar
         "free tags with t. parts", tagsExplicit, tagsFree
         "base' in head", headExplicit, headFree
+        "style, Part.batch, Part.none and void props", partsExplicit, partsSugar
     |]
 
 let elementServerPairs () : (string * string * string) array =
@@ -213,6 +225,7 @@ let elementServerPairs () : (string * string * string) array =
         "text forms and void tags", Server.render omit textsExplicit name, Server.render omit textsSugar name
         "free tags with t. parts", Server.render omit tagsExplicit (), Server.render omit tagsFree ()
         "base' in head", Server.render omit headExplicit (), Server.render omit headFree ()
+        "style, Part.batch, Part.none and void props", Server.render omit partsExplicit (), Server.render omit partsSugar ()
     |]
 
 type KeyedItem = { Id: int; Label: Signal<string> }
@@ -257,7 +270,7 @@ let keyedLiveSugar =
                     (fun (row: KeyedItem) -> row.Id)
                     (fun (rows: Signal<KeyedItem array>) -> rows.Value)
                     (tr () {
-                        td (Attrs.className "id") { fun (row: unit -> KeyedItem) -> string (row ()).Id }
+                        td (td.className "id") { fun (row: unit -> KeyedItem) -> string (row ()).Id }
                         td () { from (fun (row: unit -> KeyedItem) -> (row ()).Label) }
                     })
             }
@@ -293,7 +306,7 @@ let keyedFixedSugar =
                     (fun (row: KeyedItem) -> row.Id)
                     (fun (rows: Signal<KeyedItem array>) -> rows.Value)
                     (tr () {
-                        td (Attrs.className "id") { fun (row: KeyedItem) -> string row.Id }
+                        td (td.className "id") { fun (row: KeyedItem) -> string row.Id }
                         td () { from (fun (row: KeyedItem) -> row.Label) }
                     })
             }
@@ -350,7 +363,7 @@ let armsExplicit =
                     |]
             |])
 
-let private plainFree = armOf (span (Attrs.className "a") { "A" })
+let private plainFree = armOf (span (span.className "a") { "A" })
 let private countedFree = armOf (b () { fun payload -> string (payload ()) })
 
 let armsSugar =
@@ -419,7 +432,7 @@ let showSugar =
         (fun _ (state: Toggle) -> state)
         (div () {
             "before"
-            show (fun s -> s.On.Value) (span (Hooks.mounted logged) { from (fun (s: Toggle) -> s.Name) })
+            show (fun s -> s.On.Value) (span (span.mounted logged) { from (fun (s: Toggle) -> s.Name) })
             "after"
         })
 
@@ -436,7 +449,7 @@ let showElseExplicit =
 let showElseSugar =
     Component.template
         (fun _ (state: Toggle) -> state)
-        (div () { showElse (fun s -> s.On.Value) (span (Hooks.mounted logged) { from (fun (s: Toggle) -> s.Name) }) (em () { "off" }) })
+        (div () { showElse (fun s -> s.On.Value) (span (span.mounted logged) { from (fun (s: Toggle) -> s.Name) }) (em () { "off" }) })
 
 type Entry =
     {
@@ -606,7 +619,7 @@ let private linesFree =
             forEach
                 (fun (line: Line) -> line.Id)
                 (fun (current: unit -> Lined) -> (current ()).Lines.Value)
-                (li () { span (Hooks.mounted trailed) { from (fun (row: unit -> Line) -> (row ()).Label) } })
+                (li () { span (span.mounted trailed) { from (fun (row: unit -> Line) -> (row ()).Label) } })
         }
     )
 
@@ -631,7 +644,7 @@ let private readyExplicit =
     Component.define (fun _ (status: BoundaryStatus) -> status) (fun t -> t.span [| t.Attrs.className "ready" |] [| t.text "ready" |])
 
 let private readySugar =
-    Component.template (fun _ (status: BoundaryStatus) -> status) (span (Attrs.className "ready") { "ready" })
+    Component.template (fun _ (status: BoundaryStatus) -> status) (span (span.className "ready") { "ready" })
 
 let boundedExplicit =
     Component.define (fun _ () -> ()) (fun t -> t.div [||] [| t.boundary pendingView failedView readyExplicit |])
@@ -692,10 +705,10 @@ type CounterRecord =
     static member View =
         Builds.counterRecord <- Builds.counterRecord + 1
 
-        div (Attrs.className "counter") {
-            span (Attrs.className "caption") { fun c -> c.Caption }
+        div (div.className "counter") {
+            span (span.className "caption") { fun c -> c.Caption }
 
-            button (Attrs.attribute ("type", "button"), Events.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) {
+            button (button.attribute ("type", "button"), button.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) {
                 fun c -> string c.Count.Value
             }
         }
@@ -709,10 +722,10 @@ type CounterClass(setup: Setup, props: CounterProps) =
     static member View: TemplateView<CounterClass> =
         Builds.counterClass <- Builds.counterClass + 1
 
-        div (Attrs.className "counter") {
-            span (Attrs.className "caption") { fun (c: CounterClass) -> c.Caption }
+        div (div.className "counter") {
+            span (span.className "caption") { fun (c: CounterClass) -> c.Caption }
 
-            button (Attrs.attribute ("type", "button"), Events.onClick (fun (c: CounterClass) _ -> c.Count.Value <- c.Count.Value + 1)) {
+            button (button.attribute ("type", "button"), button.onClick (fun (c: CounterClass) _ -> c.Count.Value <- c.Count.Value + 1)) {
                 fun (c: CounterClass) -> string c.Count.Value
             }
         }
@@ -726,10 +739,10 @@ let counterTemplate =
                 Count = Api.createSignal props.Start
                 Caption = props.Caption
             })
-        (div (Attrs.className "counter") {
-            span (Attrs.className "caption") { fun c -> c.Caption }
+        (div (div.className "counter") {
+            span (span.className "caption") { fun c -> c.Caption }
 
-            button (Attrs.attribute ("type", "button"), Events.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) {
+            button (button.attribute ("type", "button"), button.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) {
                 fun c -> string c.Count.Value
             }
         })
@@ -755,7 +768,7 @@ type PanelRecord =
         }
 
     static member View =
-        section (Attrs.className "panel") {
+        section (section.className "panel") {
             h2 () { fun p -> p.Title }
             render counterRecord (fun p -> { Start = 1; Caption = p.Title })
             render counterClass (fun p -> { Start = 2; Caption = p.Title + "!" })
@@ -771,7 +784,7 @@ type PanelClass(setup: Setup, props: PanelProps) =
     member val Hits = Api.createSignal 0
 
     static member View: TemplateView<PanelClass> =
-        section (Attrs.className "panel") {
+        section (section.className "panel") {
             h2 () { fun (p: PanelClass) -> p.Title }
             render counterRecord (fun (p: PanelClass) -> { Start = 1; Caption = p.Title })
             render counterClass (fun (p: PanelClass) -> { Start = 2; Caption = p.Title + "!" })
@@ -786,7 +799,7 @@ let panelClass = Component.ofClass PanelClass
 let mixedSugar =
     Component.template
         (fun _ () -> ())
-        (div (Attrs.className "mixed") {
+        (div (div.className "mixed") {
             renderOf panelRecord { Title = "R" }
             renderOf panelClass { Title = "C" }
         })
@@ -959,19 +972,19 @@ let tagViewsSugar =
     Component.template
         (fun _ (state: Toggle) -> state)
         (div () {
-            show (fun s -> s.On.Value) (img (Hooks.mounted loggedImage, Attrs.title (from (fun (s: Toggle) -> s.Name)))).View
+            show (fun s -> s.On.Value) (img (img.mounted loggedImage, img.title (from (fun (s: Toggle) -> s.Name)))).View
             show (fun s -> s.On.Value) (counterOf { Start = 6; Caption = "shown" }).View
             matchWith (fun s -> s.On.Value) (fun on -> if on then arm breakFree () else arm ruleFree ())
             matchWith (fun s -> s.On.Value) (fun _ -> arm counterFree ())
             fragment [| (br ()).View; (hr ()).View; (counterOf { Start = 8; Caption = "f" }).View |]
-            forEachFixed (fun (n: int) -> n) (fun _ -> [| 1; 2 |]) (img (Attrs.title (fun (n: int) -> string n))).View
+            forEachFixed (fun (n: int) -> n) (fun _ -> [| 1; 2 |]) (img (img.title (fun (n: int) -> string n))).View
         })
 
 let voidRootExplicit =
     Component.define (fun _ () -> ()) (fun t -> t.img [| t.Attrs.className "root" |])
 
 let voidRootSugar =
-    Component.template (fun _ () -> ()) (img (Attrs.className "root")).View
+    Component.template (fun _ () -> ()) (img (img.className "root")).View
 
 let tagRootExplicit =
     Component.define (fun _ () -> ()) (fun t -> t.render MixedExplicit.counter (fun _ -> { Start = 9; Caption = "root" }))
@@ -1006,13 +1019,13 @@ let motionHooked =
     Component.template
         (fun _ (state: Lined) -> state)
         (div () {
-            ul (Hooks.reflow (fun _ _ -> serverRan "reflow hook")) {
+            ul (ul.reflow (fun _ _ -> serverRan "reflow hook")) {
                 forEach
                     (fun (line: Line) -> line.Id)
                     (fun (s: Lined) -> s.Lines.Value)
                     (li (
-                        Hooks.motion (System.Func<_, _, _, _>(fun _ _ _ -> serverRan "motion hook")),
-                        Hooks.exit (System.Func<_, _, _, _>(fun _ _ _ -> serverRan "exit hook"))
+                        li.motion (System.Func<_, _, _, _>(fun _ _ _ -> serverRan "motion hook")),
+                        li.exit (System.Func<_, _, _, _>(fun _ _ _ -> serverRan "exit hook"))
                     ) {
                         from (fun (row: unit -> Line) -> (row ()).Label)
                     })
@@ -1021,8 +1034,8 @@ let motionHooked =
             show
                 (fun s -> s.Shown.Value)
                 (span (
-                    Hooks.motion (System.Func<_, _, _, _>(fun _ _ _ -> serverRan "motion hook")),
-                    Hooks.exit (System.Func<_, _, _, _>(fun _ _ _ -> serverRan "exit hook"))
+                    span.motion (System.Func<_, _, _, _>(fun _ _ _ -> serverRan "motion hook")),
+                    span.exit (System.Func<_, _, _, _>(fun _ _ _ -> serverRan "exit hook"))
                 ) {
                     "shown"
                 })

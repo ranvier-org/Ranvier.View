@@ -4,7 +4,7 @@ module ElmishNested
 open global.Ranvier
 open Ranvier.Elmish
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 type ParentMsg =
     | Bump
@@ -67,16 +67,16 @@ type MvuChild =
         }
 
     static member View =
-        div (Attrs.className "child") {
-            span (Attrs.className "step") {
+        div (div.className "child") {
+            span (span.className "step") {
                 fun c ->
                     Loops.stepReads <- Loops.stepReads + 1
                     string c.StepOf.Value
             }
 
-            span (Attrs.className "total") { fun c -> string c.Total.Value }
+            span (span.className "total") { fun c -> string c.Total.Value }
 
-            button (Attrs.className "add", Attrs.attribute ("type", "button"), Events.onClick (fun c _ -> c.Loop.Dispatch Add)) { "Add" }
+            button (button.className "add", button.attribute ("type", "button"), button.onClick (fun c _ -> c.Loop.Dispatch Add)) { "Add" }
         }
 
 let mvuChild = Component.ofMembers<MvuChild, _>()
@@ -117,11 +117,11 @@ type MvuParent =
         }
 
     static member View =
-        section (Attrs.className "parent") {
-            span (Attrs.className "label") { fun p -> p.CurrentLabel.Value }
-            span (Attrs.className "last") { fun p -> string p.LastReport.Value }
+        section (section.className "parent") {
+            span (span.className "label") { fun p -> p.CurrentLabel.Value }
+            span (span.className "last") { fun p -> string p.LastReport.Value }
 
-            button (Attrs.className "bump", Attrs.attribute ("type", "button"), Events.onClick (fun p _ -> p.Loop.Dispatch Bump)) { "Bump" }
+            button (button.className "bump", button.attribute ("type", "button"), button.onClick (fun p _ -> p.Loop.Dispatch Bump)) { "Bump" }
 
             show
                 (fun p -> p.Visible.Value)

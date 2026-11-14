@@ -28,13 +28,13 @@ let snapshot (rows: Signal<(int * string) array>) : string =
     Ranvier.View.Representation.Html.render Omit (Program.run (rowsView rows))
 
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 type Card = { Caption: string; Body: Program.View }
 
 let card =
     Component.define (fun _ (card: Card) -> card) (fun t ->
-        div (Attrs.className "card") {
+        div (div.className "card") {
             h3 () { fun c -> c.Caption }
             t.view (fun c -> c.Body)
         })

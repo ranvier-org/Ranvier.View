@@ -6,8 +6,7 @@ open Ranvier
 open Ranvier.View
 open Ranvier.View.WebCore
 open Ranvier.View.WebCore.Tests.Support
-// Last, so that Events is the sugar's event parts and not WebCore's listener registry.
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 type Slider = { Inputs: Signal<int> }
 
@@ -24,9 +23,9 @@ type TypedSlider =
     static member View =
         div () {
             input (
-                Attrs.Input.``type`` "range",
-                Attrs.attribute ("style", sliderStyle),
-                Events.onInput (fun s _ -> s.Slider.Inputs.Value <- s.Slider.Inputs.Value + 1)
+                input.``type`` "range",
+                input.attribute ("style", sliderStyle),
+                input.onInput (fun s _ -> s.Slider.Inputs.Value <- s.Slider.Inputs.Value + 1)
             )
         }
 
@@ -41,9 +40,9 @@ type NamedSlider =
     static member View =
         div () {
             input (
-                Attrs.Input.``type`` "range",
-                Attrs.attribute ("style", sliderStyle),
-                Events.on ("input", fun s (_: Event) -> s.Slider.Inputs.Value <- s.Slider.Inputs.Value + 1)
+                input.``type`` "range",
+                input.attribute ("style", sliderStyle),
+                input.on ("input", fun s (_: Event) -> s.Slider.Inputs.Value <- s.Slider.Inputs.Value + 1)
             )
         }
 
@@ -56,7 +55,7 @@ type BrokenImage =
         { Errors = errors }
 
     static member View =
-        div () { img (Attrs.attribute ("src", "missing://image.png"), Events.onError (fun s _ -> s.Errors.Value <- s.Errors.Value + 1)) }
+        div () { img (img.attribute ("src", "missing://image.png"), img.onError (fun s _ -> s.Errors.Value <- s.Errors.Value + 1)) }
 
 let private typedSlider = Component.ofMembers<TypedSlider, _>()
 let private namedSlider = Component.ofMembers<NamedSlider, _>()

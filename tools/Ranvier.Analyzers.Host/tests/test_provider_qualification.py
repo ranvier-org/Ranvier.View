@@ -16,7 +16,7 @@ RUNNER = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
 SPEC.loader.exec_module(RUNNER)
 
-RETAINED_LOG = Path(__file__).parent / "fixtures" / "expecto234-summary.log"
+RETAINED_LOG = Path(__file__).parent / "fixtures" / "expecto239-summary.log"
 
 
 class ProviderQualificationControls(unittest.TestCase):
@@ -25,15 +25,15 @@ class ProviderQualificationControls(unittest.TestCase):
         text = RETAINED_LOG.read_text(encoding="utf-8", errors="replace")
         summary = RUNNER.parse_expecto_summary(text)
         RUNNER.require_full_expecto(summary)
-        self.assertEqual(summary, {"run": 234, "passed": 234, "ignored": 0,
+        self.assertEqual(summary, {"run": 239, "passed": 239, "ignored": 0,
                                    "failed": 0, "errored": 0})
 
     def test_expecto_count_skip_and_failure_controls_are_rejected(self):
         real = RETAINED_LOG.read_text(encoding="utf-8", errors="replace")
         clean = RUNNER.ANSI.sub("", real)
         mutations = (
-            clean.replace("234 tests run", "233 tests run", 1),
-            clean.replace("234 passed", "233 passed", 1),
+            clean.replace("239 tests run", "238 tests run", 1),
+            clean.replace("239 passed", "238 passed", 1),
             clean.replace("0 ignored", "1 ignored", 1),
             clean.replace("0 failed", "1 failed", 1),
             clean.replace("0 errored", "1 errored", 1),

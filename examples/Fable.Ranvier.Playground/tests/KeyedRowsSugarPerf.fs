@@ -6,7 +6,7 @@ open Fable.Core
 open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open KeyedRowsPerf
 
 #if FABLE_COMPILER
@@ -22,22 +22,22 @@ let mutable private clicks = 0
 let private keyedList =
     Component.template
         (fun _ (rows: Signal<KeyedRow array>) -> rows)
-        (table (Attrs.className "table") {
+        (table (table.className "table") {
             tbody () {
                 forEachFixed
                     (fun (row: KeyedRow) -> row.Id)
                     (fun (rows: Signal<_ array>) -> rows.Value)
                     (tr () {
-                        td (Attrs.className "col-md-1") { fun (row: KeyedRow) -> string row.Id }
-                        td (Attrs.className "col-md-4") { a (Events.onClick (fun _ _ -> clicks <- clicks + 1)) { from (fun row -> row.Label) } }
+                        td (td.className "col-md-1") { fun (row: KeyedRow) -> string row.Id }
+                        td (td.className "col-md-4") { a (a.onClick (fun _ _ -> clicks <- clicks + 1)) { from (fun row -> row.Label) } }
 
-                        td (Attrs.className "col-md-1") {
-                            a (Events.onClick (fun _ _ -> clicks <- clicks - 1)) {
-                                span (Attrs.className "glyphicon glyphicon-remove", Attrs.attribute ("aria-hidden", "true")) { }
+                        td (td.className "col-md-1") {
+                            a (a.onClick (fun _ _ -> clicks <- clicks - 1)) {
+                                span (span.className "glyphicon glyphicon-remove", span.attribute ("aria-hidden", "true")) { }
                             }
                         }
 
-                        td (Attrs.className "col-md-6") { }
+                        td (td.className "col-md-6") { }
                     })
             }
         })
@@ -99,7 +99,7 @@ let mountKeyed (host: HTMLElement) : KeyedOperations =
                     graph.Dispose ()
     }
 
-let private plain = armOf (span (Attrs.className "a") { "A" })
+let private plain = armOf (span (span.className "a") { "A" })
 let private counted = armOf (b () { fun payload -> string (payload ()) })
 
 let private armList =

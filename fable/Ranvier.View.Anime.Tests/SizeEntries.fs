@@ -11,7 +11,7 @@ open Fable.Ranvier.Anime
 open Ranvier.Anime
 open Ranvier.View
 open Ranvier.View.Dom
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Anime
 
 type Board =
@@ -53,8 +53,7 @@ let private rowExit (_: unit -> int) (node: Element) =
 let private rowOn (_: unit -> int) (node: Element) =
     Fable.Ranvier.Anime.Anime.animate (node, Anim (opacity = 0.5, duration = 240))
 
-let private still: Part<Ranvier.Dom.HTMLUListElement, Board> =
-    Attrs.className "rows"
+let private still: Part<Ranvier.Dom.HTMLUListElement, Board> = ul.className "rows"
 
 /// <summary>Rows with <c>Motion.presence</c>.</summary>
 let presence (target: HTMLElement) =
@@ -66,7 +65,7 @@ let private whenComplete (animation: JSAnimation) (action: unit -> unit) : unit 
 /// <summary>Rows with a motion hook and an exit hook calling <c>animate</c> by hand.</summary>
 let presenceTwin (target: HTMLElement) =
     let enter =
-        Hooks.motion (
+        li.motion (
             System.Func<_, _, _, _>(fun (item: unit -> int) (node: Ranvier.Dom.HTMLLIElement) context ->
                 if context.Inserted then
                     let animation = rowEnter item (unbox node)
@@ -76,7 +75,7 @@ let presenceTwin (target: HTMLElement) =
         )
 
     let exit =
-        Hooks.exit (
+        li.exit (
             System.Func<_, _, _, _>(fun (item: unit -> int) (node: Ranvier.Dom.HTMLLIElement) finish ->
                 let animation = rowExit item (unbox node)
                 whenComplete animation finish
@@ -98,7 +97,7 @@ let flip (target: HTMLElement) =
     mountRows
         target
         (listOf
-            (Attrs.className "row")
+            (li.className "row")
             (Motion.flip
                 { LayoutOptions.Default.WithDuration 350u with
                     Ease = fun t -> 1. - (1. - t) ** 4.
@@ -107,22 +106,24 @@ let flip (target: HTMLElement) =
 /// <summary>A list with a reflow hook calling <c>createLayout</c> by hand.</summary>
 let flipTwin (target: HTMLElement) =
     let reflow =
-        Hooks.reflow (fun (_: Board) (node: Ranvier.Dom.HTMLUListElement) ->
-            let layout =
-                Fable.Ranvier.Anime.Anime.layout (unbox<Element> node, flipParameters ())
+        ul.reflow (
+            System.Func<_, _, _>(fun (_: Board) (node: Ranvier.Dom.HTMLUListElement) ->
+                let layout =
+                    Fable.Ranvier.Anime.Anime.layout (unbox<Element> node, flipParameters ())
 
-            Api.onCleanup (fun () -> layout.revert ())
+                Api.onCleanup (fun () -> layout.revert ())
 
-            {
-                Before = fun () -> layout.record () |> ignore
-                After = fun () -> layout.animate () |> ignore
-            })
+                {
+                    Before = fun () -> layout.record () |> ignore
+                    After = fun () -> layout.animate () |> ignore
+                })
+        )
 
-    mountRows target (listOf (Attrs.className "row") reflow)
+    mountRows target (listOf (li.className "row") reflow)
 
 /// <summary>Rows with no Motion part, the baseline of the isolation entries.</summary>
 let plain (target: HTMLElement) =
-    mountRows target (listOf (Attrs.className "row") still)
+    mountRows target (listOf (li.className "row") still)
 
 let on (target: HTMLElement) =
     mountRows target (listOf (Motion.on rowOn) still)
@@ -146,7 +147,7 @@ let follow (target: HTMLElement) =
     mountRows
         target
         (listOf
-            (Attrs.className "row")
+            (li.className "row")
             (Motion.follow
                 "opacity"
                 { ComposedAnimationOptions.Default with
@@ -158,14 +159,14 @@ let animateOn (target: HTMLElement) =
     mountRows
         target
         (listOf
-            (Attrs.className "row")
+            (li.className "row")
             (Motion.animateOn (fun b -> b.Level.Value) (fun _ node level -> Fable.Ranvier.Anime.Anime.animate (node, Anim (opacity = level)))))
 
 let draw (target: HTMLElement) =
     mountRows
         target
         (listOf
-            (Attrs.className "row")
+            (li.className "row")
             (Motion.draw
                 { ComposedAnimationOptions.Default with
                     Duration = 400.
@@ -176,7 +177,7 @@ let morph (target: HTMLElement) =
     mountRows
         target
         (listOf
-            (Attrs.className "row")
+            (li.className "row")
             (Motion.morph
                 { ComposedAnimationOptions.Default with
                     Duration = 400.
@@ -187,7 +188,7 @@ let scroll (target: HTMLElement) =
     mountRows
         target
         (listOf
-            (Attrs.className "row")
+            (li.className "row")
             (Motion.scroll
                 ScrollParams.Default
                 (fun _ ->
@@ -201,7 +202,7 @@ let drag (target: HTMLElement) =
     mountRows
         target
         (listOf
-            (Attrs.className "row")
+            (li.className "row")
             (Motion.drag NativeDraggableOptions.Default (fun b ->
                 {
                     Position = b.Position
@@ -213,7 +214,7 @@ let split (target: HTMLElement) =
     mountRows
         target
         (listOf
-            (Attrs.className "row")
+            (li.className "row")
             (Motion.split
                 { TextSplitterOptions.Default with
                     Chars = SplitMode.Enabled

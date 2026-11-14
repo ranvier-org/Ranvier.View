@@ -8,10 +8,10 @@ open global.Ranvier
 open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open KeyedRowsPerf
 
-let private plain = armOf (span (Attrs.className "a") { "A" })
+let private plain = armOf (span (span.className "a") { "A" })
 
 let private counted =
     armOf (b () { fun (payload: unit -> obj array) -> string (unbox<int> (payload ()).[1]) })

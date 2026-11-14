@@ -54,11 +54,19 @@ let private buildSite (m: FSharpMemberOrFunctionOrValue) (index: int) : BuildSit
     match parameterAt m index with
     | Some parameter when isTextMember m && isString parameter.Type -> Some BuildSite.Text
     | Some parameter when
-        (entity = Attributes || entity = Properties)
+        (isAttributePartEntity entity
+         || isPropertyPartEntity entity)
         && parameter.Name = Some ValueParameter
         && isStatic parameter.Type
         ->
-        Some (BuildSite.Part (if entity = Attributes then "attribute" else "property"))
+        Some (
+            BuildSite.Part (
+                if isAttributePartEntity entity then
+                    "attribute"
+                else
+                    "property"
+            )
+        )
     | Some _ when isRenderOf m && index = 1 -> Some BuildSite.RenderOf
     | Some parameter when
         isComponentTagConstructor m
@@ -600,6 +608,7 @@ let rec private items (expr: FSharpExpr) : FSharpExpr list =
     match expr with
     | NewArray (_, elements) -> List.collect items elements
     | Coerce (_, inner) -> items inner
+    | Call (_, m, _, _, [ inner ]) when isBatchPartCall m -> items inner
     | _ -> [ expr ]
 
 /// Whether `expr` is a literal array with at least one element.
@@ -621,7 +630,14 @@ let private sugarTag (m: FSharpMemberOrFunctionOrValue) =
     match m.ApparentEnclosingEntity with
     | Some entity when
         m.IsConstructor
-        && (Symbols.enclosing m).StartsWith(Elements + ".", System.StringComparison.Ordinal)
+        && not entity.IsAbstractClass
+        && entity.DisplayName <> "HtmlVoidElement"
+        && (let owner = Symbols.enclosing m
+
+            owner.StartsWith (Elements + ".", System.StringComparison.Ordinal)
+            || owner.StartsWith (DslElements + ".", System.StringComparison.Ordinal)
+            || owner.StartsWith (SugarSvgElements + ".", System.StringComparison.Ordinal)
+            || owner.StartsWith (DslSvgElements + ".", System.StringComparison.Ordinal))
         ->
         Some (entity.DisplayName.Trim('`').TrimEnd ''')
     | _ -> None
@@ -684,6 +700,14 @@ let elements (input: Input) : ElementSite list =
                         Range = site.Range
                         Ancestors = ancestors outer
                     }
+                | Some tag, outer when voidTags.Contains (tag.ToLowerInvariant ()) ->
+                    {
+                        Tag = tag.ToLowerInvariant ()
+                        Parts = List.collect items site.Arguments
+                        HasChildren = false
+                        Range = site.Range
+                        Ancestors = ancestors outer
+                    }
                 | _ -> ()
     ]
 
@@ -694,24 +718,24 @@ let private invalidContent (input: Input) : Message list =
                 element.Parts
                 |> List.choose (fun part ->
                     Symbols.View.contentPart part
-                    |> Option.map (fun name -> name, part))
+                    |> Option.map (fun (isRawHtml, name) -> isRawHtml, name, part))
 
             match contents with
-            | (first, _) :: (second, part) :: _ ->
+            | (_, first, _) :: (_, second, part) :: _ ->
                 message
                     "RAN023"
                     Severity.Error
                     part.Range
                     $"This element has two content parts (`{first}` and `{second}`), which fails when the definition is created. Give each content part its own element."
                     []
-            | [ name, part ] when element.HasChildren ->
+            | [ _, name, part ] when element.HasChildren ->
                 message
                     "RAN023"
                     Severity.Error
                     part.Range
                     $"This element has a content part (`{name}`) and template children, which fails when the definition is created. Move the children into another element."
                     []
-            | [ UnsafeHtmlPart, part ] when
+            | [ true, name, part ] when
                 Symbols.View.voidTags.Contains element.Tag
                 || Symbols.View.rawTextTags.Contains element.Tag
                 || element.Tag = "template"
@@ -722,7 +746,7 @@ let private invalidContent (input: Input) : Message list =
                     "RAN023"
                     Severity.Error
                     part.Range
-                    $"`Unsafe.html` sets the content of `{element.Tag}`, whose children the HTML parser does not build from markup, which fails when the definition is created. Put the markup in an element such as `div`."
+                    $"`{name}` sets the content of `{element.Tag}`, whose children the HTML parser does not build from markup, which fails when the definition is created. Put the markup in an element such as `div`."
                     []
             | _ -> ()
     ]

@@ -5,7 +5,7 @@ open Ranvier.Analyzers
 open Ranvier.Analyzers.Tests.Options
 
 let private header =
-    "module Fixture\nopen Ranvier\nopen Ranvier.View\nopen Ranvier.View.Sugar\nlet count = createSignal 0\n"
+    "module Fixture\nopen Ranvier\nopen Ranvier.View\nopen Ranvier.View.Dsl\nlet count = createSignal 0\n"
 
 let private findings (body: string) =
     run Analyzers.ran020Cli (context (ranvier.Force ()) (header + body))
@@ -39,8 +39,8 @@ let tests =
                 let bodies =
                     [
                         "let c = Component.template (fun _ () -> ()) (div () { string count.Value })\n"
-                        "let c = Component.template (fun _ () -> ()) (div (Attrs.className (string count.Value)) { \"x\" })\n"
-                        "let c = Component.template (fun _ () -> ()) (div (Attrs.attribute (\"data-count\", string count.Value)) { \"x\" })\n"
+                        "let c = Component.template (fun _ () -> ()) (div (div.className (string count.Value)) { \"x\" })\n"
+                        "let c = Component.template (fun _ () -> ()) (div (div.attribute (\"data-count\", string count.Value)) { \"x\" })\n"
                         "let c = Component.define (fun _ () -> ()) (fun t -> t.div [| t.Attrs.className (string count.Value) |] [||])\n"
                         "let c = Component.define (fun _ () -> ()) (fun t -> t.div [||] [| t.text (string count.Value) |])\n"
                     ]
@@ -57,10 +57,22 @@ let tests =
 
             test "attribute's reader takes an option, so its static read has no fix" {
                 let messages =
-                    findings "let c = Component.template (fun _ () -> ()) (div (Attrs.attribute (\"data-count\", string count.Value)) { \"x\" })\n"
+                    findings "let c = Component.template (fun _ () -> ()) (div (div.attribute (\"data-count\", string count.Value)) { \"x\" })\n"
 
                 Expect.equal (messages |> List.map _.Code) [ "RAN020" ] "reported"
                 Expect.isEmpty messages.Head.Fixes "no reader overload of the value's type"
+            }
+
+            test "element props attribute read reports property site with fix" {
+                let source =
+                    header
+                    + "let c = Component.template (fun _ () -> ()) (div () { input (input.props.value (string count.Value)) })\n"
+
+                let messages = run Analyzers.ran020Cli (context (ranvier.Force ()) source)
+                Expect.equal (messages |> List.map _.Code) [ "RAN020" ] "reported"
+                let fix = messages.Head.Fixes |> List.exactlyOne
+                let repaired = applyFix source fix
+                Expect.isEmpty (run Analyzers.ran020Cli (context (ranvier.Force ()) repaired)) "repaired"
             }
 
             test "a guard in an element expression runs when the template is built" {
@@ -130,9 +142,20 @@ let tests =
 
             test "a static attribute" {
                 Expect.equal
-                    (codes "let c = Component.template (fun _ () -> ()) (div (Attrs.className (string count.Value)) { \"x\" })\n")
+                    (codes "let c = Component.template (fun _ () -> ()) (div (div.className (string count.Value)) { \"x\" })\n")
                     [ "RAN020" ]
                     "className value"
+            }
+
+            test "legacy Ranvier.View.Sugar still triggers RAN020" {
+                let legacy =
+                    "module Legacy\n#nowarn \"44\"\nopen Ranvier\nopen Ranvier.View\nopen Ranvier.View.Sugar\nlet count = createSignal 0\nlet c = Component.template (fun _ () -> ()) (div (Attrs.className (string count.Value)) { \"x\" })\n"
+
+                Expect.equal
+                    (run Analyzers.ran020Cli (context (ranvier.Force ()) legacy)
+                     |> List.map _.Code)
+                    [ "RAN020" ]
+                    "legacy sugar"
             }
 
             test "renderOf's props" {
@@ -170,7 +193,7 @@ let tests =
             test "a read in an event handler" {
                 Expect.isEmpty
                     (codes
-                        "let c = Component.template (fun _ () -> count) (button (Events.onClick (fun (c: Signal<int>) _ -> c.Value <- c.Value + 1)) { \"+\" })\n")
+                        "let c = Component.template (fun _ () -> count) (button (button.onClick (fun (c: Signal<int>) _ -> c.Value <- c.Value + 1)) { \"+\" })\n")
                     "handler"
             }
 

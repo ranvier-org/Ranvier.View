@@ -21,7 +21,7 @@ let project =
 let opens =
     """open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 """
 
 let fail (message: string) =

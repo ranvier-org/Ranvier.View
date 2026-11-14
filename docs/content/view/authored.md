@@ -51,8 +51,8 @@ adds `Item 2`; existing keyed rows stay mounted.
 
 `Ranvier.View.Dom.Generated.Html` requires qualified access; alias it as above.
 `Generated.Html.Authoring` adds overloaded `Attrs` and `Props` modules for the authored layer, whose
-members accept a value, a `unit -> 'T` reader, a `Signal<'T>` or a `Memo<'T>`. Keep that open out of
-files that open the [sugar](sugar.md).
+members accept a value, a `unit -> 'T` reader, a `Signal<'T>` or a `Memo<'T>`, alongside the
+[DSL](sugar.md).
 
 Run an authored view in a mount with `Program.run view context.Backend`, the same call that runs
 `Component.render`. A static snapshot comes from `Representation.Html.render`, written in full beside the `Html` alias:
@@ -72,13 +72,13 @@ A template embeds a `Program.View` through a view hole, `t.view`:
 
 ```fsharp
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 type Card = { Caption: string; Body: Program.View }
 
 let card =
     Component.define (fun _ (card: Card) -> card) (fun t ->
-        div (Attrs.className "card") {
+        div (div.className "card") {
             h3 () { fun c -> c.Caption }
             t.view (fun c -> c.Body)
         })

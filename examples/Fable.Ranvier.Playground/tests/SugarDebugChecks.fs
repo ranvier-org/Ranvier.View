@@ -5,7 +5,7 @@ open global.Ranvier
 open Ranvier.Dom
 open Ranvier.View
 open Ranvier.View.Dom
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 type private Picked =
     {
@@ -26,7 +26,7 @@ let private hazard =
             matchWith (fun (p: Picked) -> p.Pick.Value, p.Log) (fun (_, log) ->
                 // Asserts the Debug failure of a definition created during a region read.
                 // fsharpanalyzer: ignore-line-next RAN022
-                let created = armOf (span (Hooks.mounted (noting log)) { "arm" })
+                let created = armOf (span (span.mounted (noting log)) { "arm" })
                 arm created ())
         })
 
@@ -64,7 +64,7 @@ let private eachHazard =
 
 let private boundLog = ResizeArray<string>()
 
-let private boundArm = armOf (span (Hooks.mounted (noting boundLog)) { "arm" })
+let private boundArm = armOf (span (span.mounted (noting boundLog)) { "arm" })
 
 /// <summary>An arm bound at module level mounts once, however often the selector re-evaluates.</summary>
 let private bound =
@@ -75,7 +75,7 @@ let private propertyLog = ResizeArray<string>()
 /// <summary>A static property whose getter creates a definition on each read.</summary>
 type private ArmHolder =
     static member Arm: Component<unit -> unit> =
-        armOf (span (Hooks.mounted (noting propertyLog)) { "held" })
+        armOf (span (span.mounted (noting propertyLog)) { "held" })
 
 /// <summary>Reads <c>ArmHolder.Arm</c> inside the arms function, once per selector evaluation.</summary>
 let private propertyHazard =
@@ -153,14 +153,14 @@ let private innerExit =
             forEach
                 id
                 (fun (items: int array) -> items)
-                (li () { b (Hooks.exit (System.Func<_, _, _, _>(fun (_: unit -> int) (_: HTMLElement) _ -> ignore))) { "x" } })
+                (li () { b (b.exit (System.Func<_, _, _, _>(fun (_: unit -> int) (_: HTMLElement) _ -> ignore))) { "x" } })
         })
 
 /// <summary>A template whose root element, a root of the mount, has an exit.</summary>
 let private rootExit =
     Component.template
         (fun _ (items: int array) -> items)
-        (ul (Hooks.exit (System.Func<_, _, _, _>(fun (_: int array) (_: HTMLUListElement) _ -> ignore))) { "x" })
+        (ul (ul.exit (System.Func<_, _, _, _>(fun (_: int array) (_: HTMLUListElement) _ -> ignore))) { "x" })
 
 /// <summary>The messages of mounting <c>definition</c> on one row: raised during the mount or reported.</summary>
 let private exitMessages (definition: Component<int array>) =

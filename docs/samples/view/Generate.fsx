@@ -36,7 +36,7 @@ let indent (spaces: int) (lines: string list) =
 let opens =
     [ "open global.Ranvier"
       "open Ranvier.View"
-      "open Ranvier.View.Sugar" ]
+      "open Ranvier.View.Dsl" ]
 
 /// The sample opens with the DOM renderer beside the view layer.
 let domOpens =

@@ -16,8 +16,8 @@ let basket =
     Component.template (fun _ (basket: Basket) -> basket) (
         div () {
             button (
-                Attrs.attribute ("type", "button"),
-                Events.onClick (fun b _ ->
+                button.attribute ("type", "button"),
+                button.onClick (fun b _ ->
                     Api.batch (fun () ->
                         b.Items.Value <- b.Items.Value + 1
                         b.Total.Value <- b.Total.Value + 2.50m))
@@ -25,15 +25,15 @@ let basket =
                 "Add"
             }
 
-            span (Events.on ("dblclick", fun b _ -> b.Items.Value <- 0)) { fun b -> string b.Items.Value + " items" }
+            span (span.on ("dblclick", fun b _ -> b.Items.Value <- 0)) { fun b -> string b.Items.Value + " items" }
         }
     )
 ```
 
-- A handler receives the instance and the event. `Events.onClick`, `Events.onKeydown` and the other
-  generated members type the event (`PointerEvent`, `KeyboardEvent`, ...); `Events.on (name, handler)`
+- A handler receives the instance and the event. `<tag>.onClick` (`button.onClick`), `<tag>.onKeydown` and the other
+  generated members type the event (`PointerEvent`, `KeyboardEvent`, ...); `<tag>.on (name, handler)`
   takes any event name with an `Event`.
-- `Events.onInput`, `onError`, `onAbort`, `onProgress` and `onResize` take a plain `Event`: an element
+- `onInput`, `onError`, `onAbort`, `onProgress` and `onResize` (e.g. `input.onInput`, `img.onError`) take a plain `Event`: an element
   does not always dispatch the subclass. A range, checkbox or select fires `input` as an `Event`, and
   only text editing fires an `InputEvent`; a handler that needs `inputType` or `data` unboxes the event.
 - **Handlers run unbatched.** Each signal write propagates before the next statement. Wrap several
@@ -83,14 +83,14 @@ type Search =
     static member View =
         div () {
             input (
-                Hooks.ref (fun s -> s.Box),
-                Hooks.mounted (fun _ (element: Dom.HTMLInputElement) ->
+                input.ref (fun s -> s.Box),
+                input.mounted (fun _ (element: Dom.HTMLInputElement) ->
                     element.focus ()
                     fun () -> ()),
-                Props.Input.value (from (fun s -> s.Query))
+                input.props.value (from (fun s -> s.Query))
             )
 
-            button (Events.onClick (fun s _ -> s.Box.Current |> Option.iter (fun box -> box.select ()))) { "Select all" }
+            button (button.onClick (fun s _ -> s.Box.Current |> Option.iter (fun box -> box.select ()))) { "Select all" }
         }
 
 let search = Component.ofMembers<Search, _> ()
@@ -98,10 +98,10 @@ let search = Component.ofMembers<Search, _> ()
 
 | Hook | Runs | Its cleanup |
 | --- | --- | --- |
-| `Hooks.mounted (fun inst element -> cleanup)` | Once the element is placed in the mount's host. | Runs when the instance is disposed, before its nodes leave. |
-| `Hooks.ref (fun inst -> nodeRef)` | Sets the `NodeRef` to `Some element` while the element is placed. | Sets it back to `None`. |
-| `Hooks.widget (fun inst element -> cleanup)` | Hands the element's content to other code once placed. | Destroys the widget. |
-| `Hooks.lend (fun inst element -> cleanup)` | Lends the element to an integration that adds listeners, attributes or properties beyond its declared parts. | Removes what the integration added. |
+| `<tag>.mounted (fun inst element -> cleanup)` | Once the element is placed in the mount's host. | Runs when the instance is disposed, before its nodes leave. |
+| `<tag>.ref (fun inst -> nodeRef)` | Sets the `NodeRef` to `Some element` while the element is placed. | Sets it back to `None`. |
+| `<tag>.widget (fun inst element -> cleanup)` | Hands the element's content to other code once placed. | Destroys the widget. |
+| `<tag>.lend (fun inst element -> cleanup)` | Lends the element to an integration that adds listeners, attributes or properties beyond its declared parts. | Removes what the integration added. |
 
 A `NodeRef<'native>` comes from `NodeRef.create ()`, usually in setup. `Current` is `None` during
 setup, before an enclosing boundary reveals the element, and after disposal; reading it is untracked.
@@ -121,7 +121,7 @@ let drawChart (host: Dom.HTMLElement) (points: unit -> float array) : unit -> un
 let chart =
     Component.template (fun _ (chart: Chart) -> chart) (
         figure () {
-            div (Attrs.className "chart", Hooks.widget (fun c (host: Dom.HTMLDivElement) -> drawChart host (fun () -> c.Points.Value))) { }
+            div (div.className "chart", div.widget (fun c (host: Dom.HTMLDivElement) -> drawChart host (fun () -> c.Points.Value))) { }
             figcaption () { "Weekly totals" }
         }
     )

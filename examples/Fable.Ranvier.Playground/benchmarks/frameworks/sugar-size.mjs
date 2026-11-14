@@ -5,11 +5,14 @@
 // Writes docs/research/framework-performance/investigation/view-sugar-v2/bundle.json; Vite's log goes to stderr.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { gzipSync, brotliCompressSync, constants } from "node:zlib";
 import { bundleSugar, isSugarName } from "./sugar-frames.mjs";
 
 const cwd = new URL("../../", import.meta.url);
-const output = new URL("../../docs/research/framework-performance/investigation/view-sugar-v2/bundle.json", cwd);
+const outArg = process.argv.slice(2).find(arg => arg.startsWith("--out="));
+const output = outArg ? pathToFileURL(resolve(outArg.slice("--out=".length))) : new URL("../../docs/research/framework-performance/investigation/view-sugar-v2/bundle.json", cwd);
 const size = file => {
   const raw = readFileSync(file);
   return { raw: raw.length, gzip: gzipSync(raw, { level: 9 }).length, brotli: brotliCompressSync(raw, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length };

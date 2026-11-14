@@ -14,7 +14,7 @@ has every part; this page explains their shared lifecycle.
 open global.Ranvier
 open Ranvier.Anime
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Anime
 
 type Task = { Id: int; Title: string }
@@ -33,7 +33,7 @@ let taskList =
                 Done = Api.createSignal 0.
             })
         (section () {
-            ul (Attrs.className "tasks", Motion.flip (LayoutOptions.Default.WithDuration 300u)) {
+            ul (ul.className "tasks", Motion.flip (LayoutOptions.Default.WithDuration 300u)) {
                 forEach
                     (fun task -> task.Id)
                     (fun l -> l.Tasks.Value)
@@ -46,7 +46,7 @@ let taskList =
                     })
             }
 
-            div (Attrs.className "progress", Motion.follow "scaleX" { ComposedAnimationOptions.Default with Duration = 400. } (fun l -> l.Done.Value)) { () }
+            div (div.className "progress", Motion.follow "scaleX" { ComposedAnimationOptions.Default with Duration = 400. } (fun l -> l.Done.Value)) { () }
         })
 ```
 
@@ -202,7 +202,7 @@ let handle =
             })
         (div () {
             div (
-                Attrs.className "handle",
+                div.className "handle",
                 Motion.drag NativeDraggableOptions.Default (fun h ->
                     {
                         Position = h.Offset
@@ -213,7 +213,7 @@ let handle =
                 "drag"
             }
 
-            button (Events.onClick (fun (h: Handle) _ -> springBack h)) { "Back" }
+            button (button.onClick (fun (h: Handle) _ -> springBack h)) { "Back" }
         })
 ```
 
@@ -245,7 +245,7 @@ hydration attaches them. The story example renders its whole page that way with
 
 ## SVG
 
-`draw` and `morph` animate SVG geometry. The SVG tags of the sugar (`svg`, `g`, `path`, `circle`,
+`draw` and `morph` animate SVG geometry. The SVG tags of the DSL (`svg`, `g`, `path`, `circle`,
 `ellipse`, `line`, `polyline`, `polygon`, `rect`, `text'`, `tspan`, `use'`, `defs`,
 `linearGradient`, `radialGradient`, `stop`, `clipPath`, `mask`, `foreignObject` and `title'`) create
 SVG elements under both commit modes, and a list row or arm rooted at one of them is an SVG element.
@@ -263,13 +263,13 @@ The parts are written against three hooks of the view, usable without anime:
 
 | Hook | Runs |
 | --- | --- |
-| `Hooks.motion (Func<_, _, _, _> (fun inst element context -> cleanup))` | once the element is placed, with `context.Hydrated`, `context.Inserted` and `context.ExitPending` |
-| `Hooks.exit (Func<_, _, _, _> (fun inst element finish -> cancel))` | when the row or arm is retired; the element leaves when `finish ()` is called |
-| `Hooks.reflow (fun inst element -> { Before = ...; After = ... })` | on a region's parent: `Before` ahead of the first region pass in a flush, `After` once the pass is in place |
+| `<tag>.motion (Func<_, _, _, _> (fun inst element context -> cleanup))` | once the element is placed, with `context.Hydrated`, `context.Inserted` and `context.ExitPending` |
+| `<tag>.exit (Func<_, _, _, _> (fun inst element finish -> cancel))` | when the row or arm is retired; the element leaves when `finish ()` is called |
+| `<tag>.reflow (Func<_, _, _> (fun inst element -> { Before = ...; After = ... }))` | on a region's parent: `Before` ahead of the first region pass in a flush, `After` once the pass is in place |
 
-The hooks take `System.Func` delegates. F# converts a lambda to a delegate that returns a function
-only when written `Func<_, _, _, _> (fun ...)`; `reflow` returns a record and takes a plain lambda.
-`Hooks.both (first, second)` combines two hook parts on one element, at most one of them other than
+All three hooks take `System.Func` delegates: F# converts a lambda to a delegate only when
+wrapped with `Func<..., _> (fun ...)`.
+`<tag>.both (first, second)` combines two hook parts on one element, at most one of them other than
 a motion hook. The server omits all three kinds.
 
 ## Examples
@@ -277,7 +277,7 @@ a motion hook. The server omits all three kinds.
 The [browser examples menu](https://ranvier-org.github.io/Ranvier.View/examples/) also links the main playground and the
 server hydration example.
 
-`examples/Ranvier.Motion` is a Vite app with five pages, each a sugar component tree run as a
+`examples/Ranvier.Motion` is a Vite app with five pages, each a DSL component tree run as a
 CI test under jsdom and Playwright. The site serves the built pages, with an
 [index](/Ranvier.View/examples/motion/index.html) of all five:
 

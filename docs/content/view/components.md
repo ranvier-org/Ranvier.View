@@ -11,7 +11,7 @@ The samples share this props record and these opens:
 ```fsharp
 open global.Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 
 type CounterProps = { Start: int; Caption: string }
 ```
@@ -35,10 +35,10 @@ type Counter =
         { Count = createSignal props.Start; Caption = props.Caption }
 
     static member View =
-        div (Attrs.className "counter") {
-            span (Attrs.className "caption") { fun c -> c.Caption }
+        div (div.className "counter") {
+            span (span.className "caption") { fun c -> c.Caption }
 
-            button (Attrs.attribute ("type", "button"), Events.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) {
+            button (button.attribute ("type", "button"), button.onClick (fun c _ -> c.Count.Value <- c.Count.Value + 1)) {
                 fun c -> string c.Count.Value
             }
         }
@@ -60,7 +60,7 @@ definition is created. Read `View` only through the helper.
 let badge =
     Component.template
         (fun _ (label: string) -> label)
-        (span (Attrs.className "badge") { fun label -> label })
+        (span (span.className "badge") { fun label -> label })
 ```
 
 The view is built once. Rendering `badge` with `"New"` produces `<span class="badge">New</span>`;
@@ -75,7 +75,7 @@ type Switch(setup: Setup, initial: bool) =
     member _.On = on
 
     static member View: TemplateView<Switch> =
-        button (Attrs.attribute ("type", "button"), Events.onClick (fun (s: Switch) _ -> s.On.Value <- not s.On.Value)) {
+        button (button.attribute ("type", "button"), button.onClick (fun (s: Switch) _ -> s.On.Value <- not s.On.Value)) {
             fun (s: Switch) -> if s.On.Value then "On" else "Off"
         }
 
@@ -134,8 +134,8 @@ type Labelled =
 
     static member View =
         div () {
-            label (Attrs.attribute ("for", fun l -> Some l.Id)) { fun l -> l.Text }
-            input (Attrs.id (fun l -> l.Id))
+            label (label.attribute ("for", fun l -> Some l.Id)) { fun l -> l.Text }
+            input (input.id (fun l -> l.Id))
         }
 
 let labelled = Component.ofMembers<Labelled, _> ()
@@ -170,7 +170,7 @@ type Panel =
         { Title = props.Title; Hits = createSignal 0 }
 
     static member View =
-        section (Attrs.className "panel") {
+        section (section.className "panel") {
             h2 () { fun p -> p.Title }
             render counter (fun p -> { Start = 1; Caption = p.Title })
             renderOf switch true

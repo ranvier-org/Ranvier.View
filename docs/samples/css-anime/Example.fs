@@ -7,7 +7,7 @@ open Fable.Ranvier.Anime
 open Ranvier.Css
 open Ranvier.Css.View
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Anime
 
 /// <summary>The length animated by each component instance.</summary>
@@ -24,7 +24,7 @@ let card =
     Component.template
         (fun _ (target: Signal<float>) -> target)
         (div [|
-            yield Attrs.className "card"
+            yield div.className "card"
             yield! styles { cardStyle }
             yield Motion.followCss gap { ComposedAnimationOptions.Default with Duration = 300.; Ease = fun t -> 1. - (1. - t) ** 4. } (fun (target: Signal<float>) -> Css.px target.Value)
         |] { "Animated typed CSS" })

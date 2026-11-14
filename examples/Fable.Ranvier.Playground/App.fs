@@ -5,7 +5,7 @@ open Fable.Core
 open Ranvier.Dom
 open Ranvier
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open Ranvier.View.Dom
 
 type private DemoState =
@@ -28,50 +28,50 @@ type private Demo =
 
     static member View: TemplateView<Demo> =
         section (
-            Attrs.className "demo-grid",
-            Attrs.data ("testid", "demo-root"),
-            Attrs.data ("parity", fun demo -> Some (if demo.State.Count.Value % 2 = 0 then "even" else "odd"))
+            section.className "demo-grid",
+            section.data ("testid", "demo-root"),
+            section.data ("parity", fun demo -> Some (if demo.State.Count.Value % 2 = 0 then "even" else "odd"))
         ) {
-            article (Attrs.className "panel counter-panel") {
-                div (Attrs.className "panel-heading") {
-                    span (Attrs.className "eyebrow") { "01 / Counter" }
-                    span (Attrs.className "tag") { "signal → text" }
+            article (article.className "panel counter-panel") {
+                div (div.className "panel-heading") {
+                    span (span.className "eyebrow") { "01 / Counter" }
+                    span (span.className "tag") { "signal → text" }
                 }
 
-                output (Attrs.className "count", Attrs.data ("testid", "count"), Attrs.aria ("live", "polite")) {
+                output (output.className "count", output.data ("testid", "count"), output.aria ("live", "polite")) {
                     fun demo -> string demo.State.Count.Value
                 }
 
-                div (Attrs.className "derived") {
+                div (div.className "derived") {
                     span () { "Doubled" }
-                    output (Attrs.data ("testid", "doubled")) { fun demo -> string demo.Doubled.Value }
+                    output (output.data ("testid", "doubled")) { fun demo -> string demo.Doubled.Value }
                 }
 
-                div (Attrs.className "actions") {
+                div (div.className "actions") {
                     button (
-                        Attrs.className "primary",
-                        Attrs.data ("testid", "increment"),
-                        Attrs.Button.``type`` "button",
-                        Events.onClick (fun demo _ -> demo.State.Count.Value <- demo.State.Count.Value + 1)
+                        button.className "primary",
+                        button.data ("testid", "increment"),
+                        button.``type`` "button",
+                        button.onClick (fun demo _ -> demo.State.Count.Value <- demo.State.Count.Value + 1)
                     ) {
                         "Increment +1"
                     }
 
                     button (
-                        Attrs.className "secondary",
-                        Attrs.data ("testid", "reset"),
-                        Attrs.Button.``type`` "button",
-                        Props.Button.disabled (fun demo -> demo.State.Count.Value = 0),
-                        Events.onClick (fun demo _ -> demo.State.Count.Value <- 0)
+                        button.className "secondary",
+                        button.data ("testid", "reset"),
+                        button.``type`` "button",
+                        button.props.disabled (fun demo -> demo.State.Count.Value = 0),
+                        button.onClick (fun demo _ -> demo.State.Count.Value <- 0)
                     ) {
                         "Reset"
                     }
 
                     button (
-                        Attrs.className "secondary",
-                        Attrs.data ("testid", "burst"),
-                        Attrs.Button.``type`` "button",
-                        Events.onClick (fun demo _ ->
+                        button.className "secondary",
+                        button.data ("testid", "burst"),
+                        button.``type`` "button",
+                        button.onClick (fun demo _ ->
                             batch (fun () ->
                                 for _ in 1..100 do
                                     demo.State.Count.Value <- demo.State.Count.Value + 1))
@@ -80,31 +80,29 @@ type private Demo =
                     }
                 }
 
-                p (Attrs.className "note") { "The output changes. The DOM nodes stay." }
+                p (p.className "note") { "The output changes. The DOM nodes stay." }
             }
 
-            article (Attrs.className "panel name-panel") {
-                div (Attrs.className "panel-heading") {
-                    span (Attrs.className "eyebrow") { "02 / Input" }
-                    span (Attrs.className "tag") { "event → signal" }
+            article (article.className "panel name-panel") {
+                div (div.className "panel-heading") {
+                    span (span.className "eyebrow") { "02 / Input" }
+                    span (span.className "tag") { "event → signal" }
                 }
 
-                label (Attrs.attribute ("for", "name-field")) { "Your name" }
+                label (label.attribute ("for", "name-field")) { "Your name" }
 
                 input (
-                    Attrs.id "name-field",
-                    Attrs.Input.``type`` "text",
-                    Attrs.attribute ("autocomplete", "off"),
-                    Attrs.data ("testid", "name"),
-                    Props.Input.value _.State.Name.Value,
-                    Events.onInput (fun demo event -> demo.State.Name.Value <- (unbox<HTMLInputElement> event.currentTarget).value)
+                    input.id "name-field",
+                    input.``type`` "text",
+                    input.attribute ("autocomplete", "off"),
+                    input.data ("testid", "name"),
+                    input.props.value _.State.Name.Value,
+                    input.onInput (fun demo event -> demo.State.Name.Value <- (unbox<HTMLInputElement> event.currentTarget).value)
                 )
 
-                p (Attrs.className "greeting", Attrs.data ("testid", "greeting"), Attrs.aria ("live", "polite")) {
-                    fun demo -> $"Hello, {demo.State.Name.Value}"
-                }
+                p (p.className "greeting", p.data ("testid", "greeting"), p.aria ("live", "polite")) { fun demo -> $"Hello, {demo.State.Name.Value}" }
 
-                p (Attrs.className "note") { "Type anywhere in the field. Focus and selection are preserved." }
+                p (p.className "note") { "Type anywhere in the field. Focus and selection are preserved." }
             }
         }
 
@@ -158,16 +156,16 @@ type private Foundation =
     static member View: TemplateView<Foundation> =
         section () {
             section (
-                Attrs.id "foundation-demo",
-                Attrs.className "panel",
-                Attrs.data ("row-count", fun state -> Some (string state.Rows.Value.Length))
+                section.id "foundation-demo",
+                section.className "panel",
+                section.data ("row-count", fun state -> Some (string state.Rows.Value.Length))
             ) {
                 "Foundation implementation: keyed rows"
 
                 button (
-                    Attrs.id "foundation-add",
-                    Attrs.Button.``type`` "button",
-                    Events.onClick (fun state _ ->
+                    button.id "foundation-add",
+                    button.``type`` "button",
+                    button.onClick (fun state _ ->
                         let next =
                             state.Rows.Value
                             |> Array.map fst
@@ -180,9 +178,9 @@ type private Foundation =
                 }
 
                 button (
-                    Attrs.id "foundation-reverse",
-                    Attrs.Button.``type`` "button",
-                    Events.onClick (fun state _ -> state.Rows.Value <- Array.rev state.Rows.Value)
+                    button.id "foundation-reverse",
+                    button.``type`` "button",
+                    button.onClick (fun state _ -> state.Rows.Value <- Array.rev state.Rows.Value)
                 ) {
                     "Reverse rows"
                 }
@@ -190,31 +188,29 @@ type private Foundation =
                 forEach
                     fst
                     _.Rows.Value
-                    (div (Attrs.id (fun current -> "foundation-row-" + string (fst (current ())))) { fun current -> snd (current ()) })
+                    (div (div.id (fun current -> "foundation-row-" + string (fst (current ())))) { fun current -> snd (current ()) })
             }
 
             renderOf ComponentsExample.``component`` ()
 
             div (
-                Attrs.id "foundation-load",
-                Attrs.role "region",
-                Attrs.aria ("label", "Load result"),
-                Attrs.aria ("busy", fun state -> Some (if state.Busy () then "true" else "false"))
+                div.id "foundation-load",
+                div.role "region",
+                div.aria ("label", "Load result"),
+                div.aria ("busy", fun state -> Some (if state.Busy () then "true" else "false"))
             ) {
                 "Load result"
-                div (Attrs.id "foundation-load-status") { fun state -> state.Status () }
-                div (Attrs.id "foundation-load-result") { fun state -> state.Result () }
-                div (Attrs.id "foundation-load-error") { fun state -> state.Error () }
+                div (div.id "foundation-load-status") { fun state -> state.Status () }
+                div (div.id "foundation-load-result") { fun state -> state.Result () }
+                div (div.id "foundation-load-error") { fun state -> state.Error () }
 
-                button (Attrs.id "foundation-pending", Attrs.Button.``type`` "button", Events.onClick (fun state _ -> state.Pending ())) {
+                button (button.id "foundation-pending", button.``type`` "button", button.onClick (fun state _ -> state.Pending ())) {
                     "Start loading"
                 }
 
-                button (Attrs.id "foundation-fail", Attrs.Button.``type`` "button", Events.onClick (fun state _ -> state.Fail ())) {
-                    "Simulate failure"
-                }
+                button (button.id "foundation-fail", button.``type`` "button", button.onClick (fun state _ -> state.Fail ())) { "Simulate failure" }
 
-                button (Attrs.id "foundation-recover", Attrs.Button.``type`` "button", Events.onClick (fun state _ -> state.Recover ())) { "Recover" }
+                button (button.id "foundation-recover", button.``type`` "button", button.onClick (fun state _ -> state.Recover ())) { "Recover" }
             }
         }
 
@@ -304,18 +300,18 @@ type private Shell =
         }
 
     static member View: TemplateView<Shell> =
-        div (Attrs.className "playground") {
-            header (Attrs.className "page-heading") {
-                div (Attrs.className "brand") {
-                    span (Attrs.className "brand-mark") { "r" }
+        div (div.className "playground") {
+            header (header.className "page-heading") {
+                div (div.className "brand") {
+                    span (span.className "brand-mark") { "r" }
                     span () { "Fable.Ranvier" }
                 }
 
-                span (Attrs.className "preview") { "DOM PoC" }
+                span (span.className "preview") { "DOM PoC" }
             }
 
-            section (Attrs.className "intro") {
-                p (Attrs.className "eyebrow") { "F# · Fable · Browser DOM" }
+            section (section.className "intro") {
+                p (p.className "eyebrow") { "F# · Fable · Browser DOM" }
 
                 h1 () {
                     "Create once."
@@ -323,11 +319,11 @@ type private Shell =
                     span () { "Update what changes." }
                 }
 
-                p (Attrs.className "lead") { "A small playground for reactive text, properties and events. No component tree rebuild on each edit." }
+                p (p.className "lead") { "A small playground for reactive text, properties and events. No component tree rebuild on each edit." }
             }
 
-            div (Attrs.className "mount-bar") {
-                span (Attrs.data ("testid", "scheduling-status")) {
+            div (div.className "mount-bar") {
+                span (span.data ("testid", "scheduling-status")) {
                     fun shell ->
                         if shell.Queued.Value then
                             "Microtask DOM commits"
@@ -336,10 +332,10 @@ type private Shell =
                 }
 
                 button (
-                    Attrs.className "secondary",
-                    Attrs.data ("testid", "scheduling-toggle"),
-                    Attrs.Button.``type`` "button",
-                    Events.onClick (fun shell _ -> shell.ToggleScheduling ())
+                    button.className "secondary",
+                    button.data ("testid", "scheduling-toggle"),
+                    button.``type`` "button",
+                    button.onClick (fun shell _ -> shell.ToggleScheduling ())
                 ) {
                     fun shell ->
                         if shell.Queued.Value then
@@ -349,20 +345,20 @@ type private Shell =
                 }
 
                 button (
-                    Attrs.className "secondary",
-                    Attrs.data ("testid", "flush-dom"),
-                    Attrs.Button.``type`` "button",
-                    Events.onClick (fun shell _ -> shell.Flush ())
+                    button.className "secondary",
+                    button.data ("testid", "flush-dom"),
+                    button.``type`` "button",
+                    button.onClick (fun shell _ -> shell.Flush ())
                 ) {
                     "Flush DOM"
                 }
             }
 
-            div (Attrs.className "mount-bar") {
-                div (Attrs.className "mount-state") {
-                    span (Attrs.className "status-dot", Attrs.data ("active", fun shell -> if shell.Mounted.Value then Some "true" else None)) { }
+            div (div.className "mount-bar") {
+                div (div.className "mount-state") {
+                    span (span.className "status-dot", span.data ("active", fun shell -> if shell.Mounted.Value then Some "true" else None)) { }
 
-                    span (Attrs.data ("testid", "mount-status")) {
+                    span (span.data ("testid", "mount-status")) {
                         fun shell ->
                             if shell.Mounted.Value then
                                 "Demo mounted"
@@ -372,10 +368,10 @@ type private Shell =
                 }
 
                 button (
-                    Attrs.className "secondary toggle",
-                    Attrs.data ("testid", "mount-toggle"),
-                    Attrs.Button.``type`` "button",
-                    Events.onClick (fun shell _ -> shell.Toggle ())
+                    button.className "secondary toggle",
+                    button.data ("testid", "mount-toggle"),
+                    button.``type`` "button",
+                    button.onClick (fun shell _ -> shell.Toggle ())
                 ) {
                     fun shell ->
                         if shell.Mounted.Value then
@@ -385,10 +381,10 @@ type private Shell =
                 }
             }
             // This widget owns the mount whose commit scheduler and lifetime the controls demonstrate.
-            div (Hooks.widget (fun shell element -> shell.AttachDemo element)) { }
+            div (div.widget (fun shell element -> shell.AttachDemo element)) { }
             renderOf foundationComponent ()
 
-            section (Attrs.className "empty-state", Attrs.hidden _.Mounted.Value) {
+            section (section.className "empty-state", section.hidden _.Mounted.Value) {
                 h2 () { "The mount is disposed." }
                 p () { "Its nodes, bindings and event listeners have been removed. Remount to continue with the same state." }
             }

@@ -4,7 +4,7 @@ module FrameworkClassPerf
 open global.Ranvier
 open Ranvier.Dom
 open Ranvier.View
-open Ranvier.View.Sugar
+open Ranvier.View.Dsl
 open FrameworkPerf
 
 /// <summary>The props of the class-declared row: the fields of <c>FrameworkPerf.PerfProps</c>.</summary>
@@ -22,16 +22,12 @@ type PerfRowClass(setup: Setup, props: PerfRowClassProps) =
     member val Local = Api.createSignal 0
 
     static member View: TemplateView<PerfRowClass> =
-        div (
-            Attrs.id (fun (r: PerfRowClass) -> "row-" + string r.Index),
-            Attrs.className "panel",
-            Attrs.title (from (fun (r: PerfRowClass) -> r.Source))
-        ) {
-            input (Props.Input.value (from (fun (r: PerfRowClass) -> r.Source)))
+        div (div.id (fun (r: PerfRowClass) -> "row-" + string r.Index), div.className "panel", div.title (from (fun (r: PerfRowClass) -> r.Source))) {
+            input (input.props.value (from (fun (r: PerfRowClass) -> r.Source)))
 
             button (
-                Props.Button.disabled (from (fun (r: PerfRowClass) -> r.Disabled)),
-                Events.onClick (fun (r: PerfRowClass) _ -> r.Local.Value <- r.Local.Value + 1)
+                button.props.disabled (from (fun (r: PerfRowClass) -> r.Disabled)),
+                button.onClick (fun (r: PerfRowClass) _ -> r.Local.Value <- r.Local.Value + 1)
             ) {
                 fun (r: PerfRowClass) -> string r.Local.Value
             }
