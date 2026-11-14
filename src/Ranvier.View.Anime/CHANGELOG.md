@@ -1,5 +1,5 @@
 ---
-last_commit_released: 85021719b00d17b8ff3e989ad79a8fa32cea6492
+last_commit_released: a4afae44bf734666f3df5031e82a947046a82e24
 pre_release: rc
 include:
   - ../Fable.Ranvier.View.Anime/
@@ -16,6 +16,14 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.46-rc.3 - 2026-11-14
+
+### 🚀 Features
+
+* *(view)* Add unified Ranvier.View.Dsl and obsolete Ranvier.View.Sugar (#148) ([a4afae4](https://github.com/ranvier-org/Ranvier.View/commit/a4afae44bf734666f3df5031e82a947046a82e24))
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/85021719b00d17b8ff3e989ad79a8fa32cea6492..a4afae44bf734666f3df5031e82a947046a82e24)</small></strong>
 
 ## 0.1.46-rc.2 - 2026-11-12
 
