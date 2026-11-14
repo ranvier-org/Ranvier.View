@@ -1,6 +1,5 @@
 ---
 last_commit_released: a4afae44bf734666f3df5031e82a947046a82e24
-pre_release: rc
 include:
   - ../Ranvier.View.Dom/
   - ../../Directory.Build.props
@@ -11,6 +10,9 @@ updaters:
   - regex:
       file: ../Ranvier.View.Dom/Ranvier.View.Dom.fsproj
       pattern: (?<=<Version>)[^<]+(?=</Version>)
+  - regex:
+      file: README.md
+      pattern: (?<=dotnet add package Ranvier\.View\.Dom --version )\S+
 ---
 
 # Changelog

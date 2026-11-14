@@ -6,15 +6,15 @@ The companion [Ranvier.View.Dom](../Ranvier.View.Dom/README.md) mounts the same 
 or hydrates their server HTML. Server-only and shared component code references `Ranvier.View` alone;
 the explicit browser authoring examples below also use `Ranvier.View.Dom.Generated.Html`.
 
-Install `Ranvier.View` 0.1.1 for server-only or shared components. Browser apps install
-`Ranvier.View.Dom` 0.1.1 and `Fable.Ranvier.Dom` 0.1.0-alpha.2; use the matching `.Traced` package
+Install `Ranvier.View` for server-only or shared components. Browser apps install
+`Ranvier.View.Dom` and `Fable.Ranvier.Dom`; use the matching `.Traced` package
 IDs for a traced build. The explicit Fable DOM companion supplies browser metadata with the same
 assembly identity as the transitive .NET `Ranvier.Dom` contracts. Source project references select
 that companion through `FABLE_COMPILER`.
 
 ```sh
-dotnet add package Ranvier.View.Dom --version 0.1.1
-dotnet add package Fable.Ranvier.Dom --version 0.1.0-alpha.2
+dotnet add package Ranvier.View.Dom --version 0.1.49-rc.5
+dotnet add package Fable.Ranvier.Dom --version 0.1.0-rc.1
 ```
 
 Public DOM types come from `Ranvier.Dom`.
