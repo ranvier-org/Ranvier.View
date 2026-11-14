@@ -21,6 +21,7 @@ module Spec =
             "src/Fable.Ranvier.View.Anime/Fable.Ranvier.View.Anime.fsproj"
             "src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj"
             "src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj"
+            "src/Ranvier.View.WebCore.Hmr/Ranvier.View.WebCore.Hmr.fsproj"
         ]
 
     let analyzers = "tools/Ranvier.Analyzers/Ranvier.Analyzers.fsproj"
