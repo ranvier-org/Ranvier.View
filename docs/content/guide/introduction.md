@@ -6,7 +6,7 @@ order: 1
 ## Installation
 
 ```bash frame="terminal"
-dotnet add package Ranvier.View.Dom --version 0.1.49
+dotnet add package Ranvier.View.Dom --version 0.1.50
 ```
 
 `Ranvier.View.Dom` brings in `Ranvier.View` and the [Ranvier core](https://ranvier-org.github.io/Ranvier/).

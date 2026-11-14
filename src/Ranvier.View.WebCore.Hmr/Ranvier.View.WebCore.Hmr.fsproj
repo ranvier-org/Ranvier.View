@@ -12,7 +12,7 @@
         <PackageTags>reactive;signals;view;webcore;native;hot-reload;hmr;fsharp</PackageTags>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageReleaseNotes>Experimental development tool. JIT only; reference it from Debug builds.</PackageReleaseNotes>
-        <Version>0.1.0</Version>
+        <Version>0.1.1</Version>
         <IsPackable>true</IsPackable>
         <IsAotCompatible>false</IsAotCompatible>
         <!-- The checker gate: the traced build matches the traced Ranvier core of a Debug build. -->

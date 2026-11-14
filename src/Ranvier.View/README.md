@@ -13,7 +13,7 @@ assembly identity as the transitive .NET `Ranvier.Dom` contracts. Source project
 that companion through `FABLE_COMPILER`.
 
 ```sh
-dotnet add package Ranvier.View.Dom --version 0.1.49
+dotnet add package Ranvier.View.Dom --version 0.1.50
 dotnet add package Fable.Ranvier.Dom --version 0.1.0
 ```
 
