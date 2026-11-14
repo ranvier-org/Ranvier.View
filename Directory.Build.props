@@ -38,8 +38,7 @@
         <RanvierQueryVersion>0.2.0</RanvierQueryVersion>
         <RanvierCssVersion>0.1.1</RanvierCssVersion>
         <RanvierCssBindingsVersion>0.1.1</RanvierCssBindingsVersion>
-        <!-- Ranvier.Css.View 0.1.1 follows this repository's stable release. -->
-        <RanvierCssViewVersion>0.1.1-alpha.1</RanvierCssViewVersion>
+        <RanvierCssViewVersion>0.1.1</RanvierCssViewVersion>
         <RanvierDomVersion>0.1.0</RanvierDomVersion>
         <RanvierAnimeVersion>0.1.45</RanvierAnimeVersion>
         <RanvierNativeAnimeVersion>0.1.0</RanvierNativeAnimeVersion>

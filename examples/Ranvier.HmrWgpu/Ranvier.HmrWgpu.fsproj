@@ -24,6 +24,6 @@
         Its WebCore.Sdl dependency resolves to the project above: `.Traced` (the RanvierTrace=true default for
         -c Debug) depends on Ranvier.View.WebCore.Sdl.Traced, the untraced package on Ranvier.View.WebCore.Sdl.
         -->
-        <PackageReference Include="Ranvier.Wgpu.Sdl$(RanvierPackageSuffix)" Version="0.1.0-alpha.2" />
+        <PackageReference Include="Ranvier.Wgpu.Sdl$(RanvierPackageSuffix)" Version="0.1.0" />
     </ItemGroup>
 </Project>
