@@ -11,7 +11,7 @@ updaters:
       pattern: (?<=Include="Ranvier.Analyzers" Version=")[^"]+
   - regex:
       file: ../../docs/content/analyzers/index.md
-      pattern: (?<=Include="Ranvier.Analyzers" Version=")[^"]+|(?<=candidate at `)[^`]+
+      pattern: (?<=Include="Ranvier.Analyzers" Version=")[^"]+|(?<=package at `)[^`]+
 ---
 
 # Changelog
