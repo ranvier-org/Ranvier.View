@@ -1,5 +1,5 @@
 ---
-last_commit_released: 335bd1bce23529ca7a9603856fc5c951d7c259f5
+last_commit_released: 733a089f71e9f0896c1c60fa2e22007419b4fd25
 depends_on:
   - ../Ranvier.View.WebCore.Sdl/
 updaters:
@@ -14,6 +14,14 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.1 - 2026-11-14
+
+### 🔗 Dependencies
+
+* `src/Ranvier.View.WebCore.Sdl` updated to 0.1.1
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/335bd1bce23529ca7a9603856fc5c951d7c259f5..733a089f71e9f0896c1c60fa2e22007419b4fd25)</small></strong>
 
 ## 0.1.0 - 2026-11-14
 
