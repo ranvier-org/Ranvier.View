@@ -13,6 +13,12 @@ updaters:
   - regex:
       file: README.md
       pattern: (?<=dotnet add package Ranvier\.View\.Dom --version )\S+
+  - regex:
+      file: ../../docs/content/guide/introduction.md
+      pattern: (?<=dotnet add package Ranvier\.View\.Dom --version )\S+
+  - regex:
+      file: ../../docs/content/view/getting-started.md
+      pattern: (?<=Include="Ranvier\.View\.Dom" Version=")[^"]+
 ---
 
 # Changelog

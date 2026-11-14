@@ -30,7 +30,7 @@ Compile this file into both the server and the client projects. `WireCodec.ofCod
 `Ranvier.Wire.Thoth.Json.Core`; write the contract with `objectCodec` and `variantCodec`.
 
 ```bash
-dotnet add package Ranvier.Wire --prerelease
+dotnet add package Ranvier.Wire
 ```
 
 ## Writing the state

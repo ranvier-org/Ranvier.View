@@ -3,9 +3,9 @@ title: Server rendering
 order: 1
 ---
 
-:::info Alpha
-`Server` lives in `Ranvier.View`; `Hydration` lives in `Ranvier.View.Dom`. Both packages are published
-at `0.1.1-alpha.1`; see [installation and the dependency feed](../guide/introduction.md#installation).
+:::info Pre-1.0
+`Server` lives in `Ranvier.View`; `Hydration` lives in `Ranvier.View.Dom`. Both packages share one
+version; see [installation and the dependency feed](../guide/introduction.md#installation).
 `Ranvier.Wire` supplies state-transfer codecs.
 :::
 

@@ -3,8 +3,8 @@ title: Views
 order: 1
 ---
 
-:::info Alpha
-The view packages share version `0.1.1-alpha.1`; their APIs may change.
+:::info Pre-1.0
+The view packages are pre-1.0 releases; their APIs may change.
 See [installation and the dependency feed](../guide/introduction.md#installation).
 :::
 
@@ -53,15 +53,15 @@ Try this in the [browser editor](getting-started.md).
 
 | Piece | Package or project | Status |
 | --- | --- | --- |
-| Template components, server HTML writer | `Ranvier.View` | Alpha. Compiles for .NET and Fable. |
-| View DSL (free tags, control flow, declarations) | `Ranvier.View` (`Ranvier.View.Dsl`) | Alpha; the primary authoring style. See [Sugar and DSL](sugar.md). |
-| DOM mounting, hydration, document head | `Ranvier.View.Dom` | Alpha. Runs under Fable. |
-| Authored views (`Program.View`, `Generated.Html.Program`) | `Ranvier.View.Dom` | Alpha. See [Other authoring layers](authored.md). |
+| Template components, server HTML writer | `Ranvier.View` | Pre-1.0. Compiles for .NET and Fable. |
+| View DSL (free tags, control flow, declarations) | `Ranvier.View` (`Ranvier.View.Dsl`) | Pre-1.0; the primary authoring style. See [Sugar and DSL](sugar.md). |
+| DOM mounting, hydration, document head | `Ranvier.View.Dom` | Pre-1.0. Runs under Fable. |
+| Authored views (`Program.View`, `Generated.Html.Program`) | `Ranvier.View.Dom` | Pre-1.0. See [Other authoring layers](authored.md). |
 | DOM helper library | `src/Fable.Ranvier` | Proof of concept, not packaged. See [Other authoring layers](authored.md). |
-| anime.js bindings, owners and signals for animations, and the portable animation API | `Fable.Ranvier.Anime` | Alpha. Compiles for .NET and Fable. Published from [Ranvier.Anime](https://ranvier-org.github.io/Ranvier.Anime/); see [Animation](motion.md). |
-| the portable animation API on a native .NET engine | `Ranvier.Anime` | Release candidate. .NET 10. Published from [Ranvier.Anime](https://ranvier-org.github.io/Ranvier.Anime/). |
-| Motion template parts | `Fable.Ranvier.View.Anime`, and `Ranvier.View.Anime` on .NET hosts | Alpha. See [Motion parts](motion-parts.md). |
-| Wire codecs for state transfer | `Ranvier.Wire` | Preview. See [State transfer](../server/state-transfer.md). |
+| anime.js bindings, owners and signals for animations, and the portable animation API | `Fable.Ranvier.Anime` | Pre-1.0. Compiles for .NET and Fable. Published from [Ranvier.Anime](https://ranvier-org.github.io/Ranvier.Anime/); see [Animation](motion.md). |
+| the portable animation API on a native .NET engine | `Ranvier.Anime` | Pre-1.0. .NET 10. Published from [Ranvier.Anime](https://ranvier-org.github.io/Ranvier.Anime/). |
+| Motion template parts | `Fable.Ranvier.View.Anime`, and `Ranvier.View.Anime` on .NET hosts | Pre-1.0. See [Motion parts](motion-parts.md). |
+| Wire codecs for state transfer | `Ranvier.Wire` | Pre-1.0. See [State transfer](../server/state-transfer.md). |
 | Runnable reference | `examples/Fable.Ranvier.Playground` | Vite app and test suite. |
 
 ## Pages
