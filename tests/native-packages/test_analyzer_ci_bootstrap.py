@@ -111,10 +111,13 @@ class AnalyzerBootstrap(unittest.TestCase):
         for project in (ROOT / 'fable/Ranvier.View.Anime.Tests/Ranvier.View.Anime.Tests.fsproj',
                         ROOT / 'docs/samples/css-anime/Ranvier.Docs.CssAnime.fsproj'):
             for item in ET.parse(project).getroot().iter('PackageReference'):
-                if item.get('Include') in ('Ranvier.Css.Bindings', 'Ranvier.Css.View'):
-                    self.assertEqual(item.get('Version'), '$(RanvierCssAddonsVersion)')
+                if item.get('Include') == 'Ranvier.Css.Bindings':
+                    self.assertEqual(item.get('Version'), '$(RanvierCssBindingsVersion)')
+                if item.get('Include') == 'Ranvier.Css.View':
+                    self.assertEqual(item.get('Version'), '$(RanvierCssViewVersion)')
         generated = (ROOT / 'fable/Ranvier.View.Anime.Tests/typecheck.mjs').read_text()
-        self.assertEqual(generated.count('Version="$(RanvierCssAddonsVersion)"'), 2)
+        self.assertEqual(generated.count('Version="$(RanvierCssBindingsVersion)"'), 1)
+        self.assertEqual(generated.count('Version="$(RanvierCssViewVersion)"'), 1)
         self.assertNotIn('Version="$(RanvierCssVersion)"', generated)
 
 

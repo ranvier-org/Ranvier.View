@@ -32,16 +32,17 @@
         <RanvierCssRoot Condition="'$(RanvierCssRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../Ranvier.Css'))</RanvierCssRoot>
         <UseLocalRanvierAnime Condition="'$(UseLocalRanvierAnime)' == ''">false</UseLocalRanvierAnime>
         <RanvierAnimeRoot Condition="'$(RanvierAnimeRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../Ranvier.Anime'))</RanvierAnimeRoot>
-        <RanvierVersion>0.1.1-preview.2</RanvierVersion>
-        <RanvierElmishVersion>0.1.1-preview.1</RanvierElmishVersion>
-        <RanvierWireVersion>0.1.1-preview.1</RanvierWireVersion>
-        <RanvierQueryVersion>0.1.1-preview.1</RanvierQueryVersion>
-        <RanvierCssVersion>0.1.1-alpha.2</RanvierCssVersion>
-        <RanvierCssAddonsVersion>0.1.1-alpha.1</RanvierCssAddonsVersion>
-        <RanvierDomVersion>0.1.0-rc.1</RanvierDomVersion>
-        <!-- The first releases with the portable API: Fable.Ranvier.Anime 0.1.45-rc.2 and Ranvier.Anime 0.1.0-rc.1. -->
-        <RanvierAnimeVersion>0.1.45-rc.2</RanvierAnimeVersion>
-        <RanvierNativeAnimeVersion>0.1.0-rc.1</RanvierNativeAnimeVersion>
+        <RanvierVersion>0.2.0</RanvierVersion>
+        <RanvierElmishVersion>0.2.0</RanvierElmishVersion>
+        <RanvierWireVersion>0.2.0</RanvierWireVersion>
+        <RanvierQueryVersion>0.2.0</RanvierQueryVersion>
+        <RanvierCssVersion>0.1.1</RanvierCssVersion>
+        <RanvierCssBindingsVersion>0.1.1</RanvierCssBindingsVersion>
+        <!-- Ranvier.Css.View 0.1.1 follows this repository's stable release. -->
+        <RanvierCssViewVersion>0.1.1-alpha.1</RanvierCssViewVersion>
+        <RanvierDomVersion>0.1.0</RanvierDomVersion>
+        <RanvierAnimeVersion>0.1.45</RanvierAnimeVersion>
+        <RanvierNativeAnimeVersion>0.1.0</RanvierNativeAnimeVersion>
         <RanvierTrace Condition="'$(RanvierTrace)' == '' and '$(Configuration)' == 'Debug'">true</RanvierTrace>
         <RanvierPackageSuffix Condition="'$(RanvierTrace)' == 'true'">.Traced</RanvierPackageSuffix>
     </PropertyGroup>

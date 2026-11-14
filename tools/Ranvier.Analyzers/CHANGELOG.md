@@ -1,6 +1,5 @@
 ---
 last_commit_released: a4afae44bf734666f3df5031e82a947046a82e24
-pre_release: preview
 depends_on:
   - ../Ranvier.Analyzers.Host/
 updaters:
@@ -12,7 +11,7 @@ updaters:
       pattern: (?<=Include="Ranvier.Analyzers" Version=")[^"]+
   - regex:
       file: ../../docs/content/analyzers/index.md
-      pattern: (?<=Include="Ranvier.Analyzers" Version=")[^"]+|(?<=candidate at `)[^`]+
+      pattern: (?<=Include="Ranvier.Analyzers" Version=")[^"]+|(?<=package at `)[^`]+
 ---
 
 # Changelog

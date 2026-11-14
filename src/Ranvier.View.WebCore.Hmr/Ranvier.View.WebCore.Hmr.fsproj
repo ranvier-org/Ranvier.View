@@ -16,7 +16,7 @@
         <IsPackable>true</IsPackable>
         <IsAotCompatible>false</IsAotCompatible>
         <!-- The checker gate: the traced build matches the traced Ranvier core of a Debug build. -->
-        <RanvierFSharpVersion>0.1.0-preview.3</RanvierFSharpVersion>
+        <RanvierFSharpVersion>0.1.0</RanvierFSharpVersion>
     </PropertyGroup>
 
     <ItemGroup>

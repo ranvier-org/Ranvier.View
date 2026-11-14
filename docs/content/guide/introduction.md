@@ -6,13 +6,13 @@ order: 1
 ## Installation
 
 ```bash frame="terminal"
-dotnet add package Ranvier.View.Dom --version 0.1.1-alpha.1
+dotnet add package Ranvier.View.Dom --version 0.1.49-rc.5
 ```
 
 `Ranvier.View.Dom` brings in `Ranvier.View` and the [Ranvier core](https://ranvier-org.github.io/Ranvier/).
 Add `Fable.Ranvier.View.Anime` for motion parts (`Ranvier.View.Anime` on a .NET host), `Fable.Ranvier.Anime` ([Ranvier.Anime](https://ranvier-org.github.io/Ranvier.Anime/)) for the anime.js bindings alone, and
 `Ranvier.Analyzers` for build-time diagnostics. A server that only renders HTML needs `Ranvier.View`.
-The view packages share one version and support .NET 8, .NET 10 and Fable. They are alpha releases; the API can
+`Ranvier.View` and `Ranvier.View.Dom` share one version and support .NET 8, .NET 10 and Fable. They are pre-1.0 releases; the API can
 change before 1.0.
 
 The view packages depend on `Xantham.Fable.Core.TS`, which restores from the public

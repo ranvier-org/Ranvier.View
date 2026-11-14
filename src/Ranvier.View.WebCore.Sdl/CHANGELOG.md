@@ -1,6 +1,5 @@
 ---
 last_commit_released: a4afae44bf734666f3df5031e82a947046a82e24
-pre_release: rc
 depends_on:
   - ../Ranvier.View.WebCore/
 updaters:
