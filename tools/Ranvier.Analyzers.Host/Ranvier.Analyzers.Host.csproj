@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>Ranvier.Analyzers.Host</AssemblyName>
     <PackageId>Ranvier.Analyzers.Host</PackageId>
-    <Version>0.1.0-preview.3</Version>
+    <Version>0.1.0</Version>
     <Description>Ranvier's isolated F# analyzer host with a pinned compiler expression-conversion fix.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>

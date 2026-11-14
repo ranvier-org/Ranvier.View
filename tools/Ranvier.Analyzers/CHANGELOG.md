@@ -1,5 +1,5 @@
 ---
-last_commit_released: a4afae44bf734666f3df5031e82a947046a82e24
+last_commit_released: 335bd1bce23529ca7a9603856fc5c951d7c259f5
 depends_on:
   - ../Ranvier.Analyzers.Host/
 updaters:
@@ -17,6 +17,18 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.1 - 2026-11-14
+
+### 🐞 Bug Fixes
+
+* *(deps)* Build against the stable Ranvier cohort and release stable versions (#154) ([335bd1b](https://github.com/ranvier-org/Ranvier.View/commit/335bd1bce23529ca7a9603856fc5c951d7c259f5))
+
+### 🔗 Dependencies
+
+* `tools/Ranvier.Analyzers.Host` updated to 0.1.0
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/a4afae44bf734666f3df5031e82a947046a82e24..335bd1bce23529ca7a9603856fc5c951d7c259f5)</small></strong>
 
 ## 0.1.1-preview.4 - 2026-11-14
 
