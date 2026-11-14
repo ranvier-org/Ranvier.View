@@ -35,6 +35,13 @@ let start () : unit -> unit =
 
 `counter` is the sugar component of the [getting started guide](https://ranvier-org.github.io/Ranvier/view/getting-started/). The guide covers [mounts and commit modes](https://ranvier-org.github.io/Ranvier/view/lifetimes/) and [hydration](https://ranvier-org.github.io/Ranvier/server/hydration/).
 
+## Fable compilers
+
+The package's Fable sources compile with Fickl 0.6.9 and later. From 0.1.50, hydration reads the inner
+exceptions of an `AggregateException` from the `errors` array of Fickl 0.10 (the shape of a JS
+`AggregateError`) and from the `innerException` array of earlier compilers, so a mismatch nested in an
+aggregate is found and re-rendered under either.
+
 ## Shared DOM contracts
 
 Public component, modifier and mount types use `Ranvier.Dom` on both .NET and Fable. The generated

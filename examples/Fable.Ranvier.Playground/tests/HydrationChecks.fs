@@ -2074,6 +2074,16 @@ let private recoveredMountsAreLive () =
         (([ [ "Hydration mismatch at root: expected <!--[r-->, found absent" ] ], (Some "a", "Title: a1", "a"), "plainTitle: a1"), "<p>plain</p>")
         (shown, host.innerHTML)
 
+#if FABLE_COMPILER
+/// <summary>A JS <c>AggregateError</c> over <c>inner</c>: the shape Fickl 0.10 gives an <c>AggregateException</c>.</summary>
+[<Emit("new AggregateError([$0], 'errors array')")>]
+let private errorsAggregate (inner: exn) : exn = jsNative
+
+/// <summary>An error holding <c>inner</c> in an <c>innerException</c> array: the shape earlier compilers gave an <c>AggregateException</c>.</summary>
+[<Emit("Object.assign(new Error('innerException array'), { innerException: [$0] })")>]
+let private innerArrayAggregate (inner: exn) : exn = jsNative
+#endif
+
 let private aggregatedMismatch () =
     let found = TemplateDom.mismatch "#0" "<span>" "div"
     let other = InvalidOperationException "other" :> exn
@@ -2093,6 +2103,16 @@ let private aggregatedMismatch () =
             messageOf other
             messageOf (AggregateException ("outer", [| other |]) :> exn)
         ]
+
+#if FABLE_COMPILER
+    equal
+        [ Some found.Message; Some found.Message; None ]
+        [
+            messageOf (errorsAggregate (innerArrayAggregate found))
+            messageOf (innerArrayAggregate (errorsAggregate found))
+            messageOf (errorsAggregate (innerArrayAggregate other))
+        ]
+#endif
 
 let private recoveredIdsUsePrefix () =
     use graph = new Graph ()
