@@ -7,7 +7,7 @@ import { values } from "./Ranvier.View.Arms/Site.js";
 import { Exception, int32ToString } from "./fable_modules/fable-library-js/Util.js";
 import { TemplateParts_exit } from "./src/Ranvier.View/Template.js";
 import { printf, toFail } from "./fable_modules/fable-library-js/String.js";
-import { toString } from "./fable_modules/fable-library-js/Types.js";
+import { toStringOrEmpty } from "./fable_modules/fable-library-js/Types.js";
 import { append } from "./fable_modules/fable-library-js/Array.js";
 
 export function read(state) {
@@ -145,7 +145,7 @@ export const failing = Builders_Component_template((_arg, state) => state, Eleme
 
 const badge = (() => {
     const builder$0040 = Elements_i$1_$ctor_Z10189819();
-    return Elements_Element$2__Run_706D0133(builder$0040, Elements_Element$2__Yield_Z5833CC7(builder$0040, (state) => toString(Signal$1__get_Value(state))));
+    return Elements_Element$2__Run_706D0133(builder$0040, Elements_Element$2__Yield_Z5833CC7(builder$0040, (state) => toStringOrEmpty(Signal$1__get_Value(state))));
 })();
 
 export const spliced = Builders_Component_template((_arg, state) => state, Elements_Element$2__Run_706D0133(Elements_div$1_$ctor_69400C3C(), [Arms_Match_7CDE3892(read, null, (() => {
@@ -163,7 +163,7 @@ export const locals = Builders_Component_template((_arg, state) => state, Elemen
     return [(armsInstance_S9, _arg_1) => ((_arg_1.tag === 2) ? [0, armsTag_S9, _arg_1.fields[0], _arg_1, armsInstance_S9] : [1, armsTag_S9, _arg_1, armsInstance_S9]), [(builder$0040_1 = Elements_pre$1_$ctor_D6A77C0(), Elements_Element$2__Run_706D0133(builder$0040_1, Elements_Element$2__Yield_Z5833CC7(builder$0040_1, (armsArm_S9n2_S9x4) => {
         const armsRead_S9n1 = values(armsArm_S9n2_S9x4, armsTag_S9);
         const s = armsRead_S9n1[4];
-        return armsRead_S9n1[2] + toString(Signal$1__get_Value(s));
+        return armsRead_S9n1[2] + toStringOrEmpty(Signal$1__get_Value(s));
     }))), (builder$0040_2 = Elements_span$1_$ctor_Z7EAF50F5(), Elements_Element$2__Run_706D0133(builder$0040_2, Elements_Element$2__Yield_Z721C83C5(builder$0040_2, "Other")))]];
 })())]));
 

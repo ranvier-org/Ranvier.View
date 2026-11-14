@@ -436,7 +436,7 @@ let private twoReportersThrow () =
     let log, raised = failingReporters true true
 
     equal [ "left:a"; "right:b" ] log
-    equal "Commit failure reporting failed" raised.Message
+    equal "Commit failure reporting failed (left reporter) (right reporter)" raised.Message
 
 let private collectedByScope () =
     equal ([ "left:a,c"; "right:b" ], [ "a"; "b"; "c"; "d" ]) (failuresByScope CollectAndContinue)

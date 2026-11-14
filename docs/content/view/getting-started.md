@@ -29,11 +29,11 @@ Use this `Counter/Counter.fsproj`:
 </Project>
 ```
 
-Install the compiler as a local tool. These docs use Fickl 0.6.9, a Fable compiler fork:
+Install the compiler as a local tool. These docs use the latest Fickl, a Fable compiler fork:
 
 ```bash
 dotnet new tool-manifest
-dotnet tool install fickl --version 0.6.9
+dotnet tool install fickl
 ```
 
 ## The component

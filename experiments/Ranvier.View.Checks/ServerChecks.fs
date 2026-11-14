@@ -501,12 +501,8 @@ let private aggregateFailures () =
             (fun t -> t.span [||] [||])
 
     let shape (error: exn) (inner: string list) =
-#if FABLE_COMPILER
-        // Fable's exception stores the inner array as its inner exception.
-        let count = (unbox<exn array>(box error.InnerException)).Length
-#else
         let count = (error :?> AggregateException).InnerExceptions.Count
-#endif
+
         count,
         inner
         |> List.forall (fun (part: string) -> error.Message.Contains part)
@@ -1314,12 +1310,7 @@ let private authoredPendingWithCleanupFailure () =
             Server.render Server.Options.defaults authoredPendingGuarded ()
             |> ignore)
 
-#if FABLE_COMPILER
-    // Fable's exception stores the inner array as its inner exception.
-    let firstInner = (unbox<exn array>(box outside.InnerException))[0]
-#else
     let firstInner = (outside :?> AggregateException).InnerExceptions[0]
-#endif
 
     let pendingFirst =
         match firstInner with

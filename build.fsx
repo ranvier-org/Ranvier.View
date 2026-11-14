@@ -493,7 +493,7 @@ module Stage =
             return
                 stage "view checks" {
                     when' (not skip)
-                    stage "workflow scripts" { run "node --test .github/scripts/contrib.test.cjs" }
+                    stage "workflow scripts" { run "node --test .github/scripts/contrib.test.cjs .github/scripts/tool-manifest.test.cjs" }
 
                     stage "view group" {
                         when' (chosen "view")
