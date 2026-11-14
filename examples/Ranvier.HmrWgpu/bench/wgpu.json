@@ -1,0 +1,52 @@
+[
+  { "op": "click", "selector": "#rotate", "times": 2 },
+  { "op": "expect", "selector": "#scene-angle", "text": "angle 60" },
+  { "op": "expect", "selector": "#renders", "text": "renders 3" },
+
+  { "op": "edit", "name": "G1 overlay static text", "file": "Scene.fs", "find": "t.text \"Ranvier.Wgpu under HMR\"", "replace": "t.text \"Ranvier.Wgpu, hot reloaded\"" },
+  { "op": "expect", "selector": "#scene-title", "text": "Ranvier.Wgpu, hot reloaded" },
+  { "op": "expect", "selector": "#renders", "text": "renders 3" },
+  { "op": "pixel", "selector": "#viewport", "text": "b" },
+  { "op": "revert", "name": "G1 revert", "file": "Scene.fs" },
+
+  { "op": "edit", "name": "G2 overlay reader", "file": "Scene.fs", "find": "$\"angle {s.Angle.Value}\"", "replace": "$\"yaw {s.Angle.Value}\"" },
+  { "op": "expect", "selector": "#scene-angle", "text": "yaw 60" },
+  { "op": "expect", "selector": "#renders", "text": "renders 3" },
+  { "op": "revert", "name": "G2 revert", "file": "Scene.fs" },
+
+  { "op": "edit", "name": "G3 handler driving the camera", "file": "Scene.fs", "find": "s.Angle.Value + 15.0f", "replace": "s.Angle.Value + 45.0f" },
+  { "op": "click", "selector": "#rotate", "times": 1 },
+  { "op": "expect", "selector": "#scene-angle", "text": "angle 105" },
+  { "op": "expect", "selector": "#renders", "text": "renders 4" },
+  { "op": "revert", "name": "G3 revert", "file": "Scene.fs" },
+  { "op": "click", "selector": "#rotate", "times": 1 },
+  { "op": "expect", "selector": "#scene-angle", "text": "angle 120" },
+
+  { "op": "edit", "name": "G4 setup: GPU batch colour", "file": "Scene.fs", "find": "RgbaColor.fromHex \"#0ea5e9\"", "replace": "RgbaColor.fromHex \"#ef4444\"" },
+  { "op": "pixel", "selector": "#viewport", "text": "r" },
+  { "op": "expect", "selector": "#scene-angle", "text": "angle 120" },
+  { "op": "expect", "selector": "#renders", "text": "renders 6" },
+  { "op": "revert", "name": "G4 revert", "file": "Scene.fs" },
+  { "op": "pixel", "selector": "#viewport", "text": "b" },
+  { "op": "expect", "selector": "#renders", "text": "renders 7" },
+
+  { "op": "edit", "name": "G5 module value read by the render effect", "file": "Scene.fs", "find": "let backdrop = \"#05070b\"", "replace": "let backdrop = \"#3b0505\"" },
+  { "op": "pixel", "selector": "#viewport", "attr": "corner", "text": "r" },
+  { "op": "expect", "selector": "#renders", "text": "renders 8" },
+  { "op": "revert", "name": "G5 revert", "file": "Scene.fs" },
+  { "op": "pixel", "selector": "#viewport", "attr": "corner", "text": "b" },
+
+  { "op": "edit", "name": "G6 structure around the canvas (fallback)", "file": "Scene.fs", "find": "                            t.span [| t.Attrs.attribute (\"id\", \"scene-angle\") |] [| t.text (fun s -> $\"angle {s.Angle.Value}\") |]\n", "replace": "                            t.span [| t.Attrs.attribute (\"id\", \"scene-angle\") |] [| t.text (fun s -> $\"angle {s.Angle.Value}\") |]\n                            t.p [| t.Attrs.attribute (\"id\", \"hint\") |] [| t.text \"drag to orbit\" |]\n" },
+  { "op": "expect", "selector": "#hint", "text": "drag to orbit" },
+  { "op": "pixel", "selector": "#viewport", "text": "b" },
+  { "op": "expect", "selector": "#scene-angle", "text": "angle 120" },
+  { "op": "revert", "name": "G6 revert", "file": "Scene.fs" },
+  { "op": "pixel", "selector": "#viewport", "text": "b" },
+  { "op": "click", "selector": "#rotate", "times": 1 },
+  { "op": "expect", "selector": "#scene-angle", "text": "angle 135" },
+
+  { "op": "edit", "name": "G7 compile error", "error": true, "file": "Scene.fs", "find": "let backdrop = \"#05070b\"", "replace": "let backdrop = \"#05070b" },
+  { "op": "pixel", "selector": "#viewport", "text": "b" },
+  { "op": "revert", "name": "G7 revert", "file": "Scene.fs" },
+  { "op": "expect", "selector": "#scene-angle", "text": "angle 135" }
+]

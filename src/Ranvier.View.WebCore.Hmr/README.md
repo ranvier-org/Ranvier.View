@@ -31,7 +31,9 @@ dotnet run -- dev -hmr alc       # remount after an in-process compile into a co
 Components stay ordinary `Component.define` code. The window title shows each reload's path and time.
 
 A root whose props need the window (a GPU context, for instance) uses `Dev.RunWith (argv, title, width, height, root, fun window -> props)`:
-the props are built once per window and survive every reload.
+the props are built once per window and survive every reload. Props that implement `IDisposable` belong to the host,
+which disposes them after the tree unmounts and before the window.
+[examples/Ranvier.HmrWgpu](../../examples/Ranvier.HmrWgpu) hot-reloads a Ranvier.Wgpu scene this way.
 
 ## Strategies
 

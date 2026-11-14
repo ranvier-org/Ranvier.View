@@ -61,6 +61,9 @@
   <Folder Name="/examples/Ranvier.HmrCounter/">
     <Project Path="examples/Ranvier.HmrCounter/Ranvier.HmrCounter.fsproj" />
   </Folder>
+  <Folder Name="/examples/Ranvier.HmrWgpu/">
+    <Project Path="examples/Ranvier.HmrWgpu/Ranvier.HmrWgpu.fsproj" />
+  </Folder>
   <Folder Name="/experiments/Ranvier.View.Hmr.Fsc/">
     <Project Path="experiments/Ranvier.View.Hmr.Fsc/Ranvier.View.Hmr.Fsc.fsproj" />
   </Folder>
