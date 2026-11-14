@@ -268,8 +268,9 @@ let internal rootEnd (start: Node) : Node =
         raise (mismatch "root" "<!--]-->" "absent")
 
 #if FABLE_COMPILER
-/// <summary>The inner exceptions of an <c>AggregateException</c>, held under Fable as an <c>innerException</c> array; empty for any other exception.</summary>
-[<Emit("$0 != null && Array.isArray($0.innerException) ? $0.innerException : []")>]
+/// <summary>The inner exceptions of an <c>AggregateException</c>; empty for any other exception.</summary>
+/// <remarks>Fickl 0.10 holds them as an <c>errors</c> array, as a JS <c>AggregateError</c> does; earlier compilers hold them as an <c>innerException</c> array.</remarks>
+[<Emit("$0 != null && Array.isArray($0.errors) ? $0.errors : $0 != null && Array.isArray($0.innerException) ? $0.innerException : []")>]
 let private aggregated (error: exn) : exn array = jsNative
 #else
 /// <summary>The inner exceptions of an <c>AggregateException</c>; empty for any other exception.</summary>
