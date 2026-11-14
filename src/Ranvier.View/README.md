@@ -14,7 +14,7 @@ that companion through `FABLE_COMPILER`.
 
 ```sh
 dotnet add package Ranvier.View.Dom --version 0.1.49-rc.5
-dotnet add package Fable.Ranvier.Dom --version 0.1.0-rc.1
+dotnet add package Fable.Ranvier.Dom --version 0.1.0
 ```
 
 Public DOM types come from `Ranvier.Dom`.
