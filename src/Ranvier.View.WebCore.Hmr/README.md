@@ -8,7 +8,7 @@ Experimental. It runs under the JIT only (FSI, reflection), so reference it from
 path is unchanged and stays NativeAOT-compatible.
 
 ```sh
-dotnet add package Ranvier.View.WebCore.Hmr --version 0.1.0-alpha.1
+dotnet add package Ranvier.View.WebCore.Hmr --version 0.1.0-alpha.2
 ```
 
 ## Usage
