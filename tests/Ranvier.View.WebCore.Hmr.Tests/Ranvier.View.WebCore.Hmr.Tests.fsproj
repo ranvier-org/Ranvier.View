@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <!--
+    Runs the fixture app under the hot reload host, in a hidden window on the software renderer, and plays a scenario
+    of file edits against it. The fixture's sources and the scenarios are copied beside the tests; each run edits a
+    scratch copy.
+    -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <GenerateProgramFile>false</GenerateProgramFile>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="Host.fs" />
+        <Compile Include="ReloadTests.fs" />
+        <Compile Include="Main.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="fixture/*.fs;fixture/*.fsproj;scenarios/*.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Expecto" Version="11.0.0-alpha8" />
+        <PackageReference Include="YoloDev.Expecto.TestSdk" Version="0.15.5" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="fixture/HmrFixture.fsproj" />
+    </ItemGroup>
+</Project>

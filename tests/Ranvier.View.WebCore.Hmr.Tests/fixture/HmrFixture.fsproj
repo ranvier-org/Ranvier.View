@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <!--
+    The app the hot reload tests run under the dev host: two reloadable files and the entry file. The tests copy the
+    sources to a scratch folder and pass it with `-sources`, so the edits a scenario makes stay out of this folder.
+    -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <IsPackable>false</IsPackable>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="Lib.fs" />
+        <Compile Include="App.fs" />
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../../src/Ranvier.View/Ranvier.View.fsproj" />
+        <ProjectReference Include="../../../src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj" />
+        <ProjectReference Include="../../../src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj" />
+        <ProjectReference Include="../../../src/Ranvier.View.WebCore.Hmr/Ranvier.View.WebCore.Hmr.fsproj" />
+    </ItemGroup>
+</Project>

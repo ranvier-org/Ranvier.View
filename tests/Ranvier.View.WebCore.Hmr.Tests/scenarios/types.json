@@ -1,0 +1,13 @@
+[
+  { "op": "expect", "selector": "#tone", "text": "Plain" },
+  { "op": "edit", "name": "T1 type and value of the earlier file, used only by lets of the later file", "file": "Lib.fs",
+    "find": "    | Bold", "replace": "    | Bold\n    | Faint",
+    "find2": "let suffix = \"one\"", "replace2": "let suffix = \"two\"" },
+  { "op": "expect", "selector": "#caption", "text": "caption two" },
+  { "op": "expect", "selector": "#tone", "text": "Plain" },
+  { "op": "expect", "selector": "#body", "text": "BODY" },
+
+  { "op": "edit", "name": "T2 later file edited after the type change", "file": "App.fs", "find": "let tone = Plain", "replace": "let tone = Faint" },
+  { "op": "expect", "selector": "#tone", "text": "Faint" },
+  { "op": "expect", "selector": "#caption", "text": "caption two" }
+]

@@ -1,0 +1,9 @@
+[
+  { "op": "expect", "selector": "#caption", "text": "caption one" },
+  { "op": "edit", "name": "M1 new function in the earlier file and its use in the later file, saved together", "file": "Lib.fs",
+    "find": "/// A value read by", "replace": "let whisper (s: string) =\n    s.ToLowerInvariant ()\n\n/// A value read by",
+    "more": [ { "file": "App.fs", "find": "\"caption \" + suffix", "replace": "whisper \"QUIET \" + suffix" } ] },
+  { "op": "expect", "selector": "#caption", "text": "quiet one" },
+  { "op": "revert", "name": "M1 both files back", "file": "Lib.fs", "more": [ { "file": "App.fs" } ] },
+  { "op": "expect", "selector": "#caption", "text": "caption one" }
+]

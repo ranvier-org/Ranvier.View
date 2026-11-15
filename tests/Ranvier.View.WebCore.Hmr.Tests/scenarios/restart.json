@@ -1,0 +1,20 @@
+[
+  { "op": "expect", "selector": "#caption", "text": "caption one" },
+
+  { "op": "edit", "name": "R1 entry file", "file": "Program.fs", "contains": "restart needed: Program.fs",
+    "find": "Ranvier HMR fixture", "replace": "Ranvier HMR fixture, edited" },
+  { "op": "expect", "selector": "#caption", "text": "caption one" },
+
+  { "op": "edit", "name": "R2 a type of the later file that uses a type of the earlier file", "file": "App.fs",
+    "find": "/// A value of a type of another file.", "replace": "type Shelf = { Tone: Tone }\n\n/// A value of a type of another file." },
+  { "op": "expect", "selector": "#tone", "text": "Plain" },
+
+  { "op": "edit", "name": "R3 the earlier file's type changes under it", "file": "Lib.fs", "contains": "restart needed: App.fs: Shelf:Type",
+    "find": "    | Bold", "replace": "    | Bold\n    | Faint",
+    "find2": "let suffix = \"one\"", "replace2": "let suffix = \"two\"" },
+  { "op": "expect", "selector": "#caption", "text": "caption one" },
+
+  { "op": "edit", "name": "R4 the next save still needs the restart", "file": "App.fs", "contains": "restart needed: App.fs: Shelf:Type",
+    "find": "Title = \"Extra\"", "replace": "Title = \"More\"" },
+  { "op": "expect", "selector": "#extra", "text": "Extra" }
+]

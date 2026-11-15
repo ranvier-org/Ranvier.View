@@ -289,17 +289,49 @@ type FsiDelivery(project: Project) =
 
 type Declaration =
     {
+        /// "let", "open", "directive", "module" (a nested module) or "type" (anything else).
         Kind: string
         StartLine: int
         EndLine: int
         Text: string
-        /// The bound name of a single-binding let; null otherwise.
+        /// The bound name of a single-binding let, or the name of a nested module; null otherwise.
         Name: string
         /// `let name = expr` (a value), as opposed to `let name args = ...` (a function).
         IsValue: bool
         IsPublic: bool
         IsMutable: bool
+        /// The declarations of a nested module; empty for any other kind.
+        Inner: Declaration list
     }
+
+/// How a shadow module carries a nested module of its file.
+type Nested =
+    /// The module's text is evaluated again.
+    | Reevaluate
+    /// An abbreviation of the module in `definedIn`, the module that last evaluated it.
+    | Abbreviate of definedIn: string
+    /// Left out of the shadow module.
+    | Omit
+
+/// Whether a nested module holds only lets, opens and nested modules of the same kind. Such a module can be
+/// evaluated again as text, against the types already in use.
+let rec isLetsOnly (d: Declaration) : bool =
+    d.Inner
+    |> List.forall (fun inner ->
+        match inner.Kind with
+        | "let"
+        | "open" -> true
+        | "module" -> isLetsOnly inner
+        | _ -> false)
+
+/// The full names ("Module.Sub.name") of the module-level values among `decls`, nested modules included.
+let rec valueNames (moduleName: string) (decls: Declaration list) : string list =
+    decls
+    |> List.collect (fun d ->
+        match d.Kind with
+        | "let" when d.IsValue && not (isNull d.Name) -> [ moduleName + "." + d.Name ]
+        | "module" -> valueNames (moduleName + "." + d.Name) d.Inner
+        | _ -> [])
 
 let rec private headOf (p: SynPat) =
     match p with
@@ -313,6 +345,11 @@ let rec private headOf (p: SynPat) =
     | _ -> None
 
 let private parser = lazy (FSharpChecker.Create ())
+
+/// The head of a nested module in its source text: its access modifier, if any, and its name. Read from the text
+/// because the shape of SynComponentInfo differs between compiler versions.
+let private nestedHead =
+    RegularExpressions.Regex @"\bmodule\s+(private\s+|internal\s+)?(?:public\s+)?(?:rec\s+)?([A-Za-z_][A-Za-z0-9_']*)\s*="
 
 /// Top-level declarations of a file with a single top-level module, or None for any other shape.
 let declarations (path: string) (text: string) : (string * Declaration list) option =
@@ -337,42 +374,51 @@ let declarations (path: string) (text: string) : (string * Declaration list) opt
             |> List.map (fun i -> i.idText)
             |> String.concat "."
 
-        let decls =
-            decls
-            |> List.map (fun d ->
-                let kind =
-                    match d with
-                    | SynModuleDecl.Let _ -> "let"
-                    | SynModuleDecl.Open _ -> "open"
-                    | SynModuleDecl.HashDirective _ -> "directive"
-                    | _ -> "type"
+        let rec convert (d: SynModuleDecl) : Declaration =
+            let r = d.Range
+            let source = String.Join ("\n", lines[r.StartLine - 1 .. r.EndLine - 1])
+            let head = nestedHead.Match source
 
-                let name, isPublic, isValue, isMutable =
-                    match d with
-                    | SynModuleDecl.Let (bindings = [ SynBinding (accessibility = access; isMutable = m; headPat = pat) ]) ->
-                        match headOf pat with
-                        | Some (n, pub, value) -> n, pub && access.IsNone, value, m
-                        | None -> null, false, false, m
-                    | _ -> null, false, false, false
+            let kind =
+                match d with
+                | SynModuleDecl.Let _ -> "let"
+                | SynModuleDecl.Open _ -> "open"
+                | SynModuleDecl.HashDirective _ -> "directive"
+                // A nested module whose name the text does not give counts as a type: its file is evaluated whole.
+                | SynModuleDecl.NestedModule _ when head.Success -> "module"
+                | _ -> "type"
 
-                let r = d.Range
+            let name, isPublic, isValue, isMutable =
+                match d with
+                | SynModuleDecl.Let (bindings = [ SynBinding (accessibility = access; isMutable = m; headPat = pat) ]) ->
+                    match headOf pat with
+                    | Some (n, pub, value) -> n, pub && access.IsNone, value, m
+                    | None -> null, false, false, m
+                | SynModuleDecl.NestedModule _ when head.Success -> head.Groups[2].Value, not head.Groups[1].Success, false, false
+                | _ -> null, false, false, false
 
-                {
-                    Kind = kind
-                    StartLine = r.StartLine
-                    EndLine = r.EndLine
-                    Text = String.Join ("\n", lines[r.StartLine - 1 .. r.EndLine - 1])
-                    Name = name
-                    IsValue = isValue
-                    IsPublic = isPublic
-                    IsMutable = isMutable
-                })
+            let inner =
+                match d with
+                | SynModuleDecl.NestedModule (decls = inner) when head.Success -> inner |> List.map convert
+                | _ -> []
 
-        Some (name, decls)
+            {
+                Kind = kind
+                StartLine = r.StartLine
+                EndLine = r.EndLine
+                Text = source
+                Name = name
+                IsValue = isValue
+                IsPublic = isPublic
+                IsMutable = isMutable
+                Inner = inner
+            }
+
+        Some (name, decls |> List.map convert)
     | _ -> None
 
-/// A shadow module holding only a file's opens and let declarations, opening the existing module so the new
-/// closures bind to the types already in use. Line directives keep closure names and diagnostics on the
+/// A shadow module holding a file's opens, let declarations and nested modules, opening the existing module so
+/// the new closures bind to the types already in use. Line directives keep closure names and diagnostics on the
 /// original lines.
 let shadowModule
     (path: string)
@@ -380,6 +426,7 @@ let shadowModule
     (generation: int)
     (decls: Declaration list)
     (aliasOf: Declaration -> string option)
+    (nestedOf: Declaration -> Nested)
     (abbreviations: (string * string) list)
     =
     let sb = StringBuilder ()
@@ -411,15 +458,31 @@ let shadowModule
         then
             sb.Append ($"open {latest}\n") |> ignore
 
-    for d in decls |> List.filter (fun d -> d.Kind = "let") do
-        match aliasOf d with
-        | Some definedIn ->
-            // An unchanged module-level value keeps its identity (a store, a cache): bind the live one.
-            sb.Append($"# {d.StartLine} \"{source}\"\n").Append($"let {d.Name} = {definedIn}.{d.Name}\n")
-            |> ignore
-        | None ->
-            sb.Append($"# {d.StartLine} \"{source}\"\n").Append(d.Text).Append('\n')
-            |> ignore
+    // Lets and nested modules stay in source order: each may use the ones above it.
+    for d in decls do
+        match d.Kind with
+        | "let" ->
+            match aliasOf d with
+            | Some definedIn ->
+                // An unchanged module-level value keeps its identity (a store, a cache): bind the live one.
+                sb.Append($"# {d.StartLine} \"{source}\"\n").Append($"let {d.Name} = {definedIn}.{d.Name}\n")
+                |> ignore
+            | None ->
+                sb.Append($"# {d.StartLine} \"{source}\"\n").Append(d.Text).Append('\n')
+                |> ignore
+        | "module" ->
+            match nestedOf d with
+            | Reevaluate ->
+                sb.Append($"# {d.StartLine} \"{source}\"\n").Append(d.Text).Append('\n')
+                |> ignore
+            | Abbreviate definedIn ->
+                sb.Append ($"module {d.Name} = {definedIn}.{d.Name}\n")
+                |> ignore
+
+                if d.Text.Contains "AutoOpen" then
+                    sb.Append ($"open {d.Name}\n") |> ignore
+            | Omit -> ()
+        | _ -> ()
 
     sb.ToString ()
 
@@ -527,15 +590,23 @@ type CheckerGate(project: Project) =
 
     /// Declarations (file name, stamp key) that use any of `changed` through their checked contents, to a
     /// fixpoint. A use of a declaration `stops` says is a component does not propagate: components are found by key
-    /// at mount, so what uses one needs no re-evaluation.
-    member _.Dependents(changed: HashSet<struct (string * string)>, stops: string -> bool) : HashSet<struct (string * string)> =
+    /// at mount, so what uses one needs no re-evaluation. `unread` receives each file checked whole, whose uses are
+    /// unknown.
+    member _.Dependents
+        (changed: HashSet<struct (string * string)>, stops: string -> bool, unread: HashSet<string>)
+        : HashSet<struct (string * string)> =
         let byFile =
             project.Sources
             |> List.map (fun f ->
                 f,
                 (try
+                    // An edit above a file sends it back to a whole-file check until its declarations are built again.
+                    graph.WhenPromoted(f, Threading.CancellationToken.None).Wait (TimeSpan.FromSeconds 10.0)
+                    |> ignore
+
                     graph.Results(f).GetAwaiter().GetResult()
                  with _ ->
+                     unread.Add f |> ignore
                      null))
 
         let found = HashSet<struct (string * string)>()
@@ -601,6 +672,17 @@ type CheckerGate(project: Project) =
                                 grew <- true
 
         found
+
+    /// Gives the checker a file's text without waiting for its check.
+    member _.SetText(file: string, text: string) : unit =
+        graph.SetText (file, text) |> ignore
+
+    /// The errors of a file as the checker last received it, once the files it depends on are settled.
+    member _.Errors(file: string) : string list =
+        let struct (_, diagnostics) =
+            graph.SettledDiagnostics(file).GetAwaiter().GetResult()
+
+        errorsOf diagnostics
 
     member _.Check(file: string, text: string) : GateResult =
         let sw = Stopwatch.StartNew ()
