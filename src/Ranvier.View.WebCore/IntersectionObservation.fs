@@ -101,7 +101,7 @@ module IntersectionObservation =
                         try
                             deliver (copyAll entries count)
                         with error ->
-                            session.ListenerErrors.Add error
+                            session.Report error
                     finally
                         GC.KeepAlive inFlight)
 

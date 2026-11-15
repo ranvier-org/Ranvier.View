@@ -189,7 +189,7 @@ type internal DevHost
         doc.body.appendChild container |> ignore
 
         let m =
-            Mounting.mount graph None (fun errors -> raise (AggregateException (errors: exn seq))) container None (fun context ->
+            Mounting.mount graph None (List.iter window.Host.Report) container None (fun context ->
                 Program.run (Reflect.view definition props) context.Backend)
 
         mounted <- Some m
@@ -1415,7 +1415,7 @@ type Dev =
             let props = propsOf window
 
             let mounted =
-                Mounting.mount graph None (fun errors -> raise (AggregateException (errors: exn seq))) container None (fun context ->
+                Mounting.mount graph None (List.iter window.Host.Report) container None (fun context ->
                     Program.run (Component.render root props) context.Backend)
 
             Console.WriteLine ($"[app] mount {elapsed () - beforeMount:F1} ms")

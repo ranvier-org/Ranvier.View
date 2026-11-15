@@ -223,7 +223,7 @@ module FilePickers =
                             | ValueSome notify -> notify (Show request)
                             | ValueNone -> ()
                 with error ->
-                    host.Errors.Add error
+                    host.Report error
 
         let callback =
             FilePickerCallback (fun _ id action flags ->
@@ -260,7 +260,7 @@ module FilePickers =
                         | ValueSome notify -> notify (Invalidate id)
                         | ValueNone -> ()
                     with error ->
-                        host.Errors.Add error
+                        host.Report error
                 | ValueNone -> ()
 
                 GC.KeepAlive callback

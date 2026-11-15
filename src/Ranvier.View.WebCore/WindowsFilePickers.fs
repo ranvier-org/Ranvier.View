@@ -247,7 +247,7 @@ module WindowsFilePickers =
                                     match result with
                                     | Ok selection -> request.Complete selection |> ignore
                                     | Error error ->
-                                        host.Errors.Add error
+                                        host.Report error
                                         request.Complete Cancelled |> ignore
                                 | _ -> ()))
                     )
@@ -259,7 +259,7 @@ module WindowsFilePickers =
                 with error ->
                     pending.Remove request.Id |> ignore
                     state.Cancel ()
-                    host.Errors.Add error
+                    host.Report error
                     request.Complete Cancelled |> ignore
 
         let registration = FilePickers.install host provider

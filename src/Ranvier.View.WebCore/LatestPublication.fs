@@ -32,7 +32,7 @@ type LatestPublication<'T>(host: WebCoreHost, apply: 'T -> unit, ?release: 'T ->
                     try
                         this.Dispose ()
                     with error ->
-                        host.Errors.Add error)
+                        host.Report error)
             )
 
     member private _.Schedule() =

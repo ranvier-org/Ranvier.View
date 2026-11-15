@@ -400,6 +400,8 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) as this =
     let held = HashSet<NativeObject>(HashIdentity.Reference)
     let claims = ConditionalWeakTable<Owner, HashSet<NativeObject>>()
     let errors = List<exn>()
+    // The text of each exception already written to standard error.
+    let written = HashSet<string>()
     let mutable disposed = false
     let mutable closing = false
     let mutable released = 0
@@ -601,6 +603,31 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) as this =
 
     /// <summary>The exceptions raised by event listeners, in raise order; each dispatch continues past them.</summary>
     member _.ListenerErrors = errors
+
+    /// <summary>Appends <c>error</c> to <c>ListenerErrors</c> and writes it with its stack trace to standard error.</summary>
+    /// <remarks>An exception whose text matches one already written is appended without a second write.</remarks>
+    member internal _.Report(error: exn) =
+        errors.Add error
+        let text = error.ToString ()
+
+        let fresh =
+            lock written (fun () ->
+                // Bounds the set under a stream of distinct exceptions; a repeat after the reset is written again.
+                if written.Count >= 256 then
+                    written.Clear ()
+
+                written.Add text)
+
+        if fresh then
+            try
+                Console.Error.WriteLine (
+                    "Ranvier.View.WebCore: unhandled exception in page code. A repeat of it is recorded without being written again."
+                    + Environment.NewLine
+                    + text
+                )
+            with
+            | :? IO.IOException
+            | :? ObjectDisposedException -> ()
 
     /// <summary>The live node and event objects.</summary>
     member _.LiveObjects =
