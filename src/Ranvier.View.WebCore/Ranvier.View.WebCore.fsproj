@@ -22,7 +22,7 @@
 
     <!-- RanvierWebCoreNativeDir holds runtimes/<rid>/native for local native runtime checks. -->
     <PropertyGroup>
-        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.1</RanvierWebCoreNativeVersion>
+        <RanvierWebCoreNativeVersion Condition="'$(RanvierWebCoreNativeVersion)' == ''">0.1.3</RanvierWebCoreNativeVersion>
         <UseLocalRanvierWebCore Condition="'$(UseLocalRanvierWebCore)' == ''">false</UseLocalRanvierWebCore>
         <RanvierWebCoreRoot Condition="'$(RanvierWebCoreRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../../../Ranvier.WebCore'))</RanvierWebCoreRoot>
         <RanvierWebCoreNativeRid Condition="'$(RanvierWebCoreNativeRid)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</RanvierWebCoreNativeRid>
@@ -134,8 +134,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <!-- Canonical managed WebCore interop uses FSharp.Core 10.1.401. -->
-        <PackageReference Update="FSharp.Core" Version="10.1.401" />
+        <!-- Ranvier.WebCore 0.1.3 requires FSharp.Core 10.0.100 or later. -->
+        <PackageReference Update="FSharp.Core" Version="10.0.100" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(RanvierTrace)' == 'true'">
