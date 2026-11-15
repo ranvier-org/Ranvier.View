@@ -1212,7 +1212,7 @@ let zoomTests =
                 Expect.equal (paintWidth, paintHeight) pixels "the page paints every window pixel"
 
                 if WebCoreHost.Has "viewport" then
-                    let metrics = (Ranvier.View.WebCore.Viewport.provider window.Host).Metrics ()
+                    let metrics = (Ranvier.View.WebCore.Viewport.provider window.Host).Metrics()
                     Expect.equal (metrics.InnerWidth, metrics.InnerHeight) (100, 75) "the page's inner size"
                     Expect.equal metrics.DevicePixelRatio 2.0 "the page's devicePixelRatio"
 
