@@ -83,9 +83,13 @@ Window.run ("Counter", 480, 320) (fun host ->
     let container = host.Document.createElement "div"
     host.Document.body.appendChild container |> ignore
 
-    Mounting.mount graph None (fun errors -> raise (AggregateException errors)) container None (fun context ->
+    Mounting.mount graph None (List.iter host.Report) container None (fun context ->
         Program.run (Component.render counter 0) context.Backend))
 ```
+
+`host.Report` appends a failed binding's exception to `host.Errors` and writes it with its stack trace to standard
+error. The host reports an exception from an event listener, a timer, a microtask or an animation frame callback the
+same way, and writes each distinct exception once.
 
 `Window.run` returns when the window closes. An app that owns its loop calls `Window.create` and then `Step` each turn
 instead. `Step` waits for window events until the next timer is due, dispatches them, cycles the host and presents a

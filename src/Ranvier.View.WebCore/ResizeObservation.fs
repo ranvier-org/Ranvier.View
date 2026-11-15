@@ -88,7 +88,7 @@ module ResizeObservation =
                             let first = NativePtr.ofNativeInt<Native.ResizeEntry> entries
                             deliver (Array.init count (fun index -> copy (NativePtr.get first index)))
                         with error ->
-                            session.ListenerErrors.Add error
+                            session.Report error
                     finally
                         GC.KeepAlive inFlight)
 

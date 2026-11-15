@@ -198,7 +198,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     let mutable deviceScale = 1.0f
 
     let record (error: exn) =
-        session.ListenerErrors.Add error
+        session.Report error
 
     let repaintBounds x y width height =
         // A partial canvas must start on the full canvas's device-pixel grid.
@@ -528,7 +528,17 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         selected <> 0
 
     /// <summary>Exceptions raised by event listeners, microtasks, timers and animation frames, in raise order.</summary>
+    /// <remarks>The host writes each one to standard error as <c>Report</c> does.</remarks>
     member _.Errors = session.ListenerErrors
+
+    /// <summary>Appends <c>error</c> to <c>Errors</c> and writes it with its stack trace to standard error.</summary>
+    /// <remarks>
+    /// An exception whose text matches one already written is appended without a second write. A mount reports its
+    /// binding failures here with <c>List.iter host.Report</c> as its <c>report</c> argument. An exception raised
+    /// inside <c>report</c> is held by the failed binding's effect.
+    /// </remarks>
+    member _.Report(error: exn) =
+        session.Report error
 
     // Loop
 

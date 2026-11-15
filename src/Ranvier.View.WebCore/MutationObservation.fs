@@ -202,7 +202,7 @@ module MutationObservation =
                     try
                         value.Detach ()
                     with error ->
-                        session.ListenerErrors.Add error
+                        session.Report error
 
                 reraise ()
 
@@ -354,7 +354,7 @@ module MutationObservation =
                             session.AfterListener.Invoke ()
                 with error ->
                     state
-                    |> Option.iter (fun value -> value.Session.ListenerErrors.Add error)
+                    |> Option.iter (fun value -> value.Session.Report error)
             finally
                 GC.KeepAlive state)
 
@@ -374,7 +374,7 @@ module MutationObservation =
                         handle.Free ()
                 with error ->
                     state
-                    |> Option.iter (fun value -> value.Session.ListenerErrors.Add error)
+                    |> Option.iter (fun value -> value.Session.Report error)
             finally
                 GC.KeepAlive state)
 

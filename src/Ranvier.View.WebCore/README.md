@@ -95,7 +95,7 @@ let container = host.Document.createElement "div"
 host.Document.body.appendChild container |> ignore
 
 let mounted =
-    Mounting.mount graph None (fun errors -> raise (AggregateException errors)) container None (fun context ->
+    Mounting.mount graph None (List.iter host.Report) container None (fun context ->
         Program.run (Component.render counter 1) context.Backend)
 
 host.Click (40, 30) |> ignore // input in page pixels
@@ -108,6 +108,11 @@ host.Paint pixels // RGBA, row by row
 ```
 
 All calls go on the thread that created the host.
+
+`host.Report` appends a failed binding's exception to `host.Errors` and writes it with its stack trace to standard
+error. The host reports an exception from an event listener, a timer, a microtask or an animation frame callback the
+same way, and writes each distinct exception once. An exception raised inside a mount's reporter is held by the failed
+binding's effect, so a reporter records or logs.
 
 ### Native file picker
 

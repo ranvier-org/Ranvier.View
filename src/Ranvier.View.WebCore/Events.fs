@@ -17,7 +17,7 @@ type internal Events private () =
             try
                 registration.Invoke (session.BorrowedEvent event)
             with error ->
-                session.ListenerErrors.Add error
+                session.Report error
         finally
             session.ScriptDepth <- session.ScriptDepth - 1
 

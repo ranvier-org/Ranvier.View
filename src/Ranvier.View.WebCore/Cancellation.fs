@@ -28,7 +28,7 @@ module Cancellation =
                         host.PostToOwner action
 
                     member _.Report error =
-                        host.Session.ListenerErrors.Add error
+                        host.Session.Report error
 
                     member _.Listen(target, eventType, listener, options) =
                         match box target with

@@ -67,7 +67,7 @@ type internal NativeNotification(host: WebCoreHost, handle: nativeint) =
                             try
                                 callback ()
                             with error ->
-                                host.Errors.Add error
+                                host.Report error
 
                         0)
 
@@ -211,7 +211,7 @@ module Notifications =
                     try
                         present (find target) (enum<NotificationRequest> request)
                     with error ->
-                        host.Errors.Add error
+                        host.Report error
                 | _ -> ())
 
         let callbackPointer =

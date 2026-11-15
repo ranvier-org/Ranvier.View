@@ -70,7 +70,7 @@ type internal NativeWakeLock(host: WebCoreHost, handle: nativeint) as this =
                 try
                     callback ()
                 with error ->
-                    host.Errors.Add error
+                    host.Report error
 
             0)
 
@@ -168,7 +168,7 @@ module WakeLock =
                     try
                         if grant (enum<WakeLockType> kind) then 1 else 0
                     with error ->
-                        host.Errors.Add error
+                        host.Report error
                         0
                 | _ -> 0)
 

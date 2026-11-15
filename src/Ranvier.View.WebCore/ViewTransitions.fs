@@ -21,7 +21,7 @@ module ViewTransitions =
                 action ()
                 0
             with error ->
-                session.ListenerErrors.Add error
+                session.Report error
                 1
         finally
             session.ScriptDepth <- session.ScriptDepth - 1

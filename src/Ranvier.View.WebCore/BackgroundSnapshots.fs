@@ -151,7 +151,7 @@ module BackgroundSnapshots =
                         try
                             terminal outcome
                         with error ->
-                            host.Errors.Add error),
+                            host.Report error),
                     (fun () ->
                         capacity.Withdraw request
 
