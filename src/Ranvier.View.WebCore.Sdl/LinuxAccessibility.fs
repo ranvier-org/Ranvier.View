@@ -60,14 +60,10 @@ module private AtspiNative =
                         NativeLibrary.Free library
                         reraise ()
 
-    let geometry (window: nativeptr<SDL_Window>) =
+    let geometry (window: nativeptr<SDL_Window>) (scale: float32) =
         let mutable geometry = AtspiGeometry ()
         geometry.Size <- uint32 (Marshal.SizeOf<AtspiGeometry>())
-
-        geometry.Scale <-
-            match SDL3.SDL_GetWindowDisplayScale window with
-            | scale when scale > 0.0f -> float scale
-            | _ -> 1.0
+        geometry.Scale <- float scale
 
         if SDL3.SDL_GetCurrentVideoDriver () = "x11" then
             let mutable x, y = 0, 0
@@ -79,9 +75,13 @@ module private AtspiNative =
 
         geometry
 
-/// <summary>An owner-thread AT-SPI lease registered in the host's cleanup installations.</summary>
+/// <summary>
+/// An owner-thread AT-SPI lease registered in the host's cleanup installations. <c>scale</c> reads the page's device
+/// pixels per CSS pixel.
+/// </summary>
 [<Sealed>]
-type internal LinuxAccessibility private (api: AtspiNative.Api, initialToken: uint64, host: WebCoreHost, window: nativeptr<SDL_Window>) =
+type internal LinuxAccessibility
+    private (api: AtspiNative.Api, initialToken: uint64, host: WebCoreHost, window: nativeptr<SDL_Window>, scale: unit -> float32) =
     let mutable token = initialToken
 
     /// <summary>Whether the optional native provider still owns its accessibility callback.</summary>
@@ -91,7 +91,7 @@ type internal LinuxAccessibility private (api: AtspiNative.Api, initialToken: ui
     member _.Update() =
         if token <> 0UL then
             host.EnsureActive ()
-            let mutable geometry = AtspiNative.geometry window
+            let mutable geometry = AtspiNative.geometry window (scale ())
             let status = api.SetGeometry.Invoke (token, &geometry)
 
             if status <> 0 then
@@ -101,14 +101,14 @@ type internal LinuxAccessibility private (api: AtspiNative.Api, initialToken: ui
                 )
 
     /// <summary>Attaches an installed provider, returning none when the module or desktop service is unavailable.</summary>
-    static member TryCreate(host: WebCoreHost, window: nativeptr<SDL_Window>) =
+    static member TryCreate(host: WebCoreHost, window: nativeptr<SDL_Window>, scale: unit -> float32) =
         host.EnsureActive ()
 
         match AtspiNative.api.Value with
         | None -> None
         | Some api ->
             let mutable token = 0UL
-            let mutable geometry = AtspiNative.geometry window
+            let mutable geometry = AtspiNative.geometry window (scale ())
             let name = Encoding.UTF8.GetBytes (SDL3.SDL_GetWindowTitle window)
             use bytes = fixed name
 
@@ -120,7 +120,7 @@ type internal LinuxAccessibility private (api: AtspiNative.Api, initialToken: ui
             elif status <> 0 then
                 invalidOp ("AT-SPI attachment failed: " + status.ToString ())
             else
-                let bridge = new LinuxAccessibility (api, token, host, window)
+                let bridge = new LinuxAccessibility (api, token, host, window, scale)
                 host.AddCleanupInstallation bridge
                 Some bridge
 

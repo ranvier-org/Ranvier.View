@@ -1150,3 +1150,178 @@ let tests =
                 Expect.equal cancelled[0].Action 3 "the contact ends"
             }
         ]
+
+// A button of 30 by 20 CSS pixels at 60, 40.
+let private zoomTarget =
+    Component.define (fun _ (count: Signal<int>) -> count) (fun t ->
+        t.button
+            [|
+                t.Attrs.attribute ("style", "position:absolute;left:60px;top:40px;width:30px;height:20px;padding:0;border:0")
+                t.Events.on ("click", fun (count: Signal<int>) (_: Event) -> count.Value <- count.Value + 1)
+            |]
+            [||])
+
+// The page's viewport in CSS pixels, from layout.
+let private viewport (window: Window) =
+    let root = window.Host.Document.documentElement
+    int root.clientWidth, int root.clientHeight
+
+let private pixelSize (window: Window) =
+    let mutable width = 0
+    let mutable height = 0
+
+    SDL3.SDL_GetWindowSizeInPixels (NativePtr.ofNativeInt<SDL_Window> window.SdlWindow, &&width, &&height)
+    |> ignore
+
+    width, height
+
+let private displayScaleChanged (window: Window) =
+    let mutable event = SDL_Event ()
+    event.window.``type`` <- SDL_EventType.SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED
+    event.window.windowID <- windowId window
+    push event
+
+// The windows of this list are 200 by 150 pixels on a display at scale 1, as the rest of the file assumes.
+[<Tests>]
+let zoomTests =
+    testList
+        "Window zoom"
+        [
+            test "the device scale is the display's scale times the zoom, within the host's range" {
+                Expect.equal (Sdl.deviceScale 1.0f 1.0) 1.0f "no zoom"
+                Expect.equal (Sdl.deviceScale 1.0f 2.0) 2.0f "a zoom on a display at 100%"
+                Expect.equal (Sdl.deviceScale 1.5f 2.0) 3.0f "a zoom on a display at 150%"
+                Expect.equal (Sdl.deviceScale 2.0f 0.5) 1.0f "a zoom below 1"
+                Expect.equal (Sdl.deviceScale 3.0f 4.0) 8.0f "the host's upper bound"
+                Expect.equal (Sdl.deviceScale 1.0f 0.1) 0.25f "the host's lower bound"
+            }
+
+            windowCase "a zoom of 2 halves the CSS viewport of a window of fixed pixel size"
+            <| fun window ->
+                let pixels = pixelSize window
+                Expect.equal window.Zoom 1.0 "no zoom by default"
+                Expect.equal (viewport window) (200, 150) "the viewport without a zoom"
+
+                window.Zoom <- 2.0
+                Expect.equal window.Zoom 2.0 "the zoom reads back"
+                Expect.equal window.DeviceScale 2.0 "the display's scale doubled"
+                Expect.equal (pixelSize window) pixels "the window keeps its pixels"
+                Expect.equal (viewport window) (100, 75) "half the CSS pixels in each direction"
+
+                let struct (paintWidth, paintHeight) = window.Host.PaintSize
+                Expect.equal (paintWidth, paintHeight) pixels "the page paints every window pixel"
+
+                if WebCoreHost.Has "viewport" then
+                    let metrics = (Ranvier.View.WebCore.Viewport.provider window.Host).Metrics()
+                    Expect.equal (metrics.InnerWidth, metrics.InnerHeight) (100, 75) "the page's inner size"
+                    Expect.equal metrics.DevicePixelRatio 2.0 "the page's devicePixelRatio"
+
+                window.Zoom <- 1.0
+                Expect.equal (viewport window) (200, 150) "the viewport without a zoom again"
+
+            windowCase "a press on a zoomed window lands on the element under it"
+            <| fun window ->
+                use graph = new Graph ()
+                let count = graph.Run (fun () -> Api.createSignal 0)
+                use _mounted = mount window.Host graph zoomTarget count
+                window.Zoom <- 2.0
+                steps window 2
+                let log = mouseLog window
+
+                // The button's centre, 75 by 50 in CSS pixels, is under 150 by 100 in the window.
+                press window SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN 150.0f 100.0f
+                press window SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP 150.0f 100.0f
+                steps window 2
+                Expect.equal (List.ofSeq log) [ "mousedown", 75, 50; "mouseup", 75, 50 ] "the press in CSS pixels"
+                Expect.equal (graph.Run (fun () -> count.Value)) 1 "the button under the pointer was clicked"
+
+                // The same CSS position without a zoom is under 75 by 50 in the window.
+                window.Zoom <- 1.0
+                press window SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN 75.0f 50.0f
+                press window SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP 75.0f 50.0f
+                steps window 2
+                Expect.equal (graph.Run (fun () -> count.Value)) 2 "the button is clicked again after the zoom is removed"
+
+            windowCase "a zoomed page reaches the window's texture at its new size"
+            <| fun window ->
+                use graph = new Graph ()
+                let count = graph.Run (fun () -> Api.createSignal 0)
+                use _mounted = mount window.Host graph square count
+                steps window 3
+                Expect.equal (pixel (window.ReadPixels ()) 150 120) (255uy, 255uy, 255uy) "the page's background without a zoom"
+
+                window.Zoom <- 2.0
+                steps window 3
+                let image = window.ReadPixels ()
+                let struct (width, height, _) = image
+                Expect.equal (width, height) (pixelSize window) "the texture keeps the window's pixels"
+                Expect.equal (pixel image 150 120) (255uy, 0uy, 0uy) "the button of 100 CSS pixels covers 200 pixels"
+
+            testCase "a window created with a zoom lays out its first page at it" (fun () ->
+                onHostThread (fun () ->
+                    use window =
+                        Window.Create ("Ranvier test", 200, 150, hidden = true, renderer = "software", zoom = 2.0)
+
+                    Expect.equal window.Zoom 2.0 "the zoom given at creation"
+                    Expect.equal window.DeviceScale 2.0 "the display's scale doubled"
+                    Expect.equal (viewport window) (100, 75) "half the CSS pixels in each direction"))
+
+            windowCase "a move to a display of another scale keeps the zoom"
+            <| fun window ->
+                window.Zoom <- 2.0
+                window.SetDisplayScaleReader (fun () -> 1.5f)
+                displayScaleChanged window
+                steps window 1
+                Expect.equal window.Zoom 2.0 "the zoom is the app's"
+                Expect.equal window.DeviceScale 3.0 "the new display's scale times the zoom"
+                Expect.equal (viewport window) (67, 50) "the pixels divided by the new scale, rounded up"
+
+                let log = mouseLog window
+                press window SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN 30.0f 60.0f
+                steps window 1
+                Expect.equal (List.ofSeq log) [ "mousedown", 10, 20 ] "the press at the new scale"
+
+            windowCase "a zoom outside the host's range applies the nearest scale the host accepts"
+            <| fun window ->
+                window.Zoom <- 100.0
+                Expect.equal window.Zoom 100.0 "the zoom is kept as given"
+                Expect.equal window.DeviceScale 8.0 "the host's upper bound"
+                Expect.equal (viewport window) (25, 19) "the pixels divided by 8, rounded up"
+
+                window.Zoom <- 0.01
+                Expect.equal window.DeviceScale 0.25 "the host's lower bound"
+                Expect.equal (viewport window) (800, 600) "the pixels divided by 0.25"
+
+            windowCase "a zoom of zero, a negative number, NaN or an infinity is refused and the window keeps its zoom"
+            <| fun window ->
+                window.Zoom <- 2.0
+
+                for invalid in [ 0.0; -0.0; -1.0; nan; infinity; -infinity ] do
+                    Expect.throwsT<ArgumentOutOfRangeException> (fun () -> window.Zoom <- invalid) (sprintf "a zoom of %f" invalid)
+
+                Expect.equal window.Zoom 2.0 "the zoom before the refused values"
+                Expect.equal (viewport window) (100, 75) "the page is laid out as before"
+
+            testCase "Create refuses an invalid zoom" (fun () ->
+                onHostThread (fun () ->
+                    for invalid in [ 0.0; -1.0; nan; infinity ] do
+                        Expect.throwsT<ArgumentOutOfRangeException>
+                            (fun () ->
+                                use _ =
+                                    Window.Create ("Ranvier test", 200, 150, hidden = true, renderer = "software", zoom = invalid)
+
+                                ())
+                            (sprintf "a zoom of %f" invalid)))
+
+            windowCase "a key listener that sets the zoom lays the page out again"
+            <| fun window ->
+                window.Host.SetFocused true
+                steps window 2
+
+                window.Host.Document.addEventListener ("keydown", fun (_: Event) -> window.Zoom <- window.Zoom * 2.0)
+
+                keyDown window
+                steps window 2
+                Expect.equal window.Zoom 2.0 "the listener's zoom"
+                Expect.equal (viewport window) (100, 75) "half the CSS pixels in each direction"
+        ]

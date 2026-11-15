@@ -221,6 +221,21 @@ let tests =
                 Expect.equal window.CpuFramesPresented 0L "no frame took the CPU path"
                 Expect.isFalse chain.Presenting "readback waits for the present"
 
+            chainCase "a zoomed page reaches the swap chain at its new size"
+            <| fun window chain _ ->
+                stepUntilIdle window chain
+                let cpu = window.CpuFramesPresented
+                window.Zoom <- 2.0
+                window.Present ()
+                stepUntilIdle window chain
+                let image = window.ReadPixels ()
+                let struct (width, height, _) = image
+                Expect.equal (width, height) (200, 150) "the frame keeps the window's pixels"
+                Expect.equal (redAt image 150 120) (255uy, 0uy, 0uy, 255uy) "the square of 100 CSS pixels covers 200 pixels"
+
+                if WebCoreHost.Has "compositor-device-scale" then
+                    Expect.equal window.CpuFramesPresented cpu "the zoomed frame came from the GPU"
+
             chainCase "a blocked present leaves the window's loop running and its frames being produced"
             <| fun window chain _ ->
                 use released = new ManualResetEventSlim ()
