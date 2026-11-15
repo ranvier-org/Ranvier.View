@@ -1,0 +1,8 @@
+[
+  { "op": "expect", "selector": "#caption", "text": "caption one" },
+  { "op": "edit", "name": "B1 an edit that does not compile", "file": "App.fs", "error": true, "contains": "whisper",
+    "find": "\"caption \" + suffix", "replace": "whisper \"QUIET \" + suffix" },
+  { "op": "revert", "name": "B2 the edit is put back", "file": "App.fs" },
+  { "op": "edit", "name": "B3 another file is edited", "file": "Lib.fs", "find": "let suffix = \"one\"", "replace": "let suffix = \"two\"" },
+  { "op": "expect", "selector": "#caption", "text": "caption two" }
+]

@@ -1,0 +1,9 @@
+[
+  { "op": "expect", "selector": "#caption", "text": "caption one" },
+  { "op": "edit", "name": "M2a new function in the earlier file", "file": "Lib.fs",
+    "find": "/// A value read by", "replace": "let whisper (s: string) =\n    s.ToLowerInvariant ()\n\n/// A value read by" },
+  { "op": "edit", "name": "M2b its use in the later file", "file": "App.fs", "find": "\"caption \" + suffix", "replace": "whisper \"QUIET \" + suffix" },
+  { "op": "expect", "selector": "#caption", "text": "quiet one" },
+  { "op": "edit", "name": "M2c the new function edited", "file": "Lib.fs", "find": "s.ToLowerInvariant ()", "replace": "s.ToLowerInvariant () + \"?\"" },
+  { "op": "expect", "selector": "#caption", "text": "quiet ?one" }
+]

@@ -31,6 +31,8 @@
   <Folder Name="/tests/">
     <Project Path="tests/Ranvier.View.Twin.Tests/Ranvier.View.Twin.Tests.fsproj" />
     <Project Path="tests/Ranvier.View.WebCore.Tests/Ranvier.View.WebCore.Tests.fsproj" />
+    <Project Path="tests/Ranvier.View.WebCore.Hmr.Tests/Ranvier.View.WebCore.Hmr.Tests.fsproj" />
+    <Project Path="tests/Ranvier.View.WebCore.Hmr.Tests/fixture/HmrFixture.fsproj" />
     <Project Path="tests/Ranvier.View.WebCore.AotSmoke/Ranvier.View.WebCore.AotSmoke.fsproj" />
     <Project Path="fable/Ranvier.View.Anime.Tests/Ranvier.View.Anime.Tests.fsproj" />
   </Folder>

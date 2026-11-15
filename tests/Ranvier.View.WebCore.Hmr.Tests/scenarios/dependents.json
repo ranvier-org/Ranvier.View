@@ -1,0 +1,22 @@
+[
+  { "op": "expect", "selector": "#caption", "text": "caption one" },
+  { "op": "expect", "selector": "#body", "text": "BODY" },
+
+  { "op": "edit", "name": "D1 value read by a value of another file", "file": "Lib.fs", "find": "let suffix = \"one\"", "replace": "let suffix = \"two\"" },
+  { "op": "expect", "selector": "#caption", "text": "caption two" },
+
+  { "op": "edit", "name": "D2 private value read by a public value of its file", "file": "App.fs", "find": "Title = \"Extra\"", "replace": "Title = \"More\"" },
+  { "op": "expect", "selector": "#extra", "text": "More" },
+
+  { "op": "edit", "name": "D3 value in a nested module", "file": "App.fs", "find": "Title = \"Home\"", "replace": "Title = \"Start\"" },
+  { "op": "expect", "selector": "#home", "text": "Start" },
+
+  { "op": "edit", "name": "D4 function called from another file", "file": "Lib.fs", "find": "s.ToUpperInvariant ()", "replace": "s.ToUpperInvariant () + \"!\"" },
+  { "op": "expect", "selector": "#body", "text": "BODY!" },
+
+  { "op": "edit", "name": "D5 later file edited after the earlier one reloaded", "file": "App.fs", "find": "\"caption \" + suffix", "replace": "\"label \" + suffix" },
+  { "op": "expect", "selector": "#caption", "text": "label two" },
+  { "op": "expect", "selector": "#body", "text": "BODY!" },
+  { "op": "expect", "selector": "#extra", "text": "More" },
+  { "op": "expect", "selector": "#home", "text": "Start" }
+]

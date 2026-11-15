@@ -2,6 +2,8 @@ namespace Ranvier.View.WebCore.Hmr
 
 // The dev host: `dotnet run -- dev [-hmr alc|fsi|fine] [-nochecker] [-bench scenario.json]`.
 // Owns the SDL window and WebCore page for the whole session; reloads swap code underneath them.
+// For tests: `-hidden` keeps the window off screen, `-software` uses the software renderer, and `-sources <dir>`
+// reads the project from a copy in another folder.
 
 open System
 open System.Collections.Concurrent
@@ -65,6 +67,8 @@ type private Step =
         times: int
         value: int
         error: bool
+        /// Further files an edit writes or a revert restores with `file`: (file, find, replace).
+        more: (string * string * string) list
     }
 
 type private StepResult =
@@ -124,7 +128,14 @@ type internal DevHost
         || Array.contains "-nobaseline" argv
 
     let started = Time.now ()
-    let project = Delivery.loadProject callerFile
+
+    // `-sources <dir>` reads the project from another folder than the one it was built in: a test runs the host
+    // against a copy of its fixture.
+    let project =
+        match arg "-sources" with
+        | Some dir -> Delivery.loadProject (Path.Combine (Path.GetFullPath dir, "Program.fs"))
+        | None -> Delivery.loadProject callerFile
+
     let registry = Remount.Registry ()
     let remounter = Remount.Remounter registry
     let engine = Fine.Engine registry
@@ -304,12 +315,23 @@ type internal DevHost
                     "remount", state)
         | errors -> fail report (List.concat errors)
 
-    /// Evaluates a file's lets in a shadow module that opens the module already in use.
+    /// Reports a change the host leaves unapplied until the app restarts.
+    let restart (report: Report) (why: string) =
+        let r =
+            { report with
+                Path = "restart"
+                Detail = why
+            }
+
+        ui.Enqueue (fun () -> awaitingPresent <- Some r)
+
+    /// Evaluates a file's lets and nested modules in a shadow module that opens the module already in use.
     let shadowLoad
         (f: string)
         (moduleName: string)
         (decls: Delivery.Declaration list)
         (aliasOf: Delivery.Declaration -> string option)
+        (nestedOf: Delivery.Declaration -> Delivery.Nested)
         (abbreviations: (string * string) list)
         (live: bool)
         =
@@ -320,7 +342,7 @@ type internal DevHost
         let shadow =
             Path.Combine (shadowDir, $"{Path.GetFileNameWithoutExtension f}__hmr{generation}.fs")
 
-        File.WriteAllText (shadow, Delivery.shadowModule f moduleName generation decls aliasOf abbreviations)
+        File.WriteAllText (shadow, Delivery.shadowModule f moduleName generation decls aliasOf nestedOf abbreviations)
         let result = fsi.Value.Load shadow
 
         match result with
@@ -329,12 +351,16 @@ type internal DevHost
                 componentKeys.Add k |> ignore
 
             for d in decls do
-                if
-                    d.Kind = "let"
-                    && d.IsValue
-                    && not (isNull d.Name)
-                    && (aliasOf d).IsNone
-                then
+                let evaluated =
+                    match d.Kind with
+                    | "let" ->
+                        d.IsValue
+                        && not (isNull d.Name)
+                        && (aliasOf d).IsNone
+                    | "module" -> nestedOf d = Delivery.Reevaluate
+                    | _ -> false
+
+                if evaluated then
                     definedIn[struct (f, d.Name)] <- $"{moduleName}__hmr{generation}"
 
             latestModule[moduleName] <- $"{moduleName}__hmr{generation}"
@@ -342,30 +368,57 @@ type internal DevHost
 
         result
 
-    /// The aliasing a reload applies to a file with no changed value: a baseline must compile the same shape, or its
-    /// closures' IL differs from the first edit's (an alias getter in place of a static field).
-    let unchangedAlias (f: string) (moduleName: string) (d: Delivery.Declaration) =
+    /// The module that last evaluated a top-level value or nested module of a file.
+    let liveModule (f: string) (moduleName: string) (name: string) =
+        match definedIn.TryGetValue (struct (f, name)) with
+        | true, m -> m
+        | _ -> moduleName
+
+    /// The live module of a public, immutable module-level value, which then keeps the object it holds (a store, a
+    /// cache) across a reload. None for any other let, and for a value among `touched`: the declarations that
+    /// changed or that use a change, by full name.
+    let aliasOf (f: string) (moduleName: string) (touched: HashSet<string>) (d: Delivery.Declaration) =
         if
             d.IsValue
             && d.IsPublic
             && not d.IsMutable
             && not (isNull d.Name)
             && not (componentKeys.Contains (moduleName + "." + d.Name))
+            && not (touched.Contains (moduleName + "." + d.Name))
         then
-            match definedIn.TryGetValue (struct (f, d.Name)) with
-            | true, m -> Some m
-            | _ -> Some moduleName
+            Some (liveModule f moduleName d.Name)
         else
             None
 
+    /// A nested module of lets is evaluated again when a declaration inside it is among `touched`, and when it is
+    /// private: the shadow module cannot reach the existing one. Any other public module is abbreviated.
+    let nestedOf (f: string) (moduleName: string) (touched: HashSet<string>) (d: Delivery.Declaration) =
+        let prefix = $"{moduleName}.{d.Name}."
+
+        if
+            Delivery.isLetsOnly d
+            && (not d.IsPublic
+                || touched
+                   |> Seq.exists (fun name -> name.StartsWith prefix))
+        then
+            Delivery.Reevaluate
+        elif d.IsPublic then
+            Delivery.Abbreviate (liveModule f moduleName d.Name)
+        else
+            Delivery.Omit
+
+    let untouched = HashSet<string>()
+
     /// The FSI baseline of one file, the first time it is touched: fingerprints of its mounted code as FSI
     /// compiles it, so its first edit compares FSI output with FSI output (reloaded code always sits in another
-    /// assembly than the types it uses, so its IL never matches the app's own compile).
+    /// assembly than the types it uses, so its IL never matches the app's own compile). It aliases as a reload
+    /// with no changed value does, or its closures' IL differs from the first edit's (an alias getter in place of
+    /// a static field).
     let baselineOf (f: string) (text: string) =
         if baselined.Add f then
             match Delivery.declarations f text with
             | Some (moduleName, decls) ->
-                match shadowLoad f moduleName decls (unchangedAlias f moduleName) [] false with
+                match shadowLoad f moduleName decls (aliasOf f moduleName untouched) (nestedOf f moduleName untouched) [] false with
                 | Ok e ->
                     use done' = new ManualResetEventSlim false
 
@@ -387,358 +440,451 @@ type internal DevHost
         else
             None
 
-    /// Evaluates one file: its lets in a shadow module when only values and opens changed, the whole file otherwise.
-    let evaluate (f: string) (text: string) (changedKeys: string list) (abbreviate: bool) =
-        let structural =
-            changedKeys
-            |> List.exists (fun k -> not (k.EndsWith ":Value" || k.EndsWith ":Open"))
+    /// Evaluates one file: its lets and nested modules of lets in a shadow module, or the whole file when `whole`.
+    /// `touched` holds the full names of the file's declarations that changed or that use a change.
+    let evaluate (f: string) (text: string) (touched: HashSet<string>) (whole: bool) =
+        match (if whole then None else Delivery.declarations f text) with
+        | Some (moduleName, decls) ->
+            let alias = aliasOf f moduleName touched
+            let nested = nestedOf f moduleName touched
 
-        match Delivery.declarations f text with
-        | Some (moduleName, decls) when not structural ->
-            let changedNames =
-                changedKeys
-                |> Seq.map (fun k -> k.Substring (0, k.LastIndexOf ':'))
-                |> HashSet
-
-            let aliasOf (d: Delivery.Declaration) =
-                if
-                    d.IsValue
-                    && d.IsPublic
-                    && not d.IsMutable
-                    && not (isNull d.Name)
-                    && not (componentKeys.Contains (moduleName + "." + d.Name))
-                    && not (changedNames.Contains (moduleName + "." + d.Name))
-                then
-                    match definedIn.TryGetValue (struct (f, d.Name)) with
-                    | true, m -> Some m
-                    | _ -> Some moduleName
-                else
-                    None
-
+            // A name from an earlier file means that file's latest generation, in an edited file as in a dependent.
             let abbreviations =
-                if abbreviate then
-                    [
-                        for KeyValue (m, latest) in latestModule do
-                            if m <> moduleName && latest <> m then
-                                yield (m, latest)
-                    ]
-                else
-                    []
+                [
+                    for KeyValue (m, latest) in latestModule do
+                        if m <> moduleName && latest <> m then
+                            yield (m, latest)
+                ]
 
-            let aliased =
+            let kept =
                 decls
-                |> List.filter (fun d -> d.Kind = "let" && (aliasOf d).IsSome)
+                |> List.filter (fun d -> d.Kind = "let" && (alias d).IsSome)
                 |> List.map _.Name
 
             let note =
-                if aliased.IsEmpty then
+                if kept.IsEmpty then
                     ""
                 else
-                    $" (kept {String.Join (',', aliased)})"
+                    $" (kept {String.Join (',', kept)})"
 
-            let result =
-                match shadowLoad f moduleName decls aliasOf abbreviations true with
-                | Error _ when not abbreviations.IsEmpty -> shadowLoad f moduleName decls aliasOf [] true
-                | r -> r
+            match shadowLoad f moduleName decls alias nested abbreviations true with
+            | Error _ when not abbreviations.IsEmpty ->
+                // A shadow module holds lets only, so a name qualified with a reloaded module (one of its types, say)
+                // is missing from it.
+                let unabbreviated = shadowLoad f moduleName decls alias nested [] true
 
-            result, "lets-only eval" + note, false
-        | parsed ->
+                unabbreviated,
+                "lets-only eval"
+                + note
+                + " (names qualified with a reloaded module bind to the build)"
+            | result -> result, "lets-only eval" + note
+        | _ ->
             let result = fsi.Value.Load f
 
-            match result, parsed with
+            match result, Delivery.declarations f text with
             | Ok e, Some (moduleName, decls) ->
                 for (k, _) in e.Components do
                     componentKeys.Add k |> ignore
 
                 for d in decls do
-                    if d.Kind = "let" && d.IsValue && not (isNull d.Name) then
+                    if
+                        (d.Kind = "let" && d.IsValue && not (isNull d.Name))
+                        || d.Kind = "module"
+                    then
                         definedIn[struct (f, d.Name)] <- moduleName
 
                 latestModule[moduleName] <- moduleName
             | _ -> ()
 
-            result, "whole-file eval (types changed)", true
+            result, "whole-file eval (types changed)"
 
-    /// Declaration stamps decide what changed; the checker's TypedUses decide which dependents (in any file) must
-    /// be re-evaluated and patched; IL fingerprints (FSI to FSI) decide which closures inside a changed component
-    /// rebind. Components that neither changed nor depend on a change are not touched at all.
-    let deliverFine (report: Report) (files: string list) (previous: Map<string, string>) (drift: bool) =
-        let mutable checkMs = 0.0
-        let mutable baselineMs = 0.0
+    /// Declaration stamps decide what changed. The checker gate runs first: its errors block the reload, and its
+    /// uses decide which declarations, in any file, depend on a change and are evaluated again with it. IL
+    /// fingerprints (FSI to FSI) decide which closures inside a patched component rebind. Components that neither
+    /// changed nor depend on a change are not touched at all.
+    let deliverFine (report: Report) (files: string list) (drift: bool) =
         let notes = ResizeArray<string>()
-        let loads = ResizeArray<string * Result<Delivery.Evaluated, string list> * bool>()
-        let mutable blocked = false
-        let accepted = ResizeArray<string * string * Stamps.Stamp array>()
+        let texts = Dictionary<string, string>()
+        let fresh = Dictionary<string, Stamps.Stamp array>()
+        let changedKeys = Dictionary<string, string list>()
         let changedSet = HashSet<struct (string * string)>()
 
-        for f in files do
-            let text = File.ReadAllText f
-            let fresh = Stamps.ofText stampContext.Value f text
-            let changedKeys = Stamps.changed appliedStamps[f] fresh
+        let textOf (f: string) =
+            match texts.TryGetValue f with
+            | true, text -> text
+            | _ ->
+                let text = File.ReadAllText f
+                texts[f] <- text
+                text
 
-            if changedKeys.IsEmpty then
+        for f in files do
+            let stamps = Stamps.ofText stampContext.Value f (textOf f)
+            let keys = Stamps.changed appliedStamps[f] stamps
+            fresh[f] <- stamps
+            changedKeys[f] <- keys
+
+            if keys.IsEmpty then
                 // Only text between declarations changed (comments, blank lines): nothing to evaluate.
                 notes.Add $"{Path.GetFileName f}: no declaration changed (stamps)"
-                accepted.Add ((f, text, fresh))
+
+            for k in keys do
+                changedSet.Add (struct (Path.GetFileName f, k))
+                |> ignore
+
+        let checking = useChecker && gateReady
+        let check = Stopwatch.StartNew ()
+
+        // The checker holds the text of every delivered file, a file saved back to its applied text included: the
+        // errors of an edit that was undone must not outlive it.
+        if checking && changedSet.Count = 0 then
+            for f in files do
+                gate.Value.SetText (f, textOf f)
+
+        // An edit can break a file below it, so every file from the first edited one on is read for errors.
+        let errors =
+            if checking && changedSet.Count > 0 then
+                let first =
+                    files
+                    |> List.map (fun f -> List.findIndex ((=) f) project.Sources)
+                    |> List.min
+
+                [
+                    for f in project.Sources |> List.skip first do
+                        if List.contains f files then
+                            yield! (gate.Value.Check (f, textOf f)).Errors
+                        elif f <> project.Entry then
+                            yield! gate.Value.Errors f
+                ]
+                |> List.distinct
             else
-                for k in changedKeys do
-                    changedSet.Add (struct (Path.GetFileName f, k))
-                    |> ignore
+                []
 
-                // The checker gate runs beside the evaluation; its verdict decides whether the evaluation is used.
-                let verdict =
-                    if useChecker && gateReady then
-                        Some (Tasks.Task.Run (fun () -> gate.Value.Check (f, text)))
-                    else
-                        None
+        let checkMs = if checking then check.Elapsed.TotalMilliseconds else 0.0
 
-                if lazyBaseline && not drift then
-                    match baselineOf f previous[f] with
-                    | Some ms -> baselineMs <- baselineMs + ms
-                    | None -> ()
+        if not errors.IsEmpty then
+            fail { report with CheckMs = checkMs } errors
+        else
+            let parsed = Dictionary<string, (string * Delivery.Declaration list) option>()
 
-                let load, how, wholeFile = evaluate f text changedKeys false
+            let parse (f: string) =
+                match parsed.TryGetValue f with
+                | true, p -> p
+                | _ ->
+                    let p = Delivery.declarations f (textOf f)
+                    parsed[f] <- p
+                    p
 
-                let keys =
-                    changedKeys
-                    |> List.map (fun k -> k.Substring (k.LastIndexOf '.' + 1))
-                    |> List.truncate 4
+            // Declarations a shadow module cannot evaluate again: any kind but a let or an open, and a let inside a
+            // nested module that holds more than lets.
+            let structural (f: string) (keys: string list) =
+                match parse f with
+                | None -> []
+                | Some (moduleName, decls) ->
+                    keys
+                    |> List.filter (fun k ->
+                        not (k.EndsWith ":Value" || k.EndsWith ":Open")
+                        || decls
+                           |> List.exists (fun d ->
+                               d.Kind = "module"
+                               && not (Delivery.isLetsOnly d)
+                               && k.StartsWith $"{moduleName}.{d.Name}."))
 
-                let what = $"{Path.GetFileName f}: changed {String.Join (',', keys)}; {how}"
+            // A file evaluated whole redefines every declaration it holds, so each of them counts as changed.
+            let whole = HashSet<string>()
 
-                match verdict |> Option.map _.Result with
-                | Some g when not g.Errors.IsEmpty ->
-                    checkMs <- checkMs + g.CheckMs
-                    blocked <- true
-                    fail { report with CheckMs = checkMs } g.Errors
-                | Some g ->
-                    checkMs <- checkMs + g.CheckMs
-                    notes.Add what
-                    loads.Add ((f, load, wholeFile))
-
-                    if Result.isOk load then
-                        accepted.Add ((f, text, fresh))
-                | None ->
-                    notes.Add what
-                    loads.Add ((f, load, wholeFile))
-
-                    if Result.isOk load then
-                        accepted.Add ((f, text, fresh))
-
-        // Dependents through types and values (not through components, which are found by key).
-        let dependents =
-            if
-                blocked
-                || not (useChecker && gateReady)
-                || changedSet.Count = 0
-            then
-                None
-            else
-                let isComponent (stampKey: string) =
-                    stampKey.EndsWith ":Value"
-                    && componentKeys.Contains (stampKey.Substring (0, stampKey.Length - 6))
-
-                Some (gate.Value.Dependents (changedSet, isComponent))
-
-        let forced =
-            match dependents with
-            | Some _ ->
-                let values = HashSet<struct (string * string)>()
-
-                for f in files do
-                    match Delivery.declarations f (File.ReadAllText f) with
-                    | Some (moduleName, decls) ->
-                        for d in decls do
-                            let key = struct (Path.GetFileName f, $"{moduleName}.{d.Name}:Value")
-
-                            if
-                                d.IsValue
-                                && not (isNull d.Name)
-                                && changedSet.Contains key
-                                && not (componentKeys.Contains $"{moduleName}.{d.Name}")
-                            then
-                                values.Add key |> ignore
-                    | None -> ()
-
-                if values.Count = 0 then
-                    HashSet ()
-                else
-                    gate.Value.Dependents (values, (fun _ -> false))
-            | None -> HashSet ()
-
-        match dependents with
-        | Some deps when
-            loads
-            |> Seq.forall (fun (_, l, _) -> Result.isOk l)
-            ->
-            let names =
-                deps
-                |> Seq.map (fun (struct (file, _)) -> file)
-                |> HashSet
-
-            for d in project.Sources do
+            for f in files do
                 if
-                    d <> project.Entry
-                    && not (List.contains d files)
-                    && names.Contains (Path.GetFileName d)
+                    not changedKeys[f].IsEmpty
+                    && ((parse f).IsNone
+                        || not (structural f changedKeys[f]).IsEmpty)
                 then
-                    if lazyBaseline && not drift then
-                        match baselineOf d applied[d] with
-                        | Some ms -> baselineMs <- baselineMs + ms
-                        | None -> ()
+                    whole.Add f |> ignore
 
-                    let load, how, wholeFile = evaluate d (File.ReadAllText d) [] true
+                    for stamp in fresh[f] do
+                        changedSet.Add (struct (Path.GetFileName f, stamp.Key))
+                        |> ignore
 
-                    let keys =
-                        deps
-                        |> Seq.filter (fun (struct (file, _)) -> file = Path.GetFileName d)
-                        |> Seq.map (fun (struct (_, k)) -> k.Substring (k.LastIndexOf '.' + 1))
+            let isComponent (stampKey: string) =
+                stampKey.EndsWith ":Value"
+                && componentKeys.Contains (stampKey.Substring (0, stampKey.Length - 6))
 
-                    notes.Add $"{Path.GetFileName d}: dependent {String.Join (',', keys)}; {how}"
-                    loads.Add ((d, load, wholeFile))
-        | _ -> ()
+            // Dependents through types and values (not through components, which are found by key).
+            let unread = HashSet<string>()
 
-        if not blocked then
-            for (f, text, stamps) in accepted do
-                applied[f] <- text
-                appliedStamps[f] <- stamps
+            let dependents =
+                if checking && changedSet.Count > 0 then
+                    gate.Value.Dependents (changedSet, isComponent, unread)
+                else
+                    HashSet ()
 
-        let shouldPatch (file: string) (componentKey: string) =
-            match dependents with
-            | None -> true
-            | Some deps ->
-                let key = struct (Path.GetFileName file, componentKey + ":Value")
-                changedSet.Contains key || deps.Contains key
+            for f in unread do
+                if f <> project.Entry then
+                    notes.Add
+                        $"{Path.GetFileName f}: not checked by declaration, so what it uses of this edit is unknown and it was not evaluated again"
 
-        if not blocked then
-            match
-                loads
-                |> Seq.choose (fun (_, l, _) ->
-                    match l with
-                    | Error e -> Some e
-                    | _ -> None)
-                |> Seq.toList
-            with
-            | [] when loads.Count = 0 ->
-                post
-                    { report with
-                        CheckMs = checkMs
-                        Detail = String.Join ("; ", notes)
-                    }
-                    (fun () -> "unchanged", "")
-            | [] ->
-                let all =
-                    loads
-                    |> Seq.collect (fun (f, l, whole) ->
-                        match l with
-                        | Ok e ->
-                            e.Components
-                            |> List.map (fun (k, d) -> f, k, d, whole)
-                        | _ -> [])
-                    |> Seq.toList
+            let plan =
+                [
+                    for f in project.Sources do
+                        if f <> project.Entry then
+                            let own =
+                                match changedKeys.TryGetValue f with
+                                | true, keys -> keys
+                                | _ -> []
 
-                let patchable =
-                    all
-                    |> List.filter (fun (f, k, _, _) -> shouldPatch f k)
+                            let uses =
+                                [
+                                    for (struct (file, k)) in dependents do
+                                        if file = Path.GetFileName f then
+                                            yield k
+                                ]
 
-                let skipped = all.Length - patchable.Length
+                            if not (own.IsEmpty && uses.IsEmpty) then
+                                yield f, own, uses
+                ]
 
-                let deliverMs =
-                    loads
-                    |> Seq.sumBy (fun (_, l, _) ->
-                        match l with
-                        | Ok e -> e.EvalMs
-                        | _ -> 0.0)
+            // A dependent in a file with several modules is evaluated with its whole file.
+            for (f, _, _) in plan do
+                if (parse f).IsNone then
+                    whole.Add f |> ignore
 
-                let baselineNote =
-                    if baselineMs > 0.0 then
-                        $" first-touch baseline {baselineMs:F0} ms;"
+            let shortKey (k: string) =
+                k.Substring (k.LastIndexOf '.' + 1)
+
+            let stale =
+                [
+                    for (f, _, uses) in plan do
+                        if not (whole.Contains f) then
+                            match structural f uses with
+                            | [] -> ()
+                            | keys -> yield $"{Path.GetFileName f}: {String.Join (',', keys |> List.map shortKey)}"
+                ]
+
+            if not stale.IsEmpty then
+                let edited =
+                    files
+                    |> List.filter (fun f -> not changedKeys[f].IsEmpty)
+                    |> List.map Path.GetFileName
+
+                let users = String.Join ("; ", stale)
+                let sources = String.Join (',', edited)
+
+                restart
+                    { report with CheckMs = checkMs }
+                    ($"restart needed: {users} cannot be evaluated again in place, "
+                     + $"and the edit to {sources} redefines what they use; the edit was not applied")
+            else
+                let mutable baselineMs = 0.0
+                let loads = ResizeArray<string * Result<Delivery.Evaluated, string list> * bool>()
+                let mutable failure: string list = []
+
+                for (f, own, uses) in plan do
+                    if failure.IsEmpty then
+                        if lazyBaseline && not drift then
+                            match baselineOf f applied[f] with
+                            | Some ms -> baselineMs <- baselineMs + ms
+                            | None -> ()
+
+                        let touched =
+                            HashSet<string>(
+                                own @ uses
+                                |> List.map (fun k -> k.Substring (0, k.LastIndexOf ':'))
+                            )
+
+                        let load, how = evaluate f (textOf f) touched (whole.Contains f)
+
+                        let names (keys: string list) =
+                            String.Join (',', keys |> List.map shortKey |> List.truncate 4)
+
+                        let what =
+                            match own, uses with
+                            | [], _ -> $"dependent {names uses}"
+                            | _, [] -> $"changed {names own}"
+                            | _ -> $"changed {names own}, dependent {names uses}"
+
+                        notes.Add $"{Path.GetFileName f}: {what}; {how}"
+                        loads.Add ((f, load, whole.Contains f))
+
+                        match load with
+                        | Error messages ->
+                            let specific =
+                                messages
+                                |> List.filter (fun m ->
+                                    m
+                                    <> "Operation could not be completed due to earlier error")
+
+                            failure <-
+                                $"{Path.GetFileName f} passed the check and FSI did not evaluate it ({how})"
+                                :: (if specific.IsEmpty then messages else specific)
+                        | Ok _ -> ()
+
+                if not failure.IsEmpty then
+                    // Every file of this batch stays unapplied, so the next save delivers them again.
+                    fail { report with CheckMs = checkMs } failure
+                else
+                    for f in files do
+                        applied[f] <- textOf f
+                        appliedStamps[f] <- fresh[f]
+
+                    if loads.Count = 0 then
+                        post
+                            { report with
+                                CheckMs = checkMs
+                                Detail = String.Join ("; ", notes)
+                            }
+                            (fun () -> "unchanged", "")
                     else
-                        ""
+                        let shouldPatch (file: string) (componentKey: string) =
+                            not checking
+                            || (let key = struct (Path.GetFileName file, componentKey + ":Value")
+                                changedSet.Contains key || dependents.Contains key)
 
-                post
-                    { report with
-                        CheckMs = checkMs
-                        DeliverMs = deliverMs + baselineMs
-                        Detail = String.Join ("; ", notes) + ";" + baselineNote
-                    }
-                    (fun () ->
-                        // Every new definition's key is known (child lookups); only patched ones become the latest.
-                        for (_, k, d, _) in all do
-                            registry.Alias (k, d)
+                        // A module-level value lives in a static field, so evaluating it again leaves the IL of the
+                        // closures that read it unchanged: the components that use it are rebound.
+                        let forced =
+                            if checking then
+                                let values = HashSet<struct (string * string)>()
 
-                        for (_, k, d, _) in patchable do
-                            registry.Register (k, d)
-                            engine.MarkReloaded k
+                                for (f, _, _) in plan do
+                                    match parse f with
+                                    | Some (moduleName, decls) ->
+                                        for name in Delivery.valueNames moduleName decls do
+                                            let key = struct (Path.GetFileName f, name + ":Value")
 
-                        let rebind (f: string) (k: string) =
-                            forced.Contains (struct (Path.GetFileName f, k + ":Value"))
+                                            if
+                                                (changedSet.Contains key || dependents.Contains key)
+                                                && not (componentKeys.Contains name)
+                                            then
+                                                values.Add key |> ignore
+                                    | None -> ()
 
-                        let results =
-                            graph.Run (fun () ->
-                                patchable
-                                |> List.map (fun (f, k, d, whole) -> k, engine.Patch (k, d, whole || rebind f k)))
+                                if values.Count = 0 then
+                                    HashSet ()
+                                else
+                                    gate.Value.Dependents (values, (fun _ -> false), HashSet ())
+                            else
+                                HashSet ()
 
-                        let untouched =
-                            if skipped > 0 then
-                                $"; {skipped} unchanged components not touched"
+                        let all =
+                            loads
+                            |> Seq.collect (fun (f, l, whole) ->
+                                match l with
+                                | Ok e ->
+                                    e.Components
+                                    |> List.map (fun (k, d) -> f, k, d, whole)
+                                | _ -> [])
+                            |> Seq.toList
+
+                        let patchable =
+                            all
+                            |> List.filter (fun (f, k, _, _) -> shouldPatch f k)
+
+                        let skipped = all.Length - patchable.Length
+
+                        let deliverMs =
+                            loads
+                            |> Seq.sumBy (fun (_, l, _) ->
+                                match l with
+                                | Ok e -> e.EvalMs
+                                | _ -> 0.0)
+
+                        let baselineNote =
+                            if baselineMs > 0.0 then
+                                $" first-touch baseline {baselineMs:F0} ms;"
                             else
                                 ""
 
-                        match
-                            results
-                            |> List.tryPick (fun (_, r) ->
-                                match r with
-                                | Fine.Structural why -> Some why
-                                | _ -> None)
-                        with
-                        | Some why ->
-                            let _, state = remount ()
-                            "fallback-remount", $"{why}; {state}"
-                        | None ->
-                            let patched =
-                                results
-                                |> List.choose (fun (k, r) ->
-                                    match r with
-                                    | Fine.Patched (s, f, h, rebound, bridged) ->
-                                        Some
-                                            $"{k.Substring (k.LastIndexOf '.' + 1)}: {s} static, {f} reader, {h} handler changed; {rebound} rebound, {bridged} bridged"
-                                    | _ -> None)
+                        post
+                            { report with
+                                CheckMs = checkMs
+                                DeliverMs = deliverMs + baselineMs
+                                Detail = String.Join ("; ", notes) + ";" + baselineNote
+                            }
+                            (fun () ->
+                                // Every new definition's key is known (child lookups); only patched ones become the latest.
+                                for (_, k, d, _) in all do
+                                    registry.Alias (k, d)
 
-                            if patched.IsEmpty then
-                                "unchanged", untouched.TrimStart (';', ' ')
-                            else
-                                "patch", String.Join ("; ", patched) + untouched)
-            | errors -> fail { report with CheckMs = checkMs } (List.concat errors)
+                                for (_, k, d, _) in patchable do
+                                    registry.Register (k, d)
+                                    engine.MarkReloaded k
+
+                                let rebind (f: string) (k: string) =
+                                    forced.Contains (struct (Path.GetFileName f, k + ":Value"))
+
+                                let results =
+                                    graph.Run (fun () ->
+                                        patchable
+                                        |> List.map (fun (f, k, d, whole) -> k, engine.Patch (k, d, whole || rebind f k)))
+
+                                let untouched =
+                                    if skipped > 0 then
+                                        $"; {skipped} unchanged components not touched"
+                                    else
+                                        ""
+
+                                match
+                                    results
+                                    |> List.tryPick (fun (_, r) ->
+                                        match r with
+                                        | Fine.Structural why -> Some why
+                                        | _ -> None)
+                                with
+                                | Some why ->
+                                    let _, state = remount ()
+                                    "fallback-remount", $"{why}; {state}"
+                                | None ->
+                                    let patched =
+                                        results
+                                        |> List.choose (fun (k, r) ->
+                                            match r with
+                                            | Fine.Patched (s, f, h, rebound, bridged) ->
+                                                Some
+                                                    $"{k.Substring (k.LastIndexOf '.' + 1)}: {s} static, {f} reader, {h} handler changed; {rebound} rebound, {bridged} bridged"
+                                            | _ -> None)
+
+                                    if patched.IsEmpty then
+                                        "unchanged", untouched.TrimStart (';', ' ')
+                                    else
+                                        "patch", String.Join ("; ", patched) + untouched)
 
     let processBatch (files: string list) (startedAt: int64) =
         let detected = Time.now ()
 
+        let read (f: string) =
+            let rec attempt n =
+                try
+                    File.ReadAllText f
+                with :? IOException when n > 0 ->
+                    Thread.Sleep 5
+                    attempt (n - 1)
+
+            attempt 20
+
         let changed =
             files
             |> List.filter (fun f ->
-                let text =
-                    let rec read n =
-                        try
-                            File.ReadAllText f
-                        with :? IOException when n > 0 ->
-                            Thread.Sleep 5
-                            read (n - 1)
-
-                    read 20
-
                 match lastText.TryGetValue f with
-                | true, t when t = text -> false
+                | true, t when t = read f -> false
                 | _ -> true)
 
         if not changed.IsEmpty then
-            let previous =
-                changed
-                |> List.map (fun f -> f, applied[f])
-                |> Map.ofList
-
             for f in changed do
-                lastText[f] <- File.ReadAllText f
+                lastText[f] <- read f
+
+            let entryChanged = List.contains project.Entry changed
+
+            // Fine delivers the saved files and every file whose text differs from the text last applied, so a file
+            // whose reload failed goes again with the save that repairs it.
+            let deliver =
+                match strategy with
+                | Fine ->
+                    project.Sources
+                    |> List.filter (fun f ->
+                        f <> project.Entry
+                        && (List.contains f changed || read f <> applied[f]))
+                | _ ->
+                    changed
+                    |> List.filter (fun f -> f <> project.Entry)
 
             seq <- seq + 1
 
@@ -746,7 +892,12 @@ type internal DevHost
                 {
                     Seq = seq
                     Strategy = (sprintf "%A" strategy).ToLowerInvariant()
-                    Files = String.Join (",", changed |> List.map Path.GetFileName)
+                    Files =
+                        String.Join (
+                            ",",
+                            (if deliver.IsEmpty then changed else deliver)
+                            |> List.map Path.GetFileName
+                        )
                     Path = ""
                     Detail = ""
                     DetectMs = Time.ms startedAt detected
@@ -757,13 +908,23 @@ type internal DevHost
                     Started = startedAt
                 }
 
-            try
-                match strategy with
-                | Alc -> deliverAlc report
-                | Fsi -> deliverFsi report changed
-                | Fine -> deliverFine report changed previous false
-            with e ->
-                fail report [ e.ToString () ]
+            let entryNote =
+                $"restart needed: {Path.GetFileName project.Entry} is the entry file, which the host does not reload"
+
+            if deliver.IsEmpty then
+                // Only the entry file was saved.
+                restart report entryNote
+            else
+                if entryChanged then
+                    log entryNote
+
+                try
+                    match strategy with
+                    | Alc -> deliverAlc report
+                    | Fsi -> deliverFsi report deliver
+                    | Fine -> deliverFine report deliver false
+                with e ->
+                    fail report [ e.ToString () ]
 
     let warm () =
         let sw = Stopwatch.StartNew ()
@@ -796,7 +957,7 @@ type internal DevHost
                     if f <> project.Entry then
                         match Delivery.declarations f (File.ReadAllText f) with
                         | Some (moduleName, decls) ->
-                            match shadowLoad f moduleName decls (unchangedAlias f moduleName) [] false with
+                            match shadowLoad f moduleName decls (aliasOf f moduleName untouched) (nestedOf f moduleName untouched) [] false with
                             | Ok e ->
                                 baselined.Add f |> ignore
                                 use done' = new ManualResetEventSlim false
@@ -879,13 +1040,7 @@ type internal DevHost
                     Started = Time.now ()
                 }
 
-            deliverFine
-                report
-                driftFiles
-                (driftFiles
-                 |> List.map (fun f -> f, applied[f])
-                 |> Map.ofList)
-                true
+            deliverFine report driftFiles true
 
         for (files, startedAt) in work.GetConsumingEnumerable () do
             processBatch files startedAt
@@ -914,10 +1069,7 @@ type internal DevHost
     let onChange (path: string) =
         let full = Path.GetFullPath path
 
-        if
-            List.contains full project.Sources
-            && full <> project.Entry
-        then
+        if List.contains full project.Sources then
             pending.TryAdd (full, Time.now ()) |> ignore
             flush.Change (10, Timeout.Infinite) |> ignore
 
@@ -972,6 +1124,19 @@ type internal DevHost
                             times = num "times"
                             value = num "value"
                             error = flag "error"
+                            more =
+                                match e.TryGetProperty "more" with
+                                | true, items when items.ValueKind = JsonValueKind.Array ->
+                                    [
+                                        for item in items.EnumerateArray () do
+                                            let part (n: string) =
+                                                match item.TryGetProperty n with
+                                                | true, v when v.ValueKind = JsonValueKind.String -> v.GetString ()
+                                                | _ -> null
+
+                                            yield part "file", part "find", part "replace"
+                                    ]
+                                | _ -> []
                         }
             |]
 
@@ -1055,14 +1220,47 @@ type internal DevHost
                         else
                             failwith $"bench: '{step.find}' not found in {step.file}"
 
+                    let others =
+                        [
+                            for (name, find, replace) in step.more do
+                                let other = Path.Combine (project.Dir, name)
+
+                                if not (originals.ContainsKey other) then
+                                    originals[other] <- File.ReadAllText other
+
+                                let text = File.ReadAllText other
+
+                                let fit (s: string) =
+                                    if text.Contains "\r\n" then
+                                        s.Replace("\r\n", "\n").Replace("\n", "\r\n")
+                                    else
+                                        s
+
+                                if step.op = "revert" then
+                                    yield other, originals[other]
+                                elif text.Contains (fit find) then
+                                    yield other, text.Replace (fit find, fit replace)
+                                else
+                                    failwith $"bench: '{find}' not found in {name}"
+                        ]
+
                     let since = lock reports (fun () -> reports.Count |> fun _ -> seq)
                     File.WriteAllText (file, next)
+
+                    for (other, text) in others do
+                        File.WriteAllText (other, text)
+
                     let report = waitReport since
+
+                    // `contains` on an edit names text the reload's report must carry.
+                    let told (r: Report) =
+                        String.IsNullOrEmpty step.contains
+                        || r.Detail.Contains step.contains
 
                     let ok, detail =
                         match report with
-                        | Some r when r.Path = "error" && step.error -> true, $"expected error: {r.Detail}"
-                        | Some r when r.Path <> "error" -> not step.error, $"{r.Path}: {r.Detail}"
+                        | Some r when r.Path = "error" && step.error -> told r, $"expected error: {r.Detail}"
+                        | Some r when r.Path <> "error" -> not step.error && told r, $"{r.Path}: {r.Detail}"
                         | Some r -> false, r.Detail
                         | None -> false, "timed out waiting for reload"
 
@@ -1271,10 +1469,17 @@ type internal DevHost
             $"dev host: strategy {strategy}, project {Path.GetFileName project.Fsproj}, {project.Sources.Length} sources, {initial.Length} components, root {rootKey}"
 
         window <-
-            if Array.contains "-software" argv then
-                Window.Create (title, width, height, renderer = "software")
-            else
-                Window.create (title, width, height)
+            Window.Create (
+                title,
+                width,
+                height,
+                hidden = Array.contains "-hidden" argv,
+                ?renderer =
+                    (if Array.contains "-software" argv then
+                         Some "software"
+                     else
+                         None)
+            )
 
         graph <- new Graph ()
         props <- propsOf window

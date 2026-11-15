@@ -168,6 +168,34 @@ baseline became a **lazy first-touch baseline** per file (and per dependent file
 For comparison on the cross-file suite: P2 `fsi` 15/17 (only the edited file re-evaluates, so callers keep the
 old helper), P1 `alc` 17/17 (recompiles everything).
 
+## Follow-up: dependents and edits across several files
+
+Two faults showed up on a larger app: an edit inside a page was "kept" while the window showed the old page, and
+edits to several files between saves gave failed reloads. Both are reproduced by
+`tests/Ranvier.View.WebCore.Hmr.Tests`, which runs a two-file fixture under the host in a hidden window.
+
+- **Dependents were found and then kept.** The alias rule kept every public value whose own text had not changed. A
+  value that uses a change therefore kept its old object, in its own file and in a dependent file, where no
+  declaration counts as changed. A nested module was left out of the shadow module, so an edit inside one was
+  dropped. The gate now runs before the evaluation instead of beside it, the declarations it reports as using a
+  change are evaluated again, and a nested module of lets is part of the shadow module.
+- **An edited file bound to the build.** Only a dependent file received the `module Lib = Lib__hmrN` abbreviations.
+  An edited file compiled against the build's `Lib`: it could not see a function a reload had added, and it read the
+  old body of a function a reload had changed. Every shadow module now receives them.
+- **A failed save was not delivered again.** The host compared each file with the text it last saw, so a file whose
+  reload failed stayed out of the save that repaired it. A batch now holds every file whose text differs from the
+  text last applied, and nothing counts as applied when a file of the batch fails.
+- **The checker's declarations lag an edit above a file.** For a moment after such an edit the file below is checked
+  whole and publishes no declarations; the host read that as "no dependents". `Dependents` now waits on
+  `WhenPromoted`, and a file that stays whole is named in the reload's line.
+- **Type changes do not cascade.** A file evaluated whole redefines everything it declares. Lets in later files are
+  evaluated again against it; a type in a later file that uses it cannot be, so the host prints `restart needed` with
+  that type and applies nothing. Evaluating the dependent files whole, in compile order, is the alternative, not
+  tried.
+
+The check no longer overlaps the evaluation. In the fixture's runs it took 6 to 53 ms per reload (measured here: the
+`check` figure of 25 reload lines from the test project, Debug build, software renderer, Windows x64).
+
 ## 3D through Ranvier.Wgpu
 
 The sample is `examples/Ranvier.HmrWgpu`, on the published `Ranvier.Wgpu` / `Ranvier.Wgpu.Sdl` 0.1.0-alpha.2

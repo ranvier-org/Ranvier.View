@@ -270,6 +270,10 @@ jobs:
           # win-arm64 ships a CPU runtime with no D3D11 presentation, so its swap chain tests skip.
           RANVIER_REQUIRE_SWAP_CHAIN: ${{ matrix.rid == 'win-x64' && '1' || '' }}
         run: dotnet test tests/Ranvier.View.WebCore.Tests -c Release
+      # The hot reload host under scripted edits, in a hidden window on the software renderer.
+      - name: Test Ranvier.View.WebCore.Hmr.Tests
+        if: matrix.rid == 'win-x64'
+        run: dotnet test tests/Ranvier.View.WebCore.Hmr.Tests -c Release
       - name: Shared native API conformance
         run: dotnet fsi build.fsx -- native-api
       - name: Verify wrappers against the restored canonical model and DOM contracts
