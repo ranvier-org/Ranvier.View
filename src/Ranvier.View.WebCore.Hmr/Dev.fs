@@ -135,6 +135,7 @@ type internal DevHost
         match arg "-sources" with
         | Some dir -> Delivery.loadProject (Path.Combine (Path.GetFullPath dir, "Program.fs"))
         | None -> Delivery.loadProject callerFile
+
     let registry = Remount.Registry ()
     let remounter = Remount.Remounter registry
     let engine = Fine.Engine registry
@@ -397,7 +398,8 @@ type internal DevHost
         if
             Delivery.isLetsOnly d
             && (not d.IsPublic
-                || touched |> Seq.exists (fun name -> name.StartsWith prefix))
+                || touched
+                   |> Seq.exists (fun name -> name.StartsWith prefix))
         then
             Delivery.Reevaluate
         elif d.IsPublic then
@@ -557,11 +559,7 @@ type internal DevHost
             else
                 []
 
-        let checkMs =
-            if checking then
-                check.Elapsed.TotalMilliseconds
-            else
-                0.0
+        let checkMs = if checking then check.Elapsed.TotalMilliseconds else 0.0
 
         if not errors.IsEmpty then
             fail { report with CheckMs = checkMs } errors
@@ -621,7 +619,8 @@ type internal DevHost
 
             for f in unread do
                 if f <> project.Entry then
-                    notes.Add $"{Path.GetFileName f}: not checked by declaration, so what it uses of this edit is unknown and it was not evaluated again"
+                    notes.Add
+                        $"{Path.GetFileName f}: not checked by declaration, so what it uses of this edit is unknown and it was not evaluated again"
 
             let plan =
                 [
@@ -709,7 +708,9 @@ type internal DevHost
                         | Error messages ->
                             let specific =
                                 messages
-                                |> List.filter (fun m -> m <> "Operation could not be completed due to earlier error")
+                                |> List.filter (fun m ->
+                                    m
+                                    <> "Operation could not be completed due to earlier error")
 
                             failure <-
                                 $"{Path.GetFileName f} passed the check and FSI did not evaluate it ({how})"
@@ -881,7 +882,9 @@ type internal DevHost
                     |> List.filter (fun f ->
                         f <> project.Entry
                         && (List.contains f changed || read f <> applied[f]))
-                | _ -> changed |> List.filter (fun f -> f <> project.Entry)
+                | _ ->
+                    changed
+                    |> List.filter (fun f -> f <> project.Entry)
 
             seq <- seq + 1
 
@@ -889,7 +892,12 @@ type internal DevHost
                 {
                     Seq = seq
                     Strategy = (sprintf "%A" strategy).ToLowerInvariant()
-                    Files = String.Join (",", (if deliver.IsEmpty then changed else deliver) |> List.map Path.GetFileName)
+                    Files =
+                        String.Join (
+                            ",",
+                            (if deliver.IsEmpty then changed else deliver)
+                            |> List.map Path.GetFileName
+                        )
                     Path = ""
                     Detail = ""
                     DetectMs = Time.ms startedAt detected
@@ -949,9 +957,7 @@ type internal DevHost
                     if f <> project.Entry then
                         match Delivery.declarations f (File.ReadAllText f) with
                         | Some (moduleName, decls) ->
-                            match
-                                shadowLoad f moduleName decls (aliasOf f moduleName untouched) (nestedOf f moduleName untouched) [] false
-                            with
+                            match shadowLoad f moduleName decls (aliasOf f moduleName untouched) (nestedOf f moduleName untouched) [] false with
                             | Ok e ->
                                 baselined.Add f |> ignore
                                 use done' = new ManualResetEventSlim false

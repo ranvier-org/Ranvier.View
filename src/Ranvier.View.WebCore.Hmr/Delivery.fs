@@ -601,7 +601,7 @@ type CheckerGate(project: Project) =
                 f,
                 (try
                     // An edit above a file sends it back to a whole-file check until its declarations are built again.
-                    graph.WhenPromoted(f, Threading.CancellationToken.None).Wait (TimeSpan.FromSeconds 10.0)
+                    graph.WhenPromoted(f, Threading.CancellationToken.None).Wait(TimeSpan.FromSeconds 10.0)
                     |> ignore
 
                     graph.Results(f).GetAwaiter().GetResult()

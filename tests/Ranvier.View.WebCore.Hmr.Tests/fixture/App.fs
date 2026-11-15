@@ -34,6 +34,6 @@ let app: Component<unit> =
                 t.div [| t.Attrs.attribute ("id", "caption") |] [| t.text (fun _ -> caption) |]
                 t.div [| t.Attrs.attribute ("id", "home") |] [| t.text (fun _ -> pages[0].Title) |]
                 t.div [| t.Attrs.attribute ("id", "extra") |] [| t.text (fun _ -> pages[1].Title) |]
-                t.div [| t.Attrs.attribute ("id", "body") |] [| t.text (fun _ -> pages[0].Body ()) |]
+                t.div [| t.Attrs.attribute ("id", "body") |] [| t.text (fun _ -> pages[0].Body()) |]
                 t.div [| t.Attrs.attribute ("id", "tone") |] [| t.text (fun _ -> string tone) |]
             |])

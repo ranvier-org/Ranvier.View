@@ -84,9 +84,9 @@ let run (scenario: string) : Run =
                     for row in rows.RootElement.EnumerateArray () do
                         yield
                             {
-                                Name = row.GetProperty("step").GetString ()
-                                Ok = row.GetProperty("ok").GetBoolean ()
-                                Detail = row.GetProperty("detail").GetString ()
+                                Name = row.GetProperty("step").GetString()
+                                Ok = row.GetProperty("ok").GetBoolean()
+                                Detail = row.GetProperty("detail").GetString()
                             }
             ]
         else
@@ -113,7 +113,13 @@ let expectAllPassed (run: Run) =
             else
                 $"{failed.Length} of {run.Steps.Length} steps failed:"
 
-        failwith (String.Join ("\n", summary :: lines @ [ "Host log:"; run.Log; $"Scratch copy: {run.Scratch}" ]))
+        failwith (
+            String.Join (
+                "\n",
+                summary :: lines
+                @ [ "Host log:"; run.Log; $"Scratch copy: {run.Scratch}" ]
+            )
+        )
     else
         // RANVIER_HMR_TEST_LOG=1 prints the host's log of a passing run: the line of each reload.
         if Environment.GetEnvironmentVariable "RANVIER_HMR_TEST_LOG" = "1" then
