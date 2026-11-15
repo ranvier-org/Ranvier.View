@@ -1,5 +1,5 @@
 ---
-last_commit_released: 733a089f71e9f0896c1c60fa2e22007419b4fd25
+last_commit_released: f4381df54fc577d03ff1c0ebc06d512ce104f1c4
 depends_on:
   - ../Ranvier.View.WebCore/
 updaters:
@@ -14,6 +14,23 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.2.0 - 2026-11-15
+
+### 🚀 Features
+
+* *(sdl)* Add a window zoom that multiplies the display scale (#162) ([76b71d9](https://github.com/ranvier-org/Ranvier.View/commit/76b71d9874d2b95d909457b7dcd91f336465c04e))
+
+### 🐞 Bug Fixes
+
+* *(webcore)* Print exceptions the host swallowed and report binding failures (#160) ([51224b2](https://github.com/ranvier-org/Ranvier.View/commit/51224b27429b1785f8666aa6ddd1b9d1aed87c13))
+* *(webcore)* Use Ranvier.WebCore 0.1.3 and require FSharp.Core 10.0.100 (#164) ([f4381df](https://github.com/ranvier-org/Ranvier.View/commit/f4381df54fc577d03ff1c0ebc06d512ce104f1c4))
+
+### 🔗 Dependencies
+
+* `src/Ranvier.View.WebCore` updated to 0.1.2
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/733a089f71e9f0896c1c60fa2e22007419b4fd25..f4381df54fc577d03ff1c0ebc06d512ce104f1c4)</small></strong>
 
 ## 0.1.1 - 2026-11-14
 
