@@ -32,6 +32,15 @@ module internal Sdl =
     let viewportExtent pixels scale =
         max 1 (int (MathF.Ceiling (float32 pixels / scale)))
 
+    /// <summary>A page's device pixels per CSS pixel: a display's scale times a window's zoom, within the host's 0.25 to 8.</summary>
+    let deviceScale (display: float32) (zoom: float) : float32 =
+        float32 (Math.Clamp (float display * zoom, 0.25, 8.0))
+
+    /// <summary>Raises ArgumentOutOfRangeException, naming <c>name</c>, unless <c>zoom</c> is a finite number above zero.</summary>
+    let requireZoom (name: string) (zoom: float) =
+        if not (Double.IsFinite zoom && zoom > 0.0) then
+            raise (ArgumentOutOfRangeException (name, zoom, "A zoom is a finite number above zero."))
+
     /// <summary>NUL-terminated UTF-8, for SDL's byte pointer overloads.</summary>
     let utf8 (text: string) =
         Encoding.UTF8.GetBytes (text + "\000")
@@ -264,7 +273,8 @@ type Window
         egl: EglRenderer option,
         swapChain: D3D11SwapChain option,
         initialRates: InputRates,
-        frame: WindowFrame
+        frame: WindowFrame,
+        initialZoom: float
     ) as this =
     static let owner = WebCoreHost.Owner
     static let windows = WindowRegistry<Window>()
@@ -303,6 +313,19 @@ type Window
 
     let mutable lastFrameAt = 0L
     let mutable toCss = 1.0f
+    let mutable zoom = initialZoom
+    // The scale the page was last laid out at.
+    let mutable deviceScale = 1.0f
+
+    let mutable displayScaleReader =
+        fun () ->
+            match SDL3.SDL_GetWindowDisplayScale window with
+            | scale when scale > 0.0f -> scale
+            | _ -> 1.0f
+
+    let scaleNow () =
+        Sdl.deviceScale (displayScaleReader ()) zoom
+
     let mutable closed = false
     let mutable composing = false
     let mutable pendingCompositionClear = false
@@ -487,10 +510,7 @@ type Window
         SDL3.SDL_GetWindowSizeInPixels (window, &&width, &&height)
         |> ignore
 
-        let scale =
-            match SDL3.SDL_GetWindowDisplayScale window with
-            | scale when scale > 0.0f -> scale
-            | _ -> 1.0f
+        let scale = scaleNow ()
 
         let density =
             match SDL3.SDL_GetWindowPixelDensity window with
@@ -498,6 +518,7 @@ type Window
             | _ -> 1.0f
 
         toCss <- density / scale
+        deviceScale <- scale
         presenter.Resized (width, height)
         host.SetDeviceScale scale
         host.Resize (Sdl.viewportExtent width scale, Sdl.viewportExtent height scale)
@@ -558,10 +579,8 @@ type Window
                     next = Sdl.crosshair
                     && OperatingSystem.IsWindows ()
                 then
-                    let size =
-                        match SDL3.SDL_GetWindowDisplayScale window with
-                        | scale when scale > 0.0f -> Sdl.crosshairSize scale
-                        | _ -> Sdl.crosshairSize 1.0f
+                    // Sized by the display's scale alone, as the system cursors are; the zoom scales the page.
+                    let size = Sdl.crosshairSize (displayScaleReader ())
 
                     if not (crosshairs.TryGetValue (size, &created)) then
                         let rgba = Sdl.crosshairPixels size
@@ -1125,7 +1144,7 @@ type Window
             displayFeed <- owner :> IDisposable
 
         accessibilityAttached <- WindowAccessibility.attach host window
-        linuxAccessibility <- LinuxAccessibility.TryCreate (host, window)
+        linuxAccessibility <- LinuxAccessibility.TryCreate (host, window, scaleNow)
         SDL3.SDL_StartTextInput window |> ignore
 
         if WebCoreHost.Has "clipboard" then
@@ -1377,7 +1396,8 @@ type Window
             renderer: string option,
             rates: InputRates,
             frame: WindowFrame,
-            minimumSize: struct (int * int) option
+            minimumSize: struct (int * int) option,
+            zoom: float
         ) : Window =
         EglRenderer.RetryFailedConstruction ()
         EglRenderer.Prepare ()
@@ -1493,7 +1513,7 @@ type Window
 
             let host = WebCoreHost.Create (width, height)
             page <- Some host
-            new Window (window, drawing, host, egl, swapChain, rates, frame)
+            new Window (window, drawing, host, egl, swapChain, rates, frame, zoom)
         with _ ->
             page
             |> Option.iter (fun host -> (host :> IDisposable).Dispose())
@@ -1525,9 +1545,12 @@ type Window
     /// scale, with an empty page. <c>hidden</c> keeps it off screen; <c>renderer</c> names an SDL render driver, such
     /// as "software", and "direct3d11" or no name uses a D3D11 swap chain with no SDL renderer where the runtime
     /// supports it. <c>inputRates</c> sets <c>InputRates</c>, <c>InputRates.Default</c> when omitted. <c>frame</c> is
-    /// <c>WindowFrame.Native</c> when omitted. <c>minimumSize</c> is a width and height in window units.
+    /// <c>WindowFrame.Native</c> when omitted. <c>minimumSize</c> is a width and height in window units. <c>zoom</c>
+    /// is the window's first <c>Zoom</c>, 1 when omitted.
     /// </summary>
-    /// <exception cref="T:System.ArgumentOutOfRangeException"><c>frame</c> is <c>WindowFrame.Custom</c> with a negative border.</exception>
+    /// <exception cref="T:System.ArgumentOutOfRangeException">
+    /// <c>frame</c> is <c>WindowFrame.Custom</c> with a negative border, or <c>zoom</c> is zero, negative, NaN or infinite.
+    /// </exception>
     static member Create
         (
             title: string,
@@ -1537,12 +1560,16 @@ type Window
             ?renderer: string,
             ?inputRates: InputRates,
             ?frame: WindowFrame,
-            ?minimumSize: struct (int * int)
+            ?minimumSize: struct (int * int),
+            ?zoom: float
         ) : Window =
         match frame with
         | Some (WindowFrame.Custom border) when border < 0 ->
             raise (ArgumentOutOfRangeException (nameof frame, border, "A custom frame's resize border is at least zero."))
         | _ -> ()
+
+        zoom
+        |> Option.iter (Sdl.requireZoom (nameof zoom))
 
         owner.Enter ()
 
@@ -1555,7 +1582,8 @@ type Window
                 renderer,
                 defaultArg inputRates InputRates.Default,
                 defaultArg frame WindowFrame.Native,
-                minimumSize
+                minimumSize,
+                defaultArg zoom 1.0
             )
         finally
             owner.Exit ()
@@ -1680,6 +1708,36 @@ type Window
         and set (value: InputRates) =
             flushHeld HeldKind.Barrier
             rates <- value
+
+    /// <summary>
+    /// The factor multiplying the display's scale. At 2 the same window holds half the CSS pixels in each direction,
+    /// each drawn twice as large.
+    /// </summary>
+    /// <remarks>
+    /// Setting it dispatches any held input, then lays the page out at the new scale. <c>DeviceScale</c> is the scale
+    /// the page received.
+    /// </remarks>
+    /// <exception cref="T:System.ArgumentOutOfRangeException">The value is zero, negative, NaN or infinite.</exception>
+    member _.Zoom
+        with get () = zoom
+        and set (value: float) =
+            Sdl.requireZoom (nameof value) value
+            host.EnsureActive ()
+
+            if value <> zoom then
+                flushHeld HeldKind.Barrier
+                zoom <- value
+
+                // A listener of the held input can close the window.
+                if alive () then
+                    resize ()
+
+    /// <summary>The page's device pixels per CSS pixel: the display's scale times <c>Zoom</c>, kept within 0.25 to 8.</summary>
+    member _.DeviceScale = float deviceScale
+
+    /// <summary>Replaces how the window reads its display's scale; tests stand in for a move to another display.</summary>
+    member internal _.SetDisplayScaleReader(reader: unit -> float32) =
+        displayScaleReader <- reader
 
     /// <summary>The number of page resizes the window has applied.</summary>
     member internal _.ResizesApplied = resizesApplied

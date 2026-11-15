@@ -108,6 +108,31 @@ Windows), for an accessibility bridge.
 
 All calls go on the thread that created the window. That thread is the host's thread, and the main thread on macOS.
 
+## Zoom
+
+A zoom multiplies the display's scale, for a page that is too small or too large at the display's own setting, such
+as on a 4K display at 100%. Pass it to `Window.Create` and change it while the window runs:
+
+```fsharp
+use window = Window.Create ("Counter", 480, 320, zoom = 1.5)
+
+// In a keydown listener, for Ctrl with + and -:
+window.Zoom <- window.Zoom * 1.1
+```
+
+The window keeps its size in pixels. At a zoom of 2 the page has half the CSS pixels in each direction, each drawn
+twice as large, and `devicePixelRatio` doubles. Pointer, pen and touch positions, `ShowSystemMenu`, the input
+method's candidate window and the Linux accessibility geometry use the same scale. Setting `Zoom` dispatches held
+input and lays the page out before it returns. A change of display scale, such as a move to another display, keeps
+the zoom. The cursor's size follows the display's scale alone.
+
+| Member | Contract |
+| --- | --- |
+| `Window.Create (..., zoom = z)`, `Zoom` | The factor, 1 by default: a finite number above zero. Zero, a negative number, NaN or an infinity raises `ArgumentOutOfRangeException`, and a running window keeps its zoom. |
+| `DeviceScale` | The device pixels per CSS pixel the page received: the display's scale times `Zoom`, kept within the 0.25 to 8 the host accepts. Read-only. |
+
+`Window.create` and `Window.run` open a window with no zoom; set `Zoom` on the window `Window.create` returns.
+
 ## Custom window shells
 
 `WindowFrame.Custom` removes the platform's title bar and borders, and the page draws its own. Mount on `window.Graph`
