@@ -34,17 +34,16 @@ type Slot internal (owner: obj, scope: ViewScope) =
     member internal _.Scope = scope
     member val internal Version = 0 with get, set
     member val internal Listed = false with get, set
-    member val internal Action: (unit -> unit) option = None with get, set
+    member val internal Action: unit -> unit = Unchecked.defaultof<_> with get, set
     /// <summary>Runs, when not null, after a flush stopped by <c>FailFastCancel</c> cancels the slot's current commit.</summary>
     member val internal Dropped: unit -> unit = Unchecked.defaultof<_> with get, set
 
 #if FABLE_COMPILER
 [<Fable.Core.Emit("$0.map($1)")>]
-let private snapshot (pending: ResizeArray<Slot>) (project: Slot -> Slot * int * (unit -> unit) option) : (Slot * int * (unit -> unit) option) array =
-    jsNative
+let private snapshot (pending: ResizeArray<Slot>) (project: Slot -> Slot * int * (unit -> unit)) : (Slot * int * (unit -> unit)) array = jsNative
 #endif
 
-type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) as this =
+type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) =
     let pending = ResizeArray<Slot>()
     let mutable disposed = false
     let mutable flushing = false
@@ -52,11 +51,11 @@ type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) a
     let mutable generation = 0
     let mutable errors: exn array = [||]
 
-    let owned (slot: Slot) =
+    member private this.EnsureOwned(slot: Slot) =
         if not (obj.ReferenceEquals (slot.Owner, this)) then
             invalidArg "slot" "Commit slot belongs to another queue"
 
-    member private _.Request() =
+    member private this.Request() =
         if
             not disposed
             && not flushing
@@ -74,30 +73,30 @@ type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) a
                 scheduled <- false
                 reraise ()
 
-    member _.Reserve() =
+    member this.Reserve() =
         if disposed then
             raise (InvalidOperationException "Commit queue is disposed")
 
         Slot (this, Unchecked.defaultof<_>)
 
     /// <summary>Reserves a slot whose commit failures go to <c>scope</c> after each flush.</summary>
-    member internal _.Reserve(scope: ViewScope) =
+    member internal this.Reserve(scope: ViewScope) =
         if disposed then
             raise (InvalidOperationException "Commit queue is disposed")
 
         Slot (this, scope)
 
-    member _.Cancel(slot: Slot) =
-        owned slot
+    member this.Cancel(slot: Slot) =
+        this.EnsureOwned slot
         slot.Version <- slot.Version + 1
-        slot.Action <- None
+        slot.Action <- Unchecked.defaultof<_>
 
-    member _.Enqueue(slot: Slot, action: unit -> unit) =
-        owned slot
+    member this.Enqueue(slot: Slot, action: unit -> unit) =
+        this.EnsureOwned slot
 
         if not disposed then
             slot.Version <- slot.Version + 1
-            slot.Action <- Some action
+            slot.Action <- action
 
             if not slot.Listed then
                 slot.Listed <- true
@@ -105,7 +104,7 @@ type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) a
 
             this.Request ()
 
-    member _.Flush() =
+    member this.Flush() =
         if flushing then
             raise (InvalidOperationException "Recursive commit flushing is prohibited")
 
@@ -113,44 +112,86 @@ type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) a
             generation <- generation + 1
             scheduled <- false
             flushing <- true
-            let failures = ResizeArray<exn>()
+            let mutable failures: ResizeArray<exn> = null
             let mutable failedSlots: ResizeArray<Slot> = null
 
             try
                 graph.Run (fun () ->
                     Api.flush ()
 
-                    let work =
 #if FABLE_COMPILER
-                        snapshot pending (fun slot -> slot, slot.Version, slot.Action)
-#else
-                        pending
-                        |> Seq.map (fun slot -> slot, slot.Version, slot.Action)
-                        |> Seq.toArray
-#endif
-
+                    let work = snapshot pending (fun slot -> slot, slot.Version, slot.Action)
                     pending.Clear ()
 
                     for slot, _, _ in work do
                         slot.Listed <- false
-                        slot.Action <- None
+                        slot.Action <- Unchecked.defaultof<_>
 
                     let mutable stopped = false
 
-                    for slot, version, action in work do
+                    for slot, version, commit in work do
+                        let hasCommit = not (isNull (box commit))
+
                         if stopped then
-                            let dropped = action.IsSome && slot.Version = version
+                            let dropped = hasCommit && slot.Version = version
                             this.Cancel slot
 
                             if dropped && not (isNull (box slot.Dropped)) then
                                 slot.Dropped ()
-                        elif not disposed && slot.Version = version then
-                            match action with
-                            | None -> ()
-                            | Some commit ->
+                        elif
+                            not disposed
+                            && slot.Version = version
+                            && hasCommit
+                        then
+                            try
+                                Api.untrack commit
+                            with error ->
+                                if isNull failures then
+                                    failures <- ResizeArray<exn>()
+
+                                failures.Add error
+
+                                if isNull failedSlots then
+                                    failedSlots <- ResizeArray<Slot>()
+
+                                failedSlots.Add slot
+                                stopped <- failure = FailFastCancel
+#else
+                    let count = pending.Count
+
+                    if count > 0 then
+                        let work = Array.zeroCreate<struct (Slot * int * (unit -> unit))> count
+
+                        for index = 0 to count - 1 do
+                            let slot = pending[index]
+                            work[index] <- struct (slot, slot.Version, slot.Action)
+                            slot.Listed <- false
+                            slot.Action <- Unchecked.defaultof<_>
+
+                        pending.Clear ()
+                        let mutable stopped = false
+
+                        for index = 0 to count - 1 do
+                            let struct (slot, version, commit) = work[index]
+                            let hasCommit = not (isNull (box commit))
+
+                            if stopped then
+                                let dropped = hasCommit && slot.Version = version
+                                this.Cancel slot
+
+                                if dropped && not (isNull (box slot.Dropped)) then
+                                    slot.Dropped ()
+                            elif
+                                not disposed
+                                && slot.Version = version
+                                && hasCommit
+                            then
                                 try
                                     Api.untrack commit
                                 with error ->
+                                    if isNull failures then
+                                        failures <- ResizeArray<exn>()
+
                                     failures.Add error
 
                                     if isNull failedSlots then
@@ -158,11 +199,12 @@ type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) a
 
                                     failedSlots.Add slot
                                     stopped <- failure = FailFastCancel
+#endif
 
-                    if failures.Count > 0 then
+                    if not (isNull failures) && failures.Count > 0 then
                         Queue.Report (failures, failedSlots))
             finally
-                errors <- failures.ToArray ()
+                errors <- if isNull failures then [||] else failures.ToArray ()
                 flushing <- false
                 this.Request ()
 
@@ -206,7 +248,7 @@ type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) a
         elif reporterErrors.Count > 1 then
             raise (AggregateException ("Commit failure reporting failed", reporterErrors))
 
-    member _.Dispose() =
+    member this.Dispose() =
         if not disposed then
             disposed <- true
             generation <- generation + 1

@@ -4,7 +4,7 @@ open Fable.Core
 open Ranvier
 open System.Collections.Generic
 
-type internal DomQueue(graph: Graph) as this =
+type internal DomQueue(graph: Graph) =
     let pending = Dictionary<int, unit -> unit>()
     let errors = ResizeArray<exn>()
     let mutable nextId = 0
@@ -16,7 +16,7 @@ type internal DomQueue(graph: Graph) as this =
     [<Emit("queueMicrotask($0)")>]
     static member private Schedule(callback: unit -> unit) : unit = jsNative
 
-    member private _.Request() =
+    member private this.Request() =
         if
             not disposed
             && not scheduled
@@ -37,12 +37,12 @@ type internal DomQueue(graph: Graph) as this =
     member _.Cancel(id) =
         pending.Remove id |> ignore
 
-    member _.Enqueue(id, commit) =
+    member this.Enqueue(id, commit) =
         if not disposed then
             pending[id] <- commit
             this.Request ()
 
-    member _.Flush() =
+    member this.Flush() =
         if not disposed && not flushing then
             flushing <- true
             generation <- generation + 1
