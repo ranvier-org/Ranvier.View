@@ -1,5 +1,5 @@
 ---
-last_commit_released: f4381df54fc577d03ff1c0ebc06d512ce104f1c4
+last_commit_released: 39f51599d3bea2342b108c01bd95939e8a00ff1d
 depends_on:
   - ../Ranvier.View.WebCore.Sdl/
 updaters:
@@ -14,6 +14,18 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.3 - 2026-11-16
+
+### 🐞 Bug Fixes
+
+* *(deps)* Move Hmr to Ranvier.FSharp.Checker 0.1.1 and FSharp.Core 10.0.100 (#170) ([39f5159](https://github.com/ranvier-org/Ranvier.View/commit/39f51599d3bea2342b108c01bd95939e8a00ff1d))
+
+### 🔗 Dependencies
+
+* `src/Ranvier.View.WebCore.Sdl` updated to 0.2.1
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/f4381df54fc577d03ff1c0ebc06d512ce104f1c4..39f51599d3bea2342b108c01bd95939e8a00ff1d)</small></strong>
 
 ## 0.1.2 - 2026-11-15
 

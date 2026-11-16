@@ -1,5 +1,5 @@
 ---
-last_commit_released: 733a089f71e9f0896c1c60fa2e22007419b4fd25
+last_commit_released: 39f51599d3bea2342b108c01bd95939e8a00ff1d
 include:
   - ../Ranvier.View.Dom/
   - ../../Directory.Build.props
@@ -24,6 +24,14 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.2.0 - 2026-11-16
+
+### ⚡ Performance Improvements
+
+* *(view)* Remove commit-queue allocations and inline WebCore interop checks (#166) ([1882b4c](https://github.com/ranvier-org/Ranvier.View/commit/1882b4c69f44f0723aeb1269b72e862246fd0ad7))
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/733a089f71e9f0896c1c60fa2e22007419b4fd25..39f51599d3bea2342b108c01bd95939e8a00ff1d)</small></strong>
 
 ## 0.1.50 - 2026-11-14
 
