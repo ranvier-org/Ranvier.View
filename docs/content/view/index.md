@@ -92,4 +92,4 @@ Try this in the [browser editor](getting-started.md).
 The [Server](../server/index.md) section covers `Server.render`, hydration, state transfer,
 deployment and performance.
 
-[Native views](native.md) describes the in-development WebCore host and its current limits.
+[Native deployment](native.md) describes running views in a native window on WebCore, and its current limits.
