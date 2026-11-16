@@ -95,6 +95,8 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
+          # build_compiler.py builds the pinned compiler with this SDK when the cache below is absent.
+          dotnet-version: '10.0.403'
       - uses: actions/cache@v4
         id: compiler
         with:
