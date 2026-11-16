@@ -16,7 +16,7 @@
         <IsPackable>true</IsPackable>
         <IsAotCompatible>false</IsAotCompatible>
         <!-- The checker gate: the traced build matches the traced Ranvier core of a Debug build. -->
-        <RanvierFSharpVersion>0.1.0</RanvierFSharpVersion>
+        <RanvierFSharpVersion>0.1.1</RanvierFSharpVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -40,8 +40,8 @@
 
     <ItemGroup>
         <PackageReference Include="Ranvier.FSharp.Checker$(RanvierPackageSuffix)" Version="$(RanvierFSharpVersion)" />
-        <!-- Ranvier.FSharp.Checker requires FSharp.Core 10.1.403. -->
-        <PackageReference Update="FSharp.Core" Version="10.1.403" />
+        <!-- The package's minimum FSharp.Core: the version in the first .NET 10 SDK. Ranvier.FSharp.Checker 0.1.1 has the same minimum. -->
+        <PackageReference Update="FSharp.Core" Version="10.0.100" />
     </ItemGroup>
 
 </Project>

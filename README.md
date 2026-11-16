@@ -39,11 +39,13 @@ over the traced core packages, and carries its F# sources under `fable/` for Fab
   | Packages | Minimum `FSharp.Core` | .NET SDK |
   | --- | --- | --- |
   | `Ranvier.View`, `Ranvier.View.Dom` | 8.0.100 | 8 or later |
-  | `Ranvier.View.WebCore` 0.1.2, `Ranvier.View.WebCore.Sdl` 0.2.0 | 10.0.100 | any .NET 10 SDK |
+  | `Ranvier.View.WebCore` 0.1.2, `Ranvier.View.WebCore.Sdl` 0.2.0, `Ranvier.View.WebCore.Hmr` after 0.1.2 | 10.0.100 | any .NET 10 SDK |
   | `Ranvier.View.WebCore.Hmr` 0.1.2 | 10.1.403 | 10.0.403 or later |
 
-  On an older SDK, restore reports `NU1605: Detected package downgrade: FSharp.Core from 10.1.403 to ...`, and the
-  build treats it as an error when warnings are errors. Update the SDK, or set the version in the app's project:
+  With Hmr 0.1.2 on an older SDK, restore reports `NU1605: Detected package downgrade: FSharp.Core from 10.1.403 to
+  ...`, and the build treats it as an error when warnings are errors. On an SDK 10.0.1xx the app also fails when it
+  loads the package: `Could not load file or assembly 'FSharp.Core, Version=10.1.0.0'`. Update the package or the
+  SDK, or set the version in the app's project:
 
   ```xml
   <PackageReference Update="FSharp.Core" Version="10.1.403" />
