@@ -98,6 +98,15 @@ class AnalyzerBootstrap(unittest.TestCase):
         self.assertIn('path: ' + compiler, bootstrap)
         self.assertIn('compiler="$GITHUB_WORKSPACE/' + compiler + '"', bootstrap)
 
+    def test_cold_bootstrap_installs_the_sdk_the_compiler_producer_requires(self):
+        import re
+        producer = (ROOT / 'tools/Ranvier.Analyzers.Host/build_compiler.py').read_text()
+        sdk = re.search(r"(?m)^SDK = '([^']+)'$", producer).group(1)
+        ci = (ROOT / '.github/workflows/ci.yml').read_text()
+        bootstrap = re.search(r'(?ms)^  analyzer-bootstrap:\n(.*?)(?=^  [A-Za-z0-9_-]+:|\Z)', ci).group(1)
+        setup = bootstrap[:bootstrap.index('build_compiler.py --work')]
+        self.assertIn("dotnet-version: '" + sdk + "'", setup)
+
     def test_core_source_and_css_package_versions_match_their_release_closures(self):
         ci = (ROOT / '.github/workflows/ci.yml').read_text()
         qualification = (ROOT / '.github/workflows/analyzer-host.yml').read_text()
