@@ -967,20 +967,25 @@ module internal Interop =
     let callbackFailed (error: exn) =
         Callbacks.Pending <- error
 
+    [<MethodImpl(MethodImplOptions.NoInlining)>]
+    let private failCheck (name: string) (status: int) =
+        let pending = Callbacks.Pending
+        Callbacks.Pending <- null
+
+        if
+            status = -3
+            && not (isNull pending)
+            && lastException 0 = "ExistingExceptionError"
+        then
+            Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(pending).Throw()
+
+        raise (failure name status)
+
     /// <summary>Raises the status's exception unless it is <c>RV_OK</c>.</summary>
+    [<MethodImpl(MethodImplOptions.AggressiveInlining)>]
     let check (name: string) (status: int) =
         if status <> 0 then
-            let pending = Callbacks.Pending
-            Callbacks.Pending <- null
-
-            if
-                status = -3
-                && not (isNull pending)
-                && lastException 0 = "ExistingExceptionError"
-            then
-                Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(pending).Throw()
-
-            raise (failure name status)
+            failCheck name status
 
     /// <summary>The string a getter copies out, or null for a null string.</summary>
     let text (name: string) (call: byte array -> int -> int array -> int) : string =
@@ -1004,16 +1009,24 @@ module internal Interop =
     let unsupported<'T> (name: string) : 'T =
         raise (NotSupportedException $"{name} is not available in the native backend")
 
+    [<MethodImpl(MethodImplOptions.NoInlining)>]
+    let private failDisposedHandle (target: NativeObject) : nativeint =
+        raise (ObjectDisposedException (target.ToString (), "The object's host was disposed"))
+
+    [<MethodImpl(MethodImplOptions.NoInlining)>]
+    let private failInvalidHandle (other: obj) : nativeint =
+        raise (ArgumentException $"A {other.GetType().Name} is not an object of the native backend")
+
     /// <summary>The handle of a backend object, or zero for null.</summary>
+    [<MethodImpl(MethodImplOptions.AggressiveInlining)>]
     let handle (value: obj) : nativeint =
         match value with
         | null -> 0n
         | :? NativeObject as target ->
-            if target.Handle = 0n then
-                raise (ObjectDisposedException (target.ToString (), "The object's host was disposed"))
+            let raw = target.Handle
 
-            target.Handle
-        | other -> raise (ArgumentException $"A {other.GetType().Name} is not an object of the native backend")
+            if raw = 0n then failDisposedHandle target else raw
+        | other -> failInvalidHandle other
 
     /// <summary>Validates a non-null typed value from the same host session.</summary>
     let valueHandle (session: Session) (value: obj) =
