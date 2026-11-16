@@ -32,6 +32,30 @@ coordinated development.
 The four libraries share a version and depend on each other at exactly it. Each also packs as a `.Traced` package
 over the traced core packages, and carries its F# sources under `fable/` for Fable consumers.
 
+## Requirements for an app
+
+- **.NET SDK.** A package's minimum `FSharp.Core` sets the oldest SDK that restores it without a warning.
+
+  | Packages | Minimum `FSharp.Core` | .NET SDK |
+  | --- | --- | --- |
+  | `Ranvier.View`, `Ranvier.View.Dom` | 8.0.100 | 8 or later |
+  | `Ranvier.View.WebCore` 0.1.2, `Ranvier.View.WebCore.Sdl` 0.2.0 | 10.0.100 | any .NET 10 SDK |
+  | `Ranvier.View.WebCore.Hmr` 0.1.2 | 10.1.403 | 10.0.403 or later |
+
+  On an older SDK, restore reports `NU1605: Detected package downgrade: FSharp.Core from 10.1.403 to ...`, and the
+  build treats it as an error when warnings are errors. Update the SDK, or set the version in the app's project:
+
+  ```xml
+  <PackageReference Update="FSharp.Core" Version="10.1.403" />
+  ```
+
+- **One version of `Ranvier.View` and `Ranvier.View.Dom`.** `Ranvier.View.Dom` requires `Ranvier.View` at exactly its
+  own version, and `Ranvier.View.WebCore` brings both. An app that also names an older `Ranvier.View` gets
+  `NU1605: Detected package downgrade: Ranvier.View from 0.1.50 to 0.1.49`. Set the app's reference to the version
+  `Ranvier.View.Dom` resolves to, or remove it.
+- **`Ranvier.View.WebCore.Sdl` and `Ranvier.View.WebCore.Hmr` move together.** Hmr 0.1.2 is built against Sdl 0.2.0,
+  whose `Window.Create` has a different compiled signature from 0.1.x. Upgrade both in one change.
+
 ## Layout
 
 - `src/`: the four libraries and `Fable.Ranvier`, the unpacked Fable DOM helper the experiments use.
