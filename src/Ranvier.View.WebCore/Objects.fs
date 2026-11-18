@@ -382,6 +382,14 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
         + " 0x"
         + handle.ToString ("x", Globalization.CultureInfo.InvariantCulture)
 
+    interface Ranvier.View.Native.IExpandoTarget with
+        member this.ExpandoSlots(create) =
+            if create && isNull this.Expandos then
+                this.Expandos <- Ranvier.View.Native.ExpandoSlots ()
+                session.Pin this
+
+            this.Expandos
+
 /// <summary>
 /// The managed objects of one WebCore host: the node and event table, the owner claims that keep objects alive, and the
 /// queue of releases from collected objects.

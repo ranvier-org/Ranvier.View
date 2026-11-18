@@ -385,7 +385,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         |> Interop.check "rv_host_set_frame_callback"
 
         SynchronizationContext.SetSynchronizationContext context
-        installed <- [ Native.install this ]
+        installed <- [ Native.installPeer this ]
 
     /// <summary>The <c>RvHost</c> handle, for ABI calls the host does not wrap.</summary>
     member _.Handle = handle
@@ -646,67 +646,68 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     member private this.CycleCore(milliseconds: int, budget: OwnerTurnBudget option) =
         this.EnsureActive ()
 
-        let nativeStarted = schedulingTrace.Start ()
-        Native.rv_run_loop_cycle milliseconds |> ignore
-        schedulingTrace.Finish (SchedulingPhase.NativeCycle, nativeStarted, posted.Count)
+        Native.withHost this (fun () ->
+            let nativeStarted = schedulingTrace.Start ()
+            Native.rv_run_loop_cycle milliseconds |> ignore
+            schedulingTrace.Finish (SchedulingPhase.NativeCycle, nativeStarted, posted.Count)
 
-        let limit =
-            budget
-            |> Option.map (fun value -> TurnLimit (value, Stopwatch.GetTimestamp, Stopwatch.Frequency))
+            let limit =
+                budget
+                |> Option.map (fun value -> TurnLimit (value, Stopwatch.GetTimestamp, Stopwatch.Frequency))
 
-        let mutable executed = 0
+            let mutable executed = 0
 
-        let exceeded () =
-            limit
-            |> Option.exists (fun value -> value.Exceeded)
-
-        if not disposed then
-            let releaseStarted = schedulingTrace.Start ()
-            let releasedBefore = session.Released
-            session.Drain ()
-            schedulingTrace.Finish (SchedulingPhase.Releases, releaseStarted, 0, processed = session.Released - releasedBefore)
-            let mutable item = Unchecked.defaultof<_>
-
-            while not disposed
-                  && (executed = 0 || not (exceeded ()))
-                  && posted.TryDequeue (&item) do
-                let struct (callback, state) = item
-                let callbackStarted = schedulingTrace.Start ()
-
-                try
-                    callback.Invoke state
-                with error ->
-                    record error
-
-                schedulingTrace.Finish (SchedulingPhase.Posted, callbackStarted, posted.Count)
-                runMicrotasks ()
-                executed <- executed + 1
-
+            let exceeded () =
                 limit
-                |> Option.iter (fun value -> value.Complete ())
+                |> Option.exists (fun value -> value.Exceeded)
 
-            let timersStarted = schedulingTrace.Start ()
-            let timersProcessed = runDueTimers ()
-            schedulingTrace.Finish (SchedulingPhase.Timers, timersStarted, timers.Count, processed = timersProcessed)
-            runMicrotasks ()
+            if not disposed then
+                let releaseStarted = schedulingTrace.Start ()
+                let releasedBefore = session.Released
+                session.Drain ()
+                schedulingTrace.Finish (SchedulingPhase.Releases, releaseStarted, 0, processed = session.Released - releasedBefore)
+                let mutable item = Unchecked.defaultof<_>
 
-            if
-                not disposed
-                && posted.Count = 0
-                && Volatile.Read &frameRequested = 0
-            then
-                runIdle ()
+                while not disposed
+                      && (executed = 0 || not (exceeded ()))
+                      && posted.TryDequeue (&item) do
+                    let struct (callback, state) = item
+                    let callbackStarted = schedulingTrace.Start ()
 
-        let overBudget = exceeded ()
+                    try
+                        callback.Invoke state
+                    with error ->
+                        record error
 
-        if overBudget then
-            schedulingTrace.Record (SchedulingPhase.BudgetExceeded, Stopwatch.GetTimestamp (), 0L, posted.Count, processed = executed)
+                    schedulingTrace.Finish (SchedulingPhase.Posted, callbackStarted, posted.Count)
+                    runMicrotasks ()
+                    executed <- executed + 1
 
-        {
-            Executed = executed
-            Remaining = posted.Count > 0
-            BudgetExceeded = overBudget
-        }
+                    limit
+                    |> Option.iter (fun value -> value.Complete ())
+
+                let timersStarted = schedulingTrace.Start ()
+                let timersProcessed = runDueTimers ()
+                schedulingTrace.Finish (SchedulingPhase.Timers, timersStarted, timers.Count, processed = timersProcessed)
+                runMicrotasks ()
+
+                if
+                    not disposed
+                    && posted.Count = 0
+                    && Volatile.Read &frameRequested = 0
+                then
+                    runIdle ()
+
+            let overBudget = exceeded ()
+
+            if overBudget then
+                schedulingTrace.Record (SchedulingPhase.BudgetExceeded, Stopwatch.GetTimestamp (), 0L, posted.Count, processed = executed)
+
+            {
+                Executed = executed
+                Remaining = posted.Count > 0
+                BudgetExceeded = overBudget
+            })
 
     /// <summary>Moves the timer clock forward by <c>milliseconds</c> and runs the timers then due, as a test clock does.</summary>
     member internal this.AdvanceBy(milliseconds: float) =
@@ -777,31 +778,33 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
     /// </summary>
     member this.Frame() =
         this.EnsureActive ()
-        schedulingTrace.NextFrame ()
-        let frameStarted = schedulingTrace.Start ()
-        Volatile.Write (&frameRequested, 0)
-        let now = now ()
-        let callbacks = Seq.toArray frames.Keys
 
-        for id in callbacks do
+        Native.withHost this (fun () ->
+            schedulingTrace.NextFrame ()
+            let frameStarted = schedulingTrace.Start ()
+            Volatile.Write (&frameRequested, 0)
+            let now = now ()
+            let callbacks = Seq.toArray frames.Keys
+
+            for id in callbacks do
+                if not disposed then
+                    match frames.TryGetValue id with
+                    | true, callback ->
+                        frames.Remove id |> ignore
+
+                        try
+                            callback now
+                        with error ->
+                            record error
+
+                        runMicrotasks ()
+                    | _ -> ()
+
             if not disposed then
-                match frames.TryGetValue id with
-                | true, callback ->
-                    frames.Remove id |> ignore
+                Native.rv_host_update handle
+                |> Interop.check "rv_host_update"
 
-                    try
-                        callback now
-                    with error ->
-                        record error
-
-                    runMicrotasks ()
-                | _ -> ()
-
-        if not disposed then
-            Native.rv_host_update handle
-            |> Interop.check "rv_host_update"
-
-        schedulingTrace.Finish (SchedulingPhase.Frame, frameStarted, 0)
+            schedulingTrace.Finish (SchedulingPhase.Frame, frameStarted, 0))
 
     // Window
 
@@ -991,22 +994,24 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     member private this.Input(name: string, call: unit -> int) : bool =
         this.EnsureActive ()
-        let inputStarted = schedulingTrace.Start ()
-        inInput <- inInput + 1
 
-        let status =
-            try
-                call ()
-            finally
-                inInput <- inInput - 1
-                schedulingTrace.Finish (SchedulingPhase.Input, inputStarted, posted.Count)
+        Native.withHost this (fun () ->
+            let inputStarted = schedulingTrace.Start ()
+            inInput <- inInput + 1
 
-        runMicrotasks ()
+            let status =
+                try
+                    call ()
+                finally
+                    inInput <- inInput - 1
+                    schedulingTrace.Finish (SchedulingPhase.Input, inputStarted, posted.Count)
 
-        if status < 0 then
-            raise (Interop.failure name status)
+            runMicrotasks ()
 
-        status = 1
+            if status < 0 then
+                raise (Interop.failure name status)
+
+            status = 1)
 
     /// <summary>
     /// Native mouse input at <c>x</c>, <c>y</c> CSS pixels: an <c>RV_MOUSE_*</c> action, an <c>RV_BUTTON_*</c> button, the

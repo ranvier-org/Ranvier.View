@@ -39,6 +39,44 @@ let private crosshairSquare =
             |]
             [||])
 
+type private MultiWindowSurface =
+    {
+        Target: Dsl.Contracts.NodeRef<HTMLDivElement>
+        mutable PointerDowns: int
+        mutable PointerMoves: int
+        mutable PointerUps: int
+        mutable WheelDelta: float
+        mutable ScrollCount: int
+        mutable DocMatchesInDirect: bool
+        ExpectedDoc: Document
+    }
+
+module private MultiWindowTemplate =
+    open Ranvier.View.Dsl
+
+    let child: Component<MultiWindowSurface> =
+        Component.template
+            (fun _ (s: MultiWindowSurface) -> s)
+            (div (
+                div.style "position:absolute;left:0;top:105px;width:100px;height:40px;background:rgb(0,128,255)",
+                div.ref (fun (s: MultiWindowSurface) -> s.Target),
+                div.onPointerdown (fun (s: MultiWindowSurface) (_: PointerEvent) -> s.PointerDowns <- s.PointerDowns + 1),
+                div.onPointermove (fun (s: MultiWindowSurface) (_: PointerEvent) -> s.PointerMoves <- s.PointerMoves + 1),
+                div.onPointerup (fun (s: MultiWindowSurface) (_: PointerEvent) -> s.PointerUps <- s.PointerUps + 1),
+                div.onWheel (fun (s: MultiWindowSurface) (we: WheelEvent) -> s.WheelDelta <- s.WheelDelta + we.deltaY),
+                div.onScroll (fun (s: MultiWindowSurface) (_: Event) ->
+                    s.ScrollCount <- s.ScrollCount + 1
+                    s.DocMatchesInDirect <- obj.ReferenceEquals (Dom.DomRuntime.document (), s.ExpectedDoc))
+            ) {
+                ()
+            })
+
+    let shell: Component<MultiWindowSurface> =
+        Component.template (fun _ (s: MultiWindowSurface) -> s) (div () { render child id })
+
+    let renderShell (s: MultiWindowSurface) =
+        Component.render shell s
+
 // A hidden window drawn by SDL's software renderer, so the test needs no GPU, on the WebCore host thread.
 let private windowCase (name: string) (body: Window -> unit) =
     testCase name (fun () ->
@@ -1324,4 +1362,113 @@ let zoomTests =
                 steps window 2
                 Expect.equal window.Zoom 2.0 "the listener's zoom"
                 Expect.equal (viewport window) (100, 75) "half the CSS pixels in each direction"
+
+            testCase "multiple windows dispatch delegated events, grow keyed lists in their own documents, and dispose out of order" (fun () ->
+                onHostThread (fun () ->
+                    let first = Window.Create ("First", 200, 150, hidden = true, renderer = "software")
+
+                    let second =
+                        Window.Create ("Second", 200, 150, hidden = true, renderer = "software")
+
+                    let third = Window.Create ("Third", 200, 150, hidden = true, renderer = "software")
+
+                    try
+                        use firstGraph = new Graph ()
+                        use thirdGraph = new Graph ()
+                        let firstClicks = firstGraph.Run (fun () -> Api.createSignal 0)
+                        let firstItems = firstGraph.Run (fun () -> Api.createSignal [| 1; 2 |])
+                        let thirdClicks = thirdGraph.Run (fun () -> Api.createSignal 0)
+                        use _firstButton = mount first.Host firstGraph square firstClicks
+                        use firstList = mount first.Host firstGraph MountTests.rows firstItems
+                        use _thirdButton = mount third.Host thirdGraph square thirdClicks
+
+                        steps first 2
+                        steps third 2
+
+                        // Clicking and mutating reactive lists on `first` while `third` was created last must target `first`'s document/host.
+                        first.Host.Click (50, 50) |> ignore
+                        steps first 1
+                        Expect.equal firstClicks.Value 1 "delegated click on earlier window fires after later windows exist"
+
+                        firstList.Act (first.Host, fun () -> firstItems.Value <- [| 1; 2; 3; 4 |])
+                        Expect.equal firstList.Text "1234" "new keyed rows materialize in the earlier window's own document"
+
+                        // Also verify Dsl Component.template inlined child with NodeRef, delegated onPointer*, and direct onWheel / onScroll on `first`.
+                        let surface: MultiWindowSurface =
+                            {
+                                Target = Dsl.Contracts.NodeRef.create ()
+                                PointerDowns = 0
+                                PointerMoves = 0
+                                PointerUps = 0
+                                WheelDelta = 0.0
+                                ScrollCount = 0
+                                DocMatchesInDirect = false
+                                ExpectedDoc = first.Host.Document
+                            }
+
+                        use firstTemplate =
+                            mountView first.Host firstGraph (fun ctx -> Program.run (MultiWindowTemplate.renderShell surface) ctx.Backend)
+
+                        steps first 2
+                        Expect.isSome surface.Target.Current "NodeRef on earlier window is populated"
+                        first.Host.Mouse (0, 20, 120, -1, 0, 0) |> ignore
+                        first.Host.Mouse (1, 20, 120, 0, 1, 0) |> ignore
+                        first.Host.Mouse (0, 40, 120, 0, 0, 0) |> ignore
+                        first.Host.Mouse (2, 40, 120, 0, 1, 0) |> ignore
+
+                        first.Host.Wheel (20, 120, 0.0f, 24.0f, 0)
+                        |> ignore
+
+                        let scrollEvent = first.Host.Document.createEvent "Event"
+                        scrollEvent.initEvent ("scroll", false, false)
+
+                        surface.Target.Current.Value.dispatchEvent scrollEvent
+                        |> ignore
+
+                        steps first 1
+
+                        Expect.equal surface.PointerDowns 1 "inlined template child delegated onPointerdown fires on earlier window"
+                        Expect.isTrue (surface.PointerMoves >= 1) "inlined template child delegated onPointermove fires on earlier window"
+                        Expect.equal surface.PointerUps 1 "inlined template child delegated onPointerup fires on earlier window"
+                        Expect.equal surface.WheelDelta 24.0 "inlined template child direct onWheel fires on earlier window"
+                        Expect.equal surface.ScrollCount 1 "inlined template child direct onScroll fires via dispatchEvent"
+                        Expect.isTrue surface.DocMatchesInDirect "direct listener callback binds the owning window's document"
+                        (firstTemplate :> IDisposable).Dispose()
+                        Expect.isNone surface.Target.Current "disposing template on earlier window clears NodeRef while later window exists"
+
+                        // Disposing peer windows out of creation order must succeed cleanly without disturbing remaining windows.
+                        (second :> IDisposable).Dispose()
+                        (first :> IDisposable).Dispose()
+
+                        third.Host.Click (50, 50) |> ignore
+                        steps third 1
+                        Expect.equal thirdClicks.Value 1 "remaining window continues handling delegated events after earlier disposals"
+                        Expect.isEmpty (List.ofSeq third.Host.Errors) "no host errors on remaining window"
+                    finally
+                        (third :> IDisposable).Dispose()
+                        (second :> IDisposable).Dispose()
+                        (first :> IDisposable).Dispose()))
+
+            testCase "international scancodes and AltGraph map to W3C KeyboardEvent code and key values" (fun () ->
+                Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_INTERNATIONAL1) "IntlRo" "ABNT2/JIS Ro physical code"
+                Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_INTERNATIONAL2) "KanaMode" "KanaMode physical code"
+                Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_INTERNATIONAL3) "IntlYen" "JIS Yen physical code"
+                Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_INTERNATIONAL4) "Convert" "JIS Convert physical code"
+                Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_INTERNATIONAL5) "NonConvert" "JIS NonConvert physical code"
+                Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_LANG1) "Lang1" "Lang1 physical code"
+                Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_LANG2) "Lang2" "Lang2 physical code"
+                Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_KP_COMMA) "NumpadComma" "NumpadComma physical code"
+                Expect.equal (Keys.code SDL_Scancode.SDL_SCANCODE_MODE) "AltRight" "Mode scancode physical code"
+                Expect.equal (Keys.key SDL_Scancode.SDL_SCANCODE_RALT SDL_Keymod.SDL_KMOD_NONE) "Alt" "plain Right Alt key"
+                Expect.equal (Keys.key SDL_Scancode.SDL_SCANCODE_RALT SDL_Keymod.SDL_KMOD_MODE) "AltGraph" "AltGr Right Alt key"
+                Expect.equal (Keys.key SDL_Scancode.SDL_SCANCODE_MODE SDL_Keymod.SDL_KMOD_MODE) "AltGraph" "Mode key"
+                Expect.equal (Keys.key SDL_Scancode.SDL_SCANCODE_INTERNATIONAL4 SDL_Keymod.SDL_KMOD_NONE) "Convert" "Convert key"
+                Expect.equal (Keys.key SDL_Scancode.SDL_SCANCODE_INTERNATIONAL5 SDL_Keymod.SDL_KMOD_NONE) "NonConvert" "NonConvert key"
+                Expect.equal (Keys.key SDL_Scancode.SDL_SCANCODE_LANG1 SDL_Keymod.SDL_KMOD_NONE) "HangulMode" "HangulMode key"
+                Expect.equal (Keys.key SDL_Scancode.SDL_SCANCODE_LANG2 SDL_Keymod.SDL_KMOD_NONE) "HanjaMode" "HanjaMode key")
+
+            windowCase "Create sets SDL_MOUSE_FOCUS_CLICKTHROUGH default hint"
+            <| fun _ ->
+                let hint = SDL3.SDL_GetHint (Utf8String.op_Implicit "SDL_MOUSE_FOCUS_CLICKTHROUGH")
+                Expect.equal hint "1" "click-through is enabled by default on SDL windows"
         ]

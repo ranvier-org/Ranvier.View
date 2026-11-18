@@ -500,13 +500,15 @@ type internal D3D11SwapChain private (hwnd: nativeint, wakeEvent: uint32) =
     member private _.Start(width: int, height: int) =
         wantedWidth <- max 1 width
         wantedHeight <- max 1 height
+        build ()
 
-        if build () then
-            worker <- Thread ((fun () -> presentLoop ()), IsBackground = true, Name = "Ranvier present")
-            worker.Start ()
-            true
-        else
-            false
+    member private _.EnsureWorker() =
+        if isNull worker then
+            let created =
+                Thread ((fun () -> presentLoop ()), IsBackground = true, Name = "Ranvier present")
+
+            created.Start ()
+            worker <- created
 
     /// <summary>The device for <c>rv_host_acquire_d3d11_frame</c>; it changes after a lost device is rebuilt.</summary>
     member _.Device = device
@@ -595,12 +597,21 @@ type internal D3D11SwapChain private (hwnd: nativeint, wakeEvent: uint32) =
         not lost
 
     /// <summary>Starts copying <c>texture</c> to the back buffer and presenting it on the present thread.</summary>
-    member _.Submit(texture: nativeint, width: int, height: int) =
+    member this.Submit(texture: nativeint, width: int, height: int) =
+        this.EnsureWorker ()
         source <- texture
         sourceWidth <- width
         sourceHeight <- height
         idle.Reset ()
         go.Release () |> ignore
+
+    /// <summary>Releases any retained CPU-upload staging texture once GPU presentation is active.</summary>
+    member _.ReleaseCpuTexture() =
+        if cpuTexture <> 0n then
+            D3D11Native.drop cpuTexture
+            cpuTexture <- 0n
+            cpuWidth <- 0
+            cpuHeight <- 0
 
     /// <summary>The texture holding <c>pixels</c>, tightly packed RGBA at the given size.</summary>
     member _.UploadCpu(pixels: byte array, width: int, height: int) =
@@ -696,17 +707,21 @@ type internal D3D11SwapChain private (hwnd: nativeint, wakeEvent: uint32) =
 
         try
             let rowBytes = width * 4
+            let totalBytes = rowBytes * height
 
-            for row in 0 .. height - 1 do
-                let src =
-                    ReadOnlySpan<byte>(
-                        (mapped.Data
-                         + nativeint (row * int mapped.RowPitch))
-                            .ToPointer(),
-                        rowBytes
-                    )
+            if int mapped.RowPitch = rowBytes then
+                ReadOnlySpan<byte>(mapped.Data.ToPointer (), totalBytes).CopyTo(destination.Slice (0, totalBytes))
+            else
+                for row in 0 .. height - 1 do
+                    let src =
+                        ReadOnlySpan<byte>(
+                            (mapped.Data
+                             + nativeint (row * int mapped.RowPitch))
+                                .ToPointer(),
+                            rowBytes
+                        )
 
-                src.CopyTo (destination.Slice (row * rowBytes, rowBytes))
+                    src.CopyTo (destination.Slice (row * rowBytes, rowBytes))
         finally
             unmapCall.Invoke (context, readTexture, 0u)
 

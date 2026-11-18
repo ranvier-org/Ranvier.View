@@ -99,7 +99,15 @@ let code (scancode: SDL_Scancode) : string =
         | SDL_Scancode.SDL_SCANCODE_KP_ENTER -> "NumpadEnter"
         | SDL_Scancode.SDL_SCANCODE_KP_0 -> "Numpad0"
         | SDL_Scancode.SDL_SCANCODE_KP_PERIOD -> "NumpadDecimal"
+        | SDL_Scancode.SDL_SCANCODE_KP_COMMA -> "NumpadComma"
         | SDL_Scancode.SDL_SCANCODE_KP_EQUALS -> "NumpadEqual"
+        | SDL_Scancode.SDL_SCANCODE_INTERNATIONAL1 -> "IntlRo"
+        | SDL_Scancode.SDL_SCANCODE_INTERNATIONAL2 -> "KanaMode"
+        | SDL_Scancode.SDL_SCANCODE_INTERNATIONAL3 -> "IntlYen"
+        | SDL_Scancode.SDL_SCANCODE_INTERNATIONAL4 -> "Convert"
+        | SDL_Scancode.SDL_SCANCODE_INTERNATIONAL5 -> "NonConvert"
+        | SDL_Scancode.SDL_SCANCODE_LANG1 -> "Lang1"
+        | SDL_Scancode.SDL_SCANCODE_LANG2 -> "Lang2"
         | SDL_Scancode.SDL_SCANCODE_APPLICATION -> "ContextMenu"
         | SDL_Scancode.SDL_SCANCODE_LCTRL -> "ControlLeft"
         | SDL_Scancode.SDL_SCANCODE_LSHIFT -> "ShiftLeft"
@@ -107,12 +115,13 @@ let code (scancode: SDL_Scancode) : string =
         | SDL_Scancode.SDL_SCANCODE_LGUI -> "MetaLeft"
         | SDL_Scancode.SDL_SCANCODE_RCTRL -> "ControlRight"
         | SDL_Scancode.SDL_SCANCODE_RSHIFT -> "ShiftRight"
-        | SDL_Scancode.SDL_SCANCODE_RALT -> "AltRight"
+        | SDL_Scancode.SDL_SCANCODE_RALT
+        | SDL_Scancode.SDL_SCANCODE_MODE -> "AltRight"
         | SDL_Scancode.SDL_SCANCODE_RGUI -> "MetaRight"
         | _ -> "Unidentified"
 
 // Keys whose KeyboardEvent.key is a name rather than the character they type.
-let private named (scancode: SDL_Scancode) : string =
+let private named (scancode: SDL_Scancode) (state: SDL_Keymod) : string =
     if
         between scancode SDL_Scancode.SDL_SCANCODE_F1 SDL_Scancode.SDL_SCANCODE_F12
         || between scancode SDL_Scancode.SDL_SCANCODE_F13 SDL_Scancode.SDL_SCANCODE_F24
@@ -140,13 +149,26 @@ let private named (scancode: SDL_Scancode) : string =
         | SDL_Scancode.SDL_SCANCODE_DOWN -> "ArrowDown"
         | SDL_Scancode.SDL_SCANCODE_UP -> "ArrowUp"
         | SDL_Scancode.SDL_SCANCODE_NUMLOCKCLEAR -> "NumLock"
+        | SDL_Scancode.SDL_SCANCODE_INTERNATIONAL2 -> "KanaMode"
+        | SDL_Scancode.SDL_SCANCODE_INTERNATIONAL4 -> "Convert"
+        | SDL_Scancode.SDL_SCANCODE_INTERNATIONAL5 -> "NonConvert"
+        | SDL_Scancode.SDL_SCANCODE_LANG1 -> "HangulMode"
+        | SDL_Scancode.SDL_SCANCODE_LANG2 -> "HanjaMode"
         | SDL_Scancode.SDL_SCANCODE_APPLICATION -> "ContextMenu"
         | SDL_Scancode.SDL_SCANCODE_LCTRL
         | SDL_Scancode.SDL_SCANCODE_RCTRL -> "Control"
         | SDL_Scancode.SDL_SCANCODE_LSHIFT
         | SDL_Scancode.SDL_SCANCODE_RSHIFT -> "Shift"
-        | SDL_Scancode.SDL_SCANCODE_LALT
-        | SDL_Scancode.SDL_SCANCODE_RALT -> "Alt"
+        | SDL_Scancode.SDL_SCANCODE_LALT -> "Alt"
+        | SDL_Scancode.SDL_SCANCODE_RALT ->
+            if
+                state &&& SDL_Keymod.SDL_KMOD_MODE
+                <> SDL_Keymod.SDL_KMOD_NONE
+            then
+                "AltGraph"
+            else
+                "Alt"
+        | SDL_Scancode.SDL_SCANCODE_MODE -> "AltGraph"
         | SDL_Scancode.SDL_SCANCODE_LGUI
         | SDL_Scancode.SDL_SCANCODE_RGUI -> "Meta"
         | _ -> null
@@ -158,7 +180,7 @@ let private NoCharacter = 0x40000000u
 /// The KeyboardEvent.key of a key press: its name, or the character it types in the current layout with the modifiers
 /// held, or "Unidentified".
 let key (scancode: SDL_Scancode) (state: SDL_Keymod) : string =
-    match named scancode with
+    match named scancode state with
     | null ->
         let keycode = uint32 (SDL3.SDL_GetKeyFromScancode (scancode, state, true))
 

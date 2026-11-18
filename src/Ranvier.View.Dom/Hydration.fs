@@ -286,26 +286,34 @@ let hydrateWith
     (props: 'props)
     : Mounted =
     let document = DocumentHead.documentOf host
-    let served = DocumentHead.keep document
 
-    try
+    let run () =
+        let served = DocumentHead.keep document
+
         try
-            adoptHost
-                (fun () -> served.Restore ())
-                (fun () -> DocumentHead.removeUnadopted document)
-                mode
-                graph
-                parentOwner
-                report
-                options
-                host
-                definition
-                props
-        with _ ->
-            served.Restore ()
-            reraise ()
-    finally
-        served.Release ()
+            try
+                adoptHost
+                    (fun () -> served.Restore ())
+                    (fun () -> DocumentHead.removeUnadopted document)
+                    mode
+                    graph
+                    parentOwner
+                    report
+                    options
+                    host
+                    definition
+                    props
+            with _ ->
+                served.Restore ()
+                reraise ()
+        finally
+            served.Release ()
+
+#if FABLE_COMPILER
+    run ()
+#else
+    Native.withDocumentHost document run
+#endif
 
 /// <summary>
 /// The <c>textContent</c> of the global <c>document</c>'s element with id <c>id</c>, such as the JSON a

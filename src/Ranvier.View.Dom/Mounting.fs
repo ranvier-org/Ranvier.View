@@ -15,6 +15,16 @@ type NativeOwnership =
 #if FABLE_COMPILER
 [<Global "document">]
 let private document: Document = jsNative
+
+let inline private withDocumentHost (_: Document) (action: unit -> 'T) : 'T = action ()
+
+let inline private withNodeHost (_: Node) (action: unit -> 'T) : 'T = action ()
+#else
+let inline private withDocumentHost (owner: Document) (action: unit -> 'T) : 'T =
+    Native.withDocumentHost owner action
+
+let inline private withNodeHost (node: Node) (action: unit -> 'T) : 'T =
+    Native.withNodeHost node action
 #endif
 
 let private fragment () =
@@ -198,38 +208,39 @@ type private HostListeners = Collections.Generic.Dictionary<string, struct (int 
 // as currentTarget: a node's direct handler runs, a template event node dispatches with its instance state, and
 // `cancelBubble` ends the walk.
 let private walk (host: Node) (eventName: string) (event: obj) =
-    let key = "$$ranvier:" + eventName
-    let inner: Node = Native.expando event "$$ranvierHost"
+    Native.withNodeHost host (fun () ->
+        let key = "$$ranvier:" + eventName
+        let inner: Node = Native.expando event "$$ranvierHost"
 
-    let mutable node: Node =
-        if Native.isNullish inner then
-            unbox<Node> (unbox<Event> event).target
-        else
-            Native.parentOrNull inner
-
-    Native.overrideCurrentTarget event (fun () -> box node)
-    let mutable going = true
-
-    while going && not (Native.isNullish node) do
-        let handler: obj = Native.expando node key
-
-        if not (Native.isNullish handler) then
-            (unbox<obj -> unit> handler) event
-            going <- not (unbox<Event> event).cancelBubble
-        else
-            let state: obj array = Native.expando node "$$ranvier"
-
-            if not (Native.isNullish state) then
-                TemplateDom.dispatch.Invoke (state, node, event)
-                going <- not (unbox<Event> event).cancelBubble
-
-        if going then
-            if obj.ReferenceEquals (node, host) then
-                going <- false
+        let mutable node: Node =
+            if Native.isNullish inner then
+                unbox<Node> (unbox<Event> event).target
             else
-                node <- Native.parentOrNull node
+                Native.parentOrNull inner
 
-    Native.setExpando event "$$ranvierHost" host
+        Native.overrideCurrentTarget event (fun () -> box node)
+        let mutable going = true
+
+        while going && not (Native.isNullish node) do
+            let handler: obj = Native.expando node key
+
+            if not (Native.isNullish handler) then
+                (unbox<obj -> unit> handler) event
+                going <- not (unbox<Event> event).cancelBubble
+            else
+                let state: obj array = Native.expando node "$$ranvier"
+
+                if not (Native.isNullish state) then
+                    TemplateDom.dispatch.Invoke (state, node, event)
+                    going <- not (unbox<Event> event).cancelBubble
+
+            if going then
+                if obj.ReferenceEquals (node, host) then
+                    going <- false
+                else
+                    node <- Native.parentOrNull node
+
+        Native.setExpando event "$$ranvierHost" host)
 
 let private listenersOf (host: Node) : HostListeners =
     match Native.get<Node, HostListeners> hostCounts host with
@@ -1775,12 +1786,13 @@ and private RegionSite(state: MountState, regionStart: Node, regionEnd: Node, re
 #if RANVIER_VIEW_INSPECT || !FABLE_COMPILER
     /// <summary>Runs <c>action</c> as a pass of the region's mount, counted by its <c>PassDepth</c>.</summary>
     member internal _.InPass(action: unit -> 'T) : 'T =
-        state.PassDepth <- state.PassDepth + 1
+        withDocumentHost state.HeadDocument (fun () ->
+            state.PassDepth <- state.PassDepth + 1
 
-        try
-            action ()
-        finally
-            state.PassDepth <- state.PassDepth - 1
+            try
+                action ()
+            finally
+                state.PassDepth <- state.PassDepth - 1)
 #endif
 
     /// <summary>The creation index of the region's next row, counting from 0 for the region's first row.</summary>
@@ -2415,11 +2427,12 @@ and [<Sealed>] private ViewBoundary
 
     member private this.Retry(expected: int) =
         if failed && generation = expected && site.Live () then
-            graph.Run (fun () ->
-                retire ()
-                failed <- false
-                reported.Clear ()
-                this.MountContent ())
+            withNodeHost regionStart (fun () ->
+                graph.Run (fun () ->
+                    retire ()
+                    failed <- false
+                    reported.Clear ()
+                    this.MountContent ()))
 
     member private this.Settle() =
         if not received.IsEmpty then
@@ -3020,7 +3033,7 @@ and internal MountState
 
     let delegateAt (host: Node) =
         if not (isNull delegatedNames) then
-            setIter delegatedNames (fun eventName -> delegateFrom.Invoke (host, eventName))
+            withNodeHost host (fun () -> setIter delegatedNames (fun eventName -> delegateFrom.Invoke (host, eventName)))
 
         delegatedHost <- host
 
@@ -3030,7 +3043,7 @@ and internal MountState
             && not (isNull delegatedNames)
         then
             let releasedHost = delegatedHost
-            setIter delegatedNames (fun eventName -> undelegateFrom.Invoke (releasedHost, eventName))
+            withNodeHost releasedHost (fun () -> setIter delegatedNames (fun eventName -> undelegateFrom.Invoke (releasedHost, eventName)))
             delegatedHost <- Unchecked.defaultof<_>
 
     let mutable preparedRoot: Node = Unchecked.defaultof<_>
@@ -3070,14 +3083,18 @@ and internal MountState
             registerDelegated eventName
 
             if not (isNull (box delegatedHost)) then
-                delegateFrom.Invoke (delegatedHost, eventName)
+                withNodeHost delegatedHost (fun () -> delegateFrom.Invoke (delegatedHost, eventName))
 
                 if not delegationReleased then
                     delegationReleased <- true
                     root.OnCleanup releaseDelegation
 
     let listenDirect (node: Node) eventName (invoke: obj -> unit) =
-        let cleanup = DomEvents.listenDirect (box node) eventName invoke
+        let rawCleanup =
+            withNodeHost node (fun () -> DomEvents.listenDirect (box node) eventName (fun event -> withNodeHost node (fun () -> invoke event)))
+
+        let cleanup () =
+            withNodeHost node rawCleanup
 
         if root.IsDisposed then
             cleanup ()
@@ -3144,10 +3161,11 @@ and internal MountState
             releaseDelegation ()
             delegateAt range.Placement
 
-    member _.Flush() : unit =
-        match scheduling with
-        | Synchronous -> graph.Run Api.flush
-        | Queued queue -> queue.Flush ()
+    member this.Flush() : unit =
+        withDocumentHost this.HeadDocument (fun () ->
+            match scheduling with
+            | Synchronous -> graph.Run Api.flush
+            | Queued queue -> queue.Flush ())
 
     member _.CommitErrors: exn array =
         match scheduling with
@@ -3163,94 +3181,95 @@ and internal MountState
     /// in place and every edit recorded with the cursor is undone.
     /// </remarks>
     member this.Run(before: Node option, build: BuildContext -> unit) =
-        let context = BuildContext this
+        withDocumentHost this.HeadDocument (fun () ->
+            let context = BuildContext this
 
-        try
-            graph.Run (fun () ->
-                let create () =
-                    Api.createRoot (fun owner ->
-                        root <- MountLifetime.Create (graph, owner, report, release, parent)
-                        // A row or view shares its container with its siblings; its hooks form its own group.
-                        let previous = container.Enter ()
+            try
+                graph.Run (fun () ->
+                    let create () =
+                        Api.createRoot (fun owner ->
+                            root <- MountLifetime.Create (graph, owner, report, release, parent)
+                            // A row or view shares its container with its siblings; its hooks form its own group.
+                            let previous = container.Enter ()
 
-                        try
-                            Api.untrack (fun () -> build context)
-                        finally
-                            container.Leave previous)
+                            try
+                                Api.untrack (fun () -> build context)
+                            finally
+                                container.Leave previous)
 
-                if isNull (box parentOwner) then
-                    create ()
+                    if isNull (box parentOwner) then
+                        create ()
+                    else
+                        Api.runWithOwner parentOwner create)
+
+                ensureSetup ()
+
+                if not (isNull hydrationFailure) then
+                    raise hydrationFailure
+
+                if not (isNull buildEnd) then
+                    let actions = buildEnd
+                    buildEnd <- null
+
+                    for action in actions do
+                        action ()
+
+                if isNull cursor then
+                    range.Attach (host, before)
                 else
-                    Api.runWithOwner parentOwner create)
+                    range.Adopt host
+                    cursor <- null
 
-            ensureSetup ()
-
-            if not (isNull hydrationFailure) then
-                raise hydrationFailure
-
-            if not (isNull buildEnd) then
-                let actions = buildEnd
-                buildEnd <- null
-
-                for action in actions do
-                    action ()
-
-            if isNull cursor then
-                range.Attach (host, before)
-            else
-                range.Adopt host
-                cursor <- null
-
-            root.MarkAttached ()
+                root.MarkAttached ()
 #if RANVIER_VIEW_INSPECT || !FABLE_COMPILER
-            let queued, flushing =
-                match scheduling with
-                | Queued queue -> true, (fun () -> this.PassDepth > 0 || queue.Flushing)
-                | Synchronous -> false, (fun () -> this.PassDepth > 0)
+                let queued, flushing =
+                    match scheduling with
+                    | Queued queue -> true, (fun () -> this.PassDepth > 0 || queue.Flushing)
+                    | Synchronous -> false, (fun () -> this.PassDepth > 0)
 
-            root.OnCleanup (Inspect.register range.First (Inspect.MountProbe ((fun () -> root.Phase), queued, flushing, identity.Prefix, graph)))
+                root.OnCleanup (Inspect.register range.First (Inspect.MountProbe ((fun () -> root.Phase), queued, flushing, identity.Prefix, graph)))
 #endif
-            delegateAt host
+                delegateAt host
 
-            if not (isNull delegatedNames) then
-                delegationReleased <- true
-                root.OnCleanup releaseDelegation
+                if not (isNull delegatedNames) then
+                    delegationReleased <- true
+                    root.OnCleanup releaseDelegation
 
-            if isNull inherited then
-                container.Placing <- true
+                if isNull inherited then
+                    container.Placing <- true
 
-                try
-                    graph.Run (fun () -> container.Place ())
-                finally
-                    container.Placing <- false
-
-                container.RaiseFailure ()
-
-            if adopts && isNull (box enclosing) then
-                rollback.Commit ()
-                rollback <- null
-
-            Mounted this
-        with original ->
-            if not adopts then
-                if not (isNull root) then
-                    root.Abandon ()
-
-                reraise ()
-            else
-                cursor <- null
-                keepNodes <- true
-
-                try
                     try
-                        if not (isNull root) then
-                            root.Abandon ()
+                        graph.Run (fun () -> container.Place ())
                     finally
-                        rollback.Restore ()
-                with cleanup ->
-                    raise (AggregateException ("Hydration and its rollback failed", [| original; cleanup |]))
+                        container.Placing <- false
 
-                reraise ()
+                    container.RaiseFailure ()
+
+                if adopts && isNull (box enclosing) then
+                    rollback.Commit ()
+                    rollback <- null
+
+                Mounted this
+            with original ->
+                if not adopts then
+                    if not (isNull root) then
+                        root.Abandon ()
+
+                    reraise ()
+                else
+                    cursor <- null
+                    keepNodes <- true
+
+                    try
+                        try
+                            if not (isNull root) then
+                                root.Abandon ()
+                        finally
+                            rollback.Restore ()
+                    with cleanup ->
+                        raise (AggregateException ("Hydration and its rollback failed", [| original; cleanup |]))
+
+                    reraise ())
 
     override _.Clone(template, setup) =
         ensureSetup ()
@@ -4817,62 +4836,63 @@ and internal MountState
 /// </para>
 /// </remarks>
 let mountWith mode graph (parentOwner: Owner option) report host before build =
-    let parentOwner =
-        match parentOwner with
-        | Some owner -> owner
-        | None -> Unchecked.defaultof<_>
+    withNodeHost host (fun () ->
+        let parentOwner =
+            match parentOwner with
+            | Some owner -> owner
+            | None -> Unchecked.defaultof<_>
 
-    match mode with
-    | SynchronousCommits ->
-        MountState(
-            Synchronous,
-            graph,
-            null,
-            parentOwner,
-            report,
-            host,
-            Unchecked.defaultof<_>,
-            Unchecked.defaultof<_>,
-            IdentityScope "r",
-            null,
-            InstanceStep.Root,
-            0,
-            0,
-            null,
-            null,
-            null
-        )
-            .Run(before, build)
-    | QueuedCommits (failure, post) ->
-        let queue = Queue (graph, failure, post)
+        match mode with
+        | SynchronousCommits ->
+            MountState(
+                Synchronous,
+                graph,
+                null,
+                parentOwner,
+                report,
+                host,
+                Unchecked.defaultof<_>,
+                Unchecked.defaultof<_>,
+                IdentityScope "r",
+                null,
+                InstanceStep.Root,
+                0,
+                0,
+                null,
+                null,
+                null
+            )
+                .Run(before, build)
+        | QueuedCommits (failure, post) ->
+            let queue = Queue (graph, failure, post)
 
-        try
-            let state =
-                MountState (
-                    Queued queue,
-                    graph,
-                    null,
-                    parentOwner,
-                    report,
-                    host,
-                    Unchecked.defaultof<_>,
-                    Unchecked.defaultof<_>,
-                    IdentityScope "r",
-                    null,
-                    InstanceStep.Root,
-                    0,
-                    0,
-                    null,
-                    null,
-                    null
-                )
+            try
+                let state =
+                    MountState (
+                        Queued queue,
+                        graph,
+                        null,
+                        parentOwner,
+                        report,
+                        host,
+                        Unchecked.defaultof<_>,
+                        Unchecked.defaultof<_>,
+                        IdentityScope "r",
+                        null,
+                        InstanceStep.Root,
+                        0,
+                        0,
+                        null,
+                        null,
+                        null
+                    )
 
-            let mounted = state.Run (before, build)
-            state.Root.OnCleanup queue.Dispose
-            mounted
-        with _ ->
-            queue.Dispose ()
-            reraise ()
+                let mounted = state.Run (before, build)
+                state.Root.OnCleanup queue.Dispose
+                mounted
+            with _ ->
+                queue.Dispose ()
+                reraise ())
 
 let mount graph (parentOwner: Owner option) report host before build =
     mountWith SynchronousCommits graph parentOwner report host before build
