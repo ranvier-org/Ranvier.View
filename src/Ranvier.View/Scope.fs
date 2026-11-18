@@ -34,7 +34,7 @@ module BindingState =
     /// The state word of a new binding: <c>Waiting</c> when a tracking scope records it as waiting for its first read,
     /// 0 otherwise. A <c>Waiting</c> word hides the scope's content until <c>ready</c> releases it.
     /// </summary>
-    let started (scope: ViewScope) : int =
+    let inline started (scope: ViewScope) : int =
         if scope.Tracks && scope.Expect () then Waiting else 0
 
     /// <summary>
@@ -59,7 +59,7 @@ module BindingState =
         | _ -> scope.Fail [ error ]
 
     /// <summary>The state word after a successful read, with <c>ReadFailed</c> cleared; <c>clear</c> runs when it was set.</summary>
-    let recovered (clear: unit -> unit) (state: int) : int =
+    let inline recovered (clear: unit -> unit) (state: int) : int =
         if state &&& ReadFailed <> 0 then
             clear ()
             state &&& ~~~ReadFailed
@@ -67,7 +67,7 @@ module BindingState =
             state
 
     /// <summary>The state word with <c>Waiting</c> cleared. Store it, then call <c>ready</c> with the word before.</summary>
-    let released (state: int) : int =
+    let inline released (state: int) : int =
         state &&& ~~~Waiting
 
     /// <summary>
@@ -75,6 +75,6 @@ module BindingState =
     /// read is committed, and when the binding's owner is disposed. Call once per <c>released</c>; a second call with the
     /// same word releases the scope twice.
     /// </summary>
-    let ready (scope: ViewScope) (previous: int) =
+    let inline ready (scope: ViewScope) (previous: int) =
         if previous &&& Waiting <> 0 then
             scope.Ready ()

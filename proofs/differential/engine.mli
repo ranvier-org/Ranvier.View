@@ -351,29 +351,9 @@ val snapshot_and_clear :
   nat list -> slot_model list -> (((nat, nat) prod, nat option) prod list,
   slot_model list) prod
 
-val exec_work :
-  commit_failure -> (nat -> bool) -> bool -> ((nat, nat) prod, nat option)
-  prod list -> slot_model list -> nat list -> (nat, nat) prod list ->
-  ((slot_model list, nat list) prod, (nat, nat) prod list) prod
-
-val q_flush : commit_failure -> (nat -> bool) -> queue_model -> queue_model
-
 val apply_reenqueues :
   nat -> ((nat, nat) prod, nat) prod list -> slot_model list -> nat list ->
   (slot_model list, nat list) prod
-
-val exec_work_reenq :
-  commit_failure -> (nat -> bool) -> ((nat, nat) prod, nat) prod list -> bool
-  -> ((nat, nat) prod, nat option) prod list -> slot_model list -> nat list
-  -> nat list -> (nat, nat) prod list -> (((slot_model list, nat list) prod,
-  nat list) prod, (nat, nat) prod list) prod
-
-val q_flush_reenq :
-  commit_failure -> (nat -> bool) -> ((nat, nat) prod, nat) prod list ->
-  queue_model -> queue_model
-
-val q_run_posted_ticket :
-  nat -> commit_failure -> (nat -> bool) -> queue_model -> queue_model
 
 val cancel_all_pending : nat list -> slot_model list -> slot_model list
 
@@ -423,6 +403,22 @@ val cf_try_complete :
   fence_poll -> fence_model -> (fence_outcome, fence_model) prod
 
 val cf_reset : fence_model -> (fence_outcome, fence_model) prod
+
+type work_entry = ((nat, nat) prod, nat option) prod
+
+val overwrite_prefix :
+  work_entry list -> work_entry option list -> work_entry option list
+
+val exec_buf_prefix :
+  nat -> commit_failure -> (nat -> bool) -> ((nat, nat) prod, nat) prod list
+  -> bool -> work_entry option list -> slot_model list -> nat list -> nat
+  list -> (nat, nat) prod list -> ((((work_entry option list, slot_model
+  list) prod, nat list) prod, nat list) prod, (nat, nat) prod list) prod
+
+val q_flush_reenq_reusable :
+  commit_failure -> (nat -> bool) -> ((nat, nat) prod, nat) prod list ->
+  work_entry option list -> queue_model -> (work_entry option list,
+  queue_model) prod
 
 type layout_cmd =
 | LCmdRegisterExit of nat
@@ -503,9 +499,12 @@ type q_cmd =
 | QCmdRunTicket of nat * commit_failure * nat list
 | QCmdDispose
 
-val step_q_cmd : q_cmd -> queue_model -> queue_model
+val step_q_cmd :
+  q_cmd -> work_entry option list -> queue_model -> (work_entry option list,
+  queue_model) prod
 
-val run_q_cmds : q_cmd list -> queue_model -> queue_model
+val run_q_cmds :
+  q_cmd list -> work_entry option list -> queue_model -> queue_model
 
 type q_view = { qv_committed : nat list; qv_dropped : nat list;
                 qv_reported : (nat, nat list) prod list;

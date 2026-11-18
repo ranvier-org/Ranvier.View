@@ -313,27 +313,34 @@ Inductive q_cmd :=
   | QCmdRunTicket (ticket_idx : nat) (mode : commit_failure) (failing : list nat)
   | QCmdDispose.
 
-Definition step_q_cmd (c : q_cmd) (q : queue_model) : queue_model :=
+Definition step_q_cmd (c : q_cmd) (buf : list (option work_entry)) (q : queue_model)
+    : list (option work_entry) * queue_model :=
   match c with
-  | QCmdReserve sc hd => if q_disposed q then q else fst (q_reserve sc hd q)
-  | QCmdEnqueue idx act => q_enqueue idx act q
-  | QCmdCancel idx => q_cancel idx q
+  | QCmdReserve sc hd => (buf, if q_disposed q then q else fst (q_reserve sc hd q))
+  | QCmdEnqueue idx act => (buf, q_enqueue idx act q)
+  | QCmdCancel idx => (buf, q_cancel idx q)
   | QCmdFlush mode failing =>
-    q_flush mode (fun a => existsb (Nat.eqb a) failing) q
+    q_flush_reenq_reusable mode (fun a => existsb (Nat.eqb a) failing) [] buf q
   | QCmdFlushReenq mode failing reenq =>
-    q_flush_reenq mode (fun a => existsb (Nat.eqb a) failing) reenq q
+    q_flush_reenq_reusable mode (fun a => existsb (Nat.eqb a) failing) reenq buf q
   | QCmdRunTicket tidx mode failing =>
     match nth_error (q_tickets q) tidx with
-    | None => q
-    | Some t => q_run_posted_ticket t mode (fun a => existsb (Nat.eqb a) failing) q
+    | None => (buf, q)
+    | Some t =>
+      if negb (q_disposed q) && Nat.eqb t (q_generation q) then
+        q_flush_reenq_reusable mode (fun a => existsb (Nat.eqb a) failing) [] buf q
+      else (buf, q)
     end
-  | QCmdDispose => q_dispose q
+  | QCmdDispose => ([], q_dispose q)
   end.
 
-Fixpoint run_q_cmds (cs : list q_cmd) (q : queue_model) : queue_model :=
+Fixpoint run_q_cmds (cs : list q_cmd) (buf : list (option work_entry)) (q : queue_model)
+    : queue_model :=
   match cs with
   | [] => q
-  | c :: rest => run_q_cmds rest (step_q_cmd c q)
+  | c :: rest =>
+    let '(buf', q') := step_q_cmd c buf q in
+    run_q_cmds rest buf' q'
   end.
 
 Record q_view := {
@@ -345,7 +352,7 @@ Record q_view := {
 }.
 
 Definition observe_queue (cs : list q_cmd) : q_view :=
-  let q := run_q_cmds cs init_queue in
+  let q := run_q_cmds cs [] init_queue in
   {| qv_committed := q_committed q;
      qv_dropped := map sl_dropped_runs (q_slots q);
      qv_reported := report_by_scope (q_errors q);

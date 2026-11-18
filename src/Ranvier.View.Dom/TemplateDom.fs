@@ -1423,6 +1423,20 @@ let private startRender (services: MountServices) (state: obj array) =
             flags <- BindingState.released previous
             BindingState.ready scope previous)
 
+    let commitRender () =
+        let compiled = at state StateCompiled :?> Compiled
+        let renderCount = compiled.RenderSlots.Length
+        let previousBase = StateNodes + compiled.NodeCount
+
+        let pendingBase =
+            previousBase
+            + renderCount
+            + compiled.IsolatedSlots.Length
+
+        for k in 0 .. renderCount - 1 do
+            let nodeIndex, slot = at compiled.RenderSlots k
+            commit services state slot nodeIndex (previousBase + k) (at state (pendingBase + k))
+
     Api.createEffect (fun () ->
         let compiled = at state StateCompiled :?> Compiled
         let instance = at state StateInstance
@@ -1456,10 +1470,7 @@ let private startRender (services: MountServices) (state: obj array) =
 
             store state (pendingBase + k) value
 
-        Api.untrack (fun () ->
-            for k in 0 .. renderCount - 1 do
-                let nodeIndex, slot = at compiled.RenderSlots k
-                commit services state slot nodeIndex (previousBase + k) (at state (pendingBase + k)))
+        Api.untrack commitRender
 
         if flags <> 0 then
             if isNull failure then
@@ -1479,6 +1490,7 @@ let private startRender (services: MountServices) (state: obj array) =
 let private startIsolated (services: MountServices) (state: obj array) (k: int) =
     let scope = services.Scope
     let mutable flags = BindingState.started scope
+    let mutable pending: obj = unset
 
     if scope.Tracks then
         Api.onCleanup (fun () ->
@@ -1486,7 +1498,7 @@ let private startIsolated (services: MountServices) (state: obj array) (k: int) 
             flags <- BindingState.released previous
             BindingState.ready scope previous)
 
-    Api.createEffect (fun () ->
+    let commitIsolated () =
         let compiled = at state StateCompiled :?> Compiled
         let nodeIndex, slot = at compiled.IsolatedSlots k
 
@@ -1496,6 +1508,13 @@ let private startIsolated (services: MountServices) (state: obj array) (k: int) 
             + compiled.RenderSlots.Length
             + k
 
+        let value = pending
+        pending <- unset
+        commit services state slot nodeIndex previousIndex value
+
+    Api.createEffect (fun () ->
+        let compiled = at state StateCompiled :?> Compiled
+        let _, slot = at compiled.IsolatedSlots k
         let mutable failure: exn = null
         let mutable waiting = false
 
@@ -1512,7 +1531,8 @@ let private startIsolated (services: MountServices) (state: obj array) (k: int) 
 
                 unset
 
-        Api.untrack (fun () -> commit services state slot nodeIndex previousIndex value)
+        pending <- value
+        Api.untrack commitIsolated
 
         if flags <> 0 then
             if isNull failure then

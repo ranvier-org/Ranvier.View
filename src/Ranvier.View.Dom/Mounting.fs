@@ -41,6 +41,9 @@ let private propertyEquals = Func<obj, obj, bool>(fun left right -> left = right
 let private attributeEquals =
     Func<string option, string option, bool>(fun left right -> left = right)
 
+let private stringEquals =
+    Func<string, string, bool>(fun left right -> left = right)
+
 let inline private insert (parent: #Node) (node: #Node) (before: #Node option) : unit =
     let before: Node option = before |> Option.map (fun x -> x :> Node)
 
@@ -2975,6 +2978,12 @@ and internal MountState
     let clearReported () =
         lastReported <- null
 
+    let isMountLive () =
+        not root.IsDisposed
+
+    let isMountSettingUp () =
+        root.Phase = SettingUp
+
     let startBinding (scope: ViewScope) (equals: Func<_, _, bool>) read write =
 #if LADDER_NAIVE_BINDINGS
         Api.createEffect (fun () -> write (read ()))
@@ -3030,9 +3039,6 @@ and internal MountState
                     state <- BindingState.released previous
                     BindingState.ready scope previous)
         | Queued queue ->
-            let live () =
-                not root.IsDisposed
-
             let guardedWrite value =
                 try
                     write value
@@ -3064,16 +3070,7 @@ and internal MountState
                 else
                     Unchecked.defaultof<_>
 
-            Binding.startQueuedIn
-                scope
-                (fun () -> root.Phase = SettingUp)
-                root.OnCleanup
-                live
-                queue
-                (fun left right -> equals.Invoke (left, right))
-                reportingRead
-                guardedWrite
-                afterCommit
+            Binding.startQueuedFunc scope isMountSettingUp root.OnCleanup isMountLive queue equals reportingRead guardedWrite afterCommit
 
         bindingSetupFailure |> Option.iter raise
 #endif
@@ -3352,7 +3349,7 @@ and internal MountState
         if node.nodeType <> 3us then
             raise (ArgumentException ("Prepared text bindings require a text node", "node"))
 
-        startBinding this.Scope (Func<_, _, _>(fun left right -> left = right)) read (fun value -> node.textContent <- value)
+        startBinding this.Scope stringEquals read (fun value -> node.textContent <- value)
         ensureSetup ()
 
     override _.Text(value) =
@@ -3436,7 +3433,7 @@ and internal MountState
         ownedCleanup owner (fun () -> DocumentHead.withdraw record)
 
         if entry.Kind = HeadKind.Title then
-            startBinding scope (Func<string, string, bool>(fun left right -> left = right)) entry.Title (DocumentHead.setTitle record)
+            startBinding scope stringEquals entry.Title (DocumentHead.setTitle record)
         else
             let element = record.Element
 
