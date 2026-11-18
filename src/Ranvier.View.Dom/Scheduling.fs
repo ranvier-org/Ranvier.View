@@ -45,6 +45,12 @@ let private snapshot (pending: ResizeArray<Slot>) (project: Slot -> Slot * int *
 
 type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) =
     let pending = ResizeArray<Slot>()
+#if !FABLE_COMPILER
+    let mutable work: struct (Slot * int * (unit -> unit)) array = [||]
+#endif
+    let mutable flushDelegate: unit -> unit = Unchecked.defaultof<_>
+    let mutable flushFailures: ResizeArray<exn> = null
+    let mutable flushFailedSlots: ResizeArray<Slot> = null
     let mutable disposed = false
     let mutable flushing = false
     let mutable scheduled = false
@@ -104,6 +110,112 @@ type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) =
 
             this.Request ()
 
+    member private this.FlushCore() =
+        Api.flush ()
+
+#if FABLE_COMPILER
+        let staged = snapshot pending (fun slot -> slot, slot.Version, slot.Action)
+        pending.Clear ()
+
+        for slot, _, _ in staged do
+            slot.Listed <- false
+            slot.Action <- Unchecked.defaultof<_>
+
+        let mutable stopped = false
+
+        for slot, version, commit in staged do
+            let hasCommit = not (isNull (box commit))
+
+            if stopped then
+                let dropped =
+                    (hasCommit && slot.Version = version)
+                    || not (isNull (box slot.Action))
+
+                this.Cancel slot
+
+                if dropped && not (isNull (box slot.Dropped)) then
+                    slot.Dropped ()
+            elif
+                not disposed
+                && slot.Version = version
+                && hasCommit
+            then
+                try
+                    Api.untrack commit
+                with error ->
+                    if isNull flushFailures then
+                        flushFailures <- ResizeArray<exn>()
+
+                    flushFailures.Add error
+
+                    if isNull flushFailedSlots then
+                        flushFailedSlots <- ResizeArray<Slot>()
+
+                    flushFailedSlots.Add slot
+                    stopped <- failure = FailFastCancel
+#else
+        let count = pending.Count
+
+        if count > 0 then
+            let mutable buf = work
+
+            if buf.Length < count then
+                let nextCap =
+                    let doubled = if buf.Length = 0 then 16 else buf.Length * 2
+                    if doubled < count then count else doubled
+
+                buf <- Array.zeroCreate<struct (Slot * int * (unit -> unit))> nextCap
+                work <- buf
+
+            for index = 0 to count - 1 do
+                let slot = pending[index]
+                buf[index] <- struct (slot, slot.Version, slot.Action)
+                slot.Listed <- false
+                slot.Action <- Unchecked.defaultof<_>
+
+            pending.Clear ()
+            let mutable stopped = false
+
+            for index = 0 to count - 1 do
+                let struct (slot, version, commit) = buf[index]
+                buf[index] <- Unchecked.defaultof<_>
+                let hasCommit = not (isNull (box commit))
+
+                if stopped then
+                    let dropped =
+                        (hasCommit && slot.Version = version)
+                        || not (isNull (box slot.Action))
+
+                    this.Cancel slot
+
+                    if dropped && not (isNull (box slot.Dropped)) then
+                        slot.Dropped ()
+                elif
+                    not disposed
+                    && slot.Version = version
+                    && hasCommit
+                then
+                    try
+                        Api.untrack commit
+                    with error ->
+                        if isNull flushFailures then
+                            flushFailures <- ResizeArray<exn>()
+
+                        flushFailures.Add error
+
+                        if isNull flushFailedSlots then
+                            flushFailedSlots <- ResizeArray<Slot>()
+
+                        flushFailedSlots.Add slot
+                        stopped <- failure = FailFastCancel
+#endif
+
+        if
+            not (isNull flushFailures)
+            && flushFailures.Count > 0
+        then
+            Queue.Report (flushFailures, flushFailedSlots)
+
     member this.Flush() =
         if flushing then
             raise (InvalidOperationException "Recursive commit flushing is prohibited")
@@ -112,105 +224,19 @@ type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) =
             generation <- generation + 1
             scheduled <- false
             flushing <- true
-            let mutable failures: ResizeArray<exn> = null
-            let mutable failedSlots: ResizeArray<Slot> = null
+            flushFailures <- null
+            flushFailedSlots <- null
+
+            if isNull (box flushDelegate) then
+                flushDelegate <- fun () -> this.FlushCore ()
 
             try
-                graph.Run (fun () ->
-                    Api.flush ()
-
-#if FABLE_COMPILER
-                    let work = snapshot pending (fun slot -> slot, slot.Version, slot.Action)
-                    pending.Clear ()
-
-                    for slot, _, _ in work do
-                        slot.Listed <- false
-                        slot.Action <- Unchecked.defaultof<_>
-
-                    let mutable stopped = false
-
-                    for slot, version, commit in work do
-                        let hasCommit = not (isNull (box commit))
-
-                        if stopped then
-                            let dropped =
-                                (hasCommit && slot.Version = version)
-                                || not (isNull (box slot.Action))
-
-                            this.Cancel slot
-
-                            if dropped && not (isNull (box slot.Dropped)) then
-                                slot.Dropped ()
-                        elif
-                            not disposed
-                            && slot.Version = version
-                            && hasCommit
-                        then
-                            try
-                                Api.untrack commit
-                            with error ->
-                                if isNull failures then
-                                    failures <- ResizeArray<exn>()
-
-                                failures.Add error
-
-                                if isNull failedSlots then
-                                    failedSlots <- ResizeArray<Slot>()
-
-                                failedSlots.Add slot
-                                stopped <- failure = FailFastCancel
-#else
-                    let count = pending.Count
-
-                    if count > 0 then
-                        let work = Array.zeroCreate<struct (Slot * int * (unit -> unit))> count
-
-                        for index = 0 to count - 1 do
-                            let slot = pending[index]
-                            work[index] <- struct (slot, slot.Version, slot.Action)
-                            slot.Listed <- false
-                            slot.Action <- Unchecked.defaultof<_>
-
-                        pending.Clear ()
-                        let mutable stopped = false
-
-                        for index = 0 to count - 1 do
-                            let struct (slot, version, commit) = work[index]
-                            let hasCommit = not (isNull (box commit))
-
-                            if stopped then
-                                let dropped =
-                                    (hasCommit && slot.Version = version)
-                                    || not (isNull (box slot.Action))
-
-                                this.Cancel slot
-
-                                if dropped && not (isNull (box slot.Dropped)) then
-                                    slot.Dropped ()
-                            elif
-                                not disposed
-                                && slot.Version = version
-                                && hasCommit
-                            then
-                                try
-                                    Api.untrack commit
-                                with error ->
-                                    if isNull failures then
-                                        failures <- ResizeArray<exn>()
-
-                                    failures.Add error
-
-                                    if isNull failedSlots then
-                                        failedSlots <- ResizeArray<Slot>()
-
-                                    failedSlots.Add slot
-                                    stopped <- failure = FailFastCancel
-#endif
-
-                    if not (isNull failures) && failures.Count > 0 then
-                        Queue.Report (failures, failedSlots))
+                graph.Run flushDelegate
             finally
-                errors <- if isNull failures then [||] else failures.ToArray ()
+                let captured = flushFailures
+                flushFailures <- null
+                flushFailedSlots <- null
+                errors <- if isNull captured then [||] else captured.ToArray ()
                 flushing <- false
                 this.Request ()
 
@@ -265,6 +291,9 @@ type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) =
                 this.Cancel slot
 
             pending.Clear ()
+#if !FABLE_COMPILER
+            work <- [||]
+#endif
 
 #if !FABLE_COMPILER
 [<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]

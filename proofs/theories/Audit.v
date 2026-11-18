@@ -69,3 +69,6 @@ Print Assumptions owq_operations_preserve_conservation.
 Print Assumptions owq_no_lost_wakeup.
 Print Assumptions cf_try_complete_preserves_inv.
 Print Assumptions cf_reset_preserves_inv_and_rejects_pending.
+Print Assumptions q_flush_reusable_work_buffer_equiv.
+Print Assumptions binding_hoisted_commit_and_cancel_equiv.
+Print Assumptions template_hoisted_isolated_commit_equiv.

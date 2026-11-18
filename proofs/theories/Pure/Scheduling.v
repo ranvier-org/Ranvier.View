@@ -909,3 +909,875 @@ Proof.
   - split; [exact (conj Hnd (conj Hlt Hpend)) | intros _; reflexivity].
   - split; [repeat split; try assumption; trivial | intros H; contradiction].
 Qed.
+
+(** ** Batch V4: Reusable `Queue.Flush` work buffer and zero-allocation hoisted slot commits *)
+
+Definition work_entry := (nat * nat * option nat)%type.
+
+Fixpoint overwrite_prefix (items : list work_entry) (buf : list (option work_entry))
+    : list (option work_entry) :=
+  match items, buf with
+  | [], rest => rest
+  | x :: xs, [] => Some x :: overwrite_prefix xs []
+  | x :: xs, _ :: ys => Some x :: overwrite_prefix xs ys
+  end.
+
+Fixpoint exec_buf_prefix (count : nat) (mode : commit_failure) (will_fail : nat -> bool)
+    (reenq : list (nat * nat * nat)) (stopped : bool)
+    (buf : list (option work_entry))
+    (slots : list slot_model) (pend : list nat)
+    (committed : list nat) (errs : list (nat * nat))
+    : list (option work_entry) * list slot_model * list nat * list nat * list (nat * nat) :=
+  match count, buf with
+  | 0, _ | _, [] => (buf, slots, pend, committed, errs)
+  | S k, None :: rest_buf =>
+    let '(rest_buf', slots', pend', committed', errs') :=
+      exec_buf_prefix k mode will_fail reenq stopped rest_buf slots pend committed errs in
+    (None :: rest_buf', slots', pend', committed', errs')
+  | S k, Some (idx, ver, act_opt) :: rest_buf =>
+    match nth_error slots idx with
+    | None =>
+      let '(rest_buf', slots', pend', committed', errs') :=
+        exec_buf_prefix k mode will_fail reenq stopped rest_buf slots pend committed errs in
+      (None :: rest_buf', slots', pend', committed', errs')
+    | Some sl =>
+      let has_commit := match act_opt with Some _ => true | None => false end in
+      if stopped then
+        let has_replacement := match sl_action sl with Some _ => true | None => false end in
+        let dropped := (has_commit && Nat.eqb (sl_version sl) ver) || has_replacement in
+        let sl' := {| sl_version := S (sl_version sl);
+                      sl_listed := sl_listed sl;
+                      sl_action := None;
+                      sl_has_dropped_cb := sl_has_dropped_cb sl;
+                      sl_dropped_runs := sl_dropped_runs sl +
+                        (if dropped && sl_has_dropped_cb sl then 1 else 0);
+                      sl_scope := sl_scope sl |} in
+        let '(rest_buf', slots', pend', committed', errs') :=
+          exec_buf_prefix k mode will_fail reenq true rest_buf (set_slot idx sl' slots) pend committed errs in
+        (None :: rest_buf', slots', pend', committed', errs')
+      else
+        match act_opt with
+        | Some act =>
+          if Nat.eqb (sl_version sl) ver then
+            let '(slots_after, pend_after) := apply_reenqueues act reenq slots pend in
+            if will_fail act then
+              let stop_now := match mode with FailFastCancel => true | CollectAndContinue => false end in
+              let '(rest_buf', slots', pend', committed', errs') :=
+                exec_buf_prefix k mode will_fail reenq stop_now rest_buf slots_after pend_after committed
+                  (errs ++ [(sl_scope sl, act)]) in
+              (None :: rest_buf', slots', pend', committed', errs')
+            else
+              let '(rest_buf', slots', pend', committed', errs') :=
+                exec_buf_prefix k mode will_fail reenq false rest_buf slots_after pend_after
+                  (committed ++ [act]) errs in
+              (None :: rest_buf', slots', pend', committed', errs')
+          else
+            let '(rest_buf', slots', pend', committed', errs') :=
+              exec_buf_prefix k mode will_fail reenq false rest_buf slots pend committed errs in
+            (None :: rest_buf', slots', pend', committed', errs')
+        | None =>
+          let '(rest_buf', slots', pend', committed', errs') :=
+            exec_buf_prefix k mode will_fail reenq false rest_buf slots pend committed errs in
+          (None :: rest_buf', slots', pend', committed', errs')
+        end
+    end
+  end.
+
+Definition q_flush_reenq_reusable (mode : commit_failure) (will_fail : nat -> bool)
+    (reenq : list (nat * nat * nat))
+    (buf : list (option work_entry)) (q : queue_model)
+    : list (option work_entry) * queue_model :=
+  if q_disposed q then (buf, q)
+  else
+    let '(work, slots1) := snapshot_and_clear (q_pending q) (q_slots q) in
+    let staged := overwrite_prefix work buf in
+    let '(buf_after, slots2, pend2, committed', errs') :=
+      exec_buf_prefix (length work) mode will_fail reenq false staged slots1 [] (q_committed q) [] in
+    (buf_after,
+     q_request
+       {| q_slots := slots2;
+          q_pending := pend2;
+          q_disposed := false;
+          q_scheduled := false;
+          q_generation := S (q_generation q);
+          q_tickets := q_tickets q;
+          q_committed := committed';
+          q_errors := errs' |}).
+
+Lemma exec_buf_prefix_overwrite_equiv :
+  forall (work : list work_entry) (buf : list (option work_entry))
+         mode will_fail reenq stopped slots pend committed errs,
+    let '(buf_after, slots', pend', committed', errs') :=
+      exec_buf_prefix (length work) mode will_fail reenq stopped
+        (overwrite_prefix work buf) slots pend committed errs in
+    (slots', pend', committed', errs') =
+      exec_work_reenq mode will_fail reenq stopped work slots pend committed errs /\
+    firstn (length work) buf_after = repeat None (length work).
+Proof.
+  induction work as [|[[idx ver] act_opt] rest IH]; intros buf mode will_fail reenq stopped slots pend committed errs.
+  - destruct buf; simpl; split; reflexivity.
+  - unfold work_entry in *.
+    assert (Hov : exists tail_buf, overwrite_prefix ((idx, ver, act_opt) :: rest) buf =
+                                   Some (idx, ver, act_opt) :: overwrite_prefix rest tail_buf).
+    { destruct buf as [|b bs]; [exists [] | exists bs]; reflexivity. }
+    destruct Hov as [tail_buf Hov]; rewrite Hov.
+    simpl length. simpl exec_buf_prefix. simpl exec_work_reenq.
+    destruct (nth_error slots idx) as [sl|].
+    + destruct stopped.
+      * specialize (IH tail_buf mode will_fail reenq true
+          (set_slot idx
+             {| sl_version := S (sl_version sl);
+                sl_listed := sl_listed sl;
+                sl_action := None;
+                sl_has_dropped_cb := sl_has_dropped_cb sl;
+                sl_dropped_runs := sl_dropped_runs sl +
+                  (if ((match act_opt with Some _ => true | None => false end &&
+                        Nat.eqb (sl_version sl) ver) ||
+                       match sl_action sl with Some _ => true | None => false end) &&
+                      sl_has_dropped_cb sl then 1 else 0);
+                sl_scope := sl_scope sl |} slots)
+          pend committed errs).
+        destruct (exec_buf_prefix (length rest) _ _ _ _ _ _ _ _ _)
+          as [[[[buf_r slots_r] pend_r] comm_r] errs_r].
+        destruct IH as [Heq Hclr]; split; [exact Heq | simpl; f_equal; exact Hclr].
+      * destruct act_opt as [act|].
+        -- destruct (Nat.eqb (sl_version sl) ver).
+           ++ destruct (apply_reenqueues act reenq slots pend) as [slots_after pend_after].
+              destruct (will_fail act).
+              ** specialize (IH tail_buf mode will_fail reenq
+                   (match mode with FailFastCancel => true | CollectAndContinue => false end)
+                   slots_after pend_after committed (errs ++ [(sl_scope sl, act)])).
+                 destruct (exec_buf_prefix (length rest) _ _ _ _ _ _ _ _ _)
+                   as [[[[buf_r slots_r] pend_r] comm_r] errs_r].
+                 destruct IH as [Heq Hclr]; split; [exact Heq | simpl; f_equal; exact Hclr].
+              ** specialize (IH tail_buf mode will_fail reenq false
+                   slots_after pend_after (committed ++ [act]) errs).
+                 destruct (exec_buf_prefix (length rest) _ _ _ _ _ _ _ _ _)
+                   as [[[[buf_r slots_r] pend_r] comm_r] errs_r].
+                 destruct IH as [Heq Hclr]; split; [exact Heq | simpl; f_equal; exact Hclr].
+           ++ specialize (IH tail_buf mode will_fail reenq false slots pend committed errs).
+              destruct (exec_buf_prefix (length rest) _ _ _ _ _ _ _ _ _)
+                as [[[[buf_r slots_r] pend_r] comm_r] errs_r].
+              destruct IH as [Heq Hclr]; split; [exact Heq | simpl; f_equal; exact Hclr].
+        -- specialize (IH tail_buf mode will_fail reenq false slots pend committed errs).
+           destruct (exec_buf_prefix (length rest) _ _ _ _ _ _ _ _ _)
+             as [[[[buf_r slots_r] pend_r] comm_r] errs_r].
+           destruct IH as [Heq Hclr]; split; [exact Heq | simpl; f_equal; exact Hclr].
+    + specialize (IH tail_buf mode will_fail reenq stopped slots pend committed errs).
+      destruct (exec_buf_prefix (length rest) _ _ _ _ _ _ _ _ _)
+        as [[[[buf_r slots_r] pend_r] comm_r] errs_r].
+      destruct IH as [Heq Hclr]; split; [exact Heq | simpl; f_equal; exact Hclr].
+Qed.
+
+(**md
+**Reusing a grow-only non-reentrant `work` buffer in `Scheduling.Queue.Flush` is observationally identical to allocating a fresh array per flush and clears every active slot reference.**
+
+Because `Queue.Flush` prohibits re-entrancy (`if flushing then raise`), staging `pending[0 .. count - 1]` into a persistent `work` array regardless of stale trailing entries and clearing `work[i] <- default` upon reading each slot yields the exact `queue_model` state of `q_flush_reenq` while leaving all `count` staged positions `None`.
+
+- [mode:] `CollectAndContinue` or `FailFastCancel`.
+- [will_fail:] predicate identifying commit actions that raise.
+- [reenq:] in-flush re-enqueues triggered during commit execution.
+- [buf:] arbitrary residual `work` buffer left over from previous flushes.
+- [q:] the `Scheduling.Queue` state before `Flush`.
+*)
+Theorem q_flush_reusable_work_buffer_equiv mode will_fail reenq buf q :
+  let '(buf_after, q_after) := q_flush_reenq_reusable mode will_fail reenq buf q in
+  q_after = q_flush_reenq mode will_fail reenq q /\
+  (q_disposed q = false ->
+   let count := length (fst (snapshot_and_clear (q_pending q) (q_slots q))) in
+   firstn count buf_after = repeat None count).
+Proof.
+  unfold q_flush_reenq_reusable, q_flush_reenq, work_entry in *.
+  destruct (q_disposed q).
+  - split; [reflexivity | intros H; discriminate].
+  - destruct (snapshot_and_clear (q_pending q) (q_slots q)) as [work slots1] eqn:Hsnap.
+    pose proof (exec_buf_prefix_overwrite_equiv work buf mode will_fail reenq false
+                  slots1 [] (q_committed q) []) as Hbuf.
+    destruct (exec_buf_prefix (length work) mode will_fail reenq false
+                (overwrite_prefix work buf) slots1 [] (q_committed q) [])
+      as [[[[buf_after slots2] pend2] committed'] errs'] eqn:Hexec.
+    unfold work_entry in Hbuf; rewrite Hexec in Hbuf.
+    destruct Hbuf as [Heq Hclr].
+    rewrite <- Heq.
+    split; [reflexivity | intros _; simpl; exact Hclr].
+Qed.
+
+(** Hoisted `Binding.startQueuedIn` commit & cleanup state machine vs per-update closures. *)
+Section QueuedBindingHoisting.
+  Context {V : Type} (eqb_val : V -> V -> bool).
+
+  Inductive binding_event :=
+    | BEvUpdate (read_res : option V) (reenter_on_first : option (option V))
+    | BEvFlush (reenter_on_flush : option (option V))
+    | BEvFailFastDrop
+    | BEvDispose.
+
+  Record b_spec_state := {
+    bs_first : bool;
+    bs_version : nat;
+    bs_live : bool;
+    bs_committed : option V;
+    bs_queued : option (nat * V);
+    bs_writes : list V;
+    bs_after_runs : nat
+  }.
+
+  Record b_hoisted_state := {
+    bh_first : bool;
+    bh_version : nat;
+    bh_live : bool;
+    bh_committed : option V;
+    bh_commit_ver : nat;
+    bh_pending_val : option V;
+    bh_slot_active : bool;
+    bh_writes : list V;
+    bh_after_runs : nat
+  }.
+
+  Definition init_b_spec : b_spec_state :=
+    {| bs_first := true;
+       bs_version := 0;
+       bs_live := true;
+       bs_committed := None;
+       bs_queued := None;
+       bs_writes := [];
+       bs_after_runs := 0 |}.
+
+  Definition init_b_hoisted : b_hoisted_state :=
+    {| bh_first := true;
+       bh_version := 0;
+       bh_live := true;
+       bh_committed := None;
+       bh_commit_ver := 0;
+       bh_pending_val := None;
+       bh_slot_active := false;
+       bh_writes := [];
+       bh_after_runs := 0 |}.
+
+  (** Nested reactive trigger fired synchronously from inside [write value] (when [first] is already [false]). *)
+  Definition b_spec_nested (re : option (option V)) (s : b_spec_state) : b_spec_state :=
+    match re with
+    | None => s
+    | Some None =>
+      if negb (bs_live s) then s
+      else
+        {| bs_first := false;
+           bs_version := S (bs_version s);
+           bs_live := bs_live s;
+           bs_committed := bs_committed s;
+           bs_queued := None;
+           bs_writes := bs_writes s;
+           bs_after_runs := bs_after_runs s |}
+    | Some (Some v2) =>
+      if negb (bs_live s) then s
+      else
+        let ver' := S (bs_version s) in
+        {| bs_first := false;
+           bs_version := ver';
+           bs_live := bs_live s;
+           bs_committed := bs_committed s;
+           bs_queued := Some (ver', v2);
+           bs_writes := bs_writes s;
+           bs_after_runs := bs_after_runs s |}
+    end.
+
+  Definition b_spec_run_commit (current : nat) (val0 : V) (re : option (option V))
+      (s : b_spec_state) : b_spec_state :=
+    if bs_live s && Nat.eqb (bs_version s) current then
+      let changed :=
+        match bs_committed s with
+        | None => true
+        | Some prev => negb (eqb_val prev val0)
+        end in
+      let s_after_write :=
+        if changed then
+          let s_written :=
+            {| bs_first := bs_first s;
+               bs_version := bs_version s;
+               bs_live := bs_live s;
+               bs_committed := bs_committed s;
+               bs_queued := bs_queued s;
+               bs_writes := bs_writes s ++ [val0];
+               bs_after_runs := bs_after_runs s |} in
+          let s_re := b_spec_nested re s_written in
+          if Nat.eqb (bs_version s_re) current then
+            {| bs_first := bs_first s_re;
+               bs_version := bs_version s_re;
+               bs_live := bs_live s_re;
+               bs_committed := Some val0;
+               bs_queued := bs_queued s_re;
+               bs_writes := bs_writes s_re;
+               bs_after_runs := bs_after_runs s_re |}
+          else s_re
+        else s in
+      {| bs_first := bs_first s_after_write;
+         bs_version := bs_version s_after_write;
+         bs_live := bs_live s_after_write;
+         bs_committed := bs_committed s_after_write;
+         bs_queued := bs_queued s_after_write;
+         bs_writes := bs_writes s_after_write;
+         bs_after_runs := S (bs_after_runs s_after_write) |}
+    else s.
+
+  Definition step_b_spec (ev : binding_event) (s : b_spec_state) : b_spec_state :=
+    match ev with
+    | BEvUpdate read_res re =>
+      if negb (bs_live s) then s
+      else
+        let current := S (bs_version s) in
+        let was_first := bs_first s in
+        (* Spec unconditionally cancels slot at top of effect *)
+        let s1 := {| bs_first := was_first;
+                     bs_version := current;
+                     bs_live := bs_live s;
+                     bs_committed := bs_committed s;
+                     bs_queued := None;
+                     bs_writes := bs_writes s;
+                     bs_after_runs := bs_after_runs s |} in
+        match read_res with
+        | None => s1
+        | Some v =>
+          if was_first then
+            let s2 := {| bs_first := false;
+                         bs_version := current;
+                         bs_live := bs_live s1;
+                         bs_committed := bs_committed s1;
+                         bs_queued := None;
+                         bs_writes := bs_writes s1;
+                         bs_after_runs := bs_after_runs s1 |} in
+            b_spec_run_commit current v re s2
+          else
+            {| bs_first := false;
+               bs_version := current;
+               bs_live := bs_live s1;
+               bs_committed := bs_committed s1;
+               bs_queued := Some (current, v);
+               bs_writes := bs_writes s1;
+               bs_after_runs := bs_after_runs s1 |}
+        end
+    | BEvFlush re =>
+      match bs_queued s with
+      | None => s
+      | Some (cur, val0) =>
+        let s_cleared := {| bs_first := bs_first s;
+                            bs_version := bs_version s;
+                            bs_live := bs_live s;
+                            bs_committed := bs_committed s;
+                            bs_queued := None;
+                            bs_writes := bs_writes s;
+                            bs_after_runs := bs_after_runs s |} in
+        b_spec_run_commit cur val0 re s_cleared
+      end
+    | BEvFailFastDrop =>
+      match bs_queued s with
+      | None => s
+      | Some _ =>
+        {| bs_first := bs_first s;
+           bs_version := bs_version s;
+           bs_live := bs_live s;
+           bs_committed := bs_committed s;
+           bs_queued := None;
+           bs_writes := bs_writes s;
+           bs_after_runs := S (bs_after_runs s) |}
+      end
+    | BEvDispose =>
+      {| bs_first := bs_first s;
+         bs_version := bs_version s;
+         bs_live := false;
+         bs_committed := bs_committed s;
+         bs_queued := None;
+         bs_writes := bs_writes s;
+         bs_after_runs := bs_after_runs s |}
+    end.
+
+  Definition bh_cancel_slot (h : b_hoisted_state) : b_hoisted_state :=
+    {| bh_first := bh_first h;
+       bh_version := bh_version h;
+       bh_live := bh_live h;
+       bh_committed := bh_committed h;
+       bh_commit_ver := bh_commit_ver h;
+       bh_pending_val := None;
+       bh_slot_active := false;
+       bh_writes := bh_writes h;
+       bh_after_runs := bh_after_runs h |}.
+
+  Definition b_hoisted_nested (re : option (option V)) (h : b_hoisted_state) : b_hoisted_state :=
+    match re with
+    | None => h
+    | Some None =>
+      if negb (bh_live h) then h
+      else
+        bh_cancel_slot
+          {| bh_first := false;
+             bh_version := S (bh_version h);
+             bh_live := bh_live h;
+             bh_committed := bh_committed h;
+             bh_commit_ver := bh_commit_ver h;
+             bh_pending_val := bh_pending_val h;
+             bh_slot_active := bh_slot_active h;
+             bh_writes := bh_writes h;
+             bh_after_runs := bh_after_runs h |}
+    | Some (Some v2) =>
+      if negb (bh_live h) then h
+      else
+        let ver' := S (bh_version h) in
+        {| bh_first := false;
+           bh_version := ver';
+           bh_live := bh_live h;
+           bh_committed := bh_committed h;
+           bh_commit_ver := ver';
+           bh_pending_val := Some v2;
+           bh_slot_active := true;
+           bh_writes := bh_writes h;
+           bh_after_runs := bh_after_runs h |}
+    end.
+
+  (** Single hoisted [commit] + [untrackedWrite] closure: snapshots [expected := bh_commit_ver]
+      and [val_opt := bh_pending_val] onto stack locals before calling [equals] or [write]. *)
+  Definition b_hoisted_run_commit (re : option (option V)) (h : b_hoisted_state) : b_hoisted_state :=
+    let expected := bh_commit_ver h in
+    if bh_live h && Nat.eqb (bh_version h) expected then
+      match bh_pending_val h with
+      | None => h
+      | Some val0 =>
+        let h_taken :=
+          {| bh_first := bh_first h;
+             bh_version := bh_version h;
+             bh_live := bh_live h;
+             bh_committed := bh_committed h;
+             bh_commit_ver := bh_commit_ver h;
+             bh_pending_val := None;
+             bh_slot_active := bh_slot_active h;
+             bh_writes := bh_writes h;
+             bh_after_runs := bh_after_runs h |} in
+        let changed :=
+          match bh_committed h_taken with
+          | None => true
+          | Some prev => negb (eqb_val prev val0)
+          end in
+        let h_after_write :=
+          if changed then
+            let h_written :=
+              {| bh_first := bh_first h_taken;
+                 bh_version := bh_version h_taken;
+                 bh_live := bh_live h_taken;
+                 bh_committed := bh_committed h_taken;
+                 bh_commit_ver := bh_commit_ver h_taken;
+                 bh_pending_val := bh_pending_val h_taken;
+                 bh_slot_active := bh_slot_active h_taken;
+                 bh_writes := bh_writes h_taken ++ [val0];
+                 bh_after_runs := bh_after_runs h_taken |} in
+            let h_re := b_hoisted_nested re h_written in
+            if Nat.eqb (bh_version h_re) expected then
+              {| bh_first := bh_first h_re;
+                 bh_version := bh_version h_re;
+                 bh_live := bh_live h_re;
+                 bh_committed := Some val0;
+                 bh_commit_ver := bh_commit_ver h_re;
+                 bh_pending_val := bh_pending_val h_re;
+                 bh_slot_active := bh_slot_active h_re;
+                 bh_writes := bh_writes h_re;
+                 bh_after_runs := bh_after_runs h_re |}
+            else h_re
+          else h_taken in
+        {| bh_first := bh_first h_after_write;
+           bh_version := bh_version h_after_write;
+           bh_live := bh_live h_after_write;
+           bh_committed := bh_committed h_after_write;
+           bh_commit_ver := bh_commit_ver h_after_write;
+           bh_pending_val := bh_pending_val h_after_write;
+           bh_slot_active := bh_slot_active h_after_write;
+           bh_writes := bh_writes h_after_write;
+           bh_after_runs := S (bh_after_runs h_after_write) |}
+      end
+    else if Nat.eqb (bh_version h) expected then
+      {| bh_first := bh_first h;
+         bh_version := bh_version h;
+         bh_live := bh_live h;
+         bh_committed := bh_committed h;
+         bh_commit_ver := bh_commit_ver h;
+         bh_pending_val := None;
+         bh_slot_active := bh_slot_active h;
+         bh_writes := bh_writes h;
+         bh_after_runs := bh_after_runs h |}
+    else h.
+
+  Definition step_b_hoisted (ev : binding_event) (h : b_hoisted_state) : b_hoisted_state :=
+    match ev with
+    | BEvUpdate read_res re =>
+      if negb (bh_live h) then h
+      else
+        let current := S (bh_version h) in
+        let was_first := bh_first h in
+        (* Hoisted skips redundant queue.Cancel on first run before any enqueue *)
+        let h1 :=
+          if was_first then
+            {| bh_first := true;
+               bh_version := current;
+               bh_live := bh_live h;
+               bh_committed := bh_committed h;
+               bh_commit_ver := bh_commit_ver h;
+               bh_pending_val := bh_pending_val h;
+               bh_slot_active := bh_slot_active h;
+               bh_writes := bh_writes h;
+               bh_after_runs := bh_after_runs h |}
+          else
+            bh_cancel_slot
+              {| bh_first := false;
+                 bh_version := current;
+                 bh_live := bh_live h;
+                 bh_committed := bh_committed h;
+                 bh_commit_ver := bh_commit_ver h;
+                 bh_pending_val := bh_pending_val h;
+                 bh_slot_active := bh_slot_active h;
+                 bh_writes := bh_writes h;
+                 bh_after_runs := bh_after_runs h |} in
+        match read_res with
+        | None => h1
+        | Some v =>
+          if was_first then
+            let h2 := {| bh_first := false;
+                         bh_version := current;
+                         bh_live := bh_live h1;
+                         bh_committed := bh_committed h1;
+                         bh_commit_ver := current;
+                         bh_pending_val := Some v;
+                         bh_slot_active := false;
+                         bh_writes := bh_writes h1;
+                         bh_after_runs := bh_after_runs h1 |} in
+            b_hoisted_run_commit re h2
+          else
+            {| bh_first := false;
+               bh_version := current;
+               bh_live := bh_live h1;
+               bh_committed := bh_committed h1;
+               bh_commit_ver := current;
+               bh_pending_val := Some v;
+               bh_slot_active := true;
+               bh_writes := bh_writes h1;
+               bh_after_runs := bh_after_runs h1 |}
+        end
+    | BEvFlush re =>
+      if bh_slot_active h then
+        let h_cleared :=
+          {| bh_first := bh_first h;
+             bh_version := bh_version h;
+             bh_live := bh_live h;
+             bh_committed := bh_committed h;
+             bh_commit_ver := bh_commit_ver h;
+             bh_pending_val := bh_pending_val h;
+             bh_slot_active := false;
+             bh_writes := bh_writes h;
+             bh_after_runs := bh_after_runs h |} in
+        b_hoisted_run_commit re h_cleared
+      else h
+    | BEvFailFastDrop =>
+      if bh_slot_active h then
+        let h_can := bh_cancel_slot h in
+        {| bh_first := bh_first h_can;
+           bh_version := bh_version h_can;
+           bh_live := bh_live h_can;
+           bh_committed := bh_committed h_can;
+           bh_commit_ver := bh_commit_ver h_can;
+           bh_pending_val := bh_pending_val h_can;
+           bh_slot_active := false;
+           bh_writes := bh_writes h_can;
+           bh_after_runs := S (bh_after_runs h_can) |}
+      else h
+    | BEvDispose =>
+      let h_can := bh_cancel_slot h in
+      {| bh_first := bh_first h_can;
+         bh_version := bh_version h_can;
+         bh_live := false;
+         bh_committed := bh_committed h_can;
+         bh_commit_ver := bh_commit_ver h_can;
+         bh_pending_val := bh_pending_val h_can;
+         bh_slot_active := false;
+         bh_writes := bh_writes h_can;
+         bh_after_runs := bh_after_runs h_can |}
+    end.
+
+  Fixpoint run_b_spec (evs : list binding_event) (s : b_spec_state) : b_spec_state :=
+    match evs with
+    | [] => s
+    | ev :: rest => run_b_spec rest (step_b_spec ev s)
+    end.
+
+  Fixpoint run_b_hoisted (evs : list binding_event) (h : b_hoisted_state) : b_hoisted_state :=
+    match evs with
+    | [] => h
+    | ev :: rest => run_b_hoisted rest (step_b_hoisted ev h)
+    end.
+
+  Definition binding_sim_inv (s : b_spec_state) (h : b_hoisted_state) : Prop :=
+    bh_first h = bs_first s /\
+    bh_version h = bs_version s /\
+    bh_live h = bs_live s /\
+    bh_committed h = bs_committed s /\
+    bh_writes h = bs_writes s /\
+    bh_after_runs h = bs_after_runs s /\
+    (bs_first s = true -> bs_queued s = None /\ bh_slot_active h = false /\ bh_pending_val h = None) /\
+    match bs_queued s with
+    | None => bh_slot_active h = false /\ bh_pending_val h = None
+    | Some (cur, val0) =>
+      bh_slot_active h = true /\
+      cur = bs_version s /\
+      bh_commit_ver h = cur /\
+      bh_pending_val h = Some val0
+    end.
+
+  Lemma b_run_commit_preserves_inv cur val0 re s h :
+    bh_first h = bs_first s ->
+    bh_version h = bs_version s ->
+    bh_live h = bs_live s ->
+    bh_committed h = bs_committed s ->
+    bh_writes h = bs_writes s ->
+    bh_after_runs h = bs_after_runs s ->
+    bs_first s = false ->
+    bs_queued s = None ->
+    bh_slot_active h = false ->
+    cur = bs_version s ->
+    bh_commit_ver h = cur ->
+    bh_pending_val h = Some val0 ->
+    binding_sim_inv (b_spec_run_commit cur val0 re s) (b_hoisted_run_commit re h).
+  Proof.
+    intros Hfirst Hver Hlive Hcomm Hwr Haft Hnf Hsq Hsa Hcur Hcver Hpval.
+    unfold b_spec_run_commit, b_hoisted_run_commit.
+    rewrite Hlive, Hver, Hcver, Hcur, Nat.eqb_refl, Hpval.
+    destruct (bs_live s) eqn:Hl; simpl.
+    - rewrite Hcomm.
+      destruct (match bs_committed s with None => true | Some prev => negb (eqb_val prev val0) end) eqn:Hchg.
+      + destruct re as [[v2|]|]; simpl; rewrite ?Hl, ?Hver, ?Hnf, ?Hsq, ?Hsa, ?Hwr, ?Hcomm, ?Haft; simpl.
+        * assert (Hneq : Nat.eqb (S (bs_version s)) (bs_version s) = false)
+            by (apply Nat.eqb_neq; lia).
+          rewrite Hneq; unfold binding_sim_inv; simpl.
+          repeat split; try reflexivity; try congruence.
+        * assert (Hneq : Nat.eqb (S (bs_version s)) (bs_version s) = false)
+            by (apply Nat.eqb_neq; lia).
+          rewrite Hneq; unfold binding_sim_inv; simpl.
+          repeat split; try reflexivity; try congruence.
+        * rewrite Nat.eqb_refl; unfold binding_sim_inv; simpl.
+          repeat split; try reflexivity; try congruence.
+      + unfold binding_sim_inv; simpl.
+        rewrite ?Hfirst, ?Hver, ?Hcomm, ?Hwr, ?Haft, ?Hsq, ?Hsa, ?Hl; simpl.
+        repeat split; try reflexivity; try congruence.
+    - unfold binding_sim_inv; simpl.
+      rewrite ?Hfirst, ?Hver, ?Hcomm, ?Hwr, ?Haft, ?Hsq, ?Hsa, ?Hl.
+      repeat split; try reflexivity; try congruence.
+  Qed.
+
+  Lemma step_b_preserves_inv ev s h :
+    binding_sim_inv s h ->
+    binding_sim_inv (step_b_spec ev s) (step_b_hoisted ev h).
+  Proof.
+    intros Hinv.
+    pose proof Hinv as [Hfirst [Hver [Hlive [Hcomm [Hwr [Haft [Hinit Hq]]]]]]].
+    destruct ev as [read_res re | re | | ].
+    - simpl step_b_spec; simpl step_b_hoisted.
+      rewrite Hlive.
+      destruct (bs_live s) eqn:Hl; simpl; [| exact Hinv].
+      destruct read_res as [v|].
+      + rewrite Hfirst.
+        destruct (bs_first s) eqn:Hbf; simpl.
+        * apply b_run_commit_preserves_inv; simpl;
+            try assumption; try congruence.
+        * unfold binding_sim_inv; simpl.
+          rewrite ?Hver, ?Hl, ?Hcomm, ?Hwr, ?Haft.
+          repeat split; try reflexivity; try congruence.
+      + rewrite Hfirst.
+        destruct (bs_first s) eqn:Hbf.
+        * destruct (Hinit eq_refl) as [Hsq [Hsa Hpval]].
+          unfold binding_sim_inv; simpl.
+          rewrite ?Hver, ?Hl, ?Hcomm, ?Hwr, ?Haft, ?Hsa, ?Hpval.
+          repeat split; try reflexivity.
+        * unfold binding_sim_inv; simpl.
+          rewrite ?Hver, ?Hl, ?Hcomm, ?Hwr, ?Haft.
+          repeat split; try reflexivity; try congruence.
+    - simpl step_b_spec; simpl step_b_hoisted.
+      destruct (bs_queued s) as [[cur val0]|] eqn:Hsq.
+      + destruct Hq as [Hsa [Hcur [Hcver Hpval]]].
+        rewrite Hsa.
+        assert (Hnf : bs_first s = false).
+        { destruct (bs_first s) eqn:Hbf; [| reflexivity].
+          destruct (Hinit eq_refl) as [Hnone _]. discriminate Hnone. }
+        apply b_run_commit_preserves_inv; simpl;
+          try assumption; try congruence.
+      + destruct Hq as [Hsa _]; rewrite Hsa; exact Hinv.
+    - simpl step_b_spec; simpl step_b_hoisted.
+      destruct (bs_queued s) as [[cur val0]|] eqn:Hsq.
+      + destruct Hq as [Hsa _].
+        rewrite Hsa.
+        assert (Hnf : bs_first s = false).
+        { destruct (bs_first s) eqn:Hbf; [| reflexivity].
+          destruct (Hinit eq_refl) as [Hnone _]. discriminate Hnone. }
+        unfold binding_sim_inv; simpl.
+        rewrite ?Hfirst, ?Hver, ?Hlive, ?Hcomm, ?Hwr, ?Haft, ?Hnf.
+        repeat split; try reflexivity; try congruence.
+      + destruct Hq as [Hsa _]; rewrite Hsa; exact Hinv.
+    - simpl step_b_spec; simpl step_b_hoisted.
+      unfold binding_sim_inv; simpl.
+      rewrite ?Hfirst, ?Hver, ?Hcomm, ?Hwr, ?Haft.
+      repeat split; try reflexivity.
+  Qed.
+
+  Lemma run_b_preserves_inv evs s h :
+    binding_sim_inv s h ->
+    binding_sim_inv (run_b_spec evs s) (run_b_hoisted evs h).
+  Proof.
+    revert s h; induction evs as [|ev rest IH]; intros s h Hinv; simpl.
+    - exact Hinv.
+    - apply IH, step_b_preserves_inv, Hinv.
+  Qed.
+End QueuedBindingHoisting.
+
+(**md
+**Hoisting `cancelSlot`, `commit`, and `untrackedWrite` in `Binding.startQueuedIn` produces the exact DOM writes, `committed` state, and `afterCommit` calls of per-update closure allocation.**
+
+Skipping the redundant initial `queue.Cancel` before the first enqueue, sharing a single hoisted `cancelSlot` and `commit` closure per queued binding, and snapshotting `(expected := commitVersion, value := pendingValue)` onto stack locals before `equals` / `write` matches closure-per-update execution across coalesced bursts, `NotReady` suspensions, `FailFastCancel` drops, owner disposal, and synchronous re-entrant `write` callbacks.
+
+- [V:] the bound value type.
+- [eqb_val:] equality predicate passed to `Binding.startQueuedIn`.
+- [evs:] arbitrary sequence of updates, flushes, fail-fast drops, and disposal events.
+*)
+Theorem binding_hoisted_commit_and_cancel_equiv {V : Type} (eqb_val : V -> V -> bool)
+    (evs : list (@binding_event V)) :
+  let s_end := run_b_spec eqb_val evs init_b_spec in
+  let h_end := run_b_hoisted eqb_val evs init_b_hoisted in
+  bh_writes h_end = bs_writes s_end /\
+  bh_committed h_end = bs_committed s_end /\
+  bh_after_runs h_end = bs_after_runs s_end /\
+  (bs_queued s_end = None -> bh_slot_active h_end = false /\ bh_pending_val h_end = None).
+Proof.
+  assert (Hinit : @binding_sim_inv V (@init_b_spec V) (@init_b_hoisted V)).
+  { unfold binding_sim_inv, init_b_spec, init_b_hoisted; simpl.
+    repeat split; reflexivity. }
+  pose proof (run_b_preserves_inv eqb_val evs (@init_b_spec V) (@init_b_hoisted V) Hinit)
+    as [_ [_ [_ [Hcomm [Hwr [Haft [_ Hq]]]]]]].
+  split; [exact Hwr | split; [exact Hcomm | split; [exact Haft |]]].
+  intros Hnone; rewrite Hnone in Hq; exact Hq.
+Qed.
+
+(** Hoisted `TemplateDom.startIsolated` commit closure with stack-copied `pending` slot. *)
+Section TemplateIsolatedHoisting.
+  Context {V : Type} (eqb_val : V -> V -> bool).
+
+  Inductive iso_step :=
+    | IsoRead (val_opt : option V) (reenter : option V).
+
+  Record iso_state := {
+    iso_prev : option V;
+    iso_pending : option V;
+    iso_writes : list V
+  }.
+
+  Definition commit_val (v_opt : option V) (prev : option V) (writes : list V)
+      : option V * list V :=
+    match v_opt with
+    | None => (prev, writes)
+    | Some v =>
+      let changed :=
+        match prev with
+        | None => true
+        | Some p => negb (eqb_val p v)
+        end in
+      if changed then (Some v, writes ++ [v]) else (prev, writes)
+    end.
+
+  (** Spec: fresh closure [fun () -> commit ... value] allocated on every isolated effect run. *)
+  Definition step_iso_spec (st : iso_step) (prev : option V) (writes : list V)
+      : option V * list V :=
+    let '(IsoRead val_opt re) := st in
+    match val_opt with
+    | None => (prev, writes)
+    | Some v =>
+      let changed :=
+        match prev with
+        | None => true
+        | Some p => negb (eqb_val p v)
+        end in
+      if changed then
+        let writes1 := writes ++ [v] in
+        match re with
+        | None => (Some v, writes1)
+        | Some v2 =>
+          (* Synchronous re-entry inside property setter writes v2, then outer frame stores v *)
+          let '(_, writes2) := commit_val (Some v2) prev writes1 in
+          (Some v, writes2)
+        end
+      else (prev, writes)
+    end.
+
+  (** Hoisted: single [commitIsolated] closure reads [let v = pending; pending <- None] onto stack before [write]. *)
+  Definition step_iso_hoisted (st : iso_step) (s : iso_state) : iso_state :=
+    let '(IsoRead val_opt re) := st in
+    let s1 := {| iso_prev := iso_prev s; iso_pending := val_opt; iso_writes := iso_writes s |} in
+    (* commitIsolated takes pending onto stack and clears iso_pending := None immediately *)
+    let taken := iso_pending s1 in
+    match taken with
+    | None => {| iso_prev := iso_prev s1; iso_pending := None; iso_writes := iso_writes s1 |}
+    | Some v =>
+      let changed :=
+        match iso_prev s1 with
+        | None => true
+        | Some p => negb (eqb_val p v)
+        end in
+      if changed then
+        let writes1 := iso_writes s1 ++ [v] in
+        match re with
+        | None => {| iso_prev := Some v; iso_pending := None; iso_writes := writes1 |}
+        | Some v2 =>
+          (* Nested run sets iso_pending := Some v2 and commitIsolated clears it back to None *)
+          let '(_, writes2) := commit_val (Some v2) (iso_prev s1) writes1 in
+          {| iso_prev := Some v; iso_pending := None; iso_writes := writes2 |}
+        end
+      else {| iso_prev := iso_prev s1; iso_pending := None; iso_writes := iso_writes s1 |}
+    end.
+
+  Fixpoint run_iso_spec (sts : list iso_step) (prev : option V) (writes : list V)
+      : option V * list V :=
+    match sts with
+    | [] => (prev, writes)
+    | st :: rest =>
+      let '(prev', writes') := step_iso_spec st prev writes in
+      run_iso_spec rest prev' writes'
+    end.
+
+  Fixpoint run_iso_hoisted (sts : list iso_step) (s : iso_state) : iso_state :=
+    match sts with
+    | [] => s
+    | st :: rest => run_iso_hoisted rest (step_iso_hoisted st s)
+    end.
+End TemplateIsolatedHoisting.
+
+(**md
+**Hoisting `commitIsolated` in `TemplateDom.startIsolated` produces the exact DOM writes and `previous` value of per-update `Api.untrack` closures while clearing `pending` after every commit.**
+
+Snapshotting `let value = pending` onto the stack and resetting `pending <- unset` before invoking `commit` preserves exact equivalence across normal, suspended, unchanged, and synchronously re-entrant isolated slot writes, with zero per-update closure allocations and zero retained `pending` references.
+
+- [V:] the slot value type.
+- [eqb_val:] `slot.Same` equality predicate.
+- [sts:] sequence of isolated slot update steps.
+*)
+Theorem template_hoisted_isolated_commit_equiv {V : Type} (eqb_val : V -> V -> bool)
+    (sts : list (@iso_step V)) :
+  let '(prev_s, writes_s) := run_iso_spec eqb_val sts None [] in
+  let h_end := run_iso_hoisted eqb_val sts {| iso_prev := None; iso_pending := None; iso_writes := [] |} in
+  iso_prev h_end = prev_s /\
+  iso_writes h_end = writes_s /\
+  iso_pending h_end = None.
+Proof.
+  assert (Hgen : forall (prev : option V) (writes : list V),
+    let '(ps, ws) := run_iso_spec eqb_val sts prev writes in
+    let he := run_iso_hoisted eqb_val sts {| iso_prev := prev; iso_pending := None; iso_writes := writes |} in
+    iso_prev he = ps /\ iso_writes he = ws /\ iso_pending he = None).
+  { induction sts as [|[val_opt re] rest IH]; intros prev writes; simpl.
+    - repeat split; reflexivity.
+    - destruct val_opt as [v|]; simpl.
+      + destruct (match prev with None => true | Some p => negb (eqb_val p v) end); simpl.
+        * destruct re as [v2|]; simpl.
+          -- destruct (match prev with None => true | Some p => negb (eqb_val p v2) end); simpl; apply IH.
+          -- apply IH.
+        * apply IH.
+      + apply IH. }
+  apply (Hgen None []).
+Qed.

@@ -1388,87 +1388,6 @@ let rec snapshot_and_clear pend slots =
        Pair ((Cons (item, items)), slots2)
      | None -> snapshot_and_clear rest slots)
 
-(** val exec_work :
-    commit_failure -> (nat -> bool) -> bool -> ((nat, nat) prod, nat option)
-    prod list -> slot_model list -> nat list -> (nat, nat) prod list ->
-    ((slot_model list, nat list) prod, (nat, nat) prod list) prod **)
-
-let rec exec_work mode will_fail stopped work slots committed errs =
-  match work with
-  | Nil -> Pair ((Pair (slots, committed)), errs)
-  | Cons (p, rest) ->
-    let Pair (p0, act_opt) = p in
-    let Pair (idx, ver) = p0 in
-    (match nth_error slots idx with
-     | Some sl ->
-       let has_commit = match act_opt with
-                        | Some _ -> True
-                        | None -> False in
-       (match stopped with
-        | True ->
-          let has_replacement =
-            match sl.sl_action with
-            | Some _ -> True
-            | None -> False
-          in
-          let dropped =
-            match match has_commit with
-                  | True -> Nat.eqb sl.sl_version ver
-                  | False -> False with
-            | True -> True
-            | False -> has_replacement
-          in
-          let sl' = { sl_version = (S sl.sl_version); sl_listed =
-            sl.sl_listed; sl_action = None; sl_has_dropped_cb =
-            sl.sl_has_dropped_cb; sl_dropped_runs =
-            (add sl.sl_dropped_runs
-              (match match dropped with
-                     | True -> sl.sl_has_dropped_cb
-                     | False -> False with
-               | True -> S O
-               | False -> O));
-            sl_scope = sl.sl_scope }
-          in
-          exec_work mode will_fail True rest (set_slot idx sl' slots)
-            committed errs
-        | False ->
-          (match act_opt with
-           | Some act ->
-             (match Nat.eqb sl.sl_version ver with
-              | True ->
-                (match will_fail act with
-                 | True ->
-                   let stop_now =
-                     match mode with
-                     | CollectAndContinue -> False
-                     | FailFastCancel -> True
-                   in
-                   exec_work mode will_fail stop_now rest slots committed
-                     (app errs (Cons ((Pair (sl.sl_scope, act)), Nil)))
-                 | False ->
-                   exec_work mode will_fail False rest slots
-                     (app committed (Cons (act, Nil))) errs)
-              | False ->
-                exec_work mode will_fail False rest slots committed errs)
-           | None -> exec_work mode will_fail False rest slots committed errs))
-     | None -> exec_work mode will_fail stopped rest slots committed errs)
-
-(** val q_flush :
-    commit_failure -> (nat -> bool) -> queue_model -> queue_model **)
-
-let q_flush mode will_fail q =
-  match q.q_disposed with
-  | True -> q
-  | False ->
-    let Pair (work, slots1) = snapshot_and_clear q.q_pending q.q_slots in
-    let Pair (p, errs') =
-      exec_work mode will_fail False work slots1 q.q_committed Nil
-    in
-    let Pair (slots2, committed') = p in
-    q_request { q_slots = slots2; q_pending = Nil; q_disposed = False;
-      q_scheduled = False; q_generation = (S q.q_generation); q_tickets =
-      q.q_tickets; q_committed = committed'; q_errors = errs' }
-
 (** val apply_reenqueues :
     nat -> ((nat, nat) prod, nat) prod list -> slot_model list -> nat list ->
     (slot_model list, nat list) prod **)
@@ -1496,111 +1415,6 @@ let rec apply_reenqueues act reenq slots pend =
           apply_reenqueues act rest (set_slot tgt tsl' slots) pend'
         | None -> apply_reenqueues act rest slots pend)
      | False -> apply_reenqueues act rest slots pend)
-
-(** val exec_work_reenq :
-    commit_failure -> (nat -> bool) -> ((nat, nat) prod, nat) prod list ->
-    bool -> ((nat, nat) prod, nat option) prod list -> slot_model list -> nat
-    list -> nat list -> (nat, nat) prod list -> (((slot_model list, nat list)
-    prod, nat list) prod, (nat, nat) prod list) prod **)
-
-let rec exec_work_reenq mode will_fail reenq stopped work slots pend committed errs =
-  match work with
-  | Nil -> Pair ((Pair ((Pair (slots, pend)), committed)), errs)
-  | Cons (p, rest) ->
-    let Pair (p0, act_opt) = p in
-    let Pair (idx, ver) = p0 in
-    (match nth_error slots idx with
-     | Some sl ->
-       let has_commit = match act_opt with
-                        | Some _ -> True
-                        | None -> False in
-       (match stopped with
-        | True ->
-          let has_replacement =
-            match sl.sl_action with
-            | Some _ -> True
-            | None -> False
-          in
-          let dropped =
-            match match has_commit with
-                  | True -> Nat.eqb sl.sl_version ver
-                  | False -> False with
-            | True -> True
-            | False -> has_replacement
-          in
-          let sl' = { sl_version = (S sl.sl_version); sl_listed =
-            sl.sl_listed; sl_action = None; sl_has_dropped_cb =
-            sl.sl_has_dropped_cb; sl_dropped_runs =
-            (add sl.sl_dropped_runs
-              (match match dropped with
-                     | True -> sl.sl_has_dropped_cb
-                     | False -> False with
-               | True -> S O
-               | False -> O));
-            sl_scope = sl.sl_scope }
-          in
-          exec_work_reenq mode will_fail reenq True rest
-            (set_slot idx sl' slots) pend committed errs
-        | False ->
-          (match act_opt with
-           | Some act ->
-             (match Nat.eqb sl.sl_version ver with
-              | True ->
-                let Pair (slots_after, pend_after) =
-                  apply_reenqueues act reenq slots pend
-                in
-                (match will_fail act with
-                 | True ->
-                   let stop_now =
-                     match mode with
-                     | CollectAndContinue -> False
-                     | FailFastCancel -> True
-                   in
-                   exec_work_reenq mode will_fail reenq stop_now rest
-                     slots_after pend_after committed
-                     (app errs (Cons ((Pair (sl.sl_scope, act)), Nil)))
-                 | False ->
-                   exec_work_reenq mode will_fail reenq False rest
-                     slots_after pend_after (app committed (Cons (act, Nil)))
-                     errs)
-              | False ->
-                exec_work_reenq mode will_fail reenq False rest slots pend
-                  committed errs)
-           | None ->
-             exec_work_reenq mode will_fail reenq False rest slots pend
-               committed errs))
-     | None ->
-       exec_work_reenq mode will_fail reenq stopped rest slots pend committed
-         errs)
-
-(** val q_flush_reenq :
-    commit_failure -> (nat -> bool) -> ((nat, nat) prod, nat) prod list ->
-    queue_model -> queue_model **)
-
-let q_flush_reenq mode will_fail reenq q =
-  match q.q_disposed with
-  | True -> q
-  | False ->
-    let Pair (work, slots1) = snapshot_and_clear q.q_pending q.q_slots in
-    let Pair (p, errs') =
-      exec_work_reenq mode will_fail reenq False work slots1 Nil
-        q.q_committed Nil
-    in
-    let Pair (p0, committed') = p in
-    let Pair (slots2, pend2) = p0 in
-    q_request { q_slots = slots2; q_pending = pend2; q_disposed = False;
-      q_scheduled = False; q_generation = (S q.q_generation); q_tickets =
-      q.q_tickets; q_committed = committed'; q_errors = errs' }
-
-(** val q_run_posted_ticket :
-    nat -> commit_failure -> (nat -> bool) -> queue_model -> queue_model **)
-
-let q_run_posted_ticket ticket mode will_fail q =
-  match match negb q.q_disposed with
-        | True -> Nat.eqb ticket q.q_generation
-        | False -> False with
-  | True -> q_flush mode will_fail q
-  | False -> q
 
 (** val cancel_all_pending :
     nat list -> slot_model list -> slot_model list **)
@@ -1807,6 +1621,180 @@ let cf_reset f =
   | None ->
     Pair ((FenceOk True), { cf_pending = None; cf_failed = False;
       cf_next_marker = f.cf_next_marker; cf_released = f.cf_released })
+
+type work_entry = ((nat, nat) prod, nat option) prod
+
+(** val overwrite_prefix :
+    work_entry list -> work_entry option list -> work_entry option list **)
+
+let rec overwrite_prefix items buf =
+  match items with
+  | Nil -> buf
+  | Cons (x, xs) ->
+    (match buf with
+     | Nil -> Cons ((Some x), (overwrite_prefix xs Nil))
+     | Cons (_, ys) -> Cons ((Some x), (overwrite_prefix xs ys)))
+
+(** val exec_buf_prefix :
+    nat -> commit_failure -> (nat -> bool) -> ((nat, nat) prod, nat) prod
+    list -> bool -> work_entry option list -> slot_model list -> nat list ->
+    nat list -> (nat, nat) prod list -> ((((work_entry option list,
+    slot_model list) prod, nat list) prod, nat list) prod, (nat, nat) prod
+    list) prod **)
+
+let rec exec_buf_prefix count mode will_fail reenq stopped buf slots pend committed errs =
+  match count with
+  | O -> Pair ((Pair ((Pair ((Pair (buf, slots)), pend)), committed)), errs)
+  | S k ->
+    (match buf with
+     | Nil ->
+       Pair ((Pair ((Pair ((Pair (buf, slots)), pend)), committed)), errs)
+     | Cons (o, rest_buf) ->
+       (match o with
+        | Some w ->
+          let Pair (p, act_opt) = w in
+          let Pair (idx, ver) = p in
+          (match nth_error slots idx with
+           | Some sl ->
+             let has_commit =
+               match act_opt with
+               | Some _ -> True
+               | None -> False
+             in
+             (match stopped with
+              | True ->
+                let has_replacement =
+                  match sl.sl_action with
+                  | Some _ -> True
+                  | None -> False
+                in
+                let dropped =
+                  match match has_commit with
+                        | True -> Nat.eqb sl.sl_version ver
+                        | False -> False with
+                  | True -> True
+                  | False -> has_replacement
+                in
+                let sl' = { sl_version = (S sl.sl_version); sl_listed =
+                  sl.sl_listed; sl_action = None; sl_has_dropped_cb =
+                  sl.sl_has_dropped_cb; sl_dropped_runs =
+                  (add sl.sl_dropped_runs
+                    (match match dropped with
+                           | True -> sl.sl_has_dropped_cb
+                           | False -> False with
+                     | True -> S O
+                     | False -> O));
+                  sl_scope = sl.sl_scope }
+                in
+                let Pair (p0, errs') =
+                  exec_buf_prefix k mode will_fail reenq True rest_buf
+                    (set_slot idx sl' slots) pend committed errs
+                in
+                let Pair (p1, committed') = p0 in
+                let Pair (p2, pend') = p1 in
+                let Pair (rest_buf', slots') = p2 in
+                Pair ((Pair ((Pair ((Pair ((Cons (None, rest_buf')),
+                slots')), pend')), committed')), errs')
+              | False ->
+                (match act_opt with
+                 | Some act ->
+                   (match Nat.eqb sl.sl_version ver with
+                    | True ->
+                      let Pair (slots_after, pend_after) =
+                        apply_reenqueues act reenq slots pend
+                      in
+                      (match will_fail act with
+                       | True ->
+                         let stop_now =
+                           match mode with
+                           | CollectAndContinue -> False
+                           | FailFastCancel -> True
+                         in
+                         let Pair (p0, errs') =
+                           exec_buf_prefix k mode will_fail reenq stop_now
+                             rest_buf slots_after pend_after committed
+                             (app errs (Cons ((Pair (sl.sl_scope, act)),
+                               Nil)))
+                         in
+                         let Pair (p1, committed') = p0 in
+                         let Pair (p2, pend') = p1 in
+                         let Pair (rest_buf', slots') = p2 in
+                         Pair ((Pair ((Pair ((Pair ((Cons (None, rest_buf')),
+                         slots')), pend')), committed')), errs')
+                       | False ->
+                         let Pair (p0, errs') =
+                           exec_buf_prefix k mode will_fail reenq False
+                             rest_buf slots_after pend_after
+                             (app committed (Cons (act, Nil))) errs
+                         in
+                         let Pair (p1, committed') = p0 in
+                         let Pair (p2, pend') = p1 in
+                         let Pair (rest_buf', slots') = p2 in
+                         Pair ((Pair ((Pair ((Pair ((Cons (None, rest_buf')),
+                         slots')), pend')), committed')), errs'))
+                    | False ->
+                      let Pair (p0, errs') =
+                        exec_buf_prefix k mode will_fail reenq False rest_buf
+                          slots pend committed errs
+                      in
+                      let Pair (p1, committed') = p0 in
+                      let Pair (p2, pend') = p1 in
+                      let Pair (rest_buf', slots') = p2 in
+                      Pair ((Pair ((Pair ((Pair ((Cons (None, rest_buf')),
+                      slots')), pend')), committed')), errs'))
+                 | None ->
+                   let Pair (p0, errs') =
+                     exec_buf_prefix k mode will_fail reenq False rest_buf
+                       slots pend committed errs
+                   in
+                   let Pair (p1, committed') = p0 in
+                   let Pair (p2, pend') = p1 in
+                   let Pair (rest_buf', slots') = p2 in
+                   Pair ((Pair ((Pair ((Pair ((Cons (None, rest_buf')),
+                   slots')), pend')), committed')), errs')))
+           | None ->
+             let Pair (p0, errs') =
+               exec_buf_prefix k mode will_fail reenq stopped rest_buf slots
+                 pend committed errs
+             in
+             let Pair (p1, committed') = p0 in
+             let Pair (p2, pend') = p1 in
+             let Pair (rest_buf', slots') = p2 in
+             Pair ((Pair ((Pair ((Pair ((Cons (None, rest_buf')), slots')),
+             pend')), committed')), errs'))
+        | None ->
+          let Pair (p, errs') =
+            exec_buf_prefix k mode will_fail reenq stopped rest_buf slots
+              pend committed errs
+          in
+          let Pair (p0, committed') = p in
+          let Pair (p1, pend') = p0 in
+          let Pair (rest_buf', slots') = p1 in
+          Pair ((Pair ((Pair ((Pair ((Cons (None, rest_buf')), slots')),
+          pend')), committed')), errs')))
+
+(** val q_flush_reenq_reusable :
+    commit_failure -> (nat -> bool) -> ((nat, nat) prod, nat) prod list ->
+    work_entry option list -> queue_model -> (work_entry option list,
+    queue_model) prod **)
+
+let q_flush_reenq_reusable mode will_fail reenq buf q =
+  match q.q_disposed with
+  | True -> Pair (buf, q)
+  | False ->
+    let Pair (work, slots1) = snapshot_and_clear q.q_pending q.q_slots in
+    let staged = overwrite_prefix work buf in
+    let Pair (p, errs') =
+      exec_buf_prefix (length work) mode will_fail reenq False staged slots1
+        Nil q.q_committed Nil
+    in
+    let Pair (p0, committed') = p in
+    let Pair (p1, pend2) = p0 in
+    let Pair (buf_after, slots2) = p1 in
+    Pair (buf_after,
+    (q_request { q_slots = slots2; q_pending = pend2; q_disposed = False;
+      q_scheduled = False; q_generation = (S q.q_generation); q_tickets =
+      q.q_tickets; q_committed = committed'; q_errors = errs' }))
 
 type layout_cmd =
 | LCmdRegisterExit of nat
@@ -2342,33 +2330,46 @@ type q_cmd =
 | QCmdRunTicket of nat * commit_failure * nat list
 | QCmdDispose
 
-(** val step_q_cmd : q_cmd -> queue_model -> queue_model **)
+(** val step_q_cmd :
+    q_cmd -> work_entry option list -> queue_model -> (work_entry option
+    list, queue_model) prod **)
 
-let step_q_cmd c q =
+let step_q_cmd c buf q =
   match c with
   | QCmdReserve (sc, hd) ->
-    (match q.q_disposed with
-     | True -> q
-     | False -> fst (q_reserve sc hd q))
-  | QCmdEnqueue (idx, act) -> q_enqueue idx act q
-  | QCmdCancel idx -> q_cancel idx q
+    Pair (buf,
+      (match q.q_disposed with
+       | True -> q
+       | False -> fst (q_reserve sc hd q)))
+  | QCmdEnqueue (idx, act) -> Pair (buf, (q_enqueue idx act q))
+  | QCmdCancel idx -> Pair (buf, (q_cancel idx q))
   | QCmdFlush (mode, failing) ->
-    q_flush mode (fun a -> existsb (Nat.eqb a) failing) q
+    q_flush_reenq_reusable mode (fun a -> existsb (Nat.eqb a) failing) Nil
+      buf q
   | QCmdFlushReenq (mode, failing, reenq) ->
-    q_flush_reenq mode (fun a -> existsb (Nat.eqb a) failing) reenq q
+    q_flush_reenq_reusable mode (fun a -> existsb (Nat.eqb a) failing) reenq
+      buf q
   | QCmdRunTicket (tidx, mode, failing) ->
     (match nth_error q.q_tickets tidx with
      | Some t ->
-       q_run_posted_ticket t mode (fun a -> existsb (Nat.eqb a) failing) q
-     | None -> q)
-  | QCmdDispose -> q_dispose q
+       (match match negb q.q_disposed with
+              | True -> Nat.eqb t q.q_generation
+              | False -> False with
+        | True ->
+          q_flush_reenq_reusable mode (fun a -> existsb (Nat.eqb a) failing)
+            Nil buf q
+        | False -> Pair (buf, q))
+     | None -> Pair (buf, q))
+  | QCmdDispose -> Pair (Nil, (q_dispose q))
 
-(** val run_q_cmds : q_cmd list -> queue_model -> queue_model **)
+(** val run_q_cmds :
+    q_cmd list -> work_entry option list -> queue_model -> queue_model **)
 
-let rec run_q_cmds cs q =
+let rec run_q_cmds cs buf q =
   match cs with
   | Nil -> q
-  | Cons (c, rest) -> run_q_cmds rest (step_q_cmd c q)
+  | Cons (c, rest) ->
+    let Pair (buf', q') = step_q_cmd c buf q in run_q_cmds rest buf' q'
 
 type q_view = { qv_committed : nat list; qv_dropped : nat list;
                 qv_reported : (nat, nat list) prod list;
@@ -2377,7 +2378,7 @@ type q_view = { qv_committed : nat list; qv_dropped : nat list;
 (** val observe_queue : q_cmd list -> q_view **)
 
 let observe_queue cs =
-  let q = run_q_cmds cs init_queue in
+  let q = run_q_cmds cs Nil init_queue in
   { qv_committed = q.q_committed; qv_dropped =
   (map (fun s -> s.sl_dropped_runs) q.q_slots); qv_reported =
   (report_by_scope q.q_errors); qv_pending_len = (length q.q_pending);
