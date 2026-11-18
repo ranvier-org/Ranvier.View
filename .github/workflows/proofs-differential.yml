@@ -1,0 +1,76 @@
+# Runs the extracted Rocq pure model against the live F# view libraries on seeded random programs.
+# Uses the committed proofs/differential/engine.ml, so it needs OCaml + .NET without compiling Rocq.
+name: Proofs differential
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'src/Ranvier.View/Scope.fs'
+      - 'src/Ranvier.View/Lifetime.fs'
+      - 'src/Ranvier.View/Departures.fs'
+      - 'src/Ranvier.View/Ranvier.View.fsproj'
+      - 'src/Ranvier.View.Dom/Mounting.fs'
+      - 'src/Ranvier.View.Dom/Hydration.fs'
+      - 'src/Ranvier.View.Dom/TemplateDom.fs'
+      - 'src/Ranvier.View.Dom/Placement.fs'
+      - 'src/Ranvier.View.Dom/Scheduling.fs'
+      - 'src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj'
+      - 'src/Ranvier.View.WebCore/OwnerWorkQueue.fs'
+      - 'src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj'
+      - 'src/Ranvier.View.WebCore.Sdl/CompletionFence.fs'
+      - 'src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj'
+      - 'experiments/Ranvier.View.Twin/**'
+      - 'global.json'
+      - 'proofs/**'
+      - '.github/workflows/proofs-differential.yml'
+  pull_request:
+    paths:
+      - 'src/Ranvier.View/Scope.fs'
+      - 'src/Ranvier.View/Lifetime.fs'
+      - 'src/Ranvier.View/Departures.fs'
+      - 'src/Ranvier.View/Ranvier.View.fsproj'
+      - 'src/Ranvier.View.Dom/Mounting.fs'
+      - 'src/Ranvier.View.Dom/Hydration.fs'
+      - 'src/Ranvier.View.Dom/TemplateDom.fs'
+      - 'src/Ranvier.View.Dom/Placement.fs'
+      - 'src/Ranvier.View.Dom/Scheduling.fs'
+      - 'src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj'
+      - 'src/Ranvier.View.WebCore/OwnerWorkQueue.fs'
+      - 'src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj'
+      - 'src/Ranvier.View.WebCore.Sdl/CompletionFence.fs'
+      - 'src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj'
+      - 'experiments/Ranvier.View.Twin/**'
+      - 'global.json'
+      - 'proofs/**'
+      - '.github/workflows/proofs-differential.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: proofs-differential-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  differential:
+    name: Differential conformance
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: '4.14.2'
+      - name: Build view twin and SDL assemblies
+        run: |
+          dotnet build experiments/Ranvier.View.Twin/Ranvier.View.Twin.fsproj -c Release -f net10.0 -p:CopyLocalLockFileAssemblies=true --nologo
+          dotnet build src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj -c Release -f net10.0 --nologo
+      - name: Compare the extracted model and the F# implementation
+        run: opam exec -- bash proofs/differential/run.sh 1000 "${GITHUB_RUN_NUMBER:-1}"

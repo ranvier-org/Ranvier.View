@@ -32,3 +32,22 @@ test-results/
 artifacts/
 /.config/.tool-restore/
 __pycache__/
+
+# Rocq proofs
+*.vo
+*.vok
+*.vos
+*.glob
+.lia.cache
+.*.aux
+Makefile.rocq*
+.Makefile.rocq*
+*.cmi
+*.cmx
+*.cmo
+proofs/**/*.o
+proofs/engine.ml
+proofs/engine.mli
+proofs/differential/driver
+proofs/differential/driver.exe
+
