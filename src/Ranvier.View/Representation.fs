@@ -628,7 +628,7 @@ type HtmlSink() =
 
     override _.ToString() = text
 #else
-    let builder = System.Text.StringBuilder ()
+    let builder = System.Text.StringBuilder 256
 
     member _.Append(value: string) =
         builder.Append value |> ignore
@@ -1274,12 +1274,15 @@ and [<Sealed>] HtmlBackend(policy: BrowserPolicy, sink: HtmlSink) =
     /// active scope that takes cleanup failures, the scope receives them and only the setup failure raises.
     /// </summary>
     member private this.RunComponent(setup: Setup -> unit, createId: unit -> string) =
-        let cleanups = ResizeArray<unit -> unit>()
+        let mutable cleanups: ResizeArray<unit -> unit> = null
         let mutable completed = false
 
         let onCleanup callback =
             if completed then
                 raise (System.InvalidOperationException "Server component setup is completed")
+
+            if isNull cleanups then
+                cleanups <- ResizeArray<unit -> unit>()
 
             cleanups.Add callback
 
@@ -1295,28 +1298,40 @@ and [<Sealed>] HtmlBackend(policy: BrowserPolicy, sink: HtmlSink) =
             setupFailure <- Some error
 
         completed <- true
-        let errors = ResizeArray<exn>()
 
-        for cleanup in cleanups do
-            try
-                cleanup ()
-            with error ->
-                errors.Add error
+        if isNull cleanups || cleanups.Count = 0 then
+            match setupFailure with
+            | None -> ()
+            | Some error -> raise error
+        else
+            let mutable errors: ResizeArray<exn> = null
 
-        if
-            errors.Count > 0
-            && not (isNull this.Scope)
-            && (unbox<ServerScopeBase> this.Scope).TakeCleanupFailures(List.ofSeq errors)
-        then
-            errors.Clear ()
+            for cleanup in cleanups do
+                try
+                    cleanup ()
+                with error ->
+                    if isNull errors then
+                        errors <- ResizeArray<exn>()
 
-        match setupFailure, errors.Count with
-        | None, 0 -> ()
-        | Some error, 0 -> raise error
-        | Some error, _ ->
-            errors.Insert (0, error)
-            raise (System.AggregateException errors)
-        | None, _ -> raise (System.AggregateException errors)
+                    errors.Add error
+
+            if
+                not (isNull errors)
+                && errors.Count > 0
+                && not (isNull this.Scope)
+                && (unbox<ServerScopeBase> this.Scope).TakeCleanupFailures(List.ofSeq errors)
+            then
+                errors.Clear ()
+
+            let errorCount = if isNull errors then 0 else errors.Count
+
+            match setupFailure, errorCount with
+            | None, 0 -> ()
+            | Some error, 0 -> raise error
+            | Some error, _ ->
+                errors.Insert (0, error)
+                raise (System.AggregateException errors)
+            | None, _ -> raise (System.AggregateException errors)
 
     override this.Template(definition, props) =
         childNodes <- childNodes + 1

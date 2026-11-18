@@ -113,21 +113,20 @@ let private serverPending (pending: exn) : exn =
 type internal RequestScope(lifetime: MountLifetime, owner: Owner, identity: IdentityScope, report: exn -> unit) =
     inherit ServerScope()
     let mutable completed = false
-
-    // The Setup of the instance owned by this scope: OnCleanup registers on `owner`, and raises after Complete.
-    let setup =
-        {
-            OnCleanup =
-                fun cleanup ->
-                    if completed then
-                        raise (InvalidOperationException "Server component setup is completed")
-
-                    if owner.IsDisposed then
-                        raise (InvalidOperationException "Renderer scope is disposed")
-
-                    owner.OnCleanup (Action cleanup)
-            CreateId = identity.CreateId
-        }
+    let mutable instanceSetup: Setup = Unchecked.defaultof<_>
+    let mutable stagedNestBody: ServerScope -> Setup -> unit = Unchecked.defaultof<_>
+    let mutable runNestRoot: Owner -> unit = Unchecked.defaultof<_>
+    let mutable runNestUnderOwner: unit -> unit = Unchecked.defaultof<_>
+    let mutable stagedWriter: ServerWriter = Unchecked.defaultof<_>
+    let mutable stagedPlan: ServerPlan = Unchecked.defaultof<_>
+    let mutable stagedDef: TemplateComponent = Unchecked.defaultof<_>
+    let mutable stagedProps: obj = null
+    let mutable stagedParent: InstancePath = null
+    let mutable stagedKind = 0
+    let mutable stagedA = 0
+    let mutable stagedB = 0
+    let mutable runLeafRoot: Owner -> unit = Unchecked.defaultof<_>
+    let mutable runLeafUnderOwner: unit -> unit = Unchecked.defaultof<_>
 
     new(lifetime: MountLifetime, identity: IdentityScope, report: exn -> unit) = RequestScope (lifetime, lifetime.Owner, identity, report)
 
@@ -135,17 +134,125 @@ type internal RequestScope(lifetime: MountLifetime, owner: Owner, identity: Iden
         if owner.IsDisposed then
             raise (InvalidOperationException "Renderer scope is disposed")
 
-        Api.runWithOwner owner (fun () ->
-            Api.createRoot (fun child ->
-                lifetime.Adopt child
-                let scope = RequestScope (lifetime, child, identity, report)
+        if isNull (box runNestUnderOwner) then
+            runNestRoot <-
+                fun (child: Owner) ->
+                    let nextBody = stagedNestBody
+                    lifetime.Adopt child
+                    let scope = RequestScope (lifetime, child, identity, report)
 
-                try
-                    body scope scope.InstanceSetup
-                finally
-                    scope.Complete ()))
+                    try
+                        nextBody scope scope.InstanceSetup
+                    finally
+                        scope.Complete ()
 
-    member private _.InstanceSetup = setup
+            runNestUnderOwner <- fun () -> Api.createRoot runNestRoot
+
+        let outerBody = stagedNestBody
+        stagedNestBody <- body
+
+        try
+            Api.runWithOwner owner runNestUnderOwner
+        finally
+            stagedNestBody <- outerBody
+
+    override _.NestLeaf(writer, plan, definition, props, parent, kind, a, b) =
+        if owner.IsDisposed then
+            raise (InvalidOperationException "Renderer scope is disposed")
+
+        if isNull (box runLeafUnderOwner) then
+            runLeafRoot <-
+                fun (child: Owner) ->
+                    let curWriter = stagedWriter
+                    let curPlan = stagedPlan
+                    let curDef = stagedDef
+                    let curProps = stagedProps
+                    let curParent = stagedParent
+                    let curKind = stagedKind
+                    let curA = stagedA
+                    let curB = stagedB
+                    lifetime.Adopt child
+                    let mutable activeOwner: Owner = child
+
+                    try
+                        identity.Enter (curParent, curKind, curA, curB)
+
+                        let instance =
+                            try
+                                let window = identity.Window
+
+                                let leafSetup =
+                                    {
+                                        OnCleanup =
+                                            fun cleanup ->
+                                                let current = activeOwner
+
+                                                if isNull (box current) then
+                                                    raise (InvalidOperationException "Server component setup is completed")
+
+                                                if current.IsDisposed then
+                                                    raise (InvalidOperationException "Renderer scope is disposed")
+
+                                                current.OnCleanup (Action cleanup)
+                                        CreateId = fun () -> identity.CreateIdIn window
+                                    }
+
+                                curDef.Setup.Invoke (leafSetup, curProps)
+                            finally
+                                identity.Leave ()
+
+                        curWriter.RunLeaf (curPlan, instance)
+                    finally
+                        activeOwner <- Unchecked.defaultof<_>
+
+            runLeafUnderOwner <- fun () -> Api.createRoot runLeafRoot
+
+        let outerWriter = stagedWriter
+        let outerPlan = stagedPlan
+        let outerDef = stagedDef
+        let outerProps = stagedProps
+        let outerParent = stagedParent
+        let outerKind = stagedKind
+        let outerA = stagedA
+        let outerB = stagedB
+        stagedWriter <- writer
+        stagedPlan <- plan
+        stagedDef <- definition
+        stagedProps <- props
+        stagedParent <- parent
+        stagedKind <- kind
+        stagedA <- a
+        stagedB <- b
+
+        try
+            Api.runWithOwner owner runLeafUnderOwner
+        finally
+            stagedWriter <- outerWriter
+            stagedPlan <- outerPlan
+            stagedDef <- outerDef
+            stagedProps <- outerProps
+            stagedParent <- outerParent
+            stagedKind <- outerKind
+            stagedA <- outerA
+            stagedB <- outerB
+
+    member private _.InstanceSetup =
+        if isNull (box instanceSetup) then
+            instanceSetup <-
+                {
+                    OnCleanup =
+                        fun cleanup ->
+                            if completed then
+                                raise (InvalidOperationException "Server component setup is completed")
+
+                            if owner.IsDisposed then
+                                raise (InvalidOperationException "Renderer scope is disposed")
+
+                            owner.OnCleanup (Action cleanup)
+                    CreateId = identity.CreateIdDelegate
+                }
+
+        instanceSetup
 
     member private _.Complete() =
         completed <- true

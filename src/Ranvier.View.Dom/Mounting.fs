@@ -1666,7 +1666,7 @@ and private RowBuilder(state: MountState, hydration: unit -> TemplateDom.Hydrati
     let setup: Setup =
         {
             OnCleanup = fun callback -> state.OwnedCleanup (Api.getOwner (), callback)
-            CreateId = state.Identity.CreateId
+            CreateId = state.Identity.CreateIdDelegate
         }
 
     member _.Staging =

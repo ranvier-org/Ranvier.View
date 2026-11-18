@@ -82,38 +82,17 @@ type InstancePath private (parent: InstancePath, step: string, a: int, b: int) =
 /// <summary>The window of an enclosing setup, held while a setup nested inside it runs.</summary>
 [<NoEquality; NoComparison>]
 #if !FABLE_COMPILER
-[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+[<Struct>]
 #endif
-type internal IdentityWindow =
-    {
-        Parent: InstancePath
-        Kind: int
-        A: int
-        B: int
-        Path: InstancePath
-        Issued: int
-        Window: int
-    }
-
-#if !FABLE_COMPILER
-    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
-        NativeDisplay.record context depth (box (this)) (fun n0 ->
-            [
-                "Parent", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.View.InstancePath>" (box ((this).Parent)))
-                "Kind", (fun () -> NativeDisplay.int32 context n0 ((this).Kind))
-                "A", (fun () -> NativeDisplay.int32 context n0 ((this).A))
-                "B", (fun () -> NativeDisplay.int32 context n0 ((this).B))
-                "Path", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.View.InstancePath>" (box ((this).Path)))
-                "Issued", (fun () -> NativeDisplay.int32 context n0 ((this).Issued))
-                "Window", (fun () -> NativeDisplay.int32 context n0 ((this).Window))
-            ])
-
-    override this.ToString() =
-        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
-            sprintf "%+A" this
-        else
-            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
-#endif
+type internal IdentityWindow(parent: InstancePath, kind: int, a: int, b: int, path: InstancePath, pathText: string, issued: int, window: int) =
+    member _.Parent = parent
+    member _.Kind = kind
+    member _.A = a
+    member _.B = b
+    member _.Path = path
+    member _.PathText = pathText
+    member _.Issued = issued
+    member _.Window = window
 
 /// <summary>
 /// The ids of one render or one mount. A template instance's setup runs inside a window opened by <c>Enter</c>, and its
@@ -128,6 +107,7 @@ type IdentityScope(prefix: string) =
     let mutable windowB = 0
     // The open window's path, null until its first request.
     let mutable path: InstancePath = null
+    let mutable pathText: string = null
     let mutable issued = 0
     // The open window's number, unique within the scope; 0 outside every window.
     let mutable window = 0
@@ -135,6 +115,7 @@ type IdentityScope(prefix: string) =
     // The windows enclosing the open one, innermost last; null until a window opens inside another.
     let mutable enclosing: ResizeArray<IdentityWindow> = null
     let mutable authored = 0
+    let mutable createIdDelegate: unit -> string = Unchecked.defaultof<_>
 
     let notInSetup () =
         InvalidOperationException "CreateId is valid only while a component's setup runs"
@@ -143,6 +124,13 @@ type IdentityScope(prefix: string) =
 
     /// <summary>The open window's number, unique within the scope; 0 outside every window.</summary>
     member _.Window = window
+
+    /// <summary>Cached delegate forwarding to <c>CreateId</c> without per-caller method-wrapper allocation.</summary>
+    member internal this.CreateIdDelegate: unit -> string =
+        if isNull (box createIdDelegate) then
+            createIdDelegate <- fun () -> this.CreateId ()
+
+        createIdDelegate
 
     /// <summary>
     /// Opens the setup window of the instance one step of <c>kind</c> below <c>parent</c>: <c>InstanceStep.Root</c>
@@ -154,16 +142,7 @@ type IdentityScope(prefix: string) =
             if isNull enclosing then
                 enclosing <- ResizeArray ()
 
-            enclosing.Add
-                {
-                    Parent = windowParent
-                    Kind = windowKind
-                    A = windowA
-                    B = windowB
-                    Path = path
-                    Issued = issued
-                    Window = window
-                }
+            enclosing.Add (IdentityWindow (windowParent, windowKind, windowA, windowB, path, pathText, issued, window))
 
         windowCount <- windowCount + 1
         window <- windowCount
@@ -173,6 +152,7 @@ type IdentityScope(prefix: string) =
         windowA <- a
         windowB <- b
         path <- null
+        pathText <- null
         issued <- 0
 
     /// <summary>Closes the open window and reopens the window it was entered in, if any.</summary>
@@ -185,12 +165,14 @@ type IdentityScope(prefix: string) =
             windowA <- outer.A
             windowB <- outer.B
             path <- outer.Path
+            pathText <- outer.PathText
             issued <- outer.Issued
             window <- outer.Window
         else
             opened <- false
             windowParent <- null
             path <- null
+            pathText <- null
             window <- 0
 
     /// <summary>The open window's path, allocated on the first call within the window.</summary>
@@ -210,10 +192,124 @@ type IdentityScope(prefix: string) =
         if not opened then
             raise (notInSetup ())
 
+#if FABLE_COMPILER
         let text = this.Path().Text
         let n = issued
         issued <- n + 1
         prefix + "-" + text + "-" + string n
+#else
+        let n = issued
+        issued <- n + 1
+
+        let cached =
+            if not (isNull pathText) then
+                pathText
+            elif not (isNull path) then
+                let t = path.Text
+                pathText <- t
+                t
+            else
+                null
+
+        if not (isNull cached) then
+            let mutable h =
+                System.Runtime.CompilerServices.DefaultInterpolatedStringHandler (2, 3, System.Globalization.CultureInfo.InvariantCulture)
+
+            h.AppendFormatted prefix
+            h.AppendLiteral "-"
+            h.AppendFormatted cached
+            h.AppendLiteral "-"
+            h.AppendFormatted n
+            h.ToStringAndClear ()
+        elif n = 0 then
+            match windowKind with
+            | InstanceStep.Root ->
+                let mutable h =
+                    System.Runtime.CompilerServices.DefaultInterpolatedStringHandler (4, 1, System.Globalization.CultureInfo.InvariantCulture)
+
+                h.AppendFormatted prefix
+                h.AppendLiteral "-0-0"
+                h.ToStringAndClear ()
+            | InstanceStep.Child ->
+                let parentText = windowParent.Text
+
+                let mutable h =
+                    System.Runtime.CompilerServices.DefaultInterpolatedStringHandler (5, 3, System.Globalization.CultureInfo.InvariantCulture)
+
+                h.AppendFormatted prefix
+                h.AppendLiteral "-"
+                h.AppendFormatted parentText
+                h.AppendLiteral ".c"
+                h.AppendFormatted windowA
+                h.AppendLiteral "-0"
+                h.ToStringAndClear ()
+            | InstanceStep.Row when windowB >= 0 ->
+                let parentText = windowParent.Text
+
+                let mutable h =
+                    System.Runtime.CompilerServices.DefaultInterpolatedStringHandler (6, 4, System.Globalization.CultureInfo.InvariantCulture)
+
+                h.AppendFormatted prefix
+                h.AppendLiteral "-"
+                h.AppendFormatted parentText
+                h.AppendLiteral ".r"
+                h.AppendFormatted windowA
+                h.AppendLiteral "."
+                h.AppendFormatted windowB
+                h.AppendLiteral "-0"
+                h.ToStringAndClear ()
+            | InstanceStep.Row ->
+                let parentText = windowParent.Text
+
+                let mutable h =
+                    System.Runtime.CompilerServices.DefaultInterpolatedStringHandler (5, 3, System.Globalization.CultureInfo.InvariantCulture)
+
+                h.AppendFormatted prefix
+                h.AppendLiteral "-"
+                h.AppendFormatted parentText
+                h.AppendLiteral ".r"
+                h.AppendFormatted windowA
+                h.AppendLiteral "-0"
+                h.ToStringAndClear ()
+            | _ ->
+                let parentText = windowParent.Text
+
+                let mutable h =
+                    System.Runtime.CompilerServices.DefaultInterpolatedStringHandler (5, 3, System.Globalization.CultureInfo.InvariantCulture)
+
+                h.AppendFormatted prefix
+                h.AppendLiteral "-"
+                h.AppendFormatted parentText
+                h.AppendLiteral ".a"
+                h.AppendFormatted windowA
+                h.AppendLiteral "-0"
+                h.ToStringAndClear ()
+        else
+            let computed =
+                match windowKind with
+                | InstanceStep.Root -> "0"
+                | InstanceStep.Child -> windowParent.Text + ".c" + string windowA
+                | InstanceStep.Row when windowB >= 0 ->
+                    windowParent.Text
+                    + ".r"
+                    + string windowA
+                    + "."
+                    + string windowB
+                | InstanceStep.Row -> windowParent.Text + ".r" + string windowA
+                | _ -> windowParent.Text + ".a" + string windowA
+
+            pathText <- computed
+
+            let mutable h =
+                System.Runtime.CompilerServices.DefaultInterpolatedStringHandler (2, 3, System.Globalization.CultureInfo.InvariantCulture)
+
+            h.AppendFormatted prefix
+            h.AppendLiteral "-"
+            h.AppendFormatted computed
+            h.AppendLiteral "-"
+            h.AppendFormatted n
+            h.ToStringAndClear ()
+#endif
 
     /// <summary>
     /// <c>CreateId</c> for the instance whose setup opened window <c>owner</c>, a <c>Window</c> value read inside that
@@ -230,4 +326,18 @@ type IdentityScope(prefix: string) =
     member _.CreateAuthoredId(path: InstancePath) : string =
         let n = authored
         authored <- n + 1
+#if FABLE_COMPILER
         prefix + "-" + path.Text + "-a" + string n
+#else
+        let text = path.Text
+
+        let mutable h =
+            System.Runtime.CompilerServices.DefaultInterpolatedStringHandler (3, 3, System.Globalization.CultureInfo.InvariantCulture)
+
+        h.AppendFormatted prefix
+        h.AppendLiteral "-"
+        h.AppendFormatted text
+        h.AppendLiteral "-a"
+        h.AppendFormatted n
+        h.ToStringAndClear ()
+#endif

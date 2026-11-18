@@ -930,3 +930,454 @@ Proof.
   - unfold finalize_lazy_copy; rewrite Nat.eqb_refl; repeat split; reflexivity.
   - exact IH.
 Qed.
+
+(** ** Proof-backed SSR leaf-plan fast path, re-entrant `RequestScope` staging, and `IdentityScope` windows *)
+
+(** Server-plan operations (`Template.ServerOp` in `Template.fs`). Leaf operations depend only on the
+    root instance, whereas `SsrRegionOp` and `SsrEnterOp` mark `ServerPlan.Positioned = true`. *)
+Inductive ssr_plan_op :=
+  | SsrLeafEmit (emit : nat -> list nat)
+  | SsrRegionOp (emit_region : nat -> nat -> list nat)
+  | SsrEnterOp (child_slot : nat) (emit_child : nat -> nat -> list nat).
+
+Definition ssr_op_positioned (op : ssr_plan_op) : bool :=
+  match op with
+  | SsrLeafEmit _ => false
+  | SsrRegionOp _ | SsrEnterOp _ _ => true
+  end.
+
+Definition ssr_plan_positioned (ops : list ssr_plan_op) : bool :=
+  existsb ssr_op_positioned ops.
+
+Record ssr_exec_state := {
+  ssr_markup : list nat;
+  ssr_adopted_owners : list nat;
+  ssr_next_oid : nat;
+  ssr_completed_fences : list bool
+}.
+
+Fixpoint run_ssr_ops_full (scope_id : nat) (parts : list nat) (ops : list ssr_plan_op) : list nat :=
+  let inst := match parts with [] => 0 | x :: _ => x end in
+  match ops with
+  | [] => []
+  | SsrLeafEmit emit :: rest => emit inst ++ run_ssr_ops_full scope_id parts rest
+  | SsrRegionOp emit_r :: rest => emit_r scope_id inst ++ run_ssr_ops_full scope_id parts rest
+  | SsrEnterOp slot emit_c :: rest =>
+    let c_inst := nth slot parts 0 in
+    emit_c scope_id c_inst ++ run_ssr_ops_full scope_id parts rest
+  end.
+
+Fixpoint run_ssr_ops_leaf (inst : nat) (ops : list ssr_plan_op) : list nat :=
+  match ops with
+  | [] => []
+  | SsrLeafEmit emit :: rest => emit inst ++ run_ssr_ops_leaf inst rest
+  | _ :: rest => run_ssr_ops_leaf inst rest
+  end.
+
+Definition ssr_instance_full (setup_fn : nat -> nat) (child_count : nat)
+    (ops : list ssr_plan_op) (st : ssr_exec_state) : ssr_exec_state :=
+  let oid := ssr_next_oid st in
+  let inst := setup_fn oid in
+  let parts := inst :: repeat 0 child_count in
+  let out := run_ssr_ops_full oid parts ops in
+  {| ssr_markup := ssr_markup st ++ out;
+     ssr_adopted_owners := ssr_adopted_owners st ++ [oid];
+     ssr_next_oid := S oid;
+     ssr_completed_fences := ssr_completed_fences st ++ [true] |}.
+
+Definition ssr_instance_leaf (setup_fn : nat -> nat)
+    (ops : list ssr_plan_op) (st : ssr_exec_state) : ssr_exec_state :=
+  let oid := ssr_next_oid st in
+  let inst := setup_fn oid in
+  let out := run_ssr_ops_leaf inst ops in
+  {| ssr_markup := ssr_markup st ++ out;
+     ssr_adopted_owners := ssr_adopted_owners st ++ [oid];
+     ssr_next_oid := S oid;
+     ssr_completed_fences := ssr_completed_fences st ++ [true] |}.
+
+Definition leaf_fence_allows_cleanup (active_owner : option nat) (disposed : bool) : bool :=
+  match active_owner with
+  | None => false
+  | Some _ => negb disposed
+  end.
+
+Definition full_fence_allows_cleanup (completed : bool) (disposed : bool) : bool :=
+  negb completed && negb disposed.
+
+Lemma run_ssr_ops_leaf_eq_full scope_id inst tail ops :
+  ssr_plan_positioned ops = false ->
+  run_ssr_ops_leaf inst ops = run_ssr_ops_full scope_id (inst :: tail) ops.
+Proof.
+  induction ops as [|op rest IH]; intros Hpos; [reflexivity|].
+  destruct op as [emit | ? | ? ?]; simpl in Hpos; try discriminate.
+  simpl. rewrite (IH Hpos). reflexivity.
+Qed.
+
+(**md
+**Omitting child `RequestScope`, discarded intermediate `Setup`, and `[| null |]` `parts` on leaf SSR plans is observationally exact.**
+
+Whenever `ssr_plan_positioned ops = false` (`not plan.Positioned` in `ServerWriter.Instance`), `ssr_instance_leaf` (`RequestScope.NestLeaf`) emits identical HTML, adopts the exact same per-instance `Owner` IDs, and enforces the exact `OnCleanup` completion and disposal fences as `ssr_instance_full`.
+
+- [setup_fn:] the component's `Setup` function parameterized by its adopted child `Owner`.
+- [ops:] a compiled `ServerPlan` operation list with `ssr_plan_positioned ops = false`.
+- [st:] the SSR state prior to rendering the leaf instance.
+- [disposed:] whether the child `Owner` has been disposed when `OnCleanup` is invoked.
+*)
+Theorem ssr_leaf_plan_omits_child_scope_equiv
+    (setup_fn : nat -> nat) (ops : list ssr_plan_op) (st : ssr_exec_state) (disposed : bool) :
+  ssr_plan_positioned ops = false ->
+  ssr_instance_leaf setup_fn ops st = ssr_instance_full setup_fn 0 ops st /\
+  leaf_fence_allows_cleanup (Some (ssr_next_oid st)) disposed = full_fence_allows_cleanup false disposed /\
+  leaf_fence_allows_cleanup None disposed = full_fence_allows_cleanup true disposed.
+Proof.
+  intros Hpos.
+  split.
+  - unfold ssr_instance_leaf, ssr_instance_full.
+    rewrite (run_ssr_ops_leaf_eq_full (ssr_next_oid st) (setup_fn (ssr_next_oid st)) [] ops Hpos).
+    reflexivity.
+  - split; destruct disposed; reflexivity.
+Qed.
+
+(** Re-entrant staging model for hoisted `RequestScope` `runWithOwner` / `createRoot` callbacks. *)
+Record ssr_staging := {
+  stg_def : nat;
+  stg_props : nat;
+  stg_kind : nat;
+  stg_a : nat;
+  stg_b : nat
+}.
+
+Inductive ssr_reentrant_call :=
+  | SsrCall (def_id props kind a b : nat) (nested : list ssr_reentrant_call).
+
+Fixpoint eval_closure_call (c : ssr_reentrant_call) : list ssr_staging :=
+  let fix eval_list (cs : list ssr_reentrant_call) : list ssr_staging :=
+    match cs with
+    | [] => []
+    | hd :: tl => eval_closure_call hd ++ eval_list tl
+    end in
+  match c with
+  | SsrCall d p k a b nested =>
+    let frame := {| stg_def := d; stg_props := p; stg_kind := k; stg_a := a; stg_b := b |} in
+    frame :: eval_list nested ++ [frame]
+  end.
+
+Fixpoint eval_closure_calls (cs : list ssr_reentrant_call) : list ssr_staging :=
+  match cs with
+  | [] => []
+  | hd :: tl => eval_closure_call hd ++ eval_closure_calls tl
+  end.
+
+Fixpoint eval_staged_call (c : ssr_reentrant_call) (reg : ssr_staging) : list ssr_staging * ssr_staging :=
+  let fix eval_list (cs : list ssr_reentrant_call) (r : ssr_staging) : list ssr_staging * ssr_staging :=
+    match cs with
+    | [] => ([], r)
+    | hd :: tl =>
+      let '(tr1, r1) := eval_staged_call hd r in
+      let '(tr2, r2) := eval_list tl r1 in
+      (tr1 ++ tr2, r2)
+    end in
+  match c with
+  | SsrCall d p k a b nested =>
+    let saved := reg in
+    let reg_in := {| stg_def := d; stg_props := p; stg_kind := k; stg_a := a; stg_b := b |} in
+    let local_frame := reg_in in
+    let '(nested_tr, _) := eval_list nested reg_in in
+    (local_frame :: nested_tr ++ [local_frame], saved)
+  end.
+
+Fixpoint eval_staged_calls (cs : list ssr_reentrant_call) (reg : ssr_staging) : list ssr_staging * ssr_staging :=
+  match cs with
+  | [] => ([], reg)
+  | hd :: tl =>
+    let '(tr1, r1) := eval_staged_call hd reg in
+    let '(tr2, r2) := eval_staged_calls tl r1 in
+    (tr1 ++ tr2, r2)
+  end.
+
+Fixpoint ssr_call_size (c : ssr_reentrant_call) : nat :=
+  let fix list_sz (cs : list ssr_reentrant_call) : nat :=
+    match cs with
+    | [] => 0
+    | hd :: tl => S (ssr_call_size hd + list_sz tl)
+    end in
+  match c with
+  | SsrCall _ _ _ _ _ nested => S (list_sz nested)
+  end.
+
+Fixpoint ssr_calls_size (cs : list ssr_reentrant_call) : nat :=
+  match cs with
+  | [] => 0
+  | hd :: tl => S (ssr_call_size hd + ssr_calls_size tl)
+  end.
+
+Lemma ssr_call_size_unfold d p k a b nested :
+  ssr_call_size (SsrCall d p k a b nested) = S (ssr_calls_size nested).
+Proof.
+  simpl. apply eq_S. induction nested as [|h t IH]; simpl; [reflexivity | lia].
+Qed.
+
+Lemma eval_closure_call_unfold d p k a b nested :
+  let frame := {| stg_def := d; stg_props := p; stg_kind := k; stg_a := a; stg_b := b |} in
+  eval_closure_call (SsrCall d p k a b nested) = frame :: eval_closure_calls nested ++ [frame].
+Proof.
+  simpl. apply f_equal. apply f_equal2; [|reflexivity].
+  induction nested as [|h t IH]; simpl; [reflexivity | rewrite IH; reflexivity].
+Qed.
+
+Lemma eval_staged_call_unfold d p k a b nested reg :
+  let saved := reg in
+  let frame := {| stg_def := d; stg_props := p; stg_kind := k; stg_a := a; stg_b := b |} in
+  eval_staged_call (SsrCall d p k a b nested) reg =
+  (let '(nested_tr, _) := eval_staged_calls nested frame in (frame :: nested_tr ++ [frame], saved)).
+Proof.
+  simpl.
+  assert (Hlist : forall cs r,
+    (fix eval_list (l : list ssr_reentrant_call) (r0 : ssr_staging) {struct l} : list ssr_staging * ssr_staging :=
+       match l with
+       | [] => ([], r0)
+       | hd :: tl =>
+         let '(tr1, r1) := eval_staged_call hd r0 in
+         let '(tr2, r2) := eval_list tl r1 in (tr1 ++ tr2, r2)
+       end) cs r = eval_staged_calls cs r).
+  { induction cs as [|h t IH]; intros r; simpl; [reflexivity|].
+    destruct (eval_staged_call h r) as [tr1 r1].
+    rewrite IH. reflexivity. }
+  rewrite Hlist. reflexivity.
+Qed.
+
+Lemma ssr_reentrant_staging_sized bound :
+  (forall c reg, ssr_call_size c <= bound -> eval_staged_call c reg = (eval_closure_call c, reg)) /\
+  (forall cs reg, ssr_calls_size cs <= bound -> eval_staged_calls cs reg = (eval_closure_calls cs, reg)).
+Proof.
+  induction bound as [|b [IHc IHcs]].
+  - split.
+    + intros [? ? ? ? ? ?] reg Hsz; simpl in Hsz; lia.
+    + intros [|c rest] reg Hsz; [reflexivity | destruct c; simpl in Hsz; lia].
+  - split.
+    + intros [d p k a b0 nested] reg Hsz.
+      rewrite ssr_call_size_unfold in Hsz.
+      rewrite eval_staged_call_unfold, eval_closure_call_unfold.
+      simpl.
+      pose proof (IHcs nested {| stg_def := d; stg_props := p; stg_kind := k; stg_a := a; stg_b := b0 |} ltac:(lia)) as Hn.
+      rewrite Hn. reflexivity.
+    + intros [|c rest] reg Hsz; [reflexivity|].
+      assert (Hc_pos : ssr_call_size c >= 1) by (destruct c; simpl; lia).
+      simpl in Hsz |- *.
+      rewrite (IHc c reg ltac:(lia)).
+      rewrite (IHcs rest reg ltac:(lia)).
+      reflexivity.
+Qed.
+
+(**md
+**Hoisted `RequestScope` staging fields with stack save/restore are re-entrancy-exact to per-call closure allocation.**
+
+Saving outer staging fields on the stack, reading arguments into locals upon entering the hoisted `createRoot` delegate, and restoring the outer fields in `finally` produces the exact execution trace of closure-per-call `Nest`/`NestLeaf` at arbitrary nesting depth and leaves `reg` unchanged.
+
+- [c:] a tree of nested/re-entrant `RequestScope` invocations.
+- [reg:] the ambient staging state on `RequestScope` prior to the call.
+*)
+Theorem ssr_reentrant_staging_save_restore_equiv
+    (c : ssr_reentrant_call) (reg : ssr_staging) :
+  eval_staged_call c reg = (eval_closure_call c, reg).
+Proof.
+  destruct (ssr_reentrant_staging_sized (ssr_call_size c)) as [Hc _].
+  apply Hc, Nat.le_refl.
+Qed.
+
+(** `IdentityScope` unboxed `[<Struct>]` window stack and direct single-pass ID formatting (`Identity.fs`). *)
+Inductive id_step_kind :=
+  | IdRoot
+  | IdChild
+  | IdRow
+  | IdAuthored.
+
+Definition compute_instance_path (parent : list nat) (kind : id_step_kind) (a b : nat) : list nat :=
+  match kind with
+  | IdRoot => [0]
+  | IdChild => parent ++ [1; a]
+  | IdRow => parent ++ [2; a; b]
+  | IdAuthored => parent ++ [3; a]
+  end.
+
+Record id_window_struct := {
+  iw_parent : list nat;
+  iw_kind : id_step_kind;
+  iw_a : nat;
+  iw_b : nat;
+  iw_path : option (list nat);
+  iw_issued : nat;
+  iw_window : nat
+}.
+
+Record id_scope_state := {
+  ids_opened : bool;
+  ids_parent : list nat;
+  ids_kind : id_step_kind;
+  ids_a : nat;
+  ids_b : nat;
+  ids_path : option (list nat);
+  ids_issued : nat;
+  ids_window : nat;
+  ids_window_count : nat;
+  ids_enclosing : list id_window_struct
+}.
+
+Definition id_path_inv (st : id_scope_state) : Prop :=
+  ids_window st <= ids_window_count st /\
+  match ids_path st with
+  | Some p => p = compute_instance_path (ids_parent st) (ids_kind st) (ids_a st) (ids_b st)
+  | None => True
+  end.
+
+Definition id_enter (parent : list nat) (kind : id_step_kind) (a b : nat) (st : id_scope_state) : id_scope_state :=
+  let enc' :=
+    if ids_opened st then
+      {| iw_parent := ids_parent st;
+         iw_kind := ids_kind st;
+         iw_a := ids_a st;
+         iw_b := ids_b st;
+         iw_path := ids_path st;
+         iw_issued := ids_issued st;
+         iw_window := ids_window st |} :: ids_enclosing st
+    else ids_enclosing st in
+  let next_w := S (ids_window_count st) in
+  {| ids_opened := true;
+     ids_parent := parent;
+     ids_kind := kind;
+     ids_a := a;
+     ids_b := b;
+     ids_path := None;
+     ids_issued := 0;
+     ids_window := next_w;
+     ids_window_count := next_w;
+     ids_enclosing := enc' |}.
+
+Definition id_leave (st : id_scope_state) : id_scope_state :=
+  match ids_enclosing st with
+  | outer :: rest =>
+    {| ids_opened := true;
+       ids_parent := iw_parent outer;
+       ids_kind := iw_kind outer;
+       ids_a := iw_a outer;
+       ids_b := iw_b outer;
+       ids_path := iw_path outer;
+       ids_issued := iw_issued outer;
+       ids_window := iw_window outer;
+       ids_window_count := ids_window_count st;
+       ids_enclosing := rest |}
+  | [] =>
+    {| ids_opened := false;
+       ids_parent := [];
+       ids_kind := ids_kind st;
+       ids_a := ids_a st;
+       ids_b := ids_b st;
+       ids_path := None;
+       ids_issued := ids_issued st;
+       ids_window := 0;
+       ids_window_count := ids_window_count st;
+       ids_enclosing := [] |}
+  end.
+
+Definition id_create_eager (st : id_scope_state) : option ((list nat * nat) * id_scope_state) :=
+  if negb (ids_opened st) then None
+  else
+    let p :=
+      match ids_path st with
+      | Some cached => cached
+      | None => compute_instance_path (ids_parent st) (ids_kind st) (ids_a st) (ids_b st)
+      end in
+    let n := ids_issued st in
+    Some ((p, n),
+      {| ids_opened := true;
+         ids_parent := ids_parent st;
+         ids_kind := ids_kind st;
+         ids_a := ids_a st;
+         ids_b := ids_b st;
+         ids_path := Some p;
+         ids_issued := S n;
+         ids_window := ids_window st;
+         ids_window_count := ids_window_count st;
+         ids_enclosing := ids_enclosing st |}).
+
+Definition id_create_direct (st : id_scope_state) : option ((list nat * nat) * id_scope_state) :=
+  if negb (ids_opened st) then None
+  else
+    let n := ids_issued st in
+    match ids_path st with
+    | Some cached =>
+      Some ((cached, n),
+        {| ids_opened := true;
+           ids_parent := ids_parent st;
+           ids_kind := ids_kind st;
+           ids_a := ids_a st;
+           ids_b := ids_b st;
+           ids_path := Some cached;
+           ids_issued := S n;
+           ids_window := ids_window st;
+           ids_window_count := ids_window_count st;
+           ids_enclosing := ids_enclosing st |})
+    | None =>
+      let p := compute_instance_path (ids_parent st) (ids_kind st) (ids_a st) (ids_b st) in
+      let next_cached := if Nat.eqb n 0 then None else Some p in
+      Some ((p, n),
+        {| ids_opened := true;
+           ids_parent := ids_parent st;
+           ids_kind := ids_kind st;
+           ids_a := ids_a st;
+           ids_b := ids_b st;
+           ids_path := next_cached;
+           ids_issued := S n;
+           ids_window := ids_window st;
+           ids_window_count := ids_window_count st;
+           ids_enclosing := ids_enclosing st |})
+    end.
+
+Definition id_create_in_direct (owner : nat) (st : id_scope_state) : option ((list nat * nat) * id_scope_state) :=
+  if Nat.eqb owner 0 || negb (Nat.eqb owner (ids_window st)) then None
+  else id_create_direct st.
+
+(**md
+**Unboxed `[<Struct>]` `IdentityWindow` stack frames and direct leaf `CreateId` formatting preserve exact IDs and window fencing.**
+
+Direct `CreateId` without allocating `InstancePath` on `issued = 0` emits the identical `(path, issued)` token as `this.Path().Text`, and `Enter` followed by `CreateId` calls and `Leave` restores the outer window while fencing out `CreateIdIn` on the closed child window.
+
+- [st:] an open enclosing `IdentityScope` state satisfying `id_path_inv`.
+- [parent:] the parent path passed to a nested `Enter`.
+- [kind:] the `InstanceStep` kind of the nested window.
+- [a:] first positional index of the nested window.
+- [b:] second positional index of the nested window.
+*)
+Theorem identity_window_stack_lifo_equiv
+    (st : id_scope_state) (parent : list nat) (kind : id_step_kind) (a b : nat) :
+  ids_opened st = true ->
+  id_path_inv st ->
+  option_map fst (id_create_direct st) = option_map fst (id_create_eager st) /\
+  let st_child := id_enter parent kind a b st in
+  let child_win := ids_window st_child in
+  let st_after :=
+    match id_create_direct st_child with
+    | Some (_, s1) => id_leave s1
+    | None => id_leave st_child
+    end in
+  ids_window st_after = ids_window st /\
+  ids_issued st_after = ids_issued st /\
+  ids_parent st_after = ids_parent st /\
+  id_create_in_direct child_win st_after = None.
+Proof.
+  intros Hopen [Hwin Hpath].
+  split.
+  - unfold id_create_direct, id_create_eager. rewrite Hopen; simpl.
+    destruct (ids_path st) as [cached|]; [reflexivity|].
+    destruct (Nat.eqb (ids_issued st) 0); reflexivity.
+  - cbv zeta.
+    unfold id_enter, id_create_direct, id_leave, id_create_in_direct; simpl.
+    rewrite Hopen; simpl.
+    assert (Hz0 : Nat.eqb 0 0 = true) by reflexivity.
+    rewrite ?Hz0; simpl.
+    assert (Hnz : Nat.eqb (S (ids_window_count st)) 0 = false) by reflexivity.
+    assert (Hneq : Nat.eqb (S (ids_window_count st)) (ids_window st) = false)
+      by (apply Nat.eqb_neq; lia).
+    rewrite ?Hnz, ?Hneq; simpl.
+    repeat split; reflexivity.
+Qed.
