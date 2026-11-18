@@ -106,10 +106,33 @@ module internal HydrationCounters =
     let held = ref 0
 #endif
 
+#if FABLE_COMPILER
+[<Emit("$1.parentNode.replaceChild($0, $1)")>]
+let private undoReplaceNode (original: Node) (current: Node) : unit = jsNative
+
+[<Emit("$0.remove()")>]
+let private undoRemoveNode (node: Node) : unit = jsNative
+#else
+let private undoReplaceNode (original: Node) (current: Node) : unit =
+    Native.replaceNode current original current
+
+let private undoRemoveNode (node: Node) : unit =
+    Native.removeNode node
+#endif
+
+#if !FABLE_COMPILER
+[<Struct>]
+#endif
+type private UndoEntry(kind: byte, a: obj, b: obj, c: obj) =
+    member _.Kind = kind
+    member _.A = a
+    member _.B = b
+    member _.C = c
+
 /// <summary>The next server node a hydrating mount adopts, and the inverses of the edits made to the server nodes so far.</summary>
 [<Sealed; AllowNullLiteral>]
 type internal HydrationCursor(next: Node, strict: bool) =
-    let undo = ResizeArray<unit -> unit>()
+    let undo = ResizeArray<UndoEntry>()
     // The cursors of nested mounts recorded by `Nest`; null until the first.
     let mutable nested: ResizeArray<HydrationCursor> = null
 
@@ -120,49 +143,101 @@ type internal HydrationCursor(next: Node, strict: bool) =
         undo.Clear ()
         nested <- null
 
-    /// <summary>The next server node to adopt; null past the last.</summary>
-    member val Next: Node = next with get, set
-
-    member _.Strict = strict
-
-    /// <summary>Records the inverse of an edit to the server nodes.</summary>
-    member _.Undo(inverse: unit -> unit) =
+    let record (entry: UndoEntry) =
 #if RANVIER_VIEW_COUNTERS
         HydrationCounters.recorded.Value <- HydrationCounters.recorded.Value + 1
         HydrationCounters.held.Value <- HydrationCounters.held.Value + 1
 #endif
-        undo.Add inverse
+        undo.Add entry
+
+    /// <summary>The next server node to adopt; null past the last.</summary>
+    member val Next: Node = next with get, set
+
+    member _.Strict = strict
+    member val internal Parent: HydrationCursor = null with get, set
+
+    /// <summary>Runs before the first mutation to server nodes under this cursor; null outside lazy boundary hydration.</summary>
+    member val internal BeforeEdit: unit -> unit = Unchecked.defaultof<_> with get, set
+
+    /// <summary>True before the top-level <c>MountRow</c> of a hydrating <c>[c</c> boundary inserts its wrapper comments.</summary>
+    member val internal WrappingRoot = false with get, set
+
+    member val internal IgnoredFirst: Node = Unchecked.defaultof<_> with get, set
+    member val internal IgnoredLast: Node = Unchecked.defaultof<_> with get, set
+
+    member internal this.NotifyBeforeEdit() =
+        let parent = this.Parent
+
+        if not (isNull parent) then
+            parent.NotifyBeforeEdit ()
+
+        let hook = this.BeforeEdit
+
+        if not (isNull (box hook)) then
+            hook ()
+
+    /// <summary>Records the inverse of an edit to the server nodes.</summary>
+    member _.Undo(inverse: unit -> unit) =
+        record (UndoEntry (0uy, box inverse, null, null))
+
+    /// <summary>Records <c>parent.insertBefore(node, next)</c> without allocating a closure.</summary>
+    member _.UndoInsertBefore(parentNode: Node, node: Node, nextSibling: Node) =
+        record (UndoEntry (1uy, box parentNode, box node, box nextSibling))
+
+    /// <summary>Records removing <c>node</c> without allocating a closure.</summary>
+    member _.UndoRemove(node: Node) =
+        record (UndoEntry (2uy, box node, null, null))
+
+    /// <summary>Records replacing <c>current</c> back with <c>original</c> without allocating a closure.</summary>
+    member _.UndoReplace(current: Node, original: Node) =
+        record (UndoEntry (3uy, box current, box original, null))
 
     /// <summary>Records a nested mount's cursor: <c>Restore</c> restores it in its place among the inverses, and <c>Commit</c> commits it.</summary>
-    member this.Nest(child: HydrationCursor) =
+    member _.Nest(child: HydrationCursor) =
         if isNull nested then
             nested <- ResizeArray ()
 
         nested.Add child
-        this.Undo (fun () -> child.Restore ())
+        record (UndoEntry (4uy, box child, null, null))
 
     /// <summary>Runs the recorded inverses, most recent first; raises after all have run when any raised.</summary>
     member _.Restore() =
-        let errors = ResizeArray<exn>()
+        let mutable errors: ResizeArray<exn> = null
 
-        for index in undo.Count - 1 .. -1 .. 0 do
+        for index = undo.Count - 1 downto 0 do
+            let entry = undo[index]
+
             try
-                undo[index]()
+                match entry.Kind with
+                | 0uy -> (unbox<unit -> unit> entry.A) ()
+                | 1uy ->
+                    (unbox<Node> entry.A).insertBefore(unbox<Node> entry.B, unbox<Node> entry.C)
+                    |> ignore
+                | 2uy -> undoRemoveNode (unbox<Node> entry.A)
+                | 3uy -> undoReplaceNode (unbox<Node> entry.B) (unbox<Node> entry.A)
+                | _ -> (unbox<HydrationCursor> entry.A).Restore()
             with error ->
+                if isNull errors then
+                    errors <- ResizeArray ()
+
                 errors.Add error
 
         discard ()
 
-        if errors.Count = 1 then
-            raise errors[0]
-        elif errors.Count > 1 then
-            raise (AggregateException ("Hydration restore failed", errors))
+        if not (isNull errors) then
+            if errors.Count = 1 then
+                raise errors[0]
+            elif errors.Count > 1 then
+                raise (AggregateException ("Hydration restore failed", errors))
 
     /// <summary>Discards the recorded inverses of the cursor and of every nested cursor, and sets <c>Next</c> to null.</summary>
     member this.Commit() =
         let children = nested
         discard ()
         this.Next <- Unchecked.defaultof<_>
+        this.BeforeEdit <- Unchecked.defaultof<_>
+        this.IgnoredFirst <- Unchecked.defaultof<_>
+        this.IgnoredLast <- Unchecked.defaultof<_>
 
         if not (isNull children) then
             for child in children do
@@ -1214,6 +1289,7 @@ let private writeHydratingProperty (cursor: HydrationCursor) (property: Portable
         | BrowserOnly -> true
 
     if differs then
+        cursor.NotifyBeforeEdit ()
         let inverse = keepElement node
         property.Write.Invoke (node, value)
         cursor.Undo inverse
@@ -1226,16 +1302,19 @@ let private writeHydrating (cursor: HydrationCursor) (slot: Slot) (node: obj) (v
     match slot.Target with
     | AttributeTarget name ->
         if attributeDiffers node name value then
+            cursor.NotifyBeforeEdit ()
             let inverse = keepAttributes node
             setAttribute node value name
             cursor.Undo inverse
     | PropertyTarget property -> writeHydratingProperty cursor property node value
     | TextTarget ->
         if dataDiffers node value then
+            cursor.NotifyBeforeEdit ()
             let inverse = keepData node
             setData node value
             cursor.Undo inverse
     | ContentTarget ->
+        cursor.NotifyBeforeEdit ()
         let inverse = keepElement node
         write slot node value
         cursor.Undo inverse
@@ -1255,6 +1334,7 @@ let private commit (services: MountServices) (state: obj array) (slot: Slot) (no
             if isNull cursor then
                 setData node ""
             elif dataDiffers node "" then
+                cursor.NotifyBeforeEdit ()
                 let inverse = keepData node
                 setData node ""
                 cursor.Undo inverse
@@ -1492,13 +1572,16 @@ let private bind (services: MountServices) (compiled: Compiled) (state: obj arra
             reraise ()
 
 #if RANVIER_VIEW_INSPECT || !FABLE_COMPILER
-    for slots in [| compiled.RenderSlots; compiled.IsolatedSlots |] do
-        for k in 0 .. slots.Length - 1 do
+    let markBoundSlots (slots: (int * Slot) array) =
+        for k = 0 to slots.Length - 1 do
             let nodeIndex, slot = at slots k
 
             match slot.Target with
             | TextTarget -> Inspect.markBound (unbox<Node>(at state (StateNodes + nodeIndex)))
             | _ -> ()
+
+    markBoundSlots compiled.RenderSlots
+    markBoundSlots compiled.IsolatedSlots
 #endif
 
     if compiled.RenderSlots.Length > 0 then
@@ -1625,9 +1708,10 @@ let private isEmptyText (node: Node) : bool =
 
 /// <summary>Replaces the <c>&lt;!--_--&gt;</c> placeholder with an empty text node, recording the inverse, and returns the text node.</summary>
 let private replacePlaceholder (cursor: HydrationCursor) (placeholder: Node) : Node =
+    cursor.NotifyBeforeEdit ()
     let text = Native.createTextNode "" :> Node
     replaceNode placeholder text placeholder
-    cursor.Undo (fun () -> replaceNode text placeholder text)
+    cursor.UndoReplace (text, placeholder)
     text
 
 let private pathText (path: ResizeArray<int>) =
@@ -1826,9 +1910,10 @@ let private adoptTarget
         if isEmptyText node then
             replacePlaceholder cursor node
         elif absent node && isRcdataElement parent then
+            cursor.NotifyBeforeEdit ()
             let text = Native.createTextNode "" :> Node
             appendNode parent text
-            cursor.Undo (fun () -> removeNode text)
+            cursor.UndoRemove text
             text
         elif absent node || node.nodeType <> 3us then
             raise (mismatch (walkPath walk single index) "a text node" (describe node))
@@ -2104,7 +2189,11 @@ let rec internal materialise
         collectAdopted roots compiled state cursor
 
 #if RANVIER_VIEW_INSPECT || !FABLE_COMPILER
-    let childRoots = instanceRoots template clone roots
+    let childRoots =
+        if children.Length > 0 then
+            instanceRoots template clone roots
+        else
+            [||]
 #endif
 
     bind services compiled state roots

@@ -353,7 +353,7 @@ type HydOp =
     | HOpScope of HydOp list
 
 let rec countHeldReal (cursor: obj) : int =
-    let undo = getField cursor "undo" :?> ResizeArray<unit -> unit>
+    let undo = getField cursor "undo" :?> System.Collections.ICollection
     let nested = getField cursor "nested" :?> System.Collections.IEnumerable
 
     let nestedSum =
@@ -813,14 +813,18 @@ let runQueueFSharp (cmds: QCmd list) : string =
             if idx >= 0 && idx < slots.Count then
                 queue.Cancel slots[idx]
         | QFlu (mode, failing) ->
-            reportedBatches.Clear ()
+            if not (getField queue "disposed" :?> bool) then
+                reportedBatches.Clear ()
+
             failureField.SetValue (queue, mode)
             activeMode <- mode
             activeFailing <- HashSet<int>(failing)
             activeReenq <- []
             queue.Flush ()
         | QFluReenq (mode, failing, reenq) ->
-            reportedBatches.Clear ()
+            if not (getField queue "disposed" :?> bool) then
+                reportedBatches.Clear ()
+
             failureField.SetValue (queue, mode)
             activeMode <- mode
             activeFailing <- HashSet<int>(failing)

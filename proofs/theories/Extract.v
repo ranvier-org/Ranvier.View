@@ -129,24 +129,46 @@ Inductive hyd_int_op :=
   | HAdd (delta : Z)
   | HScope (sub : list hyd_int_op).
 
-Fixpoint to_hydration_op (op : hyd_int_op) : hydration_op Z :=
-  let fix conv_list (ops : list hyd_int_op) : list (hydration_op Z) :=
+Fixpoint run_hyd_tag_op (op : hyd_int_op) (st : Z) : Z * cursor_tag_entry Z :=
+  let fix run_list (ops : list hyd_int_op) (cur : Z) : Z * list (cursor_tag_entry Z) :=
     match ops with
-    | [] => []
-    | h :: t => to_hydration_op h :: conv_list t
+    | [] => (cur, [])
+    | h :: t =>
+      let '(cur1, eh) := run_hyd_tag_op h cur in
+      let '(cur2, et) := run_list t cur1 in
+      (cur2, eh :: et)
     end in
   match op with
-  | HAdd d => HydEdit (fun x => (x + d)%Z) (fun x => (x - d)%Z)
-  | HScope sub => HydScope (conv_list sub)
+  | HAdd d =>
+    let inv := fun x => (x - d)%Z in
+    let entry :=
+      match d with
+      | Z0 => TagCustom inv
+      | Zpos (xI _) | Zneg (xI _) => TagInsertBefore inv
+      | Zpos (xO _) | Zneg (xO _) => TagRemove inv
+      | Zpos xH | Zneg xH => TagReplace inv
+      end in
+    ((st + d)%Z, entry)
+  | HScope sub =>
+    let '(st', child) := run_list sub st in
+    (st', TagNest child)
+  end.
+
+Fixpoint run_hyd_tag_ops (ops : list hyd_int_op) (st : Z) : Z * list (cursor_tag_entry Z) :=
+  match ops with
+  | [] => (st, [])
+  | op :: rest =>
+    let '(st1, e) := run_hyd_tag_op op st in
+    let '(st2, es) := run_hyd_tag_ops rest st1 in
+    (st2, e :: es)
   end.
 
 Definition observe_cursor_rollback (s0 : Z) (ops : list hyd_int_op) (do_commit : bool)
     : Z * Z * nat :=
-  let hops := map to_hydration_op ops in
-  let '(s_mid, log) := run_hydration_ops hops s0 in
-  let log' := if do_commit then commit_entries log else log in
-  let held := held_entries log' in
-  let s_after := if do_commit then s_mid else restore_entries log' s_mid in
+  let '(s_mid, log) := run_hyd_tag_ops ops s0 in
+  let log' := if do_commit then commit_tag_entries log else log in
+  let held := held_tag_entries log' in
+  let s_after := if do_commit then s_mid else restore_tag_entries log' s_mid in
   (s_mid, s_after, held).
 
 Inductive bnd_cmd :=

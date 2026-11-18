@@ -219,29 +219,6 @@ type ssr_tree =
 
 val flatten_tree : ssr_tree -> ssr_token list
 
-type 'st cursor_entry =
-| UndoStep of ('st -> 'st)
-| NestedCursor of 'st cursor_entry list
-
-val restore_entry : 'a1 cursor_entry -> 'a1 -> 'a1
-
-val restore_entries : 'a1 cursor_entry list -> 'a1 -> 'a1
-
-val held_entry : 'a1 cursor_entry -> nat
-
-val held_entries : 'a1 cursor_entry list -> nat
-
-val commit_entries : 'a1 cursor_entry list -> 'a1 cursor_entry list
-
-type 'st hydration_op =
-| HydEdit of ('st -> 'st) * ('st -> 'st)
-| HydScope of 'st hydration_op list
-
-val run_hydration_op : 'a1 hydration_op -> 'a1 -> ('a1, 'a1 cursor_entry) prod
-
-val run_hydration_ops :
-  'a1 hydration_op list -> 'a1 -> ('a1, 'a1 cursor_entry list) prod
-
 type bstate = { bs_failed : bool; bs_waiting : bool }
 
 type read_outcome =
@@ -272,6 +249,24 @@ val binding_dispose :
 val bm_retry : nat -> boundary_model -> boundary_model
 
 val update_binding : nat -> bstate -> bstate list -> bstate list
+
+type 'st cursor_tag_entry =
+| TagCustom of ('st -> 'st)
+| TagInsertBefore of ('st -> 'st)
+| TagRemove of ('st -> 'st)
+| TagReplace of ('st -> 'st)
+| TagNest of 'st cursor_tag_entry list
+
+val restore_tag_entry : 'a1 cursor_tag_entry -> 'a1 -> 'a1
+
+val restore_tag_entries : 'a1 cursor_tag_entry list -> 'a1 -> 'a1
+
+val held_tag_entry : 'a1 cursor_tag_entry -> nat
+
+val held_tag_entries : 'a1 cursor_tag_entry list -> nat
+
+val commit_tag_entries :
+  'a1 cursor_tag_entry list -> 'a1 cursor_tag_entry list
 
 type placement_model = { pl_laid_out : bool; pl_discarded : bool;
                          pl_parent_placed : bool; pl_ordered : bool;
@@ -456,7 +451,10 @@ type hyd_int_op =
 | HAdd of z
 | HScope of hyd_int_op list
 
-val to_hydration_op : hyd_int_op -> z hydration_op
+val run_hyd_tag_op : hyd_int_op -> z -> (z, z cursor_tag_entry) prod
+
+val run_hyd_tag_ops :
+  hyd_int_op list -> z -> (z, z cursor_tag_entry list) prod
 
 val observe_cursor_rollback :
   z -> hyd_int_op list -> bool -> ((z, z) prod, nat) prod

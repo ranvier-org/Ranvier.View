@@ -37,6 +37,10 @@ Print Assumptions binding_dispose_preserves_waiting_inv.
 Print Assumptions binding_not_ready_idempotent_and_silent.
 Print Assumptions binding_recovered_clears_iff_failed.
 Print Assumptions boundary_stale_retry_fenced.
+Print Assumptions defunctionalized_cursor_restore_equiv.
+Print Assumptions defunctionalized_cursor_held_equiv.
+Print Assumptions lazy_copy_served_snapshot_equiv.
+Print Assumptions lazy_copy_served_skips_clone_when_settled.
 
 (* Placement, MountLifetime, & TeardownWindow *)
 Print Assumptions placement_fast_path_eq_stable_sort.

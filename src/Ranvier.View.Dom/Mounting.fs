@@ -527,17 +527,21 @@ let private commentData (node: Node) : string =
 
 /// <summary>Removes the server nodes between a region's markers and records their reinsertion before <c>regionEnd</c>.</summary>
 let private clearAdopted (cursor: TemplateDom.HydrationCursor) (regionStart: Node) (regionEnd: Node) =
-    let removed = ResizeArray<Node>()
+    let mutable removed: ResizeArray<Node> = null
     let mutable node = nextOrNull regionStart
 
     while not (isNull (box node))
           && not (same node regionEnd) do
+        if isNull removed then
+            cursor.NotifyBeforeEdit ()
+            removed <- ResizeArray ()
+
         let next = nextOrNull node
         removed.Add node
         remove node
         node <- next
 
-    if removed.Count > 0 then
+    if not (isNull removed) && removed.Count > 0 then
         cursor.Undo (fun () ->
             let parent = parentOrNull regionEnd
 
@@ -1639,11 +1643,12 @@ and private RowBuilder(state: MountState, hydration: unit -> TemplateDom.Hydrati
         let separator = cursor.Next
 
         if isSeparator separator then
+            cursor.NotifyBeforeEdit ()
             let next = nextOrNull separator
             let parent = parentOrNull separator
             remove separator
             cursor.Next <- next
-            cursor.Undo (fun () -> parent.insertBefore (separator, next) |> ignore)
+            cursor.UndoInsertBefore (parent, separator, next)
 
     // Adopts the `<!--ranvier:row-->` comment of a row with no roots.
     let adoptRowMarker () =
@@ -2167,29 +2172,34 @@ and [<Sealed>] private ViewBoundary
     // The first error of the latest failure; null until one.
     let mutable failure: exn = null
 #endif
-    // Failures received while the content sets up.
-    let held = ResizeArray<exn>()
+    // Failures received while the content sets up; null until the first.
+    let mutable held: ResizeArray<exn> = null
     // Failures received after setup, waiting for the boundary's effect.
     let mutable received: exn list = []
-    // The exception objects reported since the latest retry.
-    let reported = System.Collections.Generic.HashSet<exn>(HashIdentity.Reference)
+    // The exception objects reported since the latest retry; null until the first failure is reported.
+    let mutable reported: System.Collections.Generic.HashSet<exn> = null
     let mutable wake: Signal<int> = Unchecked.defaultof<_>
     let mutable pending: Signal<bool> = Unchecked.defaultof<_>
     let mutable status: BoundaryStatus = Unchecked.defaultof<_>
     // Whether unowned server nodes lie between the markers.
     let mutable served = false
-    // A copy of the server nodes between the markers, taken before a `[c` content's first commits; null otherwise.
+    // A copy of the server nodes between the markers, taken lazily before the first `[c` content edit or detach; null otherwise.
     let mutable copy: DocumentFragment = Unchecked.defaultof<_>
 
     let noItem () : obj = null
 
-    // A copy of the server nodes between the markers.
-    let copyServed () =
+    // A copy of the server nodes between the markers, skipping the content's own wrapper comments when present.
+    let copyServed (ignoredA: Node) (ignoredB: Node) =
         let copied = fragment ()
         let mutable node = nextOrNull regionStart
 
         while not (same node regionEnd) do
-            copied.appendChild (node.cloneNode true) |> ignore
+            if
+                (isNull (box ignoredA) || not (same node ignoredA))
+                && (isNull (box ignoredB) || not (same node ignoredB))
+            then
+                copied.appendChild (node.cloneNode true) |> ignore
+
             node <- nextOrNull node
 
         copied
@@ -2234,6 +2244,9 @@ and [<Sealed>] private ViewBoundary
 
     // Reports the exception objects of `errors` not reported before, in order, in one untracked call.
     let reportAll (errors: exn list) =
+        if isNull reported then
+            reported <- System.Collections.Generic.HashSet<exn> HashIdentity.Reference
+
         let fresh = errors |> List.filter reported.Add
 
         if not fresh.IsEmpty then
@@ -2323,6 +2336,14 @@ and [<Sealed>] private ViewBoundary
     /// content's nodes back in place of the copy.
     /// </summary>
     member private _.Detach() =
+        let cursor = hydrationCursor ()
+
+        if not (isNull cursor) then
+            cursor.NotifyBeforeEdit ()
+
+        if isNull (box copy) then
+            copy <- copyServed content.First content.Last
+
         let detached = fragment ()
         Row.MoveBefore (content, detached, Unchecked.defaultof<_>)
         let shownCopy = copy
@@ -2340,7 +2361,6 @@ and [<Sealed>] private ViewBoundary
 
         content.Adopted <- false
         served <- true
-        let cursor = hydrationCursor ()
         let bound = content
 
         if not (isNull cursor) then
@@ -2431,7 +2451,10 @@ and [<Sealed>] private ViewBoundary
                 graph.Run (fun () ->
                     retire ()
                     failed <- false
-                    reported.Clear ()
+
+                    if not (isNull reported) then
+                        reported.Clear ()
+
                     this.MountContent ()))
 
     member private this.Settle() =
@@ -2456,7 +2479,10 @@ and [<Sealed>] private ViewBoundary
     member private this.SetUpContent(row: int, cursor: TemplateDom.HydrationCursor) : exn option =
         settingUp <- true
         waiting <- 0
-        held.Clear ()
+
+        if not (isNull held) then
+            held.Clear ()
+
         contentContainer <- Placement parent
         let mutable failure = None
 
@@ -2488,12 +2514,22 @@ and [<Sealed>] private ViewBoundary
     /// the markers, the pending view hydrates.
     /// </summary>
     member private this.SetUpEnded(failure: exn option) =
+        let heldCount = if isNull held then 0 else held.Count
+
         match failure with
-        | Some error -> this.TearDown (error :: List.ofSeq held)
-        | None when held.Count > 0 -> this.TearDown (List.ofSeq held)
+        | Some error ->
+            this.TearDown (
+                error
+                :: (if heldCount = 0 then [] else List.ofSeq held)
+            )
+        | None when heldCount > 0 -> this.TearDown (List.ofSeq held)
         | None when waiting = 0 -> this.Reveal ()
-        | None when content.Adopted -> atBuildEnd (fun () -> this.DetachPending ())
-        | None when served -> this.Show (views.Pending, TemplateDom.HydrationCursor (nextOrNull regionStart, strict))
+        | None when content.Adopted ->
+            if isNull (box copy) then
+                copy <- copyServed content.First content.Last
+
+            atBuildEnd (fun () -> this.DetachPending ())
+        | None when served -> this.Show (views.Pending, TemplateDom.HydrationCursor (nextOrNull regionStart, strict, Parent = hydrationCursor ()))
         | None -> this.Show (views.Pending, null)
 
     member private this.MountContent() =
@@ -2501,19 +2537,31 @@ and [<Sealed>] private ViewBoundary
 
     /// <summary>Hydrates the content of a <c>[c</c> boundary in place.</summary>
     member private this.HydrateContent() =
-        copy <- copyServed ()
-        let attempt = TemplateDom.HydrationCursor (nextOrNull regionStart, strict)
+        copy <- Unchecked.defaultof<_>
+
+        let attempt =
+            TemplateDom.HydrationCursor (nextOrNull regionStart, strict, Parent = hydrationCursor ())
+
+        attempt.WrappingRoot <- true
+
+        attempt.BeforeEdit <-
+            fun () ->
+                if isNull (box copy) then
+                    copy <- copyServed attempt.IgnoredFirst attempt.IgnoredLast
 
         let failure =
-            match this.SetUpContent (site.NextRow (), attempt) with
-            | None ->
-                try
-                    checkEnd content attempt
-                    served <- false
-                    None
-                with error ->
-                    Some error
-            | failure -> failure
+            try
+                match this.SetUpContent (site.NextRow (), attempt) with
+                | None ->
+                    try
+                        checkEnd content attempt
+                        served <- false
+                        None
+                    with error ->
+                        Some error
+                | failure -> failure
+            finally
+                attempt.BeforeEdit <- Unchecked.defaultof<_>
 
         match failure |> Option.bind TemplateDom.findMismatch with
         | Some found ->
@@ -2590,6 +2638,9 @@ and [<Sealed>] private ViewBoundary
     member this.FailAll(errors: exn list) =
         if not errors.IsEmpty then
             if settingUp then
+                if isNull held then
+                    held <- ResizeArray ()
+
                 held.AddRange errors
             elif failed || not (site.Live ()) then
                 graph.Run (fun () -> reportAll errors)
@@ -3645,11 +3696,23 @@ and internal MountState
             else
                 Unchecked.defaultof<_>, Unchecked.defaultof<_>
 
+        let rootWrapper = adopting && cursor.WrappingRoot
+
         if adopting then
+            if rootWrapper then
+                cursor.WrappingRoot <- false
+                cursor.IgnoredFirst <- first
+                cursor.IgnoredLast <- last
+
+                if not (isNull cursor.Parent) then
+                    cursor.Parent.NotifyBeforeEdit ()
+            else
+                cursor.NotifyBeforeEdit ()
+
             rowHost.insertBefore (first, cursor.Next)
             |> ignore
 
-            cursor.Undo (fun () -> remove first)
+            cursor.UndoRemove first
 
         let nested =
             MountState (
@@ -3682,8 +3745,11 @@ and internal MountState
             render current context.Backend
 
             if adopting then
+                if not rootWrapper then
+                    cursor.NotifyBeforeEdit ()
+
                 rowHost.insertBefore (last, cursor.Next) |> ignore
-                cursor.Undo (fun () -> remove last)
+                cursor.UndoRemove last
 
         let mounted = nested.Run (None, build)
 
