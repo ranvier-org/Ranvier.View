@@ -6,3 +6,10 @@ tests/Ranvier.View.Twin.Tests/dumps/*.json text eol=lf
 tests/NativeApi.Conformance/Assets/resize-observation-native-t2.json text eol=lf
 docs/research/2026-10-21-dom-twin/*.diff text eol=lf whitespace=-blank-at-eol
 CHANGELOG.md text eol=lf
+
+# Rocq proofs: the scripts run in WSL, so every file keeps LF endings
+proofs/** text eol=lf
+# Extraction output, compared byte for byte by check.sh. Its line wrapping can leave trailing spaces.
+proofs/differential/engine.ml -whitespace
+proofs/differential/engine.mli -whitespace
+

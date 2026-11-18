@@ -1,0 +1,94 @@
+# Compiles and audits the Rocq 9.1 view proofs, checks zero assumptions, verifies conformance scenarios,
+# confirms extracted OCaml freshness, and runs the differential check.
+name: Proofs
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'src/Ranvier.View/Scope.fs'
+      - 'src/Ranvier.View/Lifetime.fs'
+      - 'src/Ranvier.View/Departures.fs'
+      - 'src/Ranvier.View/Ranvier.View.fsproj'
+      - 'src/Ranvier.View.Dom/Mounting.fs'
+      - 'src/Ranvier.View.Dom/Hydration.fs'
+      - 'src/Ranvier.View.Dom/TemplateDom.fs'
+      - 'src/Ranvier.View.Dom/Placement.fs'
+      - 'src/Ranvier.View.Dom/Scheduling.fs'
+      - 'src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj'
+      - 'src/Ranvier.View.WebCore/OwnerWorkQueue.fs'
+      - 'src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj'
+      - 'src/Ranvier.View.WebCore.Sdl/CompletionFence.fs'
+      - 'src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj'
+      - 'experiments/Ranvier.View.Twin/**'
+      - 'global.json'
+      - 'proofs/**'
+      - '.github/workflows/proofs.yml'
+  pull_request:
+    paths:
+      - 'src/Ranvier.View/Scope.fs'
+      - 'src/Ranvier.View/Lifetime.fs'
+      - 'src/Ranvier.View/Departures.fs'
+      - 'src/Ranvier.View/Ranvier.View.fsproj'
+      - 'src/Ranvier.View.Dom/Mounting.fs'
+      - 'src/Ranvier.View.Dom/Hydration.fs'
+      - 'src/Ranvier.View.Dom/TemplateDom.fs'
+      - 'src/Ranvier.View.Dom/Placement.fs'
+      - 'src/Ranvier.View.Dom/Scheduling.fs'
+      - 'src/Ranvier.View.Dom/Ranvier.View.Dom.fsproj'
+      - 'src/Ranvier.View.WebCore/OwnerWorkQueue.fs'
+      - 'src/Ranvier.View.WebCore/Ranvier.View.WebCore.fsproj'
+      - 'src/Ranvier.View.WebCore.Sdl/CompletionFence.fs'
+      - 'src/Ranvier.View.WebCore.Sdl/Ranvier.View.WebCore.Sdl.fsproj'
+      - 'experiments/Ranvier.View.Twin/**'
+      - 'global.json'
+      - 'proofs/**'
+      - '.github/workflows/proofs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: proofs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Rocq proof audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Install system packages
+        run: sudo apt-get update && sudo apt-get install -y opam libgmp-dev pkg-config unzip bubblewrap
+      - id: opam-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.opam
+          key: rocq-view-toolchain-${{ runner.os }}-${{ hashFiles('proofs/VERSIONS.md') }}
+          restore-keys: |
+            rocq-view-toolchain-${{ runner.os }}-
+      - name: Install the Rocq toolchain
+        if: steps.opam-cache.outputs.cache-hit != 'true'
+        env:
+          OPAMYES: '1'
+        run: |
+          if [ ! -d "$HOME/.opam/ranvier-proofs" ]; then
+            rm -rf "$HOME/.opam"
+            opam init --bare --disable-sandboxing --no-setup
+            opam switch create ranvier-proofs ocaml-base-compiler.4.14.2
+          fi
+          eval "$(opam env --switch=ranvier-proofs --set-switch)"
+          opam repo add rocq-released https://rocq-prover.org/opam/released || opam repo set-url rocq-released https://rocq-prover.org/opam/released
+          opam repo add iris-dev https://gitlab.mpi-sws.org/iris/opam.git || opam repo set-url iris-dev https://gitlab.mpi-sws.org/iris/opam.git
+          opam update
+          opam install rocq-core.9.1.0 rocq-stdlib.9.2.0 rocq-stdpp.1.13.0 zarith.1.14
+          opam clean --all-switches --download-cache --logs --repo-cache --untracked
+      - name: Audit proofs, conformance, and extraction
+        run: bash proofs/check.sh
