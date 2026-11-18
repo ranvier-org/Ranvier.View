@@ -263,7 +263,7 @@ Fixpoint run_pl_cmds (cs : list pl_cmd) (stack : list nat) (p : placement_model)
       end
     | PCmdAdd h => run_pl_cmds rest stack (pl_add h p)
     | PCmdReleaseChild h => run_pl_cmds rest stack (pl_enqueue h true p)
-    | PCmdPlace => run_pl_cmds rest stack (pl_place p)
+    | PCmdPlace => run_pl_cmds rest stack (pl_place_fast p)
     | PCmdDiscard => run_pl_cmds rest stack (pl_discard p)
     end
   end.

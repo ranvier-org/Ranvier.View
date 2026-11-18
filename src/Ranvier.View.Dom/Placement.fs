@@ -14,6 +14,21 @@ module internal PlacementCounters =
     let held = ref 0
 #endif
 
+#if !FABLE_COMPILER
+[<Struct>]
+#endif
+type private HeldHook(group: int, owner: Owner, hook: unit -> unit) =
+    member _.Group = group
+    member _.Owner = owner
+    member _.Hook = hook
+
+#if !FABLE_COMPILER
+[<Struct>]
+#endif
+type private ForwardedHook(owner: Owner, hook: unit -> unit) =
+    member _.Owner = owner
+    member _.Hook = hook
+
 /// <summary>
 /// The hooks of instances whose nodes are not yet placed in their mount's host. A container is placed once its own
 /// <c>Place</c> has run and its parent is placed; hooks added before then are held.
@@ -34,7 +49,7 @@ type internal Placement(parent: Placement) =
     let mutable laidOut = false
     let mutable discarded = false
     // The container's own hooks with the instance group each was added under; null until the first is held.
-    let mutable held: ResizeArray<int * Owner * (unit -> unit)> = null
+    let mutable held: ResizeArray<HeldHook> = null
     // Whether `held` is in group order.
     let mutable ordered = true
     // The group of the hook added last.
@@ -43,7 +58,7 @@ type internal Placement(parent: Placement) =
     let mutable group = 0
     let mutable entered = 0
     // The hooks released by child containers, run after `held`; null until the first is held.
-    let mutable forwarded: ResizeArray<Owner * (unit -> unit)> = null
+    let mutable forwarded: ResizeArray<ForwardedHook> = null
     let mutable failure: exn = null
 
 #if RANVIER_VIEW_COUNTERS
@@ -53,6 +68,10 @@ type internal Placement(parent: Placement) =
     let countForwarded () =
         if isNull forwarded then 0 else forwarded.Count
 #endif
+
+    member internal _.Parent = parent
+    member internal _.LaidOut = laidOut
+    member internal _.Discarded = discarded
 
     /// <summary>True while a root mount's first placement runs inside <c>mountWith</c>.</summary>
     member val Placing = false with get, set
@@ -82,6 +101,28 @@ type internal Placement(parent: Placement) =
             failure <- null
             raise error
 
+    member private _.AppendForwarded(owner: Owner, hook: unit -> unit) =
+        if isNull forwarded then
+            forwarded <- ResizeArray ()
+
+        forwarded.Add (ForwardedHook (owner, hook))
+#if RANVIER_VIEW_COUNTERS
+        PlacementCounters.held.Value <- PlacementCounters.held.Value + 1
+#endif
+
+    member private _.EnsureForwardedCapacity(additional: int) =
+#if FABLE_COMPILER
+        ignore additional
+
+        if isNull forwarded then
+            forwarded <- ResizeArray ()
+#else
+        if isNull forwarded then
+            forwarded <- ResizeArray additional
+        elif forwarded.Capacity < forwarded.Count + additional then
+            forwarded.Capacity <- forwarded.Count + additional
+#endif
+
     // Runs the hook when the container is placed, holds it while the container is not laid out (after the own hooks when
     // `released` is set), and otherwise releases it to the parent.
     member private this.Enqueue(owner: Owner, hook: unit -> unit, released: bool) =
@@ -89,10 +130,7 @@ type internal Placement(parent: Placement) =
             ()
         elif not laidOut then
             if released then
-                if isNull forwarded then
-                    forwarded <- ResizeArray ()
-
-                forwarded.Add ((owner, hook))
+                this.AppendForwarded (owner, hook)
             else
                 if isNull held then
                     held <- ResizeArray ()
@@ -101,9 +139,9 @@ type internal Placement(parent: Placement) =
                     ordered <- false
 
                 lastGroup <- group
-                held.Add ((group, owner, hook))
+                held.Add (HeldHook (group, owner, hook))
 #if RANVIER_VIEW_COUNTERS
-            PlacementCounters.held.Value <- PlacementCounters.held.Value + 1
+                PlacementCounters.held.Value <- PlacementCounters.held.Value + 1
 #endif
         elif this.IsPlaced then
             if not owner.IsDisposed then
@@ -146,19 +184,53 @@ type internal Placement(parent: Placement) =
             let rows = forwarded
             held <- null
             forwarded <- null
+            let ownCount = if isNull own then 0 else own.Count
+            let rowsCount = if isNull rows then 0 else rows.Count
 
-            if not (isNull own) then
-                if ordered then
-                    for _, owner, hook in own do
-                        this.Enqueue (owner, hook, false)
+            if ownCount + rowsCount > 0 then
+                if ownCount > 1 && not ordered then
+                    // In-place stable insertion sort keeps each group's hooks in the order added with zero allocations.
+                    for i = 1 to ownCount - 1 do
+                        let current = own[i]
+                        let key = current.Group
+                        let mutable j = i - 1
+
+                        while j >= 0 && own[j].Group > key do
+                            own[j + 1] <- own[j]
+                            j <- j - 1
+
+                        own[j + 1] <- current
+
+                if isNull parent || parent.IsPlaced then
+                    for i = 0 to ownCount - 1 do
+                        let entry = own[i]
+
+                        if not discarded && not entry.Owner.IsDisposed then
+                            Api.runWithOwner entry.Owner (fun () -> Api.createEffect (fun () -> Api.untrack entry.Hook))
+
+                    for i = 0 to rowsCount - 1 do
+                        let entry = rows[i]
+
+                        if not discarded && not entry.Owner.IsDisposed then
+                            Api.runWithOwner entry.Owner (fun () -> Api.createEffect (fun () -> Api.untrack entry.Hook))
                 else
-                    // A stable sort keeps each group's hooks in the order added.
-                    for _, owner, hook in List.sortBy (fun (index, _, _) -> index) (List.ofSeq own) do
-                        this.Enqueue (owner, hook, false)
+                    let mutable target = parent
 
-            if not (isNull rows) then
-                for owner, hook in rows do
-                    this.Enqueue (owner, hook, false)
+                    while not (isNull target)
+                          && not target.Discarded
+                          && target.LaidOut do
+                        target <- target.Parent
+
+                    if not (isNull target) && not target.Discarded then
+                        target.EnsureForwardedCapacity (ownCount + rowsCount)
+
+                        for i = 0 to ownCount - 1 do
+                            let entry = own[i]
+                            target.AppendForwarded (entry.Owner, entry.Hook)
+
+                        for i = 0 to rowsCount - 1 do
+                            let entry = rows[i]
+                            target.AppendForwarded (entry.Owner, entry.Hook)
 
     /// <summary>Drops the held hooks and every later one.</summary>
     member _.Discard() =
@@ -220,6 +292,8 @@ type internal PlacementPass(parent: Placement) =
 
 /// <summary>Element hooks registered with a placement container.</summary>
 module internal PlacedHook =
+    let private boxedFlags: obj array = [| box 0; box 1; box 2; box 3 |]
+
 #if FABLE_COMPILER
     [<Emit("$0.parentNode")>]
     let private parentOf (node: Node) : Node = jsNative
@@ -274,10 +348,8 @@ module internal PlacedHook =
             && not (atRoot node)
 
         let flags =
-            box (
-                (if hydrated then 1 else 0)
-                + (if container.Inserted then 2 else 0)
-            )
+            boxedFlags[(if hydrated then 1 else 0)
+                       + (if container.Inserted then 2 else 0)]
 
         container.Add (
             owner,

@@ -641,7 +641,9 @@ let runPlacementFSharp (parentPlaced: bool) (cmds: PlCmd list) : string =
         // Run each forwarded hook in order to read its hook id!
         graph.Run (fun () ->
             for item in parentFwd do
-                let hookFn = item.GetType().GetProperty("Item2").GetValue(item) :?> (unit -> unit)
+                let hookFn =
+                    item.GetType().GetProperty("Hook", flags).GetValue(item) :?> (unit -> unit)
+
                 let before = executed.Count
                 hookFn ()
 

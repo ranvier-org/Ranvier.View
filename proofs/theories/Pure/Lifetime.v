@@ -597,3 +597,260 @@ Proof.
         - apply Nat.eqb_refl. }
       congruence.
 Qed.
+
+(** ** Proof-backed `Placement` and `TeardownWindow` fast paths *)
+
+(** Right-to-left shift step of in-place insertion sort on `Placement.held` (`own[j].group > key`). *)
+Fixpoint insert_from_right_rev (g h : nat) (rev_prefix : list (nat * nat)) : list (nat * nat) :=
+  match rev_prefix with
+  | [] => [(g, h)]
+  | (g', h') :: rest =>
+    if Nat.ltb g g' then (g', h') :: insert_from_right_rev g h rest
+    else (g, h) :: (g', h') :: rest
+  end.
+
+Definition insert_from_right (g h : nat) (prefix : list (nat * nat)) : list (nat * nat) :=
+  rev (insert_from_right_rev g h (rev prefix)).
+
+Fixpoint in_place_insertion_sort_acc (sorted_prefix rem : list (nat * nat)) : list (nat * nat) :=
+  match rem with
+  | [] => sorted_prefix
+  | (g, h) :: rs => in_place_insertion_sort_acc (insert_from_right g h sorted_prefix) rs
+  end.
+
+Definition in_place_insertion_sort (xs : list (nat * nat)) : list (nat * nat) :=
+  in_place_insertion_sort_acc [] xs.
+
+Lemma stable_insert_preserves_bounded_nondec low g h xs :
+  low <= g ->
+  bounded_nondec low xs ->
+  bounded_nondec low (stable_insert_group g h xs).
+Proof.
+  revert low.
+  induction xs as [|[g1 h1] rest IH]; simpl; intros low Hlow Hbnd.
+  - split; [exact Hlow | trivial].
+  - destruct Hbnd as [Hl1 Hrest].
+    destruct (Nat.leb g1 g) eqn:Hleb; simpl.
+    + apply Nat.leb_le in Hleb.
+      split; [exact Hl1 | apply IH; [exact Hleb | exact Hrest]].
+    + apply Nat.leb_gt in Hleb.
+      split; [exact Hlow | split; [lia | exact Hrest]].
+Qed.
+
+Lemma bounded_nondec_weaken low1 low2 xs :
+  low1 <= low2 ->
+  bounded_nondec low2 xs ->
+  bounded_nondec low1 xs.
+Proof.
+  destruct xs as [|[g h] rest]; simpl; [trivial|].
+  intros Hle [H1 H2]; split; [lia | exact H2].
+Qed.
+
+Lemma bounded_nondec_app_last low init gl hl :
+  bounded_nondec low (init ++ [(gl, hl)]) ->
+  bounded_nondec low init /\ Forall (fun gh => fst gh <= gl) init.
+Proof.
+  revert low.
+  induction init as [|[g1 h1] rest IH]; simpl; intros low Hbnd.
+  - split; [trivial | constructor].
+  - destruct Hbnd as [Hl1 Hrest].
+    destruct (IH g1 Hrest) as [Hb_rest Hall_rest].
+    split.
+    + split; [exact Hl1 | exact Hb_rest].
+    + constructor; [|exact Hall_rest].
+      destruct rest as [|[g2 h2] tl]; simpl in Hrest |- *.
+      * lia.
+      * inversion Hall_rest as [|? ? Hg2 _]; subst; simpl in *; lia.
+Qed.
+
+Lemma stable_insert_snoc_gt g h init gl hl :
+  g < gl ->
+  stable_insert_group g h (init ++ [(gl, hl)]) = stable_insert_group g h init ++ [(gl, hl)].
+Proof.
+  intros Hlt.
+  induction init as [|[g1 h1] rest IH]; simpl.
+  - assert (Hleb : Nat.leb gl g = false) by (apply Nat.leb_gt; exact Hlt).
+    rewrite Hleb; reflexivity.
+  - destruct (Nat.leb g1 g); simpl; [rewrite IH; reflexivity | reflexivity].
+Qed.
+
+Lemma insert_from_right_eq_stable_insert g h xs :
+  bounded_nondec 0 xs ->
+  insert_from_right g h xs = stable_insert_group g h xs.
+Proof.
+  induction xs as [|[gl hl] init IH] using rev_ind; intros Hbnd.
+  - reflexivity.
+  - destruct (bounded_nondec_app_last 0 init gl hl Hbnd) as [Hb_init Hall_init].
+    unfold insert_from_right.
+    rewrite rev_app_distr; simpl.
+    destruct (Nat.ltb g gl) eqn:Hlt; simpl.
+    + apply Nat.ltb_lt in Hlt.
+      fold (insert_from_right g h init).
+      rewrite (IH Hb_init), (stable_insert_snoc_gt g h init gl hl Hlt).
+      reflexivity.
+    + apply Nat.ltb_ge in Hlt.
+      rewrite rev_involutive.
+      symmetry. apply stable_insert_at_end.
+      apply Forall_app; split.
+      * eapply Forall_impl; [|exact Hall_init]; simpl; lia.
+      * constructor; [simpl; exact Hlt | constructor].
+Qed.
+
+Lemma in_place_insertion_sort_acc_eq acc rem :
+  bounded_nondec 0 acc ->
+  in_place_insertion_sort_acc acc rem = sort_groups_acc acc rem.
+Proof.
+  revert acc.
+  induction rem as [|[g h] rs IH]; intros acc Hbnd; simpl; [reflexivity|].
+  rewrite (insert_from_right_eq_stable_insert g h acc Hbnd).
+  apply IH.
+  apply stable_insert_preserves_bounded_nondec; [lia | exact Hbnd].
+Qed.
+
+(**md
+**In-place right-shifting insertion sort on `Placement.held` equals `sort_groups` (`List.sortBy fst`).**
+
+Sorting `Placement`'s held hooks in place by shifting entries with `group > key` one slot right produces the exact stable group order of `sort_groups` with zero list or closure allocations.
+
+- [xs:] the held `(group, hook)` entries of an unordered `Placement` container.
+*)
+Theorem in_place_insertion_sort_eq_sort_groups (xs : list (nat * nat)) :
+  in_place_insertion_sort xs = sort_groups xs.
+Proof.
+  unfold in_place_insertion_sort, sort_groups.
+  apply in_place_insertion_sort_acc_eq; simpl; trivial.
+Qed.
+
+(** Bulk forwarding of ordered hooks from a placed child container into an unplaced ancestor. *)
+Definition pl_bulk_forward (hooks : list nat) (parent : placement_model) : placement_model :=
+  if pl_discarded parent then parent
+  else if negb (pl_laid_out parent) then
+    {| pl_laid_out := pl_laid_out parent;
+       pl_discarded := pl_discarded parent;
+       pl_parent_placed := pl_parent_placed parent;
+       pl_ordered := pl_ordered parent;
+       pl_last_group := pl_last_group parent;
+       pl_group := pl_group parent;
+       pl_entered := pl_entered parent;
+       pl_held := pl_held parent;
+       pl_forwarded := pl_forwarded parent ++ hooks;
+       pl_executed := pl_executed parent;
+       pl_to_parent := pl_to_parent parent |}
+  else if pl_is_placed parent then
+    {| pl_laid_out := pl_laid_out parent;
+       pl_discarded := pl_discarded parent;
+       pl_parent_placed := pl_parent_placed parent;
+       pl_ordered := pl_ordered parent;
+       pl_last_group := pl_last_group parent;
+       pl_group := pl_group parent;
+       pl_entered := pl_entered parent;
+       pl_held := pl_held parent;
+       pl_forwarded := pl_forwarded parent;
+       pl_executed := pl_executed parent ++ hooks;
+       pl_to_parent := pl_to_parent parent |}
+  else
+    {| pl_laid_out := pl_laid_out parent;
+       pl_discarded := pl_discarded parent;
+       pl_parent_placed := pl_parent_placed parent;
+       pl_ordered := pl_ordered parent;
+       pl_last_group := pl_last_group parent;
+       pl_group := pl_group parent;
+       pl_entered := pl_entered parent;
+       pl_held := pl_held parent;
+       pl_forwarded := pl_forwarded parent;
+       pl_executed := pl_executed parent;
+       pl_to_parent := pl_to_parent parent ++ hooks |}.
+
+(**md
+**Bulk-forwarding a placed container's hooks into its parent equals item-by-item `Enqueue(..., true)`.**
+
+Appending `hooks` directly into the unplaced parent's `forwarded` queue (with a single `IsPlaced` check) produces the exact `Placement` state of folding `pl_enqueue h true` across `hooks`.
+
+- [hooks:] the ordered hook sequence released by a child `Placement.Place`.
+- [parent:] the enclosing `Placement` state receiving the released hooks.
+*)
+Theorem pl_bulk_forward_eq_fold_enqueue (hooks : list nat) (parent : placement_model) :
+  pl_bulk_forward hooks parent = fold_left (fun p h => pl_enqueue h true p) hooks parent.
+Proof.
+  revert parent.
+  induction hooks as [|h hs IH]; intros parent; simpl.
+  - unfold pl_bulk_forward.
+    destruct parent as [lo dc pp ord lg g ent hld fwd ex tp]; simpl.
+    destruct dc; [reflexivity|].
+    destruct (negb lo); [rewrite app_nil_r; reflexivity|].
+    unfold pl_is_placed; simpl.
+    destruct (lo && pp); rewrite app_nil_r; reflexivity.
+  - rewrite <- IH.
+    destruct parent as [lo dc pp ord lg g ent hld fwd ex tp].
+    destruct lo, dc, pp; unfold pl_bulk_forward, pl_enqueue, pl_is_placed; simpl;
+      rewrite <- ?app_assoc; reflexivity.
+Qed.
+
+Definition pl_place_fast (p : placement_model) : placement_model :=
+  if negb (pl_laid_out p) && negb (pl_discarded p) then
+    let own_hooks :=
+      if pl_ordered p then map snd (pl_held p)
+      else map snd (in_place_insertion_sort (pl_held p)) in
+    let all_hooks := own_hooks ++ pl_forwarded p in
+    {| pl_laid_out := true;
+       pl_discarded := false;
+       pl_parent_placed := pl_parent_placed p;
+       pl_ordered := pl_ordered p;
+       pl_last_group := pl_last_group p;
+       pl_group := pl_group p;
+       pl_entered := pl_entered p;
+       pl_held := [];
+       pl_forwarded := [];
+       pl_executed := if pl_parent_placed p then pl_executed p ++ all_hooks else pl_executed p;
+       pl_to_parent := if pl_parent_placed p then pl_to_parent p else pl_to_parent p ++ all_hooks |}
+  else p.
+
+(**md
+**Fast-path `Placement.Place` (using in-place insertion sort) is observationally identical to `pl_place`.**
+
+For every `Placement` state `p`, `pl_place_fast p` produces the exact container state of `pl_place p`.
+
+- [p:] any `Placement` container state.
+*)
+Theorem pl_place_fast_eq_pl_place (p : placement_model) :
+  pl_place_fast p = pl_place p.
+Proof.
+  unfold pl_place_fast, pl_place.
+  rewrite in_place_insertion_sort_eq_sort_groups.
+  reflexivity.
+Qed.
+
+(**md
+**An error-free `TeardownWindow` (`len = 0`) returns the empty index list regardless of nested exclusions.**
+
+When `root.ErrorCount = start` (`len = 0`) and no routed errors were added, `TeardownWindow.Errors` can immediately return `[]` with zero allocations.
+
+- [start:] the starting `Root.ErrorCount` of the window.
+- [nested:] any nested `[first, finish)` exclusion intervals.
+*)
+Theorem teardown_window_empty_fast_path (start : nat) (nested : list (nat * nat)) :
+  teardown_window_indices start 0 nested = [].
+Proof.
+  reflexivity.
+Qed.
+
+Lemma filter_all_true {A : Type} (xs : list A) :
+  List.filter (fun _ => true) xs = xs.
+Proof.
+  induction xs as [|x xs IH]; simpl; [reflexivity | f_equal; exact IH].
+Qed.
+
+(**md
+**A `TeardownWindow` with no nested windows (`nested = []`) retains every root error in `[start, start + len)`.**
+
+When `nested` is empty (`isNull nested`), `TeardownWindow.Errors` can copy `recorded` directly without scanning exclusion pairs.
+
+- [start:] the starting `Root.ErrorCount` of the window.
+- [len:] the number of root errors recorded while the window was open.
+*)
+Theorem teardown_window_no_nested_fast_path (start len : nat) :
+  teardown_window_indices start len [] = seq start len.
+Proof.
+  unfold teardown_window_indices, in_any_nested; simpl.
+  apply filter_all_true.
+Qed.
