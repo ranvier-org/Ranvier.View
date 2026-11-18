@@ -1,5 +1,5 @@
 ---
-last_commit_released: 39f51599d3bea2342b108c01bd95939e8a00ff1d
+last_commit_released: 8be254d1a7d360618074ec541607ee7dc02c1892
 include:
   - ../Ranvier.View.Dom/
   - ../../Directory.Build.props
@@ -24,6 +24,20 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.3.0 - 2026-11-18
+
+### 🐞 Bug Fixes
+
+* *(view)* Close cancelled reflows and run Slot.Dropped on in-flush replacements (#176) ([ff3ed51](https://github.com/ranvier-org/Ranvier.View/commit/ff3ed5105473168a01f4a6c96a0b5c1d7246f86d))
+* *(view)* Isolate multi-window hosts, reclaim CPU buffers, add ISO/JIS keys and clickthrough ([8be254d](https://github.com/ranvier-org/Ranvier.View/commit/8be254d1a7d360618074ec541607ee7dc02c1892))
+
+### ⚡ Performance Improvements
+
+* *(view)* Add Rocq-verified keyed layout, row-key, and Departures fast paths (#178) ([cce6469](https://github.com/ranvier-org/Ranvier.View/commit/cce646919166e619ece122e1acbb2ec5a144768a))
+* *(view)* Add Rocq-verified Placement and TeardownWindow zero-allocation paths (#179) ([52ce46c](https://github.com/ranvier-org/Ranvier.View/commit/52ce46ce66344a3bbe1c2e65f185fb8d10fd6dca))
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/39f51599d3bea2342b108c01bd95939e8a00ff1d..8be254d1a7d360618074ec541607ee7dc02c1892)</small></strong>
 
 ## 0.2.0 - 2026-11-16
 

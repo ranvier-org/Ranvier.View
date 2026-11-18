@@ -1,5 +1,5 @@
 ---
-last_commit_released: 39f51599d3bea2342b108c01bd95939e8a00ff1d
+last_commit_released: 8be254d1a7d360618074ec541607ee7dc02c1892
 depends_on:
   - ../Ranvier.View.WebCore/
 updaters:
@@ -14,6 +14,18 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.2.2 - 2026-11-18
+
+### 🐞 Bug Fixes
+
+* *(view)* Isolate multi-window hosts, reclaim CPU buffers, add ISO/JIS keys and clickthrough ([8be254d](https://github.com/ranvier-org/Ranvier.View/commit/8be254d1a7d360618074ec541607ee7dc02c1892))
+
+### 🔗 Dependencies
+
+* `src/Ranvier.View.WebCore` updated to 0.2.1
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/39f51599d3bea2342b108c01bd95939e8a00ff1d..8be254d1a7d360618074ec541607ee7dc02c1892)</small></strong>
 
 ## 0.2.1 - 2026-11-16
 
