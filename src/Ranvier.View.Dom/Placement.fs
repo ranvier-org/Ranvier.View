@@ -17,17 +17,17 @@ module internal PlacementCounters =
 #if !FABLE_COMPILER
 [<Struct>]
 #endif
-type private HeldHook =
-    {
-        Group: int
-        Owner: Owner
-        Hook: unit -> unit
-    }
+type private HeldHook(group: int, owner: Owner, hook: unit -> unit) =
+    member _.Group = group
+    member _.Owner = owner
+    member _.Hook = hook
 
 #if !FABLE_COMPILER
 [<Struct>]
 #endif
-type private ForwardedHook = { Owner: Owner; Hook: unit -> unit }
+type private ForwardedHook(owner: Owner, hook: unit -> unit) =
+    member _.Owner = owner
+    member _.Hook = hook
 
 /// <summary>
 /// The hooks of instances whose nodes are not yet placed in their mount's host. A container is placed once its own
@@ -105,7 +105,7 @@ type internal Placement(parent: Placement) =
         if isNull forwarded then
             forwarded <- ResizeArray ()
 
-        forwarded.Add { Owner = owner; Hook = hook }
+        forwarded.Add (ForwardedHook (owner, hook))
 #if RANVIER_VIEW_COUNTERS
         PlacementCounters.held.Value <- PlacementCounters.held.Value + 1
 #endif
@@ -139,13 +139,7 @@ type internal Placement(parent: Placement) =
                     ordered <- false
 
                 lastGroup <- group
-
-                held.Add
-                    {
-                        Group = group
-                        Owner = owner
-                        Hook = hook
-                    }
+                held.Add (HeldHook (group, owner, hook))
 #if RANVIER_VIEW_COUNTERS
                 PlacementCounters.held.Value <- PlacementCounters.held.Value + 1
 #endif
