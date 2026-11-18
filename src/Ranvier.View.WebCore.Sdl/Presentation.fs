@@ -345,6 +345,21 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
 
         lost
 
+    let releaseCpuFallback () =
+        if pixels.Length > 0 then
+            pixels <- [||]
+            cpuWidth <- 0
+            cpuHeight <- 0
+
+        if not (NativePtr.isNullPtr cpuTexture) then
+            SDL3.SDL_DestroyTexture cpuTexture
+            cpuTexture <- NativePtr.nullPtr
+
+        swapChain
+        |> Option.iter (fun chain ->
+            if not chain.Presenting then
+                chain.ReleaseCpuTexture ())
+
     let waitSwapChain (chain: D3D11SwapChain) =
         chain.WaitIdle ()
         settleSwapChain chain |> ignore
@@ -423,6 +438,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
         else
             match acquireForSwapChain () with
             | ValueSome (struct (texture, width, height)) ->
+                releaseCpuFallback ()
                 chain.Submit (texture, width, height)
                 gpuFrames <- gpuFrames + 1L
                 lastGpu <- true
@@ -541,6 +557,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                             heldIsPipeline <- true
                             pipelinePending <- false
                             presentedTraceFrame <- ValueSome pipelineTraceFrame
+                            releaseCpuFallback ()
                             chain.Submit (texture, width, height)
                             gpuFrames <- gpuFrames + 1L
                             lastGpu <- true
@@ -978,6 +995,7 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
                         raise (PresentationNative.failure "SDL_RenderPresent"))
             with
             | ValueSome () ->
+                releaseCpuFallback ()
                 gpuFrames <- gpuFrames + 1L
                 lastGpu <- true
                 fullPaint <- true
@@ -1116,6 +1134,10 @@ type internal Presenter(renderer: nativeptr<SDL_Renderer>, host: WebCoreHost, eg
             if not (NativePtr.isNullPtr cpuTexture) then
                 SDL3.SDL_DestroyTexture cpuTexture
                 cpuTexture <- NativePtr.nullPtr
+
+            pixels <- [||]
+            cpuWidth <- 0
+            cpuHeight <- 0
 
             swapChain
             |> Option.iter (fun chain -> (chain :> IDisposable).Dispose())

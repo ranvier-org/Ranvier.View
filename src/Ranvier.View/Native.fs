@@ -58,6 +58,14 @@ type ExpandoSlots() =
             rest[name] <- value
 
 /// <summary>
+/// An object that carries the view's per-object properties directly on itself, independent of which host is current.
+/// </summary>
+[<AllowNullLiteral>]
+type IExpandoTarget =
+    /// <summary>The slots of this object, null while it has none; with <c>create</c>, allocates empty slots.</summary>
+    abstract ExpandoSlots: create: bool -> ExpandoSlots
+
+/// <summary>
 /// A host that keeps the view's per-object properties on its own objects. The properties of any other object live in a
 /// weak table keyed by the object.
 /// </summary>
@@ -76,14 +84,87 @@ type private HostSlot =
     [<System.ThreadStatic; DefaultValue>]
     static val mutable private depth: int
 
+    [<System.ThreadStatic; DefaultValue>]
+    static val mutable private peers: ResizeArray<IHost>
+
+    [<System.ThreadStatic; DefaultValue>]
+    static val mutable private knownPeers: System.Collections.Generic.HashSet<IHost>
+
     static member Current
         with get () = HostSlot.current
         and set (value: IHost) = HostSlot.current <- value
 
-    /// <summary>The number of installations open on the current thread.</summary>
+    /// <summary>The number of lexical <c>install</c> scopes open on the current thread.</summary>
     static member Depth
         with get () = HostSlot.depth
         and set (value: int) = HostSlot.depth <- value
+
+    static member EnsurePeers() =
+        if isNull HostSlot.peers then
+            HostSlot.peers <- ResizeArray<IHost>()
+            HostSlot.knownPeers <- System.Collections.Generic.HashSet<IHost>(HashIdentity.Reference)
+
+        HostSlot.peers
+
+    static member RegisterPeer(host: IHost) =
+        let list = HostSlot.EnsurePeers ()
+        HostSlot.knownPeers.Add host |> ignore
+        list.Add host
+
+    static member UnregisterPeer(host: IHost) =
+        let list = HostSlot.peers
+
+        if not (isNull list) then
+            let mutable index = list.Count - 1
+            let mutable removed = false
+
+            while index >= 0 && not removed do
+                if obj.ReferenceEquals (list[index], host) then
+                    list.RemoveAt index
+                    removed <- true
+
+                index <- index - 1
+
+    static member TopPeerOrNull() : IHost =
+        let list = HostSlot.peers
+
+        if isNull list || list.Count = 0 then
+            Unchecked.defaultof<IHost>
+        else
+            list[list.Count - 1]
+
+    static member CanRestore(candidate: IHost) : bool =
+        if isNull (box candidate) then
+            true
+        elif
+            isNull HostSlot.knownPeers
+            || not (HostSlot.knownPeers.Contains candidate)
+        then
+            true
+        else
+            let list = HostSlot.peers
+
+            not (isNull list)
+            && list.Exists (fun item -> obj.ReferenceEquals (item, candidate))
+
+    static member TryFindByDocument(owner: Document) : IHost voption =
+        let list = HostSlot.peers
+
+        if isNull (box owner) || isNull list then
+            ValueNone
+        else
+            let mutable index = list.Count - 1
+            let mutable found = ValueNone
+
+            while index >= 0 && found.IsNone do
+                let candidate = list[index]
+
+                if obj.ReferenceEquals (candidate.Document, owner) then
+                    found <- ValueSome candidate
+
+                index <- index - 1
+
+            found
 
 /// <summary>
 /// Installs <c>host</c> for the current thread until the returned value is disposed. Disposal restores the previous
@@ -117,8 +198,101 @@ let install (host: IHost) : System.IDisposable =
 
                 disposed.Value <- true
                 HostSlot.Depth <- depth - 1
-                HostSlot.Current <- previous
+
+                if HostSlot.Depth > 0 || HostSlot.CanRestore previous then
+                    HostSlot.Current <- previous
+                else
+                    HostSlot.Current <- HostSlot.TopPeerOrNull ()
     }
+
+/// <summary>
+/// Registers a long-lived peer <c>host</c> (such as a window's <c>WebCoreHost</c>) on the current thread so peer
+/// hosts can be activated by document and disposed in any order on their owning thread.
+/// </summary>
+let installPeer (host: IHost) : System.IDisposable =
+    let thread = System.Environment.CurrentManagedThreadId
+    HostSlot.RegisterPeer host
+
+    if HostSlot.Depth = 0 then
+        HostSlot.Current <- host
+
+    let disposed = ref false
+
+    { new System.IDisposable with
+        member _.Dispose() =
+            if not disposed.Value then
+                let current = System.Environment.CurrentManagedThreadId
+
+                if current <> thread then
+                    raise (
+                        System.InvalidOperationException (
+                            "A DOM host installed on thread "
+                            + thread.ToString (System.Globalization.CultureInfo.CurrentCulture)
+                            + " was disposed on thread "
+                            + current.ToString (System.Globalization.CultureInfo.CurrentCulture)
+                        )
+                    )
+
+                disposed.Value <- true
+                HostSlot.UnregisterPeer host
+
+                if
+                    HostSlot.Depth = 0
+                    && obj.ReferenceEquals (HostSlot.Current, host)
+                    && not (HostSlot.CanRestore host)
+                then
+                    HostSlot.Current <- HostSlot.TopPeerOrNull ()
+    }
+
+/// <summary>Runs <c>action</c> with <c>targetHost</c> as the thread's current host when no lexical scope overrides it.</summary>
+let withHost (targetHost: IHost) (action: unit -> 'T) : 'T =
+    let current = HostSlot.Current
+
+    if
+        isNull (box targetHost)
+        || obj.ReferenceEquals (current, targetHost)
+        || HostSlot.Depth > 0
+    then
+        action ()
+    else
+        HostSlot.Current <- targetHost
+
+        try
+            action ()
+        finally
+            if HostSlot.CanRestore current then
+                HostSlot.Current <- current
+            else
+                HostSlot.Current <- HostSlot.TopPeerOrNull ()
+
+/// <summary>Runs <c>action</c> against the peer host owning <c>owner</c> when registered on this thread.</summary>
+let withDocumentHost (owner: Document) (action: unit -> 'T) : 'T =
+    let current = HostSlot.Current
+
+    if
+        isNull (box owner)
+        || HostSlot.Depth > 0
+        || (not (isNull (box current))
+            && obj.ReferenceEquals (current.Document, owner))
+    then
+        action ()
+    else
+        match HostSlot.TryFindByDocument owner with
+        | ValueSome matched -> withHost matched action
+        | ValueNone -> action ()
+
+/// <summary>Runs <c>action</c> against the peer host owning <c>node</c>'s document when registered on this thread.</summary>
+let withNodeHost (node: Node) (action: unit -> 'T) : 'T =
+    if isNull (box node) then
+        action ()
+    else
+        let owner =
+            if node.nodeType = 9us then
+                unbox<Document> node
+            else
+                node.ownerDocument
+
+        withDocumentHost owner action
 
 let private host () : IHost =
     let current = HostSlot.Current
@@ -605,26 +779,38 @@ let expando<'T> (target: obj) (name: string) : 'T = jsNative
 let setExpando (target: obj) (name: string) (value: 'T) : unit = jsNative
 #else
 let expando<'T> (target: obj) (name: string) : 'T =
-    match HostSlot.Current with
-    | :? IExpandoHost as owner ->
-        match owner.ExpandoSlots (target, false) with
-        | ValueSome slots ->
-            if isNull slots then
-                Unchecked.defaultof<'T>
-            else
-                match slots.Get name with
-                | null -> Unchecked.defaultof<'T>
-                | value -> unbox<'T> value
-        | ValueNone -> weakExpando target name
-    | _ -> weakExpando target name
+    match target with
+    | :? IExpandoTarget as owned ->
+        match owned.ExpandoSlots false with
+        | null -> Unchecked.defaultof<'T>
+        | slots ->
+            match slots.Get name with
+            | null -> Unchecked.defaultof<'T>
+            | value -> unbox<'T> value
+    | _ ->
+        match HostSlot.Current with
+        | :? IExpandoHost as owner ->
+            match owner.ExpandoSlots (target, false) with
+            | ValueSome slots ->
+                if isNull slots then
+                    Unchecked.defaultof<'T>
+                else
+                    match slots.Get name with
+                    | null -> Unchecked.defaultof<'T>
+                    | value -> unbox<'T> value
+            | ValueNone -> weakExpando target name
+        | _ -> weakExpando target name
 
 let setExpando (target: obj) (name: string) (value: 'T) : unit =
-    match HostSlot.Current with
-    | :? IExpandoHost as owner ->
-        match owner.ExpandoSlots (target, true) with
-        | ValueSome slots -> slots.Set (name, box value)
-        | ValueNone -> setWeakExpando target name value
-    | _ -> setWeakExpando target name value
+    match target with
+    | :? IExpandoTarget as owned -> (owned.ExpandoSlots true).Set(name, box value)
+    | _ ->
+        match HostSlot.Current with
+        | :? IExpandoHost as owner ->
+            match owner.ExpandoSlots (target, true) with
+            | ValueSome slots -> slots.Set (name, box value)
+            | ValueNone -> setWeakExpando target name value
+        | _ -> setWeakExpando target name value
 #endif
 
 #if !FABLE_COMPILER

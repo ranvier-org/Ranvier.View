@@ -1406,6 +1406,13 @@ type Window
          use value = fixed Sdl.utf8 "composition"
          SDL3.SDL_SetHint (name, value) |> ignore)
 
+        // Dispatch mouse clicks on unfocused windows immediately instead of consuming the first click only to focus.
+        (use name = fixed Sdl.utf8 "SDL_MOUSE_FOCUS_CLICKTHROUGH"
+         use value = fixed Sdl.utf8 "1"
+
+         SDL3.SDL_SetHintWithPriority (name, value, SDL_HintPriority.SDL_HINT_DEFAULT)
+         |> ignore)
+
         if not (Sdl.ok (SDL3.SDL_InitSubSystem SDL_InitFlags.SDL_INIT_VIDEO)) then
             raise (Sdl.failure "SDL_InitSubSystem")
 
