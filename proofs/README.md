@@ -32,6 +32,7 @@ This directory verifies the stateful algorithms that `Ranvier.View` layers **abo
 
 - Build Rocq theories & extract OCaml model: `bash proofs/build.sh`
 - Full audit (zero-axiom check, conformance regeneration, extraction check, 400 differential runs): `bash proofs/check.sh`
+- Navigator documentation site (`proofs/site/output/`): `bash proofs/site.sh`
 - Randomized differential check against compiled F# assemblies: `bash proofs/differential/run.sh [count] [seed]`
 
 See `VERSIONS.md` for toolchain pins and `CORRESPONDENCE.md` for the symbol-by-symbol F# mapping.

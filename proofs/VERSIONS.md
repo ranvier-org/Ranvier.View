@@ -33,9 +33,22 @@ opam install -j16 rocq-core.9.1.0 rocq-stdlib.9.2.0 rocq-stdpp.1.13.0 zarith.1.1
 Rocq or stdpp needed) and compares it against the compiled F# assemblies (`Ranvier.View`,
 `Ranvier.View.Dom`, `Ranvier.View.Twin`, `Ranvier.View.WebCore`, `Ranvier.View.WebCore.Sdl`).
 
+## Navigator site
+
+`site.sh` renders the theories into `site/output/` with `Nacara.Plugin.Rocq` and `FSharp.Data.Rocq`
+at the version pinned in `site/Ranvier.View.Proofs.Site.fsproj`. It checks that every `Theorem` and
+`Corollary` carries a `(**md **...** *)` guarantee comment (`docs/guarantees.py comments`), captures
+types and assumptions from the compiled `.vo` files (`rocq-capture`), and builds the static pages
+under `--strict`.
+
+The workflow `proofs-site.yml` runs `check.sh` and `site.sh` on `ubuntu-latest` and uploads the built
+pages as a content-addressed `proofs-site-*` artifact. The `Docs` workflow (`docs.yml`) places the
+newest artifact from `main` at `/proofs/` of the GitHub Pages deployment.
+
 ## Commands
 
 - Build: `bash proofs/build.sh`
 - Audit: `bash proofs/check.sh`
+- Navigator site: `bash proofs/site.sh`
 - Differential check: `bash proofs/differential/run.sh [count] [seed]`
 - Run a command in the toolchain environment: `bash proofs/build.sh --run CMD ARGS`

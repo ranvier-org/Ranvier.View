@@ -2,11 +2,9 @@ From stdpp Require Import prelude.
 From Stdlib Require Import Arith Lia List Bool ZArith.
 Import ListNotations.
 
-(** * Pure DOM sibling layout, LIS row placement, and Departures interleaving *)
+(**md # DOM sibling layout, LIS row placement, and `Departures` interleaving
 
-(** Corresponds to [Ranvier.View.Dom.Mounting] ([increasingRun], [Row.Layout],
-    [Row.ClearBetween], [RegionSite.FlushReleased]) and [Ranvier.View.Departures]
-    ([nextLive], [holdsBetween], [retire], [before]). *)
+Models the sibling-list reconciliation and exit-animation state machines in `Ranvier.View.Dom.Mounting` (`increasingRun`, `Row.Layout`, `Row.ClearBetween`, `RegionSite.FlushReleased`) and `Ranvier.View.Departures` (`nextLive`, `holdsBetween`, `retire`, `before`). *)
 
 (** ** DOM sibling-list primitives *)
 
@@ -364,6 +362,18 @@ Proof.
       * rewrite Heq. f_equal; exact IH.
 Qed.
 
+(** ** Live sibling moves commute with held departures *)
+
+(**md
+**Moving a live sibling before a live anchor commutes with filtering out leaving nodes.**
+
+Held exit-animating nodes in `leaving` never perturb the relative sibling order produced by `move_before` (`Mounting.insert`, `Row.Place`).
+
+- [leaving:] the node ids currently held in `Departures` while their exit animations run.
+- [x:] the live row node moved.
+- [anchor:] the live sibling anchor before which `x` is placed.
+- [dom:] the parent's full DOM sibling list before the move.
+*)
 Theorem move_before_commutes_with_departures leaving x anchor dom :
   mem_nat x leaving = false ->
   mem_nat anchor leaving = false ->
@@ -376,6 +386,16 @@ Proof.
   rewrite filter_live_remove_comm. reflexivity.
 Qed.
 
+(**md
+**Right-to-left LIS placement commutes with held departure siblings.**
+
+Running `place_rtl_step` (`Row.Layout`'s backward placement loop) over a parent sibling list containing held `leaving` nodes yields the exact same live sibling projection and anchor as running it over the live-filtered list.
+
+- [leaving:] the node ids currently held in `Departures`.
+- [pairs:] the target `(row, keep)` pairs of the active window.
+- [anchor:] the live sibling anchor following the window.
+- [dom:] the parent's full DOM sibling list before placement.
+*)
 Theorem place_rtl_commutes_with_departures leaving pairs anchor dom :
   Forall (fun p => mem_nat (fst p) leaving = false) pairs ->
   mem_nat anchor leaving = false ->
@@ -671,6 +691,20 @@ Proof.
         -- apply subseq_app_both; [exact Hsub_u1 | apply subseq_cons, subseq_cons, Hsub_u2].
 Qed.
 
+(** ** `Row.Layout` window placement and fast paths *)
+
+(**md
+**Right-to-left placement produces the exact target sibling sequence whenever kept rows form an ordered subsequence.**
+
+When every row marked `keep = true` already appears in `mid` in target relative order, `place_rtl` (`Row.Layout`, `Mounting.fs`) leaves `pre` and `anchor :: suf` untouched and transforms the window into `rows`.
+
+- [rows:] the target row ids of the window in final order.
+- [keeps:] the boolean keep mask aligned with `rows`.
+- [pre:] the unchanged sibling prefix before the window.
+- [mid:] the existing live rows inside the window before placement.
+- [anchor:] the sibling node immediately after the window.
+- [suf:] the unchanged sibling suffix after `anchor`.
+*)
 Theorem place_rtl_places_exact_order rows keeps pre mid anchor suf :
   length rows = length keeps ->
   NoDup rows ->
@@ -702,7 +736,16 @@ Proof.
   intros z Hz. destruct (Hmem' z Hz) as [Hzm | Hzr]; [exact (Hmid_sub z Hzm) | exact Hzr].
 Qed.
 
-(** Pure insertion fast path ([aStart = aEnd], [Mounting.fs:1484-1502]). *)
+(**md
+**The pure-insertion fast path splices the new window immediately before the anchor.**
+
+When the old window is empty (`aStart = aEnd` in `Row.Layout`), `move_many_before` inserts `b_win` in exact order between `pre` and `anchor :: suf`.
+
+- [b_win:] the newly mounted row ids to insert.
+- [pre:] the sibling prefix before `anchor`.
+- [anchor:] the sibling node before which `b_win` is inserted.
+- [suf:] the sibling suffix after `anchor`.
+*)
 Theorem move_many_before_inserts_exact b_win pre anchor suf :
   NoDup b_win ->
   ~ In anchor pre ->
@@ -728,8 +771,18 @@ Proof.
     intros Hin; apply in_app_or in Hin; destruct Hin as [Hin | [<- | []]]; [exact (Hx_pre Hin) | exact (Hr_rs Hx)].
 Qed.
 
-(** Outer-pair swap fast path ([Mounting.fs:1505-1522]): exchanges [first_r] and [last_r]
-    around an unchanged middle [mid] in 1 move (when [mid = []]) or 2 moves (when [mid <> []]). *)
+(**md
+**The outer-pair swap fast path exchanges the endpoints of a window in at most two DOM moves.**
+
+When `first_r` and `last_r` swap places around an unchanged interior `mid` (`swapped` in `Row.Layout`), one move (when `mid` is empty) or two moves (when `mid` is non-empty) produces `last_r :: mid ++ [first_r]`.
+
+- [first_r:] the row originally at the front of the window.
+- [mid:] the unchanged interior rows between `first_r` and `last_r`.
+- [last_r:] the row originally at the end of the window.
+- [pre:] the sibling prefix before the window.
+- [anchor:] the sibling anchor immediately after the window.
+- [suf:] the sibling suffix after `anchor`.
+*)
 Theorem outer_swap_places_exact first_r mid last_r pre anchor suf :
   first_r <> last_r ->
   ~ In first_r mid ->
@@ -797,6 +850,15 @@ Proof.
   rewrite IH, list_set_length. reflexivity.
 Qed.
 
+(** ** LIS (`increasingRun`), `Departures`, and `Reflow` gating *)
+
+(**md
+**The patience-sorting LIS mask matches the input window length.**
+
+`increasing_run` (`Mounting.increasingRun`) returns one boolean keep flag per entry in `sources`.
+
+- [sources:] the old-window source indices (-1 for fresh rows) of the target window.
+*)
 Theorem increasing_run_length sources :
   length (increasing_run sources) = length sources.
 Proof.
@@ -805,8 +867,15 @@ Proof.
   rewrite mark_chain_length, repeat_length. reflexivity.
 Qed.
 
-(** ** Departures and Reflow theorems *)
+(**md
+**Retiring a row removes it from the live sibling projection whether or not an exit animation holds its DOM node.**
 
+Whether `retire_or_remove` (`Departures.retire`) detaches `n` immediately or holds `n` in `dep_leaving` for an exit animation, `filter_live` sees `n` removed at once.
+
+- [n:] the retired row node id.
+- [d:] the `Departures` state before retirement.
+- [dom:] the parent's full DOM sibling list before retirement.
+*)
 Theorem departures_retire_preserves_live_siblings n d dom :
   ~ In n (dep_leaving d) ->
   let '(d', dom') := retire_or_remove n d dom in
@@ -897,9 +966,19 @@ Proof.
   destruct (release_rows rows d (pre ++ start :: inner ++ finish :: suf)) as [d1 dom1]; simpl in *; subst; reflexivity.
 Qed.
 
-(** Soundness of [RegionSite.FlushReleased]'s [ClearBetween] fast path ([Mounting.fs:1890-1902]):
-    when [holds_between] is false (no leaving or exit-registered node between the markers) and
-    no pending-claim cleanup is needed, fast [clear_between] equals row-by-row [release_rows]. *)
+(**md
+**Clearing between region markers equals row-by-row release whenever no departure holds a node in the span.**
+
+When `holds_between` (`Departures.Holds`) is false and no pending claim remains on `rows`, `RegionSite.FlushReleased`'s bulk `clear_between` fast path produces the exact `(Departures, DOM)` pair of `release_rows`.
+
+- [rows:] the rows owned by the cleared region.
+- [d:] the `Departures` state before flushing.
+- [pre:] the sibling prefix before the region's start marker.
+- [start:] the region's opening marker node.
+- [inner:] the sibling nodes currently between `start` and `finish`.
+- [finish:] the region's closing marker node.
+- [suf:] the sibling suffix after `finish`.
+*)
 Theorem flush_released_fast_clear_sound rows d pre start inner finish suf :
   NoDup (pre ++ start :: inner ++ finish :: suf) ->
   (forall x, In x inner <-> In x rows) ->
@@ -942,10 +1021,15 @@ Proof.
   congruence.
 Qed.
 
-(** Reflow gate ([Departures.fs:469-497]): two consecutive [before] calls in one open window
-    run [Before] once, ignore the superseded first post, and close + run [After] once on the latest post. *)
 Local Arguments Nat.eqb : simpl never.
 
+(**md
+**Repeated reflow requests in one open measurement window run `Before` once and close only on the latest post.**
+
+Two `reflow_before` (`Departures.before`) calls while a measurement is open invoke `Before` once, ignore the superseded earlier post ticket, and close the window with a single `After` run when the latest ticket fires.
+
+- [s0:] the closed `ReflowEntry` state before the measurement window opens.
+*)
 Theorem reflow_latest_post_closes_once (s0 : reflow_state) :
   rf_open s0 = false ->
   let '(s1, t1) := reflow_before s0 in

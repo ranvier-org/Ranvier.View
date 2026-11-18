@@ -4,13 +4,11 @@ Import ListNotations.
 
 Local Arguments Nat.eqb : simpl never.
 
-(** * SSR marker balancing, nested HydrationCursor rollback, and ViewBoundary readiness *)
+(**md # SSR marker balancing, nested `HydrationCursor` rollback, and `ViewBoundary` readiness
 
-(** Corresponds to [Ranvier.View.Dom.TemplateDom] ([matchingEnd], [logicalNext],
-    [HydrationCursor]), [Ranvier.View.Dom.Hydration] ([hydrateWith]),
-    [Ranvier.View.Scope] ([BindingState]), and [Ranvier.View.Dom.Mounting] ([ViewBoundary]). *)
+Models the server-marker scanner and nested rollback cursor in `Ranvier.View.Dom.TemplateDom` (`matchingEnd`, `logicalNext`, `HydrationCursor`), `Ranvier.View.Dom.Hydration` (`hydrateWith`), `Ranvier.View.Scope` (`BindingState`), and `Ranvier.View.Dom.Mounting` (`ViewBoundary`). *)
 
-(** ** 1. SSR comment marker bracket matching ([TemplateDom.fs:218-246]) *)
+(** ** SSR comment marker bracket matching *)
 
 Inductive ssr_token :=
   | TokStart (tag : nat)
@@ -104,6 +102,14 @@ Proof.
       rewrite IHt by lia. apply IHts; lia.
 Qed.
 
+(**md
+**Scanning from depth 0 past any well-bracketed forest lands on the enclosing closing marker.**
+
+`scan_matching_end` (`TemplateDom.matchingEnd`) skips arbitrarily nested `TokStart` / `TokEnd` child regions inside `children` and returns `Some (TokEnd :: suf)` without overshooting into `suf`.
+
+- [children:] the well-bracketed child SSR forest inside the region.
+- [suf:] the trailing sibling tokens after the region's closing `TokEnd`.
+*)
 Theorem matching_end_well_bracketed children suf :
   scan_matching_end 0 (flatten_trees children ++ TokEnd :: suf) = Some (TokEnd :: suf).
 Proof.
@@ -112,6 +118,15 @@ Proof.
   reflexivity.
 Qed.
 
+(**md
+**`logicalNext` on an SSR start marker skips the entire bracketed region to its closing marker.**
+
+Given a flattened `SRegion tag children` followed by `suf`, `logical_next` (`TemplateDom.logicalNext`) returns `Some (TokEnd :: suf)`.
+
+- [tag:] the marker kind tag of the opening `<!--[...-->` comment.
+- [children:] the nested SSR nodes and sub-regions enclosed by the region.
+- [suf:] the sibling tokens following the region's closing `<!--]-->` comment.
+*)
 Theorem logical_next_skips_region tag children suf :
   logical_next (flatten_tree (SRegion tag children) ++ suf) = Some (TokEnd :: suf).
 Proof.
@@ -119,7 +134,7 @@ Proof.
   apply matching_end_well_bracketed.
 Qed.
 
-(** ** 2. Hierarchical [HydrationCursor] LIFO rollback & commit ([TemplateDom.fs:111-170]) *)
+(** ** Hierarchical `HydrationCursor` LIFO rollback and commit *)
 
 Inductive cursor_entry (St : Type) :=
   | UndoStep (inv : St -> St)
@@ -269,6 +284,15 @@ Proof.
   simpl. apply eq_S. induction sub as [|h t IH]; simpl; [reflexivity | lia].
 Qed.
 
+(**md
+**Restoring a nested `HydrationCursor` log exactly inverts all server DOM and head edits.**
+
+When every recorded `HydEdit` carries its left inverse (`ops_reversible`), `restore_entries` (`HydrationCursor.Restore`) unwinds arbitrarily nested child cursors in LIFO order back to the initial state `s0`.
+
+- [St:] the state type over which server DOM and `DocumentHead` edits operate.
+- [ops:] the nested hydration edit transcript executed before failure.
+- [s0:] the initial state before hydration began.
+*)
 Theorem hydration_cursor_restore_exact_inverse {St : Type} (ops : list (hydration_op St)) (s0 : St) :
   ops_reversible ops ->
   let '(s_end, log) := run_hydration_ops ops s0 in
@@ -305,13 +329,21 @@ Proof.
       reflexivity.
 Qed.
 
+(**md
+**Committing a `HydrationCursor` drops every held undo closure and nested cursor.**
+
+`commit_entries` (`HydrationCursor.Commit`) reduces `HydrationCounters.held` (`held_entries`) to `0`.
+
+- [St:] the state type over which undo entries operate.
+- [es:] the undo and nested-cursor entries accumulated during hydration.
+*)
 Theorem hydration_cursor_commit_clears_held {St : Type} (es : list (cursor_entry St)) :
   held_entries (commit_entries es) = 0.
 Proof.
   reflexivity.
 Qed.
 
-(** ** 3. [BindingState] & [ViewBoundary] readiness invariants ([Scope.fs:24-80], [Mounting.fs:2465-2565]) *)
+(** ** `BindingState` and `ViewBoundary` readiness invariants *)
 
 Record bstate := {
   bs_failed : bool;
@@ -468,9 +500,14 @@ Proof.
   - specialize (IH i Hnth). lia.
 Qed.
 
-(** Fundamental boundary readiness invariant: across creation ([bs_expect]), any [binding_step]
-    ([OutNotReady], [OutError], [OutValue]), and [binding_dispose] on any binding in the scope,
-    [bm_waiting] equals the EXACT number of bindings currently holding the [Waiting] bit! *)
+(**md
+**Registering a new binding preserves exact agreement between `bm_waiting` and binding `Waiting` bits.**
+
+`bs_expect` (`BindingState.started` / `ViewScope.Expect`) increments `bm_waiting` if and only if the new binding starts with `bs_waiting = true`.
+
+- [bm:] the `ViewBoundary` state before registering the binding.
+- [bss:] the states of the bindings already registered with `bm`.
+*)
 Theorem binding_expect_preserves_waiting_inv bm bss :
   bm_waiting bm = count_waiting bss ->
   let '(bm', b_new) := bs_expect bm in
@@ -480,6 +517,17 @@ Proof.
   destruct (bm_tracks bm && negb (bm_revealed bm || bm_failed bm)); simpl; lia.
 Qed.
 
+(**md
+**Every binding read outcome (`OutValue`, `OutNotReady`, `OutError`) preserves the boundary waiting-count invariant.**
+
+Across `binding_step` (`BindingState.rejected`, `report`, `recovered`, `released`), `bm_waiting` always equals the count of bindings holding `Waiting`.
+
+- [out:] the outcome of evaluating the binding's reader.
+- [bm:] the `ViewBoundary` state before the step.
+- [bss:] the list of binding states registered under `bm`.
+- [idx:] the index in `bss` of the binding that ran.
+- [b_old:] the state of binding `idx` before the step.
+*)
 Theorem binding_step_preserves_waiting_inv out bm bss idx b_old :
   bm_waiting bm = count_waiting bss ->
   nth_error bss idx = Some b_old ->
@@ -520,6 +568,16 @@ Proof.
     simpl in Hupd. lia.
 Qed.
 
+(**md
+**Disposing a binding releases its `Waiting` claim at most once and preserves `bm_waiting = count_waiting`.**
+
+When a waiting binding tears down before resolving (`Mounting.fs` cleanup calling `BindingState.ready`), `binding_dispose` decrements `bm_waiting` once and clears `bs_waiting`.
+
+- [bm:] the `ViewBoundary` state before disposal.
+- [bss:] the list of binding states registered under `bm`.
+- [idx:] the index in `bss` of the disposed binding.
+- [b_old:] the state of binding `idx` before disposal.
+*)
 Theorem binding_dispose_preserves_waiting_inv bm bss idx b_old :
   bm_waiting bm = count_waiting bss ->
   nth_error bss idx = Some b_old ->
@@ -538,8 +596,14 @@ Proof.
   - lia.
 Qed.
 
-(** [NotReadyException] never triggers error reporting, and repeated [NotReadyException]s on an
-    already-waiting binding are idempotent ([Scope.fs:47-59]). *)
+(**md
+**`NotReadyException` never reports an error, and consecutive `NotReadyException`s on the same binding are idempotent.**
+
+`BindingState.rejected` leaves `bm_fail_calls` unchanged and makes a second `OutNotReady` read a state identity.
+
+- [bm:] the `ViewBoundary` state before the `NotReadyException` reads.
+- [bs:] the binding's 2-bit state before the `NotReadyException` reads.
+*)
 Theorem binding_not_ready_idempotent_and_silent bm bs :
   let '(bm1, bs1) := binding_step OutNotReady bm bs in
   let '(bm2, bs2) := binding_step OutNotReady bm1 bs1 in
@@ -551,7 +615,14 @@ Proof.
     simpl; rewrite ?Hw, ?Htr; simpl; repeat split; reflexivity.
 Qed.
 
-(** Recovery calls [clearReported] iff [ReadFailed] was set ([Scope.fs:61-67]). *)
+(**md
+**A successful read clears `ReadFailed` and invokes `clearReported` if and only if the binding had previously failed.**
+
+`BindingState.recovered` increments `bm_clear_calls` by `1` when `bs_failed` was `true` and by `0` otherwise.
+
+- [bm:] the `ViewBoundary` state before the recovery read.
+- [bs:] the binding's 2-bit state before the recovery read.
+*)
 Theorem binding_recovered_clears_iff_failed bm bs :
   let '(bm', bs') := binding_step OutValue bm bs in
   bs_failed bs' = false /\
@@ -562,8 +633,14 @@ Proof.
     destruct (bm_waiting bm); simpl; (split; [reflexivity | lia]).
 Qed.
 
-(** Generation fencing ([Mounting.fs:2087-2088]): a failure advances [bm_gen], so any retry handle
-    captured from an earlier failure generation is ignored. *)
+(**md
+**Advancing the boundary generation on failure fences out every retry handle from an earlier failure.**
+
+`bm_fail` increments `bm_gen`, so `bm_retry` invoked with any `attempt_gen <= bm_gen bm` is a no-op (`ViewBoundary` retry generation check in `Mounting.fs`).
+
+- [attempt_gen:] the generation captured when the stale retry callback was created.
+- [bm:] the `ViewBoundary` state prior to the newer failure.
+*)
 Theorem boundary_stale_retry_fenced attempt_gen bm :
   attempt_gen <= bm_gen bm ->
   bm_retry attempt_gen (bm_fail bm) = bm_fail bm.
