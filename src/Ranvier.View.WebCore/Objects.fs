@@ -309,7 +309,7 @@ type internal Registration(target: nativeint, eventType: string, capture: bool, 
 [<AbstractClass; AllowNullLiteral>]
 type NativeObject(session: Session, handle: nativeint, kind: int) =
     let mutable handle = handle
-    let lifetimeAnchors = List<NativeObject>()
+    let mutable lifetimeAnchors: List<NativeObject> = null
     let mutable contextDocument: NativeObject = null
 
     /// <summary>The session of the host the object belongs to.</summary>
@@ -322,7 +322,11 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
 
     member internal _.ContextDocument = contextDocument
 
-    member internal _.LifetimeAnchors = lifetimeAnchors :> seq<NativeObject>
+    member internal _.LifetimeAnchors =
+        if isNull lifetimeAnchors then
+            Seq.empty
+        else
+            lifetimeAnchors :> seq<NativeObject>
 
     /// <summary>Binds the first checked document context without rebinding cached objects.</summary>
     member internal this.BindDocumentContext(document: NativeObject) =
@@ -348,6 +352,9 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
             not (isNull anchor)
             && not (obj.ReferenceEquals (this, anchor))
         then
+            if isNull lifetimeAnchors then
+                lifetimeAnchors <- List<NativeObject>(2)
+
             lifetimeAnchors.Add anchor
 
     member val internal Expandos: Ranvier.View.Native.ExpandoSlots = null with get, set
@@ -368,7 +375,10 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
 
             let owned = handle
             handle <- 0n
-            lifetimeAnchors.Clear ()
+
+            if not (isNull lifetimeAnchors) then
+                lifetimeAnchors.Clear ()
+
             contextDocument <- null
             GC.SuppressFinalize this
             Session.Release (kind, owned)
@@ -390,14 +400,69 @@ type NativeObject(session: Session, handle: nativeint, kind: int) =
 
             this.Expandos
 
+and [<Sealed; AbstractClass>] private KnownSessions =
+    [<ThreadStatic; DefaultValue>]
+    static val mutable private sessions: ResizeArray<WeakReference<Session>>
+
+    static member Peek() =
+        KnownSessions.sessions
+
+    static member Get() =
+        let current = KnownSessions.sessions
+
+        if isNull current then
+            let created = ResizeArray<WeakReference<Session>>(4)
+            KnownSessions.sessions <- created
+            created
+        else
+            current
+
+    static member Compact(list: ResizeArray<WeakReference<Session>>) =
+        let count = list.Count
+        let mutable write = 0
+
+        for read = 0 to count - 1 do
+            let weak = list[read]
+            let mutable target: Session = null
+
+            if
+                weak.TryGetTarget (&target)
+                && not target.IsDisposed
+            then
+                if write <> read then
+                    list[write] <- weak
+
+                write <- write + 1
+
+        if write < count then
+            list.RemoveRange (write, count - write)
+
+    static member CompactExcluding(list: ResizeArray<WeakReference<Session>>, excluded: Session) =
+        let count = list.Count
+        let mutable write = 0
+
+        for read = 0 to count - 1 do
+            let weak = list[read]
+            let mutable target: Session = null
+
+            if
+                weak.TryGetTarget (&target)
+                && not (obj.ReferenceEquals (target, excluded))
+                && not target.IsDisposed
+            then
+                if write <> read then
+                    list[write] <- weak
+
+                write <- write + 1
+
+        if write < count then
+            list.RemoveRange (write, count - write)
+
 /// <summary>
 /// The managed objects of one WebCore host: the node and event table, the owner claims that keep objects alive, and the
 /// queue of releases from collected objects.
 /// </summary>
-and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) as this =
-    static let knownSessions =
-        new System.Threading.ThreadLocal<ResizeArray<WeakReference<Session>>> (fun () -> ResizeArray ())
-
+and [<Sealed; AllowNullLiteral>] Session private (host: nativeint) =
     let table = Dictionary<nativeint, WeakReference<NativeObject>>()
 
     let objectTable =
@@ -417,14 +482,12 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) as this =
     let cleanupGate = obj ()
     let ownerCleanup = ConcurrentQueue<unit -> unit>()
 
-    do
-        knownSessions.Value.RemoveAll (fun weak ->
-            match weak.TryGetTarget () with
-            | true, session -> session.IsDisposed
-            | _ -> true)
-        |> ignore
-
-        knownSessions.Value.Add (WeakReference<Session>(this))
+    static member internal Create(host: nativeint) : Session =
+        let created = new Session (host)
+        let list = KnownSessions.Get ()
+        KnownSessions.Compact list
+        list.Add (WeakReference<Session>(created))
+        created
 
     /// <summary>Whether this session has released its native objects.</summary>
     member internal _.IsDisposed = disposed || closing
@@ -434,12 +497,19 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) as this =
 
     /// <summary>Queues cleanup before shutdown; rejection leaves ownership with the caller.</summary>
     member internal _.QueueOwnerCleanup(action: unit -> unit) =
-        lock cleanupGate (fun () ->
+        let mutable taken = false
+
+        try
+            System.Threading.Monitor.Enter (cleanupGate, &taken)
+
             if disposed || closing then
                 false
             else
                 ownerCleanup.Enqueue action
-                true)
+                true
+        finally
+            if taken then
+                System.Threading.Monitor.Exit cleanupGate
 
     member private _.DrainOwnerCleanup() =
         let mutable action = Unchecked.defaultof<unit -> unit>
@@ -450,48 +520,82 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) as this =
             with error ->
                 errors.Add error
 
-    member private _.FindKnownNode(handle: nativeint) =
+    member private _.FindKnownNodeOrNull(handle: nativeint) : NativeObject =
         if disposed || closing || handle = 0n then
-            None
+            null
         else
-            match table.TryGetValue handle with
-            | true, weak ->
-                match weak.TryGetTarget () with
-                | true, value when value.Kind = Kind.Node && value.Handle = handle -> Some value
-                | _ -> None
-            | _ -> None
+            let mutable weak = Unchecked.defaultof<WeakReference<NativeObject>>
+
+            if table.TryGetValue (handle, &weak) then
+                let mutable value: NativeObject = null
+
+                if
+                    weak.TryGetTarget (&value)
+                    && value.Kind = Kind.Node
+                    && value.Handle = handle
+                then
+                    value
+                else
+                    null
+            else
+                null
 
     /// <summary>The live node wrapper known on this host thread, preserving identity after adoption.</summary>
     static member internal TryKnownNode(handle: nativeint) : NativeObject option =
-        knownSessions.Value.RemoveAll (fun weak ->
-            match weak.TryGetTarget () with
-            | true, session -> session.IsDisposed
-            | _ -> true)
-        |> ignore
+        let list = KnownSessions.Peek ()
 
-        knownSessions.Value
-        |> Seq.tryPick (fun weak ->
-            match weak.TryGetTarget () with
-            | true, session -> session.FindKnownNode handle
-            | _ -> None)
+        if isNull list || list.Count = 0 then
+            None
+        else
+            KnownSessions.Compact list
+            let count = list.Count
+            let mutable index = 0
+            let mutable found: NativeObject = null
+
+            while index < count && isNull found do
+                let mutable session: Session = null
+
+                if list[index].TryGetTarget(&session) then
+                    found <- session.FindKnownNodeOrNull handle
+
+                index <- index + 1
+
+            if isNull found then None else Some found
 
     /// <summary>The live host session whose current document has this native address.</summary>
     static member internal TryDocumentOwner(document: nativeint) : Session option =
         if document = 0n then
             None
         else
-            knownSessions.Value
-            |> Seq.tryPick (fun weak ->
-                match weak.TryGetTarget () with
-                | true, session when session.IsOwnerThread && not session.IsDisposed ->
-                    let current = Native.rv_host_document session.Host
+            let list = KnownSessions.Peek ()
 
-                    try
-                        if current = document then Some session else None
-                    finally
-                        if current <> 0n then
-                            Native.rv_node_release current
-                | _ -> None)
+            if isNull list || list.Count = 0 then
+                None
+            else
+                let count = list.Count
+                let mutable index = 0
+                let mutable found: Session = null
+
+                while index < count && isNull found do
+                    let mutable session: Session = null
+
+                    if
+                        list[index].TryGetTarget(&session)
+                        && session.IsOwnerThread
+                        && not session.IsDisposed
+                    then
+                        let current = Native.rv_host_document session.Host
+
+                        try
+                            if current = document then
+                                found <- session
+                        finally
+                            if current <> 0n then
+                                Native.rv_node_release current
+
+                    index <- index + 1
+
+                if isNull found then None else Some found
 
     static member internal Release(kind: int, handle: nativeint) =
         match kind with
@@ -837,8 +941,21 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) as this =
             released <- released + 1
 
         if others.Count > 64 then
-            others.RemoveAll (fun weak -> not (fst (weak.TryGetTarget ())))
-            |> ignore
+            let count = others.Count
+            let mutable write = 0
+
+            for read = 0 to count - 1 do
+                let weak = others[read]
+                let mutable target: NativeObject = null
+
+                if weak.TryGetTarget (&target) then
+                    if write <> read then
+                        others[write] <- weak
+
+                    write <- write + 1
+
+            if write < count then
+                others.RemoveRange (write, count - write)
 
     /// <summary>Releases every reference, live objects included; their handles read zero afterwards.</summary>
     member this.Dispose() =
@@ -868,14 +985,10 @@ and [<Sealed; AllowNullLiteral>] Session internal (host: nativeint) as this =
                     cleanup.Attempt target.Detach
             finally
                 disposed <- true
+                let list = KnownSessions.Peek ()
 
-                knownSessions.Value.RemoveAll (fun weak ->
-                    match weak.TryGetTarget () with
-                    | true, session ->
-                        obj.ReferenceEquals (session, this)
-                        || session.IsDisposed
-                    | _ -> true)
-                |> ignore
+                if not (isNull list) && list.Count > 0 then
+                    KnownSessions.CompactExcluding (list, this)
 
                 table.Clear ()
                 objectTable.Clear ()

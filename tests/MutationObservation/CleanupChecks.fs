@@ -65,7 +65,7 @@ let runPure () =
 
     check (obj.ReferenceEquals (first, raised) && final = 1) "Later failure cannot replace the first or stop cleanup"
 
-    use session = new Session (0n)
+    use session = Session.Create 0n
     let queuedFailure = InvalidOperationException "queued"
     let mutable executed = 0
     let mutable wrongThread: exn = null
@@ -106,7 +106,7 @@ let runPure () =
     session.Dispose ()
 
     for _ in 1..32 do
-        use racing = new Session (0n)
+        use racing = Session.Create 0n
         use start = new ManualResetEventSlim ()
         let mutable accepted = false
         let mutable ran = 0

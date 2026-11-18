@@ -202,16 +202,23 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
 
     let repaintBounds x y width height =
         // A partial canvas must start on the full canvas's device-pixel grid.
-        let grid =
-            seq { 1..64 }
-            |> Seq.tryFind (fun step ->
-                let pixels = float deviceScale * float step
-                pixels = Math.Round pixels)
+        let scale = float deviceScale
+        let mutable candidate = 1
+        let mutable foundStep = 0
 
-        match grid with
-        | None -> struct (0, 0, viewportWidth, viewportHeight)
-        | Some step ->
+        while candidate <= 64 && foundStep = 0 do
+            let pixels = scale * float candidate
+
+            if pixels = Math.Round pixels then
+                foundStep <- candidate
+            else
+                candidate <- candidate + 1
+
+        if foundStep = 0 then
+            struct (0, 0, viewportWidth, viewportHeight)
+        else
             // WPE's glyph damage can omit its outer antialias pixel.
+            let step = foundStep
             let margin = if OperatingSystem.IsLinux () then 1 else 0
             let left = max 0 ((x - margin) / step * step)
             let top = max 0 ((y - margin) / step * step)
@@ -250,7 +257,11 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         let mutable going = true
 
         while not disposed && going && timers.Count > 0 do
-            let first = Seq.head timers
+            let first =
+                let mutable enumerator = timers.GetEnumerator ()
+                enumerator.MoveNext () |> ignore
+                enumerator.Current
+
             let struct (due, id) = first.Key
 
             if due <= now () then
@@ -348,7 +359,7 @@ type WebCoreHost private (handle: nativeint, session: Session, width: int, heigh
         Native.rv_host_load_html (handle, Native.utf8 initial, Native.utf8Length initial)
         |> Interop.check "rv_host_load_html"
 
-        let session = new Session (handle)
+        let session = Session.Create handle
         session.NodeFactory <- Func<_, _, _>(Factories.node)
         session.EventFactory <- Func<_, _, _>(Factories.event)
         session.TargetFactory <- Func<_, _, _>(fun session handle -> StandaloneEventTarget (session, handle) :> NativeObject)

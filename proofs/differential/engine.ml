@@ -1472,91 +1472,6 @@ type owq_admission =
 | AdmFull
 | AdmClosed
 
-type owq_model = { owq_items : nat list; owq_stopped : bool;
-                   owq_has_wake : bool; owq_wakes : nat; owq_accepted : 
-                   nat; owq_dequeued : nat; owq_rejected : nat;
-                   owq_discarded : nat }
-
-(** val init_owq : owq_model **)
-
-let init_owq =
-  { owq_items = Nil; owq_stopped = False; owq_has_wake = False; owq_wakes =
-    O; owq_accepted = O; owq_dequeued = O; owq_rejected = O; owq_discarded =
-    O }
-
-(** val owq_try_enqueue :
-    nat -> nat -> owq_model -> (owq_admission, owq_model) prod **)
-
-let owq_try_enqueue item capacity q =
-  match q.owq_stopped with
-  | True -> Pair (AdmClosed, q)
-  | False ->
-    (match Nat.leb capacity (length q.owq_items) with
-     | True ->
-       Pair (AdmFull, { owq_items = q.owq_items; owq_stopped = False;
-         owq_has_wake = q.owq_has_wake; owq_wakes = q.owq_wakes;
-         owq_accepted = q.owq_accepted; owq_dequeued = q.owq_dequeued;
-         owq_rejected = (S q.owq_rejected); owq_discarded = q.owq_discarded })
-     | False ->
-       let was_empty =
-         match q.owq_items with
-         | Nil -> True
-         | Cons (_, _) -> False
-       in
-       let notify =
-         match match was_empty with
-               | True -> q.owq_has_wake
-               | False -> False with
-         | True -> S O
-         | False -> O
-       in
-       Pair (AdmAccepted, { owq_items = (app q.owq_items (Cons (item, Nil)));
-       owq_stopped = False; owq_has_wake = q.owq_has_wake; owq_wakes =
-       (add q.owq_wakes notify); owq_accepted = (S q.owq_accepted);
-       owq_dequeued = q.owq_dequeued; owq_rejected = q.owq_rejected;
-       owq_discarded = q.owq_discarded }))
-
-(** val owq_try_dequeue : owq_model -> (nat option, owq_model) prod **)
-
-let owq_try_dequeue q =
-  match q.owq_items with
-  | Nil -> Pair (None, q)
-  | Cons (x, rest) ->
-    Pair ((Some x), { owq_items = rest; owq_stopped = q.owq_stopped;
-      owq_has_wake = q.owq_has_wake; owq_wakes = q.owq_wakes; owq_accepted =
-      q.owq_accepted; owq_dequeued = (S q.owq_dequeued); owq_rejected =
-      q.owq_rejected; owq_discarded = q.owq_discarded })
-
-(** val owq_set_wake : bool -> owq_model -> owq_model **)
-
-let owq_set_wake has_cb q =
-  match q.owq_stopped with
-  | True -> q
-  | False ->
-    let non_empty = match q.owq_items with
-                    | Nil -> False
-                    | Cons (_, _) -> True
-    in
-    let notify =
-      match match non_empty with
-            | True -> has_cb
-            | False -> False with
-      | True -> S O
-      | False -> O
-    in
-    { owq_items = q.owq_items; owq_stopped = False; owq_has_wake = has_cb;
-    owq_wakes = (add q.owq_wakes notify); owq_accepted = q.owq_accepted;
-    owq_dequeued = q.owq_dequeued; owq_rejected = q.owq_rejected;
-    owq_discarded = q.owq_discarded }
-
-(** val owq_stop : owq_model -> owq_model **)
-
-let owq_stop q =
-  { owq_items = Nil; owq_stopped = True; owq_has_wake = False; owq_wakes =
-    q.owq_wakes; owq_accepted = q.owq_accepted; owq_dequeued =
-    q.owq_dequeued; owq_rejected = q.owq_rejected; owq_discarded =
-    (add q.owq_discarded (length q.owq_items)) }
-
 type fence_poll =
 | PollNotReady
 | PollReady
@@ -1795,6 +1710,105 @@ let q_flush_reenq_reusable mode will_fail reenq buf q =
     (q_request { q_slots = slots2; q_pending = pend2; q_disposed = False;
       q_scheduled = False; q_generation = (S q.q_generation); q_tickets =
       q.q_tickets; q_committed = committed'; q_errors = errs' }))
+
+type owq_fast_state = { of_items : (nat, nat) prod list; of_stopped : 
+                        bool; of_wake_nonnull : bool; of_wakes : nat;
+                        of_accepted : nat; of_dequeued : nat;
+                        of_rejected : nat; of_discarded : nat;
+                        of_observed_ts : nat list }
+
+(** val init_owq_fast : owq_fast_state **)
+
+let init_owq_fast =
+  { of_items = Nil; of_stopped = False; of_wake_nonnull = False; of_wakes =
+    O; of_accepted = O; of_dequeued = O; of_rejected = O; of_discarded = O;
+    of_observed_ts = Nil }
+
+(** val owq_fast_try_enqueue :
+    nat -> nat -> nat -> owq_fast_state -> (owq_admission, owq_fast_state)
+    prod **)
+
+let owq_fast_try_enqueue item capacity ts_tick f =
+  match f.of_stopped with
+  | True -> Pair (AdmClosed, f)
+  | False ->
+    (match Nat.leb capacity (length f.of_items) with
+     | True ->
+       Pair (AdmFull, { of_items = f.of_items; of_stopped = False;
+         of_wake_nonnull = f.of_wake_nonnull; of_wakes = f.of_wakes;
+         of_accepted = f.of_accepted; of_dequeued = f.of_dequeued;
+         of_rejected = (S f.of_rejected); of_discarded = f.of_discarded;
+         of_observed_ts = f.of_observed_ts })
+     | False ->
+       let was_empty =
+         match f.of_items with
+         | Nil -> True
+         | Cons (_, _) -> False
+       in
+       let notify =
+         match match was_empty with
+               | True -> f.of_wake_nonnull
+               | False -> False with
+         | True -> S O
+         | False -> O
+       in
+       Pair (AdmAccepted, { of_items =
+       (app f.of_items (Cons ((Pair (item, ts_tick)), Nil))); of_stopped =
+       False; of_wake_nonnull = f.of_wake_nonnull; of_wakes =
+       (add f.of_wakes notify); of_accepted = (S f.of_accepted);
+       of_dequeued = f.of_dequeued; of_rejected = f.of_rejected;
+       of_discarded = f.of_discarded; of_observed_ts = f.of_observed_ts }))
+
+(** val owq_fast_try_dequeue :
+    bool -> owq_fast_state -> (nat option, owq_fast_state) prod **)
+
+let owq_fast_try_dequeue deq_nonnull f =
+  match f.of_items with
+  | Nil -> Pair (None, f)
+  | Cons (p, rest) ->
+    let Pair (x, started) = p in
+    let obs' =
+      match match negb (Nat.eqb started O) with
+            | True -> deq_nonnull
+            | False -> False with
+      | True -> app f.of_observed_ts (Cons (started, Nil))
+      | False -> f.of_observed_ts
+    in
+    Pair ((Some x), { of_items = rest; of_stopped = f.of_stopped;
+    of_wake_nonnull = f.of_wake_nonnull; of_wakes = f.of_wakes; of_accepted =
+    f.of_accepted; of_dequeued = (S f.of_dequeued); of_rejected =
+    f.of_rejected; of_discarded = f.of_discarded; of_observed_ts = obs' })
+
+(** val owq_fast_set_wake : bool -> owq_fast_state -> owq_fast_state **)
+
+let owq_fast_set_wake cb_nonnull f =
+  match f.of_stopped with
+  | True -> f
+  | False ->
+    let non_empty = match f.of_items with
+                    | Nil -> False
+                    | Cons (_, _) -> True
+    in
+    let notify =
+      match match non_empty with
+            | True -> cb_nonnull
+            | False -> False with
+      | True -> S O
+      | False -> O
+    in
+    { of_items = f.of_items; of_stopped = False; of_wake_nonnull =
+    cb_nonnull; of_wakes = (add f.of_wakes notify); of_accepted =
+    f.of_accepted; of_dequeued = f.of_dequeued; of_rejected = f.of_rejected;
+    of_discarded = f.of_discarded; of_observed_ts = f.of_observed_ts }
+
+(** val owq_fast_stop : owq_fast_state -> owq_fast_state **)
+
+let owq_fast_stop f =
+  { of_items = Nil; of_stopped = True; of_wake_nonnull = False; of_wakes =
+    f.of_wakes; of_accepted = f.of_accepted; of_dequeued = f.of_dequeued;
+    of_rejected = f.of_rejected; of_discarded =
+    (add f.of_discarded (length f.of_items)); of_observed_ts =
+    f.of_observed_ts }
 
 type layout_cmd =
 | LCmdRegisterExit of nat
@@ -2391,25 +2405,26 @@ type owq_cmd =
 | OWQStop
 
 (** val run_owq_cmds :
-    owq_cmd list -> nat list -> owq_model -> (nat list, owq_model) prod **)
+    owq_cmd list -> nat list -> owq_fast_state -> (nat list, owq_fast_state)
+    prod **)
 
-let rec run_owq_cmds cs deq_out q =
+let rec run_owq_cmds cs deq_out f =
   match cs with
-  | Nil -> Pair (deq_out, q)
+  | Nil -> Pair (deq_out, f)
   | Cons (c, rest) ->
     (match c with
      | OWQEnqueue (item, cap) ->
-       run_owq_cmds rest deq_out (snd (owq_try_enqueue item cap q))
+       run_owq_cmds rest deq_out (snd (owq_fast_try_enqueue item cap (S O) f))
      | OWQDequeue ->
-       let Pair (res, q') = owq_try_dequeue q in
+       let Pair (res, f') = owq_fast_try_dequeue True f in
        let out' =
          match res with
          | Some x -> app deq_out (Cons (x, Nil))
          | None -> deq_out
        in
-       run_owq_cmds rest out' q'
-     | OWQSetWake cb -> run_owq_cmds rest deq_out (owq_set_wake cb q)
-     | OWQStop -> run_owq_cmds rest deq_out (owq_stop q))
+       run_owq_cmds rest out' f'
+     | OWQSetWake cb -> run_owq_cmds rest deq_out (owq_fast_set_wake cb f)
+     | OWQStop -> run_owq_cmds rest deq_out (owq_fast_stop f))
 
 type owq_view = { ov_dequeued_items : nat list; ov_count : nat;
                   ov_wakes : nat; ov_rejected : nat; ov_discarded : nat;
@@ -2418,10 +2433,10 @@ type owq_view = { ov_dequeued_items : nat list; ov_count : nat;
 (** val observe_owq : owq_cmd list -> owq_view **)
 
 let observe_owq cs =
-  let Pair (out, q) = run_owq_cmds cs Nil init_owq in
-  { ov_dequeued_items = out; ov_count = (length q.owq_items); ov_wakes =
-  q.owq_wakes; ov_rejected = q.owq_rejected; ov_discarded = q.owq_discarded;
-  ov_stopped = q.owq_stopped }
+  let Pair (out, f) = run_owq_cmds cs Nil init_owq_fast in
+  { ov_dequeued_items = out; ov_count = (length f.of_items); ov_wakes =
+  f.of_wakes; ov_rejected = f.of_rejected; ov_discarded = f.of_discarded;
+  ov_stopped = f.of_stopped }
 
 type cf_cmd =
 | CFTryComplete of fence_poll
