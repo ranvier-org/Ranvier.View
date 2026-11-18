@@ -16,6 +16,7 @@ Start with [installation and setup](guide/introduction.md), then explore:
 - [Server rendering and hydration](server/index.md).
 - [Analyzers](analyzers/index.md).
 - [Browser examples](examples/index.md).
+- [Proofs](https://ranvier-org.github.io/Ranvier.View/proofs/).
 
 The [repository](https://github.com/ranvier-org/Ranvier.View) contains the libraries, the experiments, runnable
 examples and the complete test workflows.

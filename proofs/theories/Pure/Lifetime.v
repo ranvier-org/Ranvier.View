@@ -6,12 +6,11 @@ Local Arguments Nat.eqb : simpl never.
 Local Arguments Nat.leb : simpl never.
 Local Arguments Nat.ltb : simpl never.
 
-(** * Hierarchical Placement hook ordering, MountLifetime teardown, and TeardownWindow partitioning *)
+(**md # Hierarchical `Placement` hook ordering, `MountLifetime` teardown, and `TeardownWindow` partitioning
 
-(** Corresponds to [Ranvier.View.Dom.Placement] ([Placement], [PlacementPass]) and
-    [Ranvier.View.MountLifetime] / [TeardownWindow] ([Lifetime.fs]). *)
+Models `Ranvier.View.Dom.Placement` (`Placement`, `PlacementPass`) and `Ranvier.View.MountLifetime` / `TeardownWindow` (`Lifetime.fs`). *)
 
-(** ** 1. [Placement] container & [PlacementPass] ([Placement.fs:33-220]) *)
+(** ** `Placement` container and `PlacementPass` *)
 
 (** Stable insertion of [(g, h)] after all existing entries with group [<= g],
     matching [List.sortBy fst] on forward-accumulated [(group, hook)] pairs. *)
@@ -253,9 +252,13 @@ Proof.
       * constructor; [simpl; lia | constructor].
 Qed.
 
-(** Core [Placement] fast-path theorem ([Placement.fs:151-158]):
-    whenever [bounded_nondec 0 xs] holds (which [pl_ordered = true] guarantees),
-    iterating [xs] directly produces the EXACT same sequence as [sort_groups xs]! *)
+(**md
+**The `Placement` non-decreasing fast path yields the exact sequence of stable group sorting.**
+
+Whenever `bounded_nondec 0 xs` holds (guaranteed when `pl_ordered = true` in `Placement.fs`), iterating `xs` directly produces the identical `(group, hook)` sequence to `sort_groups xs` (`List.sortBy fst`).
+
+- [xs:] the held `(group, hook)` entries accumulated on the `Placement` container.
+*)
 Theorem placement_fast_path_eq_stable_sort xs :
   bounded_nondec 0 xs ->
   sort_groups xs = xs.
@@ -278,6 +281,14 @@ Proof.
     split; [exact Hl1 | apply IH; assumption].
 Qed.
 
+(**md
+**Adding a hook preserves the `pl_ordered` invariant.**
+
+Whenever `pl_ordered` remains `true` after `pl_add` (`Placement.Add`), `pl_held` remains non-decreasing by group and bounded by `pl_last_group`.
+
+- [hook:] the mounted hook id added at the current instance group.
+- [p:] the `Placement` container state before `pl_add`.
+*)
 Theorem pl_add_preserves_order_inv hook p :
   pl_order_inv p ->
   pl_order_inv (pl_add hook p).
@@ -297,6 +308,13 @@ Proof.
   - apply Forall_app; split; [exact Hall_g | constructor; [simpl; lia | constructor]].
 Qed.
 
+(**md
+**Placing a container drains its own ordered hooks strictly before forwarded child hooks.**
+
+`pl_place` (`Placement.Place`) empties `pl_held` and either executes `ordered_own ++ pl_forwarded` immediately (when `pl_parent_placed` is `true`) or forwards that exact sequence to the enclosing parent `Placement`.
+
+- [p:] the unplaced, non-discarded `Placement` state before `pl_place`.
+*)
 Theorem pl_place_own_before_forwarded p :
   pl_laid_out p = false ->
   pl_discarded p = false ->
@@ -317,6 +335,14 @@ Proof.
   destruct (pl_parent_placed p); split; rewrite ?app_assoc; reflexivity.
 Qed.
 
+(**md
+**Discarding a `Placement` drops held hooks and silences all subsequent `Add` and `Place` calls.**
+
+`pl_discard` (`Placement.Discard`) clears held hooks without running or forwarding them, and any later `pl_add` followed by `pl_place` leaves `pl_executed` and `pl_to_parent` unchanged.
+
+- [hook:] any hook id added after `pl_discard`.
+- [p:] the `Placement` container state before `pl_discard`.
+*)
 Theorem pl_discard_drops_held_and_blocks_later hook p :
   let p1 := pl_discard p in
   let p2 := pl_place (pl_add hook p1) in
@@ -330,6 +356,11 @@ Proof.
   repeat split; reflexivity.
 Qed.
 
+(**md
+**`PlacementPass.Inserted` is `false` during the initial pass and `true` on every subsequent pass.**
+
+`ps_begin` (`PlacementPass.Begin`) sets `Inserted = false` before the first `Place` and `Inserted = true` once the initial pass has been placed.
+*)
 Theorem pass_inserted_flag_exact :
   let p1 := ps_begin init_pass in
   let p2 := ps_begin (ps_place p1) in
@@ -338,7 +369,7 @@ Proof.
   simpl; split; reflexivity.
 Qed.
 
-(** ** 2. [MountLifetime] attached-cleanup order & [TeardownWindow] partitioning ([Lifetime.fs]) *)
+(** ** `MountLifetime` attached-cleanup order and `TeardownWindow` partitioning *)
 
 Inductive lifetime_tree :=
   | LTNode (lt_id : nat) (lt_cleanups : list nat) (lt_children : list lifetime_tree).
@@ -467,9 +498,13 @@ Proof.
       split; apply Forall_app; split; assumption.
 Qed.
 
-(** Fundamental [MountLifetime] attached-DOM invariant ([Lifetime.fs:76-80]):
-    every [EvOwnerCleanup] in the entire disposed tree occurs strictly BEFORE every
-    [EvDomRelease] in the tree, and the root lifetime's [EvDomRelease] runs LAST! *)
+(**md
+**Disposing a `MountLifetime` tree runs every `Owner` cleanup strictly before every DOM release, with the root release last.**
+
+Because `Finish` is registered at acquisition `0` and descendant `Finish` calls defer `RunRelease` onto `outer.queued`, `dispose_lifetime_tree` (`MountLifetime.Dispose`) partitions cleanly into `cleanups ++ releases` so every cleanup runs while its DOM subtree is still attached.
+
+- [t:] the mounted `MountLifetime` hierarchy disposed at its root.
+*)
 Theorem mount_lifetime_cleanups_precede_all_releases (t : lifetime_tree) :
   exists cleanups releases,
     dispose_lifetime_tree t = cleanups ++ releases /\
@@ -487,7 +522,7 @@ Proof.
   exists cl, rel. split; [reflexivity | exact Ht].
 Qed.
 
-(** ** 3. [TeardownWindow.Exclude] exact error partitioning ([Lifetime.fs:34-70]) *)
+(** ** `TeardownWindow.Exclude` error partitioning *)
 
 Definition in_interval (idx : nat) (iv : nat * nat) : bool :=
   Nat.leb (fst iv) idx && Nat.ltb idx (snd iv).
@@ -527,10 +562,16 @@ Proof.
     + exact (conj IH_t IH_f).
 Qed.
 
-(** Exact partition theorem for [TeardownWindow] ([Lifetime.fs:50-70]):
-    for any disjoint nested teardown windows inside [[start, start + len)], every root error
-    index [idx] in [[start, start + len)] is reported by EITHER the outer [TeardownWindow]
-    OR by EXCLUSIVELY ONE nested window — zero dropped errors and zero double reports! *)
+(**md
+**Disjoint nested `TeardownWindow` exclusions partition root errors without loss or duplication.**
+
+Every root error index `idx` recorded in `[start, start + len)` belongs either to `teardown_window_indices` (`TeardownWindow.Errors`) or to exactly one excluded nested window.
+
+- [start:] the starting `Root.ErrorCount` of the outer `TeardownWindow`.
+- [len:] the number of root errors recorded while the outer window is open.
+- [nested:] the disjoint `[first, finish)` intervals excluded by nested `MountLifetime.Capture` windows.
+- [idx:] any root error index in `[start, start + len)`.
+*)
 Theorem teardown_window_exact_partition start len nested idx :
   disjoint_intervals nested ->
   start <= idx < start + len ->

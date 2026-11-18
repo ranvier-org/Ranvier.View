@@ -6,14 +6,11 @@ Local Arguments Nat.eqb : simpl never.
 Local Arguments Nat.leb : simpl never.
 Local Arguments Nat.ltb : simpl never.
 
-(** * Queued DOM commits, OwnerWorkQueue wakeups, and CompletionFence lifecycle *)
+(**md # Queued DOM commits, `OwnerWorkQueue` wakeups, and `CompletionFence` lifecycle
 
-(** Corresponds to [Ranvier.View.Dom.Scheduling] ([Slot], [Queue]),
-    [Ranvier.View.WebCore.OwnerWorkQueue] ([OwnerWorkQueue]),
-    [Ranvier.View.WebCore.OwnerTurnBudget] ([TurnLimit]), and
-    [Ranvier.View.WebCore.Sdl.CompletionFence] ([CompletionFence]). *)
+Models `Ranvier.View.Dom.Scheduling` (`Slot`, `Queue`), `Ranvier.View.WebCore.OwnerWorkQueue` (`OwnerWorkQueue`), and `Ranvier.View.WebCore.Sdl.CompletionFence` (`CompletionFence`). *)
 
-(** ** 1. [Scheduling.Queue] ([Scheduling.fs:32-262]) *)
+(** ** `Scheduling.Queue` coalescing, cancellation, and error reporting *)
 
 Inductive commit_failure :=
   | CollectAndContinue
@@ -301,6 +298,15 @@ Proof.
             match q_pending r with [] => false | _ :: _ => true end); simpl; trivial.
 Qed.
 
+(**md
+**Enqueuing a commit preserves `NoDup` on `q_pending` and exact `sl_listed` agreement.**
+
+`q_enqueue` (`Queue.Enqueue`) appends `idx` to `q_pending` if and only if `sl_listed` was `false`, preserving `q_pending_inv`.
+
+- [idx:] the slot index enqueued.
+- [act:] the commit action id stored on the slot.
+- [q:] the `Queue` state before `q_enqueue`.
+*)
 Theorem q_enqueue_preserves_pending_inv idx act q :
   q_pending_inv q ->
   q_pending_inv (q_enqueue idx act q).
@@ -355,7 +361,16 @@ Proof. unfold q_request; destruct (_ && _ && _); reflexivity. Qed.
 Lemma q_gen_request r : q_generation (q_request r) = q_generation r.
 Proof. unfold q_request; destruct (_ && _ && _); reflexivity. Qed.
 
-(** Re-enqueuing an already-listed slot coalesces in place without growing [q_pending]. *)
+(**md
+**Re-enqueuing an already-listed slot coalesces in place without growing `q_pending`.**
+
+A second `q_enqueue` (`Queue.Enqueue`) on `idx` before `Flush` updates `sl_action` and `sl_version` while leaving `q_pending` identical.
+
+- [idx:] the live slot index enqueued twice.
+- [a1:] the first commit action id written to `idx`.
+- [a2:] the superseding commit action id written to `idx`.
+- [q:] the live `Queue` state before the two enqueues.
+*)
 Theorem q_reenqueue_coalesces_in_place idx a1 a2 q :
   q_disposed q = false ->
   nth_error (q_slots q) idx <> None ->
@@ -371,7 +386,18 @@ Proof.
   rewrite !q_pending_request; simpl. reflexivity.
 Qed.
 
-(** Stale posted ticket invalidation across [q_flush] and [q_dispose] ([Scheduling.fs:67-71, 112, 254]). *)
+(**md
+**An explicit `Flush` invalidates every posted flush ticket from an earlier or equal generation.**
+
+`q_flush` (`Queue.Flush`) advances `q_generation`, making `q_run_posted_ticket` a no-op for any `ticket <= q_generation q`.
+
+- [ticket:] the generation captured by an earlier posted callback.
+- [mode1:] the `CommitFailure` policy of the explicit flush.
+- [wf1:] the failure predicate during the explicit flush.
+- [mode2:] the `CommitFailure` policy active when the stale ticket fires.
+- [wf2:] the failure predicate when the stale ticket fires.
+- [q:] the live `Queue` state prior to `q_flush`.
+*)
 Theorem q_stale_ticket_after_flush_noop ticket mode1 wf1 mode2 wf2 q :
   q_disposed q = false ->
   ticket <= q_generation q ->
@@ -387,6 +413,16 @@ Proof.
   rewrite Hneq; reflexivity.
 Qed.
 
+(**md
+**Disposing a `Queue` makes every posted flush ticket a no-op.**
+
+`q_dispose` (`Queue.Dispose`) sets `q_disposed = true`, so `q_run_posted_ticket` leaves the disposed state untouched.
+
+- [ticket:] the generation captured by any posted flush callback.
+- [mode:] the `CommitFailure` policy active when the callback runs.
+- [wf:] the failure predicate when the callback runs.
+- [q:] the `Queue` state before `q_dispose`.
+*)
 Theorem q_ticket_after_dispose_noop ticket mode wf q :
   q_run_posted_ticket ticket mode wf (q_dispose q) = q_dispose q.
 Proof.
@@ -394,8 +430,18 @@ Proof.
   destruct (q_disposed q) eqn:Hd; simpl; [rewrite Hd; reflexivity | reflexivity].
 Qed.
 
-(** [FailFastCancel] invariant ([Scheduling.fs:178-201]): once [stopped = true], [exec_work]
-    commits ZERO further actions and increments [sl_dropped_runs] iff [has_commit && sl_version = ver && sl_has_dropped_cb]. *)
+(**md
+**Once `FailFastCancel` stops a flush, no remaining queued slot commits or records an error.**
+
+With `stopped = true`, `exec_work` (`Queue.Flush`) leaves `committed` and `errs` unchanged while invoking `Dropped` on still-current slots.
+
+- [mode:] the `CommitFailure` mode of the flush.
+- [wf:] the action failure predicate.
+- [work:] the remaining `(slot, version, action)` entries in the flush snapshot.
+- [slots:] the current slot array.
+- [committed:] the actions already committed before the failure.
+- [errs:] the `(scope, error)` pairs already recorded before stopping.
+*)
 Theorem exec_work_stopped_commits_nothing mode wf work slots committed errs :
   let '(_, committed', errs') := exec_work mode wf true work slots committed errs in
   committed' = committed /\ errs' = errs.
@@ -405,8 +451,6 @@ Proof.
   destruct (nth_error slots idx) as [sl|]; [apply IH | apply IH].
 Qed.
 
-(** [Queue.Report] grouping theorem ([Scheduling.fs:219-250]): each reported scope is non-zero
-    and appears at most once ([NoDup (map fst ...)]). *)
 Lemma report_by_scope_aux_nodup seen rem :
   (forall sc, In sc (map fst (report_by_scope_aux seen rem)) -> sc <> 0 /\ ~ In sc seen) /\
   NoDup (map fst (report_by_scope_aux seen rem)).
@@ -432,6 +476,13 @@ Proof.
            intros Hin. destruct (Hmem sc Hin) as [_ Hsc_n]; apply Hsc_n; left; reflexivity.
 Qed.
 
+(**md
+**`Queue.Report` groups flush failures so each non-null `ViewScope` is notified at most once.**
+
+`report_by_scope` (`Queue.Report`) drops scope `0` (null scope) and produces duplicate-free scope batches (`NoDup`).
+
+- [failures:] the `(scope_id, error_id)` pairs recorded during a flush.
+*)
 Theorem queue_report_groups_each_scope_once failures :
   NoDup (map fst (report_by_scope failures)) /\
   (forall sc, In sc (map fst (report_by_scope failures)) -> sc <> 0).
@@ -441,7 +492,7 @@ Proof.
   split; [exact Hnd | intros sc Hsc; exact (proj1 (Hmem sc Hsc))].
 Qed.
 
-(** ** 2. [OwnerWorkQueue] admission, accounting, and no-lost-wakeup ([OwnerWorkQueue.fs:7-111]) *)
+(** ** `OwnerWorkQueue` admission, accounting, and no-lost-wakeup *)
 
 Inductive owq_admission :=
   | AdmAccepted
@@ -536,6 +587,16 @@ Definition owq_stop (q : owq_model) : owq_model :=
 Definition owq_conserved (q : owq_model) : Prop :=
   owq_accepted q = owq_dequeued q + owq_discarded q + length (owq_items q).
 
+(**md
+**Every `OwnerWorkQueue` operation conserves `accepted = dequeued + discarded + Count`.**
+
+`owq_try_enqueue`, `owq_try_dequeue`, `owq_set_wake`, and `owq_stop` (`OwnerWorkQueue.fs`) neither lose nor fabricate accepted work items.
+
+- [item:] the work item passed to `TryEnqueue`.
+- [cap:] the queue capacity limit checked by `TryEnqueue`.
+- [has_cb:] whether `SetWakeCallback` installs `Some` callback or `None`.
+- [q:] the `OwnerWorkQueue` state before the operation.
+*)
 Theorem owq_operations_preserve_conservation item cap has_cb q :
   owq_conserved q ->
   owq_conserved (snd (owq_try_enqueue item cap q)) /\
@@ -554,9 +615,14 @@ Proof.
   - simpl; lia.
 Qed.
 
-(** No-lost-wakeup across the [TryEnqueue] / [SetWakeCallback] handover ([OwnerWorkQueue.fs:49-62, 95-104]):
-    regardless of whether [SetWakeCallback] runs before [TryEnqueue] or [TryEnqueue] runs before
-    [SetWakeCallback], an accepted item on an open queue fires a wake notification! *)
+(**md
+**Either interleaving of `TryEnqueue` and `SetWakeCallback` on an open queue fires a wakeup.**
+
+Whether `SetWakeCallback` registers before `TryEnqueue` or `TryEnqueue` enqueues before `SetWakeCallback` attaches, `owq_wakes` equals `1` (`OwnerWorkQueue.fs`).
+
+- [item:] the work item enqueued onto `init_owq`.
+- [cap:] the positive capacity bound (`cap >= 1`).
+*)
 Theorem owq_no_lost_wakeup item cap :
   cap >= 1 ->
   let q_wake_first := snd (owq_try_enqueue item cap (owq_set_wake true init_owq)) in
@@ -568,7 +634,7 @@ Proof.
   rewrite Hleb; simpl. split; reflexivity.
 Qed.
 
-(** ** 3. [CompletionFence] GPU marker lifecycle ([CompletionFence.fs:8-53]) *)
+(** ** `CompletionFence` GPU marker lifecycle *)
 
 Inductive fence_poll :=
   | PollNotReady
@@ -640,6 +706,14 @@ Definition fence_inv (f : fence_model) : Prop :=
    | Some m => m < cf_next_marker f /\ ~ In m (cf_released f) /\ cf_failed f = false
    end).
 
+(**md
+**`CompletionFence.TryComplete` releases each GPU marker at most once and clears `pending` on `GpuCompletionFailure`.**
+
+`cf_try_complete` (`CompletionFence.TryComplete`) preserves `NoDup (cf_released)` across `PollNotReady`, `PollReady`, and `PollGpuFailure`, and latches `cf_failed = true` with `cf_pending = None` on `PollGpuFailure`.
+
+- [poll:] the GPU completion poll result (`PollNotReady`, `PollReady`, or `PollGpuFailure`).
+- [f:] the `CompletionFence` state before `TryComplete`.
+*)
 Theorem cf_try_complete_preserves_inv poll f :
   fence_inv f ->
   fence_inv (snd (cf_try_complete poll f)) /\
@@ -685,6 +759,13 @@ Proof.
     + split; [repeat split; try assumption; trivial | intros _ _; split; reflexivity].
 Qed.
 
+(**md
+**`CompletionFence.Reset` rejects in-flight GPU work and preserves marker uniqueness.**
+
+`cf_reset` (`CompletionFence.Reset`) returns `FenceError` whenever `cf_pending <> None` and clears `cf_failed` otherwise without touching released markers.
+
+- [f:] the `CompletionFence` state before `Reset`.
+*)
 Theorem cf_reset_preserves_inv_and_rejects_pending f :
   fence_inv f ->
   fence_inv (snd (cf_reset f)) /\

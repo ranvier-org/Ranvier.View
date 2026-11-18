@@ -8,6 +8,9 @@ open Nacara.Theme
 
 let versions = [ SiteVersion.root "1.0" ]
 
+/// The Rocq proofs of the view state machines, deployed at /proofs/ of this site by the Docs workflow.
+let proofs = "https://ranvier-org.github.io/Ranvier.View/proofs/"
+
 let theme =
     Theme.defaults
     |> Theme.navbar
@@ -17,6 +20,7 @@ let theme =
             NavbarSection ("Server", "server", "/server/")
             NavbarSection ("Analyzers", "analyzers", "/analyzers/")
             NavbarSection ("Examples", "examples", "/examples/")
+            NavbarLink ("Proofs", proofs)
         ]
     |> Theme.navbarEnd
         [

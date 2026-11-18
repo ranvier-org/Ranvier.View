@@ -51,3 +51,7 @@ proofs/engine.mli
 proofs/differential/driver
 proofs/differential/driver.exe
 
+# proofs/site.sh output and captured facts
+proofs/site/output/
+proofs/site/.work/
+
