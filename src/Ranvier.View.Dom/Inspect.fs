@@ -110,13 +110,21 @@ and [<System.Diagnostics.DebuggerDisplay("{ToString(),nq}"); NoEquality; NoCompa
 let private table = Native.newWeakMap ()
 let private instances = Native.newWeakMap ()
 let private rowKeys = Native.newWeakMap ()
+let private nullKeySentinel = obj ()
 let private instanceRanges = Native.newWeakMap ()
 
 /// <summary>Registers the inclusive root span of an instance until cleanup.</summary>
 let registerInstanceRange (first: Node) (last: Node) =
     let entry = [| first; last |]
     let entries = Native.get<Node, Node array array> instanceRanges first
-    Native.set instanceRanges first (Array.append (if isNull entries then [||] else entries) [| entry |])
+
+    Native.set
+        instanceRanges
+        first
+        (if isNull entries then
+             [| entry |]
+         else
+             Array.append entries [| entry |])
 
     fun () ->
         let entries = Native.get<Node, Node array array> instanceRanges first
@@ -179,7 +187,7 @@ let rec enclosingInstanceOf (target: Node) : (Node * Node) option =
 
 /// <summary>Retains a row's key at its first node through its exit hold.</summary>
 let rememberRowKey (node: Node) (key: obj) =
-    Native.set rowKeys node [| key |]
+    Native.set rowKeys node (if isNull key then nullKeySentinel else key)
 
 /// <summary>The row's key while its first node has a parent; a detached node clears its retained entry.</summary>
 let rowKeyOf (node: Node) : obj option =
@@ -187,9 +195,10 @@ let rowKeyOf (node: Node) : obj option =
         Native.delete rowKeys node
         None
     else
-        match Native.get<Node, obj array> rowKeys node with
+        match Native.get<Node, obj> rowKeys node with
         | null -> None
-        | values -> Some values[0]
+        | stored when obj.ReferenceEquals (stored, nullKeySentinel) -> Some null
+        | stored -> Some stored
 
 /// <summary>The instances rooted at <c>node</c>, in outer-to-inner registration order.</summary>
 let instancesOf (node: Node) : Probe array =
@@ -206,7 +215,15 @@ let isStale (node: INode) =
 let register (node: Node) (probe: Probe) : unit -> unit =
     match probe with
     | InstanceProbe _ ->
-        Native.set instances node (Array.append (instancesOf node) [| probe |])
+        let existing = Native.get<Node, Probe array> instances node
+
+        Native.set
+            instances
+            node
+            (if isNull existing then
+                 [| probe |]
+             else
+                 Array.append existing [| probe |])
 
         fun () ->
             let remaining =

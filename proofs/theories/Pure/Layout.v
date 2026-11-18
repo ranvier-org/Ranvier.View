@@ -1126,3 +1126,452 @@ Proof.
   rewrite Hneq; simpl. rewrite Nat.eqb_refl; simpl.
   repeat split; reflexivity.
 Qed.
+
+(** ** Proof-backed reconciliation and `Departures` fast paths *)
+
+(** Inline `Row.LayoutIndex` stamping right-to-left across `a_win`, replacing `rowMap`
+    (`OrderedTable` / `Map`) allocation in `Row.Layout`. *)
+Fixpoint stamp_layout_indices (base : nat) (a_win : list nat) (row : nat) : Z :=
+  match a_win with
+  | [] => (-1)%Z
+  | y :: ys =>
+    let rest := stamp_layout_indices (S base) ys row in
+    if Nat.eqb row y then Z.of_nat base else rest
+  end.
+
+(**md
+**Stamping inline `LayoutIndex` fields across the old window equals map-based `index_of` lookup.**
+
+Stamping `Row.LayoutIndex` from `aEnd - 1` down to `aStart` (`stamp_layout_indices`) produces the exact source index (or `-1` when absent) returned by `index_of`, without allocating a per-pass lookup table.
+
+- [row:] the target row queried during `sources` construction.
+- [base:] the starting offset `aStart` of the old window.
+- [a_win:] the slice of old rows in `[aStart .. aEnd)`.
+*)
+Theorem stamp_layout_indices_eq_index_of (row base : nat) (a_win : list nat) :
+  stamp_layout_indices base a_win row = index_of row base a_win.
+Proof.
+  revert base.
+  induction a_win as [|y ys IH]; intros base; simpl; [reflexivity|].
+  destruct (Nat.eqb row y); [reflexivity | apply IH].
+Qed.
+
+(** In-place `-2` sentinel keep marking inside `sources`, avoiding a separate `bool array` allocation. *)
+Fixpoint mark_chain_in_place (fuel : nat) (cursor : option nat)
+    (prev : list (option nat)) (sources : list Z) : list Z :=
+  match fuel, cursor with
+  | 0, _ | _, None => sources
+  | S f, Some c =>
+    let next_c := match nth_error prev c with Some p => p | None => None end in
+    mark_chain_in_place f next_c prev (list_set c (-2)%Z sources)
+  end.
+
+Definition increasing_run_in_place (sources : list Z) : list Z :=
+  let n := length sources in
+  let init_prev := repeat (@None nat) n in
+  let '(tails, prev) := lis_scan sources 0 sources [] init_prev in
+  let start := match rev tails with [] => None | last_t :: _ => Some last_t end in
+  mark_chain_in_place n start prev sources.
+
+Lemma map_list_set {A B : Type} (f : A -> B) (idx : nat) (v : A) (xs : list A) :
+  map f (list_set idx v xs) = list_set idx (f v) (map f xs).
+Proof.
+  revert idx.
+  induction xs as [|x xs IH]; destruct idx; simpl; [reflexivity | reflexivity | reflexivity | f_equal; apply IH].
+Qed.
+
+Lemma mark_chain_in_place_map fuel cursor prev xs :
+  map (fun v => Z.eqb v (-2)%Z) (mark_chain_in_place fuel cursor prev xs) =
+  mark_chain fuel cursor prev (map (fun v => Z.eqb v (-2)%Z) xs).
+Proof.
+  revert cursor xs.
+  induction fuel as [|f IH]; intros [c|] xs; simpl; try reflexivity.
+  rewrite IH, map_list_set. reflexivity.
+Qed.
+
+Lemma map_eqb_neg2_of_ge_neg1 sources :
+  Forall (fun v => (-1 <= v)%Z) sources ->
+  map (fun v => Z.eqb v (-2)%Z) sources = repeat false (length sources).
+Proof.
+  induction 1 as [|v vs Hv _ IH]; simpl; [reflexivity|].
+  assert (Hne : Z.eqb v (-2)%Z = false) by (apply Z.eqb_neq; lia).
+  rewrite Hne, IH. reflexivity.
+Qed.
+
+(**md
+**Marking LIS winners in place with sentinel `-2` produces the exact boolean mask of `increasing_run`.**
+
+Because every entry of `sources` starts at `-1` (fresh row) or `>= 0` (surviving row index), overwriting LIS chain indices in `sources` with `-2` and testing `v = -2` equals `increasing_run` without allocating a separate `keep` array.
+
+- [sources:] source indices in `[-1, +inf)` for the target window.
+*)
+Theorem increasing_run_in_place_sentinel_equiv (sources : list Z) :
+  Forall (fun v => (-1 <= v)%Z) sources ->
+  map (fun v => Z.eqb v (-2)%Z) (increasing_run_in_place sources) = increasing_run sources.
+Proof.
+  intros Hall. unfold increasing_run_in_place, increasing_run.
+  destruct (lis_scan sources 0 sources [] (repeat None (length sources))) as [tails prev].
+  rewrite mark_chain_in_place_map, map_eqb_neg2_of_ge_neg1 by exact Hall.
+  reflexivity.
+Qed.
+
+(** Monotonicity detector for surviving (`>= 0`) entries in `sources`. *)
+Fixpoint strictly_increasing_from (bound : Z) (sources : list Z) : bool :=
+  match sources with
+  | [] => true
+  | v :: vs =>
+    if Z.geb v 0%Z then
+      Z.ltb bound v && strictly_increasing_from v vs
+    else
+      strictly_increasing_from bound vs
+  end.
+
+Definition strictly_increasing_nonneg (sources : list Z) : bool :=
+  strictly_increasing_from (-1)%Z sources.
+
+Lemma lower_bound_tails_all_lt sources tails v :
+  Forall (fun t => (nth t sources (-1)%Z < v)%Z) tails ->
+  lower_bound_tails sources tails v = length tails.
+Proof.
+  induction 1 as [|t ts Ht _ IH]; simpl; [reflexivity|].
+  apply Z.ltb_lt in Ht. rewrite Ht, IH. reflexivity.
+Qed.
+
+Lemma nth_error_list_set_lt {A : Type} (idx c : nat) (v : A) (xs : list A) :
+  c < idx ->
+  nth_error (list_set idx v xs) c = nth_error xs c.
+Proof.
+  revert idx c.
+  induction xs as [|x xs IH]; intros [|idx] [|c] Hlt; simpl; try lia; try reflexivity.
+  apply IH; lia.
+Qed.
+
+Lemma nth_error_list_set_eq {A : Type} (idx : nat) (v : A) (xs : list A) :
+  idx < length xs ->
+  nth_error (list_set idx v xs) idx = Some v.
+Proof.
+  revert idx.
+  induction xs as [|x xs IH]; intros [|idx] Hlt; simpl in *; try lia; [reflexivity|].
+  apply IH; lia.
+Qed.
+
+Lemma list_set_repeat_false_cons idx suf :
+  list_set idx true (false :: repeat false idx ++ suf) = repeat false idx ++ true :: suf.
+Proof.
+  induction idx as [|idx IH]; simpl; [reflexivity | f_equal; exact IH].
+Qed.
+
+Lemma repeat_false_S_app idx suf :
+  repeat false (S idx) ++ suf = repeat false idx ++ false :: suf.
+Proof.
+  induction idx as [|idx IH]; simpl; [reflexivity | f_equal; exact IH].
+Qed.
+
+Lemma nth_error_last_snoc {A : Type} (xs : list A) :
+  match length xs with
+  | 0 => None
+  | S k => nth_error xs k
+  end = match rev xs with [] => None | last_x :: _ => Some last_x end.
+Proof.
+  induction xs as [|a xs IH] using rev_ind; simpl; [reflexivity|].
+  rewrite length_app, rev_app_distr; simpl.
+  replace (length xs + 1) with (S (length xs)) by lia.
+  rewrite nth_error_app2 by lia.
+  replace (length xs - length xs) with 0 by lia.
+  simpl; reflexivity.
+Qed.
+
+Definition chain_follows_below (idx : nat) (tails : list nat) (prev : list (option nat)) : Prop :=
+  forall prev',
+    (forall c, c < idx -> nth_error prev' c = nth_error prev c) ->
+    forall fuel suf,
+      length tails <= fuel ->
+      mark_chain fuel (match rev tails with [] => None | last_t :: _ => Some last_t end)
+        prev' (repeat false idx ++ suf) =
+      mark_chain fuel (match rev tails with [] => None | last_t :: _ => Some last_t end)
+        prev (repeat false idx ++ suf).
+
+Lemma lis_scan_strictly_increasing_invariant sources :
+  forall rem idx bound tails prev keep_pre,
+    idx + length rem = length sources ->
+    (forall k, k < length rem -> nth (idx + k) sources (-1)%Z = nth k rem (-1)%Z) ->
+    strictly_increasing_from bound rem = true ->
+    length keep_pre = idx ->
+    length prev = length sources ->
+    length tails <= idx ->
+    Forall (fun t => t < idx /\ (nth t sources (-1)%Z <= bound)%Z) tails ->
+    (forall prev' fuel suf,
+      (forall c, c < idx -> nth_error prev' c = nth_error prev c) ->
+      length tails <= fuel ->
+      mark_chain fuel (match rev tails with [] => None | last_t :: _ => Some last_t end)
+        prev' (repeat false idx ++ suf) = keep_pre ++ suf) ->
+    let '(tails_f, prev_f) := lis_scan sources idx rem tails prev in
+    mark_chain (length sources)
+      (match rev tails_f with [] => None | last_t :: _ => Some last_t end)
+      prev_f (repeat false (length sources)) =
+    keep_pre ++ map (fun v => Z.geb v 0%Z) rem.
+Proof.
+  induction rem as [|v vs IH]; intros idx bound tails prev keep_pre Hlen Hnth Hinc Hklen Hplen Htlen Htails Hmark; simpl in *.
+  - replace idx with (length sources) in * by lia.
+    rewrite app_nil_r.
+    specialize (Hmark prev (length sources) [] (fun _ _ => eq_refl) Htlen).
+    rewrite !app_nil_r in Hmark. exact Hmark.
+  - destruct (Z.geb v 0%Z) eqn:Hv.
+    + apply andb_true_iff in Hinc. destruct Hinc as [Hlt Hinc_vs].
+      apply Z.ltb_lt in Hlt.
+      assert (Hall_lt : Forall (fun t => (nth t sources (-1)%Z < v)%Z) tails).
+      { eapply Forall_impl; [|exact Htails]. intros t [_ Hle]; lia. }
+      rewrite (lower_bound_tails_all_lt sources tails v Hall_lt).
+      unfold update_tails. rewrite Nat.eqb_refl.
+      set (pred := match length tails with 0 => None | S k => nth_error tails k end).
+      set (prev1 := list_set idx pred prev).
+      replace (keep_pre ++ true :: map (fun v0 => Z.geb v0 0%Z) vs)
+        with ((keep_pre ++ [true]) ++ map (fun v0 => Z.geb v0 0%Z) vs)
+        by (rewrite <- app_assoc; reflexivity).
+      apply (IH (S idx) v (tails ++ [idx]) prev1 (keep_pre ++ [true])).
+      * lia.
+      * intros k Hk. replace (S idx + k) with (idx + S k) by lia.
+        apply (Hnth (S k)); lia.
+      * exact Hinc_vs.
+      * rewrite length_app; simpl; lia.
+      * unfold prev1; rewrite list_set_length; exact Hplen.
+      * rewrite length_app; simpl; lia.
+      * apply Forall_app; split.
+        -- eapply Forall_impl; [|exact Htails]. intros t [Hti Htb]; split; lia.
+        -- constructor; [|constructor].
+           split; [lia|].
+           pose proof (Hnth 0 ltac:(lia)) as H0.
+           replace (idx + 0) with idx in H0 by lia. simpl in H0. rewrite H0; lia.
+      * intros prev' [|fuel] suf Hprev_eq Hflen.
+        -- rewrite length_app in Hflen; simpl in Hflen; lia.
+        -- rewrite rev_app_distr; simpl.
+           rewrite Hprev_eq by lia.
+           unfold prev1. rewrite nth_error_list_set_eq by lia.
+           unfold pred. rewrite nth_error_last_snoc.
+           rewrite list_set_repeat_false_cons.
+           rewrite (Hmark prev' fuel (true :: suf)).
+           ++ rewrite <- app_assoc; simpl; reflexivity.
+           ++ intros c Hc. rewrite Hprev_eq by lia.
+              apply nth_error_list_set_lt; exact Hc.
+           ++ rewrite length_app in Hflen; simpl in Hflen; lia.
+    + replace (keep_pre ++ false :: map (fun v0 => Z.geb v0 0%Z) vs)
+        with ((keep_pre ++ [false]) ++ map (fun v0 => Z.geb v0 0%Z) vs)
+        by (rewrite <- app_assoc; reflexivity).
+      apply (IH (S idx) bound tails prev (keep_pre ++ [false])).
+      * lia.
+      * intros k Hk. replace (S idx + k) with (idx + S k) by lia.
+        apply (Hnth (S k)); lia.
+      * exact Hinc.
+      * rewrite length_app; simpl; lia.
+      * exact Hplen.
+      * lia.
+      * eapply Forall_impl; [|exact Htails]. intros t [Hti Htb]; split; lia.
+      * intros prev' fuel suf Hprev_eq Hflen.
+        rewrite repeat_false_S_app.
+        rewrite (Hmark prev' fuel (false :: suf)).
+        -- rewrite <- app_assoc; simpl; reflexivity.
+        -- intros c Hc; apply Hprev_eq; lia.
+        -- exact Hflen.
+Qed.
+
+(**md
+**When surviving rows are already strictly increasing, `increasing_run` keeps every surviving row.**
+
+Whenever `strictly_increasing_nonneg sources = true` (such as multi-row filtering or interleaved insertions without reordering), `increasing_run sources` equals `map (fun v => v >=? 0) sources`, so patience-sorting LIS can be skipped entirely.
+
+- [sources:] source indices in `[-1, +inf)` for the target window.
+*)
+Theorem increasing_run_strictly_increasing (sources : list Z) :
+  strictly_increasing_nonneg sources = true ->
+  increasing_run sources = map (fun v => Z.geb v 0%Z) sources.
+Proof.
+  intros Hinc. unfold increasing_run, strictly_increasing_nonneg in *.
+  pose proof (lis_scan_strictly_increasing_invariant
+    sources sources 0 (-1)%Z [] (repeat None (length sources)) []
+    eq_refl
+    (fun k _ => eq_refl)
+    Hinc
+    eq_refl
+    (repeat_length None (length sources))
+    (Nat.le_0_l 0)
+    (Forall_nil _)
+    (fun _ fuel suf _ _ => match fuel with 0 => eq_refl | S _ => eq_refl end)) as Hres.
+  simpl in Hres.
+  destruct (lis_scan sources 0 sources [] (repeat None (length sources))) as [tails prev].
+  exact Hres.
+Qed.
+
+Lemma place_rtl_step_all_kept rows anchor dom :
+  snd (place_rtl_step (combine rows (repeat true (length rows))) anchor dom) = dom.
+Proof.
+  induction rows as [|r rows IH]; simpl; [reflexivity|].
+  destruct (place_rtl_step (combine rows (repeat true (length rows))) anchor dom) as [before dom'] eqn:Hstep.
+  simpl in IH; subst dom'; simpl; reflexivity.
+Qed.
+
+(**md
+**When every row in the window is kept, right-to-left placement performs zero DOM moves.**
+
+`place_rtl` with an all-`true` keep mask returns `dom` unchanged, justifying skipping the backward anchor loop altogether on pure multi-deletion windows where surviving rows stay in order.
+
+- [rows:] target window rows.
+- [anchor:] the sibling anchor following the target window.
+- [dom:] the parent's sibling list before placement.
+*)
+Theorem place_rtl_all_kept_noop (rows : list nat) (anchor : nat) (dom : list nat) :
+  place_rtl rows (repeat true (length rows)) anchor dom = dom.
+Proof.
+  unfold place_rtl. apply place_rtl_step_all_kept.
+Qed.
+
+Definition row_layout_fast (previous next : list nat) (region_end : nat) (dom : list nat) : list nat :=
+  let lead := common_prefix_len previous next in
+  let prev_rem := skipn lead previous in
+  let next_rem := skipn lead next in
+  let trail := common_suffix_len prev_rem next_rem in
+  let a_len := length prev_rem - trail in
+  let b_len := length next_rem - trail in
+  if Nat.eqb b_len 0 then dom
+  else
+    let a_win := firstn a_len prev_rem in
+    let b_win := firstn b_len next_rem in
+    let anchor :=
+      match skipn (lead + b_len) next with
+      | r :: _ => r
+      | [] => region_end
+      end in
+    if Nat.eqb a_len 0 then
+      move_many_before b_win anchor dom
+    else if is_outer_swap a_win b_win then
+      let dom1 := move_before (nth 0 b_win 0) (nth 0 a_win 0) dom in
+      if Nat.ltb 2 b_len then move_before (nth (b_len - 1) b_win 0) anchor dom1
+      else dom1
+    else
+      let sources := map (stamp_layout_indices lead a_win) b_win in
+      if strictly_increasing_nonneg sources then
+        if forallb (fun v => Z.geb v 0%Z) sources then
+          dom
+        else
+          place_rtl b_win (map (fun v => Z.geb v 0%Z) sources) anchor dom
+      else
+        let marked := increasing_run_in_place sources in
+        let keeps := map (fun v => Z.eqb v (-2)%Z) marked in
+        place_rtl b_win keeps anchor dom.
+
+Lemma index_of_ge_neg1 x base xs :
+  (-1 <= index_of x base xs)%Z.
+Proof.
+  revert base.
+  induction xs as [|y ys IH]; intros base; simpl; [lia|].
+  destruct (Nat.eqb x y); [lia | apply IH].
+Qed.
+
+Lemma map_all_true_repeat {A : Type} (p : A -> bool) (xs : list A) :
+  forallb p xs = true ->
+  map p xs = repeat true (length xs).
+Proof.
+  induction xs as [|x xs IH]; simpl; [reflexivity|].
+  intros H. apply andb_true_iff in H. destruct H as [Hx Hxs].
+  rewrite Hx, (IH Hxs). reflexivity.
+Qed.
+
+(**md
+**Fast-path `Row.Layout` (inline `LayoutIndex`, monotonic LIS skip, and in-place `-2` sentinel) is observationally identical to `row_layout`.**
+
+For all `previous`, `next`, `region_end`, and `dom`, `row_layout_fast` produces the exact DOM sibling list of `row_layout`.
+
+- [previous:] laid-out row ids before the pass.
+- [next:] target row ids of the pass.
+- [region_end:] the closing marker node id of the region.
+- [dom:] the parent's sibling list before layout.
+*)
+Theorem row_layout_fast_eq_row_layout (previous next : list nat) (region_end : nat) (dom : list nat) :
+  row_layout_fast previous next region_end dom = row_layout previous next region_end dom.
+Proof.
+  unfold row_layout_fast, row_layout.
+  destruct (Nat.eqb (length (skipn (common_prefix_len previous next) next) -
+    common_suffix_len (skipn (common_prefix_len previous next) previous)
+      (skipn (common_prefix_len previous next) next)) 0); [reflexivity|].
+  destruct (Nat.eqb (length (skipn (common_prefix_len previous next) previous) -
+    common_suffix_len (skipn (common_prefix_len previous next) previous)
+      (skipn (common_prefix_len previous next) next)) 0); [reflexivity|].
+  destruct (is_outer_swap _ _); [reflexivity|].
+  set (lead := common_prefix_len previous next).
+  set (prev_rem := skipn lead previous).
+  set (next_rem := skipn lead next).
+  set (trail := common_suffix_len prev_rem next_rem).
+  set (a_win := firstn (length prev_rem - trail) prev_rem).
+  set (b_win := firstn (length next_rem - trail) next_rem).
+  set (anchor := match skipn (lead + length b_win) next with r :: _ => r | [] => region_end end).
+  assert (Hmap_eq : map (stamp_layout_indices lead a_win) b_win = map (fun r => index_of r lead a_win) b_win).
+  { apply map_ext. intros r. apply stamp_layout_indices_eq_index_of. }
+  rewrite Hmap_eq.
+  set (sources := map (fun r => index_of r lead a_win) b_win).
+  destruct (strictly_increasing_nonneg sources) eqn:Hmono.
+  - rewrite (increasing_run_strictly_increasing sources Hmono).
+    destruct (forallb (fun v => Z.geb v 0%Z) sources) eqn:Hall; [|reflexivity].
+    rewrite (map_all_true_repeat _ _ Hall).
+    unfold sources. rewrite length_map.
+    symmetry. apply place_rtl_all_kept_noop.
+  - rewrite increasing_run_in_place_sentinel_equiv; [reflexivity|].
+    unfold sources. apply Forall_map, Forall_forall.
+    intros r _. apply index_of_ge_neg1.
+Qed.
+
+(** Direct `O(1)` next-sibling lookup when `leavingCount = 0`. *)
+Fixpoint next_sibling_after (target : nat) (dom : list nat) : option nat :=
+  match dom with
+  | [] => None
+  | x :: xs =>
+    if Nat.eqb x target then head xs
+    else next_sibling_after target xs
+  end.
+
+Lemma filter_live_nil dom :
+  filter_live [] dom = dom.
+Proof.
+  induction dom as [|x xs IH]; simpl; [reflexivity | f_equal; exact IH].
+Qed.
+
+(**md
+**When `leaving` is empty (`leavingCount = 0`), `nextLive` equals direct `nextSibling` lookup.**
+
+With zero active leaving nodes, `next_live_after []` returns the immediate next DOM sibling without consulting the `leaving` `WeakSet`.
+
+- [target:] the node whose next live sibling is queried.
+- [dom:] the parent's sibling list.
+*)
+Theorem next_live_empty_leaving_fast_path (target : nat) (dom : list nat) :
+  next_live_after [] target dom = next_sibling_after target dom.
+Proof.
+  induction dom as [|x xs IH]; simpl; [reflexivity|].
+  destruct (Nat.eqb x target); [rewrite filter_live_nil; reflexivity | exact IH].
+Qed.
+
+Lemma common_prefix_nth_error_eq (a b : list nat) :
+  forall i,
+    i < common_prefix_len a b ->
+    nth_error b i = nth_error a i.
+Proof.
+  revert b.
+  induction a as [|x xs IH]; intros [|y ys] i Hi; simpl in *; try lia.
+  destruct (Nat.eqb x y) eqn:Heq; [|lia].
+  apply Nat.eqb_eq in Heq; subst y.
+  destruct i as [|i]; simpl; [reflexivity | apply IH; lia].
+Qed.
+
+(**md
+**Rows before the changed window prefix are identical in `previous` and `next`.**
+
+Every position `i < common_prefix_len previous next` holds the same element in `next` and `previous`, justifying skipping redundant `Inspect.rememberRowKey` writes outside the changed window.
+
+- [previous:] keys/rows of the previous pass.
+- [next:] keys/rows of the current pass.
+- [i:] an index strictly before `common_prefix_len previous next`.
+*)
+Theorem window_prefix_preserves_entries (previous next : list nat) (i : nat) :
+  i < common_prefix_len previous next ->
+  nth_error next i = nth_error previous i.
+Proof.
+  apply common_prefix_nth_error_eq.
+Qed.

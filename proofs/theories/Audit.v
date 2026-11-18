@@ -18,6 +18,13 @@ Print Assumptions reflow_latest_post_closes_once.
 Print Assumptions naive_reflow_drop_skips_next_before_falsified.
 Print Assumptions reflow_abort_latest_recovers_cleanly.
 Print Assumptions reflow_abort_superseded_keeps_open.
+Print Assumptions stamp_layout_indices_eq_index_of.
+Print Assumptions increasing_run_in_place_sentinel_equiv.
+Print Assumptions increasing_run_strictly_increasing.
+Print Assumptions place_rtl_all_kept_noop.
+Print Assumptions row_layout_fast_eq_row_layout.
+Print Assumptions next_live_empty_leaving_fast_path.
+Print Assumptions window_prefix_preserves_entries.
 
 (* Hydration & ViewBoundary *)
 Print Assumptions matching_end_well_bracketed.

@@ -54,7 +54,7 @@ Definition step_layout_cmd (c : layout_cmd) (s : layout_sim) : layout_sim :=
     let removed := List.filter (fun r => negb (mem_nat r next_rows)) (ls_laid_out s) in
     let cleared := match next_rows with [] => true | _ => false end in
     let '(dep1, dom1) := flush_released cleared (ls_start s) (ls_end s) removed (ls_dep s) (ls_dom s) in
-    let dom2 := row_layout (ls_laid_out s) next_rows (ls_end s) dom1 in
+    let dom2 := row_layout_fast (ls_laid_out s) next_rows (ls_end s) dom1 in
     {| ls_start := ls_start s;
        ls_end := ls_end s;
        ls_dom := dom2;

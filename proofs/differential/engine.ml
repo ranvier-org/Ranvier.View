@@ -290,6 +290,20 @@ module Pos =
   let compare =
     compare_cont Eq
 
+  (** val eqb : positive -> positive -> bool **)
+
+  let rec eqb p q =
+    match p with
+    | XI p0 -> (match q with
+                | XI q0 -> eqb p0 q0
+                | _ -> False)
+    | XO p0 -> (match q with
+                | XO q0 -> eqb p0 q0
+                | _ -> False)
+    | XH -> (match q with
+             | XH -> True
+             | _ -> False)
+
   (** val of_succ_nat : nat -> positive **)
 
   let rec of_succ_nat = function
@@ -390,6 +404,20 @@ module Z =
     match compare x y with
     | Lt -> True
     | _ -> False
+
+  (** val eqb : z -> z -> bool **)
+
+  let eqb x y =
+    match x with
+    | Z0 -> (match y with
+             | Z0 -> True
+             | _ -> False)
+    | Zpos p -> (match y with
+                 | Zpos q -> Pos.eqb p q
+                 | _ -> False)
+    | Zneg p -> (match y with
+                 | Zneg q -> Pos.eqb p q
+                 | _ -> False)
 
   (** val of_nat : nat -> z **)
 
@@ -505,35 +533,6 @@ let rec lis_scan sources idx rem tails prev =
        lis_scan sources (S idx) vs tails' prev'
      | False -> lis_scan sources (S idx) vs tails prev)
 
-(** val mark_chain :
-    nat -> nat option -> nat option list -> bool list -> bool list **)
-
-let rec mark_chain fuel cursor prev keep =
-  match fuel with
-  | O -> keep
-  | S f ->
-    (match cursor with
-     | Some c ->
-       let next_c = match nth_error prev c with
-                    | Some p -> p
-                    | None -> None in
-       mark_chain f next_c prev (list_set c True keep)
-     | None -> keep)
-
-(** val increasing_run : z list -> bool list **)
-
-let increasing_run sources =
-  let n = length sources in
-  let init_prev = repeat None n in
-  let init_keep = repeat False n in
-  let Pair (tails, prev) = lis_scan sources O sources Nil init_prev in
-  let start =
-    match rev tails with
-    | Nil -> None
-    | Cons (last_t, _) -> Some last_t
-  in
-  mark_chain n start prev init_keep
-
 (** val common_prefix_len : nat list -> nat list -> nat **)
 
 let rec common_prefix_len a b =
@@ -552,15 +551,6 @@ let rec common_prefix_len a b =
 let common_suffix_len a b =
   common_prefix_len (rev a) (rev b)
 
-(** val index_of : nat -> nat -> nat list -> z **)
-
-let rec index_of x base = function
-| Nil -> Zneg XH
-| Cons (y, ys) ->
-  (match Nat.eqb x y with
-   | True -> Z.of_nat base
-   | False -> index_of x (S base) ys)
-
 (** val is_outer_swap : nat list -> nat list -> bool **)
 
 let is_outer_swap a_win b_win =
@@ -577,39 +567,6 @@ let is_outer_swap a_win b_win =
      forallb (fun off -> Nat.eqb (nth off a_win O) (nth off b_win O))
        (seq (S O) (sub count (S (S O))))
    | False -> False)
-
-(** val row_layout : nat list -> nat list -> nat -> nat list -> nat list **)
-
-let row_layout previous next region_end dom =
-  let lead = common_prefix_len previous next in
-  let prev_rem = skipn lead previous in
-  let next_rem = skipn lead next in
-  let trail = common_suffix_len prev_rem next_rem in
-  let a_len = sub (length prev_rem) trail in
-  let b_len = sub (length next_rem) trail in
-  (match Nat.eqb b_len O with
-   | True -> dom
-   | False ->
-     let a_win = firstn a_len prev_rem in
-     let b_win = firstn b_len next_rem in
-     let anchor =
-       match skipn (add lead b_len) next with
-       | Nil -> region_end
-       | Cons (r, _) -> r
-     in
-     (match Nat.eqb a_len O with
-      | True -> move_many_before b_win anchor dom
-      | False ->
-        (match is_outer_swap a_win b_win with
-         | True ->
-           let dom1 = move_before (nth O b_win O) (nth O a_win O) dom in
-           (match Nat.ltb (S (S O)) b_len with
-            | True -> move_before (nth (sub b_len (S O)) b_win O) anchor dom1
-            | False -> dom1)
-         | False ->
-           let sources = map (fun r -> index_of r lead a_win) b_win in
-           let keeps = increasing_run sources in
-           place_rtl b_win keeps anchor dom)))
 
 type dep_state = { dep_exits : nat list; dep_leaving : nat list;
                    dep_pending : nat list }
@@ -752,6 +709,105 @@ let reflow_abort_post ticket s =
     { rf_open = False; rf_posts = s.rf_posts; rf_before_runs =
       s.rf_before_runs; rf_after_runs = s.rf_after_runs }
   | False -> s
+
+(** val stamp_layout_indices : nat -> nat list -> nat -> z **)
+
+let rec stamp_layout_indices base a_win row =
+  match a_win with
+  | Nil -> Zneg XH
+  | Cons (y, ys) ->
+    let rest = stamp_layout_indices (S base) ys row in
+    (match Nat.eqb row y with
+     | True -> Z.of_nat base
+     | False -> rest)
+
+(** val mark_chain_in_place :
+    nat -> nat option -> nat option list -> z list -> z list **)
+
+let rec mark_chain_in_place fuel cursor prev sources =
+  match fuel with
+  | O -> sources
+  | S f ->
+    (match cursor with
+     | Some c ->
+       let next_c = match nth_error prev c with
+                    | Some p -> p
+                    | None -> None in
+       mark_chain_in_place f next_c prev (list_set c (Zneg (XO XH)) sources)
+     | None -> sources)
+
+(** val increasing_run_in_place : z list -> z list **)
+
+let increasing_run_in_place sources =
+  let n = length sources in
+  let init_prev = repeat None n in
+  let Pair (tails, prev) = lis_scan sources O sources Nil init_prev in
+  let start =
+    match rev tails with
+    | Nil -> None
+    | Cons (last_t, _) -> Some last_t
+  in
+  mark_chain_in_place n start prev sources
+
+(** val strictly_increasing_from : z -> z list -> bool **)
+
+let rec strictly_increasing_from bound = function
+| Nil -> True
+| Cons (v, vs) ->
+  (match Z.geb v Z0 with
+   | True ->
+     (match Z.ltb bound v with
+      | True -> strictly_increasing_from v vs
+      | False -> False)
+   | False -> strictly_increasing_from bound vs)
+
+(** val strictly_increasing_nonneg : z list -> bool **)
+
+let strictly_increasing_nonneg sources =
+  strictly_increasing_from (Zneg XH) sources
+
+(** val row_layout_fast :
+    nat list -> nat list -> nat -> nat list -> nat list **)
+
+let row_layout_fast previous next region_end dom =
+  let lead = common_prefix_len previous next in
+  let prev_rem = skipn lead previous in
+  let next_rem = skipn lead next in
+  let trail = common_suffix_len prev_rem next_rem in
+  let a_len = sub (length prev_rem) trail in
+  let b_len = sub (length next_rem) trail in
+  (match Nat.eqb b_len O with
+   | True -> dom
+   | False ->
+     let a_win = firstn a_len prev_rem in
+     let b_win = firstn b_len next_rem in
+     let anchor =
+       match skipn (add lead b_len) next with
+       | Nil -> region_end
+       | Cons (r, _) -> r
+     in
+     (match Nat.eqb a_len O with
+      | True -> move_many_before b_win anchor dom
+      | False ->
+        (match is_outer_swap a_win b_win with
+         | True ->
+           let dom1 = move_before (nth O b_win O) (nth O a_win O) dom in
+           (match Nat.ltb (S (S O)) b_len with
+            | True -> move_before (nth (sub b_len (S O)) b_win O) anchor dom1
+            | False -> dom1)
+         | False ->
+           let sources = map (stamp_layout_indices lead a_win) b_win in
+           (match strictly_increasing_nonneg sources with
+            | True ->
+              (match forallb (fun v -> Z.geb v Z0) sources with
+               | True -> dom
+               | False ->
+                 place_rtl b_win (map (fun v -> Z.geb v Z0) sources) anchor
+                   dom)
+            | False ->
+              let marked = increasing_run_in_place sources in
+              let keeps = map (fun v -> Z.eqb v (Zneg (XO XH))) marked in
+              place_rtl b_win keeps anchor dom))))
 
 type ssr_token =
 | TokStart of nat
@@ -2072,7 +2128,7 @@ let step_layout_cmd c s =
     let Pair (dep1, dom1) =
       flush_released cleared s.ls_start s.ls_end removed s.ls_dep s.ls_dom
     in
-    let dom2 = row_layout s.ls_laid_out next_rows s.ls_end dom1 in
+    let dom2 = row_layout_fast s.ls_laid_out next_rows s.ls_end dom1 in
     { ls_start = s.ls_start; ls_end = s.ls_end; ls_dom = dom2; ls_laid_out =
     next_rows; ls_dep = dep1; ls_reflow = s.ls_reflow; ls_tickets =
     s.ls_tickets }
