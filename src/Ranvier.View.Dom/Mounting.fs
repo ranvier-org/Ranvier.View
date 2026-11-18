@@ -667,7 +667,7 @@ type private RegionErrors(report: exn list -> unit) =
             raise error
 
 #if !FABLE_COMPILER
-[<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
+[<Struct; System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
 #endif
 type private Entry =
     {
@@ -675,32 +675,39 @@ type private Entry =
         EndNode: Node
         Validate: unit -> unit
         Relocate: unit -> unit
-        Restore: (unit -> unit) option
+        Restore: unit -> unit
     }
 
 #if !FABLE_COMPILER
     member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, precedence: int) =
-        NativeDisplay.record context depth (box (this)) (fun n0 ->
+        let copy = this
+
+        NativeDisplay.record context depth (box copy) (fun n0 ->
             [
-                "Node", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.Dom.Node>" (box ((this).Node)))
-                "EndNode", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.Dom.Node>" (box ((this).EndNode)))
-                "Validate", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Validate)))
-                "Relocate", (fun () -> NativeDisplay.opaque context n0 "<function>" (box ((this).Relocate)))
+                "Node", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.Dom.Node>" (box copy.Node))
+                "EndNode", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.Dom.Node>" (box copy.EndNode))
+                "Validate", (fun () -> NativeDisplay.opaque context n0 "<function>" (box copy.Validate))
+                "Relocate", (fun () -> NativeDisplay.opaque context n0 "<function>" (box copy.Relocate))
                 "Restore",
                 (fun () ->
                     NativeDisplay.option
                         context
                         n0
                         3
-                        (fun c42 d42 p42 (item42: (unit -> unit)) -> NativeDisplay.opaque c42 d42 "<function>" (box (item42)))
-                        ((this).Restore))
+                        (fun c42 d42 _ (item42: (unit -> unit)) -> NativeDisplay.opaque c42 d42 "<function>" (box item42))
+                        (if isNull (box copy.Restore) then
+                             None
+                         else
+                             Some copy.Restore))
             ])
 
     override this.ToString() =
+        let copy = this
+
         if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
-            sprintf "%+A" this
+            sprintf "%+A" copy
         else
-            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+            NativeDisplay.format (fun context depth precedence -> copy.NativeDisplay (context, depth, precedence))
 #endif
 
 /// <summary>
@@ -779,7 +786,7 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
                 EndNode = first
                 Validate = skip
                 Relocate = skip
-                Restore = None
+                Restore = Unchecked.defaultof<_>
             }
 
         entries.Add
@@ -788,7 +795,7 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
                 EndNode = last
                 Validate = skip
                 Relocate = skip
-                Restore = None
+                Restore = Unchecked.defaultof<_>
             }
 
         claim claims first
@@ -812,7 +819,7 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
                 EndNode = node
                 Validate = skip
                 Relocate = skip
-                Restore = None
+                Restore = Unchecked.defaultof<_>
             }
         )
 
@@ -835,7 +842,7 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
                 EndNode = finish
                 Validate = validate
                 Relocate = relocate
-                Restore = None
+                Restore = Unchecked.defaultof<_>
             }
         )
 
@@ -864,7 +871,7 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
                 EndNode = finish
                 Validate = validate
                 Relocate = relocate
-                Restore = None
+                Restore = Unchecked.defaultof<_>
             }
 
         entries.RemoveAt index
@@ -902,7 +909,7 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
                 EndNode = node
                 Validate = skip
                 Relocate = skip
-                Restore = None
+                Restore = Unchecked.defaultof<_>
             }
         )
 
@@ -926,11 +933,11 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
 
         let restore =
             match ownership with
-            | Owned -> None
+            | Owned -> Unchecked.defaultof<_>
             | Borrowed ->
                 let originalParent, originalNext = node.parentNode, node.nextSibling
 
-                Some (fun () ->
+                fun () ->
                     if isNull originalParent then
                         remove node
                     else
@@ -943,7 +950,7 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
                             else
                                 None
 
-                        insert originalParent node before)
+                        insert originalParent node before
 
         stage ()
 
@@ -1136,14 +1143,14 @@ type private OwnedRange(host: Node, first: Node, last: Node) =
             let entry = at entries index
             let spans = not (same entry.Node entry.EndNode)
 
-            match entry.Restore with
-            | _ when keep -> ()
-            | Some restore ->
+            if keep then
+                ()
+            elif not (isNull (box entry.Restore)) then
                 try
-                    restore ()
+                    entry.Restore ()
                 with error ->
                     errors.Add error
-            | None ->
+            else
                 try
                     if
                         spans
@@ -1196,10 +1203,12 @@ type private RegionPlacement =
             | RegionPlacement.NestedRegion -> "NestedRegion", [])
 
     override this.ToString() =
+        let copy = this
+
         if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
-            sprintf "%+A" this
+            sprintf "%+A" copy
         else
-            NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
+            NativeDisplay.format (fun context depth precedence -> copy.NativeDisplay (context, depth, precedence))
 #endif
 
 /// <summary>Arm selections are equal when both are null, or when their keys (<c>fst</c>) are equal under <c>=</c>.</summary>
@@ -1209,7 +1218,11 @@ let private sameArm =
             if isNull left || isNull right then
                 isNull left && isNull right
             else
-                fst (unbox<obj * obj> left) = fst (unbox<obj * obj> right)
+                let leftKey = fst (unbox<obj * obj> left)
+                let rightKey = fst (unbox<obj * obj> right)
+
+                obj.ReferenceEquals (leftKey, rightKey)
+                || leftKey = rightKey
 
         member _.GetHashCode _ = 0
     }
@@ -1744,8 +1757,8 @@ and private RowBuilder(state: MountState, hydration: unit -> TemplateDom.Hydrati
 and private RegionSite(state: MountState, regionStart: Node, regionEnd: Node, report: exn list -> unit, releaseNodes: Row -> unit) =
     let laidOut = ResizeArray<Row>()
     let errors = RegionErrors report
-    // Template rows released while `Deferring` is set, with their nodes still in place.
-    let pending = ResizeArray<Row>()
+    // Template rows released while `Deferring` is set, with their nodes still in place; null until the first is held.
+    let mutable pending: ResizeArray<Row> = null
     let mutable owner: Owner = Unchecked.defaultof<_>
     let mutable builder: RowBuilder = Unchecked.defaultof<_>
     let mutable created = 0
@@ -1808,7 +1821,10 @@ and private RegionSite(state: MountState, regionStart: Node, regionEnd: Node, re
             Api.batch (fun () -> owner.Dispose ())
 
         laidOut.Clear ()
-        pending.Clear ()
+
+        if not (isNull pending) then
+            pending.Clear ()
+
         errors.Initializing <- true
         errors.SetupFailure <- None
 
@@ -1855,6 +1871,9 @@ and private RegionSite(state: MountState, regionStart: Node, regionEnd: Node, re
             then
                 row.Removed <- true
             elif this.Deferring && not state.Root.IsDisposed then
+                if isNull pending then
+                    pending <- ResizeArray ()
+
                 pending.Add row
             else
                 releaseNodes row
@@ -1865,6 +1884,7 @@ and private RegionSite(state: MountState, regionStart: Node, regionEnd: Node, re
     /// laid-out order compare in one walk; any other order compares through a set.
     /// </remarks>
     member _.ReleasedAll() =
+        let pendingCount = if isNull pending then 0 else pending.Count
         let mutable live = 0
         let mutable ordered = true
 
@@ -1874,14 +1894,14 @@ and private RegionSite(state: MountState, regionStart: Node, regionEnd: Node, re
             if not row.Removed then
                 if
                     ordered
-                    && (live >= pending.Count
+                    && (live >= pendingCount
                         || not (same row (at pending live)))
                 then
                     ordered <- false
 
                 live <- live + 1
 
-        if live <> pending.Count then
+        if live <> pendingCount then
             false
         elif ordered then
             true
@@ -1897,7 +1917,7 @@ and private RegionSite(state: MountState, regionStart: Node, regionEnd: Node, re
             let mutable all = true
             let mutable index = 0
 
-            while all && index < pending.Count do
+            while all && index < pendingCount do
                 all <- rowSetHas rows (at pending index)
                 index <- index + 1
 
@@ -1908,9 +1928,10 @@ and private RegionSite(state: MountState, regionStart: Node, regionEnd: Node, re
     /// operation and marks the rows removed; otherwise releases each row's nodes through the mount, in release order.
     /// </summary>
     member _.FlushReleased(cleared: bool) =
-        if pending.Count > 0 then
-            let rows = pending.ToArray ()
-            pending.Clear ()
+        if not (isNull pending) && pending.Count > 0 then
+            let rows = pending
+            pending <- null
+            let rowCount = rows.Count
 
             let parent =
                 match regionStart.parentNode with
@@ -1927,21 +1948,35 @@ and private RegionSite(state: MountState, regionStart: Node, regionEnd: Node, re
             then
                 Row.ClearBetween (parent, regionStart, regionEnd)
 
-                for index in 0 .. rows.Length - 1 do
-                    rows[index].Removed <- true
+                for index = 0 to rowCount - 1 do
+                    (at rows index).Removed <- true
+
+                rows.Clear ()
+
+                if isNull pending then
+                    pending <- rows
             else
-                let errors = ResizeArray<exn>()
+                let mutable releaseErrors: ResizeArray<exn> = null
 
-                for index in 0 .. rows.Length - 1 do
+                for index = 0 to rowCount - 1 do
                     try
-                        releaseNodes rows[index]
+                        releaseNodes (at rows index)
                     with error ->
-                        errors.Add error
+                        if isNull releaseErrors then
+                            releaseErrors <- ResizeArray ()
 
-                if errors.Count = 1 then
-                    raise errors[0]
-                elif errors.Count > 1 then
-                    raise (AggregateException ("Row release failed", errors))
+                        releaseErrors.Add error
+
+                rows.Clear ()
+
+                if isNull pending then
+                    pending <- rows
+
+                if not (isNull releaseErrors) then
+                    if releaseErrors.Count = 1 then
+                        raise releaseErrors[0]
+                    elif releaseErrors.Count > 1 then
+                        raise (AggregateException ("Row release failed", releaseErrors))
 
 
     /// <summary>
@@ -3735,6 +3770,17 @@ and internal MountState
         let moved = ResizeArray<int>()
         // The passes whose containers hold the hooks of the rows each pass creates.
         let passPlacement = PlacementPass parentContainer
+        let isSiteLive = fun () -> site.Live ()
+        let bumpVersion = fun () -> version.Value <- version.Value + 1
+        let readKeys = fun () -> projection.Keys
+        let readKeysVersion = fun () -> projection.KeysVersion
+        let postReflow = Action<_, _>(fun action cancel -> this.Post (action, cancel))
+        let mutable passParent: Node = Unchecked.defaultof<_>
+        let mutable passKeys: obj array = null
+        let mutable passStart = 0
+        let mutable passEnd0 = -1
+        let mutable passEnd1 = -1
+        let mutable passInPlace = false
 
         // When the window from `first` keeps its length and spans more than `smallWindow` positions, collects into `moved`
         // the positions whose key differs between `prior` and `next` and returns true.
@@ -3802,8 +3848,8 @@ and internal MountState
                     if hydrating then
                         cursor.Next <- nextOrNull regionStart
 
-                    let parent = ref Unchecked.defaultof<Node>
-                    let keys = ref Unchecked.defaultof<obj array>
+                    passParent <- Unchecked.defaultof<Node>
+                    passKeys <- null
                     let priorKeys = previousKeys
                     let priorVersion = previousVersion
                     let priorRows = previousRows
@@ -3815,12 +3861,12 @@ and internal MountState
 
                     if priorRows.Length = 0 then
                         retired.Clear ()
-                    // Keys before `start` and after `end0` (previous) or `end1` (current) are equal in both passes.
-                    let start = ref 0
-                    let end0 = ref -1
-                    let end1 = ref -1
+                    // Keys before `passStart` and after `passEnd0` (previous) or `passEnd1` (current) are equal in both passes.
+                    passStart <- 0
+                    passEnd0 <- -1
+                    passEnd1 <- -1
                     // The window keeps the rows of its unchanged keys in place, and `moved` holds its changed positions.
-                    let inPlace = ref false
+                    passInPlace <- false
 
                     // Validates the laid-out rows from `first - 1` to `last0 + 1`, or every row after a failed pass.
                     let validate (parent: Node) (first: int) (last0: int) =
@@ -3838,14 +3884,13 @@ and internal MountState
                                     let current = site.ReadSource items.Read
                                     // A pass whose source read is pending or raises begins no placement pass or reflow measurement.
                                     if Departures.seam.ReflowEnabled && not hydrating then
-                                        measured <-
-                                            Departures.seam.Before.Invoke (regionStart, Action<_, _>(fun action cancel -> this.Post (action, cancel)))
+                                        measured <- Departures.seam.Before.Invoke (regionStart, postReflow)
 
                                     passPlacement.Begin ()
                                     site.Resume ()
                                     snapshot <- current
-                                    Api.untrack (fun () -> version.Value <- version.Value + 1)
-                                    parent.Value <- site.Parent ()
+                                    Api.untrack bumpVersion
+                                    passParent <- site.Parent ()
 
                                     if authored then
                                         let n0 = priorItems.Length
@@ -3866,29 +3911,35 @@ and internal MountState
                                             last0 <- last0 - 1
                                             last1 <- last1 - 1
 
-                                        start.Value <- first
-                                        end0.Value <- last0
-                                        end1.Value <- last1
-                                        validate parent.Value first last0
+                                        passStart <- first
+                                        passEnd0 <- last0
+                                        passEnd1 <- last1
+                                        validate passParent first last0
 
                                     // Runs the pass: its row setup, rollback and retirement errors are reported with this update.
                                     // Rows retired by the pass keep their nodes until the flush.
                                     site.Deferring <- true
-                                    let errors = ResizeArray<exn>()
+                                    let mutable errors: ResizeArray<exn> = null
+
+                                    let addError (error: exn) =
+                                        if isNull errors then
+                                            errors <- ResizeArray ()
+
+                                        errors.Add error
 
                                     try
                                         try
-                                            keys.Value <- Api.untrack (fun () -> projection.Keys)
+                                            passKeys <- Api.untrack readKeys
                                         finally
                                             site.Deferring <- false
                                     with error ->
-                                        errors.Add error
+                                        addError error
 
                                     // A pass that empties the list removes every node between the markers in one operation.
                                     let cleared =
                                         not authored
-                                        && not (isNull keys.Value)
-                                        && keys.Value.Length = 0
+                                        && not (isNull passKeys)
+                                        && passKeys.Length = 0
                                         && site.Live ()
                                         && site.ReleasedAll ()
 
@@ -3897,11 +3948,11 @@ and internal MountState
                                         try
                                             if authored || cleared || not (site.Live ()) then
                                                 ()
-                                            elif isNull keys.Value then
+                                            elif isNull passKeys then
                                                 if not hydrating then
-                                                    Row.Validate (regionStart, regionEnd, site.LaidOut, parent.Value)
+                                                    Row.Validate (regionStart, regionEnd, site.LaidOut, passParent)
                                             else
-                                                let next = keys.Value
+                                                let next = passKeys
                                                 let mutable first = 0
 
                                                 let mutable last0 =
@@ -3934,38 +3985,38 @@ and internal MountState
                                                         last0 <- last0 - 1
                                                         last1 <- last1 - 1
 
-                                                start.Value <- first
-                                                end0.Value <- last0
-                                                end1.Value <- last1
-                                                inPlace.Value <- collectMoved priorKeys next first last0 last1
+                                                passStart <- first
+                                                passEnd0 <- last0
+                                                passEnd1 <- last1
+                                                passInPlace <- collectMoved priorKeys next first last0 last1
 
                                                 if hydrating then
                                                     ()
                                                 elif
-                                                    inPlace.Value
+                                                    passInPlace
                                                     && priorRows.Length = site.LaidOut.Count
                                                 then
-                                                    validateMoved parent.Value
+                                                    validateMoved passParent
                                                 else
-                                                    validate parent.Value first last0
+                                                    validate passParent first last0
 
                                             true
                                         with error ->
-                                            errors.Add error
+                                            addError error
                                             false
 
                                     if validated && not hydrating then
                                         try
                                             site.FlushReleased (cleared && site.Live ())
                                         with error ->
-                                            errors.Add error
+                                            addError error
 
                                     if
                                         hydrating
-                                        && errors.Count = 0
+                                        && isNull errors
                                         && not (same cursor.Next regionEnd)
                                     then
-                                        errors.Add (
+                                        addError (
                                             TemplateDom.mismatch
                                                 ("#"
                                                  + string (positionAfter regionStart cursor.Next))
@@ -3973,10 +4024,11 @@ and internal MountState
                                                 (TemplateDom.describe cursor.Next)
                                         )
 
-                                    if errors.Count = 1 then
-                                        raise errors[0]
-                                    elif errors.Count > 1 then
-                                        raise (AggregateException ("Keyed update and row release failed", errors))
+                                    if not (isNull errors) then
+                                        if errors.Count = 1 then
+                                            raise errors[0]
+                                        elif errors.Count > 1 then
+                                            raise (AggregateException ("Keyed update and row release failed", errors))
                             )
                         finally
                             if hydrating then
@@ -3988,6 +4040,12 @@ and internal MountState
                         failure,
                         hydrating,
                         fun recorded ->
+                            let keys = passKeys
+                            let layoutParent = passParent
+                            let start, end0, end1 = passStart, passEnd0, passEnd1
+                            let wasInPlace = passInPlace
+                            passKeys <- null
+                            passParent <- Unchecked.defaultof<_>
                             let mutable keyLeading = 0
                             let mutable keyTrailing = 0
                             let mutable keyMovedOnly = false
@@ -3995,9 +4053,7 @@ and internal MountState
                             let layout =
                                 try
                                     Api.untrack (fun () ->
-                                        let keys = keys.Value
                                         let count = keys.Length
-                                        let start, end0, end1 = start.Value, end0.Value, end1.Value
 
                                         let lookup index =
 #if RANVIER_VIEW_COUNTERS
@@ -4013,7 +4069,7 @@ and internal MountState
                                             && if authored then
                                                    collectMoved priorKeys keys start end0 end1
                                                else
-                                                   inPlace.Value
+                                                   wasInPlace
 
                                         let next: Row array =
                                             if inPlace then
@@ -4114,10 +4170,10 @@ and internal MountState
                                             site.LaidOut.AddRange next
                                         else
                                             Row.Layout (
-                                                (fun () -> site.Live ()),
+                                                isSiteLive,
                                                 site.LaidOut,
                                                 site.Builder.Staging,
-                                                parent.Value,
+                                                layoutParent,
                                                 regionEnd,
                                                 next,
                                                 leading,
@@ -4137,8 +4193,8 @@ and internal MountState
                                 site.Errors.Fail (error, recorded @ [ error ])
                             | Ok next ->
                                 if site.Live () then
-                                    previousKeys <- keys.Value
-                                    previousVersion <- Api.untrack (fun () -> projection.KeysVersion)
+                                    previousKeys <- keys
+                                    previousVersion <- Api.untrack readKeysVersion
                                     previousRows <- next
 
 #if RANVIER_VIEW_INSPECT || !FABLE_COMPILER
@@ -4383,7 +4439,10 @@ and internal MountState
                                             not hydrating
                                             && not (isNull selected)
                                             && not (isNull (box armItem))
-                                            && fst (unbox<obj * obj> selected) = armKey
+                                            && (let selectedKey = fst (unbox<obj * obj> selected)
+
+                                                obj.ReferenceEquals (selectedKey, armKey)
+                                                || selectedKey = armKey)
 
                                         if kept then
                                             armItem.Value <- snd (unbox<obj * obj> selected)
@@ -4413,15 +4472,22 @@ and internal MountState
                     if not (isNull (box measured)) then
                         measured.Invoke completed
 
+        let mutable pendingSelection: obj = null
+
+        let applyPayload () =
+            let selected = pendingSelection
+            pendingSelection <- null
+            let key, value = unbox<obj * obj> selected
+
+            if obj.ReferenceEquals (key, armKey) || key = armKey then
+                armItem.Value <- value
+
         let updatePayload () =
             let current = items.Value
 
-            Api.untrack (fun () ->
-                if current.Length > 0 && not (isNull (box armItem)) then
-                    let key, value = unbox<obj * obj> current[0]
-
-                    if key = armKey then
-                        armItem.Value <- value)
+            if current.Length > 0 && not (isNull (box armItem)) then
+                pendingSelection <- current[0]
+                Api.untrack applyPayload
 
         site.Own (fun () ->
 #if RANVIER_VIEW_INSPECT || !FABLE_COMPILER

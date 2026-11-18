@@ -273,14 +273,6 @@ val bm_retry : nat -> boundary_model -> boundary_model
 
 val update_binding : nat -> bstate -> bstate list -> bstate list
 
-val stable_insert_group :
-  nat -> nat -> (nat, nat) prod list -> (nat, nat) prod list
-
-val sort_groups_acc :
-  (nat, nat) prod list -> (nat, nat) prod list -> (nat, nat) prod list
-
-val sort_groups : (nat, nat) prod list -> (nat, nat) prod list
-
 type placement_model = { pl_laid_out : bool; pl_discarded : bool;
                          pl_parent_placed : bool; pl_ordered : bool;
                          pl_last_group : nat; pl_group : nat;
@@ -299,8 +291,6 @@ val pl_leave : nat -> placement_model -> placement_model
 val pl_enqueue : nat -> bool -> placement_model -> placement_model
 
 val pl_add : nat -> placement_model -> placement_model
-
-val pl_place : placement_model -> placement_model
 
 val pl_discard : placement_model -> placement_model
 
@@ -323,6 +313,19 @@ val in_interval : nat -> (nat, nat) prod -> bool
 val in_any_nested : nat -> (nat, nat) prod list -> bool
 
 val teardown_window_indices : nat -> nat -> (nat, nat) prod list -> nat list
+
+val insert_from_right_rev :
+  nat -> nat -> (nat, nat) prod list -> (nat, nat) prod list
+
+val insert_from_right :
+  nat -> nat -> (nat, nat) prod list -> (nat, nat) prod list
+
+val in_place_insertion_sort_acc :
+  (nat, nat) prod list -> (nat, nat) prod list -> (nat, nat) prod list
+
+val in_place_insertion_sort : (nat, nat) prod list -> (nat, nat) prod list
+
+val pl_place_fast : placement_model -> placement_model
 
 type commit_failure =
 | CollectAndContinue

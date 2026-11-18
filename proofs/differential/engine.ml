@@ -1080,30 +1080,6 @@ let rec update_binding idx b_new bss =
      | Nil -> Nil
      | Cons (b, rest) -> Cons (b, (update_binding i b_new rest)))
 
-(** val stable_insert_group :
-    nat -> nat -> (nat, nat) prod list -> (nat, nat) prod list **)
-
-let rec stable_insert_group g h = function
-| Nil -> Cons ((Pair (g, h)), Nil)
-| Cons (p, rest) ->
-  let Pair (g', h') = p in
-  (match Nat.leb g' g with
-   | True -> Cons ((Pair (g', h')), (stable_insert_group g h rest))
-   | False -> Cons ((Pair (g, h)), (Cons ((Pair (g', h')), rest))))
-
-(** val sort_groups_acc :
-    (nat, nat) prod list -> (nat, nat) prod list -> (nat, nat) prod list **)
-
-let rec sort_groups_acc acc = function
-| Nil -> acc
-| Cons (p, rs) ->
-  let Pair (g, h) = p in sort_groups_acc (stable_insert_group g h acc) rs
-
-(** val sort_groups : (nat, nat) prod list -> (nat, nat) prod list **)
-
-let sort_groups xs =
-  sort_groups_acc Nil xs
-
 type placement_model = { pl_laid_out : bool; pl_discarded : bool;
                          pl_parent_placed : bool; pl_ordered : bool;
                          pl_last_group : nat; pl_group : nat;
@@ -1198,32 +1174,6 @@ let pl_enqueue hook released p =
 let pl_add hook p =
   pl_enqueue hook False p
 
-(** val pl_place : placement_model -> placement_model **)
-
-let pl_place p =
-  match match negb p.pl_laid_out with
-        | True -> negb p.pl_discarded
-        | False -> False with
-  | True ->
-    let own_hooks =
-      match p.pl_ordered with
-      | True -> map snd p.pl_held
-      | False -> map snd (sort_groups p.pl_held)
-    in
-    let all_hooks = app own_hooks p.pl_forwarded in
-    { pl_laid_out = True; pl_discarded = False; pl_parent_placed =
-    p.pl_parent_placed; pl_ordered = p.pl_ordered; pl_last_group =
-    p.pl_last_group; pl_group = p.pl_group; pl_entered = p.pl_entered;
-    pl_held = Nil; pl_forwarded = Nil; pl_executed =
-    (match p.pl_parent_placed with
-     | True -> app p.pl_executed all_hooks
-     | False -> p.pl_executed);
-    pl_to_parent =
-    (match p.pl_parent_placed with
-     | True -> p.pl_to_parent
-     | False -> app p.pl_to_parent all_hooks) }
-  | False -> p
-
 (** val pl_discard : placement_model -> placement_model **)
 
 let pl_discard p =
@@ -1288,6 +1238,64 @@ let in_any_nested idx nested =
 
 let teardown_window_indices start len nested =
   filter (fun idx -> negb (in_any_nested idx nested)) (seq start len)
+
+(** val insert_from_right_rev :
+    nat -> nat -> (nat, nat) prod list -> (nat, nat) prod list **)
+
+let rec insert_from_right_rev g h = function
+| Nil -> Cons ((Pair (g, h)), Nil)
+| Cons (p, rest) ->
+  let Pair (g', h') = p in
+  (match Nat.ltb g g' with
+   | True -> Cons ((Pair (g', h')), (insert_from_right_rev g h rest))
+   | False -> Cons ((Pair (g, h)), (Cons ((Pair (g', h')), rest))))
+
+(** val insert_from_right :
+    nat -> nat -> (nat, nat) prod list -> (nat, nat) prod list **)
+
+let insert_from_right g h prefix =
+  rev (insert_from_right_rev g h (rev prefix))
+
+(** val in_place_insertion_sort_acc :
+    (nat, nat) prod list -> (nat, nat) prod list -> (nat, nat) prod list **)
+
+let rec in_place_insertion_sort_acc sorted_prefix = function
+| Nil -> sorted_prefix
+| Cons (p, rs) ->
+  let Pair (g, h) = p in
+  in_place_insertion_sort_acc (insert_from_right g h sorted_prefix) rs
+
+(** val in_place_insertion_sort :
+    (nat, nat) prod list -> (nat, nat) prod list **)
+
+let in_place_insertion_sort xs =
+  in_place_insertion_sort_acc Nil xs
+
+(** val pl_place_fast : placement_model -> placement_model **)
+
+let pl_place_fast p =
+  match match negb p.pl_laid_out with
+        | True -> negb p.pl_discarded
+        | False -> False with
+  | True ->
+    let own_hooks =
+      match p.pl_ordered with
+      | True -> map snd p.pl_held
+      | False -> map snd (in_place_insertion_sort p.pl_held)
+    in
+    let all_hooks = app own_hooks p.pl_forwarded in
+    { pl_laid_out = True; pl_discarded = False; pl_parent_placed =
+    p.pl_parent_placed; pl_ordered = p.pl_ordered; pl_last_group =
+    p.pl_last_group; pl_group = p.pl_group; pl_entered = p.pl_entered;
+    pl_held = Nil; pl_forwarded = Nil; pl_executed =
+    (match p.pl_parent_placed with
+     | True -> app p.pl_executed all_hooks
+     | False -> p.pl_executed);
+    pl_to_parent =
+    (match p.pl_parent_placed with
+     | True -> p.pl_to_parent
+     | False -> app p.pl_to_parent all_hooks) }
+  | False -> p
 
 type commit_failure =
 | CollectAndContinue
@@ -2307,7 +2315,7 @@ let rec run_pl_cmds cs stack p =
         | Cons (prev, st') -> run_pl_cmds rest st' (pl_leave prev p))
      | PCmdAdd h -> run_pl_cmds rest stack (pl_add h p)
      | PCmdReleaseChild h -> run_pl_cmds rest stack (pl_enqueue h True p)
-     | PCmdPlace -> run_pl_cmds rest stack (pl_place p)
+     | PCmdPlace -> run_pl_cmds rest stack (pl_place_fast p)
      | PCmdDiscard -> run_pl_cmds rest stack (pl_discard p))
 
 type pl_view = { pv_held : nat; pv_executed : nat list;

@@ -26,47 +26,96 @@ type ScopePhase =
             NativeDisplay.format (fun context depth precedence -> this.NativeDisplay (context, depth, precedence))
 #endif
 
+module private LifetimeCache =
+    let cleanCapture: exn list * exn option = [], None
+
 /// <summary>
 /// The errors of one view-initiated teardown or list pass: the errors the graph root records while it runs, less those
 /// of nested windows, followed by the errors routed to it by lifetimes that report to <c>report</c>.
 /// </summary>
 [<Sealed; AllowNullLiteral>]
-type internal TeardownWindow(root: Owner, start: int, report: exn list -> unit) =
-    let routed = ResizeArray<exn>()
+type internal TeardownWindow(initialRoot: Owner, initialStart: int, initialReport: exn list -> unit) =
+    let mutable root = initialRoot
+    let mutable start = initialStart
+    let mutable report = initialReport
+    let mutable routed: ResizeArray<exn> = null
     // Start and end positions in the root's errors of nested windows, in pairs.
-    let nested = ResizeArray<int>()
+    let mutable nested: ResizeArray<int> = null
 
     member _.Root = root
     member _.Start = start
     member _.Report = report
 
+    member _.Reset(nextRoot: Owner, nextStart: int, nextReport: exn list -> unit) =
+        root <- nextRoot
+        start <- nextStart
+        report <- nextReport
+
+        if not (isNull routed) then
+            routed.Clear ()
+
+        if not (isNull nested) then
+            nested.Clear ()
+
+    member _.ClearRefs() =
+        root <- Unchecked.defaultof<_>
+        report <- Unchecked.defaultof<_>
+
+        if not (isNull routed) then
+            routed.Clear ()
+
+        if not (isNull nested) then
+            nested.Clear ()
+
     member _.Add(errors: exn[]) =
-        routed.AddRange errors
+        if errors.Length > 0 then
+            if isNull routed then
+                routed <- ResizeArray ()
+
+            routed.AddRange errors
 
     member _.Exclude(first: int, finish: int) =
-        nested.Add first
-        nested.Add finish
+        if first < finish then
+            if isNull nested then
+                nested <- ResizeArray ()
+
+            nested.Add first
+            nested.Add finish
 
     member _.Errors() : exn list =
-        let recorded = root.ErrorsFrom start
-        let result = ResizeArray<exn>()
+        let routedCount = if isNull routed then 0 else routed.Count
 
-        for offset in 0 .. recorded.Length - 1 do
-            let index = start + offset
-            let mutable inner = false
-            let mutable pair = 0
+        if root.ErrorCount = start && routedCount = 0 then
+            []
+        else
+            let mutable acc: exn list = []
 
-            while not inner && pair < nested.Count do
-                if index >= nested[pair] && index < nested[pair + 1] then
-                    inner <- true
+            for i = routedCount - 1 downto 0 do
+                acc <- routed[i] :: acc
 
-                pair <- pair + 2
+            if root.ErrorCount > start then
+                let recorded = root.ErrorsFrom start
+                let nestedCount = if isNull nested then 0 else nested.Count
 
-            if not inner then
-                result.Add recorded[offset]
+                if nestedCount = 0 then
+                    for offset = recorded.Length - 1 downto 0 do
+                        acc <- recorded[offset] :: acc
+                else
+                    for offset = recorded.Length - 1 downto 0 do
+                        let index = start + offset
+                        let mutable inner = false
+                        let mutable pair = 0
 
-        result.AddRange routed
-        List.ofSeq result
+                        while not inner && pair < nestedCount do
+                            if index >= nested[pair] && index < nested[pair + 1] then
+                                inner <- true
+
+                            pair <- pair + 2
+
+                        if not inner then
+                            acc <- recorded[offset] :: acc
+
+            acc
 
 /// <summary>
 /// The lifetime of a mounted view: a core owner, the release of the view's DOM nodes and the reporter of its teardown
@@ -100,11 +149,15 @@ type MountLifetime private (graph: Graph, owner: Owner, report: exn list -> unit
 
 #if FABLE_COMPILER
     static member val private Windows = ResizeArray<TeardownWindow>()
+    static member val private WindowPool = ResizeArray<TeardownWindow>()
     static member val private Frames = ResizeArray<MountLifetime>()
 #else
     // Each thread has its own teardown windows and frames.
     [<ThreadStatic; DefaultValue>]
     static val mutable private windows: ResizeArray<TeardownWindow>
+
+    [<ThreadStatic; DefaultValue>]
+    static val mutable private windowPool: ResizeArray<TeardownWindow>
 
     [<ThreadStatic; DefaultValue>]
     static val mutable private frames: ResizeArray<MountLifetime>
@@ -114,6 +167,12 @@ type MountLifetime private (graph: Graph, owner: Owner, report: exn list -> unit
             MountLifetime.windows <- ResizeArray ()
 
         MountLifetime.windows
+
+    static member private WindowPool =
+        if isNull MountLifetime.windowPool then
+            MountLifetime.windowPool <- ResizeArray ()
+
+        MountLifetime.windowPool
 
     static member private Frames =
         if isNull MountLifetime.frames then
@@ -151,27 +210,43 @@ type MountLifetime private (graph: Graph, owner: Owner, report: exn list -> unit
     static member Capture(graph: Graph, report: exn list -> unit, body: unit -> unit) : exn list * exn option =
         let root = graph.Root
         let windows = MountLifetime.Windows
-        let window = TeardownWindow (root, root.ErrorCount, report)
+        let pool = MountLifetime.WindowPool
+        let depth = windows.Count
+
+        let window =
+            if depth < pool.Count then
+                let rented = pool[depth]
+                rented.Reset (root, root.ErrorCount, report)
+                rented
+            else
+                let created = TeardownWindow (root, root.ErrorCount, report)
+                pool.Add created
+                created
+
         windows.Add window
-        let mutable failure = None
+        let mutable failure: exn = null
 
         try
             try
                 body ()
             with error ->
-                failure <- Some error
+                failure <- error
         finally
             windows.RemoveAt (windows.Count - 1)
 
-        let outer = MountLifetime.CurrentWindow
+        if depth > 0 then
+            let outer = windows[depth - 1]
 
-        if
-            not (isNull outer)
-            && obj.ReferenceEquals (outer.Root, root)
-        then
-            outer.Exclude (window.Start, root.ErrorCount)
+            if obj.ReferenceEquals (outer.Root, root) then
+                outer.Exclude (window.Start, root.ErrorCount)
 
-        window.Errors (), failure
+        let errors = window.Errors ()
+        window.ClearRefs ()
+
+        if errors.IsEmpty && isNull failure then
+            LifetimeCache.cleanCapture
+        else
+            errors, Option.ofObj failure
 
     static member private DescendantFrame(lifetime: MountLifetime) : MountLifetime =
         let frames = MountLifetime.Frames

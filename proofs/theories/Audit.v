@@ -46,6 +46,11 @@ Print Assumptions pl_discard_drops_held_and_blocks_later.
 Print Assumptions pass_inserted_flag_exact.
 Print Assumptions mount_lifetime_cleanups_precede_all_releases.
 Print Assumptions teardown_window_exact_partition.
+Print Assumptions in_place_insertion_sort_eq_sort_groups.
+Print Assumptions pl_bulk_forward_eq_fold_enqueue.
+Print Assumptions pl_place_fast_eq_pl_place.
+Print Assumptions teardown_window_empty_fast_path.
+Print Assumptions teardown_window_no_nested_fast_path.
 
 (* Scheduling, OwnerWorkQueue, & CompletionFence *)
 Print Assumptions q_enqueue_preserves_pending_inv.
