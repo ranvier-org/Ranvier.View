@@ -369,22 +369,6 @@ type owq_admission =
 | AdmFull
 | AdmClosed
 
-type owq_model = { owq_items : nat list; owq_stopped : bool;
-                   owq_has_wake : bool; owq_wakes : nat; owq_accepted : 
-                   nat; owq_dequeued : nat; owq_rejected : nat;
-                   owq_discarded : nat }
-
-val init_owq : owq_model
-
-val owq_try_enqueue :
-  nat -> nat -> owq_model -> (owq_admission, owq_model) prod
-
-val owq_try_dequeue : owq_model -> (nat option, owq_model) prod
-
-val owq_set_wake : bool -> owq_model -> owq_model
-
-val owq_stop : owq_model -> owq_model
-
 type fence_poll =
 | PollNotReady
 | PollReady
@@ -419,6 +403,24 @@ val q_flush_reenq_reusable :
   commit_failure -> (nat -> bool) -> ((nat, nat) prod, nat) prod list ->
   work_entry option list -> queue_model -> (work_entry option list,
   queue_model) prod
+
+type owq_fast_state = { of_items : (nat, nat) prod list; of_stopped : 
+                        bool; of_wake_nonnull : bool; of_wakes : nat;
+                        of_accepted : nat; of_dequeued : nat;
+                        of_rejected : nat; of_discarded : nat;
+                        of_observed_ts : nat list }
+
+val init_owq_fast : owq_fast_state
+
+val owq_fast_try_enqueue :
+  nat -> nat -> nat -> owq_fast_state -> (owq_admission, owq_fast_state) prod
+
+val owq_fast_try_dequeue :
+  bool -> owq_fast_state -> (nat option, owq_fast_state) prod
+
+val owq_fast_set_wake : bool -> owq_fast_state -> owq_fast_state
+
+val owq_fast_stop : owq_fast_state -> owq_fast_state
 
 type layout_cmd =
 | LCmdRegisterExit of nat
@@ -519,7 +521,8 @@ type owq_cmd =
 | OWQStop
 
 val run_owq_cmds :
-  owq_cmd list -> nat list -> owq_model -> (nat list, owq_model) prod
+  owq_cmd list -> nat list -> owq_fast_state -> (nat list, owq_fast_state)
+  prod
 
 type owq_view = { ov_dequeued_items : nat list; ov_count : nat;
                   ov_wakes : nat; ov_rejected : nat; ov_discarded : nat;

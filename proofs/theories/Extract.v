@@ -365,18 +365,20 @@ Inductive owq_cmd :=
   | OWQSetWake (has_cb : bool)
   | OWQStop.
 
-Fixpoint run_owq_cmds (cs : list owq_cmd) (deq_out : list nat) (q : owq_model) : list nat * owq_model :=
+Fixpoint run_owq_cmds (cs : list owq_cmd) (deq_out : list nat) (f : owq_fast_state)
+    : list nat * owq_fast_state :=
   match cs with
-  | [] => (deq_out, q)
+  | [] => (deq_out, f)
   | c :: rest =>
     match c with
-    | OWQEnqueue item cap => run_owq_cmds rest deq_out (snd (owq_try_enqueue item cap q))
+    | OWQEnqueue item cap =>
+      run_owq_cmds rest deq_out (snd (owq_fast_try_enqueue item cap 1 f))
     | OWQDequeue =>
-      let '(res, q') := owq_try_dequeue q in
+      let '(res, f') := owq_fast_try_dequeue true f in
       let out' := match res with Some x => deq_out ++ [x] | None => deq_out end in
-      run_owq_cmds rest out' q'
-    | OWQSetWake cb => run_owq_cmds rest deq_out (owq_set_wake cb q)
-    | OWQStop => run_owq_cmds rest deq_out (owq_stop q)
+      run_owq_cmds rest out' f'
+    | OWQSetWake cb => run_owq_cmds rest deq_out (owq_fast_set_wake cb f)
+    | OWQStop => run_owq_cmds rest deq_out (owq_fast_stop f)
     end
   end.
 
@@ -390,13 +392,13 @@ Record owq_view := {
 }.
 
 Definition observe_owq (cs : list owq_cmd) : owq_view :=
-  let '(out, q) := run_owq_cmds cs [] init_owq in
+  let '(out, f) := run_owq_cmds cs [] init_owq_fast in
   {| ov_dequeued_items := out;
-     ov_count := length (owq_items q);
-     ov_wakes := owq_wakes q;
-     ov_rejected := owq_rejected q;
-     ov_discarded := owq_discarded q;
-     ov_stopped := owq_stopped q |}.
+     ov_count := length (of_items f);
+     ov_wakes := of_wakes f;
+     ov_rejected := of_rejected f;
+     ov_discarded := of_discarded f;
+     ov_stopped := of_stopped f |}.
 
 Inductive cf_cmd :=
   | CFTryComplete (poll : fence_poll)

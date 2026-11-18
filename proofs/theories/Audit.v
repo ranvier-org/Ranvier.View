@@ -72,3 +72,6 @@ Print Assumptions cf_reset_preserves_inv_and_rejects_pending.
 Print Assumptions q_flush_reusable_work_buffer_equiv.
 Print Assumptions binding_hoisted_commit_and_cancel_equiv.
 Print Assumptions template_hoisted_isolated_commit_equiv.
+Print Assumptions owq_nullable_sentinel_refines_model.
+Print Assumptions session_in_place_compaction_preserves_live.
+Print Assumptions repaint_grid_step_loop_eq_seq_tryFind.

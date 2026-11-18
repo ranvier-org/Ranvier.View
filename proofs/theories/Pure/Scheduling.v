@@ -1781,3 +1781,277 @@ Proof.
       + apply IH. }
   apply (Hgen None []).
 Qed.
+
+(** ** Batch V5: Nullable-sentinel `OwnerWorkQueue`, `Session` in-place compaction, and repaint grid loop *)
+
+(** Nullable-delegate / `0L`-timestamp sentinel model for `OwnerWorkQueue` (`OwnerWorkQueue.fs`). *)
+Record owq_fast_state := {
+  of_items : list (nat * nat);
+  of_stopped : bool;
+  of_wake_nonnull : bool;
+  of_wakes : nat;
+  of_accepted : nat;
+  of_dequeued : nat;
+  of_rejected : nat;
+  of_discarded : nat;
+  of_observed_ts : list nat
+}.
+
+Definition init_owq_fast : owq_fast_state :=
+  {| of_items := [];
+     of_stopped := false;
+     of_wake_nonnull := false;
+     of_wakes := 0;
+     of_accepted := 0;
+     of_dequeued := 0;
+     of_rejected := 0;
+     of_discarded := 0;
+     of_observed_ts := [] |}.
+
+Definition owq_fast_project (f : owq_fast_state) : owq_model :=
+  {| owq_items := map fst (of_items f);
+     owq_stopped := of_stopped f;
+     owq_has_wake := of_wake_nonnull f;
+     owq_wakes := of_wakes f;
+     owq_accepted := of_accepted f;
+     owq_dequeued := of_dequeued f;
+     owq_rejected := of_rejected f;
+     owq_discarded := of_discarded f |}.
+
+(** [ts_tick = 0] represents a null [timestampFn]; nonzero [ts_tick] represents [timestampFn ()]. *)
+Definition owq_fast_try_enqueue (item capacity ts_tick : nat) (f : owq_fast_state)
+    : owq_admission * owq_fast_state :=
+  if of_stopped f then (AdmClosed, f)
+  else if Nat.leb capacity (length (of_items f)) then
+    (AdmFull,
+     {| of_items := of_items f;
+        of_stopped := false;
+        of_wake_nonnull := of_wake_nonnull f;
+        of_wakes := of_wakes f;
+        of_accepted := of_accepted f;
+        of_dequeued := of_dequeued f;
+        of_rejected := S (of_rejected f);
+        of_discarded := of_discarded f;
+        of_observed_ts := of_observed_ts f |})
+  else
+    let was_empty := match of_items f with [] => true | _ => false end in
+    let notify := if was_empty && of_wake_nonnull f then 1 else 0 in
+    (AdmAccepted,
+     {| of_items := of_items f ++ [(item, ts_tick)];
+        of_stopped := false;
+        of_wake_nonnull := of_wake_nonnull f;
+        of_wakes := of_wakes f + notify;
+        of_accepted := S (of_accepted f);
+        of_dequeued := of_dequeued f;
+        of_rejected := of_rejected f;
+        of_discarded := of_discarded f;
+        of_observed_ts := of_observed_ts f |}).
+
+Definition owq_fast_try_dequeue (deq_nonnull : bool) (f : owq_fast_state)
+    : option nat * owq_fast_state :=
+  match of_items f with
+  | [] => (None, f)
+  | (x, started) :: rest =>
+    let obs' :=
+      if negb (Nat.eqb started 0) && deq_nonnull
+      then of_observed_ts f ++ [started]
+      else of_observed_ts f in
+    (Some x,
+     {| of_items := rest;
+        of_stopped := of_stopped f;
+        of_wake_nonnull := of_wake_nonnull f;
+        of_wakes := of_wakes f;
+        of_accepted := of_accepted f;
+        of_dequeued := S (of_dequeued f);
+        of_rejected := of_rejected f;
+        of_discarded := of_discarded f;
+        of_observed_ts := obs' |})
+  end.
+
+Definition owq_fast_set_wake (cb_nonnull : bool) (f : owq_fast_state) : owq_fast_state :=
+  if of_stopped f then f
+  else
+    let non_empty := match of_items f with [] => false | _ => true end in
+    let notify := if non_empty && cb_nonnull then 1 else 0 in
+    {| of_items := of_items f;
+       of_stopped := false;
+       of_wake_nonnull := cb_nonnull;
+       of_wakes := of_wakes f + notify;
+       of_accepted := of_accepted f;
+       of_dequeued := of_dequeued f;
+       of_rejected := of_rejected f;
+       of_discarded := of_discarded f;
+       of_observed_ts := of_observed_ts f |}.
+
+Definition owq_fast_stop (f : owq_fast_state) : owq_fast_state :=
+  {| of_items := [];
+     of_stopped := true;
+     of_wake_nonnull := false;
+     of_wakes := of_wakes f;
+     of_accepted := of_accepted f;
+     of_dequeued := of_dequeued f;
+     of_rejected := of_rejected f;
+     of_discarded := of_discarded f + length (of_items f);
+     of_observed_ts := of_observed_ts f |}.
+
+(**md
+**Nullable delegate sentinels and `0L` timestamp sentinels in `OwnerWorkQueue` refine `owq_model` exactly.**
+
+Replacing `FSharpOption` wrappers and heap tuple lock returns with nullable delegate fields (`wakeFn`, `timestampFn`, `dequeuedFn`) and `0L` timestamp sentinels preserves exact admission outcomes, FIFO items, wake counts, and conservation across `TryEnqueue`, `TryDequeue`, `SetWakeCallback`, and `Stop`.
+
+- [item:] work item passed to `TryEnqueue`.
+- [cap:] capacity bound passed to `TryEnqueue`.
+- [ts_tick:] `0` when `timestampFn` is null, otherwise the sampled timestamp.
+- [deq_nonnull:] whether `dequeuedFn` is non-null.
+- [cb_nonnull:] whether the wake callback installed by `SetWakeCallback` is non-null.
+- [f:] the fast `OwnerWorkQueue` state before the operation.
+*)
+Theorem owq_nullable_sentinel_refines_model item cap ts_tick deq_nonnull cb_nonnull f :
+  let '(adm_f, f_enq) := owq_fast_try_enqueue item cap ts_tick f in
+  let '(adm_m, m_enq) := owq_try_enqueue item cap (owq_fast_project f) in
+  let '(deq_f, f_deq) := owq_fast_try_dequeue deq_nonnull f in
+  let '(deq_m, m_deq) := owq_try_dequeue (owq_fast_project f) in
+  adm_f = adm_m /\
+  owq_fast_project f_enq = m_enq /\
+  deq_f = deq_m /\
+  owq_fast_project f_deq = m_deq /\
+  owq_fast_project (owq_fast_set_wake cb_nonnull f) = owq_set_wake cb_nonnull (owq_fast_project f) /\
+  owq_fast_project (owq_fast_stop f) = owq_stop (owq_fast_project f).
+Proof.
+  assert (Hmap_snoc : forall (xs : list (nat * nat)) (p : nat * nat),
+            map fst (xs ++ [p]) = map fst xs ++ [fst p]).
+  { induction xs as [|h t IH]; intros p; simpl; [reflexivity | rewrite IH; reflexivity]. }
+  destruct f as [items stp wk wks acc deq rej dsc obs].
+  unfold owq_fast_try_enqueue, owq_try_enqueue,
+         owq_fast_try_dequeue, owq_try_dequeue,
+         owq_fast_set_wake, owq_set_wake,
+         owq_fast_stop, owq_stop, owq_fast_project; simpl.
+  rewrite Stdlib.Lists.List.length_map.
+  destruct stp, (Nat.leb cap (length items)), items as [|[x started] rest];
+    simpl; repeat split; try reflexivity;
+    rewrite Hmap_snoc; reflexivity.
+Qed.
+
+(** In-place `KnownSessions` compaction and indexed lookup vs `RemoveAll` + `Seq.tryPick` (`Objects.fs`). *)
+Section KnownSessionsCompaction.
+  Context {S R : Type}.
+
+  (** Models a weak-reference slot: [None] = collected target, [Some s] = live target [s]. *)
+  Definition slot_keep (is_disposed : S -> bool) (w : option S) : bool :=
+    match w with
+    | None => false
+    | Some s => negb (is_disposed s)
+    end.
+
+  (** Two-pointer in-place compaction accumulating retained entries onto [acc_rev]. *)
+  Fixpoint compact_weak_acc (is_disposed : S -> bool) (ws : list (option S)) (acc_rev : list (option S))
+      : list (option S) :=
+    match ws with
+    | [] => rev acc_rev
+    | w :: rest =>
+      match w with
+      | Some s =>
+        if is_disposed s
+        then compact_weak_acc is_disposed rest acc_rev
+        else compact_weak_acc is_disposed rest (Some s :: acc_rev)
+      | None => compact_weak_acc is_disposed rest acc_rev
+      end
+    end.
+
+  Fixpoint pick_live_session (is_disposed : S -> bool) (probe : S -> option R) (ws : list (option S))
+      : option R :=
+    match ws with
+    | [] => None
+    | None :: rest => pick_live_session is_disposed probe rest
+    | Some s :: rest =>
+      if is_disposed s then pick_live_session is_disposed probe rest
+      else
+        match probe s with
+        | Some r => Some r
+        | None => pick_live_session is_disposed probe rest
+        end
+    end.
+
+  Fixpoint seq_try_pick_weak (probe : S -> option R) (ws : list (option S)) : option R :=
+    match ws with
+    | [] => None
+    | None :: rest => seq_try_pick_weak probe rest
+    | Some s :: rest =>
+      match probe s with
+      | Some r => Some r
+      | None => seq_try_pick_weak probe rest
+      end
+    end.
+
+  Lemma compact_weak_acc_eq_filter is_disposed ws acc_rev :
+    compact_weak_acc is_disposed ws acc_rev =
+    rev acc_rev ++ filter (slot_keep is_disposed) ws.
+  Proof.
+    revert acc_rev; induction ws as [|[s|] rest IH]; intros acc_rev; simpl.
+    - rewrite app_nil_r; reflexivity.
+    - destruct (is_disposed s) eqn:Hd; simpl.
+      + apply IH.
+      + rewrite IH; simpl; rewrite <- app_assoc; simpl; reflexivity.
+    - apply IH.
+  Qed.
+
+  Lemma seq_try_pick_after_filter is_disposed probe ws :
+    seq_try_pick_weak probe (filter (slot_keep is_disposed) ws) =
+    pick_live_session is_disposed probe ws.
+  Proof.
+    induction ws as [|[s|] rest IH]; simpl; [reflexivity| | exact IH].
+    destruct (is_disposed s) eqn:Hd; simpl; [exact IH|].
+    destruct (probe s); [reflexivity | exact IH].
+  Qed.
+End KnownSessionsCompaction.
+
+(**md
+**In-place `KnownSessions` compaction and indexed session lookup match `RemoveAll` + `Seq.tryPick` identically.**
+
+Compacting dead or disposed `WeakReference<Session>` entries in place without allocating a `Predicate` delegate and scanning the compacted `ResizeArray` by index without `Seq.tryPick` enumerators preserves the exact session order and lookup result of `TryKnownNode` and `TryDocumentOwner`.
+
+- [S:] the `Session` type.
+- [R:] the lookup result type (`NativeObject` or `Session`).
+- [is_disposed:] `session.IsDisposed` predicate.
+- [probe:] per-session node or document-owner query.
+- [ws:] the thread-local weak session table before lookup.
+*)
+Theorem session_in_place_compaction_preserves_live {S R : Type}
+    (is_disposed : S -> bool) (probe : S -> option R) (ws : list (option S)) :
+  let compacted := compact_weak_acc is_disposed ws [] in
+  compacted = filter (slot_keep is_disposed) ws /\
+  seq_try_pick_weak probe compacted =
+    seq_try_pick_weak probe (filter (slot_keep is_disposed) ws) /\
+  seq_try_pick_weak probe compacted = pick_live_session is_disposed probe ws.
+Proof.
+  pose proof (compact_weak_acc_eq_filter is_disposed ws []) as Hcomp.
+  simpl in Hcomp.
+  split; [exact Hcomp|].
+  rewrite Hcomp.
+  split; [reflexivity | apply seq_try_pick_after_filter].
+Qed.
+
+(** Allocation-free `1..64` pixel-grid step scan vs `seq { 1..64 } |> Seq.tryFind` (`Host.fs:203-210`). *)
+Fixpoint find_grid_step_loop (cur remaining : nat) (aligned : nat -> bool) : option nat :=
+  match remaining with
+  | 0 => None
+  | S rem =>
+    if aligned cur then Some cur
+    else find_grid_step_loop (S cur) rem aligned
+  end.
+
+(**md
+**Scanning device-pixel grid steps with an integer `while` loop equals `seq { 1..n } |> Seq.tryFind`.**
+
+Replacing `seq { 1..64 } |> Seq.tryFind (...)` in `WebCoreHost.repaintBounds` with a bounded integer loop returns the identical first aligned step `Some step` (or `None` when none in `start .. start + len - 1` aligns) with zero `IEnumerable`/`IEnumerator`/closure allocations.
+
+- [start:] initial step candidate (`1` in `repaintBounds`).
+- [len:] number of steps to test (`64` in `repaintBounds`).
+- [aligned:] predicate testing whether `float deviceScale * float step` lands on an integer pixel.
+*)
+Theorem repaint_grid_step_loop_eq_seq_tryFind start len aligned :
+  find_grid_step_loop start len aligned = Stdlib.Lists.List.find aligned (Stdlib.Lists.List.seq start len).
+Proof.
+  revert start; induction len as [|rem IH]; intros start; simpl; [reflexivity|].
+  destruct (aligned start); [reflexivity | apply IH].
+Qed.
