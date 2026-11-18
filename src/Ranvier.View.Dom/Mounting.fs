@@ -331,8 +331,6 @@ let private nextOrNull (node: Node) : Node =
     Native.nextOrNull node
 #endif
 
-let private nextNode = System.Func<Node, Node>(fun node -> nextOrNull node)
-
 #if FABLE_COMPILER
 [<Emit("$0.textContent = ''")>]
 let private clearChildren (parent: Node) : unit = jsNative
@@ -461,31 +459,6 @@ let private sliceRows (rows: 'T array) (start: int) (finish: int) : 'T array =
 
 /// <summary>The largest changed window whose rows a keyed pass splices into a copy of the previous rows.</summary>
 let private smallWindow = 64
-
-#if FABLE_COMPILER
-[<Emit("new Map()")>]
-let private rowMap () : obj = jsNative
-#else
-let private rowMap () : obj =
-    Native.newMap ()
-#endif
-
-#if FABLE_COMPILER
-[<Emit("$0.set($1, $2)")>]
-let private rowMapSet (map: obj) (key: 'T) (value: int) : unit = jsNative
-#else
-let private rowMapSet (map: obj) (key: 'T) (value: int) : unit =
-    Native.set map key value
-#endif
-
-/// <summary>The value stored for <c>key</c>, or -1.</summary>
-#if FABLE_COMPILER
-[<Emit("($0.get($1) ?? -1)")>]
-let private rowMapGet (map: obj) (key: 'T) : int = jsNative
-#else
-let private rowMapGet (map: obj) (key: 'T) : int =
-    Native.getIndex map key
-#endif
 
 #if FABLE_COMPILER
 [<Emit("new Set()")>]
@@ -622,46 +595,45 @@ let private setIter (set: obj) (action: string -> unit) : unit =
     Native.forEach set action
 #endif
 
-/// <summary>For each position of <c>sources</c>, whether it belongs to one longest increasing run of its non-negative values.</summary>
-let private increasingRun (sources: int array) : bool array =
+/// <summary>Marks with <c>-2</c> each position of <c>sources</c> belonging to one longest increasing run of its non-negative values.</summary>
+let private markIncreasingRun (sources: int array) : unit =
 #if RANVIER_VIEW_COUNTERS
     ListCounters.increasingRuns.Value <- ListCounters.increasingRuns.Value + 1
 #endif
-    let keep: bool array = Array.zeroCreate sources.Length
-    let tails = ResizeArray<int>()
-    let previous = Array.create sources.Length -1
+    let count = sources.Length
+    let tails: int array = Array.zeroCreate count
+    let mutable tailsCount = 0
+    let previous = Array.create count -1
 
-    for index in 0 .. sources.Length - 1 do
-        let value = sources[index]
+    for index = 0 to count - 1 do
+        let value = item sources index
 
         if value >= 0 then
             let mutable low = 0
-            let mutable high = tails.Count
+            let mutable high = tailsCount
 
             while low < high do
                 let middle = (low + high) >>> 1
 
-                if sources[tails[middle]] < value then
+                if item sources (item tails middle) < value then
                     low <- middle + 1
                 else
                     high <- middle
 
             if low > 0 then
-                previous[index] <- tails[low - 1]
+                setItem previous index (item tails (low - 1))
 
-            if low = tails.Count then
-                tails.Add index
-            else
-                tails[low] <- index
+            setItem tails low index
 
-    if tails.Count > 0 then
-        let mutable cursor = tails[tails.Count - 1]
+            if low = tailsCount then
+                tailsCount <- tailsCount + 1
+
+    if tailsCount > 0 then
+        let mutable cursor = item tails (tailsCount - 1)
 
         while cursor >= 0 do
-            keep[cursor] <- true
-            cursor <- previous[cursor]
-
-    keep
+            setItem sources cursor -2
+            cursor <- item previous cursor
 
 /// <summary>A region's failure state: set up failures recorded during the first pass, reports after it.</summary>
 type private RegionErrors(report: exn list -> unit) =
@@ -1306,6 +1278,8 @@ and [<Sealed; AllowNullLiteral>] private Row(first: Node, last: Node) =
     member val Adopted = false with get, set
     /// <summary>The nested mount of an authored row, or null for a template row.</summary>
     member val Mount: Mounted = Unchecked.defaultof<_> with get, set
+    /// <summary>Scratch old-window index during <c>Row.Layout</c>, or -1 outside a layout pass.</summary>
+    member val LayoutIndex = -1 with get, set
 
     static member MoveBefore(row: Row, parent: Node, anchor: Node) =
         let mutable cursor = row.First
@@ -1396,14 +1370,19 @@ and [<Sealed; AllowNullLiteral>] private Row(first: Node, last: Node) =
         let last = min last (laidOut.Count - 1)
         let mutable index = max first 0
 
-        let step =
+        let nextLive =
             if Departures.seam.Enabled then
                 Departures.seam.NextLive
             else
-                nextNode
+                Unchecked.defaultof<_>
+
+        let firstAfter = if index = 0 then regionStart else laidOut[index - 1].Last
 
         let mutable cursor =
-            step.Invoke (if index = 0 then regionStart else laidOut[index - 1].Last)
+            if isNullish nextLive then
+                nextOrNull firstAfter
+            else
+                nextLive.Invoke firstAfter
 
         while index <= last do
             let row = laidOut[index]
@@ -1418,7 +1397,11 @@ and [<Sealed; AllowNullLiteral>] private Row(first: Node, last: Node) =
                 if not (same cursor row.First) then
                     invalid "Keyed-list rows or contents were externally mutated"
 
-                cursor <- step.Invoke row.Last
+                cursor <-
+                    if isNullish nextLive then
+                        nextOrNull row.Last
+                    else
+                        nextLive.Invoke row.Last
 
             index <- index + 1
 
@@ -1520,27 +1503,56 @@ and [<Sealed; AllowNullLiteral>] private Row(first: Node, last: Node) =
                     if count > 2 && live () then
                         Row.Place (next[bEnd - 1], parent, anchor)
                 else
-                    let sources = Array.create count -1
-                    let positions = rowMap ()
+                    let sources: int array = Array.zeroCreate count
 
-                    for index in aStart .. aEnd - 1 do
-                        rowMapSet positions (at previous index) index
+                    for index = aEnd - 1 downto aStart do
+                        (at previous index).LayoutIndex <- index
 
-                    for offset in 0 .. count - 1 do
-                        setItem sources offset (rowMapGet positions (item next (bStart + offset)))
+                    let mutable lastSource = -1
+                    let mutable increasing = true
+                    let mutable allKept = true
 
-                    let keep = increasingRun sources
-                    let mutable before = anchor
-                    let mutable offset = count - 1
+                    for offset = 0 to count - 1 do
+                        let source = (item next (bStart + offset)).LayoutIndex
+                        setItem sources offset source
 
-                    while offset >= 0 && live () do
-                        let row = next[bStart + offset]
+                        if source >= 0 then
+                            if source <= lastSource then
+                                increasing <- false
+                            else
+                                lastSource <- source
+                        else
+                            allKept <- false
 
-                        if not keep[offset] then
-                            Row.Place (row, parent, before)
+                    for index = aStart to aEnd - 1 do
+                        (at previous index).LayoutIndex <- -1
 
-                        before <- row.First
-                        offset <- offset - 1
+                    if increasing then
+                        if not allKept then
+                            let mutable before = anchor
+                            let mutable offset = count - 1
+
+                            while offset >= 0 && live () do
+                                let row = next[bStart + offset]
+
+                                if item sources offset < 0 then
+                                    Row.Place (row, parent, before)
+
+                                before <- row.First
+                                offset <- offset - 1
+                    else
+                        markIncreasingRun sources
+                        let mutable before = anchor
+                        let mutable offset = count - 1
+
+                        while offset >= 0 && live () do
+                            let row = next[bStart + offset]
+
+                            if item sources offset <> -2 then
+                                Row.Place (row, parent, before)
+
+                            before <- row.First
+                            offset <- offset - 1
 
         // Rows before `bStart` are in place; rows after `bEnd` keep their positions when the row count is unchanged, and
         // are the rows after `aEnd` otherwise.
@@ -1548,7 +1560,25 @@ and [<Sealed; AllowNullLiteral>] private Row(first: Node, last: Node) =
             previous.Count <> next.Length
             && bEnd - bStart <= smallWindow
         then
+#if FABLE_COMPILER
             spliceList laidOut aStart (aEnd - aStart) (sliceRows next bStart bEnd)
+#else
+            let removedCount = aEnd - aStart
+            let insertedCount = bEnd - bStart
+            let shared = min removedCount insertedCount
+
+            for offset = 0 to shared - 1 do
+                laidOut[aStart + offset] <- next[bStart + offset]
+
+            if removedCount > insertedCount then
+                laidOut.RemoveRange (aStart + shared, removedCount - shared)
+            elif insertedCount > removedCount then
+                if aStart + shared = laidOut.Count then
+                    for offset = shared to insertedCount - 1 do
+                        laidOut.Add next[bStart + offset]
+                else
+                    laidOut.InsertRange (aStart + shared, sliceRows next (bStart + shared) bEnd)
+#endif
         else
             let last =
                 if previous.Count = next.Length then
@@ -3958,6 +3988,10 @@ and internal MountState
                         failure,
                         hydrating,
                         fun recorded ->
+                            let mutable keyLeading = 0
+                            let mutable keyTrailing = 0
+                            let mutable keyMovedOnly = false
+
                             let layout =
                                 try
                                     Api.untrack (fun () ->
@@ -3999,12 +4033,20 @@ and internal MountState
                                                 spliceRows next start removed (Array.init inserted (fun offset -> lookup (start + offset)))
                                                 next
 #else
-                                                Array.concat
-                                                    [|
-                                                        Array.sub priorRows 0 start
-                                                        Array.init inserted (fun offset -> lookup (start + offset))
-                                                        Array.sub priorRows (start + removed) (priorRows.Length - start - removed)
-                                                    |]
+                                                let next = Array.zeroCreate count
+
+                                                if start > 0 then
+                                                    Array.Copy (priorRows, 0, next, 0, start)
+
+                                                for offset = 0 to inserted - 1 do
+                                                    next[start + offset] <- lookup (start + offset)
+
+                                                let tailCount = priorRows.Length - start - removed
+
+                                                if tailCount > 0 then
+                                                    Array.Copy (priorRows, start + removed, next, start + inserted, tailCount)
+
+                                                next
 #endif
                                             else
                                                 let next = Array.zeroCreate count
@@ -4054,10 +4096,18 @@ and internal MountState
                                                             trailing <- min trailing (count - 1 - position)
 
                                         retired.Clear ()
+                                        let intact = priorRows.Length = site.LaidOut.Count
 
-                                        if priorRows.Length <> site.LaidOut.Count then
+                                        if not intact then
                                             leading <- 0
                                             trailing <- 0
+
+                                        if not authored && not (isNull priorKeys) && intact then
+                                            if inPlace && checkedRows = 0 then
+                                                keyMovedOnly <- true
+                                            else
+                                                keyLeading <- leading
+                                                keyTrailing <- trailing
 
                                         // Adopted rows are in place and in order.
                                         if hydrating then
@@ -4092,11 +4142,23 @@ and internal MountState
                                     previousRows <- next
 
 #if RANVIER_VIEW_INSPECT || !FABLE_COMPILER
-                                    for index in 0 .. min previousKeys.Length next.Length - 1 do
-                                        let row = item next index
+                                    let keyLimit = min previousKeys.Length next.Length
 
-                                        if not (isNull row) then
-                                            Inspect.rememberRowKey row.First (item previousKeys index)
+                                    if keyMovedOnly then
+                                        for k = 0 to moved.Count - 1 do
+                                            let index = at moved k
+
+                                            if index < keyLimit then
+                                                let row = item next index
+
+                                                if not (isNull row) then
+                                                    Inspect.rememberRowKey row.First (item previousKeys index)
+                                    else
+                                        for index = keyLeading to keyLimit - 1 - keyTrailing do
+                                            let row = item next index
+
+                                            if not (isNull row) then
+                                                Inspect.rememberRowKey row.First (item previousKeys index)
 #endif
 
                                     if authored then

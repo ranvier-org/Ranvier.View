@@ -96,6 +96,8 @@ module Pos :
 
   val compare : positive -> positive -> comparison
 
+  val eqb : positive -> positive -> bool
+
   val of_succ_nat : nat -> positive
  end
 
@@ -118,6 +120,8 @@ module Z :
   val compare : z -> z -> comparison
 
   val ltb : z -> z -> bool
+
+  val eqb : z -> z -> bool
 
   val of_nat : nat -> z
 
@@ -147,20 +151,11 @@ val lis_scan :
   z list -> nat -> z list -> nat list -> nat option list -> (nat list, nat
   option list) prod
 
-val mark_chain :
-  nat -> nat option -> nat option list -> bool list -> bool list
-
-val increasing_run : z list -> bool list
-
 val common_prefix_len : nat list -> nat list -> nat
 
 val common_suffix_len : nat list -> nat list -> nat
 
-val index_of : nat -> nat -> nat list -> z
-
 val is_outer_swap : nat list -> nat list -> bool
-
-val row_layout : nat list -> nat list -> nat -> nat list -> nat list
 
 type dep_state = { dep_exits : nat list; dep_leaving : nat list;
                    dep_pending : nat list }
@@ -195,6 +190,19 @@ val reflow_before : reflow_state -> (reflow_state, nat) prod
 val reflow_run_post : nat -> reflow_state -> reflow_state
 
 val reflow_abort_post : nat -> reflow_state -> reflow_state
+
+val stamp_layout_indices : nat -> nat list -> nat -> z
+
+val mark_chain_in_place :
+  nat -> nat option -> nat option list -> z list -> z list
+
+val increasing_run_in_place : z list -> z list
+
+val strictly_increasing_from : z -> z list -> bool
+
+val strictly_increasing_nonneg : z list -> bool
+
+val row_layout_fast : nat list -> nat list -> nat -> nat list -> nat list
 
 type ssr_token =
 | TokStart of nat

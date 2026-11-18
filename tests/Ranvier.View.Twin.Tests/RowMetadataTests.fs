@@ -83,4 +83,44 @@ let tests =
                 Expect.isNone (Inspect.rowKeyOf first) "finished row metadata clears"
                 session.Host.appendChild first |> ignore
                 Expect.isNone (Inspect.rowKeyOf first) "cleared metadata stays absent after reattachment"
+
+            testCase "null and windowed row keys stay accurate across swaps, inserts, and removals"
+            <| fun () ->
+                let items = ref Unchecked.defaultof<Signal<string array>>
+
+                let stringRow =
+                    Component.define (fun _ (item: unit -> string) -> item) (fun t ->
+                        t.li [||] [| t.text (fun item -> let v = item () in if isNull v then "<null>" else v) |])
+
+                let stringRows =
+                    Component.define (fun _ (src: Signal<string array>) -> src) (fun t ->
+                        t.ul [||] [| t.each id (fun (src: Signal<string array>) -> src.Value) stringRow |])
+
+                use session =
+                    Twin.mountView TwinMount.defaults (fun context ->
+                        items.Value <- Api.createSignal [| "a"; null; "b"; "c" |]
+                        Program.run (Component.render stringRows items.Value) context.Backend)
+
+                let readListRows () =
+                    let rec find (node: TwinNode) =
+                        match Inspect.probeOf (unbox node.Native) with
+                        | Some (Inspect.ListProbe (_, readRows, _)) -> Some (readRows ())
+                        | _ -> node.Children |> Seq.tryPick find
+
+                    find (Bridge.nodeOf session.Host) |> Option.get
+
+                let check expected label =
+                    let actual =
+                        readListRows ()
+                        |> Array.map (fun (_, node) -> Inspect.rowKeyOf node)
+
+                    Expect.equal actual expected label
+
+                check [| Some (box "a"); Some null; Some (box "b"); Some (box "c") |] "initial keys including null"
+                session.Act (fun () -> items.Value.Value <- [| "a"; "b"; null; "c" |])
+                check [| Some (box "a"); Some (box "b"); Some null; Some (box "c") |] "after swap involving null"
+                session.Act (fun () -> items.Value.Value <- [| "a"; "b"; "x"; null; "c" |])
+                check [| Some (box "a"); Some (box "b"); Some (box "x"); Some null; Some (box "c") |] "after windowed insert"
+                session.Act (fun () -> items.Value.Value <- [| "a"; "c" |])
+                check [| Some (box "a"); Some (box "c") |] "after multi-remove filter"
         ]

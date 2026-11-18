@@ -270,6 +270,31 @@ let internal safetyTimeout = 10000
 // Each registered exit, by element: given `finish`, starts the exit and returns its cancel.
 let private exits = weakMap ()
 let private leaving = weakSet ()
+#if FABLE_COMPILER
+let mutable private leavingCount = 0
+
+let inline private hasLeaving () =
+    leavingCount > 0
+
+let inline private incrementLeaving () =
+    leavingCount <- leavingCount + 1
+
+let inline private decrementLeaving () =
+    leavingCount <- leavingCount - 1
+#else
+let private leavingCount = ref 0
+
+let inline private hasLeaving () =
+    System.Threading.Volatile.Read &leavingCount.contents > 0
+
+let inline private incrementLeaving () =
+    System.Threading.Interlocked.Increment &leavingCount.contents
+    |> ignore
+
+let inline private decrementLeaving () =
+    System.Threading.Interlocked.Decrement &leavingCount.contents
+    |> ignore
+#endif
 // Roots whose instance is disposed and whose exit runs once the row is retired.
 let private pending = weakSet ()
 // The held list each end action is in.
@@ -289,8 +314,9 @@ type private ReflowEntry =
 let private nextLive (node: Node) : Node =
     let mutable next = nextOrNull node
 
-    while not (isNullish next) && holds leaving next do
-        next <- nextOrNull next
+    if hasLeaving () then
+        while not (isNullish next) && holds leaving next do
+            next <- nextOrNull next
 
     next
 
@@ -328,20 +354,21 @@ let private drop (ending: unit -> unit) =
             index <- index - 1
 
 let private endAll (held: ResizeArray<unit -> unit>) (errors: ResizeArray<exn>) (target: ResizeArray<unit -> unit>) =
-    let departing = held.ToArray ()
-
     if isNull target then
+        let departing = held.ToArray ()
+
         for index in 0 .. departing.Length - 1 do
             try
                 departing[index]()
             with error ->
                 errors.Add error
     else
-        held.Clear ()
+        for index in 0 .. held.Count - 1 do
+            let ending = held[index]
+            store holders ending target
+            target.Add ending
 
-        for index in 0 .. departing.Length - 1 do
-            store holders departing[index] target
-            target.Add departing[index]
+        held.Clear ()
 
 #if FABLE_COMPILER
 let private claimHeld (_: Node) : unit -> unit = ignore
@@ -423,7 +450,10 @@ let private retire (node: Node) (held: ResizeArray<unit -> unit>) : bool =
     else
         forget exits node
         forget pending node
-        mark leaving node
+
+        if not (holds leaving node) then
+            mark leaving node
+            incrementLeaving ()
 
         let release = claimHeld node
         let mutable ended = false
@@ -437,7 +467,10 @@ let private retire (node: Node) (held: ResizeArray<unit -> unit>) : bool =
             if not (isNull timer) then
                 stopTimer timer
 
-            forget leaving node
+            if holds leaving node then
+                forget leaving node
+                decrementLeaving ()
+
             drop ending
             detach node
             release ()
