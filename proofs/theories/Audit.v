@@ -15,6 +15,9 @@ Print Assumptions increasing_run_length.
 Print Assumptions departures_retire_preserves_live_siblings.
 Print Assumptions flush_released_fast_clear_sound.
 Print Assumptions reflow_latest_post_closes_once.
+Print Assumptions naive_reflow_drop_skips_next_before_falsified.
+Print Assumptions reflow_abort_latest_recovers_cleanly.
+Print Assumptions reflow_abort_superseded_keeps_open.
 
 (* Hydration & ViewBoundary *)
 Print Assumptions matching_end_well_bracketed.
@@ -43,6 +46,8 @@ Print Assumptions q_reenqueue_coalesces_in_place.
 Print Assumptions q_stale_ticket_after_flush_noop.
 Print Assumptions q_ticket_after_dispose_noop.
 Print Assumptions exec_work_stopped_commits_nothing.
+Print Assumptions naive_failfast_reenqueue_skips_dropped_falsified.
+Print Assumptions exec_work_stopped_drops_iff_active_commit.
 Print Assumptions queue_report_groups_each_scope_once.
 Print Assumptions owq_operations_preserve_conservation.
 Print Assumptions owq_no_lost_wakeup.

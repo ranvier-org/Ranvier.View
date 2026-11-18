@@ -164,7 +164,8 @@ Fixpoint exec_work (mode : commit_failure) (will_fail : nat -> bool) (stopped : 
     | Some sl =>
       let has_commit := match act_opt with Some _ => true | None => false end in
       if stopped then
-        let dropped := has_commit && Nat.eqb (sl_version sl) ver in
+        let has_replacement := match sl_action sl with Some _ => true | None => false end in
+        let dropped := (has_commit && Nat.eqb (sl_version sl) ver) || has_replacement in
         let sl' := {| sl_version := S (sl_version sl);
                       sl_listed := sl_listed sl;
                       sl_action := None;
@@ -199,6 +200,90 @@ Definition q_flush (mode : commit_failure) (will_fail : nat -> bool) (q : queue_
     q_request
       {| q_slots := slots2;
          q_pending := [];
+         q_disposed := false;
+         q_scheduled := false;
+         q_generation := S (q_generation q);
+         q_tickets := q_tickets q;
+         q_committed := committed';
+         q_errors := errs' |}.
+
+(** In-flush re-enqueues triggered while a commit callback executes ([BindingChecks.failFastReplacements]). *)
+Fixpoint apply_reenqueues (act : nat) (reenq : list (nat * nat * nat))
+    (slots : list slot_model) (pend : list nat) : list slot_model * list nat :=
+  match reenq with
+  | [] => (slots, pend)
+  | (trig, tgt, new_act) :: rest =>
+    if Nat.eqb trig act then
+      match nth_error slots tgt with
+      | None => apply_reenqueues act rest slots pend
+      | Some tsl =>
+        let pend' := if sl_listed tsl then pend else pend ++ [tgt] in
+        let tsl' := {| sl_version := S (sl_version tsl);
+                       sl_listed := true;
+                       sl_action := Some new_act;
+                       sl_has_dropped_cb := sl_has_dropped_cb tsl;
+                       sl_dropped_runs := sl_dropped_runs tsl;
+                       sl_scope := sl_scope tsl |} in
+        apply_reenqueues act rest (set_slot tgt tsl' slots) pend'
+      end
+    else
+      apply_reenqueues act rest slots pend
+  end.
+
+Fixpoint exec_work_reenq (mode : commit_failure) (will_fail : nat -> bool)
+    (reenq : list (nat * nat * nat)) (stopped : bool)
+    (work : list (nat * nat * option nat))
+    (slots : list slot_model) (pend : list nat)
+    (committed : list nat) (errs : list (nat * nat))
+    : list slot_model * list nat * list nat * list (nat * nat) :=
+  match work with
+  | [] => (slots, pend, committed, errs)
+  | (idx, ver, act_opt) :: rest =>
+    match nth_error slots idx with
+    | None => exec_work_reenq mode will_fail reenq stopped rest slots pend committed errs
+    | Some sl =>
+      let has_commit := match act_opt with Some _ => true | None => false end in
+      if stopped then
+        let has_replacement := match sl_action sl with Some _ => true | None => false end in
+        let dropped := (has_commit && Nat.eqb (sl_version sl) ver) || has_replacement in
+        let sl' := {| sl_version := S (sl_version sl);
+                      sl_listed := sl_listed sl;
+                      sl_action := None;
+                      sl_has_dropped_cb := sl_has_dropped_cb sl;
+                      sl_dropped_runs := sl_dropped_runs sl +
+                        (if dropped && sl_has_dropped_cb sl then 1 else 0);
+                      sl_scope := sl_scope sl |} in
+        exec_work_reenq mode will_fail reenq true rest (set_slot idx sl' slots) pend committed errs
+      else
+        match act_opt with
+        | Some act =>
+          if Nat.eqb (sl_version sl) ver then
+            let '(slots_after, pend_after) := apply_reenqueues act reenq slots pend in
+            if will_fail act then
+              let stop_now := match mode with FailFastCancel => true | CollectAndContinue => false end in
+              exec_work_reenq mode will_fail reenq stop_now rest slots_after pend_after committed
+                (errs ++ [(sl_scope sl, act)])
+            else
+              exec_work_reenq mode will_fail reenq false rest slots_after pend_after
+                (committed ++ [act]) errs
+          else
+            exec_work_reenq mode will_fail reenq false rest slots pend committed errs
+        | None =>
+          exec_work_reenq mode will_fail reenq false rest slots pend committed errs
+        end
+    end
+  end.
+
+Definition q_flush_reenq (mode : commit_failure) (will_fail : nat -> bool)
+    (reenq : list (nat * nat * nat)) (q : queue_model) : queue_model :=
+  if q_disposed q then q
+  else
+    let '(work, slots1) := snapshot_and_clear (q_pending q) (q_slots q) in
+    let '(slots2, pend2, committed', errs') :=
+      exec_work_reenq mode will_fail reenq false work slots1 [] (q_committed q) [] in
+    q_request
+      {| q_slots := slots2;
+         q_pending := pend2;
          q_disposed := false;
          q_scheduled := false;
          q_generation := S (q_generation q);
@@ -449,6 +534,52 @@ Proof.
   revert slots committed errs.
   induction work as [|[[idx ver] act_opt] rest IH]; simpl; intros slots committed errs; [split; reflexivity|].
   destruct (nth_error slots idx) as [sl|]; [apply IH | apply IH].
+Qed.
+
+(**md
+**Checking only snapshot version equality misses `Slot.Dropped` when `FailFastCancel` cancels an in-flush replacement.**
+
+Counterexample (Issue #175): when an earlier commit in the flush re-enqueued `sl` (`sl_version = S ver`, `sl_action = Some new_act`), the unfixed guard `has_commit && Nat.eqb (sl_version sl) ver` evaluates to `false` even though `Cancel` clears `sl_action`.
+
+- [ver:] the version recorded for the slot when the flush snapshot was taken.
+- [old_act:] the snapshot commit superseded during the flush.
+- [new_act:] the replacement commit enqueued onto the slot before `FailFastCancel` stopped the flush.
+*)
+Theorem naive_failfast_reenqueue_skips_dropped_falsified (ver old_act new_act : nat) :
+  let has_commit := match Some old_act with Some _ => true | None => false end in
+  let sl_ver := S ver in
+  let sl_act := Some new_act in
+  sl_act <> None /\ (has_commit && Nat.eqb sl_ver ver) = false.
+Proof.
+  simpl. split; [discriminate | apply Nat.eqb_neq; lia].
+Qed.
+
+(**md
+**A stopped `FailFastCancel` flush fires `Slot.Dropped` if and only if cancelling the slot drops an active commit.**
+
+Whether the slot still holds its unreplaced snapshot commit (`act_opt = Some _` and `sl_version = ver`) or holds an in-flush replacement commit (`sl_action = Some _`), `exec_work` clears `sl_action` to `None` and increments `sl_dropped_runs` iff `sl_has_dropped_cb` is set; an already-cancelled slot (`sl_version <> ver` and `sl_action = None`) is not notified.
+
+- [mode:] the `CommitFailure` policy of the flush.
+- [wf:] the action failure predicate.
+- [ver:] the snapshot version of slot `0`.
+- [act_opt:] the snapshot action of slot `0`.
+- [sl:] the current state of slot `0` when the stopped loop visits it.
+*)
+Theorem exec_work_stopped_drops_iff_active_commit mode wf ver act_opt sl :
+  sl_has_dropped_cb sl = true ->
+  let active :=
+    (match act_opt with Some _ => true | None => false end && Nat.eqb (sl_version sl) ver) ||
+    match sl_action sl with Some _ => true | None => false end in
+  let '(slots', _, _) := exec_work mode wf true [(0, ver, act_opt)] [sl] [] [] in
+  match slots' with
+  | [sl'] =>
+    sl_action sl' = None /\
+    sl_dropped_runs sl' = sl_dropped_runs sl + (if active then 1 else 0)
+  | _ => False
+  end.
+Proof.
+  intros Hcb. simpl. rewrite Hcb, andb_true_r.
+  split; reflexivity.
 Qed.
 
 Lemma report_by_scope_aux_nodup seen rem :

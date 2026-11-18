@@ -222,7 +222,14 @@ let private snapshotDisposal () =
 let private failFastReplacements () =
     use graph = new Graph ()
     let queue = Queue (graph, FailFastCancel, ignore)
-    let a, b, c = queue.Reserve (), queue.Reserve (), queue.Reserve ()
+
+    let a, b, c, d =
+        queue.Reserve (), queue.Reserve (), queue.Reserve (), queue.Reserve ()
+
+    let mutable droppedB = 0
+    let mutable droppedD = 0
+    b.Dropped <- fun () -> droppedB <- droppedB + 1
+    d.Dropped <- fun () -> droppedD <- droppedD + 1
     let writes = ResizeArray<int>()
 
     queue.Enqueue (
@@ -234,8 +241,10 @@ let private failFastReplacements () =
     )
 
     queue.Enqueue (b, fun () -> writes.Add 2)
+    queue.Enqueue (d, fun () -> writes.Add 5)
+    queue.Cancel d
     queue.Flush ()
-    equal [] (List.ofSeq writes)
+    equal ([], 1, 0) (List.ofSeq writes, droppedB, droppedD)
     queue.Flush ()
     equal [ 4 ] (List.ofSeq writes)
     queue.Dispose ()

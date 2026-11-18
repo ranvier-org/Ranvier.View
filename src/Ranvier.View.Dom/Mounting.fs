@@ -3625,18 +3625,43 @@ and internal MountState
 
     /// <summary>
     /// Runs a reflow's <c>After</c> once the pass's commits are in place: under synchronous commits as an untracked core
-    /// effect, which runs after the effects the pass created, and under queued commits on a commit slot. A failure goes to
-    /// the mount's scope.
+    /// effect, which runs after the effects the pass created, and under queued commits on a commit slot. <c>cancel</c> runs
+    /// instead when <c>FailFastCancel</c> drops the queued slot or the mount tears down before <c>action</c> runs. A
+    /// failure goes to the mount's scope.
     /// </summary>
-    member private this.Post(action: unit -> unit) =
+    member private this.Post(action: unit -> unit, cancel: unit -> unit) =
+        let mutable settled = false
+
+        let abort () =
+            if not settled then
+                settled <- true
+                cancel ()
+
         match scheduling with
         | Synchronous ->
+            root.OnCleanup abort
+
             Api.createEffect (fun () ->
+                settled <- true
+
                 try
                     Api.untrack action
                 with error ->
                     this.Scope.FailAll [ error ])
-        | Queued queue -> queue.Enqueue (queue.Reserve this.Scope, action)
+        | Queued queue ->
+            let slot = queue.Reserve this.Scope
+            slot.Dropped <- abort
+
+            root.OnCleanup (fun () ->
+                queue.Cancel slot
+                abort ())
+
+            queue.Enqueue (
+                slot,
+                fun () ->
+                    settled <- true
+                    action ()
+            )
 
     /// <summary>
     /// Mounts one row per keyed item between the region's markers, on a core projection that creates new rows before it
@@ -3738,358 +3763,360 @@ and internal MountState
             if site.Live () then
                 // A hydrating pass adopts its rows in place, without window validation or a flush of released rows.
                 let hydrating = site.Hydrating
+                let mutable measured: Action<bool> = Unchecked.defaultof<_>
+                let mutable completed = false
 
-                let measured =
-                    if Departures.seam.ReflowEnabled && not hydrating then
-                        Departures.seam.Before.Invoke (regionStart, this.Post)
-                    else
-                        Unchecked.defaultof<_>
+                try
+                    let resumed = if hydrating then cursor.Next else Unchecked.defaultof<_>
 
-                let resumed = if hydrating then cursor.Next else Unchecked.defaultof<_>
+                    if hydrating then
+                        cursor.Next <- nextOrNull regionStart
 
-                if hydrating then
-                    cursor.Next <- nextOrNull regionStart
+                    let parent = ref Unchecked.defaultof<Node>
+                    let keys = ref Unchecked.defaultof<obj array>
+                    let priorKeys = previousKeys
+                    let priorVersion = previousVersion
+                    let priorRows = previousRows
+                    let priorItems = previousItems
+                    previousKeys <- null
+                    previousVersion <- -1
+                    previousRows <- [||]
+                    previousItems <- [||]
 
-                let parent = ref Unchecked.defaultof<Node>
-                let keys = ref Unchecked.defaultof<obj array>
-                let priorKeys = previousKeys
-                let priorVersion = previousVersion
-                let priorRows = previousRows
-                let priorItems = previousItems
-                previousKeys <- null
-                previousVersion <- -1
-                previousRows <- [||]
-                previousItems <- [||]
+                    if priorRows.Length = 0 then
+                        retired.Clear ()
+                    // Keys before `start` and after `end0` (previous) or `end1` (current) are equal in both passes.
+                    let start = ref 0
+                    let end0 = ref -1
+                    let end1 = ref -1
+                    // The window keeps the rows of its unchanged keys in place, and `moved` holds its changed positions.
+                    let inPlace = ref false
 
-                if priorRows.Length = 0 then
-                    retired.Clear ()
-                // Keys before `start` and after `end0` (previous) or `end1` (current) are equal in both passes.
-                let start = ref 0
-                let end0 = ref -1
-                let end1 = ref -1
-                // The window keeps the rows of its unchanged keys in place, and `moved` holds its changed positions.
-                let inPlace = ref false
+                    // Validates the laid-out rows from `first - 1` to `last0 + 1`, or every row after a failed pass.
+                    let validate (parent: Node) (first: int) (last0: int) =
+                        if priorRows.Length = site.LaidOut.Count then
+                            Row.ValidateWindow (regionStart, regionEnd, site.LaidOut, parent, first - 1, last0 + 1)
+                        else
+                            Row.Validate (regionStart, regionEnd, site.LaidOut, parent)
 
-                // Validates the laid-out rows from `first - 1` to `last0 + 1`, or every row after a failed pass.
-                let validate (parent: Node) (first: int) (last0: int) =
-                    if priorRows.Length = site.LaidOut.Count then
-                        Row.ValidateWindow (regionStart, regionEnd, site.LaidOut, parent, first - 1, last0 + 1)
-                    else
-                        Row.Validate (regionStart, regionEnd, site.LaidOut, parent)
+                    let recorded, failure =
+                        try
+                            MountLifetime.Capture (
+                                graph,
+                                report,
+                                fun () ->
+                                    let current = site.ReadSource items.Read
+                                    // A pass whose source read is pending or raises begins no placement pass or reflow measurement.
+                                    if Departures.seam.ReflowEnabled && not hydrating then
+                                        measured <-
+                                            Departures.seam.Before.Invoke (regionStart, Action<_, _>(fun action cancel -> this.Post (action, cancel)))
 
-                let recorded, failure =
-                    try
-                        MountLifetime.Capture (
-                            graph,
-                            report,
-                            fun () ->
-                                let current = site.ReadSource items.Read
-                                // A pass whose source read is pending begins no placement pass.
-                                passPlacement.Begin ()
-                                site.Resume ()
-                                snapshot <- current
-                                Api.untrack (fun () -> version.Value <- version.Value + 1)
-                                parent.Value <- site.Parent ()
+                                    passPlacement.Begin ()
+                                    site.Resume ()
+                                    snapshot <- current
+                                    Api.untrack (fun () -> version.Value <- version.Value + 1)
+                                    parent.Value <- site.Parent ()
 
-                                if authored then
-                                    let n0 = priorItems.Length
-                                    let n1 = current.Length
-                                    let mutable first = 0
+                                    if authored then
+                                        let n0 = priorItems.Length
+                                        let n1 = current.Length
+                                        let mutable first = 0
 
-                                    while first < n0
-                                          && first < n1
-                                          && obj.ReferenceEquals (item priorItems first, item current first) do
-                                        first <- first + 1
+                                        while first < n0
+                                              && first < n1
+                                              && obj.ReferenceEquals (item priorItems first, item current first) do
+                                            first <- first + 1
 
-                                    let mutable last0 = n0 - 1
-                                    let mutable last1 = n1 - 1
+                                        let mutable last0 = n0 - 1
+                                        let mutable last1 = n1 - 1
 
-                                    while last0 >= first
-                                          && last1 >= first
-                                          && obj.ReferenceEquals (item priorItems last0, item current last1) do
-                                        last0 <- last0 - 1
-                                        last1 <- last1 - 1
+                                        while last0 >= first
+                                              && last1 >= first
+                                              && obj.ReferenceEquals (item priorItems last0, item current last1) do
+                                            last0 <- last0 - 1
+                                            last1 <- last1 - 1
 
-                                    start.Value <- first
-                                    end0.Value <- last0
-                                    end1.Value <- last1
-                                    validate parent.Value first last0
+                                        start.Value <- first
+                                        end0.Value <- last0
+                                        end1.Value <- last1
+                                        validate parent.Value first last0
 
-                                // Runs the pass: its row setup, rollback and retirement errors are reported with this update.
-                                // Rows retired by the pass keep their nodes until the flush.
-                                site.Deferring <- true
-                                let errors = ResizeArray<exn>()
+                                    // Runs the pass: its row setup, rollback and retirement errors are reported with this update.
+                                    // Rows retired by the pass keep their nodes until the flush.
+                                    site.Deferring <- true
+                                    let errors = ResizeArray<exn>()
 
-                                try
                                     try
-                                        keys.Value <- Api.untrack (fun () -> projection.Keys)
-                                    finally
-                                        site.Deferring <- false
-                                with error ->
-                                    errors.Add error
+                                        try
+                                            keys.Value <- Api.untrack (fun () -> projection.Keys)
+                                        finally
+                                            site.Deferring <- false
+                                    with error ->
+                                        errors.Add error
 
-                                // A pass that empties the list removes every node between the markers in one operation.
-                                let cleared =
-                                    not authored
-                                    && not (isNull keys.Value)
-                                    && keys.Value.Length = 0
-                                    && site.Live ()
-                                    && site.ReleasedAll ()
+                                    // A pass that empties the list removes every node between the markers in one operation.
+                                    let cleared =
+                                        not authored
+                                        && not (isNull keys.Value)
+                                        && keys.Value.Length = 0
+                                        && site.Live ()
+                                        && site.ReleasedAll ()
 
-                                // Before the flush removes any node, a pass that keeps rows validates the laid-out rows around the changed window.
-                                let validated =
-                                    try
-                                        if authored || cleared || not (site.Live ()) then
-                                            ()
-                                        elif isNull keys.Value then
-                                            if not hydrating then
-                                                Row.Validate (regionStart, regionEnd, site.LaidOut, parent.Value)
-                                        else
-                                            let next = keys.Value
-                                            let mutable first = 0
-
-                                            let mutable last0 =
-                                                (if isNull priorKeys then 0 else priorKeys.Length)
-                                                - 1
-
-                                            let mutable last1 = next.Length - 1
-
-                                            let window =
-                                                if isNull priorKeys then
-                                                    ValueNone
-                                                else
-                                                    Api.untrack (fun () -> projection.ChangedSince priorVersion)
-
-                                            match window with
-                                            | ValueSome (struct (windowStart, windowEnd0, windowEnd1)) ->
-                                                first <- windowStart
-                                                last0 <- windowEnd0
-                                                last1 <- windowEnd1
-                                            // Without the projection's window, the common ends of the two key arrays bound the window.
-                                            | ValueNone ->
-                                                while first <= last0
-                                                      && first <= last1
-                                                      && item priorKeys first = item next first do
-                                                    first <- first + 1
-
-                                                while last0 >= first
-                                                      && last1 >= first
-                                                      && item priorKeys last0 = item next last1 do
-                                                    last0 <- last0 - 1
-                                                    last1 <- last1 - 1
-
-                                            start.Value <- first
-                                            end0.Value <- last0
-                                            end1.Value <- last1
-                                            inPlace.Value <- collectMoved priorKeys next first last0 last1
-
-                                            if hydrating then
+                                    // Before the flush removes any node, a pass that keeps rows validates the laid-out rows around the changed window.
+                                    let validated =
+                                        try
+                                            if authored || cleared || not (site.Live ()) then
                                                 ()
-                                            elif
-                                                inPlace.Value
-                                                && priorRows.Length = site.LaidOut.Count
-                                            then
-                                                validateMoved parent.Value
+                                            elif isNull keys.Value then
+                                                if not hydrating then
+                                                    Row.Validate (regionStart, regionEnd, site.LaidOut, parent.Value)
                                             else
-                                                validate parent.Value first last0
+                                                let next = keys.Value
+                                                let mutable first = 0
 
-                                        true
-                                    with error ->
-                                        errors.Add error
-                                        false
+                                                let mutable last0 =
+                                                    (if isNull priorKeys then 0 else priorKeys.Length)
+                                                    - 1
 
-                                if validated && not hydrating then
-                                    try
-                                        site.FlushReleased (cleared && site.Live ())
-                                    with error ->
-                                        errors.Add error
+                                                let mutable last1 = next.Length - 1
 
-                                if
-                                    hydrating
-                                    && errors.Count = 0
-                                    && not (same cursor.Next regionEnd)
-                                then
-                                    errors.Add (
-                                        TemplateDom.mismatch
-                                            ("#"
-                                             + string (positionAfter regionStart cursor.Next))
-                                            "<!--]-->"
-                                            (TemplateDom.describe cursor.Next)
-                                    )
+                                                let window =
+                                                    if isNull priorKeys then
+                                                        ValueNone
+                                                    else
+                                                        Api.untrack (fun () -> projection.ChangedSince priorVersion)
 
-                                if errors.Count = 1 then
-                                    raise errors[0]
-                                elif errors.Count > 1 then
-                                    raise (AggregateException ("Keyed update and row release failed", errors))
-                        )
-                    finally
-                        if hydrating then
-                            site.Hydrating <- false
-                            cursor.Next <- resumed
+                                                match window with
+                                                | ValueSome (struct (windowStart, windowEnd0, windowEnd1)) ->
+                                                    first <- windowStart
+                                                    last0 <- windowEnd0
+                                                    last1 <- windowEnd1
+                                                // Without the projection's window, the common ends of the two key arrays bound the window.
+                                                | ValueNone ->
+                                                    while first <= last0
+                                                          && first <= last1
+                                                          && item priorKeys first = item next first do
+                                                        first <- first + 1
 
-                site.Settle (
-                    recorded,
-                    failure,
-                    hydrating,
-                    fun recorded ->
-                        let layout =
-                            try
-                                Api.untrack (fun () ->
-                                    let keys = keys.Value
-                                    let count = keys.Length
-                                    let start, end0, end1 = start.Value, end0.Value, end1.Value
+                                                    while last0 >= first
+                                                          && last1 >= first
+                                                          && item priorKeys last0 = item next last1 do
+                                                        last0 <- last0 - 1
+                                                        last1 <- last1 - 1
 
-                                    let lookup index =
-#if RANVIER_VIEW_COUNTERS
-                                        ListCounters.lookups.Value <- ListCounters.lookups.Value + 1
-#endif
-                                        projection.Get (item keys index)
+                                                start.Value <- first
+                                                end0.Value <- last0
+                                                end1.Value <- last1
+                                                inPlace.Value <- collectMoved priorKeys next first last0 last1
 
-                                    let removed = end0 - start + 1
-                                    let inserted = end1 - start + 1
+                                                if hydrating then
+                                                    ()
+                                                elif
+                                                    inPlace.Value
+                                                    && priorRows.Length = site.LaidOut.Count
+                                                then
+                                                    validateMoved parent.Value
+                                                else
+                                                    validate parent.Value first last0
 
-                                    let inPlace =
-                                        priorRows.Length = count
-                                        && if authored then
-                                               collectMoved priorKeys keys start end0 end1
-                                           else
-                                               inPlace.Value
+                                            true
+                                        with error ->
+                                            errors.Add error
+                                            false
 
-                                    let next: Row array =
-                                        if inPlace then
-                                            let next = copyRows priorRows
+                                    if validated && not hydrating then
+                                        try
+                                            site.FlushReleased (cleared && site.Live ())
+                                        with error ->
+                                            errors.Add error
 
-                                            for k in 0 .. moved.Count - 1 do
-                                                let index = at moved k
-                                                setItem next index (lookup index)
-
-                                            next
-                                        elif
-                                            inserted <= smallWindow
-                                            && priorRows.Length - removed + inserted = count
-                                        then
-#if FABLE_COMPILER
-                                            let next = copyRows priorRows
-                                            spliceRows next start removed (Array.init inserted (fun offset -> lookup (start + offset)))
-                                            next
-#else
-                                            Array.concat
-                                                [|
-                                                    Array.sub priorRows 0 start
-                                                    Array.init inserted (fun offset -> lookup (start + offset))
-                                                    Array.sub priorRows (start + removed) (priorRows.Length - start - removed)
-                                                |]
-#endif
-                                        else
-                                            let next = Array.zeroCreate count
-
-                                            for index in 0 .. count - 1 do
-                                                let kept =
-                                                    if index < start then item priorRows index
-                                                    elif index > end1 then item priorRows (end0 + index - end1)
-                                                    else null
-
-                                                setItem next index (if isNullish kept then lookup index else kept)
-
-                                            next
-
-                                    // Kept rows released since the last layout are replaced, and bound the rows that
-                                    // `Row.Layout` can skip.
-                                    let mutable leading = min start count
-                                    let mutable trailing = max 0 (count - 1 - end1)
-
-                                    let checkedRows =
-                                        if inPlace || leading + trailing > 0 then
-                                            retired.Count
-                                        else
-                                            0
-
-                                    if checkedRows > 0 then
-                                        let window = rowSet ()
-
-                                        if inPlace then
-                                            for k in 0 .. moved.Count - 1 do
-                                                rowSetAdd window (item priorRows (at moved k))
-                                        else
-                                            for index in start..end0 do
-                                                rowSetAdd window (item priorRows index)
-
-                                        for index in 0 .. checkedRows - 1 do
-                                            let row = at retired index
-
-                                            if not (rowSetHas window row) then
-                                                for position in 0 .. count - 1 do
-                                                    if
-                                                        (inPlace || position < start || position > end1)
-                                                        && same (item next position) row
-                                                    then
-                                                        setItem next position (lookup position)
-                                                        leading <- min leading position
-                                                        trailing <- min trailing (count - 1 - position)
-
-                                    retired.Clear ()
-
-                                    if priorRows.Length <> site.LaidOut.Count then
-                                        leading <- 0
-                                        trailing <- 0
-
-                                    // Adopted rows are in place and in order.
-                                    if hydrating then
-                                        site.LaidOut.AddRange next
-                                    else
-                                        Row.Layout (
-                                            (fun () -> site.Live ()),
-                                            site.LaidOut,
-                                            site.Builder.Staging,
-                                            parent.Value,
-                                            regionEnd,
-                                            next,
-                                            leading,
-                                            trailing
+                                    if
+                                        hydrating
+                                        && errors.Count = 0
+                                        && not (same cursor.Next regionEnd)
+                                    then
+                                        errors.Add (
+                                            TemplateDom.mismatch
+                                                ("#"
+                                                 + string (positionAfter regionStart cursor.Next))
+                                                "<!--]-->"
+                                                (TemplateDom.describe cursor.Next)
                                         )
 
-                                    next)
-                                |> Ok
-                            with error ->
-                                Error error
+                                    if errors.Count = 1 then
+                                        raise errors[0]
+                                    elif errors.Count > 1 then
+                                        raise (AggregateException ("Keyed update and row release failed", errors))
+                            )
+                        finally
+                            if hydrating then
+                                site.Hydrating <- false
+                                cursor.Next <- resumed
 
-                        match layout with
-                        // A layout that disposed its own region reports the pass's errors and ends the update.
-                        | Error _ when not (site.Live ()) -> site.Errors.Report recorded
-                        | Error error ->
-                            root.Dispose ()
-                            site.Errors.Fail (error, recorded @ [ error ])
-                        | Ok next ->
-                            if site.Live () then
-                                previousKeys <- keys.Value
-                                previousVersion <- Api.untrack (fun () -> projection.KeysVersion)
-                                previousRows <- next
+                    site.Settle (
+                        recorded,
+                        failure,
+                        hydrating,
+                        fun recorded ->
+                            let layout =
+                                try
+                                    Api.untrack (fun () ->
+                                        let keys = keys.Value
+                                        let count = keys.Length
+                                        let start, end0, end1 = start.Value, end0.Value, end1.Value
+
+                                        let lookup index =
+#if RANVIER_VIEW_COUNTERS
+                                            ListCounters.lookups.Value <- ListCounters.lookups.Value + 1
+#endif
+                                            projection.Get (item keys index)
+
+                                        let removed = end0 - start + 1
+                                        let inserted = end1 - start + 1
+
+                                        let inPlace =
+                                            priorRows.Length = count
+                                            && if authored then
+                                                   collectMoved priorKeys keys start end0 end1
+                                               else
+                                                   inPlace.Value
+
+                                        let next: Row array =
+                                            if inPlace then
+                                                let next = copyRows priorRows
+
+                                                for k in 0 .. moved.Count - 1 do
+                                                    let index = at moved k
+                                                    setItem next index (lookup index)
+
+                                                next
+                                            elif
+                                                inserted <= smallWindow
+                                                && priorRows.Length - removed + inserted = count
+                                            then
+#if FABLE_COMPILER
+                                                let next = copyRows priorRows
+                                                spliceRows next start removed (Array.init inserted (fun offset -> lookup (start + offset)))
+                                                next
+#else
+                                                Array.concat
+                                                    [|
+                                                        Array.sub priorRows 0 start
+                                                        Array.init inserted (fun offset -> lookup (start + offset))
+                                                        Array.sub priorRows (start + removed) (priorRows.Length - start - removed)
+                                                    |]
+#endif
+                                            else
+                                                let next = Array.zeroCreate count
+
+                                                for index in 0 .. count - 1 do
+                                                    let kept =
+                                                        if index < start then item priorRows index
+                                                        elif index > end1 then item priorRows (end0 + index - end1)
+                                                        else null
+
+                                                    setItem next index (if isNullish kept then lookup index else kept)
+
+                                                next
+
+                                        // Kept rows released since the last layout are replaced, and bound the rows that
+                                        // `Row.Layout` can skip.
+                                        let mutable leading = min start count
+                                        let mutable trailing = max 0 (count - 1 - end1)
+
+                                        let checkedRows =
+                                            if inPlace || leading + trailing > 0 then
+                                                retired.Count
+                                            else
+                                                0
+
+                                        if checkedRows > 0 then
+                                            let window = rowSet ()
+
+                                            if inPlace then
+                                                for k in 0 .. moved.Count - 1 do
+                                                    rowSetAdd window (item priorRows (at moved k))
+                                            else
+                                                for index in start..end0 do
+                                                    rowSetAdd window (item priorRows index)
+
+                                            for index in 0 .. checkedRows - 1 do
+                                                let row = at retired index
+
+                                                if not (rowSetHas window row) then
+                                                    for position in 0 .. count - 1 do
+                                                        if
+                                                            (inPlace || position < start || position > end1)
+                                                            && same (item next position) row
+                                                        then
+                                                            setItem next position (lookup position)
+                                                            leading <- min leading position
+                                                            trailing <- min trailing (count - 1 - position)
+
+                                        retired.Clear ()
+
+                                        if priorRows.Length <> site.LaidOut.Count then
+                                            leading <- 0
+                                            trailing <- 0
+
+                                        // Adopted rows are in place and in order.
+                                        if hydrating then
+                                            site.LaidOut.AddRange next
+                                        else
+                                            Row.Layout (
+                                                (fun () -> site.Live ()),
+                                                site.LaidOut,
+                                                site.Builder.Staging,
+                                                parent.Value,
+                                                regionEnd,
+                                                next,
+                                                leading,
+                                                trailing
+                                            )
+
+                                        next)
+                                    |> Ok
+                                with error ->
+                                    Error error
+
+                            match layout with
+                            // A layout that disposed its own region reports the pass's errors and ends the update.
+                            | Error _ when not (site.Live ()) -> site.Errors.Report recorded
+                            | Error error ->
+                                root.Dispose ()
+                                site.Errors.Fail (error, recorded @ [ error ])
+                            | Ok next ->
+                                if site.Live () then
+                                    previousKeys <- keys.Value
+                                    previousVersion <- Api.untrack (fun () -> projection.KeysVersion)
+                                    previousRows <- next
 
 #if RANVIER_VIEW_INSPECT || !FABLE_COMPILER
-                                for index in 0 .. min previousKeys.Length next.Length - 1 do
-                                    let row = item next index
+                                    for index in 0 .. min previousKeys.Length next.Length - 1 do
+                                        let row = item next index
 
-                                    if not (isNull row) then
-                                        Inspect.rememberRowKey row.First (item previousKeys index)
+                                        if not (isNull row) then
+                                            Inspect.rememberRowKey row.First (item previousKeys index)
 #endif
 
-                                if authored then
-                                    previousItems <- Array.copy snapshot
+                                    if authored then
+                                        previousItems <- Array.copy snapshot
 
-                                passPlacement.Place ()
+                                    passPlacement.Place ()
 
-                            site.Errors.Report recorded
-                )
+                                site.Errors.Report recorded
+                                completed <- true
+                    )
 
-                // A pass whose source read was pending keeps the last pass's rows, so the next pass compares against them.
-                if site.SourcePending then
-                    previousKeys <- priorKeys
-                    previousVersion <- priorVersion
-                    previousRows <- priorRows
-                    previousItems <- priorItems
-
-                if not (isNull (box measured)) then
-                    measured ()
+                    // A pass whose source read was pending keeps the last pass's rows, so the next pass compares against them.
+                    if site.SourcePending then
+                        previousKeys <- priorKeys
+                        previousVersion <- priorVersion
+                        previousRows <- priorRows
+                        previousItems <- priorItems
+                finally
+                    if not (isNull (box measured)) then
+                        measured.Invoke completed
 
         site.Own (fun () ->
 #if RANVIER_VIEW_INSPECT || !FABLE_COMPILER
@@ -4263,57 +4290,66 @@ and internal MountState
         let reconcile () =
             if site.Live () then
                 let hydrating = site.Hydrating
-                let resumed = if hydrating then cursor.Next else Unchecked.defaultof<_>
+                let mutable measured: Action<bool> = Unchecked.defaultof<_>
+                let mutable completed = false
 
-                let measured =
-                    if Departures.seam.ReflowEnabled && not hydrating then
-                        Departures.seam.Before.Invoke (regionStart, this.Post)
-                    else
-                        Unchecked.defaultof<_>
+                try
+                    let resumed = if hydrating then cursor.Next else Unchecked.defaultof<_>
 
-                if hydrating then
-                    cursor.Next <- nextOrNull regionStart
+                    if hydrating then
+                        cursor.Next <- nextOrNull regionStart
 
-                let recorded, failure =
-                    try
-                        MountLifetime.Capture (
-                            graph,
-                            report,
-                            fun () ->
-                                let selected = site.ReadSource select
-                                // A pass whose source read is pending begins no placement pass.
-                                armPlacement.Begin ()
+                    let recorded, failure =
+                        try
+                            MountLifetime.Capture (
+                                graph,
+                                report,
+                                fun () ->
+                                    let selected = site.ReadSource select
+                                    // A pass whose source read is pending or raises begins no placement pass or reflow measurement.
+                                    if Departures.seam.ReflowEnabled && not hydrating then
+                                        measured <-
+                                            Departures.seam.Before.Invoke (regionStart, Action<_, _>(fun action cancel -> this.Post (action, cancel)))
 
-                                Api.untrack (fun () ->
-                                    site.Resume ()
+                                    armPlacement.Begin ()
 
-                                    // A selection read again after a pending or failed read keeps an arm of the same key.
-                                    let kept =
-                                        not hydrating
-                                        && not (isNull selected)
-                                        && not (isNull (box armItem))
-                                        && fst (unbox<obj * obj> selected) = armKey
+                                    Api.untrack (fun () ->
+                                        site.Resume ()
 
-                                    if kept then
-                                        armItem.Value <- snd (unbox<obj * obj> selected)
-                                    else
-                                        if hydrating then
-                                            site.Parent () |> ignore
+                                        // A selection read again after a pending or failed read keeps an arm of the same key.
+                                        let kept =
+                                            not hydrating
+                                            && not (isNull selected)
+                                            && not (isNull (box armItem))
+                                            && fst (unbox<obj * obj> selected) = armKey
+
+                                        if kept then
+                                            armItem.Value <- snd (unbox<obj * obj> selected)
                                         else
-                                            site.Validate ()
+                                            if hydrating then
+                                                site.Parent () |> ignore
+                                            else
+                                                site.Validate ()
 
-                                        disposeArm ()
-                                        mountArm selected hydrating)
-                        )
-                    finally
-                        if hydrating then
-                            site.Hydrating <- false
-                            cursor.Next <- resumed
+                                            disposeArm ()
+                                            mountArm selected hydrating)
+                            )
+                        finally
+                            if hydrating then
+                                site.Hydrating <- false
+                                cursor.Next <- resumed
 
-                site.Settle (recorded, failure, hydrating, (fun recorded -> site.Errors.Report recorded))
-
-                if not (isNull (box measured)) then
-                    measured ()
+                    site.Settle (
+                        recorded,
+                        failure,
+                        hydrating,
+                        fun recorded ->
+                            site.Errors.Report recorded
+                            completed <- true
+                    )
+                finally
+                    if not (isNull (box measured)) then
+                        measured.Invoke completed
 
         let updatePayload () =
             let current = items.Value

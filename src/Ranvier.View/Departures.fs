@@ -51,10 +51,12 @@ type Seam =
 
     /// <summary>
     /// Runs the <c>Before</c> of the reflow registered on the parent of a region's start marker unless its measurement is
-    /// open, and returns the function that posts its <c>After</c> through the given post; null without a reflow. Of the
-    /// posts made while the measurement is open, the one posted last closes it and runs <c>After</c>.
+    /// open, and returns the completion callback (true posts <c>After</c> with its abort callback through the given post;
+    /// false closes an unposted measurement opened by this pass); null without a reflow. Of the posts made while the
+    /// measurement is open, the one posted last closes it and runs <c>After</c>, or closes it without <c>After</c> when
+    /// aborted.
     /// </summary>
-    abstract Before: System.Func<Node, (unit -> unit) -> unit, unit -> unit> with get, set
+    abstract Before: System.Func<Node, System.Action<unit -> unit, unit -> unit>, System.Action<bool>> with get, set
 
     /// <summary>
     /// Creates the element named by the string under the node: in the SVG namespace for an SVG element name and under an
@@ -91,7 +93,9 @@ type private SeamObject() =
     let mutable finish: System.Action<ResizeArray<unit -> unit>, ResizeArray<exn>, ResizeArray<unit -> unit>> =
         null
 
-    let mutable before: System.Func<Node, (unit -> unit) -> unit, unit -> unit> = null
+    let mutable before: System.Func<Node, System.Action<unit -> unit, unit -> unit>, System.Action<bool>> =
+        null
+
     let mutable createElement: System.Func<Node, string, Element> = null
     let mutable nest: System.Action<Node, Node> = null
     let mutable parse: System.Action<HTMLTemplateElement, string> = null
@@ -466,15 +470,17 @@ let private retire (node: Node) (held: ResizeArray<unit -> unit>) : bool =
 
         true
 
-let private before (regionStart: Node) (post: (unit -> unit) -> unit) : unit -> unit =
+let private before (regionStart: Node) (post: System.Action<unit -> unit, unit -> unit>) : System.Action<bool> =
     let entry: ReflowEntry = lookup reflows (parentOf regionStart)
 
     if isNullish entry then
         Unchecked.defaultof<_>
     else
         let mutable failure: exn = null
+        let openedHere = not entry.Open
+        let priorPosts = entry.Posts
 
-        if not entry.Open then
+        if openedHere then
             entry.Open <- true
 
             try
@@ -484,16 +490,35 @@ let private before (regionStart: Node) (post: (unit -> unit) -> unit) : unit -> 
                 failure <- error
 
         if not (isNull failure) then
-            fun () -> post (fun () -> raise failure)
+            System.Action<bool>(fun _ -> post.Invoke ((fun () -> raise failure), ignore))
         else
-            fun () ->
-                let mutable posted = entry.Posts + 1
-                entry.Posts <- posted
-
-                post (fun () ->
-                    if entry.Open && entry.Posts = posted then
+            System.Action<bool>(fun completed ->
+                if not completed then
+                    if
+                        openedHere
+                        && entry.Open
+                        && entry.Posts = priorPosts
+                    then
                         entry.Open <- false
-                        entry.Reflow.After ())
+                else
+                    let posted = entry.Posts + 1
+                    entry.Posts <- posted
+
+                    let cancel () =
+                        if entry.Open && entry.Posts = posted then
+                            entry.Open <- false
+
+                    try
+                        post.Invoke (
+                            (fun () ->
+                                if entry.Open && entry.Posts = posted then
+                                    entry.Open <- false
+                                    entry.Reflow.After ()),
+                            cancel
+                        )
+                    with _ ->
+                        cancel ()
+                        reraise ())
 
 /// <summary>
 /// Registers <c>exit</c> for <c>node</c>, replacing an earlier registration, enables exits, and returns the cleanup that

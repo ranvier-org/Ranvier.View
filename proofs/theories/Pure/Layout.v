@@ -287,6 +287,16 @@ Definition reflow_run_post (ticket : nat) (s : reflow_state) : reflow_state :=
        rf_after_runs := S (rf_after_runs s) |}
   else s.
 
+(** Aborting a posted reflow callback (on [FailFastCancel], mount teardown before flush, or a
+    raising [post]) closes [rf_open] when [ticket] is still the latest post, without running [After]. *)
+Definition reflow_abort_post (ticket : nat) (s : reflow_state) : reflow_state :=
+  if rf_open s && Nat.eqb (rf_posts s) ticket then
+    {| rf_open := false;
+       rf_posts := rf_posts s;
+       rf_before_runs := rf_before_runs s;
+       rf_after_runs := rf_after_runs s |}
+  else s.
+
 (** ** Metatheory and invariants *)
 
 Lemma remove_node_not_in x xs :
@@ -1044,6 +1054,74 @@ Theorem reflow_latest_post_closes_once (s0 : reflow_state) :
 Proof.
   destruct s0 as [op p br ar]; simpl; intros ->.
   unfold reflow_before, reflow_run_post; simpl.
+  assert (Hneq : Nat.eqb (S (S p)) (S p) = false) by (apply Nat.eqb_neq; lia).
+  rewrite Hneq; simpl. rewrite Nat.eqb_refl; simpl.
+  repeat split; reflexivity.
+Qed.
+
+(**md
+**Dropping a queued reflow post without closing `rf_open` skips `Before` on the next pass.**
+
+Counterexample (Issue #174): if a pass opens `rf_open` (`reflow_before s0`) and its posted callback is cancelled without `reflow_abort_post`, `rf_open` remains `true` and the subsequent pass (`reflow_before s1`) fails to run `Before`.
+
+- [s0:] the closed `ReflowEntry` state before the cancelled pass.
+*)
+Theorem naive_reflow_drop_skips_next_before_falsified (s0 : reflow_state) :
+  rf_open s0 = false ->
+  let '(s1, _) := reflow_before s0 in
+  let '(s2, _) := reflow_before s1 in
+  rf_open s1 = true /\ rf_before_runs s2 = rf_before_runs s1.
+Proof.
+  destruct s0 as [op p br ar]; simpl; intros ->.
+  unfold reflow_before; simpl.
+  split; reflexivity.
+Qed.
+
+(**md
+**Aborting the latest reflow post closes `rf_open` without running `After`, so the next pass measures cleanly.**
+
+When `reflow_abort_post` (`Departures.before`'s cancel callback) runs for the latest ticket `t1`, `rf_open` resets to `false` with `rf_after_runs` unchanged, and the following pass runs both `Before` and `After`.
+
+- [s0:] the closed `ReflowEntry` state before the aborted pass.
+*)
+Theorem reflow_abort_latest_recovers_cleanly (s0 : reflow_state) :
+  rf_open s0 = false ->
+  let '(s1, t1) := reflow_before s0 in
+  let s_aborted := reflow_abort_post t1 s1 in
+  let '(s2, t2) := reflow_before s_aborted in
+  let s3 := reflow_run_post t2 s2 in
+  rf_open s_aborted = false /\
+  rf_after_runs s_aborted = rf_after_runs s0 /\
+  rf_before_runs s3 = S (S (rf_before_runs s0)) /\
+  rf_after_runs s3 = S (rf_after_runs s0) /\
+  rf_open s3 = false.
+Proof.
+  destruct s0 as [op p br ar]; simpl; intros ->.
+  unfold reflow_before, reflow_abort_post, reflow_run_post; simpl.
+  rewrite !Nat.eqb_refl; simpl.
+  repeat split; reflexivity.
+Qed.
+
+(**md
+**Aborting an earlier superseded reflow post leaves `rf_open` open for the newer pending post.**
+
+When two passes share one measurement window (`t1` then `t2`) and `t1` is aborted, `rf_open` remains `true` until `t2` closes the window and runs `After` once.
+
+- [s0:] the closed `ReflowEntry` state before the shared measurement window opens.
+*)
+Theorem reflow_abort_superseded_keeps_open (s0 : reflow_state) :
+  rf_open s0 = false ->
+  let '(s1, t1) := reflow_before s0 in
+  let '(s2, t2) := reflow_before s1 in
+  let s3 := reflow_abort_post t1 s2 in
+  let s4 := reflow_run_post t2 s3 in
+  rf_open s3 = true /\
+  rf_after_runs s3 = rf_after_runs s0 /\
+  rf_open s4 = false /\
+  rf_after_runs s4 = S (rf_after_runs s0).
+Proof.
+  destruct s0 as [op p br ar]; simpl; intros ->.
+  unfold reflow_before, reflow_abort_post, reflow_run_post; simpl.
   assert (Hneq : Nat.eqb (S (S p)) (S p) = false) by (apply Nat.eqb_neq; lia).
   rewrite Hneq; simpl. rewrite Nat.eqb_refl; simpl.
   repeat split; reflexivity.
