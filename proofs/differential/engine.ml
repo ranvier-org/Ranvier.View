@@ -854,90 +854,6 @@ let rec flatten_tree t =
    | SRegion (tag, children) ->
      Cons ((TokStart tag), (app (flatten_list children) (Cons (TokEnd, Nil)))))
 
-type 'st cursor_entry =
-| UndoStep of ('st -> 'st)
-| NestedCursor of 'st cursor_entry list
-
-(** val restore_entry : 'a1 cursor_entry -> 'a1 -> 'a1 **)
-
-let rec restore_entry e st =
-  let restore_list =
-    let rec restore_list es acc =
-      match es with
-      | Nil -> acc
-      | Cons (hd, tl) -> restore_entry hd (restore_list tl acc)
-    in restore_list
-  in
-  (match e with
-   | UndoStep inv -> inv st
-   | NestedCursor child -> restore_list child st)
-
-(** val restore_entries : 'a1 cursor_entry list -> 'a1 -> 'a1 **)
-
-let rec restore_entries es st =
-  match es with
-  | Nil -> st
-  | Cons (e, rest) -> restore_entry e (restore_entries rest st)
-
-(** val held_entry : 'a1 cursor_entry -> nat **)
-
-let rec held_entry e =
-  let held_list =
-    let rec held_list = function
-    | Nil -> O
-    | Cons (hd, tl) -> add (held_entry hd) (held_list tl)
-    in held_list
-  in
-  (match e with
-   | UndoStep _ -> S O
-   | NestedCursor child -> S (held_list child))
-
-(** val held_entries : 'a1 cursor_entry list -> nat **)
-
-let rec held_entries = function
-| Nil -> O
-| Cons (e, rest) -> add (held_entry e) (held_entries rest)
-
-(** val commit_entries : 'a1 cursor_entry list -> 'a1 cursor_entry list **)
-
-let commit_entries _ =
-  Nil
-
-type 'st hydration_op =
-| HydEdit of ('st -> 'st) * ('st -> 'st)
-| HydScope of 'st hydration_op list
-
-(** val run_hydration_op :
-    'a1 hydration_op -> 'a1 -> ('a1, 'a1 cursor_entry) prod **)
-
-let rec run_hydration_op op st =
-  let run_list =
-    let rec run_list ops acc =
-      match ops with
-      | Nil -> Pair (acc, Nil)
-      | Cons (hd, tl) ->
-        let Pair (acc1, e_hd) = run_hydration_op hd acc in
-        let Pair (acc2, es_tl) = run_list tl acc1 in
-        Pair (acc2, (Cons (e_hd, es_tl)))
-    in run_list
-  in
-  (match op with
-   | HydEdit (fwd, inv) -> Pair ((fwd st), (UndoStep inv))
-   | HydScope sub0 ->
-     let Pair (st1, child_log) = run_list sub0 st in
-     Pair (st1, (NestedCursor child_log)))
-
-(** val run_hydration_ops :
-    'a1 hydration_op list -> 'a1 -> ('a1, 'a1 cursor_entry list) prod **)
-
-let rec run_hydration_ops ops st =
-  match ops with
-  | Nil -> Pair (st, Nil)
-  | Cons (op, rest) ->
-    let Pair (st1, e) = run_hydration_op op st in
-    let Pair (st2, log_rest) = run_hydration_ops rest st1 in
-    Pair (st2, (Cons (e, log_rest)))
-
 type bstate = { bs_failed : bool; bs_waiting : bool }
 
 type read_outcome =
@@ -1079,6 +995,62 @@ let rec update_binding idx b_new bss =
     (match bss with
      | Nil -> Nil
      | Cons (b, rest) -> Cons (b, (update_binding i b_new rest)))
+
+type 'st cursor_tag_entry =
+| TagCustom of ('st -> 'st)
+| TagInsertBefore of ('st -> 'st)
+| TagRemove of ('st -> 'st)
+| TagReplace of ('st -> 'st)
+| TagNest of 'st cursor_tag_entry list
+
+(** val restore_tag_entry : 'a1 cursor_tag_entry -> 'a1 -> 'a1 **)
+
+let rec restore_tag_entry e st =
+  let restore_list =
+    let rec restore_list es acc =
+      match es with
+      | Nil -> acc
+      | Cons (hd, tl) -> restore_tag_entry hd (restore_list tl acc)
+    in restore_list
+  in
+  (match e with
+   | TagCustom inv -> inv st
+   | TagInsertBefore reinsert -> reinsert st
+   | TagRemove detach -> detach st
+   | TagReplace swap -> swap st
+   | TagNest child -> restore_list child st)
+
+(** val restore_tag_entries : 'a1 cursor_tag_entry list -> 'a1 -> 'a1 **)
+
+let rec restore_tag_entries es st =
+  match es with
+  | Nil -> st
+  | Cons (e, rest) -> restore_tag_entry e (restore_tag_entries rest st)
+
+(** val held_tag_entry : 'a1 cursor_tag_entry -> nat **)
+
+let rec held_tag_entry e =
+  let held_list =
+    let rec held_list = function
+    | Nil -> O
+    | Cons (hd, tl) -> add (held_tag_entry hd) (held_list tl)
+    in held_list
+  in
+  (match e with
+   | TagNest child -> S (held_list child)
+   | _ -> S O)
+
+(** val held_tag_entries : 'a1 cursor_tag_entry list -> nat **)
+
+let rec held_tag_entries = function
+| Nil -> O
+| Cons (e, rest) -> add (held_tag_entry e) (held_tag_entries rest)
+
+(** val commit_tag_entries :
+    'a1 cursor_tag_entry list -> 'a1 cursor_tag_entry list **)
+
+let commit_tag_entries _ =
+  Nil
 
 type placement_model = { pl_laid_out : bool; pl_discarded : bool;
                          pl_parent_placed : bool; pl_ordered : bool;
@@ -2185,33 +2157,65 @@ type hyd_int_op =
 | HAdd of z
 | HScope of hyd_int_op list
 
-(** val to_hydration_op : hyd_int_op -> z hydration_op **)
+(** val run_hyd_tag_op : hyd_int_op -> z -> (z, z cursor_tag_entry) prod **)
 
-let rec to_hydration_op op =
-  let conv_list =
-    let rec conv_list = function
-    | Nil -> Nil
-    | Cons (h, t) -> Cons ((to_hydration_op h), (conv_list t))
-    in conv_list
+let rec run_hyd_tag_op op st =
+  let run_list =
+    let rec run_list ops cur =
+      match ops with
+      | Nil -> Pair (cur, Nil)
+      | Cons (h, t) ->
+        let Pair (cur1, eh) = run_hyd_tag_op h cur in
+        let Pair (cur2, et) = run_list t cur1 in Pair (cur2, (Cons (eh, et)))
+    in run_list
   in
   (match op with
-   | HAdd d -> HydEdit ((fun x -> Z.add x d), (fun x -> Z.sub x d))
-   | HScope sub0 -> HydScope (conv_list sub0))
+   | HAdd d ->
+     let inv = fun x -> Z.sub x d in
+     let entry =
+       match d with
+       | Z0 -> TagCustom inv
+       | Zpos p ->
+         (match p with
+          | XI _ -> TagInsertBefore inv
+          | XO _ -> TagRemove inv
+          | XH -> TagReplace inv)
+       | Zneg p ->
+         (match p with
+          | XI _ -> TagInsertBefore inv
+          | XO _ -> TagRemove inv
+          | XH -> TagReplace inv)
+     in
+     Pair ((Z.add st d), entry)
+   | HScope sub0 ->
+     let Pair (st', child) = run_list sub0 st in Pair (st', (TagNest child)))
+
+(** val run_hyd_tag_ops :
+    hyd_int_op list -> z -> (z, z cursor_tag_entry list) prod **)
+
+let rec run_hyd_tag_ops ops st =
+  match ops with
+  | Nil -> Pair (st, Nil)
+  | Cons (op, rest) ->
+    let Pair (st1, e) = run_hyd_tag_op op st in
+    let Pair (st2, es) = run_hyd_tag_ops rest st1 in
+    Pair (st2, (Cons (e, es)))
 
 (** val observe_cursor_rollback :
     z -> hyd_int_op list -> bool -> ((z, z) prod, nat) prod **)
 
 let observe_cursor_rollback s0 ops do_commit =
-  let hops = map to_hydration_op ops in
-  let Pair (s_mid, log) = run_hydration_ops hops s0 in
-  let log' = match do_commit with
-             | True -> commit_entries log
-             | False -> log in
-  let held = held_entries log' in
+  let Pair (s_mid, log) = run_hyd_tag_ops ops s0 in
+  let log' =
+    match do_commit with
+    | True -> commit_tag_entries log
+    | False -> log
+  in
+  let held = held_tag_entries log' in
   let s_after =
     match do_commit with
     | True -> s_mid
-    | False -> restore_entries log' s_mid
+    | False -> restore_tag_entries log' s_mid
   in
   Pair ((Pair (s_mid, s_after)), held)
 

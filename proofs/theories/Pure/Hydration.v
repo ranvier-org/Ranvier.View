@@ -649,3 +649,284 @@ Proof.
   assert (Hneq : Nat.eqb attempt_gen (S (bm_gen bm)) = false) by (apply Nat.eqb_neq; lia).
   rewrite Hneq; reflexivity.
 Qed.
+
+(** ** Proof-backed `HydrationCursor` defunctionalization and lazy `copyServed` *)
+
+(** Defunctionalized `UndoEntry` tags (`TemplateDom.HydrationCursor`), eliminating per-row
+    and per-slot closure allocations on separator removal, placeholder replacement,
+    RCDATA text insertion, `MountRow` marker removal, and nested cursor registration. *)
+Inductive cursor_tag_entry (St : Type) :=
+  | TagCustom (inv : St -> St)
+  | TagInsertBefore (reinsert : St -> St)
+  | TagRemove (detach : St -> St)
+  | TagReplace (swap : St -> St)
+  | TagNest (child : list (cursor_tag_entry St)).
+
+Arguments TagCustom {St} _.
+Arguments TagInsertBefore {St} _.
+Arguments TagRemove {St} _.
+Arguments TagReplace {St} _.
+Arguments TagNest {St} _.
+
+Fixpoint denote_tag_entry {St : Type} (e : cursor_tag_entry St) : cursor_entry St :=
+  let fix denote_list (es : list (cursor_tag_entry St)) : list (cursor_entry St) :=
+    match es with
+    | [] => []
+    | hd :: tl => denote_tag_entry hd :: denote_list tl
+    end in
+  match e with
+  | TagCustom inv => UndoStep inv
+  | TagInsertBefore reinsert => UndoStep reinsert
+  | TagRemove detach => UndoStep detach
+  | TagReplace swap => UndoStep swap
+  | TagNest child => NestedCursor (denote_list child)
+  end.
+
+Fixpoint restore_tag_entry {St : Type} (e : cursor_tag_entry St) (st : St) : St :=
+  let fix restore_list (es : list (cursor_tag_entry St)) (acc : St) : St :=
+    match es with
+    | [] => acc
+    | hd :: tl => restore_tag_entry hd (restore_list tl acc)
+    end in
+  match e with
+  | TagCustom inv => inv st
+  | TagInsertBefore reinsert => reinsert st
+  | TagRemove detach => detach st
+  | TagReplace swap => swap st
+  | TagNest child => restore_list child st
+  end.
+
+Fixpoint restore_tag_entries {St : Type} (es : list (cursor_tag_entry St)) (st : St) : St :=
+  match es with
+  | [] => st
+  | e :: rest => restore_tag_entry e (restore_tag_entries rest st)
+  end.
+
+Fixpoint held_tag_entry {St : Type} (e : cursor_tag_entry St) : nat :=
+  let fix held_list (es : list (cursor_tag_entry St)) : nat :=
+    match es with
+    | [] => 0
+    | hd :: tl => held_tag_entry hd + held_list tl
+    end in
+  match e with
+  | TagCustom _ | TagInsertBefore _ | TagRemove _ | TagReplace _ => 1
+  | TagNest child => S (held_list child)
+  end.
+
+Fixpoint held_tag_entries {St : Type} (es : list (cursor_tag_entry St)) : nat :=
+  match es with
+  | [] => 0
+  | e :: rest => held_tag_entry e + held_tag_entries rest
+  end.
+
+Definition commit_tag_entries {St : Type} (_ : list (cursor_tag_entry St)) : list (cursor_tag_entry St) := [].
+
+Fixpoint tag_entry_size {St : Type} (e : cursor_tag_entry St) : nat :=
+  let fix list_sz (es : list (cursor_tag_entry St)) : nat :=
+    match es with
+    | [] => 0
+    | hd :: tl => S (tag_entry_size hd + list_sz tl)
+    end in
+  match e with
+  | TagCustom _ | TagInsertBefore _ | TagRemove _ | TagReplace _ => 1
+  | TagNest child => S (list_sz child)
+  end.
+
+Fixpoint tag_entries_size {St : Type} (es : list (cursor_tag_entry St)) : nat :=
+  match es with
+  | [] => 0
+  | e :: rest => S (tag_entry_size e + tag_entries_size rest)
+  end.
+
+Lemma tag_entry_size_nest {St : Type} (child : list (cursor_tag_entry St)) :
+  tag_entry_size (TagNest child) = S (tag_entries_size child).
+Proof.
+  simpl. apply eq_S. induction child as [|h t IH]; simpl; [reflexivity | lia].
+Qed.
+
+Lemma denote_tag_nest_unfold {St : Type} (child : list (cursor_tag_entry St)) :
+  denote_tag_entry (TagNest child) = NestedCursor (map denote_tag_entry child).
+Proof.
+  simpl. apply f_equal. induction child as [|h t IH]; simpl; [reflexivity | apply f_equal2; [reflexivity | exact IH]].
+Qed.
+
+Lemma restore_tag_nest_unfold {St : Type} (child : list (cursor_tag_entry St)) (st : St) :
+  restore_tag_entry (TagNest child) st = restore_tag_entries child st.
+Proof.
+  simpl. revert st. induction child as [|h t IH]; simpl; [reflexivity | intros st; rewrite IH; reflexivity].
+Qed.
+
+Lemma held_tag_nest_unfold {St : Type} (child : list (cursor_tag_entry St)) :
+  held_tag_entry (TagNest child) = S (held_tag_entries child).
+Proof.
+  simpl. apply eq_S. induction child as [|h t IH]; simpl; [reflexivity | lia].
+Qed.
+
+Lemma held_entry_nested_unfold {St : Type} (child : list (cursor_entry St)) :
+  held_entry (NestedCursor child) = S (held_entries child).
+Proof.
+  simpl. apply eq_S. induction child as [|h t IH]; simpl; [reflexivity | lia].
+Qed.
+
+Lemma defunctionalized_cursor_sized {St : Type} bound :
+  (forall (e : cursor_tag_entry St), tag_entry_size e <= bound ->
+     (forall st, restore_tag_entry e st = restore_entry (denote_tag_entry e) st) /\
+     held_tag_entry e = held_entry (denote_tag_entry e)) /\
+  (forall (es : list (cursor_tag_entry St)), tag_entries_size es <= bound ->
+     (forall st, restore_tag_entries es st = restore_entries (map denote_tag_entry es) st) /\
+     held_tag_entries es = held_entries (map denote_tag_entry es)).
+Proof.
+  induction bound as [|b [IHe IHes]].
+  - split.
+    + intros [? | ? | ? | ? | child] Hsz; simpl in Hsz; lia.
+    + intros [|e rest] Hsz; [split; reflexivity|].
+      destruct e; simpl in Hsz; lia.
+  - split.
+    + intros [inv | reinsert | detach | swap | child] Hsz.
+      * split; reflexivity.
+      * split; reflexivity.
+      * split; reflexivity.
+      * split; reflexivity.
+      * rewrite tag_entry_size_nest in Hsz.
+        destruct (IHes child ltac:(lia)) as [Hrest Hheld].
+        rewrite denote_tag_nest_unfold, held_tag_nest_unfold, held_entry_nested_unfold.
+        split.
+        -- intros st. rewrite restore_tag_nest_unfold, restore_entry_nested. apply Hrest.
+        -- lia.
+    + intros [|e rest] Hsz; [split; reflexivity|].
+      assert (He_pos : tag_entry_size e >= 1) by (destruct e; simpl; lia).
+      simpl in Hsz |- *.
+      destruct (IHe e ltac:(lia)) as [He_r He_h].
+      destruct (IHes rest ltac:(lia)) as [Hrest_r Hrest_h].
+      split.
+      * intros st. rewrite Hrest_r, He_r. reflexivity.
+      * lia.
+Qed.
+
+(**md
+**Restoring defunctionalized `[<Struct>]` `HydrationCursor` entries produces the exact state of closure-based `restore_entries`.**
+
+Dispatching tagged `UndoEntry` values (`TagCustom`, `TagInsertBefore`, `TagRemove`, `TagReplace`, `TagNest`) in LIFO order is extensionally identical to running closure-wrapped `cursor_entry` values.
+
+- [St:] the server DOM and `DocumentHead` state type.
+- [es:] the recorded tagged undo entries.
+- [st:] the post-attempt state to unwind.
+*)
+Theorem defunctionalized_cursor_restore_equiv {St : Type}
+    (es : list (cursor_tag_entry St)) (st : St) :
+  restore_tag_entries es st = restore_entries (map denote_tag_entry es) st.
+Proof.
+  destruct (@defunctionalized_cursor_sized St (tag_entries_size es)) as [_ Hes].
+  destruct (Hes es (Nat.le_refl _)) as [Hr _].
+  apply Hr.
+Qed.
+
+(**md
+**Defunctionalized `HydrationCursor` entries preserve exact `HydrationCounters.held` accounting and zero on `Commit`.**
+
+Tagged undo entries report the identical `held` count as closure entries and drop to `0` upon `commit_tag_entries`.
+
+- [St:] the server DOM and `DocumentHead` state type.
+- [es:] the recorded tagged undo entries.
+*)
+Theorem defunctionalized_cursor_held_equiv {St : Type}
+    (es : list (cursor_tag_entry St)) :
+  held_tag_entries es = held_entries (map denote_tag_entry es) /\
+  held_tag_entries (commit_tag_entries es) = 0.
+Proof.
+  destruct (@defunctionalized_cursor_sized St (tag_entries_size es)) as [_ Hes].
+  destruct (Hes es (Nat.le_refl _)) as [_ Hh].
+  split; [exact Hh | reflexivity].
+Qed.
+
+(** Copy-on-write `copyServed` model for `[c` `ViewBoundary.HydrateContent`. *)
+Inductive boundary_hyd_step (St : Type) :=
+  | BHMatch
+  | BHMutate (f : St -> St).
+
+Arguments BHMatch {St}.
+Arguments BHMutate {St} _.
+
+Fixpoint run_hyd_with_lazy_copy {St : Type}
+    (steps : list (boundary_hyd_step St)) (cur : St) (snap : option St) : St * option St :=
+  match steps with
+  | [] => (cur, snap)
+  | BHMatch :: rest => run_hyd_with_lazy_copy rest cur snap
+  | BHMutate f :: rest =>
+    let snap1 := match snap with Some s => Some s | None => Some cur end in
+    run_hyd_with_lazy_copy rest (f cur) snap1
+  end.
+
+Definition finalize_lazy_copy {St : Type} (waiting : nat) (cur : St) (snap : option St) : option St :=
+  if Nat.eqb waiting 0 then None
+  else match snap with Some s => Some s | None => Some cur end.
+
+Lemma run_hyd_with_some_snap {St : Type} (steps : list (boundary_hyd_step St)) (cur s_orig : St) :
+  snd (run_hyd_with_lazy_copy steps cur (Some s_orig)) = Some s_orig.
+Proof.
+  revert cur.
+  induction steps as [|[|f] rest IH]; intros cur; simpl; [reflexivity | apply IH | apply IH].
+Qed.
+
+Lemma run_hyd_preserves_origin {St : Type} (steps : list (boundary_hyd_step St)) (s0 : St) :
+  let '(s_end, snap) := run_hyd_with_lazy_copy steps s0 None in
+  match snap with
+  | Some s_captured => s_captured = s0
+  | None => s_end = s0
+  end.
+Proof.
+  revert s0.
+  induction steps as [|[|f] rest IH]; intros s0; simpl.
+  - reflexivity.
+  - apply IH.
+  - pose proof (run_hyd_with_some_snap rest (f s0) s0) as Hsnd.
+    destruct (run_hyd_with_lazy_copy rest (f s0) (Some s0)) as [s_end snap]; simpl in Hsnd.
+    subst snap; reflexivity.
+Qed.
+
+(**md
+**Lazy copy-on-write `copyServed` captures the exact initial server DOM whenever a `[c` boundary pends on the client.**
+
+Whether `HydrateContent` mutates server nodes during setup (`BeforeEdit` snapshots before the first edit) or performs zero edits (`SetUpEnded` snapshots at `waiting > 0`), `finalize_lazy_copy` always yields `Some s0`.
+
+- [St:] the server DOM state type between the boundary markers.
+- [steps:] the sequence of matching and mutating hydration steps inside `SetUpContent`.
+- [s0:] the initial server DOM state before `HydrateContent` began.
+- [waiting:] the positive count of pending bindings at `SetUpEnded`.
+*)
+Theorem lazy_copy_served_snapshot_equiv {St : Type}
+    (steps : list (boundary_hyd_step St)) (s0 : St) (waiting : nat) :
+  0 < waiting ->
+  let '(s_end, snap) := run_hyd_with_lazy_copy steps s0 None in
+  finalize_lazy_copy waiting s_end snap = Some s0.
+Proof.
+  intros Hw.
+  pose proof (run_hyd_preserves_origin steps s0) as Horig.
+  destruct (run_hyd_with_lazy_copy steps s0 None) as [s_end [s_cap|]].
+  - subst s_cap. unfold finalize_lazy_copy.
+    assert (Hne : Nat.eqb waiting 0 = false) by (apply Nat.eqb_neq; lia).
+    rewrite Hne; reflexivity.
+  - subst s_end. unfold finalize_lazy_copy.
+    assert (Hne : Nat.eqb waiting 0 = false) by (apply Nat.eqb_neq; lia).
+    rewrite Hne; reflexivity.
+Qed.
+
+(**md
+**Settled SSR `[c` boundaries whose hydration matches server output perform zero `copyServed` DOM clones.**
+
+When every step is `BHMatch` and `waiting = 0` at `SetUpEnded`, `snap` stays `None` throughout setup and reveal — eliminating `node.cloneNode(true)` completely.
+
+- [St:] the server DOM state type between the boundary markers.
+- [steps:] a hydration transcript containing only non-mutating `BHMatch` steps.
+- [s0:] the initial server DOM state.
+*)
+Theorem lazy_copy_served_skips_clone_when_settled {St : Type}
+    (steps : list (boundary_hyd_step St)) (s0 : St) :
+  Forall (fun step => step = BHMatch) steps ->
+  let '(s_end, snap) := run_hyd_with_lazy_copy steps s0 None in
+  snap = None /\ finalize_lazy_copy 0 s_end snap = None /\ s_end = s0.
+Proof.
+  induction 1 as [|step rest -> _ IH]; simpl.
+  - unfold finalize_lazy_copy; rewrite Nat.eqb_refl; repeat split; reflexivity.
+  - exact IH.
+Qed.
