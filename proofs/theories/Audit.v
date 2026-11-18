@@ -41,6 +41,9 @@ Print Assumptions defunctionalized_cursor_restore_equiv.
 Print Assumptions defunctionalized_cursor_held_equiv.
 Print Assumptions lazy_copy_served_snapshot_equiv.
 Print Assumptions lazy_copy_served_skips_clone_when_settled.
+Print Assumptions ssr_leaf_plan_omits_child_scope_equiv.
+Print Assumptions ssr_reentrant_staging_save_restore_equiv.
+Print Assumptions identity_window_stack_lifo_equiv.
 
 (* Placement, MountLifetime, & TeardownWindow *)
 Print Assumptions placement_fast_path_eq_stable_sort.

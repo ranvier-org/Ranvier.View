@@ -1642,6 +1642,14 @@ type internal ServerScope() =
     /// <summary>Runs the body with the scope and <c>Setup</c> of a new nested instance.</summary>
     abstract Nest: (ServerScope -> Setup -> unit) -> unit
 
+    /// <summary>Sets up and writes a leaf template instance (<c>not plan.Positioned</c>) without allocating a child <c>ServerScope</c>.</summary>
+    abstract NestLeaf:
+        writer: ServerWriter * plan: ServerPlan * definition: TemplateComponent * props: obj * parent: InstancePath * kind: int * a: int * b: int ->
+            unit
+
+    default this.NestLeaf(writer, plan, definition, props, parent, kind, a, b) =
+        this.Nest (fun scope setup -> writer.RunLeafWithSetup (scope, setup, plan, definition, props, parent, kind, a, b))
+
     /// <summary>Runs the body in a new nested scope; when it raises, that scope's cleanups run before the exception propagates.</summary>
     abstract Attempt: (ServerScope -> unit) -> unit
 
@@ -1660,12 +1668,11 @@ type internal ServerScope() =
 /// The scope of <c>Html.render</c>: an instance's cleanups run after its markup is written, and an inlined child's run
 /// with its parent's.
 /// </summary>
-[<Sealed>]
-type internal HtmlScope(backend: HtmlBackend) =
+and [<Sealed>] internal HtmlScope(backend: HtmlBackend) =
     inherit ServerScope()
 
     override this.Nest body =
-        backend.ComponentWith ((fun setup -> body this setup), (fun () -> backend.Identity.CreateId ()))
+        backend.ComponentWith ((fun setup -> body this setup), backend.Identity.CreateIdDelegate)
 
     override this.Inline(parent, body) =
         body this parent
@@ -1677,8 +1684,7 @@ type internal HtmlScope(backend: HtmlBackend) =
 /// Each instance is written at a position, one step below a parent path (see <c>InstanceStep</c>), and its setup runs in
 /// the identity window of that position.
 /// </remarks>
-[<Sealed>]
-type internal ServerWriter(backend: HtmlBackend) =
+and [<Sealed>] internal ServerWriter(backend: HtmlBackend) =
     let reject = backend.Policy = Reject
     // The position the next template reached from authored content takes, while `pending` is set.
     let mutable pending = false
@@ -1688,6 +1694,8 @@ type internal ServerWriter(backend: HtmlBackend) =
     let mutable pendingB = 0
     // The templates reached from authored content at the authored step under `backend.Path`.
     let mutable authored = 0
+    // Resume index written when an inlined child finishes `Run`, avoiding a heap `ref` cell per `EnterOp`.
+    let mutable inlineNext = 0
 
     /// <summary>Runs <c>body</c> with <c>scope</c> as the backend's active scope.</summary>
     let under (scope: ServerScope) (body: unit -> unit) =
@@ -1703,7 +1711,12 @@ type internal ServerWriter(backend: HtmlBackend) =
         match property.Html with
         | AsAttribute (name, serialise) ->
             match serialise.Invoke value with
-            | Some text -> backend.Append (" " + name + "=\"" + Html.escape true text + "\"")
+            | Some text ->
+                backend.Append " "
+                backend.Append name
+                backend.Append "=\""
+                backend.Append (Html.escape true text)
+                backend.Append "\""
             | None -> ()
         | AsChildText
         | BrowserOnly -> raise (InvalidOperationException "Only an attribute serialisation is written as an attribute")
@@ -1795,42 +1808,77 @@ type internal ServerWriter(backend: HtmlBackend) =
             finally
                 heads.LeaveGroup outer
 
+    member internal this.RunLeaf(plan: ServerPlan, instance: obj) : unit =
+        this.Run (Unchecked.defaultof<_>, Unchecked.defaultof<_>, plan, instance, null, null, 0, 0)
+        |> ignore
+
+    member internal this.RunLeafWithSetup
+        (
+            _scope: ServerScope,
+            setup: Setup,
+            plan: ServerPlan,
+            definition: TemplateComponent,
+            props: obj,
+            parent: InstancePath,
+            kind: int,
+            a: int,
+            b: int
+        ) : unit =
+        let identity = backend.Identity
+        identity.Enter (parent, kind, a, b)
+
+        let instance =
+            try
+                definition.Setup.Invoke (ownSetup identity setup, props)
+            finally
+                identity.Leave ()
+
+        this.RunLeaf (plan, instance)
+
     member private this.Instance
         (scope: ServerScope, definition: TemplateComponent, props: obj, parent: InstancePath, kind: int, a: int, b: int)
         : unit =
         let plan = serverPlan definition
         checkRoots plan backend.Ancestors
 
-        scope.Nest (fun scope setup ->
-            let identity = backend.Identity
+        if not plan.Positioned then
+            scope.NestLeaf (this, plan, definition, props, parent, kind, a, b)
+        else
+            scope.Nest (fun scope setup ->
+                let identity = backend.Identity
 
-            let parts: obj array =
-                if plan.Children.Length = 0 then
-                    [| null |]
-                else
-                    Array.zeroCreate (plan.Children.Length + 1)
+                let parts: obj array =
+                    if plan.Children.Length = 0 then
+                        null
+                    else
+                        Array.zeroCreate (plan.Children.Length + 1)
 
-            let mutable path: InstancePath = null
-            identity.Enter (parent, kind, a, b)
+                let mutable rootInstance: obj = null
+                let mutable path: InstancePath = null
+                identity.Enter (parent, kind, a, b)
 
-            try
-                parts[0] <- definition.Setup.Invoke (ownSetup identity setup, props)
+                try
+                    rootInstance <- definition.Setup.Invoke (ownSetup identity setup, props)
 
-                if plan.Positioned then
+                    if not (isNull parts) then
+                        parts[0] <- rootInstance
+
                     path <- identity.Path ()
-            finally
-                identity.Leave ()
+                finally
+                    identity.Leave ()
 
-            this.Run (scope, setup, plan, parts, path, 0, 0)
-            |> ignore)
+                this.Run (scope, setup, plan, rootInstance, parts, path, 0, 0)
+                |> ignore)
 
     /// <summary>
     /// Interprets the plan from <c>start</c> against <c>part</c> until its <c>LeaveOp</c> or the end; returns the index
     /// after it. <c>path</c> is the instance's path, null for a plan that is not <c>Positioned</c>.
     /// </summary>
-    member private this.Run(scope: ServerScope, setup: Setup, plan: ServerPlan, parts: obj array, path: InstancePath, part: int, start: int) : int =
+    member private this.Run
+        (scope: ServerScope, setup: Setup, plan: ServerPlan, rootInstance: obj, parts: obj array, path: InstancePath, part: int, start: int)
+        : int =
         let ops = plan.Ops
-        let instance = parts[part]
+        let instance = if part = 0 then rootInstance else parts[part]
         let mutable partPath: InstancePath = null
         let mutable index = start
         let mutable running = true
@@ -1907,10 +1955,7 @@ type internal ServerWriter(backend: HtmlBackend) =
                 if isNull partPath then
                     partPath <- if part = 0 then path else path.Child (part - 1)
 
-                let outer = backend.Ancestors
-                backend.Ancestors <- List.append ancestors outer
-
-                try
+                if ancestors.IsEmpty then
                     match backend.Heads with
                     | null -> this.Region (scope, region, instance, partPath, regionIndex)
                     | heads ->
@@ -1920,15 +1965,35 @@ type internal ServerWriter(backend: HtmlBackend) =
                             this.Region (scope, region, instance, partPath, regionIndex)
                         finally
                             heads.Close ()
-                finally
-                    backend.Ancestors <- outer
+                else
+                    let outer = backend.Ancestors
+                    backend.Ancestors <- List.append ancestors outer
+
+                    try
+                        match backend.Heads with
+                        | null -> this.Region (scope, region, instance, partPath, regionIndex)
+                        | heads ->
+                            heads.Open ()
+
+                            try
+                                this.Region (scope, region, instance, partPath, regionIndex)
+                            finally
+                                heads.Close ()
+                    finally
+                        backend.Ancestors <- outer
 
                 index <- index + 1
             | EnterOp child ->
                 let inlined = plan.Children[child - 1]
-                let props = inlined.Props.Invoke parts[inlined.Owner]
+
+                let ownerInstance =
+                    if inlined.Owner = 0 then
+                        rootInstance
+                    else
+                        parts[inlined.Owner]
+
+                let props = inlined.Props.Invoke ownerInstance
                 let resume = index + 1
-                let next = ref resume
 
                 let write (scope: ServerScope) (childSetup: Setup) =
                     let identity = backend.Identity
@@ -1939,7 +2004,7 @@ type internal ServerWriter(backend: HtmlBackend) =
                     finally
                         identity.Leave ()
 
-                    next.Value <- this.Run (scope, childSetup, plan, parts, path, child, resume)
+                    inlineNext <- this.Run (scope, childSetup, plan, rootInstance, parts, path, child, resume)
 
                 scope.Inline (
                     setup,
@@ -1955,7 +2020,7 @@ type internal ServerWriter(backend: HtmlBackend) =
                                 heads.LeaveGroup outer
                 )
 
-                index <- next.Value
+                index <- inlineNext
             | LeaveOp ->
                 running <- false
                 index <- index + 1
@@ -1964,7 +2029,11 @@ type internal ServerWriter(backend: HtmlBackend) =
 
     /// <summary>Writes a region whose rows sit under <c>parent</c>, the path of its owning part, at index <c>regionIndex</c>.</summary>
     member private this.Region(scope: ServerScope, region: Region, instance: obj, parent: InstancePath, regionIndex: int) =
+#if FABLE_COMPILER
         let items = Array.copy (region.Items.Invoke instance)
+#else
+        let items = region.Items.Invoke instance
+#endif
         Projection.ensureUniqueKeys region.Key.Invoke items
 
         match region.Row with
