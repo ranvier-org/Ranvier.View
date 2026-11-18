@@ -82,17 +82,44 @@ type InstancePath private (parent: InstancePath, step: string, a: int, b: int) =
 /// <summary>The window of an enclosing setup, held while a setup nested inside it runs.</summary>
 [<NoEquality; NoComparison>]
 #if !FABLE_COMPILER
-[<Struct>]
+[<Struct; System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
 #endif
-type internal IdentityWindow(parent: InstancePath, kind: int, a: int, b: int, path: InstancePath, pathText: string, issued: int, window: int) =
-    member _.Parent = parent
-    member _.Kind = kind
-    member _.A = a
-    member _.B = b
-    member _.Path = path
-    member _.PathText = pathText
-    member _.Issued = issued
-    member _.Window = window
+type internal IdentityWindow =
+    {
+        Parent: InstancePath
+        Kind: int
+        A: int
+        B: int
+        Path: InstancePath
+        Issued: int
+        Window: int
+    }
+
+#if !FABLE_COMPILER
+    member internal this.NativeDisplay(context: NativeDisplay.Context, depth: int, _precedence: int) =
+        let value = this
+
+        NativeDisplay.record context depth (box value) (fun n0 ->
+            [
+                "Parent", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.View.InstancePath>" (box value.Parent))
+                "Kind", (fun () -> NativeDisplay.int32 context n0 value.Kind)
+                "A", (fun () -> NativeDisplay.int32 context n0 value.A)
+                "B", (fun () -> NativeDisplay.int32 context n0 value.B)
+                "Path", (fun () -> NativeDisplay.opaque context n0 "<Ranvier.View.InstancePath>" (box value.Path))
+                "Issued", (fun () -> NativeDisplay.int32 context n0 value.Issued)
+                "Window", (fun () -> NativeDisplay.int32 context n0 value.Window)
+            ])
+
+    override this.ToString() =
+        let value = this
+
+        if System.Runtime.CompilerServices.RuntimeFeature.IsDynamicCodeSupported then
+            sprintf "%+A" value
+        else
+            NativeDisplay.format (fun context depth precedence ->
+                let mutable copy = value
+                copy.NativeDisplay (context, depth, precedence))
+#endif
 
 /// <summary>
 /// The ids of one render or one mount. A template instance's setup runs inside a window opened by <c>Enter</c>, and its
@@ -142,7 +169,16 @@ type IdentityScope(prefix: string) =
             if isNull enclosing then
                 enclosing <- ResizeArray ()
 
-            enclosing.Add (IdentityWindow (windowParent, windowKind, windowA, windowB, path, pathText, issued, window))
+            enclosing.Add
+                {
+                    Parent = windowParent
+                    Kind = windowKind
+                    A = windowA
+                    B = windowB
+                    Path = path
+                    Issued = issued
+                    Window = window
+                }
 
         windowCount <- windowCount + 1
         window <- windowCount
@@ -165,7 +201,7 @@ type IdentityScope(prefix: string) =
             windowA <- outer.A
             windowB <- outer.B
             path <- outer.Path
-            pathText <- outer.PathText
+            pathText <- null
             issued <- outer.Issued
             window <- outer.Window
         else
