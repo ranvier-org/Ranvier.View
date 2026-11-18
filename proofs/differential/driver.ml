@@ -96,6 +96,7 @@ let read_layout_cmd = function
   | Node [ Atom "fin-exit"; n ] -> LCmdFinishExit (nat_of_int (atom_int n))
   | Node [ Atom "rf-before" ] -> LCmdReflowBefore
   | Node [ Atom "rf-post"; idx ] -> LCmdReflowPost (nat_of_int (atom_int idx))
+  | Node [ Atom "rf-cancel"; idx ] -> LCmdReflowCancel (nat_of_int (atom_int idx))
   | _ -> failwith "bad layout_cmd"
 
 let run_layout = function
@@ -243,11 +244,18 @@ let read_mode = function
   | Atom "failfast" -> FailFastCancel
   | _ -> failwith "bad mode"
 
+let read_reenq_triple = function
+  | Node [ tr; tg; na ] ->
+    Pair (Pair (nat_of_int (atom_int tr), nat_of_int (atom_int tg)), nat_of_int (atom_int na))
+  | _ -> failwith "bad reenq triple"
+
 let read_q_cmd = function
   | Node [ Atom "reserve"; sc; hd ] -> QCmdReserve (nat_of_int (atom_int sc), bool_of_atom hd)
   | Node [ Atom "enqueue"; idx; act ] -> QCmdEnqueue (nat_of_int (atom_int idx), nat_of_int (atom_int act))
   | Node [ Atom "cancel"; idx ] -> QCmdCancel (nat_of_int (atom_int idx))
   | Node [ Atom "flush"; mode; failing ] -> QCmdFlush (read_mode mode, nat_list_of_sexp failing)
+  | Node [ Atom "flush-reenq"; mode; failing; Node triples ] ->
+    QCmdFlushReenq (read_mode mode, nat_list_of_sexp failing, coq_list_of_ocaml (Stdlib.List.map read_reenq_triple triples))
   | Node [ Atom "ticket"; tidx; mode; failing ] ->
     QCmdRunTicket (nat_of_int (atom_int tidx), read_mode mode, nat_list_of_sexp failing)
   | Node [ Atom "dispose" ] -> QCmdDispose

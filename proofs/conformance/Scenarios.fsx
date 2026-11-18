@@ -279,6 +279,64 @@ let emitExpected (outPath: string) =
             s10Cf["fail"]
     )
 
+    line ""
+
+    // S11: Reflow post cancellation recovery (Issue #174)
+    let s11 =
+        runLayoutFSharp [ 31; 32 ] [ LRfBefore; LRfCancel 0; LRfBefore; LRfPost 1 ]
+        |> parseFields
+
+    line (
+        sprintf
+            "Definition exp_S11 : layout_view :=\n  {| lv_dom := %s; lv_live := %s; lv_open := %s; lv_before := %s; lv_after := %s |}."
+            (coqNatList (parseBracketInts s11["dom"]))
+            (coqNatList (parseBracketInts s11["live"]))
+            s11["open"]
+            s11["before"]
+            s11["after"]
+    )
+
+    line ""
+
+    // S12: FailFastCancel in-flush slot replacement triggers Dropped (Issue #175)
+    let s12 =
+        runQueueFSharp
+            [
+                QRes (1, false)
+                QRes (2, true)
+                QRes (2, true)
+                QEnq (0, 10)
+                QEnq (1, 20)
+                QFluReenq (FailFastCancel, [ 10 ], [ (10, 1, 30); (10, 2, 40) ])
+                QFlu (FailFastCancel, [])
+            ]
+        |> parseFields
+
+    let rep12Inner = s12["rep"].TrimStart('[').TrimEnd(']')
+
+    let coqRep12 =
+        if String.IsNullOrWhiteSpace rep12Inner then
+            "[]"
+        else
+            let pairs =
+                rep12Inner.Split ','
+                |> Array.map (fun p ->
+                    let kv = p.Split ':'
+                    sprintf "(%s, %s)" kv[0] (coqNatList (parseBracketInts kv[1])))
+                |> String.concat "; "
+
+            "[" + pairs + "]"
+
+    line (
+        sprintf
+            "Definition exp_S12 : q_view :=\n  {| qv_committed := %s; qv_dropped := %s; qv_reported := %s; qv_pending_len := %s; qv_disposed := %s |}."
+            (coqNatList (parseBracketInts s12["comm"]))
+            (coqNatList (parseBracketInts s12["drop"]))
+            coqRep12
+            s12["pend"]
+            s12["disp"]
+    )
+
     let text = sb.ToString().Replace("\r\n", "\n")
     File.WriteAllText (outPath, text, UTF8Encoding false)
 

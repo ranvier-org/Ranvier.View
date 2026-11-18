@@ -30,3 +30,9 @@ Definition exp_S09 : q_view :=
 Definition exp_S10 : owq_view * (list fence_outcome * list nat * bool) :=
   ({| ov_dequeued_items := [1]; ov_count := 0; ov_wakes := 1; ov_rejected := 1; ov_discarded := 1; ov_stopped := true |},
    ([FenceOk false; FenceError; FenceError; FenceOk true; FenceOk true], [1; 2], false)).
+
+Definition exp_S11 : layout_view :=
+  {| lv_dom := [31; 32]; lv_live := [31; 32]; lv_open := false; lv_before := 2; lv_after := 1 |}.
+
+Definition exp_S12 : q_view :=
+  {| qv_committed := [40]; qv_dropped := [0; 1; 0]; qv_reported := []; qv_pending_len := 0; qv_disposed := false |}.

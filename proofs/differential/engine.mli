@@ -194,6 +194,8 @@ val reflow_before : reflow_state -> (reflow_state, nat) prod
 
 val reflow_run_post : nat -> reflow_state -> reflow_state
 
+val reflow_abort_post : nat -> reflow_state -> reflow_state
+
 type ssr_token =
 | TokStart of nat
 | TokEnd
@@ -350,6 +352,20 @@ val exec_work :
 
 val q_flush : commit_failure -> (nat -> bool) -> queue_model -> queue_model
 
+val apply_reenqueues :
+  nat -> ((nat, nat) prod, nat) prod list -> slot_model list -> nat list ->
+  (slot_model list, nat list) prod
+
+val exec_work_reenq :
+  commit_failure -> (nat -> bool) -> ((nat, nat) prod, nat) prod list -> bool
+  -> ((nat, nat) prod, nat option) prod list -> slot_model list -> nat list
+  -> nat list -> (nat, nat) prod list -> (((slot_model list, nat list) prod,
+  nat list) prod, (nat, nat) prod list) prod
+
+val q_flush_reenq :
+  commit_failure -> (nat -> bool) -> ((nat, nat) prod, nat) prod list ->
+  queue_model -> queue_model
+
 val q_run_posted_ticket :
   nat -> commit_failure -> (nat -> bool) -> queue_model -> queue_model
 
@@ -408,6 +424,7 @@ type layout_cmd =
 | LCmdFinishExit of nat
 | LCmdReflowBefore
 | LCmdReflowPost of nat
+| LCmdReflowCancel of nat
 
 type layout_sim = { ls_start : nat; ls_end : nat; ls_dom : nat list;
                     ls_laid_out : nat list; ls_dep : dep_state;
@@ -472,6 +489,8 @@ type q_cmd =
 | QCmdEnqueue of nat * nat
 | QCmdCancel of nat
 | QCmdFlush of commit_failure * nat list
+| QCmdFlushReenq of commit_failure * nat list
+   * ((nat, nat) prod, nat) prod list
 | QCmdRunTicket of nat * commit_failure * nat list
 | QCmdDispose
 

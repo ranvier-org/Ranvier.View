@@ -77,7 +77,11 @@ let genLayout (rng: Rng) : string =
         | 2 ->
             rfTickets <- rfTickets + 1
             cmds.Add "(rf-before)"
-        | 3 when rfTickets > 0 -> cmds.Add (sprintf "(rf-post %d)" (rng.Next rfTickets))
+        | 3 when rfTickets > 0 ->
+            if rng.Bool () then
+                cmds.Add (sprintf "(rf-post %d)" (rng.Next rfTickets))
+            else
+                cmds.Add (sprintf "(rf-cancel %d)" (rng.Next rfTickets))
         | _ ->
             let next =
                 match rng.Next 4 with
@@ -326,7 +330,15 @@ let genQueue (rng: Rng) : string =
                             a
                 ]
 
-            if rng.Bool () && ticketUpper > 0 then
+            if rng.Next 3 = 0 && slotCount > 0 && nextAct > 1 then
+                let trig = 1 + rng.Next (nextAct - 1)
+                let tgt = rng.Next slotCount
+                let na = nextAct
+                nextAct <- nextAct + 1
+                ticketUpper <- ticketUpper + 1
+
+                cmds.Add (sprintf "(flush-reenq %s %s ((%d %d %d)))" mode (fmtIntListSexp failing) trig tgt na)
+            elif rng.Bool () && ticketUpper > 0 then
                 cmds.Add (sprintf "(ticket %d %s %s)" (rng.Next ticketUpper) mode (fmtIntListSexp failing))
             else
                 cmds.Add (sprintf "(flush %s %s)" mode (fmtIntListSexp failing))

@@ -133,7 +133,10 @@ type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) =
                         let hasCommit = not (isNull (box commit))
 
                         if stopped then
-                            let dropped = hasCommit && slot.Version = version
+                            let dropped =
+                                (hasCommit && slot.Version = version)
+                                || not (isNull (box slot.Action))
+
                             this.Cancel slot
 
                             if dropped && not (isNull (box slot.Dropped)) then
@@ -176,7 +179,10 @@ type Queue(graph: Graph, failure: CommitFailure, post: (unit -> unit) -> unit) =
                             let hasCommit = not (isNull (box commit))
 
                             if stopped then
-                                let dropped = hasCommit && slot.Version = version
+                                let dropped =
+                                    (hasCommit && slot.Version = version)
+                                    || not (isNull (box slot.Action))
+
                                 this.Cancel slot
 
                                 if dropped && not (isNull (box slot.Dropped)) then

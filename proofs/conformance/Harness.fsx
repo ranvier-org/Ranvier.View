@@ -140,6 +140,7 @@ type LayoutCmd =
     | LFinExit of int
     | LRfBefore
     | LRfPost of int
+    | LRfCancel of int
 
 let runLayoutFSharp (initRows: int list) (cmds: LayoutCmd list) : string =
     let finishes = Dictionary<int, unit -> unit>()
@@ -186,6 +187,7 @@ let runLayoutFSharp (initRows: int list) (cmds: LayoutCmd list) : string =
         callMethod departuresType null "registerReflow" [| box (rfParent :> Node); box reflowSpec |] :?> (unit -> unit)
 
     let postedCallbacks = ResizeArray<unit -> unit>()
+    let cancelCallbacks = ResizeArray<unit -> unit>()
 
     let registerExitOn (rowId: int) =
         match elemById.TryGetValue rowId with
@@ -213,12 +215,20 @@ let runLayoutFSharp (initRows: int list) (cmds: LayoutCmd list) : string =
             | false, _ -> ()
         | LRfBefore ->
             let triggerPost =
-                Departures.seam.Before.Invoke (rfStart :> Node, fun cb -> postedCallbacks.Add cb)
+                Departures.seam.Before.Invoke (
+                    rfStart :> Node,
+                    Action<_, _>(fun cb cancel ->
+                        postedCallbacks.Add cb
+                        cancelCallbacks.Add cancel)
+                )
 
-            triggerPost ()
+            triggerPost.Invoke true
         | LRfPost idx ->
             if idx >= 0 && idx < postedCallbacks.Count then
                 postedCallbacks[idx]()
+        | LRfCancel idx ->
+            if idx >= 0 && idx < cancelCallbacks.Count then
+                cancelCallbacks[idx]()
 
     let ul = (doc.querySelector "ul")
     let domIds = ResizeArray<int>()
@@ -722,12 +732,14 @@ type QCmd =
     | QEnq of int * int
     | QCan of int
     | QFlu of CommitFailure * int list
+    | QFluReenq of CommitFailure * int list * (int * int * int) list
     | QTik of int * CommitFailure * int list
     | QDis
 
 let runQueueFSharp (cmds: QCmd list) : string =
     use graph = new Graph ()
     let mutable activeFailing = HashSet<int>()
+    let mutable activeReenq: (int * int * int) list = []
     let mutable activeMode = CollectAndContinue
     let posted = ResizeArray<unit -> unit>()
     let committed = ResizeArray<int>()
@@ -765,6 +777,21 @@ let runQueueFSharp (cmds: QCmd list) : string =
     let failureField = typeof<Queue>.GetField("failure", flags)
     let slots = ResizeArray<Slot>()
 
+    let rec enqueueAct (idx: int) (act: int) =
+        if idx >= 0 && idx < slots.Count then
+            queue.Enqueue (
+                slots[idx],
+                fun () ->
+                    for (trig, tgt, na) in activeReenq do
+                        if trig = act then
+                            enqueueAct tgt na
+
+                    if activeFailing.Contains act then
+                        raise (Exception (string act))
+                    else
+                        committed.Add act
+            )
+
     for cmd in cmds do
         match cmd with
         | QRes (sc, hasDrop) ->
@@ -779,16 +806,7 @@ let runQueueFSharp (cmds: QCmd list) : string =
                     setProp sl "Dropped" (box (fun () -> droppedCounts[slotIdx] <- droppedCounts[slotIdx] + 1))
 
                 slots.Add sl
-        | QEnq (idx, act) ->
-            if idx >= 0 && idx < slots.Count then
-                queue.Enqueue (
-                    slots[idx],
-                    fun () ->
-                        if activeFailing.Contains act then
-                            raise (Exception (string act))
-                        else
-                            committed.Add act
-                )
+        | QEnq (idx, act) -> enqueueAct idx act
         | QCan idx ->
             if idx >= 0 && idx < slots.Count then
                 queue.Cancel slots[idx]
@@ -797,7 +815,16 @@ let runQueueFSharp (cmds: QCmd list) : string =
             failureField.SetValue (queue, mode)
             activeMode <- mode
             activeFailing <- HashSet<int>(failing)
+            activeReenq <- []
             queue.Flush ()
+        | QFluReenq (mode, failing, reenq) ->
+            reportedBatches.Clear ()
+            failureField.SetValue (queue, mode)
+            activeMode <- mode
+            activeFailing <- HashSet<int>(failing)
+            activeReenq <- reenq
+            queue.Flush ()
+            activeReenq <- []
         | QTik (tidx, mode, failing) ->
             if tidx >= 0 && tidx < posted.Count then
                 let wasDisposed = getField queue "disposed" :?> bool
@@ -805,6 +832,7 @@ let runQueueFSharp (cmds: QCmd list) : string =
                 failureField.SetValue (queue, mode)
                 activeMode <- mode
                 activeFailing <- HashSet<int>(failing)
+                activeReenq <- []
                 // Only clear `reportedBatches` if the ticket actually runs a flush!
                 let tempBatches = List.ofSeq reportedBatches
                 reportedBatches.Clear ()
@@ -968,6 +996,7 @@ let evalSexpFSharp (s: Sexp) : string =
                 | Node [ Atom "fin-exit"; n ] -> LFinExit (atomInt n)
                 | Node [ Atom "rf-before" ] -> LRfBefore
                 | Node [ Atom "rf-post"; idx ] -> LRfPost (atomInt idx)
+                | Node [ Atom "rf-cancel"; idx ] -> LRfCancel (atomInt idx)
                 | _ -> failwith "bad layout cmd")
 
         runLayoutFSharp (intList initRows) parsed
@@ -1018,6 +1047,14 @@ let evalSexpFSharp (s: Sexp) : string =
                 | Node [ Atom "enqueue"; idx; act ] -> QEnq (atomInt idx, atomInt act)
                 | Node [ Atom "cancel"; idx ] -> QCan (atomInt idx)
                 | Node [ Atom "flush"; mode; failing ] -> QFlu (parseMode mode, intList failing)
+                | Node [ Atom "flush-reenq"; mode; failing; Node triples ] ->
+                    let rs =
+                        triples
+                        |> List.map (function
+                            | Node [ tr; tg; na ] -> atomInt tr, atomInt tg, atomInt na
+                            | _ -> failwith "bad reenq triple")
+
+                    QFluReenq (parseMode mode, intList failing, rs)
                 | Node [ Atom "ticket"; tidx; mode; failing ] -> QTik (atomInt tidx, parseMode mode, intList failing)
                 | Node [ Atom "dispose" ] -> QDis
                 | _ -> failwith "bad q cmd")

@@ -793,6 +793,108 @@ let private failed =
 let private ready =
     Component.template (fun _ (status: BoundaryStatus) -> status) (em () { "ready" })
 
+/// <summary>
+/// Under <c>FailFastCancel</c>, a commit failure ahead of a reflow's queued <c>After</c> closes the open measurement
+/// without running <c>After</c>, so the next pass measures <c>Before</c> and <c>After</c> again.
+/// </summary>
+let private reflowCancelledByFailFastRecovers () =
+    use graph = new Graph ()
+    (log ()).Clear()
+    let trigger = graph.Run (fun () -> Api.createSignal "ok")
+    let items = graph.Run (fun () -> Api.createSignal [| 1 |])
+    let reports = ResizeArray<exn list>()
+
+    let template =
+        Component.template
+            (fun _ () -> ())
+            (ul (ul.reflow (fun () (node: HTMLUListElement) -> measuring "ul" node)) {
+                forEach id (fun () -> items.Value) (li () { fun (row: unit -> int) -> string (row ()) })
+            })
+
+    let failingSetter =
+        Typed.div
+            Program.ops
+            [|
+                Typed.reactiveProperty
+                    (fun (node: HTMLDivElement) (value: string) ->
+                        if value = "bad" then
+                            failwith "setter"
+
+                        node.title <- value)
+                    (fun () -> trigger.Value)
+            |]
+            [||]
+
+    let mounted =
+        Mounting.mountWith (Scheduling.QueuedCommits (Scheduling.FailFastCancel, ignore)) graph None reports.Add (host ()) None (fun context ->
+            Program.run failingSetter context.Backend
+            Program.run (Component.render template ()) context.Backend)
+
+    mounted.Flush ()
+
+    graph.Run (fun () ->
+        trigger.Value <- "bad"
+        items.Value <- [| 1; 2 |])
+
+    mounted.Flush ()
+    let cancelledPass = taken ()
+    graph.Run (fun () -> items.Value <- [| 2; 1 |])
+    mounted.Flush ()
+    let recoveredPass = taken ()
+    mounted.Dispose ()
+
+    equal ([ "ul before 1" ], [ "ul before 12"; "ul after 21" ], [ [ "setter" ] ]) (cancelledPass, recoveredPass, messages reports)
+
+/// <summary>
+/// A measured list whose source read is pending (<c>NotReadyException</c>) or raises does not open or run a reflow
+/// measurement; once a source read succeeds, the next layout measures normally.
+/// </summary>
+let private reflowSkipsNonLayoutSourceReads queued () =
+    use graph = new Graph ()
+    (log ()).Clear()
+
+    let settledItems =
+        let src = graph.Run (fun () -> Api.createAsyncSource<int array>())
+        graph.Run (fun () -> src.Settle [| 1; 2 |])
+        src
+
+    let flight = graph.Run (fun () -> Api.createSignal settledItems)
+    let failSource = graph.Run (fun () -> Api.createSignal false)
+    let reports = ResizeArray<exn list>()
+
+    let content =
+        Component.template
+            (fun _ (_: BoundaryStatus) -> ())
+            (ul (ul.reflow (fun () (node: HTMLUListElement) -> measuring "ul" node)) {
+                forEach
+                    id
+                    (fun () ->
+                        if failSource.Value then
+                            raise (InvalidOperationException "source boom")
+
+                        flight.Value.Value)
+                    (li () { fun (row: unit -> int) -> string (row ()) })
+            })
+
+    let view =
+        Component.template (fun _ () -> ()) (div () { boundary waiting failed content })
+
+    let mounted =
+        mountTemplate queued graph reports.Add (host ()) (Component.render view ())
+
+    mounted.Flush ()
+    let initial = taken ()
+    let nextSource = graph.Run (fun () -> Api.createAsyncSource<int array>())
+    write graph mounted (fun () -> flight.Value <- nextSource)
+    let duringPending = taken ()
+    write graph mounted (fun () -> nextSource.Settle [| 2; 1 |])
+    let afterSettle = taken ()
+    write graph mounted (fun () -> failSource.Value <- true)
+    let afterSourceError = taken ()
+    mounted.Dispose ()
+
+    equal ([], [], [ "ul before 12"; "ul after 21" ], []) (initial, duringPending, afterSettle, afterSourceError)
+
 /// <summary>Rows whose exiting root holds a nested list, a shown arm and a boundary.</summary>
 let private nestedContent =
     Component.template
@@ -1018,7 +1120,9 @@ let private checks: (string * (unit -> unit)) array =
                 templated "a reflow measures once per flush across the passes under its element" reflowPerFlush
                 [|
                     "a reflow's After follows the pass's queued commits", reflowAfterQueuedCommits
+                    "a reflow cancelled by FailFastCancel closes and measures the next pass", reflowCancelledByFailFastRecovers
                 |]
+                templated "a reflow skips pending and raising source reads" reflowSkipsNonLayoutSourceReads
                 templated "a disposed instance withdraws its reflow registration" reflowWithdrawnWithInstance
                 templated "a raising reflow Before or After is reported once and the list keeps updating" reflowFailuresReported
                 templated "a held root keeps its nested lists, arms and boundaries until finish" heldRootKeepsContent

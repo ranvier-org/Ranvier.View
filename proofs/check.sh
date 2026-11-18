@@ -164,4 +164,5 @@ if ! bash ./differential/run.sh 400 1; then
 fi
 
 [ "$fail" -eq 0 ] || exit 1
-echo "check.sh: OK ($expected theorems closed, 10 conformance scenarios, 400 differential programs)"
+scenarios="$(grep -cE '^\s*Example\s+check_S' theories/Conformance/Check.v)"
+echo "check.sh: OK ($expected theorems closed, $scenarios conformance scenarios, 400 differential programs)"

@@ -15,7 +15,8 @@ Inductive layout_cmd :=
   | LCmdReconcile (next_rows : list nat)
   | LCmdFinishExit (node : nat)
   | LCmdReflowBefore
-  | LCmdReflowPost (ticket : nat).
+  | LCmdReflowPost (ticket : nat)
+  | LCmdReflowCancel (ticket : nat).
 
 Record layout_sim := {
   ls_start : nat;
@@ -87,6 +88,15 @@ Definition step_layout_cmd (c : layout_cmd) (s : layout_sim) : layout_sim :=
        ls_laid_out := ls_laid_out s;
        ls_dep := ls_dep s;
        ls_reflow := reflow_run_post ticket (ls_reflow s);
+       ls_tickets := ls_tickets s |}
+  | LCmdReflowCancel idx =>
+    let ticket := nth idx (ls_tickets s) 0 in
+    {| ls_start := ls_start s;
+       ls_end := ls_end s;
+       ls_dom := ls_dom s;
+       ls_laid_out := ls_laid_out s;
+       ls_dep := ls_dep s;
+       ls_reflow := reflow_abort_post ticket (ls_reflow s);
        ls_tickets := ls_tickets s |}
   end.
 
@@ -277,6 +287,7 @@ Inductive q_cmd :=
   | QCmdEnqueue (slot_idx action : nat)
   | QCmdCancel (slot_idx : nat)
   | QCmdFlush (mode : commit_failure) (failing : list nat)
+  | QCmdFlushReenq (mode : commit_failure) (failing : list nat) (reenq : list (nat * nat * nat))
   | QCmdRunTicket (ticket_idx : nat) (mode : commit_failure) (failing : list nat)
   | QCmdDispose.
 
@@ -287,6 +298,8 @@ Definition step_q_cmd (c : q_cmd) (q : queue_model) : queue_model :=
   | QCmdCancel idx => q_cancel idx q
   | QCmdFlush mode failing =>
     q_flush mode (fun a => existsb (Nat.eqb a) failing) q
+  | QCmdFlushReenq mode failing reenq =>
+    q_flush_reenq mode (fun a => existsb (Nat.eqb a) failing) reenq q
   | QCmdRunTicket tidx mode failing =>
     match nth_error (q_tickets q) tidx with
     | None => q

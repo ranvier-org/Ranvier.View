@@ -66,3 +66,16 @@ Example check_S10 :
    observe_fence [CFTryComplete PollNotReady; CFReset; CFTryComplete PollGpuFailure;
                   CFReset; CFTryComplete PollReady]) = exp_S10.
 Proof. vm_compute. reflexivity. Qed.
+
+Example check_S11 :
+  observe_layout [31; 32]
+    [LCmdReflowBefore; LCmdReflowCancel 0; LCmdReflowBefore; LCmdReflowPost 1] = exp_S11.
+Proof. vm_compute. reflexivity. Qed.
+
+Example check_S12 :
+  observe_queue
+    [QCmdReserve 1 false; QCmdReserve 2 true; QCmdReserve 2 true;
+     QCmdEnqueue 0 10; QCmdEnqueue 1 20;
+     QCmdFlushReenq FailFastCancel [10] [(10, 1, 30); (10, 2, 40)];
+     QCmdFlush FailFastCancel []] = exp_S12.
+Proof. vm_compute. reflexivity. Qed.

@@ -23,7 +23,7 @@ Playwright, and NativeAOT suites rather than Rocq axioms.
 | `common_prefix_len`, `common_suffix_len`, `is_outer_swap`, `row_layout` | `Row.Layout` (`Mounting.fs:1450-1544`) | Covers prefix/suffix window framing, pure insertion (`aStart = aEnd`), outer-pair swap (`swapped`), and LIS right-to-left placement. Staging-fragment bulk insertion (`Mounting.fs:1494-1495`) produces the identical sibling list to `move_many_before`. |
 | `dep_state`, `filter_live`, `next_live_after`, `holds_between`, `retire_or_remove`, `finish_exit` | `Departures` (`Departures.fs:267-313, 414-467`) | Models `exits`, `leaving`, and `pending` weak sets over sibling ids. Safety timer (`10000 ms`) triggers `finish_exit` identically to an explicit `finish` callback. |
 | `clear_between`, `release_rows`, `flush_released` | `Row.ClearBetween` (`Mounting.fs:1358-1373`), `RegionSite.FlushReleased` (`Mounting.fs:1880-1915`) | Proves `ClearBetween` fast path equals row-by-row `release_rows` when `holds_between` is false (`Departures.Holds` guard at `Mounting.fs:1895`). |
-| `reflow_state`, `reflow_before`, `reflow_run_post` | `ReflowEntry`, `Departures.before` (`Departures.fs:276-283, 469-497`) | `rf_posts` models `entry.Posts`; proves `Before` runs once per open measurement and only the latest posted callback closes `Open` and runs `After`. |
+| `reflow_state`, `reflow_before`, `reflow_run_post`, `reflow_abort_post` | `ReflowEntry`, `Departures.before`, `MountState.Post` (`Departures.fs:276-283, 472-514`, `Mounting.fs:3632-3665`) | `rf_posts` models `entry.Posts`; proves `Before` runs once per open measurement, only the latest posted callback closes `Open` and runs `After`, and aborting the latest post (`FailFastCancel`, teardown, or unwinding pass) closes `Open` without running `After`. |
 
 ## 2. `theories/Pure/Hydration.v` — SSR Markers, HydrationCursor, & ViewBoundary
 
@@ -47,7 +47,7 @@ Playwright, and NativeAOT suites rather than Rocq axioms.
 
 | Rocq symbol | F# symbol | Notes & simplifications |
 |---|---|---|
-| `slot_model`, `queue_model`, `q_reserve`, `q_enqueue`, `q_cancel`, `q_flush`, `q_run_posted_ticket`, `q_dispose` | `Scheduling.Slot`, `Scheduling.Queue` (`Scheduling.fs:32-262`) | Models `Slot.Version`, `Listed` pending deduplication, `generation` ticket invalidation across `Flush`/`Dispose` (`Reserve` guarded when disposed), and `CollectAndContinue` vs `FailFastCancel` (`Dropped`). |
+| `slot_model`, `queue_model`, `q_reserve`, `q_enqueue`, `q_cancel`, `q_flush`, `q_flush_reenq`, `q_run_posted_ticket`, `q_dispose` | `Scheduling.Slot`, `Scheduling.Queue` (`Scheduling.fs:32-268`) | Models `Slot.Version`, `Listed` pending deduplication, `generation` ticket invalidation across `Flush`/`Dispose` (`Reserve` guarded when disposed), `CollectAndContinue` vs `FailFastCancel`, and `Slot.Dropped` firing on both unreplaced snapshot commits and in-flush replacement commits. |
 | `report_by_scope` | `Queue.Report` (`Scheduling.fs:219-250`) | Groups failing slots by non-null `ViewScope` in first-failure order. |
 | `owq_model`, `owq_try_enqueue`, `owq_try_dequeue`, `owq_set_wake`, `owq_stop` | `OwnerWorkQueue` (`OwnerWorkQueue.fs:7-111`) | Models capacity admission (`Accepted`/`Full`/`Closed`), item conservation, and no-lost-wakeup across `TryEnqueue` and `SetWakeCallback`. |
 | `fence_model`, `cf_try_complete`, `cf_reset` | `CompletionFence`, `GpuCompletionFailure` (`CompletionFence.fs:4-53`) | Models owner-thread GPU marker allocation, single release on completion or `GpuCompletionFailure`, and `Reset` guard when `pending <> 0n`. |
