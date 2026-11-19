@@ -1,10 +1,8 @@
 ---
 title: Ranvier.View
 description: Template components, server rendering, hydration, motion parts and analyzers for Ranvier
-layout: bare
+toc: false
 ---
-
-# Ranvier.View
 
 Template components for [Ranvier](https://ranvier-org.github.io/Ranvier/) on .NET and Fable: typed templates and
 view sugar, keyed lists, arms and boundaries, server HTML with hydration, motion parts over anime.js, and analyzers
