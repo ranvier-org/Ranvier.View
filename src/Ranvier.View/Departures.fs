@@ -273,13 +273,13 @@ let private leaving = weakSet ()
 #if FABLE_COMPILER
 let mutable private leavingCount = 0
 
-let inline private hasLeaving () =
+let private hasLeaving () =
     leavingCount > 0
 
-let inline private incrementLeaving () =
+let private incrementLeaving () =
     leavingCount <- leavingCount + 1
 
-let inline private decrementLeaving () =
+let private decrementLeaving () =
     leavingCount <- leavingCount - 1
 #else
 let private leavingCount = ref 0
