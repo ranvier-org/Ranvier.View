@@ -1,5 +1,5 @@
 ---
-last_commit_released: 8be254d1a7d360618074ec541607ee7dc02c1892
+last_commit_released: f13d925b1b0f80a0a37e1bf7a98cd6e504dd539a
 include:
   - ../Ranvier.View.Dom/
   - ../../Directory.Build.props
@@ -24,6 +24,20 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.4.0 - 2026-11-19
+
+### 🐞 Bug Fixes
+
+* *(view)* Avoid inline capture of private mutable leavingCount under Fable precompile (#189) ([0bcf6c2](https://github.com/ranvier-org/Ranvier.View/commit/0bcf6c23a5fef09242b36f0a07779df58959f9af))
+
+### ⚡ Performance Improvements
+
+* *(view)* Add Rocq-verified HydrationCursor defunctionalization and lazy boundary copy-on-write (#183) ([687faa3](https://github.com/ranvier-org/Ranvier.View/commit/687faa3381568266bfe27eb2e8c23f81ef16ee93))
+* *(view)* Add Rocq-verified reusable Queue.Flush buffer and hoisted slot commits (#184) ([ff183e4](https://github.com/ranvier-org/Ranvier.View/commit/ff183e4e3d46d30dee207300e5da92e120636e09))
+* *(view)* Hoist leaf SSR scopes and unbox IdentityScope windows (#187) ([b9c4bf3](https://github.com/ranvier-org/Ranvier.View/commit/b9c4bf370b7de543b9cba82764f3c8caec2269bd))
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/8be254d1a7d360618074ec541607ee7dc02c1892..f13d925b1b0f80a0a37e1bf7a98cd6e504dd539a)</small></strong>
 
 ## 0.3.0 - 2026-11-18
 
