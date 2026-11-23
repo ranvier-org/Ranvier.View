@@ -1,10 +1,10 @@
 ---
-last_commit_released: 335bd1bce23529ca7a9603856fc5c951d7c259f5
-depends_on:
-  - ../Ranvier.View/
+last_commit_released: 8cb88430848239a8140ca69b3551b1194cbc2018
 include:
   - ../Fable.Ranvier.View.Anime/
   - ../../Directory.Build.props
+depends_on:
+  - ../Ranvier.View/
 updaters:
   - regex:
       file: Ranvier.View.Anime.fsproj
@@ -17,6 +17,18 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.1.47 - 2026-11-23
+
+### 🐞 Bug Fixes
+
+* *(deps)* Align cohort to Ranvier 0.2.1, Css 0.3.0, and Anime 0.3.0 ([8cb8843](https://github.com/ranvier-org/Ranvier.View/commit/8cb88430848239a8140ca69b3551b1194cbc2018))
+
+### 🔗 Dependencies
+
+* `src/Ranvier.View` updated to 0.4.0
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/335bd1bce23529ca7a9603856fc5c951d7c259f5..8cb88430848239a8140ca69b3551b1194cbc2018)</small></strong>
 
 ## 0.1.46 - 2026-11-14
 
