@@ -1,5 +1,5 @@
 ---
-last_commit_released: 8be254d1a7d360618074ec541607ee7dc02c1892
+last_commit_released: 8cb88430848239a8140ca69b3551b1194cbc2018
 depends_on:
   - ../Ranvier.View/
 updaters:
@@ -11,6 +11,18 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.3.0 - 2026-11-23
+
+### ⚡ Performance Improvements
+
+* *(view)* Add Rocq-verified WebCore OwnerWorkQueue, Session, and repaint hot-path fast paths (#185) ([d5037ab](https://github.com/ranvier-org/Ranvier.View/commit/d5037ab441203798c389bd5b9d05fe7d60ae156a))
+
+### 🔗 Dependencies
+
+* `src/Ranvier.View` updated to 0.4.0
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/8be254d1a7d360618074ec541607ee7dc02c1892..8cb88430848239a8140ca69b3551b1194cbc2018)</small></strong>
 
 ## 0.2.1 - 2026-11-18
 
