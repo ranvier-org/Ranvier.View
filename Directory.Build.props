@@ -32,16 +32,16 @@
         <RanvierCssRoot Condition="'$(RanvierCssRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../Ranvier.Css'))</RanvierCssRoot>
         <UseLocalRanvierAnime Condition="'$(UseLocalRanvierAnime)' == ''">false</UseLocalRanvierAnime>
         <RanvierAnimeRoot Condition="'$(RanvierAnimeRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../Ranvier.Anime'))</RanvierAnimeRoot>
-        <RanvierVersion>0.2.0</RanvierVersion>
-        <RanvierElmishVersion>0.2.0</RanvierElmishVersion>
-        <RanvierWireVersion>0.2.0</RanvierWireVersion>
-        <RanvierQueryVersion>0.2.0</RanvierQueryVersion>
-        <RanvierCssVersion>0.1.1</RanvierCssVersion>
-        <RanvierCssBindingsVersion>0.1.1</RanvierCssBindingsVersion>
-        <RanvierCssViewVersion>0.1.1</RanvierCssViewVersion>
+        <RanvierVersion>0.2.1</RanvierVersion>
+        <RanvierElmishVersion>0.2.1</RanvierElmishVersion>
+        <RanvierWireVersion>0.2.1</RanvierWireVersion>
+        <RanvierQueryVersion>0.2.1</RanvierQueryVersion>
+        <RanvierCssVersion>0.3.0</RanvierCssVersion>
+        <RanvierCssBindingsVersion>0.2.0</RanvierCssBindingsVersion>
+        <RanvierCssViewVersion>0.3.0</RanvierCssViewVersion>
         <RanvierDomVersion>0.1.0</RanvierDomVersion>
-        <RanvierAnimeVersion>0.1.45</RanvierAnimeVersion>
-        <RanvierNativeAnimeVersion>0.1.0</RanvierNativeAnimeVersion>
+        <RanvierAnimeVersion>0.2.0</RanvierAnimeVersion>
+        <RanvierNativeAnimeVersion>0.3.0</RanvierNativeAnimeVersion>
         <RanvierTrace Condition="'$(RanvierTrace)' == '' and '$(Configuration)' == 'Debug'">true</RanvierTrace>
         <RanvierPackageSuffix Condition="'$(RanvierTrace)' == 'true'">.Traced</RanvierPackageSuffix>
     </PropertyGroup>

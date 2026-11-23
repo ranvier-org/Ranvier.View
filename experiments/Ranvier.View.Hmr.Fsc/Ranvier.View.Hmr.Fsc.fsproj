@@ -15,6 +15,6 @@
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Ranvier.FSharp.Checker" Version="0.1.0" />
+    <PackageReference Include="Ranvier.FSharp.Checker" Version="0.1.2" />
   </ItemGroup>
 </Project>
