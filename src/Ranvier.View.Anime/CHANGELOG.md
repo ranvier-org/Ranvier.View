@@ -1,5 +1,7 @@
 ---
 last_commit_released: 335bd1bce23529ca7a9603856fc5c951d7c259f5
+depends_on:
+  - ../Ranvier.View/
 include:
   - ../Fable.Ranvier.View.Anime/
   - ../../Directory.Build.props

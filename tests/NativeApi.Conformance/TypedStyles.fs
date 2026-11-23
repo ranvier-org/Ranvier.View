@@ -45,7 +45,7 @@ let run (document: Document) (computed: ComputedStyleService) (errorName: exn ->
         equal "typed serialized value" "42px" (Declaration.value width)
         equal "typed importance" true (Declaration.isImportant width)
 
-        let metadata = (widthValue :> Ranvier.Css.Generated.CssGrammar.IValue).Data.Numeric
+        let metadata = (widthValue :> Ranvier.Css.CssGrammar.IValue).Data.Numeric
         equal "numeric magnitude and unit" (Some (42., "px")) metadata
         StyleDeclaration.apply style width
         equal "typed inline value and priority" ("42px", "important") (StyleDeclaration.read style width)
