@@ -261,14 +261,22 @@ let private observerState (node: INode) =
         ||| System.Reflection.BindingFlags.Public
         ||| System.Reflection.BindingFlags.NonPublic
 
-    let observers = node.GetType().GetField("observers", flags).GetValue node
-
-    // A signal creates its observer set on its first observer.
-    let count =
+    let countOf (observers: obj) =
         if isNull observers then
             0
         else
-            unbox<int>(observers.GetType().GetProperty("Count", flags).GetValue observers)
+            let t = observers.GetType ()
+
+            match t.GetProperty ("Count", flags) with
+            | null -> unbox<int>(t.GetField("Count", flags).GetValue observers)
+            | prop -> unbox<int>(prop.GetValue observers)
+
+    let nodeType = node.GetType ()
+
+    let count =
+        match nodeType.GetProperty ("ObserverCount", flags) with
+        | null -> countOf (nodeType.GetField("observers", flags).GetValue node)
+        | prop -> unbox<int>(prop.GetValue node)
 
     node.Id, node.Status, count
 #endif
