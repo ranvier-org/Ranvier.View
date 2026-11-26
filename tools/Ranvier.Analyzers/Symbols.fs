@@ -17,11 +17,22 @@ let enclosing (m: FSharpMemberOrFunctionOrValue) : string =
 let isMember (entity: string) (name: string) (m: FSharpMemberOrFunctionOrValue) : bool =
     m.LogicalName = name && enclosing m = entity
 
-/// The name a message gives `m`: the type's name for a constructor, the display name otherwise.
+/// The name a message gives `m`: the type's name for a constructor, the CE builder keyword for a `.Run` on `Ranvier.CE`,
+/// the display name otherwise.
 let display (m: FSharpMemberOrFunctionOrValue) : string =
-    match m.ApparentEnclosingEntity with
-    | Some entity when m.IsConstructor -> entity.DisplayName
-    | _ -> m.DisplayName
+    match enclosing m, m.LogicalName with
+    | "Ranvier.CE.MemoBuilder", "Run" -> "memo"
+    | "Ranvier.CE.EffectBuilder", "Run" -> "effect"
+    | "Ranvier.CE.AsyncMemoBuilder", "Run" -> "asyncMemo"
+    | "Ranvier.CE.StreamBuilder", "Run" -> "stream"
+    | "Ranvier.CE.EditableBuilder", "Run" -> "editable"
+    | "Ranvier.CE.DraftBuilder", "Run" -> "draft"
+    | "Ranvier.CE.BoundaryBuilder", "Run" -> "boundary"
+    | "Ranvier.CE.RowBuilder", "Run" -> "row"
+    | _ ->
+        match m.ApparentEnclosingEntity with
+        | Some entity when m.IsConstructor -> entity.DisplayName
+        | _ -> m.DisplayName
 
 [<Literal>]
 let Operators = "Microsoft.FSharp.Core.Operators"
@@ -34,6 +45,10 @@ let PipeRight = "op_PipeRight"
 
 [<Literal>]
 let PipeLeft = "op_PipeLeft"
+
+/// Whether `m` is the pipe operator `name` (`PipeRight` or `PipeLeft`).
+let isPipe (name: string) (m: FSharpMemberOrFunctionOrValue) : bool =
+    m.LogicalName = name && enclosing m = Operators
 
 [<Literal>]
 let CompilerGenerated = "System.Runtime.CompilerServices.CompilerGeneratedAttribute"
@@ -315,6 +330,8 @@ module Core =
                 "Ranvier.AsyncSource`1"
                 "Ranvier.Memo`1"
                 "Ranvier.AsyncMemo`1"
+                "Ranvier.StreamMemo`1"
+                "Ranvier.Timed`1"
                 "Ranvier.Boundary`1"
                 "Ranvier.Editable`1"
             ]
@@ -335,6 +352,198 @@ module Core =
                 || m.LogicalName = "TryGet"
                 || m.LogicalName = "get_Keys"))
 
+    /// The `Ranvier.CE` computation-expression builder kind that declares or extends `m`.
+    [<RequireQualifiedAccess>]
+    type CeKind =
+        | Memo
+        | Effect
+        | AsyncMemo
+        | Stream
+        | Editable
+        | Draft
+        | Boundary
+        | Row
+
+    /// The ownership/mode variant selected by a `MemoBuilder.Run` overload.
+    [<RequireQualifiedAccess>]
+    type MemoRunMode =
+        | Pure
+        | Owning
+        | Option
+        | Tail
+
+    /// The ownership variant selected by an `AsyncMemoBuilder.Run` overload.
+    [<RequireQualifiedAccess>]
+    type AsyncRunMode =
+        | Pure
+        | Owning
+
+    /// What kind of computation-expression `Bind` or `BindReturn` overload a call selects.
+    [<RequireQualifiedAccess>]
+    type CeBindKind =
+        | Reactive
+        | TaskAwait
+        | ContextToken
+
+    let private ceBuilders: Map<string, CeKind> =
+        Map.ofList
+            [
+                "Ranvier.CE.MemoBuilder", CeKind.Memo
+                "Ranvier.CE.EffectBuilder", CeKind.Effect
+                "Ranvier.CE.AsyncMemoBuilder", CeKind.AsyncMemo
+                "Ranvier.CE.StreamBuilder", CeKind.Stream
+                "Ranvier.CE.EditableBuilder", CeKind.Editable
+                "Ranvier.CE.DraftBuilder", CeKind.Draft
+                "Ranvier.CE.BoundaryBuilder", CeKind.Boundary
+                "Ranvier.CE.RowBuilder", CeKind.Row
+            ]
+
+    /// The `Ranvier.CE` builder kind of `m`, when `m` is a member or extension member of a `Ranvier.CE` builder.
+    let ceBuilder (m: FSharpMemberOrFunctionOrValue) : CeKind option =
+        ceBuilders |> Map.tryFind (enclosing m)
+
+    /// The `Ranvier.CE` builder kind when `m` is a `.Run` method of that builder.
+    let isCeRun (m: FSharpMemberOrFunctionOrValue) : CeKind option =
+        if m.LogicalName = "Run" then ceBuilder m else None
+
+    let private typeFullName (t: FSharpType) : string option =
+        if t.HasTypeDefinition then
+            t.TypeDefinition.TryFullName
+        else
+            None
+
+    let private param0Type (m: FSharpMemberOrFunctionOrValue) : FSharpType option =
+        if
+            m.CurriedParameterGroups.Count > 0
+            && m.CurriedParameterGroups[0].Count > 0
+        then
+            Some (m.CurriedParameterGroups[0].[0].Type)
+        else
+            None
+
+    let private param0RangeType (m: FSharpMemberOrFunctionOrValue) : FSharpType option =
+        param0Type m
+        |> Option.bind (fun t ->
+            if t.IsFunctionType && t.GenericArguments.Count = 2 then
+                Some t.GenericArguments[1]
+            else
+                None)
+
+    /// The `MemoRunMode` encoded in the parameter type of `MemoBuilder.Run`.
+    let memoRunMode (m: FSharpMemberOrFunctionOrValue) : MemoRunMode =
+        match param0RangeType m with
+        | Some t ->
+            match typeFullName t with
+            | Some ("Ranvier.Internal.MemoTail`2" | "Ranvier.Internal.ConfiguredMemoTail`4") -> MemoRunMode.Tail
+            | Some "Ranvier.Internal.ConfiguredMemo`5" when t.GenericArguments.Count > 0 ->
+                match typeFullName t.GenericArguments[0] with
+                | Some "Ranvier.Internal.OwningMode" -> MemoRunMode.Owning
+                | Some "Ranvier.Internal.OptionMode" -> MemoRunMode.Option
+                | _ -> MemoRunMode.Pure
+            | _ -> MemoRunMode.Pure
+        | None -> MemoRunMode.Pure
+
+    /// The `AsyncRunMode` encoded in the parameter type of `AsyncMemoBuilder.Run`.
+    let asyncRunMode (m: FSharpMemberOrFunctionOrValue) : AsyncRunMode =
+        match param0RangeType m with
+        | Some t when
+            typeFullName t = Some "Ranvier.Internal.ConfiguredAsync`5"
+            && t.GenericArguments.Count > 0
+            ->
+            match typeFullName t.GenericArguments[0] with
+            | Some "Ranvier.Internal.OwningMode" -> AsyncRunMode.Owning
+            | _ -> AsyncRunMode.Pure
+        | _ -> AsyncRunMode.Pure
+
+    let private headerTypes =
+        set
+            [
+                "Ranvier.Internal.MemoHeader`2"
+                "Ranvier.Internal.EffectHeader`1"
+                "Ranvier.Internal.AsyncHeader`2"
+                "Ranvier.Internal.StreamHeader`1"
+                "Ranvier.Internal.BoundaryHeader`3"
+            ]
+
+    /// Whether `m` is the header-carrying `For` overload of a `Ranvier.CE` builder.
+    let isCeHeaderFor (m: FSharpMemberOrFunctionOrValue) : bool =
+        (ceBuilder m).IsSome
+        && m.LogicalName = "For"
+        && (match param0Type m |> Option.bind typeFullName with
+            | Some name -> headerTypes.Contains name
+            | None -> false)
+
+    let private taskAwaitTypes =
+        set
+            [
+                "System.Threading.Tasks.Task"
+                "System.Threading.Tasks.Task`1"
+                "System.Threading.Tasks.ValueTask"
+                "System.Threading.Tasks.ValueTask`1"
+            ]
+
+    let private contextTokenTypes =
+        set
+            [
+                "Ranvier.Internal.MemoPreviousToken"
+                "Ranvier.Internal.MemoPreviousOrToken`1"
+                "Ranvier.Internal.EditablePreviousToken"
+                "Ranvier.Internal.EditablePreviousOrToken`1"
+                "Ranvier.Internal.DraftPreviousToken"
+                "Ranvier.Internal.DraftPreviousOrToken`1"
+                "Ranvier.Internal.AsyncPreviousToken"
+                "Ranvier.Internal.AsyncCancellationToken"
+                "Ranvier.Internal.StreamCancellationToken"
+            ]
+
+    /// The bind kind of `m` when `m` is `Bind` or `BindReturn` on a `Ranvier.CE` builder.
+    let ceBindKind (m: FSharpMemberOrFunctionOrValue) : CeBindKind option =
+        if
+            (ceBuilder m).IsSome
+            && (m.LogicalName = "Bind"
+                || m.LogicalName = "BindReturn")
+        then
+            match param0Type m |> Option.bind typeFullName with
+            | Some name when taskAwaitTypes.Contains name -> Some CeBindKind.TaskAwait
+            | Some name when contextTokenTypes.Contains name -> Some CeBindKind.ContextToken
+            | _ -> Some CeBindKind.Reactive
+        else
+            None
+
+    /// Whether `m` is `Bind` or `BindReturn` binding `asyncMemo.cancellationToken`.
+    let isCeCancellationBind (m: FSharpMemberOrFunctionOrValue) : bool =
+        ceBuilder m = Some CeKind.AsyncMemo
+        && (m.LogicalName = "Bind"
+            || m.LogicalName = "BindReturn")
+        && (param0Type m |> Option.bind typeFullName) = Some "Ranvier.Internal.AsyncCancellationToken"
+
+    /// Whether `m` is `AsyncMemoBuilder.Policy`.
+    let isCePolicyCall (m: FSharpMemberOrFunctionOrValue) : bool =
+        ceBuilder m = Some CeKind.AsyncMemo
+        && m.LogicalName = "Policy"
+
+    /// Whether `Step.Lambda` immediately inside argument `index` of `count` of `m` is a `Ranvier.CE` control/continuation
+    /// thunk rather than a user callback.
+    let isCeStepLambda (m: FSharpMemberOrFunctionOrValue) (index: int) (count: int) : bool =
+        if (ceBuilder m).IsNone then
+            false
+        else
+            match m.LogicalName, index, count with
+            | "Delay", 0, 1
+            | ("For" | "Combine" | "Using" | "Bind" | "BindReturn"), 1, 2
+            | ("While" | "TryWith" | "TryFinally"), (0 | 1), 2 -> true
+            | _ -> false
+
+    /// Whether `m` is `MergeSources` on a `Ranvier.CE` builder.
+    let isMergeSources (m: FSharpMemberOrFunctionOrValue) : bool =
+        (ceBuilder m).IsSome
+        && m.LogicalName = "MergeSources"
+
+    /// Whether `m` is `Ranvier.CE.Builders.withComparer`.
+    let isWithComparer (m: FSharpMemberOrFunctionOrValue) : bool =
+        enclosing m = "Ranvier.CE.Builders"
+        && m.LogicalName = "withComparer"
+
     let private creatorFunctions =
         set
             [
@@ -342,16 +551,27 @@ module Core =
                 "createMemoWithComparer"
                 "createMemoWith"
                 "createOwningMemoWithComparer"
+                "createMemoOn"
+                "createMemoOnWithComparer"
+                "createMemoWithOn"
+                "createOwningMemoOnWithComparer"
                 "createEffect"
+                "createEffectNode"
                 "createEffectOn"
                 "createEffectOnWithComparer"
                 "createAsync"
                 "createAsyncWith"
                 "createAsyncWithPolicy"
                 "createOwningAsyncWithPolicy"
+                "createAsyncOn"
+                "createAsyncWithOn"
+                "createAsyncOnWithPolicy"
+                "createOwningAsyncOnWithPolicy"
                 "createAsyncSource"
                 "createStream"
                 "createStreamFold"
+                "createStreamOn"
+                "createStreamFoldOn"
                 "createSuspense"
                 "createSuspenseWithComparer"
                 "createErrorBoundary"
@@ -368,7 +588,78 @@ module Core =
                 "createLookup"
                 "createSelector"
                 "createOptionMemo"
+                "createEditable"
+                "createDraft"
                 "onCleanup"
+            ]
+
+    let private creatorModules: Map<string, Set<string>> =
+        let combinators = set [ "map"; "map2"; "zip"; "bind" ]
+
+        Map.ofList
+            [
+                Api, creatorFunctions
+                "Ranvier.TimedCombinators",
+                set
+                    [
+                        "debounce"
+                        "debounceWith"
+                        "throttle"
+                        "throttleWith"
+                        "throttleFirst"
+                        "throttleFirstWith"
+                        "throttleLast"
+                        "throttleLastWith"
+                    ]
+                "Ranvier.SignalModule", combinators
+                "Ranvier.MemoModule", combinators
+                "Ranvier.AsyncMemoModule", Set.add "bindWithPolicy" combinators
+                "Ranvier.AsyncSourceModule", combinators
+                "Ranvier.StreamMemoModule", Set.add "bindFold" combinators
+                "Ranvier.ProjectionModule",
+                set
+                    [
+                        "filter"
+                        "choose"
+                        "map"
+                        "mapWith"
+                        "sortBy"
+                        "sortByDescending"
+                        "take"
+                        "skip"
+                        "sub"
+                        "groupBy"
+                        "partition"
+                        "distinctBy"
+                        "foldGroup"
+                        "fold"
+                        "foldGroupBy"
+                        "sumBy"
+                        "countBy"
+                        "exists"
+                        "forall"
+                        "length"
+                        "isEmpty"
+                        "tryHead"
+                        "tryLast"
+                        "tryItem"
+                        "head"
+                        "last"
+                        "item"
+                        "tryFind"
+                        "tryFindKey"
+                        "tryPick"
+                        "find"
+                        "findKey"
+                        "pick"
+                        "tryAverageBy"
+                        "averageBy"
+                        "tryMinBy"
+                        "tryMaxBy"
+                        "minBy"
+                        "maxBy"
+                    ]
+                "Ranvier.GroupingModule", set [ "aggregate" ]
             ]
 
     let private creatorTypes =
@@ -376,10 +667,14 @@ module Core =
 
     /// Whether a call of `m` creates an owned node.
     let isCreator (m: FSharpMemberOrFunctionOrValue) : bool =
-        (enclosing m = Api
-         && creatorFunctions.Contains m.LogicalName)
+        (creatorModules
+         |> Map.tryFind (enclosing m)
+         |> Option.exists (fun names -> names.Contains m.LogicalName))
         || (m.IsConstructor
             && creatorTypes.Contains (enclosing m))
+        || (match isCeRun m with
+            | Some kind -> kind <> CeKind.Row
+            | None -> false)
 
     /// Whether the lambda argument of a call of `m` runs in the caller's run: `untrack`, `batch`, and the `Delay` of a
     /// task expression.
@@ -394,9 +689,14 @@ module Core =
     [<RequireQualifiedAccess>]
     type Pure =
         | Memo
+        | MemoRead
         | Async
+        | AsyncRead
         | EffectOn
         | Map
+        | Mapping
+        | Stream
+        | Timed
         | Reader
         | LookupF
         | LookupAffected
@@ -424,18 +724,61 @@ module Core =
             [
                 (Api, "createMemo", 0), context Pure.Memo 1 (Some "createMemoWith")
                 (Api, "createMemoWithComparer", 1), context Pure.Memo 1 (Some "createOwningMemoWithComparer")
+                (Api, "createMemoOn", 0), context Pure.MemoRead 1 None
+                (Api, "createMemoOn", 1), context Pure.Memo 1 (Some "createMemoWithOn")
+                (Api, "createMemoOnWithComparer", 1), context Pure.MemoRead 1 None
+                (Api, "createMemoOnWithComparer", 2), context Pure.Memo 1 (Some "createOwningMemoOnWithComparer")
+                (Api, "createMemoWithOn", 0), context Pure.MemoRead 1 None
+                (Api, "createOwningMemoOnWithComparer", 1), context Pure.MemoRead 1 None
                 (Api, "createAsync", 0), context Pure.Async 2 (Some "createAsyncWith")
                 (Api, "createAsyncWithPolicy", 1), context Pure.Async 2 (Some "createOwningAsyncWithPolicy")
+                (Api, "createAsyncOn", 0), context Pure.AsyncRead 1 None
+                (Api, "createAsyncOn", 1), context Pure.Async 3 (Some "createAsyncWithOn")
+                (Api, "createAsyncOnWithPolicy", 1), context Pure.AsyncRead 1 None
+                (Api, "createAsyncOnWithPolicy", 2), context Pure.Async 3 (Some "createOwningAsyncOnWithPolicy")
+                (Api, "createAsyncWithOn", 0), context Pure.AsyncRead 1 None
+                (Api, "createOwningAsyncOnWithPolicy", 1), context Pure.AsyncRead 1 None
                 (Api, "createEffectOn", 0), context Pure.EffectOn 1 None
                 (Api, "createEffectOnWithComparer", 1), context Pure.EffectOn 1 None
+                (Api, "createStream", 0), context Pure.Stream 1 None
+                (Api, "createStreamFold", 2), context Pure.Stream 1 None
+                (Api, "createStreamOn", 0), context Pure.Stream 1 None
+                (Api, "createStreamOn", 1), context Pure.Stream 2 None
+                (Api, "createStreamFoldOn", 2), context Pure.Stream 1 None
+                (Api, "createStreamFoldOn", 3), context Pure.Stream 2 None
                 (Api, "createProjection", 1), context Pure.Map 1 None
                 (Api, "createIndexProjection", 0), context Pure.Map 1 None
                 (Api, "createProjectionWith", 1), context Pure.Reader 2 None
+                (Api, "createProjectionWithOptions", 2), context Pure.Reader 2 None
                 (Api, "createIndexProjectionWith", 0), context Pure.Reader 2 None
                 (Api, "createLookup", 0), context Pure.LookupF 2 None
                 (Api, "createLookup", 1), context Pure.LookupAffected 2 None
                 (Api, "createEditable", 0), context Pure.Seed 1 None
                 (Api, "createDraft", 0), context Pure.Seed 1 None
+                ("Ranvier.TimedCombinators", "debounce", 1), context Pure.Timed 1 None
+                ("Ranvier.TimedCombinators", "debounceWith", 2), context Pure.Timed 1 None
+                ("Ranvier.TimedCombinators", "throttle", 1), context Pure.Timed 1 None
+                ("Ranvier.TimedCombinators", "throttleWith", 2), context Pure.Timed 1 None
+                ("Ranvier.TimedCombinators", "throttleFirst", 1), context Pure.Timed 1 None
+                ("Ranvier.TimedCombinators", "throttleFirstWith", 2), context Pure.Timed 1 None
+                ("Ranvier.TimedCombinators", "throttleLast", 1), context Pure.Timed 1 None
+                ("Ranvier.TimedCombinators", "throttleLastWith", 2), context Pure.Timed 1 None
+                ("Ranvier.SignalModule", "map", 0), context Pure.Mapping 1 None
+                ("Ranvier.SignalModule", "map2", 0), context Pure.Mapping 2 None
+                ("Ranvier.MemoModule", "map", 0), context Pure.Mapping 1 None
+                ("Ranvier.MemoModule", "map2", 0), context Pure.Mapping 2 None
+                ("Ranvier.AsyncMemoModule", "map", 0), context Pure.Mapping 1 None
+                ("Ranvier.AsyncMemoModule", "map2", 0), context Pure.Mapping 2 None
+                ("Ranvier.AsyncMemoModule", "bind", 0), context Pure.AsyncRead 2 None
+                ("Ranvier.AsyncMemoModule", "bindWithPolicy", 1), context Pure.AsyncRead 2 None
+                ("Ranvier.AsyncSourceModule", "map", 0), context Pure.Mapping 1 None
+                ("Ranvier.AsyncSourceModule", "map2", 0), context Pure.Mapping 2 None
+                ("Ranvier.AsyncSourceModule", "bind", 0), context Pure.AsyncRead 2 None
+                ("Ranvier.StreamMemoModule", "map", 0), context Pure.Mapping 1 None
+                ("Ranvier.StreamMemoModule", "map2", 0), context Pure.Mapping 2 None
+                ("Ranvier.StreamMemoModule", "bind", 0), context Pure.Stream 2 None
+                ("Ranvier.StreamMemoModule", "bindFold", 2), context Pure.Stream 2 None
+                ("Ranvier.ProjectionModule", "map", 0), context Pure.Map 1 None
                 ("Ranvier.ProjectionModule", "foldGroup", 0), context Pure.Aggregate 2 None
                 ("Ranvier.ProjectionModule", "foldGroup", 1), context Pure.Aggregate 2 None
                 ("Ranvier.ProjectionModule", "fold", 0), context Pure.Aggregate 2 None
@@ -481,30 +824,39 @@ module Core =
             && enclosing m = "Ranvier.AsyncMemo`1"
         then
             Some (count - 1)
-        elif enclosing m = Api then
-            match m.LogicalName with
-            | "createAsync"
-            | "createAsyncWith" -> Some 0
-            | "createAsyncWithPolicy"
-            | "createOwningAsyncWithPolicy" -> Some 1
-            | _ -> None
+        elif isCeRun m = Some CeKind.AsyncMemo && count = 1 then
+            Some 0
         else
-            None
+            match enclosing m, m.LogicalName with
+            | Api, ("createAsync" | "createAsyncWith") -> Some 0
+            | Api, ("createAsyncWithPolicy" | "createOwningAsyncWithPolicy" | "createAsyncOn" | "createAsyncWithOn") -> Some 1
+            | Api, ("createAsyncOnWithPolicy" | "createOwningAsyncOnWithPolicy") -> Some 2
+            | "Ranvier.AsyncMemoModule", "bind" -> Some 0
+            | "Ranvier.AsyncMemoModule", "bindWithPolicy" -> Some 1
+            | "Ranvier.AsyncSourceModule", "bind" -> Some 0
+            | _ -> None
 
-    let private ownerFunctions: Map<string * int, int> =
+    let private ownerFunctions: Map<string * string * int, int> =
         Map.ofList
             [
-                ("createSuspense", 1), 1
-                ("createSuspenseWithComparer", 2), 1
-                ("createErrorBoundary", 1), 1
-                ("createErrorBoundaryWithComparer", 2), 1
-                ("createBoundary", 2), 1
-                ("createBoundaryWithComparer", 3), 1
-                ("createMemoWith", 0), 1
-                ("createOwningMemoWithComparer", 1), 1
-                ("createEffect", 0), 1
-                ("createAsyncWith", 0), 2
-                ("createOwningAsyncWithPolicy", 1), 2
+                (Api, "createSuspense", 1), 1
+                (Api, "createSuspenseWithComparer", 2), 1
+                (Api, "createErrorBoundary", 1), 1
+                (Api, "createErrorBoundaryWithComparer", 2), 1
+                (Api, "createBoundary", 2), 1
+                (Api, "createBoundaryWithComparer", 3), 1
+                (Api, "createMemoWith", 0), 1
+                (Api, "createOwningMemoWithComparer", 1), 1
+                (Api, "createMemoWithOn", 1), 1
+                (Api, "createOwningMemoOnWithComparer", 2), 1
+                (Api, "createEffect", 0), 1
+                (Api, "createEffectNode", 0), 1
+                (Api, "createAsyncWith", 0), 2
+                (Api, "createAsyncWithOn", 1), 3
+                (Api, "createOwningAsyncWithPolicy", 1), 2
+                (Api, "createOwningAsyncOnWithPolicy", 2), 3
+                ("Ranvier.SignalModule", "bind", 0), 1
+                ("Ranvier.MemoModule", "bind", 0), 1
             ]
 
     /// The lambdas before the body when argument `index` of `count` arguments of a call of `m` is an owner body: a
@@ -516,11 +868,9 @@ module Core =
             && index = count - 1
         then
             Some 1
-        elif enclosing m = Api then
-            ownerFunctions
-            |> Map.tryFind (m.LogicalName, index)
         else
-            None
+            ownerFunctions
+            |> Map.tryFind (enclosing m, m.LogicalName, index)
 
     /// Whether a call of `m` creates an async value: an async memo, an async source or a stream.
     let isAsyncCreator (m: FSharpMemberOrFunctionOrValue) : bool =
@@ -529,7 +879,19 @@ module Core =
         || (enclosing m = Api
             && (m.LogicalName.StartsWith ("createAsync", StringComparison.Ordinal)
                 || m.LogicalName.StartsWith ("createStream", StringComparison.Ordinal)
-                || m.LogicalName = "createOwningAsyncWithPolicy"))
+                || m.LogicalName = "createOwningAsyncWithPolicy"
+                || m.LogicalName = "createOwningAsyncOnWithPolicy"))
+        || (enclosing m = "Ranvier.AsyncMemoModule"
+            && (m.LogicalName = "bind"
+                || m.LogicalName = "bindWithPolicy"))
+        || (enclosing m = "Ranvier.AsyncSourceModule"
+            && m.LogicalName = "bind")
+        || (enclosing m = "Ranvier.StreamMemoModule"
+            && (m.LogicalName = "bind"
+                || m.LogicalName = "bindFold"))
+        || (match isCeRun m with
+            | Some (CeKind.AsyncMemo | CeKind.Stream) -> true
+            | _ -> false)
 
     /// Whether a call of `m` writes a signal or pumps the graph: work the graph's owning thread must do.
     let isGraphWrite (m: FSharpMemberOrFunctionOrValue) : bool =
@@ -562,13 +924,23 @@ module Core =
     let isBind (m: FSharpMemberOrFunctionOrValue) : bool =
         m.LogicalName.StartsWith ("Bind", StringComparison.Ordinal)
 
+    /// Whether `m` is an awaited bind whose continuation suspends on async work (`Bind*` outside `Ranvier.CE`, or
+    /// `Task`/`ValueTask` binds on `AsyncMemoBuilder`).
+    let isAwaitBind (m: FSharpMemberOrFunctionOrValue) : bool =
+        match ceBuilder m with
+        | Some CeKind.AsyncMemo -> ceBindKind m = Some CeBindKind.TaskAwait
+        | Some _ -> false
+        | None -> isBind m
+
     /// Whether `m` is a computation-expression `Combine`, whose second argument runs after its first.
     let isCombine (m: FSharpMemberOrFunctionOrValue) : bool =
         m.LogicalName = "Combine"
 
-    /// Whether `m` is a computation-expression loop, `For` or `While`, whose body runs again after its own awaits.
+    /// Whether `m` is a computation-expression loop, `For` over a sequence or `While`, whose body runs again after its
+    /// own awaits. Header `For` wrappers of `Ranvier.CE` builders are excluded.
     let isLoop (m: FSharpMemberOrFunctionOrValue) : bool =
-        m.LogicalName = "For" || m.LogicalName = "While"
+        (m.LogicalName = "For" && not (isCeHeaderFor m))
+        || m.LogicalName = "While"
 
     /// Whether `m` is a computation-expression member that runs its lambda arguments as part of the computation:
     /// `Delay`, `Combine`, a loop, `TryWith`, `TryFinally` or `Using`.
@@ -591,10 +963,13 @@ module Core =
             =
             Some "Ranvier.Graph"
 
-    /// Whether `m` creates an async value with a flight policy: `createAsyncWithPolicy` or its owning form.
+    /// Whether `m` creates an async value with a flight policy: `createAsyncWithPolicy`, `createAsyncOnWithPolicy`, or
+    /// their owning forms.
     let isPolicyCreator (m: FSharpMemberOrFunctionOrValue) : bool =
         isMember Api "createAsyncWithPolicy" m
         || isMember Api "createOwningAsyncWithPolicy" m
+        || isMember Api "createAsyncOnWithPolicy" m
+        || isMember Api "createOwningAsyncOnWithPolicy" m
 
     /// Whether `case` is `FlightPolicy.CancelPrevious`, which cancels a superseded flight's token.
     let isCancelPrevious (case: FSharpUnionCase) : bool =

@@ -175,4 +175,339 @@ let tests =
                 Expect.stringContains repaired "createMemoWith (fun _" "renamed"
                 Expect.isEmpty (run Analyzers.ran010Cli (context (ranvier.Force ()) repaired)) "no finding after the fix"
             }
+
+            test "createMemoOn read and compute report RAN010, and compute fixes to createMemoWithOn" {
+                let source =
+                    "module Fixture\nopen Ranvier\nlet s = createSignal 1\nlet m () = createMemoOn (fun () -> createEffect ignore; s.Value) (fun x -> onCleanup ignore; x)\n"
+
+                let msgs = run Analyzers.ran010Cli (context (ranvier.Force ()) source)
+                Expect.equal (msgs |> List.map _.Code) [ "RAN010"; "RAN010" ] "both read and compute"
+                Expect.isEmpty msgs[0].Fixes "read has no owning fix"
+                let computeFix = msgs[1].Fixes |> List.exactlyOne
+                let repaired = applyFix source computeFix
+                Expect.stringContains repaired "createMemoWithOn" "compute renamed"
+
+                Expect.equal
+                    (run Analyzers.ran010Cli (context (ranvier.Force ()) repaired)
+                     |> List.map _.Code)
+                    [ "RAN010" ]
+                    "only read remains"
+            }
+
+            test "createMemoOnWithComparer compute fixes to createOwningMemoOnWithComparer, and owning variants allow creators in compute" {
+                let source =
+                    "module Fixture\nopen Ranvier\nlet s = createSignal 1\nlet m () = createMemoOnWithComparer HashIdentity.Structural (fun () -> s.Value) (fun x -> createEffect ignore; x)\n"
+
+                let msgs = run Analyzers.ran010Cli (context (ranvier.Force ()) source)
+                Expect.equal (msgs |> List.map _.Code) [ "RAN010" ] "compute only"
+                let repaired = applyFix source (msgs.Head.Fixes |> List.exactlyOne)
+                Expect.stringContains repaired "createOwningMemoOnWithComparer" "renamed"
+                Expect.isEmpty (run Analyzers.ran010Cli (context (ranvier.Force ()) repaired)) "clean after fix"
+
+                Expect.isEmpty
+                    (codes "let ok () = createMemoWithOn (fun () -> 1) (fun x -> createEffect ignore; x)\n")
+                    "createMemoWithOn compute is owning"
+
+                Expect.equal
+                    (codes
+                        "let bad () = createOwningMemoOnWithComparer HashIdentity.Structural (fun () -> onCleanup ignore; 1) (fun x -> createEffect ignore; x)\n")
+                    [ "RAN010" ]
+                    "read stays pure on owning form"
+            }
+
+            test "createAsyncOn and createAsyncOnWithPolicy fix to owning variants, and createAsyncWithOn is owning in compute" {
+                for before, after in
+                    [
+                        "createAsyncOn (fun () -> 1) (fun x _ _ -> createEffect ignore; Task.FromResult x)", "createAsyncWithOn (fun () -> 1)"
+                        "createAsyncOnWithPolicy FlightPolicy.KeepLatest (fun () -> 1) (fun x _ _ -> createEffect ignore; Task.FromResult x)",
+                        "createOwningAsyncOnWithPolicy FlightPolicy.KeepLatest (fun () -> 1)"
+                    ] do
+                    let source =
+                        "module Fixture\nopen Ranvier\nopen System.Threading.Tasks\nlet a () = "
+                        + before
+                        + "\n"
+
+                    let msgs = run Analyzers.ran010Cli (context (ranvier.Force ()) source)
+                    Expect.equal (msgs |> List.map _.Code) [ "RAN010" ] "one finding"
+                    let repaired = applyFix source (msgs.Head.Fixes |> List.exactlyOne)
+                    Expect.stringContains repaired after "renamed"
+                    Expect.isEmpty (run Analyzers.ran010Cli (context (ranvier.Force ()) repaired)) "clean after fix"
+
+                Expect.equal
+                    (codes "let bad () = createAsyncWithOn (fun () -> onCleanup ignore; 1) (fun x _ _ -> createEffect ignore; Task.FromResult x)\n")
+                    [ "RAN010" ]
+                    "read is pure while compute is owning"
+
+                Expect.isEmpty
+                    (codes
+                        "let ok () = createOwningAsyncOnWithPolicy FlightPolicy.KeepLatest (fun () -> 1) (fun x _ _ -> onCleanup ignore; Task.FromResult x)\n")
+                    "owning async with policy allows cleanup"
+            }
+
+            test "stream, combinator, timed, projection, and grouping creators and pure contexts" {
+                let body1 =
+                    "let s = createSignal 1
+let st = createStreamOn (fun () -> onCleanup ignore; s.Value) (fun _ _ -> createEffect ignore; Unchecked.defaultof<StreamSource<int>>)
+let stf = createStreamFoldOn 0 (+) (fun () -> onCleanup ignore; s.Value) (fun _ _ -> createEffect ignore; Unchecked.defaultof<StreamSource<int>>)
+"
+
+                Expect.equal (codes body1) [ "RAN010"; "RAN010"; "RAN010"; "RAN010" ] "createStreamOn and createStreamFoldOn"
+
+                let body2 =
+                    "let s = createSignal 1
+let sm = s |> Signal.map (fun x -> createEffect ignore; x)
+let sm2 = Signal.map2 (fun a b -> onCleanup ignore; a + b) s s
+let sb = s |> Signal.bind (fun x -> createEffect ignore; createMemo (fun _ -> x))
+let ab = createAsync (fun _ _ -> Task.FromResult 1) |> AsyncMemo.bind (fun x _ -> createEffect ignore; Task.FromResult x)
+let abp = createAsync (fun _ _ -> Task.FromResult 1) |> AsyncMemo.bindWithPolicy FlightPolicy.KeepLatest (fun x _ -> createEffect ignore; Task.FromResult x)
+let asb = (createAsyncSource<int> ()) |> AsyncSource.bind (fun x _ -> createEffect ignore; Task.FromResult x)
+let smb = createStream (fun _ -> Unchecked.defaultof<StreamSource<int>>) |> StreamMemo.bind (fun _ _ -> createEffect ignore; Unchecked.defaultof<StreamSource<int>>)
+let timed (g: Graph) = debounce System.TimeSpan.Zero (fun () -> onCleanup ignore; s.Value) g
+"
+
+                Expect.equal
+                    (codes body2)
+                    [ "RAN010"; "RAN010"; "RAN010"; "RAN010"; "RAN010"; "RAN010"; "RAN010" ]
+                    "combinators and debounce (Signal.bind is owning)"
+
+                let makeInPure expr =
+                    $"let s = createSignal 1\nlet inPure (p: Projection<int, int>) (l: Lookup<int, int>) (g: Grouping<int, int, int>) =\n    createMemo (fun _ ->\n        {expr}\n        ())\n"
+
+                Expect.equal (codes (makeInPure "createEffectNode ignore |> ignore")) [ "RAN010" ] "createEffectNode in pure memo"
+                Expect.isEmpty (codes (makeInPure "Signal.update s id")) "Signal.update is not a creator"
+                Expect.isEmpty (codes (makeInPure "Projection.at 1 p |> ignore")) "Projection.at is not a creator"
+                Expect.isEmpty (codes (makeInPure "Projection.keys p |> ignore")) "Projection.keys is not a creator"
+                Expect.isEmpty (codes (makeInPure "Lookup.tryAt 1 l |> ignore")) "Lookup.tryAt is not a creator"
+                Expect.equal (codes (makeInPure "p |> Projection.filter (fun v -> v > 0) |> ignore")) [ "RAN010" ] "Projection.filter in pure memo"
+                Expect.equal (codes (makeInPure "p |> Projection.sumBy id |> ignore")) [ "RAN010" ] "Projection.sumBy in pure memo"
+                Expect.equal (codes (makeInPure "g |> Grouping.aggregate Projection.length |> ignore")) [ "RAN010" ] "Grouping.aggregate in pure memo"
+                Expect.equal (codes (makeInPure "p |> Projection.length |> ignore")) [ "RAN010" ] "Projection.length in pure memo"
+                Expect.equal (codes (makeInPure "s |> Signal.map id |> ignore")) [ "RAN010" ] "Signal.map in pure memo"
+                Expect.equal (codes (makeInPure "createEditable (fun _ -> 1) |> ignore")) [ "RAN010" ] "createEditable in pure memo"
+                Expect.equal (codes (makeInPure "createDraft (fun _ -> 1) |> ignore")) [ "RAN010" ] "createDraft in pure memo"
+            }
+
+            test "memo CE pure vs owning vs option vs MemoTail return!" {
+                let ce (extra: string) =
+                    "module Fixture\nopen System\nopen System.Threading\nopen System.Threading.Tasks\nopen Ranvier\nopen Ranvier.CE\n"
+                    + extra
+
+                let pureMemoSrc =
+                    ce
+                        "let s = createSignal 1
+let m () =
+    memo {
+        let! x = s
+        createEffect ignore
+        return x
+    }
+"
+
+                let msgs = run Analyzers.ran010Cli (context (ranvier.Force ()) pureMemoSrc)
+                Expect.equal (msgs |> List.map _.Code) [ "RAN010" ] "pure memo CE"
+                let repaired = applyFix pureMemoSrc (msgs.Head.Fixes |> List.exactlyOne)
+                Expect.stringContains repaired "owning" "inserts owning"
+                Expect.isEmpty (run Analyzers.ran010Cli (context (ranvier.Force ()) repaired)) "clean after fix"
+
+                let singleLineSrc =
+                    ce "let s = createSignal 1\nlet m () = memo { createEffect ignore; return s.Value }\n"
+
+                let singleMsgs = run Analyzers.ran010Cli (context (ranvier.Force ()) singleLineSrc)
+                Expect.equal (singleMsgs |> List.map _.Code) [ "RAN010" ] "single-line pure memo"
+
+                let singleRepaired =
+                    applyFix singleLineSrc (singleMsgs.Head.Fixes |> List.exactlyOne)
+
+                Expect.isEmpty (run Analyzers.ran010Cli (context (ranvier.Force ()) singleRepaired)) "single-line fix compiles and is clean"
+
+                let comparerMemoSrc =
+                    ce
+                        "let s = createSignal 1
+let m () =
+    memo {
+        comparer HashIdentity.Structural
+        let! x = s
+        createEffect ignore
+        return x
+    }
+"
+
+                let cmpMsgs = run Analyzers.ran010Cli (context (ranvier.Force ()) comparerMemoSrc)
+                Expect.equal (cmpMsgs |> List.map _.Code) [ "RAN010" ] "comparer pure memo"
+                let cmpRepaired = applyFix comparerMemoSrc (cmpMsgs.Head.Fixes |> List.exactlyOne)
+                Expect.isEmpty (run Analyzers.ran010Cli (context (ranvier.Force ()) cmpRepaired)) "comparer memo owning fix compiles cleanly"
+
+                let owningClean =
+                    ce
+                        "let s = createSignal 1
+let m () =
+    memo {
+        owning
+        let! x = s
+        createEffect ignore
+        return x
+    }
+"
+
+                Expect.isEmpty (run Analyzers.ran010Cli (context (ranvier.Force ()) owningClean)) "owning memo Phase 2 is clean"
+
+                let owningPhase1Bad =
+                    ce
+                        "let s = createSignal 1
+let m () =
+    memo {
+        owning
+        let! x = (createEffect ignore; s)
+        createEffect ignore
+        return x
+    }
+"
+
+                let phase1Msgs =
+                    run Analyzers.ran010Cli (context (ranvier.Force ()) owningPhase1Bad)
+
+                Expect.equal (phase1Msgs |> List.map _.Code) [ "RAN010" ] "Phase 1 stays pure even with owning"
+                Expect.isEmpty phase1Msgs.Head.Fixes "Phase 1 violation offers no owning fix"
+
+                let phase1WithComparerBad =
+                    ce
+                        "let s = createSignal 1
+let m () =
+    memo {
+        owning
+        let! x = (createEffect ignore; s) |> withComparer HashIdentity.Structural
+        return x
+    }
+"
+
+                let cmpPhase1Msgs =
+                    run Analyzers.ran010Cli (context (ranvier.Force ()) phase1WithComparerBad)
+
+                Expect.equal (cmpPhase1Msgs |> List.map _.Code) [ "RAN010" ] "Phase 1 through withComparer stays pure"
+                Expect.isEmpty cmpPhase1Msgs.Head.Fixes "Phase 1 through withComparer offers no owning fix"
+
+                let optionBad =
+                    ce
+                        "let s = createSignal 1
+let m () =
+    memo {
+        option
+        let! x = s
+        createEffect ignore
+        return Some x
+    }
+"
+
+                let optionMsgs = run Analyzers.ran010Cli (context (ranvier.Force ()) optionBad)
+                Expect.equal (optionMsgs |> List.map _.Code) [ "RAN010" ] "option memo Phase 2 is pure"
+                Expect.isEmpty optionMsgs.Head.Fixes "option cannot combine with owning"
+
+                let tailClean =
+                    ce
+                        "let s = createSignal 1
+let s2 = createSignal 2
+let m () =
+    memo {
+        let! x = s
+        return! memo {
+            let! y = s2
+            return x + y
+        }
+    }
+"
+
+                Expect.isEmpty (run Analyzers.ran010Cli (context (ranvier.Force ()) tailClean)) "MemoTail SplitBind binder owns inner memo"
+
+                let tailInnerBad =
+                    ce
+                        "let s = createSignal 1
+let s2 = createSignal 2
+let m () =
+    memo {
+        let! x = s
+        return! memo {
+            let! y = s2
+            createEffect ignore
+            return x + y
+        }
+    }
+"
+
+                let tailInnerMsgs =
+                    run Analyzers.ran010Cli (context (ranvier.Force ()) tailInnerBad)
+
+                Expect.equal (tailInnerMsgs |> List.map _.Code) [ "RAN010" ] "inner non-owning memo in return! still reports RAN010"
+            }
+
+            test "effect, asyncMemo, editable, draft, stream, and row CEs" {
+                let ce (extra: string) =
+                    "module Fixture\nopen System\nopen System.Threading\nopen System.Threading.Tasks\nopen Ranvier\nopen Ranvier.CE\n"
+                    + extra
+
+                let asyncPureSrc =
+                    ce
+                        "let s = createSignal 1
+let a () =
+    asyncMemo {
+        let! x = s
+        createEffect ignore
+        do! Task.CompletedTask
+        return x
+    }
+"
+
+                let asyncMsgs = run Analyzers.ran010Cli (context (ranvier.Force ()) asyncPureSrc)
+                Expect.equal (asyncMsgs |> List.map _.Code) [ "RAN010" ] "non-owning asyncMemo"
+                let asyncRepaired = applyFix asyncPureSrc (asyncMsgs.Head.Fixes |> List.exactlyOne)
+                Expect.isEmpty (run Analyzers.ran010Cli (context (ranvier.Force ()) asyncRepaired)) "asyncMemo owning fix cleans pre-await"
+
+                let mixed =
+                    ce
+                        "let s = createSignal 1
+let e () =
+    effect {
+        let! x = (onCleanup ignore; s)
+        createEffect ignore
+        ignore x
+    }
+let aOwning () =
+    asyncMemo {
+        owning
+        let! x = (createEffect ignore; s)
+        createEffect ignore
+        do! Task.CompletedTask
+        return x
+    }
+let ed () = editable { let! x = s in createEffect ignore; return x }
+let dr () = draft { let! x = s in createEffect ignore; return x }
+let st () = stream { let! x = s in createEffect ignore; return Unchecked.defaultof<StreamSource<int>> }
+let proj () =
+    createProjectionWith id (fun item ->
+        row {
+            let! v = item
+            createEffect ignore
+            return v + 1
+        }) (fun () -> [ 1 ])
+let projOk () =
+    createProjectionWith id (fun item ->
+        row {
+            let! v = item
+            return v + 1
+        }) (fun () -> [ 1 ])
+let callbackOk (handlers: ResizeArray<unit -> unit>) =
+    memo {
+        handlers.Add (fun () -> createEffect ignore)
+        return 1
+    }
+"
+
+                let mixedCodes =
+                    run Analyzers.ran010Cli (context (ranvier.Force ()) mixed)
+                    |> List.map _.Code
+
+                Expect.equal
+                    mixedCodes
+                    [ "RAN010"; "RAN010"; "RAN010"; "RAN010"; "RAN010"; "RAN010" ]
+                    "effect Phase1, asyncMemo owning Phase1, editable, draft, stream, row (projOk and callbackOk clean)"
+            }
         ]

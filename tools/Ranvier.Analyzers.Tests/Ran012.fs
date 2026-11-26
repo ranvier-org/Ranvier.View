@@ -215,4 +215,140 @@ let tests =
 
                 Expect.isEmpty (codes body) "user type"
             }
+
+            test "StreamMemo and Timed Value after await are reactive reads" {
+                let body =
+                    "let load (st: StreamMemo<int>) (tm: Timed<int>) =
+    createAsync (fun _ _ ->
+        task {
+            do! Task.Yield ()
+            return st.Value + tm.Value
+        })
+"
+
+                Expect.equal (codes body) [ "RAN012"; "RAN012" ] "StreamMemo and Timed"
+            }
+
+            test "createAsyncOn* and AsyncMemo/AsyncSource.bind reads after await" {
+                let body =
+                    "let load (k: Signal<int>) (s: Signal<int>) (am: AsyncMemo<int>) (src: AsyncSource<int>) =
+    let a1 = createAsyncOn (fun () -> k.Value) (fun _ _ _ -> task {
+        do! Task.Yield ()
+        return s.Value
+    })
+    let a2 = createAsyncOnWithPolicy FlightPolicy.KeepLatest (fun () -> k.Value) (fun _ _ _ -> task {
+        do! Task.Yield ()
+        return s.Value
+    })
+    let a3 = createAsyncWithOn (fun () -> k.Value) (fun _ _ _ -> task {
+        do! Task.Yield ()
+        return s.Value
+    })
+    let a4 = am |> AsyncMemo.bind (fun _ _ -> task {
+        do! Task.Yield ()
+        return s.Value
+    })
+    let a5 = src |> AsyncSource.bind (fun _ _ -> task {
+        do! Task.Yield ()
+        return s.Value
+    })
+    a1, a2, a3, a4, a5
+"
+
+                Expect.equal (codes body) [ "RAN012"; "RAN012"; "RAN012"; "RAN012"; "RAN012" ] "all PR #389 async compute forms"
+            }
+
+            test "asyncMemo CE reads after Task or ValueTask await report RAN012, while pre-await or no-Task binds do not" {
+                let ce (extra: string) =
+                    "module Fixture
+open Ranvier
+open Ranvier.CE
+open System.Threading.Tasks
+"
+                    + extra
+
+                let triggers =
+                    ce
+                        "let load (userId: Signal<int>) (flag: bool) =
+    let a1 =
+        asyncMemo {
+            do! Task.CompletedTask
+            return userId.Value
+        }
+    let a2 =
+        asyncMemo {
+            let! _ = Task.FromResult 1
+            return userId.Value
+        }
+    let a3 =
+        asyncMemo {
+            do! ValueTask.CompletedTask
+            return userId.Value
+        }
+    let a4 =
+        asyncMemo {
+            let! _ = ValueTask.FromResult 1
+            return userId.Value
+        }
+    let a5 =
+        asyncMemo {
+            if flag then
+                do! Task.CompletedTask
+            return userId.Value
+        }
+    let a6 =
+        asyncMemo {
+            for _ in 1..2 do
+                let n = userId.Value
+                do! Task.Delay n
+            return 0
+        }
+    a1, a2, a3, a4, a5, a6
+"
+
+                Expect.equal
+                    (run Analyzers.ran012Cli (context (ranvier.Force ()) triggers)
+                     |> List.map _.Code)
+                    [ "RAN012"; "RAN012"; "RAN012"; "RAN012"; "RAN012"; "RAN012" ]
+                    "asyncMemo CE post-await reads"
+
+                let clean =
+                    ce
+                        "let load (s: Signal<int>) (other: Signal<int>) =
+    let preAwait =
+        asyncMemo {
+            let x = other.Value
+            do! Task.CompletedTask
+            return x
+        }
+    let phase2NoAwait =
+        asyncMemo {
+            let! x = s
+            return x + other.Value
+        }
+    let withHeader =
+        asyncMemo {
+            policy FlightPolicy.CancelPrevious
+            let x = other.Value
+            do! Task.CompletedTask
+            return x
+        }
+    let nestedEffectAfterAwait =
+        asyncMemo {
+            do! Task.CompletedTask
+            effect { ignore other.Value }
+            return 1
+        }
+    let peekAfterAwait =
+        asyncMemo {
+            do! Task.CompletedTask
+            return other.Peek
+        }
+    preAwait, phase2NoAwait, withHeader, nestedEffectAfterAwait, peekAfterAwait
+"
+
+                Expect.isEmpty
+                    (run Analyzers.ran012Cli (context (ranvier.Force ()) clean))
+                    "pre-await, no-await Phase2 (RAN016's), headers, nested effects, and Peek stay clean in RAN012"
+            }
         ]

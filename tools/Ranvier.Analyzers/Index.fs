@@ -104,8 +104,7 @@ let private redex (fn: FSharpExpr) (arguments: FSharpExpr list) =
     | _ -> None
 
 let private isPipe (name: string) (m: FSharpMemberOrFunctionOrValue) =
-    m.LogicalName = name
-    && Symbols.enclosing m = Symbols.Operators
+    Symbols.isPipe name m
 
 /// Excludes the compiler-generated `CompareTo`, `Equals` and `GetHashCode`.
 let private generatedComparison (value: FSharpMemberOrFunctionOrValue) =
@@ -149,11 +148,38 @@ let private build (file: FSharpImplementationFileContents) : FileIndex =
                 walk step bound
             | _ -> walk step argument)
 
-    and apply path (expr: FSharpExpr) (fn: FSharpExpr) (arguments: FSharpExpr list) =
+    and walkLet
+        (path: Step list)
+        (value: FSharpMemberOrFunctionOrValue)
+        (bound: FSharpExpr)
+        (body: FSharpExpr)
+        (cont: Step list -> FSharpExpr -> unit)
+        =
+        lets.Add
+            {
+                Value = value
+                Bound = bound
+                Body = body
+                Path = path
+            }
+
+        match bound with
+        | Lambda _ when value.IsCompilerGenerated ->
+            hoisted[value] <- bound
+            cont path body
+
+            if hoisted.Remove value then
+                walk (Step.Bound value :: path) bound
+        | _ ->
+            walk (Step.Bound value :: path) bound
+            cont path body
+
+    and apply (path: Step list) (expr: FSharpExpr) (fn: FSharpExpr) (arguments: FSharpExpr list) =
         match redex fn arguments with
         | Some (receiver, callee, substituted) -> call path expr.Range receiver callee substituted
         | None ->
             match fn with
+            | Let ((value, bound, _), body) -> walkLet path value bound body (fun innerPath innerFn -> apply innerPath expr innerFn arguments)
             | Lambda (parameter, body) ->
                 arguments
                 |> List.iter (walk (Step.Applied parameter :: path))
@@ -171,25 +197,7 @@ let private build (file: FSharpImplementationFileContents) : FileIndex =
         | NewObject (constructor, _, arguments) -> call path expr.Range None constructor arguments
         | Application (fn, _, arguments) -> apply path expr fn arguments
         | Lambda (parameter, body) -> walk (Step.Lambda (Some parameter, false) :: path) body
-        | Let ((value, bound, _), body) ->
-            lets.Add
-                {
-                    Value = value
-                    Bound = bound
-                    Body = body
-                    Path = path
-                }
-
-            match bound with
-            | Lambda _ when value.IsCompilerGenerated ->
-                hoisted[value] <- bound
-                walk path body
-
-                if hoisted.Remove value then
-                    walk (Step.Bound value :: path) bound
-            | _ ->
-                walk (Step.Bound value :: path) bound
-                walk path body
+        | Let ((value, bound, _), body) -> walkLet path value bound body walk
         | ObjectExpr (_, baseCall, overrides, interfaces) ->
             walk path baseCall
 
