@@ -4,10 +4,10 @@ order: 1
 ---
 
 :::info
-The `Ranvier.Analyzers` package at `0.1.1` restores its pinned analyzer host automatically. Reference it and set `RanvierAnalyze`:
+The `Ranvier.Analyzers` package at `0.2.0` restores its pinned analyzer host automatically. Reference it and set `RanvierAnalyze`:
 
 ```xml
-<PackageReference Include="Ranvier.Analyzers" Version="0.1.1" PrivateAssets="all" />
+<PackageReference Include="Ranvier.Analyzers" Version="0.2.0" PrivateAssets="all" />
 <PropertyGroup>
   <RanvierAnalyze>true</RanvierAnalyze>
 </PropertyGroup>
