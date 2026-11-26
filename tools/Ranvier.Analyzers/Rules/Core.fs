@@ -1,4 +1,4 @@
-/// RAN010-RAN015: core graph traps.
+/// RAN010-RAN018: core graph and computation-expression rules.
 module Ranvier.Analyzers.Rules.Core
 
 open System.Collections.Generic
@@ -243,7 +243,12 @@ let private owningHeaderFix (input: Input) (runSite: CallSite) : Fix list =
                       && (textLine[i] = ' ' || textLine[i] = '\t') do
                     i <- i + 1
 
-                if i >= textLine.Length then
+                if
+                    i >= textLine.Length
+                    || (i + 1 < textLine.Length
+                        && textLine[i] = '/'
+                        && textLine[i + 1] = '/')
+                then
                     findFirstToken (line + 1) 0
                 else
                     Some (line, i, textLine)
@@ -483,7 +488,7 @@ let private recreated (input: Input) : Message list =
                 ->
                 Some (callee, false)
             | CeKind.Effect, false -> Some (callee, false)
-            | CeKind.Boundary, _ -> Some (callee, false)
+            | CeKind.Boundary, false -> Some (callee, false)
             | CeKind.AsyncMemo, false when
                 asyncRunMode callee = AsyncRunMode.Owning
                 && not (afterAwait input site.Path)
@@ -773,4 +778,600 @@ let ran015: Rule =
         Title = "CancelPrevious with a body that ignores its token"
         Gate = Symbols.Assemblies.Ranvier
         Run = ignoredTokens
+    }
+
+let private isBatchOrTaskDelay (m: FSharpMemberOrFunctionOrValue) : bool =
+    isTransparent m && not (isUntrack m)
+
+/// Whether `path` executes inside an untracked closed Phase-2 body (split `*On`, static `map`/`map2`/`bind*`, or the
+/// continuation after a reactive CE `let!`) without entering a nested tracked body, `untrack`, or user closure.
+let private inUntrackedComputePhase (input: Input) (path: Step list) : bool =
+    let rec go (lambdas: int) (inReactiveCeCont: bool) (steps: Step list) : bool =
+        match steps with
+        | [] -> false
+        | Step.Lambda (_, true) :: rest -> go lambdas inReactiveCeCont rest
+        | Step.Lambda (_, false) :: Step.Argument (callee, _, _) :: _ when isUntrack callee -> false
+        | Step.Lambda (_, false) :: Step.Argument (callee, _, _) :: rest when isBatchOrTaskDelay callee -> go lambdas inReactiveCeCont rest
+        | Step.Lambda (_, false) :: Step.Argument (callee, index, count) :: rest when lambdas = 0 && isCeStepLambda callee index count ->
+            let enteredReactive =
+                index = 1
+                && count = 2
+                && ceBindKind callee = Some CeBindKind.Reactive
+
+            go 0 (inReactiveCeCont || enteredReactive) rest
+        | Step.Lambda (_, false) :: rest -> go (lambdas + 1) inReactiveCeCont rest
+        | Step.Argument (callee, 0, 2) :: rest when isCeHeaderFor callee ->
+            if lambdas = 0 then
+                let outer =
+                    match ceBuilder callee with
+                    | Some kind -> skipCeHeaderWrapper kind rest
+                    | None -> rest
+
+                go 0 inReactiveCeCont outer
+            else
+                false
+        | Step.Argument (callee, 0, 1) :: _ when (isCeRun callee).IsSome -> lambdas = 0 && inReactiveCeCont
+        | Step.Argument (callee, index, count) :: rest ->
+            if (ceBuilder callee).IsSome then
+                if lambdas = 0 then go 0 inReactiveCeCont rest else false
+            else
+                match untrackedPhaseLayers callee index with
+                | Some layers -> lambdas = layers
+                | None ->
+                    if trackedBody callee index count then false
+                    elif lambdas = 0 then go 0 inReactiveCeCont rest
+                    else false
+        | _ :: rest -> go lambdas inReactiveCeCont rest
+
+    go 0 false path && not (afterAwait input path)
+
+let private untrackedPhaseReads (input: Input) : Message list =
+    [
+        for site in input.Index.Calls do
+            match site.Receiver with
+            | Some receiver when
+                isReactiveRead site.Callee
+                && inUntrackedComputePhase input site.Path
+                ->
+                let read = text input site.Range
+                let source = text input receiver.Range
+
+                message
+                    "RAN016"
+                    Severity.Warning
+                    site.Range
+                    $"`{read}` runs inside an untracked compute phase, so changes to `{source}` never wake this computation and a pending read fails it. Bind `{source}` with `let!`/`and!` in the tracked phase, or use `{source}.Peek` / `untrack` for an intentional snapshot."
+                    []
+            | _ -> ()
+    ]
+
+let ran016: Rule =
+    {
+        Code = "RAN016"
+        Title = "Reactive read inside an untracked compute phase"
+        Gate = Symbols.Assemblies.Ranvier
+        Run = untrackedPhaseReads
+    }
+
+let private isRan017Builder (kind: CeKind) : bool =
+    match kind with
+    | CeKind.Memo
+    | CeKind.Effect
+    | CeKind.AsyncMemo
+    | CeKind.Stream
+    | CeKind.Editable
+    | CeKind.Draft
+    | CeKind.Row -> true
+    | CeKind.Boundary -> false
+
+let rec private leftmostMergeSource (expr: FSharpExpr) : FSharpExpr =
+    match expr with
+    | Coerce (_, inner) -> leftmostMergeSource inner
+    | Call (_, m, _, _, [ left; _ ]) when isMergeSources m -> leftmostMergeSource left
+    | _ -> expr
+
+let rec private exprEndPos (expr: FSharpExpr) : pos =
+    let mutable best = expr.Range.End
+
+    for sub in expr.ImmediateSubExpressions do
+        let p = exprEndPos sub
+
+        if Position.posGt p best then
+            best <- p
+
+    best
+
+let rec private isPatternProjection (locals: FSharpMemberOrFunctionOrValue list) (expr: FSharpExpr) : bool =
+    match expr with
+    | Value value -> locals |> List.contains value
+    | AddressOf inner
+    | Coerce (_, inner)
+    | TupleGet (_, _, inner)
+    | FSharpFieldGet (Some inner, _, _)
+    | UnionCaseGet (inner, _, _, _) -> isPatternProjection locals inner
+    | _ -> false
+
+/// Strips compiler-generated irrefutable pattern-destructuring `Let` bindings bound before `s1End` from `paramA`.
+let private stripPatternBinds
+    (s1End: pos)
+    (paramA: FSharpMemberOrFunctionOrValue)
+    (body: FSharpExpr)
+    : FSharpExpr * FSharpMemberOrFunctionOrValue list * FSharpMemberOrFunctionOrValue list =
+    let rec go (allLocals: FSharpMemberOrFunctionOrValue list) (namedVars: FSharpMemberOrFunctionOrValue list) (expr: FSharpExpr) =
+        match expr with
+        | Let ((value, rhs, _), rest) when
+            (value.IsCompilerGenerated
+             || Position.posLt value.DeclarationLocation.Start s1End)
+            && isPatternProjection allLocals rhs
+            ->
+            let nextNamed =
+                if value.IsCompilerGenerated then
+                    namedVars
+                else
+                    value :: namedVars
+
+            go (value :: allLocals) nextNamed rest
+        | _ -> expr, allLocals, namedVars
+
+    go [ paramA ] [] body
+
+let private codeLimitBeforeLineComment (lineText: string) (minCol: int) (maxCol: int) : int =
+    let limit = min maxCol lineText.Length
+    let mutable i = max 0 minCol
+    let mutable inString = false
+    let mutable blockDepth = 0
+    let mutable stopAt = limit
+
+    while i < limit && stopAt = limit do
+        let c = lineText[i]
+
+        if inString then
+            if c = '\\' && i + 1 < limit then
+                i <- i + 2
+            elif c = '"' then
+                inString <- false
+                i <- i + 1
+            else
+                i <- i + 1
+        elif blockDepth > 0 then
+            if c = '(' && i + 1 < limit && lineText[i + 1] = '*' then
+                blockDepth <- blockDepth + 1
+                i <- i + 2
+            elif c = '*' && i + 1 < limit && lineText[i + 1] = ')' then
+                blockDepth <- blockDepth - 1
+                i <- i + 2
+            else
+                i <- i + 1
+        elif c = '"' then
+            inString <- true
+            i <- i + 1
+        elif c = '(' && i + 1 < limit && lineText[i + 1] = '*' then
+            blockDepth <- 1
+            i <- i + 2
+        elif c = '/' && i + 1 < limit && lineText[i + 1] = '/' then
+            stopAt <- i
+        else
+            i <- i + 1
+
+    stopAt
+
+let private isIdentChar (c: char) : bool =
+    System.Char.IsLetterOrDigit c
+    || c = '_'
+    || c = '\''
+    || c = '!'
+
+/// Finds the `let!` keyword range immediately preceding `targetPos` (the pattern of the inner bind), skipping comments
+/// and whitespace back to `stopPos`. Rejects `match!`, `do!`, `use!`, or anything without a preceding `let!`.
+let private letBangRangeBefore (input: Input) (fileName: string) (stopPos: pos) (targetPos: pos) : range option =
+    let minLine = max 1 stopPos.Line
+
+    let rec scanBack line col blockDepth =
+        if line < minLine then
+            None
+        else
+            let textLine = input.Source.GetLineString (line - 1)
+            let mutable i = min col textLine.Length
+            let mutable depth = blockDepth
+            let mutable found: range option = None
+            let mutable stopped = false
+
+            while i > 0 && not stopped do
+                if depth > 0 then
+                    if
+                        i >= 2
+                        && textLine[i - 2] = '*'
+                        && textLine[i - 1] = ')'
+                    then
+                        depth <- depth + 1
+                        i <- i - 2
+                    elif
+                        i >= 2
+                        && textLine[i - 2] = '('
+                        && textLine[i - 1] = '*'
+                    then
+                        depth <- depth - 1
+                        i <- i - 2
+                    else
+                        i <- i - 1
+                else
+                    let c = textLine[i - 1]
+
+                    if c = ' ' || c = '\t' || c = '\r' then
+                        i <- i - 1
+                    elif
+                        i >= 2
+                        && textLine[i - 2] = '*'
+                        && textLine[i - 1] = ')'
+                    then
+                        depth <- 1
+                        i <- i - 2
+                    elif
+                        i >= 4
+                        && textLine.Substring (i - 4, 4) = "let!"
+                        && (i = 4 || not (isIdentChar textLine[i - 5]))
+                    then
+                        let startPos = Position.mkPos line (i - 4)
+                        let endPos = Position.mkPos line i
+                        found <- Some (Range.mkRange fileName startPos endPos)
+                        stopped <- true
+                    else
+                        stopped <- true
+
+            if found.IsSome then
+                found
+            elif not stopped && line - 1 >= minLine then
+                let prevLine = line - 1
+                let prevText = input.Source.GetLineString (prevLine - 1)
+
+                let prevLimit =
+                    if depth = 0 then
+                        let minCol = if prevLine = stopPos.Line then stopPos.Column else 0
+                        codeLimitBeforeLineComment prevText minCol prevText.Length
+                    else
+                        prevText.Length
+
+                scanBack prevLine prevLimit depth
+            else
+                None
+
+    scanBack targetPos.Line targetPos.Column 0
+
+let private letRhsText (input: Input) (afterPattern: range) (expr: FSharpExpr) : string =
+    match expr with
+    | Let _ ->
+        let afterPatternPos = afterPattern.End
+        let endPos = exprEndPos expr
+        let maxLine = min endPos.Line (input.Source.GetLineCount ())
+
+        let rec findEq line col =
+            if line > maxLine then
+                None
+            else
+                let lineText = input.Source.GetLineString (line - 1)
+
+                let limit =
+                    if line = maxLine then
+                        min endPos.Column lineText.Length
+                    else
+                        lineText.Length
+
+                let mutable i = col
+                let mutable found = -1
+
+                while i < limit && found < 0 do
+                    if lineText[i] = '=' then found <- i else i <- i + 1
+
+                if found >= 0 then
+                    Some (line, found + 1)
+                else
+                    findEq (line + 1) 0
+
+        let rec findStart line col =
+            if line > maxLine then
+                None
+            else
+                let lineText = input.Source.GetLineString (line - 1)
+
+                let limit =
+                    if line = maxLine then
+                        min endPos.Column lineText.Length
+                    else
+                        lineText.Length
+
+                let mutable i = col
+
+                while i < limit
+                      && (lineText[i] = ' ' || lineText[i] = '\t') do
+                    i <- i + 1
+
+                if i < limit then
+                    Some (Position.mkPos line i)
+                else
+                    findStart (line + 1) 0
+
+        match
+            findEq afterPatternPos.Line afterPatternPos.Column
+            |> Option.bind (fun (line, col) -> findStart line col)
+        with
+        | Some startPos when Position.posLt startPos endPos -> text input (Range.mkRange afterPattern.FileName startPos endPos)
+        | _ -> text input expr.Range
+    | _ -> text input expr.Range
+
+let private independentSequentialBinds (input: Input) : Message list =
+    [
+        for site in input.Index.Calls do
+            if
+                site.Callee.LogicalName = "Bind"
+                && ceBindKind site.Callee = Some CeBindKind.Reactive
+                && (match ceBuilder site.Callee with
+                    | Some kind -> isRan017Builder kind
+                    | None -> false)
+            then
+                match site.Arguments with
+                | [ s1; Lambda (paramA, bodyA) ] ->
+                    let s1End = exprEndPos s1
+                    let stripped, patternLocals, namedVars = stripPatternBinds s1End paramA bodyA
+
+                    match stripped with
+                    | Call (_, innerCallee, _, _, [ s2; Lambda (paramB, _) ]) when
+                        ceBuilder innerCallee = ceBuilder site.Callee
+                        && (innerCallee.LogicalName = "Bind"
+                            || innerCallee.LogicalName = "BindReturn")
+                        && ceBindKind innerCallee = Some CeBindKind.Reactive
+                        && (patternLocals
+                            |> List.forall (fun local -> (Index.uses local s2).IsEmpty))
+                        ->
+                        match letBangRangeBefore input paramB.DeclarationLocation.FileName s1End paramB.DeclarationLocation.Start with
+                        | Some letBangRange ->
+                            let sourceExpr = leftmostMergeSource s2
+                            let s2Text = letRhsText input paramB.DeclarationLocation sourceExpr
+
+                            let paramDisplay =
+                                match namedVars with
+                                | [] -> "_"
+                                | [ single ] -> single.DisplayName
+                                | many ->
+                                    many
+                                    |> List.sortBy (fun v -> v.DeclarationLocation.StartLine, v.DeclarationLocation.StartColumn)
+                                    |> List.map _.DisplayName
+                                    |> String.concat ", "
+
+                            message
+                                "RAN017"
+                                Severity.Hint
+                                letBangRange
+                                $"`{s2Text}` does not depend on `{paramDisplay}`; sequential `let!` forces dynamic tracking and skips static `map2`/`*On` key cutoff. Write `and!` to bind both sources statically."
+                                [ replace letBangRange "let!" "and!" ]
+                        | None -> ()
+                    | _ -> ()
+                | _ -> ()
+    ]
+
+let ran017: Rule =
+    {
+        Code = "RAN017"
+        Title = "Independent sequential let! in a reactive computation expression"
+        Gate = Symbols.Assemblies.Ranvier
+        Run = independentSequentialBinds
+    }
+
+let private isRan018Builder (kind: CeKind) : bool =
+    match kind with
+    | CeKind.Memo
+    | CeKind.Editable
+    | CeKind.Draft
+    | CeKind.AsyncMemo
+    | CeKind.Stream
+    | CeKind.Row -> true
+    | CeKind.Effect
+    | CeKind.Boundary -> false
+
+/// The innermost enclosing `.Run` path when `steps` sits directly in a CE block (jumping across headers via `skipCeHeaderWrapper`).
+let rec private enclosingBindRunPath (steps: Step list) : Step list option =
+    match steps with
+    | [] -> None
+    | Step.Lambda (_, true) :: rest -> enclosingBindRunPath rest
+    | Step.Argument (callee, 0, 2) :: rest when isCeHeaderFor callee ->
+        let outer =
+            match ceBuilder callee with
+            | Some kind -> skipCeHeaderWrapper kind rest
+            | None -> rest
+
+        enclosingBindRunPath outer
+    | Step.Argument (callee, 0, 1) :: rest when (isCeRun callee).IsSome -> Some rest
+    | _ :: rest -> enclosingBindRunPath rest
+
+/// The innermost enclosing `.Run` `(callee, kind, runPath)` when `path` evaluates directly inside that CE's body at
+/// `lambdaCount = 0`, outside `untrack` and nested tracked/untracked callback bodies.
+let private enclosingDirectCeRun (path: Step list) : (FSharpMemberOrFunctionOrValue * CeKind * Step list) option =
+    let rec go (lambdas: int) (steps: Step list) =
+        match steps with
+        | [] -> None
+        | Step.Lambda (_, true) :: rest -> go lambdas rest
+        | Step.Lambda (_, false) :: Step.Argument (callee, _, _) :: _ when isUntrack callee -> None
+        | Step.Lambda (_, false) :: Step.Argument (callee, _, _) :: rest when isBatchOrTaskDelay callee -> go lambdas rest
+        | Step.Lambda (_, false) :: Step.Argument (callee, index, count) :: rest when lambdas = 0 && isCeStepLambda callee index count -> go 0 rest
+        | Step.Lambda (_, false) :: _ -> None
+        | Step.Argument (callee, 0, 2) :: rest when isCeHeaderFor callee ->
+            if lambdas = 0 then
+                let outer =
+                    match ceBuilder callee with
+                    | Some kind -> skipCeHeaderWrapper kind rest
+                    | None -> rest
+
+                go 0 outer
+            else
+                None
+        | Step.Argument (callee, 0, 1) :: rest ->
+            match isCeRun callee with
+            | Some kind -> if lambdas = 0 then Some (callee, kind, rest) else None
+            | None -> checkNonCe callee 0 1 lambdas rest
+        | Step.Argument (callee, index, count) :: rest ->
+            if (ceBuilder callee).IsSome then
+                if lambdas = 0 then go 0 rest else None
+            else
+                checkNonCe callee index count lambdas rest
+        | _ :: rest -> go lambdas rest
+
+    and checkNonCe callee index count lambdas rest =
+        if
+            (untrackedPhaseLayers callee index).IsSome
+            || trackedBody callee index count
+        then
+            None
+        elif lambdas = 0 then
+            go 0 rest
+        else
+            None
+
+    go 0 path
+
+/// The `item: unit -> 'T` parameter of the enclosing projection row factory when `rowRunPath` is the factory's row reader.
+let private enclosingProjectionItem (rowRunPath: Step list) : FSharpMemberOrFunctionOrValue option =
+    let rec stripPrefix =
+        function
+        | Step.Lambda (_, true) :: rest
+        | Step.Bound _ :: rest -> stripPrefix rest
+        | rest -> rest
+
+    match stripPrefix rowRunPath with
+    | Step.Lambda (Some item, false) :: Step.Argument (callee, index, _) :: _ when projectionFactoryLambdaCount callee index = Some 1 -> Some item
+    | Step.Lambda (Some item, false) :: Step.Lambda (_, false) :: Step.Argument (callee, index, _) :: _ when
+        projectionFactoryLambdaCount callee index = Some 2
+        ->
+        Some item
+    | _ -> None
+
+/// Collects direct `(callRange, fnRange)` calls to the row `item ()` reader in `expr`, stopping before user lambdas,
+/// `untrack`, nested tracked/untracked callbacks, CE headers, and nested CE `.Run` blocks.
+let private directRowItemCalls (item: FSharpMemberOrFunctionOrValue) (expr: FSharpExpr) : (range * range) list =
+    let results = ResizeArray<range * range>()
+
+    let rec walkStepLambda (arg: FSharpExpr) =
+        match arg with
+        | Lambda (_, body) -> walk body
+        | _ -> walk arg
+
+    and walk (e: FSharpExpr) =
+        match e with
+        | Lambda _ -> ()
+        | Call (_, callee, _, _, _) when (isCeRun callee).IsSome || isUntrack callee -> ()
+        | Call (receiver, callee, _, _, [ body ]) when isCeHeaderFor callee ->
+            Option.iter walk receiver
+            walkStepLambda body
+        | Call (None, pipe, _, _, [ arg; fn ]) when Symbols.isPipe Symbols.PipeRight pipe ->
+            walk arg
+            walkAppliedLambda fn
+        | Call (None, pipe, _, _, [ fn; arg ]) when Symbols.isPipe Symbols.PipeLeft pipe ->
+            walk arg
+            walkAppliedLambda fn
+        | Call (receiver, callee, _, _, args) ->
+            Option.iter walk receiver
+
+            args
+            |> List.iteri (fun i arg ->
+                if
+                    not (trackedBody callee i args.Length)
+                    && (untrackedPhaseLayers callee i).IsNone
+                then
+                    if
+                        isCeStepLambda callee i args.Length
+                        || isBatchOrTaskDelay callee
+                    then
+                        walkStepLambda arg
+                    else
+                        walk arg)
+        | Application (Value fn, _, args) when fn = item && args.Length = 1 ->
+            let fnRange =
+                match e with
+                | Application (fnExpr, _, _) -> fnExpr.Range
+                | _ -> e.Range
+
+            results.Add (e.Range, fnRange)
+            List.iter walk args
+        | Application (fn, _, args) ->
+            walkAppliedLambda fn
+            List.iter walk args
+        | ObjectExpr (_, baseCall, _, _) -> walk baseCall
+        | _ ->
+            for sub in e.ImmediateSubExpressions do
+                walk sub
+
+    and walkAppliedLambda fn =
+        match fn with
+        | Lambda (_, body) -> walkAppliedLambda body
+        | _ -> walk fn
+
+    walk expr
+    List.ofSeq results
+
+let private directReadsWithoutBind (input: Input) : Message list =
+    let candidateRuns =
+        input.Index.Calls
+        |> Array.filter (fun site ->
+            match isCeRun site.Callee with
+            | Some kind -> isRan018Builder kind
+            | None -> false)
+
+    if Array.isEmpty candidateRuns then
+        []
+    else
+        let boundRunPaths = HashSet<Step list>(HashIdentity.Reference)
+
+        for site in input.Index.Calls do
+            if ceBindKind site.Callee = Some CeBindKind.Reactive then
+                match enclosingBindRunPath site.Path with
+                | Some runPath -> boundRunPaths.Add runPath |> ignore
+                | None -> ()
+
+        [
+            for site in input.Index.Calls do
+                match site.Receiver with
+                | Some receiver when isReactiveRead site.Callee ->
+                    match enclosingDirectCeRun site.Path with
+                    | Some (runCallee, kind, runPath) when
+                        isRan018Builder kind
+                        && not (boundRunPaths.Contains runPath)
+                        ->
+                        let read = text input site.Range
+                        let source = text input receiver.Range
+                        let builderName = Symbols.display runCallee
+
+                        message
+                            "RAN018"
+                            Severity.Hint
+                            site.Range
+                            $"`{read}` is read directly inside `{builderName} {{ ... }}` with no `let!` bindings, which skips static source fusion, `.Graph` resolution, and closed-phase tracking. Bind `{source}` with `let!`."
+                            []
+                    | _ -> ()
+                | _ -> ()
+
+            for rowRun in candidateRuns do
+                if
+                    isCeRun rowRun.Callee = Some CeKind.Row
+                    && not (boundRunPaths.Contains rowRun.Path)
+                then
+                    match enclosingProjectionItem rowRun.Path, rowRun.Arguments with
+                    | Some item, [ bodyExpr ] ->
+                        for callRange, fnRange in directRowItemCalls item bodyExpr do
+                            let read = text input callRange
+                            let source = text input fnRange
+
+                            message
+                                "RAN018"
+                                Severity.Hint
+                                callRange
+                                $"`{read}` is read directly inside `row {{ ... }}` with no `let!` bindings, which skips static source fusion, `.Graph` resolution, and closed-phase tracking. Bind `{source}` with `let!`."
+                                []
+                    | _ -> ()
+        ]
+        |> List.sortBy (fun m -> m.Range.StartLine, m.Range.StartColumn)
+
+let ran018: Rule =
+    {
+        Code = "RAN018"
+        Title = "Reactive read in a computation expression with no let! bindings"
+        Gate = Symbols.Assemblies.Ranvier
+        Run = directReadsWithoutBind
     }

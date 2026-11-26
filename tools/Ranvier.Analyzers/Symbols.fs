@@ -995,6 +995,54 @@ module Core =
     let isUntrack (m: FSharpMemberOrFunctionOrValue) : bool =
         isMember Api "untrack" m
 
+    let private untrackedPhaseFunctions: Map<string * string * int, int> =
+        Map.ofList
+            [
+                (Api, "createMemoOn", 1), 1
+                (Api, "createMemoOnWithComparer", 2), 1
+                (Api, "createMemoWithOn", 1), 1
+                (Api, "createOwningMemoOnWithComparer", 2), 1
+                (Api, "createEffectOn", 1), 1
+                (Api, "createEffectOnWithComparer", 2), 1
+                (Api, "createAsyncOn", 1), 3
+                (Api, "createAsyncWithOn", 1), 3
+                (Api, "createAsyncOnWithPolicy", 2), 3
+                (Api, "createOwningAsyncOnWithPolicy", 2), 3
+                (Api, "createStreamOn", 1), 2
+                (Api, "createStreamFoldOn", 3), 2
+                ("Ranvier.SignalModule", "map", 0), 1
+                ("Ranvier.SignalModule", "map2", 0), 2
+                ("Ranvier.SignalModule", "bind", 0), 1
+                ("Ranvier.MemoModule", "map", 0), 1
+                ("Ranvier.MemoModule", "map2", 0), 2
+                ("Ranvier.MemoModule", "bind", 0), 1
+                ("Ranvier.AsyncMemoModule", "map", 0), 1
+                ("Ranvier.AsyncMemoModule", "map2", 0), 2
+                ("Ranvier.AsyncMemoModule", "bind", 0), 2
+                ("Ranvier.AsyncMemoModule", "bindWithPolicy", 1), 2
+                ("Ranvier.AsyncSourceModule", "map", 0), 1
+                ("Ranvier.AsyncSourceModule", "map2", 0), 2
+                ("Ranvier.AsyncSourceModule", "bind", 0), 2
+                ("Ranvier.StreamMemoModule", "map", 0), 1
+                ("Ranvier.StreamMemoModule", "map2", 0), 2
+                ("Ranvier.StreamMemoModule", "bind", 0), 2
+                ("Ranvier.StreamMemoModule", "bindFold", 2), 2
+            ]
+
+    /// The lambda count before the body when argument `index` of `m` is an untracked closed Phase-2 callback.
+    let untrackedPhaseLayers (m: FSharpMemberOrFunctionOrValue) (index: int) : int option =
+        untrackedPhaseFunctions
+        |> Map.tryFind (enclosing m, m.LogicalName, index)
+
+    /// The lambda count from the row-factory argument `index` of `m` to its `item: unit -> 'T` reader parameter.
+    let projectionFactoryLambdaCount (m: FSharpMemberOrFunctionOrValue) (index: int) : int option =
+        match enclosing m, m.LogicalName, index with
+        | Api, "createProjectionWith", 1
+        | Api, "createProjectionWithOptions", 2
+        | Api, "createIndexProjectionWith", 0 -> Some 1
+        | "Ranvier.ProjectionModule", "mapWith", 0 -> Some 2
+        | _ -> None
+
 /// The view layer's builders, sugar and definitions.
 module View =
     /// The namespace of the view layer's templates, sugar and server rendering.

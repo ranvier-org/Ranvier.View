@@ -309,6 +309,31 @@ let m () =
                 Expect.stringContains repaired "owning" "inserts owning"
                 Expect.isEmpty (run Analyzers.ran010Cli (context (ranvier.Force ()) repaired)) "clean after fix"
 
+                let commentBraceSrc =
+                    ce
+                        "let s = createSignal 1
+let m () =
+    memo { // keeps body aligned
+        let! x = s
+        createEffect ignore
+        return x
+    }
+"
+
+                let commentMsgs =
+                    run Analyzers.ran010Cli (context (ranvier.Force ()) commentBraceSrc)
+
+                Expect.equal (commentMsgs |> List.map _.Code) [ "RAN010" ] "memo with trailing brace comment"
+
+                let commentRepaired =
+                    applyFix commentBraceSrc (commentMsgs.Head.Fixes |> List.exactlyOne)
+
+                Expect.stringContains commentRepaired "memo { // keeps body aligned\n        owning\n" "inserts owning on next line aligned with body"
+
+                Expect.isEmpty
+                    (run Analyzers.ran010Cli (context (ranvier.Force ()) commentRepaired))
+                    "repaired comment brace memo compiles and is clean"
+
                 let singleLineSrc =
                     ce "let s = createSignal 1\nlet m () = memo { createEffect ignore; return s.Value }\n"
 
