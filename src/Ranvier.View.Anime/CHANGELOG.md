@@ -1,5 +1,5 @@
 ---
-last_commit_released: 8cb88430848239a8140ca69b3551b1194cbc2018
+last_commit_released: 79abd73e119b8cbfad6ab21827d3d6126e3fcef8
 include:
   - ../Fable.Ranvier.View.Anime/
   - ../../Directory.Build.props
@@ -17,6 +17,18 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.2.0 - 2026-11-26
+
+### 🚀 Features
+
+* *(analyzers)* Add RAN016-RAN018 computation expression rules and upgrade to Ranvier 0.2.3 (#196) ([79abd73](https://github.com/ranvier-org/Ranvier.View/commit/79abd73e119b8cbfad6ab21827d3d6126e3fcef8))
+
+### 🔗 Dependencies
+
+* `src/Ranvier.View` updated to 0.5.0
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/8cb88430848239a8140ca69b3551b1194cbc2018..79abd73e119b8cbfad6ab21827d3d6126e3fcef8)</small></strong>
 
 ## 0.1.47 - 2026-11-23
 

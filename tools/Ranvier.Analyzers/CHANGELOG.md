@@ -1,5 +1,5 @@
 ---
-last_commit_released: 335bd1bce23529ca7a9603856fc5c951d7c259f5
+last_commit_released: 79abd73e119b8cbfad6ab21827d3d6126e3fcef8
 depends_on:
   - ../Ranvier.Analyzers.Host/
 updaters:
@@ -17,6 +17,18 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.2.0 - 2026-11-26
+
+### 🚀 Features
+
+* *(analyzers)* Add RAN016-RAN018 computation expression rules and upgrade to Ranvier 0.2.3 (#196) ([79abd73](https://github.com/ranvier-org/Ranvier.View/commit/79abd73e119b8cbfad6ab21827d3d6126e3fcef8))
+
+### 🔗 Dependencies
+
+* `tools/Ranvier.Analyzers.Host` updated to 0.2.0
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/335bd1bce23529ca7a9603856fc5c951d7c259f5..79abd73e119b8cbfad6ab21827d3d6126e3fcef8)</small></strong>
 
 ## 0.1.1 - 2026-11-14
 
