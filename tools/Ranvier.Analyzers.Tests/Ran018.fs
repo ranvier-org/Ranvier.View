@@ -130,6 +130,37 @@ let outer () =
                 Expect.stringContains msgs.Head.Message "`inner.Value`" "flags inner.Value, not inner's bound s"
             }
 
+            test "post-await reads in 0-reactive-bind asyncMemo report RAN012 only while pre-await still reports RAN018" {
+                let body =
+                    "let stray = createSignal 1
+let fireTask () = Task.FromResult 1
+let postAwait (s: Signal<int>) =
+    asyncMemo {
+        let! v = fireTask ()
+        return v + s.Value
+    }
+let postDoBang () =
+    asyncMemo {
+        do! Task.CompletedTask
+        return stray.Value
+    }
+let preAwait (s: Signal<int>) =
+    asyncMemo {
+        let x = s.Value
+        do! Task.CompletedTask
+        return x
+    }
+"
+
+                let ctx = context (ranvier.Force ()) (preamble + body)
+
+                Expect.equal (run Analyzers.ran012Cli ctx |> List.map _.Code) [ "RAN012"; "RAN012" ] "RAN012 reports both post-await reads"
+
+                let r18 = run Analyzers.ran018Cli ctx
+                Expect.equal (r18 |> List.map _.Code) [ "RAN018" ] "only pre-await read reports RAN018"
+                Expect.stringContains r18.Head.Message "`s.Value`" "pre-await read reports s.Value"
+            }
+
             test "exclusions: effect, boundary, pure return, Peek, untrack, nested tracked, nested closures, and bound CEs" {
                 let clean =
                     "let s = createSignal 1

@@ -1333,6 +1333,7 @@ let private directReadsWithoutBind (input: Input) : Message list =
                     | Some (runCallee, kind, runPath) when
                         isRan018Builder kind
                         && not (boundRunPaths.Contains runPath)
+                        && not (afterAwait input site.Path)
                         ->
                         let read = text input site.Range
                         let source = text input receiver.Range
