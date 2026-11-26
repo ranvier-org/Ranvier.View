@@ -28,6 +28,9 @@ triggering example and a corrected version.
 | [RAN012](ran012.md) | Reactive read after the first await of an async memo | Warning | Ranvier |
 | [RAN013](ran013.md) | Signal write or Pump on a thread-pool callback | Warning | Ranvier |
 | [RAN015](ran015.md) | CancelPrevious with a body that ignores its token | Hint | Ranvier |
+| [RAN016](ran016.md) | Reactive read inside an untracked compute phase | Warning | Ranvier |
+| [RAN017](ran017.md) | Independent sequential let! in a reactive computation expression | Hint | Ranvier |
+| [RAN018](ran018.md) | Reactive read in a computation expression with no let! bindings | Hint | Ranvier |
 | [RAN020](ran020.md) | Reactive read at template build time | Warning | view |
 | [RAN021](ran021.md) | Unstable list key | Warning / Info | view |
 | [RAN022](ran022.md) | Definition created on every region read | Warning | view |

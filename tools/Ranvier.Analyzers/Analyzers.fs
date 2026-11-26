@@ -14,6 +14,9 @@ let rules: Rule list =
         Rules.Core.ran012
         Rules.Core.ran013
         Rules.Core.ran015
+        Rules.Core.ran016
+        Rules.Core.ran017
+        Rules.Core.ran018
         Rules.View.ran020
         Rules.View.ran021
         Rules.View.ran022
@@ -177,3 +180,31 @@ let ran015Cli: Analyzer<CliContext> =
 [<EditorAnalyzer("RAN015", "CancelPrevious with a body that ignores its token", "https://shayanhabibi.github.io/Ranvier/analyzers/ran015/")>]
 let ran015Editor: Analyzer<EditorContext> =
     fun context -> async { return runEditor Rules.Core.ran015 context }
+
+[<CliAnalyzer("RAN016", "Reactive read inside an untracked compute phase", "https://shayanhabibi.github.io/Ranvier/analyzers/ran016/")>]
+let ran016Cli: Analyzer<CliContext> =
+    fun context -> async { return runCli Rules.Core.ran016 context }
+
+[<EditorAnalyzer("RAN016", "Reactive read inside an untracked compute phase", "https://shayanhabibi.github.io/Ranvier/analyzers/ran016/")>]
+let ran016Editor: Analyzer<EditorContext> =
+    fun context -> async { return runEditor Rules.Core.ran016 context }
+
+[<CliAnalyzer("RAN017", "Independent sequential let! in a reactive computation expression", "https://shayanhabibi.github.io/Ranvier/analyzers/ran017/")>]
+let ran017Cli: Analyzer<CliContext> =
+    fun context -> async { return runCli Rules.Core.ran017 context }
+
+[<EditorAnalyzer("RAN017",
+                 "Independent sequential let! in a reactive computation expression",
+                 "https://shayanhabibi.github.io/Ranvier/analyzers/ran017/")>]
+let ran017Editor: Analyzer<EditorContext> =
+    fun context -> async { return runEditor Rules.Core.ran017 context }
+
+[<CliAnalyzer("RAN018", "Reactive read in a computation expression with no let! bindings", "https://shayanhabibi.github.io/Ranvier/analyzers/ran018/")>]
+let ran018Cli: Analyzer<CliContext> =
+    fun context -> async { return runCli Rules.Core.ran018 context }
+
+[<EditorAnalyzer("RAN018",
+                 "Reactive read in a computation expression with no let! bindings",
+                 "https://shayanhabibi.github.io/Ranvier/analyzers/ran018/")>]
+let ran018Editor: Analyzer<EditorContext> =
+    fun context -> async { return runEditor Rules.Core.ran018 context }
