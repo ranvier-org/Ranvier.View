@@ -3,7 +3,9 @@ module Ranvier.View.Dom.Debug
 
 #if RANVIER_VIEW_INSPECT || !FABLE_COMPILER
 open System
+#if FABLE_COMPILER
 open Fable.Core
+#endif
 open Ranvier.Dom
 open Ranvier
 open Ranvier.View

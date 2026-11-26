@@ -25,28 +25,37 @@ let rules: Rule list =
         Rules.View.ran025
     ]
 
-/// Whether `rule` runs on a file of the project: the project references the rule's gate assembly, or, for a view rule,
-/// the file calls a member of the view namespace.
-let enabled (rule: Rule) (options: AnalyzerProjectOptions) (index: Index.FileIndex) : bool =
-    Symbols.references rule.Gate options
-    || ((rule.Gate = Symbols.Assemblies.View
-         || rule.Gate = Symbols.Assemblies.Dom)
-        && index.Calls
-           |> Array.exists (fun call -> Symbols.View.isViewMember call.Callee))
+/// Whether `rule` runs on `fileName`: a Fable rule runs when the project's Fable signals show Fable compiles it;
+/// other rules run when the project references the rule's gate assembly, or, for a view rule, the file calls a member
+/// of the view namespace.
+let enabled (rule: Rule) (options: AnalyzerProjectOptions) (fileName: string) (index: Index.FileIndex) : bool =
+    if rule.Gate = Symbols.Assemblies.Fable then
+        (Symbols.Compilers.signal options fileName).CompilesWithFable
+    else
+        Symbols.references rule.Gate options
+        || ((rule.Gate = Symbols.Assemblies.View
+             || rule.Gate = Symbols.Assemblies.Dom)
+            && index.Calls
+               |> Array.exists (fun call -> Symbols.View.isViewMember call.Callee))
 
 /// The findings of `rule` in a CLI context; empty when `enabled` refuses the file.
 let runCli (rule: Rule) (context: CliContext) : Message list =
     match context.TypedTree with
-    | Some tree when enabled rule context.ProjectOptions (Index.ofFile tree) ->
-        rule.Run
-            {
-                FileName = context.FileName
-                Source = context.SourceText
-                Tree = tree
-                Index = Index.ofFile tree
-                Options = context.ProjectOptions
-                Project = Some context.CheckProjectResults
-            }
+    | Some tree ->
+        let index = Index.ofFile tree
+
+        if enabled rule context.ProjectOptions context.FileName index then
+            rule.Run
+                {
+                    FileName = context.FileName
+                    Source = context.SourceText
+                    Tree = tree
+                    Index = index
+                    Options = context.ProjectOptions
+                    Project = Some context.CheckProjectResults
+                }
+        else
+            []
     | _ -> []
 
 let private ignoresFile (code: string) (ranges: Map<string, AnalyzerIgnoreRange list>) =
@@ -62,19 +71,21 @@ let private ignoresFile (code: string) (ranges: Map<string, AnalyzerIgnoreRange 
 /// The findings of `rule` in an editor context; empty for a file that an `ignore-file` comment exempts.
 let runEditor (rule: Rule) (context: EditorContext) : Message list =
     match context.TypedTree with
-    | Some tree when
-        enabled rule context.ProjectOptions (Index.ofFile tree)
-        && not (ignoresFile rule.Code context.AnalyzerIgnoreRanges)
-        ->
-        rule.Run
-            {
-                FileName = context.FileName
-                Source = context.SourceText
-                Tree = tree
-                Index = Index.ofFile tree
-                Options = context.ProjectOptions
-                Project = context.CheckProjectResults
-            }
+    | Some tree when not (ignoresFile rule.Code context.AnalyzerIgnoreRanges) ->
+        let index = Index.ofFile tree
+
+        if enabled rule context.ProjectOptions context.FileName index then
+            rule.Run
+                {
+                    FileName = context.FileName
+                    Source = context.SourceText
+                    Tree = tree
+                    Index = index
+                    Options = context.ProjectOptions
+                    Project = context.CheckProjectResults
+                }
+        else
+            []
     | _ -> []
 
 [<CliAnalyzer("RAN001", "Fable inlines a snapshot of a module mutable", "https://shayanhabibi.github.io/Ranvier/analyzers/ran001/")>]

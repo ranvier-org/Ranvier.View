@@ -6,7 +6,9 @@ module internal Ranvier.View.Dom.DocumentHead
 open Ranvier.View
 open System
 open System.Collections.Generic
+#if FABLE_COMPILER
 open Fable.Core
+#endif
 open Ranvier.Dom
 open Ranvier.View.Representation
 

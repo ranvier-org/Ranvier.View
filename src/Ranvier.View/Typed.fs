@@ -1,7 +1,9 @@
 module Ranvier.View.Typed
 
+#if FABLE_COMPILER
 open Fable.Core
 open Fable.Core.JsInterop
+#endif
 open Ranvier.Dom
 open Ranvier
 open Ranvier.View.Representation
@@ -9,8 +11,9 @@ open Ranvier.View.Representation
 /// <summary>An element modifier constrained to its native DOM type.</summary>
 #if !FABLE_COMPILER
 [<System.Diagnostics.DebuggerDisplay("{ToString(),nq}")>]
-#endif
+#else
 [<Erase>]
+#endif
 type Modifier<'native> =
     private
     | Modifier of ModifierAction

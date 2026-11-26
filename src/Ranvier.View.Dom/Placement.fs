@@ -3,7 +3,9 @@ namespace Ranvier.View.Dom
 open Ranvier.View
 open System
 open Ranvier
+#if FABLE_COMPILER
 open Fable.Core
+#endif
 open Ranvier.Dom
 open Ranvier.View.Representation
 

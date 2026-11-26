@@ -81,7 +81,13 @@ let tests =
                 Expect.isEmpty (run Analyzers.ran001Cli (contextOf (ranvier.Force ()) [ "Loops.fs", records; "Probe.fs", probe ])) "record field"
             }
 
-            test "a project without Fable.Core is not analyzed" { Expect.isEmpty (findingsWith (plain.Force ()) snapshot) "no Fable.Core reference" }
+            test "a dual-target project with a manifest and no Fable.Core reference is analyzed" {
+                Expect.equal
+                    (findingsWith (plain.Force ()) snapshot
+                     |> List.map _.Code)
+                    [ "RAN001" ]
+                    "manifest without Fable.Core"
+            }
 
             test "the finding's range is the binding identifier" {
                 let range = (findings snapshot).Head.Range

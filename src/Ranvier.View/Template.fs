@@ -3,7 +3,9 @@ module Ranvier.View.Template
 
 open System
 open System.Text
+#if FABLE_COMPILER
 open Fable.Core
+#endif
 open Ranvier.Dom
 open Ranvier
 open Ranvier.View.Representation

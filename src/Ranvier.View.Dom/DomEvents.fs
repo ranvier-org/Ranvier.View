@@ -1,7 +1,9 @@
 module Ranvier.View.Dom.DomEvents
 
 open Ranvier.View
+#if FABLE_COMPILER
 open Fable.Core
+#endif
 
 /// <summary>Adds a direct event listener and returns its removal.</summary>
 #if FABLE_COMPILER

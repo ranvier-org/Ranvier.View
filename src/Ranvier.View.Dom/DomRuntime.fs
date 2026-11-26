@@ -1,6 +1,8 @@
 module Ranvier.View.Dom.DomRuntime
 
+#if FABLE_COMPILER
 open Fable.Core
+#endif
 open global.Ranvier.Dom
 
 /// <summary>Returns the document installed on the current thread, or the browser document under Fable.</summary>
