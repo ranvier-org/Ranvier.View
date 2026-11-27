@@ -45,10 +45,11 @@ content of `show`, write `(img (parts)).View`. A [component tag](components.md#a
 is used the same way.
 [Templates and bindings](templates.md) walks through each kind of part.
 
-The SVG tags `svg`, `g`, `path`, `circle`, `rect`, `text'`, `use'`, `title'` and the others create
-SVG elements under both commit modes; `text'`, `use'` and `title'` take an apostrophe because `text`
-is the text slot, `use` an F# keyword and `title` the HTML tag. See [SVG](motion-parts.md#svg) and
-[Element names](templates.md#element-names).
+The 63 SVG tags `svg`, `g`, `path`, `circle`, `rect`, `filter`, `feGaussianBlur` and the others
+create SVG elements under both commit modes. Eight take an apostrophe: `a'`, `script'`, `style'` and
+`title'` beside the HTML tags, `text'` and `view'` beside the text and view slots, `set'` beside
+FSharp.Core's `set`, and `use'`, an F# keyword. The obsolete `Ranvier.View.Sugar` keeps its first 20
+SVG tags. See [SVG](motion-parts.md#svg) and [Element names](templates.md#element-names).
 
 ## The inference rule
 

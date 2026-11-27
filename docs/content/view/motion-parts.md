@@ -245,12 +245,11 @@ hydration attaches them. The story example renders its whole page that way with
 
 ## SVG
 
-`draw` and `morph` animate SVG geometry. The SVG tags of the DSL (`svg`, `g`, `path`, `circle`,
-`ellipse`, `line`, `polyline`, `polygon`, `rect`, `text'`, `tspan`, `use'`, `defs`,
-`linearGradient`, `radialGradient`, `stop`, `clipPath`, `mask`, `foreignObject` and `title'`) create
-SVG elements under both commit modes, and a list row or arm rooted at one of them is an SVG element.
-A row or arm rooted at `title'` is the exception: an SVG `title` under queued commits, and an HTML
-`title` under synchronous commits.
+`draw` and `morph` animate SVG geometry. The 63 SVG tags of the DSL (`svg`, `g`, `path`, `circle`,
+`rect`, `text'`, `use'`, `linearGradient`, `filter`, `feGaussianBlur`, `foreignObject` and the
+others) create SVG elements under both commit modes, and a list row or arm rooted at one of them is
+an SVG element. A row or arm rooted at `title'` or `a'` is the exception: an SVG element under queued
+commits, and an HTML element under synchronous commits.
 
 Case-sensitive SVG names such as `viewBox`, `preserveAspectRatio` and `linearGradient` are written
 as given; every other tag and attribute name is lowercase. Under Fable the module of the SVG tags

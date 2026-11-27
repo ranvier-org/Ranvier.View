@@ -1094,6 +1094,52 @@ let private svgAuthoring queued (clock: Clock) =
 
     equal ("0 0 10 10", "axis", [ "svg"; "svg"; "svg"; "svg"; "svg" ], [ "html" ], [ "svg"; "svg" ]) read
 
+let private glowing =
+    Component.template
+        (fun _ (layers: string array) -> layers)
+        (svg () {
+            defs () {
+                filter (filter.attribute ("id", "glow")) {
+                    feGaussianBlur (feGaussianBlur.attribute ("stdDeviation", "4"), feGaussianBlur.attribute ("result", "blur")) { () }
+
+                    feMerge () {
+                        forEach
+                            id
+                            (fun (layers: string array) -> layers)
+                            (feMergeNode (feMergeNode.attribute ("in", fun (layer: unit -> string) -> Some (layer ()))) { () })
+                    }
+                }
+            }
+        })
+
+[<Emit("Array.from($0.querySelectorAll($1), n => (n.namespaceURI === 'http://www.w3.org/2000/svg' ? 'svg ' : 'html ') + n.localName)")>]
+let private elementsOf (root: obj) (selector: string) : string array = jsNative
+
+let private filterPrimitives queued (clock: Clock) =
+    use graph = new Graph ()
+    let target = host ()
+
+    let mounted =
+        mountIn queued graph target (Component.render glowing [| "blur"; "SourceGraphic" |])
+
+    let created = List.ofArray (elementsOf target "defs *")
+    mounted.Dispose ()
+
+    equal
+        [
+            "svg filter"
+            "svg feGaussianBlur"
+            "svg feMerge"
+            "svg feMergeNode"
+            "svg feMergeNode"
+        ]
+        created
+
+let private filterRenders (clock: Clock) =
+    equal
+        """<!--[r--><svg><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"></feGaussianBlur><feMerge><!--[--><feMergeNode in="blur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode><!--]--></feMerge></filter></defs></svg><!--]-->"""
+        (Server.render Server.Options.defaults glowing [| "blur"; "SourceGraphic" |])
+
 let private mixedRoots =
     Component.template (fun _ (s: Plot) -> s) (svg () { forEach id (fun (s: Plot) -> s.Ticks.Value) (fragment [| g () { () }; p () { "p" } |]) })
 
@@ -1658,6 +1704,8 @@ let cases: (string * (Clock -> unit)) array =
             |]
             modes "SVG tags take camelCase attributes, shared parts, text rows and foreignObject content" svgAuthoring
             [| "a synchronous row mixing SVG and HTML roots raises", mixedRootsRaise |]
+            modes "a filter, its fe primitives and their rows are SVG elements" filterPrimitives
+            [| "a filter with fe primitives renders through Server.render", filterRenders |]
             [|
                 "draw and morph cleanups restore the element's attributes", svgCleanupRestores
             |]

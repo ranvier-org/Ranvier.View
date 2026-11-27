@@ -6,7 +6,7 @@ const portable = new URL("../../generated-tests/src/Ranvier.View/", import.meta.
 const generatedSource = new URL("../../../../src/Ranvier.View/Generated/HtmlDsl.fs", import.meta.url);
 
 /** Bundle module paths (as in `//#region` comments and frame `module` fields) of the sugar layer. */
-export const sugarModules = ["src/Ranvier.View/Dsl.js", "src/Ranvier.View/Generated/HtmlDsl.js", "src/Ranvier.View/SvgDsl.js"];
+export const sugarModules = ["src/Ranvier.View/Dsl.js", "src/Ranvier.View/Generated/HtmlDsl.js", "src/Ranvier.View/Generated/SvgDsl.js"];
 export const isSugarModule = path => sugarModules.some(module => path.endsWith(module));
 
 /** A JavaScript source with comments removed and string and template literals emptied; line breaks are kept. */
@@ -45,7 +45,7 @@ export function sugarDeclarations() {
   const names = new Set([
     ...declarations(readFileSync(new URL("Dsl.js", portable), "utf8")),
     ...declarations(tagsEmitted),
-    ...declarations(readFileSync(new URL("SvgDsl.js", portable), "utf8")),
+    ...declarations(readFileSync(new URL("Generated/SvgDsl.js", portable), "utf8")),
   ]);
   return (derived = { tagClasses, names });
 }

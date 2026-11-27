@@ -54,6 +54,30 @@ let private listed =
             }
         })
 
+let private glowLayers = [| "blur"; "SourceGraphic" |]
+
+let private glowing =
+    Component.template
+        (fun _ (layers: string array) -> layers)
+        (svg () {
+            defs () {
+                filter (filter.attribute ("id", "glow")) {
+                    feGaussianBlur (feGaussianBlur.attribute ("stdDeviation", "4"), feGaussianBlur.attribute ("result", "blur")) { () }
+
+                    feMerge () {
+                        forEach
+                            id
+                            (fun (layers: string array) -> layers)
+                            (feMergeNode (feMergeNode.attribute ("in", fun (layer: unit -> string) -> Some (layer ()))) { () })
+                    }
+                }
+            }
+        })
+
+let private glowElements =
+    [ "filter"; "feGaussianBlur"; "feMerge"; "feMergeNode"; "feMergeNode" ]
+    |> List.map (fun name -> svgNamespace, name)
+
 // The namespace and local name of each element matching the selector, in document order.
 let private names (mount: Mount) (selector: string) =
     let found = mount.Container.querySelectorAll selector
@@ -153,4 +177,24 @@ let tests =
                 drain ()
                 host.Cycle ()
                 Expect.equal (names mounted "circle") (List.replicate 4 (svgNamespace, "circle")) "after a move and inserts"
+
+            testCase "a filter with fe primitives renders through Server.render"
+            <| fun () ->
+                Expect.equal
+                    (Server.render Server.Options.defaults glowing glowLayers)
+                    """<!--[r--><svg><defs><filter id="glow"><feGaussianBlur stdDeviation="4" result="blur"></feGaussianBlur><feMerge><!--[--><feMergeNode in="blur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode><!--]--></feMerge></filter></defs></svg><!--]-->"""
+                    "the server markup keeps the camel-case names"
+
+            hostCase "a filter, its fe primitives and their rows are SVG elements"
+            <| fun host ->
+                use graph = new Graph ()
+                use mounted = mount host graph glowing glowLayers
+                Expect.equal (names mounted "defs *") glowElements "the filter's elements"
+
+            hostCase "a filter, its fe primitives and their rows under queued commits are SVG elements"
+            <| fun host ->
+                use graph = new Graph ()
+                let mounted, _ = mountQueued host graph glowing glowLayers
+                use _ = mounted
+                Expect.equal (names mounted "defs *") glowElements "the filter's elements"
         ]

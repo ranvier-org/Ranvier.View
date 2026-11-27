@@ -4,22 +4,27 @@ open System
 open System.Reflection
 open System.Text.Json
 
-/// <summary>Checks canonical WebKit tag identities against existing typed HTML authoring.</summary>
+/// <summary>Checks canonical WebKit tag identities against existing typed HTML and SVG authoring.</summary>
 let validate (browserAssembly: Assembly) (sharedAssembly: Assembly) (metadata: JsonElement) =
     let tags =
         metadata.GetProperty("tagInterfaces").EnumerateArray()
         |> Seq.toArray
 
-    let html =
-        tags
-        |> Array.filter (fun row -> row.GetProperty("namespaceURI").GetString() = "http://www.w3.org/1999/xhtml")
-        |> Array.map (fun row -> row.GetProperty("tag").GetString(), row.GetProperty("interface").GetString())
-        |> dict
+    for family, uri, tagMap in
+        [
+            "HTML", "http://www.w3.org/1999/xhtml", "HTMLElementTagNameMap"
+            "SVG", "http://www.w3.org/2000/svg", "SVGElementTagNameMap"
+        ] do
+        let canonical =
+            tags
+            |> Array.filter (fun row -> row.GetProperty("namespaceURI").GetString() = uri)
+            |> Array.map (fun row -> row.GetProperty("tag").GetString(), row.GetProperty("interface").GetString())
+            |> dict
 
-    for property in browserAssembly.GetType("Fable.Core.TS+Dom+HTMLElementTagNameMap", true).GetProperties() do
-        match html.TryGetValue property.Name with
-        | true, name when name = property.PropertyType.Name -> ()
-        | _ -> invalidOp $"WebKit HTML tag identity differs from authoring: {property.Name}"
+        for property in browserAssembly.GetType("Fable.Core.TS+Dom+" + tagMap, true).GetProperties() do
+            match canonical.TryGetValue property.Name with
+            | true, name when name = property.PropertyType.Name -> ()
+            | _ -> invalidOp $"WebKit {family} tag identity differs from authoring: {property.Name}"
 
     for row in tags do
         sharedAssembly.GetType (
