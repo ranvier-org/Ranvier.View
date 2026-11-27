@@ -18,7 +18,8 @@ dotnet fsi tools/Ranvier.Dom.Generate/CheckDocs.fsx
 
 `dom-contracts.json` pins the WebKit-derived HTML/SVG tag identities used by the Twin dispatch
 table. Generation writes `experiments/Ranvier.View.Twin/Generated/TagTypes.fs` from those canonical
-rows and validates the existing 112 HTML authoring tags against them. Native property signatures
+rows and validates the 112 HTML tags of `HTMLElementTagNameMap` and the 63 SVG tags of
+`SVGElementTagNameMap` against them. Native property signatures
 come from the shared `Ranvier.Dom` contracts. Browser-only helpers keep their names behind
 `FABLE_COMPILER` and emit direct JavaScript property access. Their values use shared contracts where
 available, strings for browser scalar enums, nongeneric collections, and `obj` for out-of-scope
@@ -42,6 +43,8 @@ The same command writes a third output, `src/Ranvier.View/Generated/HtmlTemplate
 
 It also writes a fourth output, `src/Ranvier.View/Generated/HtmlDsl.fs` (or beside the first output replacing any `Template` suffix with `Dsl`). It declares `module Props` and `[<AutoOpen>] module Elements` in `namespace Ranvier.View.Dsl`, with `TagScope<'native, 'inst>` inheriting `TagBase<'native, 'inst>`, `HtmlElement<'native, 'inst>`, `SvgElement<'native, 'inst>`, `HtmlVoidElement<'native, 'inst>`, and one generic class per tag named after the tag (`base'` and `option'` take an apostrophe). Each tag class has a private primary constructor over the parts array, a public `[<ParamArray>]` constructor, and static inline members for its inherited + tag-specific attributes, events, hooks, and `.props`. Coverage records `templateTagClassCount` (112). Generation stops when two classes share a name.
 
+It also writes a fifth output, `src/Ranvier.View/Generated/SvgDsl.fs` (or beside the fourth output, its `Dsl` suffix replaced by `SvgDsl`), from all 63 entries of the pinned `SVGElementTagNameMap`. It declares `[<AutoOpen>] module SvgElements` in `namespace Ranvier.View.Dsl`: one generic class per tag over `SvgElement<'native, 'inst>`, named after the tag, whose constructor enables SVG creation (`Departures.enableSvg`). Under Fable the module calls `Representation.acceptSvgNames` when it loads, so the case-sensitive SVG names are accepted in a bundle that uses an SVG tag. Eight classes take a trailing apostrophe: `a'`, `script'`, `style'` and `title'` beside the HTML tag classes, `text'` and `view'` beside the handwritten Dsl's `text` and `view`, `set'` beside FSharp.Core's `set`, and `use'`, an F# keyword. Generation stops when an apostrophe entry names no SVG tag, when an SVG tag's native type is not an `SVGElement`, or when two HTML or SVG classes share a name. Coverage records `svgTagCount` (63). `GeneratorTests.fsx` also checks that no SVG class takes the name of a handwritten Dsl function or of a member of an FSharp.Core `[<AutoOpen>]` module, that the lowercase SVG name lists in `Departures.fs` equal the SVG tags HTML does not also define, and that `Representation.fs` accepts every camel-case SVG tag.
+
 ```fsharp
 Html.article Tree.ops
     [| Html.Properties.HTMLElement.titleStatic "Article"
@@ -49,7 +52,7 @@ Html.article Tree.ops
     [| Html.img Tree.ops [| Html.Img.altStatic "Illustration" |] |]
 ```
 
-Shared modifiers constrain their native type, so input properties cannot be used on a div. Getters preserve supported primitives, options, named native references and closed native generics. Setters support writable primitives and optional primitives. Native-object setters require explicit equality/ownership policy. Unsupported arrays, callbacks and unmapped aliases/unions are recorded in `Generated/Html.coverage.json`; they are not widened to `obj`. Methods and SVG are outside this scope.
+Shared modifiers constrain their native type, so input properties cannot be used on a div. Getters preserve supported primitives, options, named native references and closed native generics. Setters support writable primitives and optional primitives. Native-object setters require explicit equality/ownership policy. Unsupported arrays, callbacks and unmapped aliases/unions are recorded in `Generated/Html.coverage.json`; they are not widened to `obj`. Methods, and properties, attributes and events specific to SVG elements, are outside this scope.
 
 Files is writable upstream but getter-only by Ranvier policy; form is readonly upstream. `innerHTML`, `outerHTML`, `textContent`, `innerText`, `outerText` and iframe `srcdoc` receive no setters. The template catalogue also omits `text` on anchor, option, title and script, `value` and `defaultValue` on output, and `defaultValue` on textarea, whose setters replace child nodes. Generated helpers delegate ownership/scheduling to handwritten `Typed` operations. Templates mount children into content; selects apply modifiers after options. HTML snapshots reject raw-text/context-sensitive elements without explicit serialization policy and preserve initial newlines in pre/textarea. These distinctions follow the [HTML syntax model](https://html.spec.whatwg.org/multipage/syntax.html); legacy param retains void compatibility. Complete portable property metadata remains separate work.
 

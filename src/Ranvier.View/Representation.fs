@@ -421,26 +421,36 @@ let private validNameCharacters underscore (value: string) =
 
     valid
 
+// The case-sensitive SVG tag and attribute names of the HTML parser's SVG adjustment tables, space-separated.
+[<Literal>]
+let private SvgCaseNames =
+    "altGlyph altGlyphDef altGlyphItem animateColor animateMotion animateTransform clipPath feBlend feColorMatrix feComponentTransfer feComposite feConvolveMatrix feDiffuseLighting feDisplacementMap feDistantLight feDropShadow feFlood feFuncA feFuncB feFuncG feFuncR feGaussianBlur feImage feMerge feMergeNode feMorphology feOffset fePointLight feSpecularLighting feSpotLight feTile feTurbulence foreignObject glyphRef linearGradient radialGradient textPath attributeName attributeType baseFrequency baseProfile calcMode clipPathUnits diffuseConstant edgeMode filterUnits gradientTransform gradientUnits kernelMatrix kernelUnitLength keyPoints keySplines keyTimes lengthAdjust limitingConeAngle markerHeight markerUnits markerWidth maskContentUnits maskUnits numOctaves pathLength patternContentUnits patternTransform patternUnits pointsAtX pointsAtY pointsAtZ preserveAlpha preserveAspectRatio primitiveUnits refX refY repeatCount repeatDur requiredExtensions requiredFeatures specularConstant specularExponent spreadMethod startOffset stdDeviation stitchTiles surfaceScale systemLanguage tableValues targetX targetY textLength viewBox viewTarget xChannelSelector yChannelSelector zoomAndPan"
+
 /// <summary>
 /// The case-sensitive SVG tag and attribute names accepted besides lowercase names, as the HTML parser's SVG adjustment
-/// tables restore them. On .NET every name is accepted; under Fable, the module of the SVG sugar tags sets them, so a
-/// bundle without an SVG tag accepts lowercase names only.
+/// tables restore them. On .NET every name is accepted; under Fable, the module of the SVG tags sets them, so a bundle
+/// without an SVG tag accepts lowercase names only.
 /// </summary>
 [<Sealed>]
 type internal SvgNames() =
 #if FABLE_COMPILER
-    /// <summary>A JS Set of the names; null until the SVG sugar tags' module loads.</summary>
+    /// <summary>A JS Set of the names; null until the SVG tags' module loads.</summary>
     member val Names: obj = null with get, set
 #else
-    member val Names =
-        System.Collections.Generic.HashSet<string>(
-            "altGlyph altGlyphDef altGlyphItem animateColor animateMotion animateTransform clipPath feBlend feColorMatrix feComponentTransfer feComposite feConvolveMatrix feDiffuseLighting feDisplacementMap feDistantLight feDropShadow feFlood feFuncA feFuncB feFuncG feFuncR feGaussianBlur feImage feMerge feMergeNode feMorphology feOffset fePointLight feSpecularLighting feSpotLight feTile feTurbulence foreignObject glyphRef linearGradient radialGradient textPath attributeName attributeType baseFrequency baseProfile calcMode clipPathUnits diffuseConstant edgeMode filterUnits gradientTransform gradientUnits kernelMatrix kernelUnitLength keyPoints keySplines keyTimes lengthAdjust limitingConeAngle markerHeight markerUnits markerWidth maskContentUnits maskUnits numOctaves pathLength patternContentUnits patternTransform patternUnits pointsAtX pointsAtY pointsAtZ preserveAlpha preserveAspectRatio primitiveUnits refX refY repeatCount repeatDur requiredExtensions requiredFeatures specularConstant specularExponent spreadMethod startOffset stdDeviation stitchTiles surfaceScale systemLanguage tableValues targetX targetY textLength viewBox viewTarget xChannelSelector yChannelSelector zoomAndPan"
-                .Split
-                ' '
-        ) with get, set
+    member val Names = System.Collections.Generic.HashSet<string>(SvgCaseNames.Split ' ') with get, set
 #endif
 
 let internal svgNames = SvgNames ()
+
+#if FABLE_COMPILER
+[<Fable.Core.Emit("new Set($0.split(' '))")>]
+let private nameSet (names: string) : obj =
+    Fable.Core.Util.jsNative
+
+/// <summary>Sets <c>svgNames.Names</c>; the modules of the SVG tags call it when they load.</summary>
+let internal acceptSvgNames () =
+    svgNames.Names <- nameSet SvgCaseNames
+#endif
 
 #if FABLE_COMPILER
 [<Fable.Core.Emit("($0 != null && $0.has($1))")>]

@@ -623,13 +623,14 @@ let internal registerReflow (node: Node) (reflow: Reflow) : unit -> unit =
 // The parent recorded for each row fragment by `Nest`.
 let private nests = weakMap ()
 
-// The lowercase SVG element names that HTML does not also define, and svg.
+// The lowercase names of the SVG tags that HTML does not also define. GeneratorTests.fsx checks both lists against the
+// generated tags.
 #if FABLE_COMPILER
-[<Emit("new Set('svg g path circle ellipse line polyline polygon rect text tspan textpath use defs symbol marker pattern lineargradient radialgradient stop clippath mask foreignobject'.split(' '))")>]
+[<Emit("new Set('animate animatemotion animatetransform circle clippath defs desc ellipse feblend fecolormatrix fecomponenttransfer fecomposite feconvolvematrix fediffuselighting fedisplacementmap fedistantlight fedropshadow feflood fefunca fefuncb fefuncg fefuncr fegaussianblur feimage femerge femergenode femorphology feoffset fepointlight fespecularlighting fespotlight fetile feturbulence filter foreignobject g image line lineargradient marker mask metadata mpath path pattern polygon polyline radialgradient rect set stop svg switch symbol text textpath tspan use view'.split(' '))")>]
 let private svgNames () : obj = jsNative
 #else
 let private svgNameList =
-    "svg g path circle ellipse line polyline polygon rect text tspan textpath use defs symbol marker pattern lineargradient radialgradient stop clippath mask foreignobject"
+    "animate animatemotion animatetransform circle clippath defs desc ellipse feblend fecolormatrix fecomponenttransfer fecomposite feconvolvematrix fediffuselighting fedisplacementmap fedistantlight fedropshadow feflood fefunca fefuncb fefuncg fefuncr fegaussianblur feimage femerge femergenode femorphology feoffset fepointlight fespecularlighting fespotlight fetile feturbulence filter foreignobject g image line lineargradient marker mask metadata mpath path pattern polygon polyline radialgradient rect set stop svg switch symbol text textpath tspan use view"
 
 let private svgNames () : obj =
     box (System.Collections.Generic.HashSet<string>(svgNameList.Split ' ', System.StringComparer.Ordinal))
