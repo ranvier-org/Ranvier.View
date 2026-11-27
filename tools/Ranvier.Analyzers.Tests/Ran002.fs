@@ -113,12 +113,18 @@ let drop (policy: FlightPolicy) graph id gen owed = trace (graph, id, gen, owed,
                 Expect.isEmpty (findings "module Fixture\nlet queued (policy: Ranvier.FlightPolicy) = policy.IsQueue\n") "Ranvier's FlightPolicy"
             }
 
-            test "a project without Fable.Core is not analyzed" {
+            test "a dual-target project with a manifest and no Fable.Core reference is analyzed, and one without a signal is not" {
                 let source =
                     policy
                     + "let isQueue (policy: Policy) = policy.IsQueue\n"
 
-                Expect.isEmpty (run Analyzers.ran002Cli (context (plain.Force ()) source)) "no Fable.Core reference"
+                Expect.equal
+                    (run Analyzers.ran002Cli (context (plain.Force ()) source)
+                     |> List.map _.Code)
+                    [ "RAN002" ]
+                    "manifest without Fable.Core"
+
+                Expect.isEmpty (run Analyzers.ran002Cli (contextIn None (plain.Force ()) [ "Fixture.fs", source ])) "no Fable signal"
             }
 
             test "the finding's range is the tester call" {

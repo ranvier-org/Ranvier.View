@@ -207,5 +207,38 @@ let paramPolicy (p: FlightPolicy) =
                 Expect.isEmpty
                     (run Analyzers.ran015Cli (context (ranvier.Force ()) clean))
                     "used token, KeepLatest, and parameterized policy are clean"
+
+                let timedMissing =
+                    ce
+                        "let s = createSignal 1
+let a () =
+    asyncMemo {
+        policy FlightPolicy.CancelPrevious
+        debounce System.TimeSpan.Zero
+        let! x = s
+        do! Task.CompletedTask
+        return x
+    }
+"
+
+                let timedMsgs = run Analyzers.ran015Cli (context (ranvier.Force ()) timedMissing)
+                Expect.equal (timedMsgs |> List.map _.Code) [ "RAN015" ] "timed CancelPrevious without token reports RAN015"
+                Expect.equal (textAt timedMissing timedMsgs.Head.Range) "policy FlightPolicy.CancelPrevious" "header range preserved with debounce"
+
+                let timedClean =
+                    ce
+                        "let s = createSignal 1
+let a () =
+    asyncMemo {
+        policy FlightPolicy.CancelPrevious
+        debounce System.TimeSpan.Zero
+        let! ct = asyncMemo.cancellationToken
+        let! x = s
+        do! Task.Delay (10, ct)
+        return x
+    }
+"
+
+                Expect.isEmpty (run Analyzers.ran015Cli (context (ranvier.Force ()) timedClean)) "timed CancelPrevious using token is clean"
             }
         ]

@@ -221,5 +221,22 @@ let closureInRow =
                 Expect.isEmpty
                     (codes clean)
                     "effect, boundary, constant, Peek, untrack, nested tracked computations, closure in row, and bound CEs stay clean"
+
+                let v024Triggers =
+                    "let s = createSignal 1
+let ed = createDraft (fun _ -> 10)
+let mBatched () = memo { return batched { return s.Value } }
+let mEditable () = memo { return (if ed.IsEdited then ed.Upstream else 0) }
+"
+
+                Expect.equal (codes v024Triggers) [ "RAN018"; "RAN018"; "RAN018" ] "0.2.4 batched and Editable.IsEdited/Upstream in 0-bind memo"
+
+                let v024Clean =
+                    "let s = createSignal 1
+let mUntracked () = memo { return untracked { return s.Value } }
+let sigInit () = signal { return s.Value }
+"
+
+                Expect.isEmpty (codes v024Clean) "0.2.4 untracked CE and signal { ... } stay clean in RAN018"
             }
         ]

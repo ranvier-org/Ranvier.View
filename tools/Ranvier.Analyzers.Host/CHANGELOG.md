@@ -1,5 +1,8 @@
 ---
 last_commit_released: 79abd73e119b8cbfad6ab21827d3d6126e3fcef8
+include:
+  - ../Ranvier.Analyzers/
+  - ../../Directory.Build.props
 updaters:
   - regex:
       file: Ranvier.Analyzers.Host.csproj

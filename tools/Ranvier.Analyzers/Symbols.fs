@@ -21,6 +21,7 @@ let isMember (entity: string) (name: string) (m: FSharpMemberOrFunctionOrValue) 
 /// the display name otherwise.
 let display (m: FSharpMemberOrFunctionOrValue) : string =
     match enclosing m, m.LogicalName with
+    | "Ranvier.CE.SignalBuilder", "Run" -> "signal"
     | "Ranvier.CE.MemoBuilder", "Run" -> "memo"
     | "Ranvier.CE.EffectBuilder", "Run" -> "effect"
     | "Ranvier.CE.AsyncMemoBuilder", "Run" -> "asyncMemo"
@@ -29,6 +30,12 @@ let display (m: FSharpMemberOrFunctionOrValue) : string =
     | "Ranvier.CE.DraftBuilder", "Run" -> "draft"
     | "Ranvier.CE.BoundaryBuilder", "Run" -> "boundary"
     | "Ranvier.CE.RowBuilder", "Run" -> "row"
+    | "Ranvier.CE.CleanupBuilder", "Run" -> "cleanup"
+    | "Ranvier.CE.BatchedBuilder", "Run" -> "batched"
+    | "Ranvier.CE.UntrackedBuilder", "Run" -> "untracked"
+    | "Ranvier.CE.RootBuilder", "Run" -> "root"
+    | "Ranvier.CE.DispatchBuilder", "Run" -> "dispatch"
+    | "Ranvier.Owner", "Run" -> "owner"
     | _ ->
         match m.ApparentEnclosingEntity with
         | Some entity when m.IsConstructor -> entity.DisplayName
@@ -338,8 +345,8 @@ module Core =
 
     let private keyedTypes = set [ "Ranvier.Projection`2"; "Ranvier.Lookup`2" ]
 
-    /// Whether `m` is a tracked read: `Value`, `TryValue` or `Status` of a node, `Get`, `TryGet` or `Keys` of a
-    /// projection or lookup. `Peek` is untracked.
+    /// Whether `m` is a tracked read: `Value`, `TryValue` or `Status` of a node, `IsEdited` or `Upstream` of an
+    /// `Editable`, or `Get`, `TryGet` or `Keys` of a projection or lookup. `Peek` is untracked.
     let isReactiveRead (m: FSharpMemberOrFunctionOrValue) : bool =
         let entity = enclosing m
 
@@ -347,6 +354,9 @@ module Core =
          && (m.LogicalName = "get_Value"
              || m.LogicalName = "get_TryValue"
              || m.LogicalName = "get_Status"))
+        || (entity = "Ranvier.Editable`1"
+            && (m.LogicalName = "get_IsEdited"
+                || m.LogicalName = "get_Upstream"))
         || (keyedTypes.Contains entity
             && (m.LogicalName = "Get"
                 || m.LogicalName = "TryGet"
@@ -434,8 +444,9 @@ module Core =
         match param0RangeType m with
         | Some t ->
             match typeFullName t with
-            | Some ("Ranvier.Internal.MemoTail`2" | "Ranvier.Internal.ConfiguredMemoTail`4") -> MemoRunMode.Tail
-            | Some "Ranvier.Internal.ConfiguredMemo`5" when t.GenericArguments.Count > 0 ->
+            | Some ("Ranvier.Internal.MemoTail`2" | "Ranvier.Internal.MemoTail`3" | "Ranvier.Internal.ConfiguredMemoTail`4" | "Ranvier.Internal.ConfiguredMemoTail`6") ->
+                MemoRunMode.Tail
+            | Some ("Ranvier.Internal.ConfiguredMemo`5" | "Ranvier.Internal.ConfiguredMemo`7") when t.GenericArguments.Count > 0 ->
                 match typeFullName t.GenericArguments[0] with
                 | Some "Ranvier.Internal.OwningMode" -> MemoRunMode.Owning
                 | Some "Ranvier.Internal.OptionMode" -> MemoRunMode.Option
@@ -447,7 +458,9 @@ module Core =
     let asyncRunMode (m: FSharpMemberOrFunctionOrValue) : AsyncRunMode =
         match param0RangeType m with
         | Some t when
-            typeFullName t = Some "Ranvier.Internal.ConfiguredAsync`5"
+            (match typeFullName t with
+             | Some ("Ranvier.Internal.ConfiguredAsync`5" | "Ranvier.Internal.ConfiguredAsync`6") -> true
+             | _ -> false)
             && t.GenericArguments.Count > 0
             ->
             match typeFullName t.GenericArguments[0] with
@@ -459,10 +472,16 @@ module Core =
         set
             [
                 "Ranvier.Internal.MemoHeader`2"
+                "Ranvier.Internal.MemoHeader`3"
                 "Ranvier.Internal.EffectHeader`1"
+                "Ranvier.Internal.EffectHeader`2"
                 "Ranvier.Internal.AsyncHeader`2"
+                "Ranvier.Internal.AsyncHeader`3"
                 "Ranvier.Internal.StreamHeader`1"
+                "Ranvier.Internal.StreamHeader`2"
                 "Ranvier.Internal.BoundaryHeader`3"
+                "Ranvier.Internal.SignalHeader`1"
+                "Ranvier.Internal.DispatchHeader`1"
             ]
 
     /// Whether `m` is the header-carrying `For` overload of a `Ranvier.CE` builder.
@@ -539,10 +558,21 @@ module Core =
         (ceBuilder m).IsSome
         && m.LogicalName = "MergeSources"
 
-    /// Whether `m` is `Ranvier.CE.Builders.withComparer`.
+    /// Whether `m` is a source-wrapping helper on `Ranvier.CE.Builders` (`withComparer`, `tryRead`, `debounced*`, `throttled*`).
     let isWithComparer (m: FSharpMemberOrFunctionOrValue) : bool =
         enclosing m = "Ranvier.CE.Builders"
-        && m.LogicalName = "withComparer"
+        && (match m.LogicalName with
+            | "withComparer"
+            | "tryRead"
+            | "debounced"
+            | "debouncedWith"
+            | "throttled"
+            | "throttledWith"
+            | "throttledFirst"
+            | "throttledFirstWith"
+            | "throttledLast"
+            | "throttledLastWith" -> true
+            | _ -> false)
 
     let private creatorFunctions =
         set
@@ -579,6 +609,7 @@ module Core =
                 "createBoundary"
                 "createBoundaryWithComparer"
                 "createRoot"
+                "runWithOwner"
                 "createProjection"
                 "createProjectionWith"
                 "createProjectionWithOptions"
@@ -610,6 +641,18 @@ module Core =
                         "throttleFirstWith"
                         "throttleLast"
                         "throttleLastWith"
+                    ]
+                "Ranvier.CE.Builders",
+                set
+                    [
+                        "debounced"
+                        "debouncedWith"
+                        "throttled"
+                        "throttledWith"
+                        "throttledFirst"
+                        "throttledFirstWith"
+                        "throttledLast"
+                        "throttledLastWith"
                     ]
                 "Ranvier.SignalModule", combinators
                 "Ranvier.MemoModule", combinators
@@ -665,25 +708,44 @@ module Core =
     let private creatorTypes =
         set [ "Ranvier.Memo`1"; "Ranvier.Effect"; "Ranvier.AsyncMemo`1" ]
 
-    /// Whether a call of `m` creates an owned node.
+    /// Whether a call of `m` creates an owned node or accesses the current owner scope.
     let isCreator (m: FSharpMemberOrFunctionOrValue) : bool =
         (creatorModules
          |> Map.tryFind (enclosing m)
          |> Option.exists (fun names -> names.Contains m.LogicalName))
         || (m.IsConstructor
             && creatorTypes.Contains (enclosing m))
+        || (match enclosing m, m.LogicalName with
+            | ("Ranvier.CE.CleanupBuilder" | "Ranvier.CE.RootBuilder" | "Ranvier.Owner"), "Run" -> true
+            | _ -> false)
         || (match isCeRun m with
             | Some kind -> kind <> CeKind.Row
             | None -> false)
 
-    /// Whether the lambda argument of a call of `m` runs in the caller's run: `untrack`, `batch`, and the `Delay` of a
-    /// task expression.
+    /// Whether the lambda argument of a call of `m` runs synchronously in the caller's run: `untrack`/`untracked`,
+    /// `batch`/`batched`, `signal`, `graph { ... }`, and the `Delay` of a task expression.
     let isTransparent (m: FSharpMemberOrFunctionOrValue) : bool =
-        (enclosing m = Api
+        let entity = enclosing m
+
+        (entity = Api
          && (m.LogicalName = "untrack"
              || m.LogicalName = "batch"))
         || (m.LogicalName = "Delay"
-            && enclosing m = "Microsoft.FSharp.Control.TaskBuilderBase")
+            && entity = "Microsoft.FSharp.Control.TaskBuilderBase")
+        || entity = "Ranvier.CE.BatchedBuilder"
+        || entity = "Ranvier.CE.UntrackedBuilder"
+        || entity = "Ranvier.CE.SignalBuilder"
+        || (entity = "Ranvier.Graph"
+            && (match m.LogicalName with
+                | "Run"
+                | "Delay"
+                | "Combine"
+                | "While"
+                | "TryWith"
+                | "TryFinally"
+                | "Using"
+                | "For" -> true
+                | _ -> false))
 
     /// How a pure context fails when its body creates an owned node.
     [<RequireQualifiedAccess>]
@@ -899,9 +961,11 @@ module Core =
         || isMember "Ranvier.SignalModule" "update" m
         || isMember "Ranvier.Graph" "Pump" m
 
-    /// Whether `m` is `Graph.Dispatch`, which runs its work on the owning thread.
+    /// Whether `m` is `Graph.Dispatch`, `Graph.DispatchAsync`, or `DispatchBuilder.Run`, which marshal work onto the owning thread.
     let isDispatch (m: FSharpMemberOrFunctionOrValue) : bool =
         isMember "Ranvier.Graph" "Dispatch" m
+        || isMember "Ranvier.Graph" "DispatchAsync" m
+        || isMember "Ranvier.CE.DispatchBuilder" "Run" m
 
     /// Whether a call of `m` runs its delegate argument on a thread-pool or new thread.
     let threadStarter (m: FSharpMemberOrFunctionOrValue) : bool =
@@ -930,7 +994,9 @@ module Core =
         match ceBuilder m with
         | Some CeKind.AsyncMemo -> ceBindKind m = Some CeBindKind.TaskAwait
         | Some _ -> false
-        | None -> isBind m
+        | None ->
+            enclosing m <> "Ranvier.CE.RootBuilder"
+            && isBind m
 
     /// Whether `m` is a computation-expression `Combine`, whose second argument runs after its first.
     let isCombine (m: FSharpMemberOrFunctionOrValue) : bool =
@@ -991,9 +1057,10 @@ module Core =
             | "Ranvier.AsyncMemo`1" -> true
             | _ -> false)
 
-    /// Whether `m` is `untrack`.
+    /// Whether `m` is `untrack` or a member of `UntrackedBuilder` (`untracked { ... }`).
     let isUntrack (m: FSharpMemberOrFunctionOrValue) : bool =
         isMember Api "untrack" m
+        || enclosing m = "Ranvier.CE.UntrackedBuilder"
 
     let private untrackedPhaseFunctions: Map<string * string * int, int> =
         Map.ofList

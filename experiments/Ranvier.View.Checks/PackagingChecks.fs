@@ -38,7 +38,6 @@ let private browserReferences () =
     let expectedPackages =
         set
             [
-                "Fable.Core"
                 "Ranvier$(RanvierPackageSuffix)"
                 "Ranvier.Dom$(RanvierPackageSuffix)"
                 "Fable.Ranvier.Dom$(RanvierPackageSuffix)"

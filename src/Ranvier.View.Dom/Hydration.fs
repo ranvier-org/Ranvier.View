@@ -2,7 +2,9 @@
 module Ranvier.View.Dom.Hydration
 
 open System
+#if FABLE_COMPILER
 open Fable.Core
+#endif
 open Ranvier.Dom
 open Ranvier
 open Ranvier.View

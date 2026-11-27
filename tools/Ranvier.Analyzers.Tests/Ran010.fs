@@ -534,5 +534,54 @@ let callbackOk (handlers: ResizeArray<unit -> unit>) =
                     mixedCodes
                     [ "RAN010"; "RAN010"; "RAN010"; "RAN010"; "RAN010"; "RAN010" ]
                     "effect Phase1, asyncMemo owning Phase1, editable, draft, stream, row (projOk and callbackOk clean)"
+
+                let v024 =
+                    ce
+                        "let s = createSignal 1
+let scopeViolations (g: Graph) (o: Owner) =
+    let m1 = memo { cleanup { () }; return 1 }
+    let m2 = memo { root { () } |> ignore; return 1 }
+    let m3 = memo { o { () }; return 1 }
+    let m4 = memo { runWithOwner o (fun () -> ()); return 1 }
+    let m5 = memo { s |> debounced TimeSpan.Zero |> ignore; return 1 }
+    let m6 = memo { s |> throttled TimeSpan.Zero |> ignore; return 1 }
+    let m7 = memo { batched { cleanup { () } }; return 1 }
+    let m8 = memo { untracked { cleanup { () } }; return 1 }
+    let m9 = memo { g { cleanup { () } }; return 1 }
+    let m10 = memo { let _ = signal { cleanup { () }; return 1 } in return 1 }
+    let sigClean =
+        memo {
+            let s1 = signal { return 1 }
+            let s2 = signal { comparer HashIdentity.Structural; return 2 }
+            return s1, s2
+        }
+    m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, sigClean
+"
+
+                Expect.equal
+                    (run Analyzers.ran010Cli (context (ranvier.Force ()) v024)
+                     |> List.map _.Code)
+                    (List.replicate 10 "RAN010")
+                    "0.2.4 scope/pipe creators and transparent wrappers (signal clean)"
+
+                let timedMemoFixSrc =
+                    ce
+                        "let s = createSignal 1
+let m () =
+    memo {
+        debounce TimeSpan.Zero
+        let! x = s
+        cleanup { () }
+        return x
+    }
+"
+
+                let timedMsgs = run Analyzers.ran010Cli (context (ranvier.Force ()) timedMemoFixSrc)
+                Expect.equal (timedMsgs |> List.map _.Code) [ "RAN010" ] "timed pure memo reports RAN010"
+
+                let timedRepaired =
+                    applyFix timedMemoFixSrc (timedMsgs.Head.Fixes |> List.exactlyOne)
+
+                Expect.isEmpty (run Analyzers.ran010Cli (context (ranvier.Force ()) timedRepaired)) "timed memo owning fix is clean"
             }
         ]

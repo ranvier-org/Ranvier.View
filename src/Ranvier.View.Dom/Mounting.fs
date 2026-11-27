@@ -1,7 +1,9 @@
 module Ranvier.View.Dom.Mounting
 
 open System
+#if FABLE_COMPILER
 open Fable.Core
+#endif
 open Ranvier.Dom
 open Ranvier
 open Ranvier.View

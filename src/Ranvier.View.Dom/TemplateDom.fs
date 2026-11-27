@@ -2,8 +2,10 @@ module Ranvier.View.Dom.TemplateDom
 
 open Ranvier.View
 open System
+#if FABLE_COMPILER
 open Fable.Core
 open Fable.Core.JsInterop
+#endif
 open Ranvier.Dom
 open Ranvier
 open Ranvier.View.Representation

@@ -3,7 +3,9 @@ module Ranvier.View.Dom.Prepared
 
 open Ranvier.View
 open System
+#if FABLE_COMPILER
 open Fable.Core
+#endif
 open Ranvier.Dom
 open Ranvier.View.Representation
 

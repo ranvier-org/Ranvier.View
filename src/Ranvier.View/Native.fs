@@ -4,7 +4,6 @@
 /// </summary>
 module internal Ranvier.View.Native
 
-open Fable.Core
 open global.Ranvier.Dom
 
 /// <summary>The weak membership operations used for DOM ownership checks.</summary>
@@ -315,6 +314,8 @@ let inline private orNull (value: 'T option) : 'R =
 #endif
 
 #if FABLE_COMPILER
+open Fable.Core
+
 [<Emit("document")>]
 let document () : Document = jsNative
 #else

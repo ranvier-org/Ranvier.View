@@ -43,9 +43,6 @@
     <None Include="NativeDisplay.LICENSE.txt" Pack="true" PackagePath="\" />
     <None Include="../../brand/icon/ranvier-icon.png" Pack="true" PackagePath="\" Visible="false" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Fable.Core" Version="5.3.0" />
-  </ItemGroup>
   <ItemGroup Condition="'$(UseLocalRanvier)' == 'true' and '$(FABLE_COMPILER)' != 'true'">
     <ProjectReference Include="$(RanvierRoot)/src/Ranvier.Dom/Ranvier.Dom.fsproj" />
   </ItemGroup>

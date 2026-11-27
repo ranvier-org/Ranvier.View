@@ -421,7 +421,13 @@ let rec private referencesBoundSource (target: FSharpMemberOrFunctionOrValue) (e
     | Call (_, pipe, _, _, [ arg; _ ]) when Symbols.isPipe Symbols.PipeRight pipe -> referencesBoundSource target arg
     | Call (_, pipe, _, _, [ _; arg ]) when Symbols.isPipe Symbols.PipeLeft pipe -> referencesBoundSource target arg
     | Call (_, m, _, _, args) when isMergeSources m || isWithComparer m -> List.exists (referencesBoundSource target) args
-    | NewObject (ctor, _, args) when Symbols.enclosing ctor = "Ranvier.Internal.ComparedReactive`1" -> List.exists (referencesBoundSource target) args
+    | NewObject (ctor, _, args) when
+        (match Symbols.enclosing ctor with
+         | "Ranvier.Internal.ComparedReactive`1"
+         | "Ranvier.Internal.ReadingReactive`1" -> true
+         | _ -> false)
+        ->
+        List.exists (referencesBoundSource target) args
     | _ -> false
 
 /// Whether `inner` (the relative path from an inner read or reactive `let!` back to the `let` binding) remains within
@@ -622,6 +628,25 @@ let private offThreadWrites (input: Input) : Message list =
             - starter.Range.StartColumn)
         |> Array.tryHead
 
+    let appliedAliases =
+        lazy
+            (let pairs = ResizeArray<FSharpMemberOrFunctionOrValue * FSharpExpr>()
+
+             let rec collect (e: FSharpExpr) =
+                 match e with
+                 | Application (Lambda (param, body), _, [ arg ]) ->
+                     pairs.Add (param, arg)
+                     collect arg
+                     collect body
+                 | _ ->
+                     for sub in e.ImmediateSubExpressions do
+                         collect sub
+
+             for def in input.Index.Definitions do
+                 collect def.Body
+
+             pairs.ToArray ())
+
     // A graph that the innermost starter's delegate constructs, a node it constructs over that graph, and a write in
     // that graph's `Run`, belong to the delegate's thread.
     let ownedByThread (site: CallSite) =
@@ -638,21 +663,40 @@ let private offThreadWrites (input: Input) : Message list =
                     | NewObject (constructor, _, _) when isGraphConstructor constructor -> Some binding.Value
                     | _ -> None)
 
-            let overGraph (expr: FSharpExpr) =
+            let rec isThreadGraph (expr: FSharpExpr) =
                 match expr with
-                | NewObject (constructor, _, Value graph :: _) when isNodeConstructor constructor -> graphs |> Array.contains graph
-                | Call (Some (Value graph), m, _, _, _)
-                | Call (None, m, _, _, Value graph :: _) when isGraphRun m -> graphs |> Array.contains graph
+                | Value v ->
+                    graphs |> Array.contains v
+                    || input.Index.Lets
+                       |> Array.exists (fun b -> b.Value = v && isThreadGraph b.Bound)
+                    || appliedAliases.Value
+                       |> Array.exists (fun (p, arg) -> p = v && isThreadGraph arg)
+                | Coerce (_, inner) -> isThreadGraph inner
+                | _ -> false
+
+            let rec overGraph (expr: FSharpExpr) =
+                match expr with
+                | Let (_, body)
+                | Application (Lambda (_, body), _, [ _ ]) -> overGraph body
+                | NewObject (constructor, _, gExpr :: _) when isNodeConstructor constructor -> isThreadGraph gExpr
+                | Call (Some gExpr, m, _, _, _)
+                | Call (None, m, _, _, gExpr :: _) when isGraphRun m -> isThreadGraph gExpr
                 | _ -> false
 
             let insideRun =
                 input.Index.Calls
                 |> Array.exists (fun call ->
                     isGraphRun call.Callee
-                    && within call.Range site.Range
+                    && (within call.Range site.Range
+                        || (match Index.within call.Path site.Path with
+                            | Some inner when not inner.IsEmpty ->
+                                match List.last inner with
+                                | Step.Argument _ -> true
+                                | _ -> false
+                            | _ -> false))
                     && (match call.Receiver, call.Arguments with
-                        | Some (Value graph), _
-                        | None, Value graph :: _ -> graphs |> Array.contains graph
+                        | Some gExpr, _
+                        | None, gExpr :: _ -> isThreadGraph gExpr
                         | _ -> false))
 
             graphs |> Array.contains target
@@ -691,6 +735,8 @@ let rec private cancelPreviousHeaderRange (expr: FSharpExpr) : range option =
     match expr with
     | Call (_, m, _, _, [ _; NewUnionCase (_, case, []) ]) when isCePolicyCall m && isCancelPrevious case -> Some expr.Range
     | Call (_, _, _, _, args) -> List.tryPick cancelPreviousHeaderRange args
+    | Let (_, body)
+    | Sequential (_, body) -> cancelPreviousHeaderRange body
     | _ -> None
 
 let rec private referencesValue (target: FSharpMemberOrFunctionOrValue) (expr: FSharpExpr) : bool =

@@ -43,8 +43,7 @@ triggering example and a corrected version.
 - **Ranvier** rules run in a project that references `Ranvier`.
 - **view** rules run in a project that references `Ranvier.View` or `Ranvier.View.Dom`, or compiles
   their sources, such as the view projects of this repository.
-- **Fable** rules run in a project that Fable compiles. Every Ranvier project references Fable.Core, so the rules
-  read the project's own signals instead:
+- **Fable** rules run in a project that Fable compiles, detected from the project's Fable signals:
   - a tool manifest (`.config/dotnet-tools.json`, searched upward to the first root manifest) that declares `fable` or
     `fickl`;
   - a `Fable.*` package reference in the project file;

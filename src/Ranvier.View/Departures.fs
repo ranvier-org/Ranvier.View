@@ -4,7 +4,9 @@
 /// </summary>
 module Ranvier.View.Departures
 
+#if FABLE_COMPILER
 open Fable.Core
+#endif
 open Ranvier.Dom
 open Ranvier.View.Representation
 

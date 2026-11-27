@@ -350,5 +350,65 @@ open System.Threading.Tasks
                 Expect.isEmpty
                     (run Analyzers.ran012Cli (context (ranvier.Force ()) clean))
                     "pre-await, no-await Phase2 (RAN016's), headers, nested effects, and Peek stay clean in RAN012"
+
+                let v024Triggers =
+                    ce
+                        "let load (userId: Signal<int>) (ed: Editable<int>) (o: Owner) =
+    let aCleanup =
+        asyncMemo {
+            owning
+            do! Task.CompletedTask
+            cleanup { ignore userId.Value }
+            return 0
+        }
+    let aRoot =
+        asyncMemo {
+            do! Task.CompletedTask
+            let r = root { let! _own = root.owner in return userId.Value }
+            return r
+        }
+    let aOwner =
+        asyncMemo {
+            do! Task.CompletedTask
+            o { ignore userId.Value }
+            return 0
+        }
+    let aTimed =
+        asyncMemo {
+            debounce System.TimeSpan.Zero
+            let! k = userId
+            do! Task.CompletedTask
+            return if ed.IsEdited then ed.Upstream + k else k
+        }
+    aCleanup, aRoot, aOwner, aTimed
+"
+
+                Expect.equal
+                    (run Analyzers.ran012Cli (context (ranvier.Force ()) v024Triggers)
+                     |> List.map _.Code)
+                    [ "RAN012"; "RAN012"; "RAN012"; "RAN012"; "RAN012" ]
+                    "0.2.4 post-await cleanup, root (with root.owner), owner CE, and timed asyncMemo Editable reads"
+
+                let v024Clean =
+                    ce
+                        "let load (s: Signal<int>) (other: Signal<int>) =
+    let aUntracked =
+        asyncMemo {
+            do! Task.CompletedTask
+            return untracked { return other.Value }
+        }
+    let aTimedPre =
+        asyncMemo {
+            debounce System.TimeSpan.Zero
+            let! x = s
+            do! Task.CompletedTask
+            return x
+        }
+    aUntracked, aTimedPre
+"
+
+                Expect.isEmpty
+                    (run Analyzers.ran012Cli (context (ranvier.Force ()) v024Clean))
+                    "0.2.4 untracked CE after await and timed asyncMemo pre-await bind stay clean"
             }
         ]
