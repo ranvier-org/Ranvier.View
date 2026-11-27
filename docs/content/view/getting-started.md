@@ -22,7 +22,7 @@ Use this `Counter/Counter.fsproj`:
     <Compile Include="Main.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Ranvier.View.Dom" Version="0.6.0" />
+    <PackageReference Include="Ranvier.View.Dom" Version="0.7.0" />
     <PackageReference Include="Fable.Ranvier.Dom" Version="0.1.0" />
     <PackageReference Update="FSharp.Core" Version="10.1.401" />
   </ItemGroup>

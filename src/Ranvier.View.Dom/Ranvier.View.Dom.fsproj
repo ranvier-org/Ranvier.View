@@ -14,7 +14,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>Alpha release. The API may change before 1.0.</PackageReleaseNotes>
     <!-- Shares its version with Ranvier.View, set by ShipIt from src/Ranvier.View/CHANGELOG.md. -->
-    <Version>0.6.0</Version>
+    <Version>0.7.0</Version>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <RanvierExactSiblingVersions>true</RanvierExactSiblingVersions>
   </PropertyGroup>
