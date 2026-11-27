@@ -1,5 +1,5 @@
 ---
-last_commit_released: 79abd73e119b8cbfad6ab21827d3d6126e3fcef8
+last_commit_released: 2c3be18ece285b107e4075e6bd42fe708254b438
 depends_on:
   - ../Ranvier.Analyzers.Host/
 updaters:
@@ -17,6 +17,18 @@ updaters:
 # Changelog
 
 This changelog is generated from conventional commits by [EasyBuild.ShipIt](https://github.com/easybuild-org/EasyBuild.ShipIt).
+
+## 0.3.0 - 2026-11-27
+
+### 🚀 Features
+
+* *(analyzers)* Support Ranvier 0.2.4 CEs and remove Fable.Core dependency (#198) ([2c3be18](https://github.com/ranvier-org/Ranvier.View/commit/2c3be18ece285b107e4075e6bd42fe708254b438))
+
+### 🔗 Dependencies
+
+* `tools/Ranvier.Analyzers.Host` updated to 0.3.0
+
+<strong><small>[View changes on Github](https://github.com/ranvier-org/Ranvier.View/compare/79abd73e119b8cbfad6ab21827d3d6126e3fcef8..2c3be18ece285b107e4075e6bd42fe708254b438)</small></strong>
 
 ## 0.2.0 - 2026-11-26
 
