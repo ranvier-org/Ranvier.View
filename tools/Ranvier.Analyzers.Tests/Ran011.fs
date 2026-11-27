@@ -190,6 +190,18 @@ let b2 = (createMemo (fun _ -> 1)) |> Memo.bind (fun _ -> let a = createAsync (f
                         "let bn () =\n    boundary {\n        pending (fun _ -> 0)\n        let a = createAsync (fun _ _ -> Task.FromResult 1)\n        let! v = a\n        return v\n    }\n")
                     [ "RAN011" ]
                     "boundary + let!"
+
+                Expect.equal
+                    (runCe
+                        "let mTryRead () =\n    memo {\n        owning\n        let a = asyncMemo { return! Task.FromResult 1 }\n        let! r = tryRead a\n        return r\n    }\n")
+                    [ "RAN011" ]
+                    "memo owning + tryRead let!"
+
+                Expect.equal
+                    (runCe
+                        "let mDebounced () =\n    memo {\n        owning\n        let a = asyncMemo { return! Task.FromResult 1 }\n        let! v = a |> debounced System.TimeSpan.Zero\n        return v\n    }\n")
+                    [ "RAN011" ]
+                    "memo owning + debounced pipe let!"
             }
 
             test "post-await creation in owning asyncMemo and child-memo reads are clean in RAN011" {

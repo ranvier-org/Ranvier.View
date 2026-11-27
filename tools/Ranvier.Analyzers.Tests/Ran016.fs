@@ -343,5 +343,35 @@ let okPrevBeforeBind =
                 Expect.isEmpty
                     (codes clean)
                     "and!, Peek, untrack, nested tracked bodies, Phase-1 read, stored callback, 0-bind, and pre-bind context token are clean"
+
+                let v024Bad =
+                    "let s = createSignal 1
+let other = createSignal 2
+let ed = createDraft (fun _ -> 10)
+let b1 () = memo { let! x = s in return batched { return x + other.Value } }
+let b2 () = memo { debounce System.TimeSpan.Zero; let! x = s in return x + other.Value }
+let b3 () = memo { let! x = s in return (if ed.IsEdited then ed.Upstream else x) }
+"
+
+                Expect.equal
+                    (codes v024Bad)
+                    [ "RAN016"; "RAN016"; "RAN016"; "RAN016" ]
+                    "0.2.4 batched in closed phase, timed memo Phase 2, and Editable.IsEdited/Upstream in closed phase"
+
+                let v024Clean =
+                    "let s = createSignal 1
+let other = createSignal 2
+let ed = createDraft (fun _ -> 10)
+let c1 () = memo { let! x = s in return x + untracked { return other.Value } }
+let c2 () =
+    memo {
+        let! x = s
+        and! ie = Editable.isEdited ed
+        and! up = Editable.upstream ed
+        return if ie then up else x
+    }
+"
+
+                Expect.isEmpty (codes v024Clean) "0.2.4 untracked CE and Editable.isEdited/upstream in and! stay clean"
             }
         ]

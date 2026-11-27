@@ -32,10 +32,10 @@
         <RanvierCssRoot Condition="'$(RanvierCssRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../Ranvier.Css'))</RanvierCssRoot>
         <UseLocalRanvierAnime Condition="'$(UseLocalRanvierAnime)' == ''">false</UseLocalRanvierAnime>
         <RanvierAnimeRoot Condition="'$(RanvierAnimeRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../Ranvier.Anime'))</RanvierAnimeRoot>
-        <RanvierVersion>0.2.3</RanvierVersion>
-        <RanvierElmishVersion>0.2.3</RanvierElmishVersion>
-        <RanvierWireVersion>0.2.3</RanvierWireVersion>
-        <RanvierQueryVersion>0.2.3</RanvierQueryVersion>
+        <RanvierVersion>0.2.4</RanvierVersion>
+        <RanvierElmishVersion>0.2.4</RanvierElmishVersion>
+        <RanvierWireVersion>0.2.4</RanvierWireVersion>
+        <RanvierQueryVersion>0.2.4</RanvierQueryVersion>
         <RanvierCssVersion>0.3.0</RanvierCssVersion>
         <RanvierCssBindingsVersion>0.2.0</RanvierCssBindingsVersion>
         <RanvierCssViewVersion>0.3.0</RanvierCssViewVersion>

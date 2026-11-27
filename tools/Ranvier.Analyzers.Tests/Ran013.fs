@@ -43,9 +43,15 @@ let tests =
             test "a write in a new Thread" { Expect.equal (codes "let f (s: Signal<int>) = Thread (fun () -> s.Value <- 1)\n") [ "RAN013" ] "Thread" }
 
             test "a write inside graph.Dispatch inside Task.Run" {
-                Expect.isEmpty
-                    (codes "let f (graph: Graph) (s: Signal<int>) = Task.Run (fun () -> graph.Dispatch (fun () -> s.Value <- 1))\n")
-                    "dispatched"
+                let cleanSrc =
+                    "open Ranvier.CE\nlet f (graph: Graph) (s: Signal<int>) =\n    Task.Run (fun () ->\n        graph.Dispatch (fun () -> s.Value <- 1)\n        graph.DispatchAsync (fun () -> s.Value <- 2) |> ignore\n        dispatch graph { s.Value <- 3 }\n        dispatch graph { s.Value <- 4; return s.Value } |> ignore) |> ignore\nlet ownThread () =\n    Thread (fun () ->\n        use g = new Graph ()\n        let sOut = g { return! signal { return 0 } }\n        sOut.Value <- 1\n        g {\n            let s = signal { return 0 }\n            s.Value <- 1\n        })\n"
+
+                Expect.isEmpty (codes cleanSrc) "dispatched via Dispatch, DispatchAsync, dispatch CE, and thread-owned g { ... }"
+
+                Expect.equal
+                    (codes "open Ranvier.CE\nlet bad (s: Signal<int>) = Task.Run (fun () -> batched { s.Value <- 1 })\n")
+                    [ "RAN013" ]
+                    "batched without dispatch on pool thread still reports RAN013"
             }
 
             test "Settle inside Task.Run" {
